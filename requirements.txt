@@ -1,0 +1,10 @@
+Django>=5.0
+celery>=5.3             # Task Queue
+redis>=5.0              # Broker & Cache
+channels>=4.0           # WebSockets (Real-time logs)
+daphne>=4.0             # ASGI Server for Channels
+django-htmx>=1.17       # Frontend interactivity
+psutil>=5.9             # System/Process management
+requests>=2.31          # HTTP checks
+scapy>=2.5              # Network Scanning (For your auto-discovery)
+colorlog>=6.7           # Pretty console output
