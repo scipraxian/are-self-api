@@ -8,3 +8,4 @@ psutil>=5.9             # System/Process management
 requests>=2.31          # HTTP checks
 scapy>=2.5              # Network Scanning (For your auto-discovery)
 colorlog>=6.7           # Pretty console output
+django-celery-results>=2.5
