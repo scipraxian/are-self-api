@@ -4,11 +4,14 @@ import os
 
 from celery.result import AsyncResult
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.views import View
 from django.views.generic import TemplateView
 
 from config.celery import app as celery_app
+from core.models import RemoteTarget
+from core.tasks import scan_network_task
 from dashboard.tasks import debug_task
 
 
@@ -16,16 +19,18 @@ class DashboardHomeView(TemplateView):
   '''Renders the main dashboard page.'''
   template_name = 'dashboard/home.html'
 
+  def get_context_data(self, **kwargs):
+    context = super().get_context_data(**kwargs)
+    context['targets'] = RemoteTarget.objects.all()
+    return context
+
 
 class TriggerBuildView(View):
   '''Triggers a Celery task and returns an HTML fragment.'''
 
   def post(self, request, *args, **kwargs):
     '''Handles POST requests to trigger a build.'''
-    # Trigger the Celery task
     task = debug_task.delay()
-
-    # Return the "Running..." state fragment with the task ID for polling
     return render(
         request,
         'dashboard/partials/build_button_queued.html',
@@ -42,7 +47,6 @@ class BuildStatusView(View):
     if result.ready():
       return render(request, 'dashboard/partials/build_button_idle.html')
 
-    # Still running, return the queued button again to continue polling
     return render(
         request,
         'dashboard/partials/build_button_queued.html',
@@ -50,32 +54,52 @@ class BuildStatusView(View):
     )
 
 
-class ShutdownView(View):
-  '''System-wide shutdown for all Talos processes.
+class ScanNetworkView(View):
+  '''Triggers the network scan task.'''
 
-  This view is responsible for orchestrating a clean exit of the entire
-  application stack, including:
-  1. Signaling all Celery workers and agents to terminate.
-  2. Shutting down the Django ASGI/HTTP server process.
-  
-  This is intended to be the single point of termination for the orchestrator.
-  '''
+  def post(self, request, *args, **kwargs):
+    '''Initiates the async scan.'''
+    scan_network_task.delay()
+    return HttpResponse('''
+        <div class="scanning-toast">
+            Scanner Active...
+        </div>
+    ''')
+
+
+class DeleteAgentView(View):
+  '''Removes a build agent from the registry.'''
+
+  def delete(self, request, pk, *args, **kwargs):
+    '''Deletes an offline agent.'''
+    target = get_object_or_404(RemoteTarget, pk=pk)
+    if target.status == 'OFFLINE':
+      target.delete()
+      return HttpResponse('')  # Remove element from UI
+    return HttpResponse('Only offline agents can be deleted.', status=403)
+
+
+class AgentListView(View):
+  '''Returns the partial agent list for polling.'''
+
+  def get(self, request, *args, **kwargs):
+    targets = RemoteTarget.objects.all()
+    return render(
+        request,
+        'dashboard/partials/agent_list.html',
+        {'targets': targets}
+    )
+
+
+class ShutdownView(View):
+  '''System-wide shutdown for all Talos processes.'''
 
   def post(self, request, *args, **kwargs):
     '''Triggers system-wide shutdown.'''
     print('System-wide shutdown initiated from dashboard...')
-    
-    # 1. Signaling Celery workers to shut down.
-    # We use a broad ignore_result=True broadcast to stop all connected workers.
     try:
       celery_app.control.shutdown()
-      print('Celery shutdown signal broadcasted successfully.')
     except Exception as e:
       print(f'Warning: Could not broadcast Celery shutdown: {e}')
-
-    # 2. Exiting current Django process.
-    # We use os._exit(0) to ensure the process terminates immediately 
-    # and definitively in the development environment.
-    print('Exiting Django server. Talos is now offline.')
     os._exit(0)
     return HttpResponse('System Offline')

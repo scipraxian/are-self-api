@@ -35,7 +35,12 @@ class RemoteTarget(models.Model):
     last_seen = models.DateTimeField(null=True, blank=True)
     status = models.CharField(
         max_length=20, 
-        choices=[('ONLINE', 'Online'), ('OFFLINE', 'Offline'), ('BUSY', 'Busy')],
+        choices=[
+            ('ONLINE', 'Online'),
+            ('OFFLINE', 'Offline'),
+            ('BUSY', 'Busy'),
+            ('STORAGE_ERROR', 'Storage Error')
+        ],
         default='OFFLINE'
     )
 

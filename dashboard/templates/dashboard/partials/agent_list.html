@@ -1,0 +1,152 @@
+<div id="agent-list" hx-get="{% url 'agent_list' %}" hx-trigger="every 5s" hx-swap="outerHTML" class="agent-grid">
+    {% for target in targets %}
+    <div class="agent-card {% if target.status == 'OFFLINE' %}opacity-50{% endif %} status-{{ target.status|lower }}">
+        <div class="agent-info">
+            <span class="hostname">{{ target.hostname }}</span>
+            <span class="ip">{{ target.ip_address }}</span>
+        </div>
+
+        <div class="agent-status">
+            <span class="status-indicator"></span>
+            <span class="status-text">{{ target.status }}</span>
+        </div>
+
+        {% if target.status == 'OFFLINE' %}
+        <button class="delete-btn" hx-delete="{% url 'delete_agent' target.pk %}" hx-confirm="Delete this agent?"
+            hx-target="closest .agent-card" hx-swap="outerHTML">
+            &times;
+        </button>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div class="empty-state">No agents discovered. Click 'Scan Network' to start.</div>
+    {% endfor %}
+</div>
+
+<style>
+    .agent-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .agent-card {
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        backdrop-filter: blur(8px);
+        transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .agent-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .agent-info {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+    }
+
+    .hostname {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: #f1f5f9;
+    }
+
+    .ip {
+        font-size: 0.85rem;
+        color: #94a3b8;
+    }
+
+    .agent-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .status-text {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Status Colors */
+    .status-online .status-indicator {
+        background-color: #22c55e;
+        box-shadow: 0 0 10px #22c55e;
+    }
+
+    .status-online .status-text {
+        color: #22c55e;
+    }
+
+    .status-offline .status-indicator {
+        background-color: #94a3b8;
+    }
+
+    .status-offline .status-text {
+        color: #94a3b8;
+    }
+
+    .status-storage_error .status-indicator {
+        background-color: #eab308;
+        box-shadow: 0 0 10px #eab308;
+    }
+
+    .status-storage_error .status-text {
+        color: #eab308;
+    }
+
+    .status-busy .status-indicator {
+        background-color: #60a5fa;
+        box-shadow: 0 0 10px #60a5fa;
+    }
+
+    .status-busy .status-text {
+        color: #60a5fa;
+    }
+
+    .opacity-50 {
+        opacity: 0.5;
+    }
+
+    .delete-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: transparent;
+        border: none;
+        color: #ef4444;
+        font-size: 1.2rem;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .agent-card:hover .delete-btn {
+        opacity: 1;
+    }
+
+    .empty-state {
+        grid-column: 1 / -1;
+        padding: 3rem;
+        color: #64748b;
+        font-style: italic;
+    }
+</style>
