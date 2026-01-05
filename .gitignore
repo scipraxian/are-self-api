@@ -37,3 +37,4 @@ Logs/
 # --- OS Specific ---
 .DS_Store
 Thumbs.db
+_talos_concatenated_source.txt

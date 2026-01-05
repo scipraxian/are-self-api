@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'daphne',
     'channels',
     'core',
+    'dashboard',
     'celery',
     'django_celery_results',
     'django.contrib.admin',
@@ -72,6 +73,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
 
 
 # Database
@@ -122,7 +124,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 # Celery
-CELERY_BROKER_URL = 'django://'
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
