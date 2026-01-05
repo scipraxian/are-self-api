@@ -4,6 +4,7 @@ from django.urls import path
 
 from dashboard.views import BuildStatusView
 from dashboard.views import DashboardHomeView
+from dashboard.views import ShutdownView
 from dashboard.views import TriggerBuildView
 
 
@@ -18,5 +19,10 @@ urlpatterns = [
         'check-status/<str:task_id>/',
         BuildStatusView.as_view(),
         name='check_build_status',
+    ),
+    path(
+        'shutdown/',
+        ShutdownView.as_view(),
+        name='shutdown',
     ),
 ]

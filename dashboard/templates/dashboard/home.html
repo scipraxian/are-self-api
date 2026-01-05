@@ -27,6 +27,7 @@
             border-radius: 24px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
         }
 
         h1 {
@@ -95,6 +96,54 @@
             }
         }
 
+        .shutdown-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .shutdown-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        #shutdown-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #0f172a;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            text-align: center;
+        }
+
+        #shutdown-screen h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #ef4444;
+        }
+
+        #shutdown-screen p {
+            color: #94a3b8;
+        }
+
         /* CSRF Token Setup for HTMX */
         body {
             --htmx-csrf: "{{ csrf_token }}";
@@ -103,17 +152,34 @@
 </head>
 
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <div id="shutdown-screen">
+        <h2>Talos Offline</h2>
+        <p>The session has been terminated safely.</p>
+        <p style="margin-top: 20px; font-size: 0.8rem;">You may now close this tab.</p>
+    </div>
+
     <div class="container">
+        <button class="shutdown-btn" hx-post="{% url 'shutdown' %}"
+            onclick="document.getElementById('shutdown-screen').style.display = 'flex';">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                <line x1="12" y1="2" x2="12" y2="12"></line>
+            </svg>
+            Exit
+        </button>
+
         <h1>Talos Command Center</h1>
+
         <div id="build-container">
             {% include "dashboard/partials/build_button_idle.html" %}
         </div>
 
-        <!-- Optional indicator if we wanted a separate spinner, but we'll swap the button directly -->
-        <div id="indicator" class="htmx-indicator" style="margin-top: 20px; color: #94a3b8;">
+        <div id="indicator" class="htmx-indicator"
+            style="margin-top: 200px; color: #94a3b8; position: absolute; left: 0; right: 0;">
             <div class="spinner">
                 <div class="loading-ring"></div>
-                <span>Processing...</span>
+                <span>Processing Build...</span>
             </div>
         </div>
     </div>

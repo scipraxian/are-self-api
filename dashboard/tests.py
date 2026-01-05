@@ -81,6 +81,19 @@ class DashboardViewTests(TestCase):
     self.assertNotIn('disabled', response.content.decode())
     self.assertNotIn('hx-trigger', response.content.decode())
 
+  @patch('dashboard.views.celery_app.control.shutdown')
+  @patch('dashboard.views.os._exit')
+  def test_shutdown_post(self, mock_exit, mock_celery_shutdown):
+    '''Test that POSTing to shutdown triggers Celery and Django exit.'''
+    response = self.client.post(reverse('shutdown'))
+    self.assertEqual(response.status_code, 200)
+    
+    # Verify Celery shutdown was signaled
+    mock_celery_shutdown.assert_called_once()
+    
+    # Verify Django process exit
+    mock_exit.assert_called_once_with(0)
+
 
 class DashboardTaskTests(TestCase):
   '''Tests for the dashboard tasks.'''
