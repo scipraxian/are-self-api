@@ -5,38 +5,53 @@
         <h3 style="color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin: 0;">
             Pipeline Orchestrator
         </h3>
-        <span style="font-size: 0.7rem; color: #475569; font-family: monospace;">Loaded {{ profiles.count }} Profiles</span>
+        <span style="font-size: 0.7rem; color: #475569; font-family: monospace;">Loaded {{ profiles|length }} Profiles</span>
     </div>
 
     <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
         {% for profile in profiles %}
         <button hx-post="{% url 'launch_pipeline' %}" hx-vals='{"profile_id": "{{ profile.id }}"}'
             hx-target="#campaign-launcher" hx-swap="outerHTML"
-            style="{% if profile.name == 'Fast Validate' %}background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white; border: none; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);{% else %}background: rgba(30, 41, 59, 0.6); color: #f1f5f9; border: 1px solid rgba(255, 255, 255, 0.1);{% endif %} padding: 1rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 12px; cursor: pointer; display: flex; align-items: center; font-family: 'Inter', sans-serif;">
+            style="{% if profile.name == 'Fast Validate' %}background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            color: white; border: none; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);{% else %}background: rgba(30, 41, 59, 0.6); color: #f1f5f9;
+            border: 1px solid rgba(255, 255, 255, 0.1);{% endif %} padding: 1rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 12px; cursor: pointer;
+            display: flex; align-items: center; font-family: 'Inter', sans-serif;">
             <span style="margin-right: 8px;">🚀</span> {{ profile.name }}
         </button>
         {% empty %}
-        <div style="padding: 1rem; width: 100%; background: rgba(239, 68, 68, 0.1); color: #f87171; border-radius: 8px; border: 1px solid #ef4444; text-align: center;">
+        <div style="padding: 1rem;
+            width: 100%; background: rgba(239, 68, 68, 0.1); color: #f87171; border-radius: 8px; border: 1px solid #ef4444;
+            text-align: center;">
             <strong>CRITICAL:</strong> No Build Profiles found in DB.
         </div>
         {% endfor %}
     </div>
 
     {% if recent_runs %}
-    <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 1.5rem;">
-        <h4 style="color: #64748b; font-size: 0.8rem; text-transform: uppercase; margin: 0 0 1rem 0;">Recent Missions</h4>
-        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+    <div style="border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 1.5rem;">
+        <h4 style="color: #64748b; font-size: 0.8rem; text-transform: uppercase;
+            margin: 0 0 1rem 0;">Recent Missions</h4>
+        <div style="display: flex; flex-direction: column;
+            gap: 0.5rem;">
             {% for run in recent_runs %}
             <div hx-get="{% url 'pipeline_live_monitor' run.pk %}" 
                  hx-target="#campaign-launcher" 
                  hx-swap="outerHTML"
-                 style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255, 255, 255, 0.03); border-radius: 8px; cursor: pointer;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: {% if run.status == 'SUCCESS' %}#4ade80{% elif run.status == 'FAILED' %}#f87171{% elif run.status == 'RUNNING' %}#60a5fa{% else %}#94a3b8{% endif %};"></span>
-                    <span style="color: #f1f5f9; font-weight: 600; font-size: 0.9rem;">{{ run.profile.name }}</span>
-                    <span style="color: #64748b; font-size: 0.8rem;">Run #{{ run.pk }}</span>
+                 style="display: flex;
+                 justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255, 255, 255, 0.03); border-radius: 8px;
+                 cursor: pointer;">
+                <div style="display: flex;
+                    align-items: center; gap: 1rem;">
+                    <span style="width: 8px;
+                        height: 8px; border-radius: 50%; display: inline-block; background: {% if run.status == 'SUCCESS' %}#4ade80{% elif run.status == 'FAILED' %}#f87171{% elif run.status == 'RUNNING' %}#60a5fa{% else %}#94a3b8{% endif %};"></span>
+                    <span style="color: #f1f5f9;
+                        font-weight: 600; font-size: 0.9rem;">{{ run.profile.name }}</span>
+                    <span style="color: #64748b;
+                        font-size: 0.8rem;">Run #{{ run.pk }}</span>
                 </div>
-                <div style="color: #94a3b8; font-size: 0.8rem;">{{ run.created_at|timesince }} ago</div>
+                <div style="color: #94a3b8;
+                    font-size: 0.8rem;">{{ run.created_at|timesince }} ago</div>
             </div>
             {% endfor %}
         </div>

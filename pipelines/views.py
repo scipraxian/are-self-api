@@ -11,10 +11,13 @@ logger = logging.getLogger(__name__)
 
 def dashboard_campaign_section(request):
     """View to render the campaign section on the dashboard."""
-    # Force Launcher: If user explicitly asks for it via ?force=true
-    force = request.GET.get('force')
+    # Force Launcher: robust check for 'true' string
+    force_param = request.GET.get('force', '').lower()
+    force = (force_param == 'true')
     
     active_run = PipelineRun.objects.filter(status='RUNNING').first()
+    
+    # Only redirect to monitor if we have a run AND we aren't forcing the menu
     if active_run and not force:
         try:
             return pipeline_live_monitor(request, active_run.id)
@@ -23,9 +26,13 @@ def dashboard_campaign_section(request):
             active_run.status = 'FAILED'
             active_run.save()
 
+    # Query profiles
     profiles = list(BuildProfile.objects.all().order_by('name'))
     recent_runs = PipelineRun.objects.order_by('-created_at')[:5]
     
+    # DEBUG: Print to console to verify data is fetching
+    print(f"[CAMPAIGN] Rendering Campaign Section. Force={force}. Found {len(profiles)} profiles.")
+
     return render(request, 'pipelines/partials/launch_campaign.html', {
         'profiles': profiles,
         'recent_runs': recent_runs
@@ -40,7 +47,6 @@ def launch_pipeline(request):
     run = PipelineRun.objects.create(profile=profile, status='PENDING')
     
     # 2. PRE-CREATE STEPS (Synchronous)
-    # This guarantees the UI is never empty, even if Celery is slow.
     if profile.headless:
         PipelineStepRun.objects.create(pipeline_run=run, step_name="Headless Validator", status='PENDING', logs="Waiting for worker...")
     if profile.staging:
