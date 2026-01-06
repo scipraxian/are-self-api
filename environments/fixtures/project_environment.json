@@ -1,0 +1,16 @@
+[
+    {
+        "model": "environments.projectenvironment",
+        "pk": "2a898e21-b7f2-4442-94e4-f0acb87d57b6",
+        "fields": {
+            "name": "Talos Default Environment",
+            "project_root": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy",
+            "engine_root": "C:\\Program Files\\Epic Games\\UE_5.6",
+            "build_root": "C:\\steambuild",
+            "project_name": "HSHVacancy",
+            "staging_dir": "C:\\steambuild\\StagingBuffer",
+            "agent_port": 5005,
+            "is_active": true
+        }
+    }
+]
