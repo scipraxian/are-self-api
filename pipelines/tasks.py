@@ -5,7 +5,6 @@ import logging
 import time
 import threading
 import queue
-import glob
 from celery import shared_task, chain
 from django.utils import timezone
 from environments.models import ProjectEnvironment
@@ -20,10 +19,8 @@ def get_active_env():
         return None
 
 def parse_ue5_test_report(json_path):
-    """Parses UE5 automation test report and returns a formatted string summary."""
     if not os.path.exists(json_path):
         return "\n--- NO TEST REPORT FOUND (Check index.json) ---\n"
-
     try:
         with open(json_path, 'r', encoding='utf-8-sig') as f:
             data = json.load(f)
@@ -33,80 +30,58 @@ def parse_ue5_test_report(json_path):
     passed = 0
     failed = 0
     tests = data.get('tests', [])
-    
-    output_lines = [
-        "",
-        "=" * 80,
-        " TEST RESULTS SUMMARY",
-        "=" * 80,
-        f"{'TEST NAME':<60} | {'STATUS':<10} | {'TIME (s)':<10}",
-        "-" * 80
-    ]
+    output_lines = ["", "=" * 80, " TEST RESULTS SUMMARY", "=" * 80, f"{'TEST NAME':<60} | {'STATUS':<10} | {'TIME (s)':<10}", "-" * 80]
 
     for test in tests:
         full_path = test.get('fullTestPath', 'Unknown')
         state = test.get('state', 'Unknown')
         duration = test.get('duration', 0.0)
-        
         status_str = 'PASS' if state == 'Success' else 'FAIL'
-        if state == 'Success':
-            passed += 1
-        else:
-            failed += 1
-
+        if state == 'Success': passed += 1
+        else: failed += 1
+        
         display_path = full_path
-        if len(display_path) > 57:
-            display_path = "..." + display_path[-54:]
-            
+        if len(display_path) > 57: display_path = "..." + display_path[-54:]
         output_lines.append(f"{display_path:<60} | {status_str:<10} | {duration:.4f}")
 
         if state != 'Success':
-            entries = test.get('entries', [])
-            for entry in entries:
+            for entry in test.get('entries', []):
                 event = entry.get('event')
                 if isinstance(event, dict) and event.get('type') == 'Error':
-                    msg = event.get('message', 'No message provided')
-                    output_lines.append(f"    >>> ERROR: {msg}")
+                    output_lines.append(f"    >>> ERROR: {event.get('message', 'No message')}")
 
     output_lines.append("-" * 80)
     output_lines.append(f"TOTAL: {len(tests)}  |  PASSED: {passed}  |  FAILED: {failed}")
-    output_lines.append("=" * 80)
-    output_lines.append("")
-    
+    output_lines.append("=" * 80 + "\n")
     return "\n".join(output_lines)
 
 def stream_process_with_log_tail(cmd, step, log_file_path):
-    """
-    Runs a command and streams BOTH stdout and a target log file to the DB.
-    """
-    print(f"[TASK] Launching: {cmd[0]}")
+    # 1. HEADER
+    cmd_str = " ".join(cmd)
+    header = (f"=== EXECUTION CONTEXT ===\nCmd: {cmd[0]}\nArgs: {cmd_str}\nTarget Log: {log_file_path}\n=========================\n\n")
     
+    if step:
+        # Overwrite the "Waiting..." text from the view
+        step.logs = header
+        step.status = 'RUNNING'
+        step.save()
+
+    print(f"[TASK] Launching: {cmd[0]}")
     try:
-        process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=1,
-            encoding='utf-8',
-            errors='replace'
-        )
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, encoding='utf-8', errors='replace')
     except FileNotFoundError:
         if step:
-            step.logs = f"ERROR: Executable not found: {cmd[0]}"
+            step.logs += f"\n[FATAL] Executable not found: {cmd[0]}"
             step.status = 'FAILED'
             step.save()
         return -1
 
     console_queue = queue.Queue()
-    
     def reader_thread(pipe, q):
         try:
             with pipe:
-                for line in iter(pipe.readline, ''):
-                    q.put(line)
-        finally:
-            q.put(None)
+                for line in iter(pipe.readline, ''): q.put(line)
+        finally: q.put(None)
 
     t = threading.Thread(target=reader_thread, args=(process.stdout, console_queue))
     t.daemon = True
@@ -114,39 +89,27 @@ def stream_process_with_log_tail(cmd, step, log_file_path):
 
     log_buffer = []
     file_cursor = 0
-    if os.path.exists(log_file_path):
-        file_cursor = 0 
+    # If log exists, start at beginning to catch everything for this run
+    if os.path.exists(log_file_path): file_cursor = 0
 
     def flush_logs():
         if log_buffer:
             chunk = "".join(log_buffer)
-            # SAFE GUARD: Check if step exists before accessing logs
             if step:
-                if step.logs:
-                    step.logs += chunk
-                else:
-                    step.logs = chunk
+                if step.logs: step.logs += chunk
+                else: step.logs = chunk
                 step.save()
-            else:
-                # Debugging output for headless tests without step tracking
-                print(chunk, end='')
-                
             log_buffer.clear()
 
-    print("[TASK] Entering Stream Loop...")
     while True:
         process_alive = (process.poll() is None)
-        
-        # A. Drain Console Queue
         while True:
             try:
                 line = console_queue.get_nowait()
-                if line is None: break 
+                if line is None: break
                 log_buffer.append(line)
-            except queue.Empty:
-                break
+            except queue.Empty: break
         
-        # B. Read Game Log File
         if os.path.exists(log_file_path):
             try:
                 with open(log_file_path, 'r', encoding='utf-8', errors='replace') as f:
@@ -155,22 +118,25 @@ def stream_process_with_log_tail(cmd, step, log_file_path):
                     if new_data:
                         log_buffer.append(new_data)
                         file_cursor = f.tell()
-            except (PermissionError, OSError):
-                pass
+            except (PermissionError, OSError): pass
 
         flush_logs()
         
-        # Safe Exit Condition
         if not process_alive and console_queue.empty():
+            if os.path.exists(log_file_path):
+                try:
+                    with open(log_file_path, 'r', encoding='utf-8', errors='replace') as f:
+                        f.seek(file_cursor)
+                        log_buffer.append(f.read())
+                except: pass
+            flush_logs()
             break
-            
         time.sleep(1.0)
 
     return process.returncode
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=1)
 def run_headless_tests_task(self, pipeline_run_id=None):
-    print(f"[TASK] Headless Task Started for Run {pipeline_run_id}")
     run = None
     step = None
     
@@ -179,50 +145,38 @@ def run_headless_tests_task(self, pipeline_run_id=None):
             run = PipelineRun.objects.get(id=pipeline_run_id)
         except PipelineRun.DoesNotExist:
             return self.retry(exc=PipelineRun.DoesNotExist())
-
-        step = PipelineStepRun.objects.create(
-            pipeline_run=run,
-            step_name="Headless Validator",
-            status='RUNNING',
-            logs="Initializing..."
-        )
+        
+        # FIND THE PRE-CREATED STEP
+        step = run.steps.filter(step_name="Headless Validator").first()
+        if not step:
+            # Fallback if view didn't create it
+            step = PipelineStepRun.objects.create(pipeline_run=run, step_name="Headless Validator", status='RUNNING', logs="Initializing...")
 
     env = get_active_env()
     if not env:
-        if step: 
-            step.status='FAILED'
-            step.logs="No Active Environment Found"
-            step.save()
+        if step: step.status='FAILED'; step.logs="No Active Env"; step.save()
         return "FAILED"
 
     uproject_path = os.path.join(env.project_root, f"{env.project_name}.uproject")
     editor_cmd = os.path.join(env.engine_root, 'Engine', 'Binaries', 'Win64', 'UnrealEditor-Cmd.exe')
-    target_log_file = os.path.join(env.project_root, 'Saved', 'Logs', f'{env.project_name}.log')
-
-    if step:
-        step.logs = f"--- STARTING HEADLESS VALIDATOR ---\nTarget Log: {target_log_file}\n"
-        step.save()
+    
+    # STRICT PATH: Saved/Logs/{ProjectName}.log
+    log_folder = os.path.join(env.project_root, 'Saved', 'Logs')
+    target_log_file = os.path.join(log_folder, f'{env.project_name}.log')
 
     test_args = [
-        editor_cmd,
-        uproject_path,
-        '-log',
-        '-nullrhi',
-        '-unattended',
-        '-nopause',
-        '-nosplash',
-        '-stdout', 
-        '-FullStdOutLogOutput',
+        editor_cmd, uproject_path,
+        '-log', '-nullrhi', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput',
         '-CustomConfig=Staging',
+        f'-ReportExportPath={log_folder}',
         '-ExecCmds=Automation RunTests HSH.Tests; Quit',
         '-TestExit=Automation Test Queue Empty',
     ]
     
     retcode = stream_process_with_log_tail(test_args, step, target_log_file)
 
-    # --- REPORT PARSING INTEGRATION ---
     if retcode == 0:
-        report_json = os.path.join(env.project_root, 'Saved', 'Logs', 'index.json')
+        report_json = os.path.join(log_folder, 'index.json')
         summary = parse_ue5_test_report(report_json)
         if step:
             step.logs += summary
@@ -243,7 +197,10 @@ def run_staging_build_task(pipeline_run_id=None):
     if pipeline_run_id:
         try: run = PipelineRun.objects.get(id=pipeline_run_id)
         except: return None
-        step = PipelineStepRun.objects.create(pipeline_run=run, step_name="Staging Builder", status='RUNNING', logs="Initializing Build...")
+        # FIND THE PRE-CREATED STEP
+        step = run.steps.filter(step_name="Staging Builder").first()
+        if not step:
+            step = PipelineStepRun.objects.create(pipeline_run=run, step_name="Staging Builder", status='RUNNING', logs="Initializing...")
 
     env = get_active_env()
     uproject_path = os.path.join(env.project_root, f"{env.project_name}.uproject")
@@ -251,12 +208,9 @@ def run_staging_build_task(pipeline_run_id=None):
     staging_dir = env.staging_dir or os.path.join(env.build_root, 'Staging')
 
     cmd = [
-        uat_batch,
-        'BuildCookRun',
+        uat_batch, 'BuildCookRun',
         f'-project={uproject_path}',
-        '-platform=Win64',
-        '-clientconfig=Development',
-        '-serverconfig=Development',
+        '-platform=Win64', '-clientconfig=Development', '-serverconfig=Development',
         '-build', '-cook', '-stage', '-pak',
         f'-stagingdirectory={staging_dir}',
         '-nocompileeditor', '-unattended', '-nopause', '-utf8output'

@@ -1,15 +1,9 @@
 <div id="campaign-launcher" class="monitor-card">
-
     <div class="monitor-header">
         <div class="status-info">
             <h3>Campaign Monitor</h3>
-            <div class="status-line"
-                 {% if is_active %}
-                 hx-get="{% url 'pipeline_live_monitor' run.pk %}" 
-                 hx-select=".status-line" 
-                 hx-target="this" 
-                 hx-trigger="every 2s"
-                 {% endif %}>
+            <div class="status-line" {% if is_active %} hx-get="{% url 'pipeline_live_monitor' run.pk %}"
+                hx-select=".status-line" hx-target="this" hx-trigger="every 2s" {% endif %}>
                 <span class="profile-name">{{ run.profile.name }}</span>
                 <span class="separator">|</span>
                 <span class="run-id">Run #{{ run.pk }}</span>
@@ -17,24 +11,14 @@
                 <span class="status-text status-{{ run.status|lower }}">{{ run.status }}</span>
             </div>
         </div>
-        
-        <div class="actions" 
-             {% if is_active %}
-             hx-get="{% url 'pipeline_live_monitor' run.pk %}" 
-             hx-select=".actions" 
-             hx-target="this" 
-             hx-trigger="every 2s"
-             {% endif %}>
+        <div class="actions" {% if is_active %} hx-get="{% url 'pipeline_live_monitor' run.pk %}" hx-select=".actions"
+            hx-target="this" hx-trigger="every 2s" {% endif %}>
             {% if run.status == 'RUNNING' or run.status == 'PENDING' %}
-                <button hx-post="{% url 'reset_campaign' %}" hx-target="#campaign-launcher" hx-swap="outerHTML"
-                    class="btn-stop">
-                    STOP
-                </button>
+            <button hx-post="{% url 'reset_campaign' %}" hx-target="#campaign-launcher" hx-swap="outerHTML"
+                class="btn-stop">STOP</button>
             {% else %}
-                <button hx-get="{% url 'dashboard_campaign_section' %}" hx-target="#campaign-launcher" hx-swap="outerHTML"
-                    class="btn-done">
-                    DONE
-                </button>
+            <button hx-get="{% url 'dashboard_campaign_section' %}?force=true&t={% now 'U' %}" hx-target="#campaign-launcher" hx-swap="outerHTML"
+                class="btn-done">DONE</button>
             {% endif %}
         </div>
     </div>
@@ -53,39 +37,34 @@
                 {% for step in steps %}
                 <tr class="step-row" onclick="toggleLogs('{{ step.pk }}');">
                     <td class="col-step">{{ step.step_name }}</td>
-                    <td class="col-status" 
-                        {% if run.status == 'RUNNING' %}
-                        hx-get="{% url 'pipeline_live_monitor' run.pk %}" hx-select="#status-{{ step.pk }}" hx-target="this" hx-trigger="every 2s"
-                        {% endif %}>
+                    <td class="col-status" {% if run.status == 'RUNNING' %}
+                        hx-get="{% url 'pipeline_live_monitor' run.pk %}" hx-select="#status-{{ step.pk }}"
+                        hx-target="this" hx-trigger="every 2s" {% endif %}>
                         <span id="status-{{ step.pk }}" class="status-badge status-{{ step.status|lower }}">{{ step.status }}</span>
                     </td>
                     <td class="col-time">{{ step.started_at|date:"H:i:s" }}</td>
-                    <td class="col-dur"
-                        {% if run.status == 'RUNNING' %}
-                        hx-get="{% url 'pipeline_live_monitor' run.pk %}" hx-select="#duration-{{ step.pk }}" hx-target="this" hx-trigger="every 2s"
-                        {% endif %}>
+                    <td class="col-dur" {% if run.status == 'RUNNING' %} hx-get="{% url 'pipeline_live_monitor' run.pk %}"
+                        hx-select="#duration-{{ step.pk }}" hx-target="this" hx-trigger="every 2s" {% endif %}>
                         <div id="duration-{{ step.pk }}">{{ step.duration|floatformat:1 }}s</div>
                     </td>
                 </tr>
-                
                 <tr id="logs-{{ step.pk }}" class="log-container" style="display: none;">
                     <td colspan="4" style="padding: 0; border: none;">
-                        <div id="log-content-{{ step.pk }}" 
-                             class="log-content-box"
-                             hx-get="{% url 'pipeline_step_logs' step.pk %}" 
-                             hx-trigger="load, every 2s" 
-                             hx-swap="innerHTML"
-                             hx-on::after-swap="this.scrollTop = this.scrollHeight;">
-                            <span style="color: #64748b;">Loading...</span>
+                        <div class="log-wrapper">
+                            <div class="log-toolbar">
+                                <span class="log-label">Live Output Stream</span>
+                                <button class="btn-copy" onclick="copyLog('log-content-{{ step.pk }}', this); event.stopPropagation();">Copy Log</button>
+                            </div>
+                            <div id="log-content-{{ step.pk }}" class="log-content-box"
+                                hx-get="{% url 'pipeline_step_logs' step.pk %}" hx-trigger="load, every 2s"
+                                hx-swap="innerHTML" hx-on::after-swap="updateLogScroll(this)">
+                                <span style="color: #64748b;">Loading logs...</span>
+                            </div>
                         </div>
                     </td>
                 </tr>
                 {% empty %}
-                <tr>
-                    <td colspan="4" class="empty-state">
-                        <div class="spinner"></div><span>Initializing...</span>
-                    </td>
-                </tr>
+                <tr><td colspan="4" class="empty-state"><div class="spinner"></div><span>Initializing Pipeline...</span></td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -95,8 +74,27 @@
 <script>
     function toggleLogs(id) {
         var el = document.getElementById('logs-' + id);
-        if (el.style.display === 'none') el.style.display = 'table-row';
-        else el.style.display = 'none';
+        if (el.style.display === 'none') {
+            el.style.display = 'table-row';
+            var content = document.getElementById('log-content-' + id);
+            if(content) setTimeout(() => { content.scrollTop = content.scrollHeight; }, 50);
+        } else {
+            el.style.display = 'none';
+        }
+    }
+
+    function updateLogScroll(el) {
+        // Simple scroll to bottom
+        el.scrollTop = el.scrollHeight;
+    }
+
+    function copyLog(elementId, btn) {
+        const text = document.getElementById(elementId).innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            const original = btn.innerText;
+            btn.innerText = "Copied!";
+            setTimeout(() => { btn.innerText = original; }, 2000);
+        });
     }
 </script>
 
@@ -104,14 +102,13 @@
     .monitor-card { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem; backdrop-filter: blur(12px); }
     .monitor-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
     .monitor-header h3 { color: #94a3b8; font-weight: 700; text-transform: uppercase; font-size: 0.9rem; margin: 0 0 0.5rem 0; }
-    .status-line { font-size: 1.1rem; font-weight: 600; color: #f1f5f9; }
+    .status-line { font-size: 1.1rem; font-weight: 600; color: #f1f5f9; font-family: 'Outfit', sans-serif; }
     .separator { color: #475569; margin: 0 8px; }
     .status-text.status-success { color: #4ade80; }
     .status-text.status-failed { color: #f87171; }
     .status-text.status-running { color: #818cf8; }
-    .btn-stop, .btn-done { background: transparent; padding: 0.5rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; }
-    .btn-stop { border: 1px solid #ef4444; color: #ef4444; }
-    .btn-done { border: 1px solid #4ade80; color: #4ade80; }
+    .btn-stop { background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 0.5rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; }
+    .btn-done { background: transparent; border: 1px solid #4ade80; color: #4ade80; padding: 0.5rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; }
     .table-wrapper { background: rgba(0, 0, 0, 0.2); border-radius: 12px; overflow: hidden; margin-top: 1rem; }
     .monitor-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
     .col-step { width: 45%; text-align: left; }
@@ -127,9 +124,18 @@
     .status-badge.status-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
     .status-badge.status-failed { background: rgba(239, 68, 68, 0.15); color: #f87171; }
     .status-badge.status-pending { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
-    .log-content-box { padding: 1.5rem; font-family: 'Consolas', monospace; font-size: 0.8rem; line-height: 1.5; color: #cbd5e1; white-space: pre-wrap; max-height: 600px; overflow-y: auto; text-align: left; background: #0f172a; }
+    .log-wrapper { background: #0f172a; border-top: 1px solid rgba(255,255,255,0.1); }
+    .log-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .log-label { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
+    .btn-copy { background: transparent; border: 1px solid #334155; color: #94a3b8; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; display: flex; align-items: center; gap: 6px; }
+    .btn-copy:hover { border-color: #64748b; color: #f1f5f9; background: rgba(255,255,255,0.05); }
+    .log-content-box { padding: 1rem; font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: 0.8rem; line-height: 1.5; color: #cbd5e1; white-space: pre-wrap; max-height: 600px; overflow-y: auto; text-align: left; }
+    .log-error { color: #f87171; font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 0 4px; border-radius: 2px; }
+    .log-warning { color: #fbbf24; font-weight: bold; }
+    .log-success { color: #4ade80; font-weight: bold; }
+    .log-system { color: #22d3ee; font-weight: bold; }
     .empty-state { text-align: center; padding: 3rem; color: #64748b; }
-    .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.1); border-top-color: #60a5fa; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; margin-right: 10px; }
+    .spinner { width: 20px; height: 20px; border: 2px solid rgba(255, 255, 255, 0.1); border-top-color: #60a5fa; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; margin-right: 10px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 </style>

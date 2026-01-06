@@ -5,15 +5,20 @@
         <h3 style="color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin: 0;">
             Pipeline Orchestrator
         </h3>
+        <span style="font-size: 0.7rem; color: #475569; font-family: monospace;">Loaded {{ profiles.count }} Profiles</span>
     </div>
 
     <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
         {% for profile in profiles %}
         <button hx-post="{% url 'launch_pipeline' %}" hx-vals='{"profile_id": "{{ profile.id }}"}'
             hx-target="#campaign-launcher" hx-swap="outerHTML"
-            class="{% if profile.name == 'Fast Validate' %}btn-red{% else %}btn-glass{% endif %}">
+            style="{% if profile.name == 'Fast Validate' %}background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white; border: none; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);{% else %}background: rgba(30, 41, 59, 0.6); color: #f1f5f9; border: 1px solid rgba(255, 255, 255, 0.1);{% endif %} padding: 1rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 12px; cursor: pointer; display: flex; align-items: center; font-family: 'Inter', sans-serif;">
             <span style="margin-right: 8px;">🚀</span> {{ profile.name }}
         </button>
+        {% empty %}
+        <div style="padding: 1rem; width: 100%; background: rgba(239, 68, 68, 0.1); color: #f87171; border-radius: 8px; border: 1px solid #ef4444; text-align: center;">
+            <strong>CRITICAL:</strong> No Build Profiles found in DB.
+        </div>
         {% endfor %}
     </div>
 
@@ -25,90 +30,16 @@
             <div hx-get="{% url 'pipeline_live_monitor' run.pk %}" 
                  hx-target="#campaign-launcher" 
                  hx-swap="outerHTML"
-                 class="history-row">
-                
+                 style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255, 255, 255, 0.03); border-radius: 8px; cursor: pointer;">
                 <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span class="status-dot status-{{ run.status|lower }}"></span>
+                    <span style="width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: {% if run.status == 'SUCCESS' %}#4ade80{% elif run.status == 'FAILED' %}#f87171{% elif run.status == 'RUNNING' %}#60a5fa{% else %}#94a3b8{% endif %};"></span>
                     <span style="color: #f1f5f9; font-weight: 600; font-size: 0.9rem;">{{ run.profile.name }}</span>
                     <span style="color: #64748b; font-size: 0.8rem;">Run #{{ run.pk }}</span>
                 </div>
-                <div style="color: #94a3b8; font-size: 0.8rem;">
-                    {{ run.created_at|timesince }} ago
-                </div>
+                <div style="color: #94a3b8; font-size: 0.8rem;">{{ run.created_at|timesince }} ago</div>
             </div>
             {% endfor %}
         </div>
     </div>
     {% endif %}
 </div>
-
-<style>
-    /* 1. Base Button Styles */
-    button { font-family: 'Inter', sans-serif; }
-
-    /* 2. Glass Button (The standard ones) */
-    .btn-glass {
-        background: rgba(30, 41, 59, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #f1f5f9;
-        padding: 1rem 2rem;
-        font-size: 1rem;
-        font-weight: 600;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-    }
-    .btn-glass:hover {
-        background: rgba(30, 41, 59, 0.9);
-        border-color: rgba(255, 255, 255, 0.3);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    /* 3. Red Button (Fast Validate) */
-    .btn-red {
-        background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-        border: none;
-        color: white;
-        padding: 1rem 2rem;
-        font-size: 1.1rem; /* Slightly larger */
-        font-weight: 700;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
-    }
-    .btn-red:hover {
-        filter: brightness(1.1);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
-    }
-
-    /* 4. History Rows */
-    .history-row {
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        padding: 0.75rem 1rem; 
-        background: rgba(255, 255, 255, 0.03); 
-        border-radius: 8px; 
-        cursor: pointer; 
-        transition: background 0.2s;
-        border: 1px solid transparent;
-    }
-    .history-row:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-
-    /* 5. Status Dots */
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-    .status-dot.status-success { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
-    .status-dot.status-failed { background: #f87171; box-shadow: 0 0 8px #f87171; }
-    .status-dot.status-running { background: #60a5fa; box-shadow: 0 0 8px #60a5fa; }
-    .status-dot.status-pending { background: #94a3b8; }
-</style>

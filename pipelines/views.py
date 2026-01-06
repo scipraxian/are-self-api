@@ -4,16 +4,26 @@ from django.views.decorators.http import require_POST
 from django.utils import timezone
 from pipelines.models import BuildProfile, PipelineRun, PipelineStepRun
 from pipelines.tasks import orchestrate_pipeline
+import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 def dashboard_campaign_section(request):
     """View to render the campaign section on the dashboard."""
-    # 1. Check for Active Run (Redirect to Monitor if running)
+    # Force Launcher: If user explicitly asks for it via ?force=true
+    force = request.GET.get('force')
+    
     active_run = PipelineRun.objects.filter(status='RUNNING').first()
-    if active_run:
-        return pipeline_live_monitor(request, active_run.id)
+    if active_run and not force:
+        try:
+            return pipeline_live_monitor(request, active_run.id)
+        except Exception as e:
+            logger.error(f"Active run corrupted: {e}")
+            active_run.status = 'FAILED'
+            active_run.save()
 
-    # 2. Fetch Data (Simple & Direct)
-    profiles = BuildProfile.objects.all().order_by('name')
+    profiles = list(BuildProfile.objects.all().order_by('name'))
     recent_runs = PipelineRun.objects.order_by('-created_at')[:5]
     
     return render(request, 'pipelines/partials/launch_campaign.html', {
@@ -23,61 +33,65 @@ def dashboard_campaign_section(request):
 
 @require_POST
 def launch_pipeline(request):
-    """Handles the HTMX request to launch a pipeline."""
     profile_id = request.POST.get('profile_id')
-    profile = BuildProfile.objects.get(id=profile_id)
+    profile = get_object_or_404(BuildProfile, id=profile_id)
     
-    # Create the run record
+    # 1. Create the Run
     run = PipelineRun.objects.create(profile=profile, status='PENDING')
     
-    # Orchestrate and start the chain with run ID
+    # 2. PRE-CREATE STEPS (Synchronous)
+    # This guarantees the UI is never empty, even if Celery is slow.
+    if profile.headless:
+        PipelineStepRun.objects.create(pipeline_run=run, step_name="Headless Validator", status='PENDING', logs="Waiting for worker...")
+    if profile.staging:
+        PipelineStepRun.objects.create(pipeline_run=run, step_name="Staging Builder", status='PENDING', logs="Waiting for worker...")
+
+    # 3. Launch Celery
     chain = orchestrate_pipeline(profile.id, run.id)
     if chain:
         result = chain.apply_async()
         run.celery_task_id = result.id
         run.status = 'RUNNING'
         run.save()
-        
         return pipeline_live_monitor(request, run.id)
     else:
         run.status = 'FAILED'
         run.finished_at = timezone.now()
         run.save()
-        return HttpResponse('''
-            <div id="campaign-launcher">
-                <p style="color: #ef4444; padding: 1rem; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 12px;">
-                    Error: No tasks defined for this profile.
-                </p>
-                <button hx-get="/pipelines/campaign-section/" hx-target="#campaign-launcher" hx-swap="outerHTML" style="margin-top: 1rem;" class="reset-button">Back</button>
-            </div>
-        ''')
+        return HttpResponse("Error: No tasks defined.")
 
 def pipeline_live_monitor(request, run_id):
-    """Renders the live monitoring dashboard for a specific run."""
     run = get_object_or_404(PipelineRun, id=run_id)
     steps = run.steps.all().order_by('started_at')
+    
+    # Poll if Running OR if Pending (waiting for worker pick-up)
+    is_active = (run.status in ['RUNNING', 'PENDING'])
     
     return render(request, 'pipelines/live_monitor.html', {
         'run': run,
         'steps': steps,
-        'is_active': run.status == 'RUNNING'
+        'is_active': is_active
     })
 
 def pipeline_live_logs_partial(request, step_id):
-    """HTMX partial to stream logs for a step."""
-    # Ensure we get the step or 404
     step = get_object_or_404(PipelineStepRun, id=step_id)
-    
-    # Default message if empty
     content = step.logs
     if not content:
-        content = f"Waiting for logs... (Step Status: {step.status})"
-        
-    # We strip the style attribute here because the CSS class .log-content-box handles it
-    return HttpResponse(f"<pre style='margin: 0; white-space: pre-wrap;'>{content}</pre>")
+        content = f"Waiting for logs... (Status: {step.status})"
+    else:
+        patterns = [
+            (r'(Error:)', r'<span style="color:#f87171; font-weight:bold;">\1</span>'),
+            (r'(Warning:)', r'<span style="color:#fbbf24; font-weight:bold;">\1</span>'),
+            (r'(SUCCESS:)', r'<span style="color:#4ade80; font-weight:bold;">\1</span>'),
+            (r'(=== EXECUTION CONTEXT ===)', r'<span style="color:#a78bfa; font-weight:bold; display:block; border-bottom: 1px solid #a78bfa; margin-bottom: 10px;">\1</span>'),
+            (r'(Cmd:)', r'<span style="color:#22d3ee; font-weight:bold;">\1</span>'),
+        ]
+        for pattern, replacement in patterns:
+            content = re.sub(pattern, replacement, content)
+
+    return HttpResponse(f"<pre style='margin: 0; white-space: pre-wrap; font-family: monospace;'>{content}</pre>")
 
 @require_POST
 def reset_campaign_view(request):
-    """Force resets the campaign view by marking RUNNING runs as FAILED."""
     PipelineRun.objects.filter(status='RUNNING').update(status='FAILED', finished_at=timezone.now())
     return dashboard_campaign_section(request)
