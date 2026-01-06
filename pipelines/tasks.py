@@ -1,5 +1,6 @@
 import os
 import subprocess
+import json
 import logging
 import time
 import threading
@@ -18,24 +19,85 @@ def get_active_env():
     except ProjectEnvironment.DoesNotExist:
         return None
 
+def parse_ue5_test_report(json_path):
+    """Parses UE5 automation test report and returns a formatted string summary."""
+    if not os.path.exists(json_path):
+        return "\n--- NO TEST REPORT FOUND (Check index.json) ---\n"
+
+    try:
+        with open(json_path, 'r', encoding='utf-8-sig') as f:
+            data = json.load(f)
+    except Exception as e:
+        return f"\n--- ERROR PARSING REPORT: {e} ---\n"
+
+    passed = 0
+    failed = 0
+    tests = data.get('tests', [])
+    
+    output_lines = [
+        "",
+        "=" * 80,
+        " TEST RESULTS SUMMARY",
+        "=" * 80,
+        f"{'TEST NAME':<60} | {'STATUS':<10} | {'TIME (s)':<10}",
+        "-" * 80
+    ]
+
+    for test in tests:
+        full_path = test.get('fullTestPath', 'Unknown')
+        state = test.get('state', 'Unknown')
+        duration = test.get('duration', 0.0)
+        
+        status_str = 'PASS' if state == 'Success' else 'FAIL'
+        if state == 'Success':
+            passed += 1
+        else:
+            failed += 1
+
+        display_path = full_path
+        if len(display_path) > 57:
+            display_path = "..." + display_path[-54:]
+            
+        output_lines.append(f"{display_path:<60} | {status_str:<10} | {duration:.4f}")
+
+        if state != 'Success':
+            entries = test.get('entries', [])
+            for entry in entries:
+                event = entry.get('event')
+                if isinstance(event, dict) and event.get('type') == 'Error':
+                    msg = event.get('message', 'No message provided')
+                    output_lines.append(f"    >>> ERROR: {msg}")
+
+    output_lines.append("-" * 80)
+    output_lines.append(f"TOTAL: {len(tests)}  |  PASSED: {passed}  |  FAILED: {failed}")
+    output_lines.append("=" * 80)
+    output_lines.append("")
+    
+    return "\n".join(output_lines)
+
 def stream_process_with_log_tail(cmd, step, log_file_path):
     """
     Runs a command and streams BOTH stdout and a target log file to the DB.
-    Uses a threaded reader to prevent stdout from blocking the file tail.
     """
-    # 1. Start Process
     print(f"[TASK] Launching: {cmd[0]}")
-    process = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        bufsize=1,
-        encoding='utf-8',
-        errors='replace'
-    )
+    
+    try:
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+            encoding='utf-8',
+            errors='replace'
+        )
+    except FileNotFoundError:
+        if step:
+            step.logs = f"ERROR: Executable not found: {cmd[0]}"
+            step.status = 'FAILED'
+            step.save()
+        return -1
 
-    # 2. Setup Threaded Console Reader (Prevents Blocking)
     console_queue = queue.Queue()
     
     def reader_thread(pipe, q):
@@ -44,36 +106,38 @@ def stream_process_with_log_tail(cmd, step, log_file_path):
                 for line in iter(pipe.readline, ''):
                     q.put(line)
         finally:
-            q.put(None) # Signal end
+            q.put(None)
 
     t = threading.Thread(target=reader_thread, args=(process.stdout, console_queue))
     t.daemon = True
     t.start()
 
-    # 3. Setup File Reader
     log_buffer = []
     file_cursor = 0
-    # If file exists, reset cursor to 0 to catch fresh logs
     if os.path.exists(log_file_path):
         file_cursor = 0 
 
     def flush_logs():
         if log_buffer:
             chunk = "".join(log_buffer)
-            # Append to DB
-            if step.logs:
-                step.logs += chunk
+            # SAFE GUARD: Check if step exists before accessing logs
+            if step:
+                if step.logs:
+                    step.logs += chunk
+                else:
+                    step.logs = chunk
+                step.save()
             else:
-                step.logs = chunk
-            step.save()
+                # Debugging output for headless tests without step tracking
+                print(chunk, end='')
+                
             log_buffer.clear()
 
-    # 4. The Non-Blocking Loop
     print("[TASK] Entering Stream Loop...")
     while True:
         process_alive = (process.poll() is None)
         
-        # A. Drain Console Queue (Non-blocking)
+        # A. Drain Console Queue
         while True:
             try:
                 line = console_queue.get_nowait()
@@ -92,22 +156,21 @@ def stream_process_with_log_tail(cmd, step, log_file_path):
                         log_buffer.append(new_data)
                         file_cursor = f.tell()
             except (PermissionError, OSError):
-                pass # Locked, retry next tick
+                pass
 
-        # C. Save & Wait
         flush_logs()
         
+        # Safe Exit Condition
         if not process_alive and console_queue.empty():
             break
             
-        time.sleep(1.0) # 1s poll is plenty fast for logs
+        time.sleep(1.0)
 
     return process.returncode
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=1)
 def run_headless_tests_task(self, pipeline_run_id=None):
     print(f"[TASK] Headless Task Started for Run {pipeline_run_id}")
-    
     run = None
     step = None
     
@@ -115,7 +178,6 @@ def run_headless_tests_task(self, pipeline_run_id=None):
         try:
             run = PipelineRun.objects.get(id=pipeline_run_id)
         except PipelineRun.DoesNotExist:
-            print("[TASK] Run not found, retrying...")
             return self.retry(exc=PipelineRun.DoesNotExist())
 
         step = PipelineStepRun.objects.create(
@@ -124,7 +186,6 @@ def run_headless_tests_task(self, pipeline_run_id=None):
             status='RUNNING',
             logs="Initializing..."
         )
-        print(f"[TASK] Step Created: {step.id}")
 
     env = get_active_env()
     if not env:
@@ -134,7 +195,6 @@ def run_headless_tests_task(self, pipeline_run_id=None):
             step.save()
         return "FAILED"
 
-    # Paths
     uproject_path = os.path.join(env.project_root, f"{env.project_name}.uproject")
     editor_cmd = os.path.join(env.engine_root, 'Engine', 'Binaries', 'Win64', 'UnrealEditor-Cmd.exe')
     target_log_file = os.path.join(env.project_root, 'Saved', 'Logs', f'{env.project_name}.log')
@@ -143,7 +203,6 @@ def run_headless_tests_task(self, pipeline_run_id=None):
         step.logs = f"--- STARTING HEADLESS VALIDATOR ---\nTarget Log: {target_log_file}\n"
         step.save()
 
-    # Arguments (Note: -NoSplash is key)
     test_args = [
         editor_cmd,
         uproject_path,
@@ -161,19 +220,24 @@ def run_headless_tests_task(self, pipeline_run_id=None):
     
     retcode = stream_process_with_log_tail(test_args, step, target_log_file)
 
+    # --- REPORT PARSING INTEGRATION ---
+    if retcode == 0:
+        report_json = os.path.join(env.project_root, 'Saved', 'Logs', 'index.json')
+        summary = parse_ue5_test_report(report_json)
+        if step:
+            step.logs += summary
+            step.save()
+
     final_status = 'SUCCESS' if retcode == 0 else 'FAILED'
     if step:
         step.status = final_status
         step.finished_at = timezone.now()
         step.save()
         
-    print(f"[TASK] Finished with code {retcode}")
     return f"{final_status}: Code {retcode}"
 
 @shared_task
 def run_staging_build_task(pipeline_run_id=None):
-    # (Simplified for brevity, uses same streamer)
-    print(f"[TASK] Staging Task Started for Run {pipeline_run_id}")
     run = None
     step = None
     if pipeline_run_id:
@@ -198,9 +262,7 @@ def run_staging_build_task(pipeline_run_id=None):
         '-nocompileeditor', '-unattended', '-nopause', '-utf8output'
     ]
     
-    # UAT log is usually in AppData, but we rely on stdout mostly for UAT
     uat_log = os.path.join(os.getenv('APPDATA'), 'Unreal Engine', 'AutomationTool', 'Logs', 'C+Program+Files+Epic+Games+UE_5.6', 'Log.txt')
-    
     retcode = stream_process_with_log_tail(cmd, step, uat_log)
     
     final_status = 'SUCCESS' if retcode == 0 else 'FAILED'
