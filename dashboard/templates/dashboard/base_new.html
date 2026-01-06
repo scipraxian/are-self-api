@@ -129,6 +129,13 @@
     <div class="container">
         <div class="top-actions">
             {% block top_actions %}
+            <a href="{% url 'admin:index' %}" class="btn-secondary" target="_blank">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                Admin
+            </a>
             <button class="btn-secondary" hx-post="{% url 'scan_network' %}" hx-target="#scan-status">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"></circle>
