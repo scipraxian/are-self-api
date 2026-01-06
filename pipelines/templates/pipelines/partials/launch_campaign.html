@@ -1,0 +1,36 @@
+<div id="campaign-launcher"
+    style="background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 2rem; margin-bottom: 2rem;">
+    <h3
+        style="color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.5rem;">
+        Pipeline Orchestrator</h3>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+        {% for profile in profiles %}
+        <button hx-post="{% url 'launch_pipeline' %}" hx-vals='{"profile_id": "{{ profile.id }}"}'
+            hx-target="#campaign-launcher" hx-swap="outerHTML" class="campaign-button">
+            🚀 {{ profile.name }}
+        </button>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .campaign-button {
+        background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4);
+    }
+
+    .campaign-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.5);
+        filter: brightness(1.1);
+    }
+</style>

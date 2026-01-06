@@ -16,7 +16,8 @@ from typing import Any, Dict, Optional
 
 import psutil
 
-from talos_agent.version import VERSION
+# VERSION must be hardcoded for remote agents to prevent import errors during updates.
+VERSION = '2.1.3'
 
 class TalosAgent:
   '''A flexible, socket-based agent for remote UE5 process management.
@@ -171,7 +172,7 @@ class TalosAgent:
           
           # 2. Wait up to 5 seconds
           killed = False
-          for _ in range(5):
+          for _ in range(10):
             if not self._get_proc_by_name(pname):
               killed = True
               break
@@ -211,14 +212,14 @@ class TalosAgent:
                 res['status'] = 'UPDATING'
                 conn.sendall((json.dumps(res) + '\n').encode('utf-8'))
                 conn.close()
-                self.logger.info("Restarting agent...")
-                time.sleep(1)
+                self.logger.info(f"Restarting agent from {target_file} using {sys.executable}...")
                 # On Windows, os.execv can sometimes fail to restart from certain parent processes.
                 # Using Popen with NEW_CONSOLE is more robust for standalone agents.
                 subprocess.Popen(
                     [sys.executable, target_file],
                     creationflags=subprocess.CREATE_NEW_CONSOLE | subprocess.DETACHED_PROCESS
                 )
+                self.logger.info("Child process spawned. Exiting parent.")
             except Exception as e:
                 res['status'] = 'ERROR'
                 res['message'] = str(e)

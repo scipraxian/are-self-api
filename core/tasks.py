@@ -110,49 +110,53 @@ def discover_agent_assets_task(target_id):
         print(f"[DISCOVERY] {err_msg}")
         return err_msg
 
-  # 2. Try to locate the .exe using the specific legacy project structure
-  # Structure: [BuildRoot]/ReleaseTest/[ProjectName].exe
-  sub_paths = [
-      f"ReleaseTest/{pname}.exe",
-      f"{pname}/ReleaseTest/{pname}.exe", 
+  # 2. Strict Path Check based on Environment
+  # The user states: "searching is not required". We assume standard UE structure or direct root.
+  # Primary Candidate: {build_root}/{project_name}.exe (or Windows/{project_name}.exe for standard Staging)
+  
+  # Based on standard UE5 Staging:
+  # [StagingDir]/Windows/[Project].exe
+  # OR if build_root IS the Windows folder:
+  # [BuildRoot]/[Project].exe
+  
+  candidates = [
+      f"ReleaseTest/{pname}.exe",            # Strict User Requirement
+      f"{pname}.exe",                        # Direct in root
+      f"Windows/{pname}.exe",                # Standard Staging
+      f"WindowsNoEditor/{pname}.exe",        # Standard Package
   ]
   
-  print(f"[DISCOVERY] Searching for {pname} executable...")
+  print(f"[DISCOVERY] checking {len(candidates)} strict paths relative to {root}...")
   exe_found = False
-  for sub in sub_paths:
+  
+  for sub in candidates:
     full_path = os.path.join(root, sub).replace('\\', '/')
     probe = client.probe_path(full_path)
     
     if probe.get('data', {}).get('exists') and not probe.get('data', {}).get('is_dir'):
       target.remote_exe_path = full_path
-      
-      # Determine log path based on script 6_Distribute_With_Agent.py
-      # Correct Path: [BuildRoot]/ReleaseTest/[ProjectName]/Saved/Logs/[ProjectName].log
-      log_candidates = [
-          f"{root}/ReleaseTest/{pname}/Saved/Logs/{pname}.log",
-          f"{root}/{pname}/Saved/Logs/{pname}.log",
-          f"{root}/ReleaseTest/{pname}.log",
-          f"{os.path.dirname(full_path)}/Saved/Logs/{pname}.log",
-      ]
-      
-      # Default if none found
-      target.remote_log_path = log_candidates[0]
-      for log_path in log_candidates:
-          lp_probe = client.probe_path(log_path)
-          if lp_probe.get('data', {}).get('exists'):
-              target.remote_log_path = log_path
-              break
-              
       target.is_exe_available = True
-      target.status = 'ONLINE'
+      if target.status != 'ONLINE': target.status = 'ONLINE'
       exe_found = True
-      print(f"[DISCOVERY] SUCCESS: Found {full_path} | Log Path: {target.remote_log_path}")
+      
+      # Strict Logs: Saved/Logs/[Project].log relative to exe or root
+      # If exe is at C:/Build/Windows/Game.exe, logs are usually C:/Build/Windows/Game/Saved/Logs/Game.log
+      exe_dir = os.path.dirname(full_path)
+      log_path = f"{exe_dir}/{pname}/Saved/Logs/{pname}.log"
+      
+      # Fallback: Check root logs if exe-relative missing (though strict implies we should know)
+      if not client.probe_path(log_path).get('data', {}).get('exists'):
+          print(f"[DISCOVERY] Log not found at strict path {log_path}, checking fallback...")
+          log_path = f"{root}/Saved/Logs/{pname}.log"
+      
+      target.remote_log_path = log_path
+      print(f"[DISCOVERY] SUCCESS: Exe: {full_path} | Log: {log_path}")
       break
       
   if not exe_found:
-    target.is_exe_available = False
-    target.status = 'STORAGE_ERROR'
-    print(f"[DISCOVERY] FAILED: No executable found for {pname} at {root}/ReleaseTest/{pname}.exe")
-    
+      target.is_exe_available = False
+      if target.status != 'ONLINE': target.status = 'ONLINE'
+      print(f"[DISCOVERY] INFO: No executable found at expected paths (Root={root}, Project={pname}). Agent is ONLINE.")
+
   target.save()
   return f"Discovery finished for {target.hostname}. Exe Available: {exe_found}"
