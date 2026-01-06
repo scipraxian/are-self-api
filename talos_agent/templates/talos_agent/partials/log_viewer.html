@@ -1,0 +1,16 @@
+<div id="log-stream-container" class="log-viewer" style="margin-top: 2rem;">
+    <div class="log-header">
+        <h3>Live Telemetry Feed: {{ agent.remote_log_path }}</h3>
+        <button onclick="document.getElementById('log-stream-container').remove()" class="btn-close">&times;</button>
+    </div>
+    <div id="log-output" class="log-content" hx-get="{% url 'agent_log_feed' agent.pk %}" hx-trigger="every 2s"
+        hx-swap="innerHTML">
+        <!-- Lines will load here -->
+        <p>Attaching to remote log stream...</p>
+    </div>
+</div>
+
+<script>
+    // Reveal the container if it was hidden
+    document.getElementById('log-stream-container').style.display = 'block';
+</script>

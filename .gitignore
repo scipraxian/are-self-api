@@ -20,7 +20,7 @@ dump.rdb
 
 # --- HSH Builder Specifics (Runtime Data) ---
 # Ignore the active config (keep the template!)
-core/builder_engine/builder_config.json
+# core/builder_engine/builder_config.json
 
 # Ignore runtime status & logs
 core/builder_engine/agent_status.json
@@ -38,3 +38,34 @@ Logs/
 .DS_Store
 Thumbs.db
 _talos_concatenated_source.txt
+core/utils/Legacy/0_5_Headless_Test.py
+core/utils/Legacy/0_Unattended.py
+core/utils/Legacy/1_Staging_Build.py
+core/utils/Legacy/2_Stage_Run.py
+core/utils/Legacy/3_5_VersionStamp.py
+core/utils/Legacy/3_CacheShaders.py
+core/utils/Legacy/4_UAT_Build.py
+core/utils/Legacy/5_UAT_Run.py
+core/utils/Legacy/6_5_FeedTheAI.py
+core/utils/Legacy/6_Distribute_With_Agent.py
+core/utils/Legacy/6_Distribute.py
+core/utils/Legacy/6_Parallel_Distribute.py
+core/utils/Legacy/7_Manager.py
+core/utils/Legacy/8_CleanArtifacts.py
+core/utils/Legacy/9_5_RemoteAgent_Ping_Test.py
+core/utils/Legacy/9_AgentConsole.py
+core/utils/Legacy/9_RemoteAgent.py
+core/utils/Legacy/agent_status.json
+core/utils/Legacy/AgentMonitor.py
+core/utils/Legacy/AgentUtils.py
+core/utils/Legacy/Audit_NavMesh_Actors.py
+core/utils/Legacy/AuditDataLayer.py
+core/utils/Legacy/AuditNanite2.py
+core/utils/Legacy/AuditNaniteSettings.py
+core/utils/Legacy/builder_config.json
+core/utils/Legacy/builder_config.template.json
+core/utils/Legacy/concat_scripts.py
+core/utils/Legacy/log_grokker.py
+core/utils/Legacy/PipelineConfig.py
+core/utils/Legacy/test_version_stamper.py
+core/utils/Legacy/VersionStamper.py

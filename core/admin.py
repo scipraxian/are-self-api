@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import ProjectEnvironment, RemoteTarget, PipelineStage, BuildJob, JobLog
+from .models import RemoteTarget, PipelineStage, BuildJob, JobLog
+from environments.models import ProjectEnvironment
 
 @admin.register(ProjectEnvironment)
 class EnvAdmin(admin.ModelAdmin):

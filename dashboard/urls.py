@@ -1,6 +1,6 @@
 '''URL configuration for the dashboard application.'''
 
-from django.urls import path
+from django.urls import path, include
 
 from dashboard.views import AgentListView
 from dashboard.views import BuildStatusView
@@ -43,4 +43,5 @@ urlpatterns = [
         ShutdownView.as_view(),
         name='shutdown',
     ),
+    path('agent-detail/', include('talos_agent.urls')),
 ]

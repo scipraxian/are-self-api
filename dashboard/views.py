@@ -13,6 +13,7 @@ from config.celery import app as celery_app
 from core.models import RemoteTarget
 from core.tasks import scan_network_task
 from dashboard.tasks import debug_task
+from talos_agent.version import VERSION as SERVER_VERSION
 
 
 class DashboardHomeView(TemplateView):
@@ -22,6 +23,7 @@ class DashboardHomeView(TemplateView):
   def get_context_data(self, **kwargs):
     context = super().get_context_data(**kwargs)
     context['targets'] = RemoteTarget.objects.all()
+    context['server_version'] = SERVER_VERSION
     return context
 
 
@@ -87,7 +89,7 @@ class AgentListView(View):
     return render(
         request,
         'dashboard/partials/agent_list.html',
-        {'targets': targets}
+        {'targets': targets, 'server_version': SERVER_VERSION}
     )
 
 

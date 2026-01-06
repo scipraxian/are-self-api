@@ -11,7 +11,7 @@ cd /d "%~dp0"
 
 :: 1. Start Celery Worker in a new window
 echo Starting Celery Worker...
-start "Talos Worker" cmd /k ".\venv\Scripts\celery -A config worker --loglevel=info --pool=solo"
+start "Talos Worker" cmd /c ".\venv\Scripts\celery -A config worker --loglevel=info --pool=solo"
 
 :: 2. Start Django Server in this window
 echo Starting Django Server...

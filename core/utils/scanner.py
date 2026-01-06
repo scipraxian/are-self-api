@@ -1,6 +1,7 @@
 '''Network scanning utility for detecting Talos build agents.'''
 
 import concurrent.futures
+import json
 import os
 import socket
 
@@ -25,7 +26,7 @@ class NetworkScanner:
       return '127.0.0.'
 
   def check_agent(self, ip):
-    '''Verified if an agent is active and has valid storage access.
+    '''Verifies if an agent is active and has valid storage access.
 
     Returns:
         dict: {'hostname': str, 'ip': str, 'online': bool, 'share_ok': bool}
@@ -38,11 +39,27 @@ class NetworkScanner:
     }
 
     try:
-      # 1. Port Check + PING/PONG
+      # Try modern JSON PING first, fallback to raw if needed (though agent handles both)
       with socket.create_connection((ip, self.port), timeout=self.timeout) as s:
-        s.sendall(b'PING')
-        response = s.recv(4)
-        if response == b'PONG':
+        # Sending modern JSON PING
+        payload = json.dumps({'cmd': 'PING'}).encode('utf-8')
+        s.sendall(payload)
+        
+        raw_response = s.recv(1024).decode('utf-8').strip()
+        
+        # Check for JSON PONG or raw PONG
+        is_pong = False
+        if raw_response == 'PONG':
+          is_pong = True
+        else:
+          try:
+            res_json = json.loads(raw_response)
+            if res_json.get('status') == 'PONG':
+              is_pong = True
+          except json.JSONDecodeError:
+            pass
+
+        if is_pong:
           result['online'] = True
           try:
             result['hostname'] = socket.gethostbyaddr(ip)[0]
@@ -54,6 +71,9 @@ class NetworkScanner:
           if os.path.exists(share_path):
             result['share_ok'] = True
     except (socket.timeout, ConnectionRefusedError, OSError):
+      pass
+    except Exception:
+      # Catch-all for scanner robustness
       pass
 
     return result
@@ -67,8 +87,11 @@ class NetworkScanner:
     with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
       future_to_ip = {executor.submit(self.check_agent, ip): ip for ip in ips}
       for future in concurrent.futures.as_completed(future_to_ip):
-        res = future.result()
-        if res['online']:
-          agents.append(res)
+        try:
+          res = future.result()
+          if res['online']:
+            agents.append(res)
+        except Exception:
+          pass
 
     return agents

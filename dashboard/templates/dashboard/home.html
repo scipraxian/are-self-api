@@ -1,276 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "dashboard/base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Talos Dashboard</title>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            margin: 0;
-            padding: 2rem;
-            overflow-x: hidden;
-            overflow-y: auto;
-        }
+{% block main_content %}
+<h1>Talos Command Center</h1>
 
-        .container {
-            text-align: center;
-            padding: 3rem;
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            position: relative;
-            width: 100%;
-            max-width: 1200px;
-        }
+<div id="build-container">
+    {% include "dashboard/partials/build_button_idle.html" %}
+</div>
 
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 2rem;
-            background: linear-gradient(to right, #60a5fa, #a855f7);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 800;
-        }
+<div class="section-header"
+    style="display: flex; justify-content: space-between; align-items: center; margin-top: 3rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+    <h2
+        style="font-size: 1.5rem; margin: 0; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;">
+        Sonar: Build Agents</h2>
+</div>
 
-        .big-red-button {
-            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-            color: white;
-            border: none;
-            padding: 1.5rem 3rem;
-            font-size: 1.5rem;
-            font-weight: 700;
-            border-radius: 16px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.4), 0 4px 6px -2px rgba(239, 68, 68, 0.2);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            position: relative;
-            overflow: hidden;
-        }
+{% include "dashboard/partials/agent_list.html" %}
+{% endblock %}
 
-        .big-red-button:hover {
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 20px 25px -5px rgba(239, 68, 68, 0.5), 0 10px 10px -5px rgba(239, 68, 68, 0.3);
-            filter: brightness(1.1);
-        }
-
-        .big-red-button:active {
-            transform: translateY(0) scale(0.98);
-        }
-
-        .big-red-button:disabled {
-            background: #475569;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-            filter: grayscale(1);
-        }
-
-        .spinner {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .loading-ring {
-            width: 24px;
-            height: 24px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .top-actions {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            gap: 12px;
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #94a3b8;
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #f8fafc;
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .shutdown-btn:hover {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-            border-color: rgba(239, 68, 68, 0.3);
-        }
-
-        #shutdown-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #0f172a;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            text-align: center;
-        }
-
-        #shutdown-screen h2 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            color: #ef4444;
-        }
-
-        #shutdown-screen p {
-            color: #94a3b8;
-        }
-
-        .scanning-toast {
-            background: rgba(96, 165, 250, 0.1);
-            color: #60a5fa;
-            border: 1px solid rgba(96, 165, 250, 0.3);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            animation: fadeInOut 3s forwards;
-            pointer-events: none;
-        }
-
-        @keyframes fadeInOut {
-            0% {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-
-            10% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-
-            90% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-
-            100% {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 3rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .section-header h2 {
-            font-size: 1.5rem;
-            margin: 0;
-            color: #94a3b8;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        /* CSRF Token Setup for HTMX */
-        body {
-            --htmx-csrf: "{{ csrf_token }}";
-        }
-    </style>
-</head>
-
-<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-    <div id="shutdown-screen">
-        <h2>Talos Offline</h2>
-        <p>The session has been terminated safely.</p>
-        <p style="margin-top: 20px; font-size: 0.8rem;">You may now close this tab.</p>
-    </div>
-
-    <div class="container">
-        <div class="top-actions">
-            <button class="btn-secondary" hx-post="{% url 'scan_network' %}" hx-target="#scan-status"
-                hx-swap="innerHTML">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <path d="M12 2v2"></path>
-                    <path d="M12 20v2"></path>
-                    <path d="M2 12h2"></path>
-                    <path d="M20 12h2"></path>
-                </svg>
-                Scan Network
-            </button>
-            <button class="btn-secondary shutdown-btn" hx-post="{% url 'shutdown' %}"
-                onclick="document.getElementById('shutdown-screen').style.display = 'flex';">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                    <line x1="12" y1="2" x2="12" y2="12"></line>
-                </svg>
-                Exit
-            </button>
-        </div>
-
-        <div id="scan-status" style="position: absolute; top: 70px; right: 20px;"></div>
-
-        <h1>Talos Command Center</h1>
-
-        <div id="build-container">
-            {% include "dashboard/partials/build_button_idle.html" %}
-        </div>
-
-        <div class="section-header">
-            <h2>Sonar: Build Agents</h2>
-        </div>
-
-        {% include "dashboard/partials/agent_list.html" %}
-
-        <div id="indicator" class="htmx-indicator" style="margin-top: 20px; color: #94a3b8;">
-            <div class="spinner">
-                <div class="loading-ring"></div>
-                <span>Communicating...</span>
-            </div>
-        </div>
-    </div>
-</body>
-
-</html>
+{% block extra_style %}
+.big-red-button {
+background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
+color: white !important;
+border: none;
+padding: 1.5rem 3rem;
+font-size: 1.5rem;
+font-weight: 700;
+border-radius: 16px;
+cursor: pointer;
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.4), 0 4px 6px -2px rgba(239, 68, 68, 0.2);
+text-transform: uppercase;
+letter-spacing: 0.05em;
+position: relative;
+overflow: hidden;
+}
+.big-red-button:hover {
+transform: translateY(-4px) scale(1.02);
+box-shadow: 0 20px 25px -5px rgba(239, 68, 68, 0.5), 0 10px 10px -5px rgba(239, 68, 68, 0.3);
+filter: brightness(1.1);
+}
+.big-red-button:active { transform: translateY(0) scale(0.98); }
+.big-red-button:disabled { background: #475569 !important; cursor: not-allowed; transform: none; box-shadow: none;
+filter: grayscale(1); }
+{% endblock %}

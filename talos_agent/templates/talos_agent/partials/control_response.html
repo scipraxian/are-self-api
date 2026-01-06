@@ -1,0 +1,19 @@
+{% if message %}
+<div class="toast-msg success"
+    style="background: rgba(34, 197, 94, 0.2); color: #22c55e; padding: 10px; border-radius: 8px; font-weight: 700;">
+    {{ message }}
+</div>
+{% elif error %}
+<div class="toast-msg error"
+    style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 10px; border-radius: 8px; font-weight: 700;">
+    {{ error }}
+</div>
+{% endif %}
+
+<script>
+    // Auto-remove toast after 3 seconds
+    setTimeout(() => {
+        const toast = document.querySelector('.toast-msg');
+        if (toast) toast.remove();
+    }, 3000);
+</script>
