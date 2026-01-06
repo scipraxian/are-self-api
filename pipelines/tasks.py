@@ -2,6 +2,9 @@ import os
 import subprocess
 import logging
 import time
+import threading
+import queue
+import glob
 from celery import shared_task, chain
 from django.utils import timezone
 from environments.models import ProjectEnvironment
@@ -13,14 +16,15 @@ def get_active_env():
     try:
         return ProjectEnvironment.objects.get(is_active=True)
     except ProjectEnvironment.DoesNotExist:
-        logger.error("No active ProjectEnvironment found.")
         return None
 
 def stream_process_with_log_tail(cmd, step, log_file_path):
     """
-    Runs a command and streams BOTH stdout and a specific target log file 
-    to the database in real-time.
+    Runs a command and streams BOTH stdout and a target log file to the DB.
+    Uses a threaded reader to prevent stdout from blocking the file tail.
     """
+    # 1. Start Process
+    print(f"[TASK] Launching: {cmd[0]}")
     process = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
@@ -31,37 +35,54 @@ def stream_process_with_log_tail(cmd, step, log_file_path):
         errors='replace'
     )
 
+    # 2. Setup Threaded Console Reader (Prevents Blocking)
+    console_queue = queue.Queue()
+    
+    def reader_thread(pipe, q):
+        try:
+            with pipe:
+                for line in iter(pipe.readline, ''):
+                    q.put(line)
+        finally:
+            q.put(None) # Signal end
+
+    t = threading.Thread(target=reader_thread, args=(process.stdout, console_queue))
+    t.daemon = True
+    t.start()
+
+    # 3. Setup File Reader
     log_buffer = []
     file_cursor = 0
-    
-    # If the file exists from a previous run, start at the END to avoid duplicating old logs
-    # UNLESS the file is smaller than before (new run overwrote it), then start at 0.
+    # If file exists, reset cursor to 0 to catch fresh logs
     if os.path.exists(log_file_path):
-        file_cursor = 0 # Unreal overwrites on start, so we start at 0 to catch the new header
-    
+        file_cursor = 0 
+
     def flush_logs():
         if log_buffer:
-            current_text = "".join(log_buffer)
+            chunk = "".join(log_buffer)
+            # Append to DB
             if step.logs:
-                step.logs += current_text
+                step.logs += chunk
             else:
-                step.logs = current_text
+                step.logs = chunk
             step.save()
             log_buffer.clear()
 
+    # 4. The Non-Blocking Loop
+    print("[TASK] Entering Stream Loop...")
     while True:
-        retcode = process.poll()
+        process_alive = (process.poll() is None)
         
-        # 1. Read Console (Launcher)
-        try:
-            # Non-blocking check for stdout
-            lines = process.stdout.readline()
-            if lines:
-                log_buffer.append(lines)
-        except Exception:
-            pass
-            
-        # 2. Read Game Log (HSHVacancy.log)
+        # A. Drain Console Queue (Non-blocking)
+        while True:
+            try:
+                line = console_queue.get_nowait()
+                if line is None: break 
+                log_buffer.append(line)
+            except queue.Empty:
+                break
+        
+        # B. Read Game Log File
         if os.path.exists(log_file_path):
             try:
                 with open(log_file_path, 'r', encoding='utf-8', errors='replace') as f:
@@ -71,23 +92,22 @@ def stream_process_with_log_tail(cmd, step, log_file_path):
                         log_buffer.append(new_data)
                         file_cursor = f.tell()
             except (PermissionError, OSError):
-                pass # File locked by UE5, skip this tick
-        
+                pass # Locked, retry next tick
+
+        # C. Save & Wait
         flush_logs()
-
-        if retcode is not None:
-            # Final sweep
-            remaining = process.stdout.read()
-            if remaining: log_buffer.append(remaining)
-            flush_logs()
-            break
         
-        time.sleep(0.5)
+        if not process_alive and console_queue.empty():
+            break
+            
+        time.sleep(1.0) # 1s poll is plenty fast for logs
 
-    return retcode
+    return process.returncode
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=1)
 def run_headless_tests_task(self, pipeline_run_id=None):
+    print(f"[TASK] Headless Task Started for Run {pipeline_run_id}")
+    
     run = None
     step = None
     
@@ -95,33 +115,35 @@ def run_headless_tests_task(self, pipeline_run_id=None):
         try:
             run = PipelineRun.objects.get(id=pipeline_run_id)
         except PipelineRun.DoesNotExist:
+            print("[TASK] Run not found, retrying...")
             return self.retry(exc=PipelineRun.DoesNotExist())
 
         step = PipelineStepRun.objects.create(
             pipeline_run=run,
             step_name="Headless Validator",
-            status='RUNNING'
+            status='RUNNING',
+            logs="Initializing..."
         )
+        print(f"[TASK] Step Created: {step.id}")
 
     env = get_active_env()
     if not env:
-        if step:
-            step.status = 'FAILED'
-            step.logs = "No Active Environment"
+        if step: 
+            step.status='FAILED'
+            step.logs="No Active Environment Found"
             step.save()
         return "FAILED"
 
+    # Paths
     uproject_path = os.path.join(env.project_root, f"{env.project_name}.uproject")
     editor_cmd = os.path.join(env.engine_root, 'Engine', 'Binaries', 'Win64', 'UnrealEditor-Cmd.exe')
-    
-    # --- LOG PATH LOGIC ---
-    # Target: .../Saved/Logs/HSHVacancy.log
     target_log_file = os.path.join(env.project_root, 'Saved', 'Logs', f'{env.project_name}.log')
 
     if step:
-        step.logs = f"--- ORCHESTRATOR START ---\nTarget Log: {target_log_file}\n"
+        step.logs = f"--- STARTING HEADLESS VALIDATOR ---\nTarget Log: {target_log_file}\n"
         step.save()
 
+    # Arguments (Note: -NoSplash is key)
     test_args = [
         editor_cmd,
         uproject_path,
@@ -129,6 +151,9 @@ def run_headless_tests_task(self, pipeline_run_id=None):
         '-nullrhi',
         '-unattended',
         '-nopause',
+        '-nosplash',
+        '-stdout', 
+        '-FullStdOutLogOutput',
         '-CustomConfig=Staging',
         '-ExecCmds=Automation RunTests HSH.Tests; Quit',
         '-TestExit=Automation Test Queue Empty',
@@ -136,38 +161,27 @@ def run_headless_tests_task(self, pipeline_run_id=None):
     
     retcode = stream_process_with_log_tail(test_args, step, target_log_file)
 
-    if retcode != 0:
-        if step:
-            step.status = 'FAILED'
-            step.finished_at = timezone.now()
-            step.save()
-        return f"FAILED: Code {retcode}"
-    
+    final_status = 'SUCCESS' if retcode == 0 else 'FAILED'
     if step:
-        step.status = 'SUCCESS'
+        step.status = final_status
         step.finished_at = timezone.now()
         step.save()
-    return "SUCCESS"
+        
+    print(f"[TASK] Finished with code {retcode}")
+    return f"{final_status}: Code {retcode}"
 
 @shared_task
 def run_staging_build_task(pipeline_run_id=None):
-    # Same pattern for Staging, but target UAT log if desired
-    # For now, standard implementation
+    # (Simplified for brevity, uses same streamer)
+    print(f"[TASK] Staging Task Started for Run {pipeline_run_id}")
     run = None
     step = None
     if pipeline_run_id:
-        run = PipelineRun.objects.get(id=pipeline_run_id)
-        step = PipelineStepRun.objects.create(
-            pipeline_run=run,
-            step_name="Staging Builder",
-            status='RUNNING'
-        )
+        try: run = PipelineRun.objects.get(id=pipeline_run_id)
+        except: return None
+        step = PipelineStepRun.objects.create(pipeline_run=run, step_name="Staging Builder", status='RUNNING', logs="Initializing Build...")
 
     env = get_active_env()
-    if not env: 
-        if step: step.status='FAILED'; step.save()
-        return "FAILED"
-
     uproject_path = os.path.join(env.project_root, f"{env.project_name}.uproject")
     uat_batch = os.path.join(env.engine_root, 'Engine', 'Build', 'BatchFiles', 'RunUAT.bat')
     staging_dir = env.staging_dir or os.path.join(env.build_root, 'Staging')
@@ -179,49 +193,25 @@ def run_staging_build_task(pipeline_run_id=None):
         '-platform=Win64',
         '-clientconfig=Development',
         '-serverconfig=Development',
-        '-build',
-        '-cook',
-        '-stage',
-        '-pak',
+        '-build', '-cook', '-stage', '-pak',
         f'-stagingdirectory={staging_dir}',
-        '-nocompileeditor',
-        '-unattended',
-        '-nopause',
-        '-utf8output'
+        '-nocompileeditor', '-unattended', '-nopause', '-utf8output'
     ]
     
-    # We can also stream this one simply
-    # For UAT, the log is usually stdout, so we just capture stdout
-    process = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, shell=True
-    )
+    # UAT log is usually in AppData, but we rely on stdout mostly for UAT
+    uat_log = os.path.join(os.getenv('APPDATA'), 'Unreal Engine', 'AutomationTool', 'Logs', 'C+Program+Files+Epic+Games+UE_5.6', 'Log.txt')
     
-    while True:
-        output = process.stdout.readline()
-        if output == '' and process.poll() is not None:
-            break
-        if output and step:
-            step.logs += output
-            # Throttle saves slightly to avoid DB locking
-            # (In production, use Redis cache for this buffer)
-            step.save()
-            
-    if process.poll() != 0:
-        if step:
-            step.status = 'FAILED'
-            step.finished_at = timezone.now()
-            step.save()
-        return "FAILED"
+    retcode = stream_process_with_log_tail(cmd, step, uat_log)
     
+    final_status = 'SUCCESS' if retcode == 0 else 'FAILED'
     if step:
-        step.status = 'SUCCESS'
+        step.status = final_status
         step.finished_at = timezone.now()
         step.save()
-    return "SUCCESS"
+    return final_status
 
 @shared_task
 def finalize_pipeline_run(pipeline_run_id):
-    logger.info(f"Finalizing PipelineRun {pipeline_run_id}")
     try:
         run = PipelineRun.objects.get(id=pipeline_run_id)
         all_success = all(s.status == 'SUCCESS' for s in run.steps.all())
@@ -235,17 +225,8 @@ def finalize_pipeline_run(pipeline_run_id):
 def orchestrate_pipeline(profile_id, run_id=None):
     profile = BuildProfile.objects.get(id=profile_id)
     tasks = []
-
-    if profile.headless:
-        tasks.append(run_headless_tests_task.si(run_id))
-
-    if profile.staging:
-        tasks.append(run_staging_build_task.si(run_id))
-
-    if not tasks:
-        return None
-
-    if run_id:
-        return chain(*tasks, finalize_pipeline_run.si(run_id))
-    
+    if profile.headless: tasks.append(run_headless_tests_task.si(run_id))
+    if profile.staging: tasks.append(run_staging_build_task.si(run_id))
+    if not tasks: return None
+    if run_id: return chain(*tasks, finalize_pipeline_run.si(run_id))
     return chain(*tasks)
