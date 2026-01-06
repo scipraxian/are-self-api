@@ -82,6 +82,10 @@ python talos_agent/bin/agent_service.py
 *   **No Placeholders:** If it's in the code, it's functional.
 *   **Single-Line Tags:** Django template tags are kept elegant and single-line to prevent rendering artifacts.
 *   **Async First:** No blocking `time.sleep` calls in the UI thread—everything flows through Celery.
+*   **Test Driven:** If you change logic and no test fails, you have violated the mission.
+*   **UI and Unit Tests:** Everything must be tested, including the UI. No implementations without matching tests.
+
+NOTE: The token '&&' is not a valid statement separator in this version. Once command per line here.
 
 ---
 *Built for the future of game development by the Talos Engineering Team.*
