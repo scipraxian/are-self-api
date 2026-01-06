@@ -95,22 +95,43 @@ def agent_kill_view(request, pk):
   return render(request, 'talos_agent/partials/control_response.html', {'error': f'Process {pname} kill failed: {res.get("message")}'})
 
 def agent_logs_view(request, pk):
-  '''Returns the log viewer container partial.'''
+  '''Returns the log viewer container partial with log list.'''
   agent = get_object_or_404(RemoteTarget, pk=pk)
-  return render(request, 'talos_agent/partials/log_viewer.html', {'agent': agent})
+  logs = []
+  
+  if agent.remote_log_path:
+    log_dir = os.path.dirname(agent.remote_log_path)
+    client = TalosAgentClient(agent.ip_address, port=agent.agent_port)
+    res = client.list_logs(log_dir)
+    if res.get('status') == 'OK':
+      logs = res.get('data', [])
+      logs.reverse() # Newest first usually
+      
+  return render(request, 'talos_agent/partials/log_viewer.html', {
+      'agent': agent,
+      'logs': logs,
+      'current_log': os.path.basename(agent.remote_log_path) if agent.remote_log_path else None
+  })
 
 def agent_log_feed_view(request, pk):
   '''Returns the actual log lines tail.'''
   agent = get_object_or_404(RemoteTarget, pk=pk)
-  if not agent.remote_log_path:
+  log_file = request.GET.get('log_file')
+  
+  target_log = agent.remote_log_path
+  if log_file and agent.remote_log_path:
+    log_dir = os.path.dirname(agent.remote_log_path)
+    target_log = os.path.join(log_dir, log_file)
+
+  if not target_log:
     return render(request, 'talos_agent/partials/log_lines.html', {'lines': ['Log path not discovered yet.']})
     
   client = TalosAgentClient(agent.ip_address, port=agent.agent_port)
-  res = client.tail(agent.remote_log_path, lines=100)
+  res = client.tail(target_log, lines=100)
   
   lines = res.get('data', [])
   if res.get('status') == 'NOT_FOUND':
-    lines = [f"Log file not found at expected location: {agent.remote_log_path}"]
+    lines = [f"Log file not found at expected location: {target_log}"]
     
   return render(request, 'talos_agent/partials/log_lines.html', {'lines': lines})
 
@@ -133,7 +154,7 @@ def agent_update_view(request, pk):
   res = client.update_agent(content)
   
   if res.get('status') == 'UPDATING':
-     AgentEvent.objects.create(target=agent, event_type='UPDATE', message="Agent updating self to v2.1.2.")
+     AgentEvent.objects.create(target=agent, event_type='UPDATE', message="Agent updating self to v2.1.3.")
      return render(request, 'talos_agent/partials/control_response.html', {'message': 'Update sent! Agent restarting...'})
   
   return render(request, 'talos_agent/partials/control_response.html', {'error': res.get('message', 'Update failed')})

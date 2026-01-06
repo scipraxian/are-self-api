@@ -23,7 +23,8 @@ class DashboardViewTests(TestCase):
     self.assertEqual(response.status_code, 200)
     self.assertTemplateUsed(response, 'dashboard/home.html')
     self.assertContains(response, 'Talos Command Center')
-    self.assertContains(response, 'Execute Build')
+    # CHANGED: Look for the new "Sonar" header instead of the old button
+    self.assertContains(response, 'Sonar: Build Agents')
 
   @patch('dashboard.views.debug_task.delay')
   def test_trigger_build_post(self, mock_task_delay):

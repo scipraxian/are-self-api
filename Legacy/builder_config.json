@@ -1,0 +1,18 @@
+{
+    "ProjectName": "HSHVacancy",
+    "ProjectRoot": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy",
+    "EngineRoot": "C:\\Program Files\\Epic Games\\UE_5.6",
+    "BuildRoot": "C:\\steambuild",
+    "StagingDir": "C:\\steambuild\\StagingBuffer",
+    "AgentPort": 5005,
+    "RemoteTargets": [
+        {
+            "name": "DREWDESK01",
+            "path": "\\\\DREWDESK01\\steambuild"
+        },
+        {
+            "name": "MIKE-DESKTOP-1",
+            "path": "\\\\MIKE-DESKTOP-1\\steambuild"
+        }
+    ]
+}

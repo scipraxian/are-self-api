@@ -7,12 +7,19 @@ from pipelines.tasks import orchestrate_pipeline
 
 def dashboard_campaign_section(request):
     """View to render the campaign section on the dashboard."""
+    # 1. Check for Active Run (Redirect to Monitor if running)
     active_run = PipelineRun.objects.filter(status='RUNNING').first()
     if active_run:
         return pipeline_live_monitor(request, active_run.id)
+
+    # 2. Fetch Data (Simple & Direct)
+    profiles = BuildProfile.objects.all().order_by('name')
+    recent_runs = PipelineRun.objects.order_by('-created_at')[:5]
     
-    profiles = BuildProfile.objects.all()
-    return render(request, 'pipelines/partials/launch_campaign.html', {'profiles': profiles})
+    return render(request, 'pipelines/partials/launch_campaign.html', {
+        'profiles': profiles,
+        'recent_runs': recent_runs
+    })
 
 @require_POST
 def launch_pipeline(request):
@@ -31,16 +38,19 @@ def launch_pipeline(request):
         run.status = 'RUNNING'
         run.save()
         
-        return HttpResponse(f"""
-            <div id="campaign-launcher" hx-get="/pipelines/monitor/{run.id}/" hx-trigger="load" hx-swap="outerHTML">
-                <!-- Redirecting to Monitor... -->
-            </div>
-        """)
+        return pipeline_live_monitor(request, run.id)
     else:
         run.status = 'FAILED'
         run.finished_at = timezone.now()
         run.save()
-        return HttpResponse("<p style='color: #ef4444;'>Error: No tasks in profile.</p>")
+        return HttpResponse('''
+            <div id="campaign-launcher">
+                <p style="color: #ef4444; padding: 1rem; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 12px;">
+                    Error: No tasks defined for this profile.
+                </p>
+                <button hx-get="/pipelines/campaign-section/" hx-target="#campaign-launcher" hx-swap="outerHTML" style="margin-top: 1rem;" class="reset-button">Back</button>
+            </div>
+        ''')
 
 def pipeline_live_monitor(request, run_id):
     """Renders the live monitoring dashboard for a specific run."""
@@ -55,8 +65,16 @@ def pipeline_live_monitor(request, run_id):
 
 def pipeline_live_logs_partial(request, step_id):
     """HTMX partial to stream logs for a step."""
+    # Ensure we get the step or 404
     step = get_object_or_404(PipelineStepRun, id=step_id)
-    return HttpResponse(f"<pre style='color: #94a3b8; font-family: monospace; font-size: 0.85rem; line-height: 1.4; white-space: pre-wrap;'>{step.logs}</pre>")
+    
+    # Default message if empty
+    content = step.logs
+    if not content:
+        content = f"Waiting for logs... (Step Status: {step.status})"
+        
+    # We strip the style attribute here because the CSS class .log-content-box handles it
+    return HttpResponse(f"<pre style='margin: 0; white-space: pre-wrap;'>{content}</pre>")
 
 @require_POST
 def reset_campaign_view(request):

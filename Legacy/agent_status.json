@@ -1,0 +1,14 @@
+{
+    "DREWDESK01": {
+        "last_seen": "08:57:51",
+        "online": true,
+        "share_ok": true,
+        "agent_ok": false
+    },
+    "MIKE-DESKTOP-1": {
+        "last_seen": "08:57:51",
+        "online": true,
+        "share_ok": true,
+        "agent_ok": true
+    }
+}

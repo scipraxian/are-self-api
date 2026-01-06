@@ -3,13 +3,11 @@
 {% block main_content %}
 <h1>Talos Command Center</h1>
 
-<div id="build-container">
-    {% include "dashboard/partials/build_button_idle.html" %}
-</div>
 
 <div hx-get="{% url 'dashboard_campaign_section' %}" hx-trigger="load" hx-swap="outerHTML">
     <!-- Campaign Orchestrator loads here -->
 </div>
+
 
 <div class="section-header"
     style="display: flex; justify-content: space-between; align-items: center; margin-top: 3rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">

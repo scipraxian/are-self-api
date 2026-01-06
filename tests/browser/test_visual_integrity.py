@@ -15,6 +15,8 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 class VisualIntegrityTests(StaticLiveServerTestCase):
     def setUp(self):
         ProjectEnvironment.objects.create(name="ProjectX", is_active=True)
+        from pipelines.models import BuildProfile
+        BuildProfile.objects.create(name="Fast Validate", headless=True)
         self.agent = RemoteTarget.objects.create(
             hostname="ColorTestAgent",
             ip_address="127.0.0.1",

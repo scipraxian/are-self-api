@@ -33,6 +33,25 @@ class PipelineUITest(StaticLiveServerTestCase):
             self.playwright.stop()
         super().tearDown()
 
+    def test_monitor_interaction(self):
+        """Verify that clicking a step row exposes the log container."""
+        # This is a duplicate of test_pipeline_step_click_shows_logs but matches the specific task requirement
+        self.playwright = sync_playwright().start()
+        self.browser = self.playwright.chromium.launch(headless=True)
+        page = self.browser.new_page()
+        monitor_url = f"{self.live_server_url}/pipelines/monitor/{self.run.id}/"
+        page.goto(monitor_url)
+        
+        # Click the row
+        page.locator("tr.step-row").first.click()
+        
+        # Wait for the log container to be visible
+        # We check for the class as requested by the task 'exposes the #log-container element'
+        # but since IDs must be unique per step, we use the class or a pattern.
+        log_container = page.locator(".log-container").first
+        log_container.wait_for(state="visible", timeout=2000)
+        self.assertTrue(log_container.is_visible(), "Log container was not exposed after click")
+
     def test_pipeline_step_click_shows_logs(self):
         self.playwright = sync_playwright().start()
         # Launch browser in headless mode but can switch to headless=False for debugging

@@ -1,10 +1,22 @@
 <div id="log-stream-container" class="log-viewer" style="margin-top: 2rem;">
-    <div class="log-header">
-        <h3>Live Telemetry Feed: {{ agent.remote_log_path }}</h3>
-        <button onclick="document.getElementById('log-stream-container').remove()" class="btn-close">&times;</button>
+    <div class="log-header"
+        style="display: flex; justify-content: space-between; align-items: center; background: rgba(30, 41, 59, 0.8); padding: 1rem; border-radius: 12px 12px 0 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <h3 style="margin: 0;">Log Feed</h3>
+            <select name="log_file" hx-get="{% url 'agent_log_feed' agent.pk %}" hx-target="#log-output"
+                hx-trigger="change"
+                style="background: #0f172a; color: #f8fafc; border: 1px solid #334155; padding: 4px 8px; border-radius: 6px; font-size: 0.85rem;">
+                {% for log in logs %}
+                <option value="{{ log }}" {% if log==current_log %}selected{% endif %}>{{ log }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button onclick="document.getElementById('log-stream-container').remove()" class="btn-close"
+            style="background: transparent; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer;">&times;</button>
     </div>
     <div id="log-output" class="log-content" hx-get="{% url 'agent_log_feed' agent.pk %}" hx-trigger="every 2s"
-        hx-swap="innerHTML">
+        hx-include="[name='log_file']" hx-swap="innerHTML"
+        style="background: #0f172a; padding: 1.5rem; border-radius: 0 0 12px 12px; border: 1px solid rgba(255,255,255,0.05); font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.85rem; max-height: 500px; overflow-y: auto; color: #cbd5e1; line-height: 1.5;">
         <!-- Lines will load here -->
         <p>Attaching to remote log stream...</p>
     </div>

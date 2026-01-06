@@ -66,6 +66,9 @@ class TalosAgentClient:
   def tail(self, log_path: str, lines: int = 50) -> dict:
     return self._send_command('TAIL', {'log_path': log_path, 'lines': lines})
 
+  def list_logs(self, log_dir: str) -> dict:
+    return self._send_command('LIST_LOGS', {'log_dir': log_dir})
+
   def update_agent(self, content: str) -> dict:
     '''Transmits new source code to the agent.'''
     return self._send_command('UPDATE_SELF', {'content': content})

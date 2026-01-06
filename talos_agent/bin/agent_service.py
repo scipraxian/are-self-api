@@ -17,7 +17,7 @@ from typing import Any, Dict, Optional
 import psutil
 
 # VERSION must be hardcoded for remote agents to prevent import errors during updates.
-VERSION = '2.1.3'
+VERSION = '2.1.4'
 
 class TalosAgent:
   '''A flexible, socket-based agent for remote UE5 process management.
@@ -114,6 +114,20 @@ class TalosAgent:
 
       elif cmd == 'PROBE':
         res['data'] = self._probe_path(args.get('path'))
+
+      elif cmd == 'LIST_LOGS':
+        log_dir = args.get('log_dir')
+        if not log_dir or not os.path.exists(log_dir):
+          res['status'] = 'ERROR'
+          res['message'] = f'Log directory not found: {log_dir}'
+        else:
+          try:
+            logs = [f for f in os.listdir(log_dir) if f.endswith('.log')]
+            logs.sort() # Newest might be better, but sort for now
+            res['data'] = logs
+          except Exception as e:
+            res['status'] = 'ERROR'
+            res['message'] = str(e)
 
       elif cmd == 'STATUS':
         pname = args.get('process_name')
@@ -212,14 +226,28 @@ class TalosAgent:
                 res['status'] = 'UPDATING'
                 conn.sendall((json.dumps(res) + '\n').encode('utf-8'))
                 conn.close()
-                self.logger.info(f"Restarting agent from {target_file} using {sys.executable}...")
-                # On Windows, os.execv can sometimes fail to restart from certain parent processes.
-                # Using Popen with NEW_CONSOLE is more robust for standalone agents.
+                # Phoenix Fix: Write a restart batch file to handle the process swap
+                bat_path = os.path.join(os.path.dirname(target_file), "_restart.bat")
+                with open(bat_path, 'w') as f:
+                    f.write("@echo off\n")
+                    f.write('cd /d "%~dp0"\n')
+                    f.write("timeout /t 2\n")
+                    
+                    # CHANGED: Use specific sys.executable path instead of generic 'python'
+                    f.write(f'"{sys.executable}" "{target_file}"\n')
+                    
+                    f.write("echo Agent Restarted. Press any key to close this debugger.\n")
+                    # Keep pause for now to debug, remove later if stable
+                    f.write("pause\n") 
+                    f.write("del %0\n")
+                
+                self.logger.info(f"Restarting via {bat_path}...")
                 subprocess.Popen(
-                    [sys.executable, target_file],
+                    [bat_path],
+                    shell=True,
                     creationflags=subprocess.CREATE_NEW_CONSOLE | subprocess.DETACHED_PROCESS
                 )
-                self.logger.info("Child process spawned. Exiting parent.")
+                self.logger.info("Restart batch spawned. Exiting.")
             except Exception as e:
                 res['status'] = 'ERROR'
                 res['message'] = str(e)

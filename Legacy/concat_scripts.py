@@ -8,29 +8,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-OUTPUT_FILENAME = '_talos_concatenated_source.txt'
-# Common directories to exclude to reduce noise and processing time
-IGNORED_DIRS = {'venv', '.git', '__pycache__', '.idea', '.vscode', 'Binaries', 'Intermediate'}
+OUTPUT_FILENAME = '_hsh_concatenated_source.txt'
 
 
 def main():
-    """Concatenates .py files recursively, pruning specific directories."""
+    """Concatenates all .py files in the tree into a single text file."""
     cwd = os.getcwd()
     logger.info(f'Starting concatenation in: {cwd}')
-    logger.info(f'Ignoring directories: {IGNORED_DIRS}')
 
     try:
         with open(OUTPUT_FILENAME, 'w', encoding='utf-8') as outfile:
             file_count = 0
             
-            for root, dirs, files in os.walk(cwd):
-                # Modify dirs in-place to prevent os.walk from entering ignored directories
-                # This is more efficient than checking paths inside the loop
-                dirs[:] = [d for d in dirs if d not in IGNORED_DIRS]
-
+            for root, _, files in os.walk(cwd):
                 for file in files:
-                    # Ignore this script itself to prevent recursion in output
-                    if (file.endswith('.py') or file.endswith('.html')) and file != os.path.basename(__file__):
+                    if file.endswith('.py') and file != os.path.basename(__file__):
                         file_path = os.path.join(root, file)
                         
                         # Create a header for each file for readability
