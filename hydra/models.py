@@ -1,4 +1,5 @@
 """Hydra Data Models."""
+from common.models import DescriptionMixin
 from django.db import models
 from environments.models import ProjectEnvironment
 from common.models import (DefaultFieldsMixin, UUIDIdMixin, BigIdMixin,
@@ -64,7 +65,7 @@ class HydraSpellOutcomeConfig(DefaultFieldsMixin):
     pass
 
 
-class HydraSpellbook(DefaultFieldsMixin):
+class HydraSpellbook(DefaultFieldsMixin, DescriptionMixin):
     """
     An ordered collection of Spells.
     """

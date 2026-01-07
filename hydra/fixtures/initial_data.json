@@ -2,71 +2,285 @@
     {
         "model": "hydra.hydraheadstatus",
         "pk": 1,
-        "fields": {
-            "name": "Created"
-        }
+        "fields": { "name": "Created" }
     },
     {
         "model": "hydra.hydraheadstatus",
         "pk": 2,
-        "fields": {
-            "name": "Pending"
-        }
+        "fields": { "name": "Pending" }
     },
     {
         "model": "hydra.hydraheadstatus",
         "pk": 3,
-        "fields": {
-            "name": "Running"
-        }
+        "fields": { "name": "Running" }
     },
     {
         "model": "hydra.hydraheadstatus",
         "pk": 4,
-        "fields": {
-            "name": "Success"
-        }
+        "fields": { "name": "Success" }
     },
     {
         "model": "hydra.hydraheadstatus",
         "pk": 5,
-        "fields": {
-            "name": "Failed"
-        }
+        "fields": { "name": "Failed" }
     },
     {
         "model": "hydra.hydraspawnstatus",
         "pk": 1,
-        "fields": {
-            "name": "Created"
-        }
+        "fields": { "name": "Created" }
     },
     {
         "model": "hydra.hydraspawnstatus",
         "pk": 2,
-        "fields": {
-            "name": "Pending"
-        }
+        "fields": { "name": "Pending" }
     },
     {
         "model": "hydra.hydraspawnstatus",
         "pk": 3,
-        "fields": {
-            "name": "Running"
-        }
+        "fields": { "name": "Running" }
     },
     {
         "model": "hydra.hydraspawnstatus",
         "pk": 4,
-        "fields": {
-            "name": "Success"
-        }
+        "fields": { "name": "Success" }
     },
     {
         "model": "hydra.hydraspawnstatus",
         "pk": 5,
+        "fields": { "name": "Failed" }
+    },
+    {
+        "model": "hydra.hydraexecutable",
+        "pk": 1,
         "fields": {
-            "name": "Failed"
+            "name": "Unreal Editor (Cmd)",
+            "slug": "ue_cmd",
+            "path_template": "{engine_root}/Engine/Binaries/Win64/UnrealEditor-Cmd.exe",
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraexecutable",
+        "pk": 2,
+        "fields": {
+            "name": "Unreal Automation Tool",
+            "slug": "uat",
+            "path_template": "{engine_root}/Engine/Build/BatchFiles/RunUAT.bat",
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraexecutable",
+        "pk": 3,
+        "fields": {
+            "name": "Staged Game Executable",
+            "slug": "game_exe",
+            "path_template": "{staging_dir}/Windows/{project_name}.exe",
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 1,
+        "fields": {
+            "name": "UProject Path",
+            "executable": 1,
+            "flag": "",
+            "value": "{project_root}/{project_name}.uproject",
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 2,
+        "fields": {
+            "name": "Log Flag",
+            "executable": 1,
+            "flag": "-log",
+            "value": "",
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 3,
+        "fields": {
+            "name": "Unattended",
+            "executable": 1,
+            "flag": "-unattended",
+            "value": "",
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 4,
+        "fields": {
+            "name": "Exec Automation Tests",
+            "executable": 1,
+            "flag": "-ExecCmds=",
+            "value": "Automation RunTests HSH.Tests;Quit",
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 5,
+        "fields": {
+            "name": "Null RHI (Headless)",
+            "executable": 1,
+            "flag": "-nullrhi",
+            "value": "",
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 10,
+        "fields": {
+            "name": "Command: BuildCookRun",
+            "executable": 2,
+            "flag": "BuildCookRun",
+            "value": "",
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 11,
+        "fields": {
+            "name": "Project Flag",
+            "executable": 2,
+            "flag": "-project=",
+            "value": "{project_root}/{project_name}.uproject",
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 12,
+        "fields": {
+            "name": "Platform Win64",
+            "executable": 2,
+            "flag": "-platform=Win64",
+            "value": "",
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 13,
+        "fields": {
+            "name": "Staging Directory",
+            "executable": 2,
+            "flag": "-stagingdirectory=",
+            "value": "{staging_dir}",
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 14,
+        "fields": {
+            "name": "Build Cook Stage Pak",
+            "executable": 2,
+            "flag": "-build -cook -stage -pak",
+            "value": "",
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 20,
+        "fields": {
+            "name": "Log PSO",
+            "executable": 3,
+            "flag": "-logPSO",
+            "value": "",
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 21,
+        "fields": {
+            "name": "Windowed 720p",
+            "executable": 3,
+            "flag": "-windowed -resX=1280 -resY=720",
+            "value": "",
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraspell",
+        "pk": 1,
+        "fields": {
+            "name": "Gatekeeper: Headless Unit Tests",
+            "executable": 1,
+            "active_switches": [1, 2, 3, 4, 5],
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraspell",
+        "pk": 2,
+        "fields": {
+            "name": "Staging: Build Game",
+            "executable": 2,
+            "active_switches": [10, 11, 12, 13, 14],
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraspell",
+        "pk": 3,
+        "fields": {
+            "name": "Staging: Record PSOs",
+            "executable": 3,
+            "active_switches": [20, 21],
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraspellbook",
+        "pk": 1,
+        "fields": {
+            "name": "Legacy Full Pipeline",
+            "description": "The original 7_Manager.py workflow",
+            "spells": [1, 2, 3],
+            "outcomes": [],
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraspellbook",
+        "pk": 2,
+        "fields": {
+            "name": "Fast Validate",
+            "description": "Headless Test + Staging Build only",
+            "spells": [1, 2],
+            "outcomes": [],
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
         }
     }
 ]
