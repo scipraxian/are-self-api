@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'daphne',
     'channels',
     'core',
+    'common',
     'dashboard',
     'talos_agent',
     'celery',
