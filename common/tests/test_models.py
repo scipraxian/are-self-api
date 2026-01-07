@@ -5,8 +5,10 @@ from django.test import TestCase
 
 from common import constants
 from common.models import (CreatedMixin, DefaultFieldsMixin, DescriptionMixin,
-                           ModifiedMixin, NameMixin, CreatedByMixin)
-
+                           ModifiedMixin, NameMixin, CreatedByMixin,
+                           ModifiedByMixin, UUIDIdMixin, BigIdMixin,
+                           CreatedAndModifiedBy,
+                           DjangoAdminReverseRequirementsMixin)
 
 # pylint: disable=invalid-name
 
@@ -113,3 +115,67 @@ class CommonMixinTests(TestCase):  # pylint: disable=too-many-public-methods
         self.assertTrue(hasattr(class_instance, 'created_by_id'))
         self.assertTrue(hasattr(class_instance, 'test_field'))
         self.assertFalse(hasattr(class_instance, 'foo'))
+
+    def test_modified_by_mixin_adds_modified_by(self):
+        """Assert modified by mixin adds modified_by field."""
+
+        class MixedModifiedBy(SimpleModelClass, ModifiedByMixin):
+            """Mixed Model."""
+            pass
+
+        class_instance = MixedModifiedBy()
+        self.assertTrue(hasattr(class_instance, 'modified_by_id'))
+        self.assertTrue(hasattr(class_instance, 'test_field'))
+
+    def test_uuid_id_mixin_adds_uuid_id(self):
+        """Assert UUIDIdMixin adds UUID id field."""
+        import uuid
+
+        class MixedUUID(UUIDIdMixin):
+            """Mixed Model."""
+            pass
+
+        class_instance = MixedUUID()
+        self.assertTrue(hasattr(class_instance, 'id'))
+        self.assertIsNotNone(class_instance.id)
+        self.assertIsInstance(class_instance.id, uuid.UUID)
+
+    def test_big_id_mixin_adds_big_id(self):
+        """Assert BigIdMixin adds BigAutoField id field."""
+
+        class MixedBigId(BigIdMixin):
+            """Mixed Model."""
+            pass
+
+        class_instance = MixedBigId()
+        self.assertTrue(hasattr(class_instance, 'id'))
+
+    def test_created_and_modified_by_mixin(self):
+        """Assert CreatedAndModifiedBy adds all fields."""
+
+        # pylint:disable=too-many-ancestors
+        class MixedAll(CreatedAndModifiedBy):
+            """Mixed Model."""
+            pass
+
+        class_instance = MixedAll()
+        self.assertTrue(hasattr(class_instance, 'created'))
+        self.assertTrue(hasattr(class_instance, 'modified'))
+        self.assertTrue(hasattr(class_instance, 'created_by_id'))
+        self.assertTrue(hasattr(class_instance, 'modified_by_id'))
+
+    def test_django_admin_reverse_requirements_mixin(self):
+        """Assert DjangoAdminReverseRequirementsMixin adds expected properties."""
+
+        class MixedAdmin(models.Model, DjangoAdminReverseRequirementsMixin):
+            """Mixed Model."""
+
+            class Meta(object):
+                """Meta."""
+                app_label = 'common'
+
+        class_instance = MixedAdmin()
+        self.assertEqual(class_instance.app_label, 'common')
+        self.assertEqual(class_instance.model_name, 'mixedadmin')
+        self.assertTrue(hasattr(class_instance, 'get_absolute_url'))
+        self.assertTrue(hasattr(class_instance, 'get_admin_url'))
