@@ -12,7 +12,6 @@ from .constants import (CREATED_LABEL, PENDING_LABEL, RUNNING_LABEL,
 class HydraStatusID(object):
     """
     Centralized Integer IDs for Status lookups.
-    Usage: HydraStatusID.CREATED
     """
     CREATED = 1
     PENDING = 2
@@ -54,8 +53,6 @@ class HydraSpell(DefaultFieldsMixin):
     """
     executable = models.ForeignKey(HydraExecutable, on_delete=models.PROTECT)
     active_switches = models.ManyToManyField(HydraSwitch, blank=True)
-    
-    # Restore Order Field
     order = models.PositiveIntegerField(default=0, help_text="Execution sequence (1, 2, 3...)")
 
     class Meta:
@@ -70,9 +67,10 @@ class HydraSpellOutcomeConfig(DefaultFieldsMixin):
     pass
 
 
-class HydraSpellbook(DefaultFieldsMixin, DescriptionMixin):
+class HydraSpellbook(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     """
     An ordered collection of Spells.
+    Uses UUIDIdMixin to ensure IDs are URL-safe and distinct.
     """
     spells = models.ManyToManyField(HydraSpell, blank=True)
     outcomes = models.ManyToManyField(HydraSpellOutcomeConfig, blank=True)

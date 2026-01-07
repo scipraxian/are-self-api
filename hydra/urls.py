@@ -1,6 +1,6 @@
-from .views import LaunchFastValidateView
 from django.urls import path
+from .views import LaunchSpellbookView
 
 urlpatterns = [
-    path('launch/fast-validate/', LaunchFastValidateView.as_view(), name='hydra_launch_fast_validate'),
+    path('launch/<uuid:spellbook_id>/', LaunchSpellbookView.as_view(), name='hydra_launch'),
 ]

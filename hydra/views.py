@@ -1,19 +1,23 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
 from django.views import View
 from .models import HydraSpellbook, HydraEnvironment
 from .hydra import Hydra
 from environments.models import ProjectEnvironment
+import logging
 
-class LaunchFastValidateView(View):
-    def post(self, request):
-        # 1. Get the "Fast Validate" Spellbook
+logger = logging.getLogger(__name__)
+
+class LaunchSpellbookView(View):
+    def post(self, request, spellbook_id):
+        # 1. Get the Spellbook (Clean UUID lookup)
         try:
-            spellbook = HydraSpellbook.objects.get(name="Fast Validate")
+            spellbook = HydraSpellbook.objects.get(id=spellbook_id)
         except HydraSpellbook.DoesNotExist:
             return render(request, 'hydra/partials/error.html', {
-                'message': "Error: 'Fast Validate' Spellbook missing. Run fixtures."
+                'message': f"Error: Spellbook {spellbook_id} not found."
             }, status=404)
+
+        logger.info(f"[HYDRA] Launching Spellbook: {spellbook.name} ({spellbook.id})")
 
         # 2. Get Active Environment
         env = ProjectEnvironment.objects.filter(is_active=True).first()
@@ -29,10 +33,15 @@ class LaunchFastValidateView(View):
         )
 
         # 4. Initialize & Launch
-        controller = Hydra(spellbook_id=spellbook.id, env_id=hydra_env.id)
-        controller.start()
+        try:
+            controller = Hydra(spellbook_id=spellbook.id, env_id=hydra_env.id)
+            controller.start()
+        except Exception as e:
+            logger.exception("[HYDRA] Controller Start Failed")
+            return render(request, 'hydra/partials/error.html', {
+                'message': f"Controller Error: {str(e)}"
+            }, status=500)
 
-        # 5. Render Feedback Template
         return render(request, 'hydra/partials/spawn_feedback.html', {
             'spawn': controller.spawn
         })

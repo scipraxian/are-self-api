@@ -1,5 +1,6 @@
 '''Views for the dashboard application.'''
 
+from hydra.models import HydraSpellbook
 import os
 
 from celery.result import AsyncResult
@@ -24,6 +25,7 @@ class DashboardHomeView(TemplateView):
     context = super().get_context_data(**kwargs)
     context['targets'] = RemoteTarget.objects.all()
     context['server_version'] = SERVER_VERSION
+    context['hydra_spellbooks'] = HydraSpellbook.objects.all().order_by('name')
     return context
 
 

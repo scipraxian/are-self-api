@@ -1,313 +1,556 @@
 [
     {
-        "model": "hydra.hydraheadstatus",
-        "pk": 1,
-        "fields": { "name": "Created" }
-    },
-    {
-        "model": "hydra.hydraheadstatus",
-        "pk": 2,
-        "fields": { "name": "Pending" }
-    },
-    {
-        "model": "hydra.hydraheadstatus",
-        "pk": 3,
-        "fields": { "name": "Running" }
-    },
-    {
-        "model": "hydra.hydraheadstatus",
-        "pk": 4,
-        "fields": { "name": "Success" }
-    },
-    {
-        "model": "hydra.hydraheadstatus",
-        "pk": 5,
-        "fields": { "name": "Failed" }
-    },
-    {
-        "model": "hydra.hydraspawnstatus",
-        "pk": 1,
-        "fields": { "name": "Created" }
-    },
-    {
-        "model": "hydra.hydraspawnstatus",
-        "pk": 2,
-        "fields": { "name": "Pending" }
-    },
-    {
-        "model": "hydra.hydraspawnstatus",
-        "pk": 3,
-        "fields": { "name": "Running" }
-    },
-    {
-        "model": "hydra.hydraspawnstatus",
-        "pk": 4,
-        "fields": { "name": "Success" }
-    },
-    {
-        "model": "hydra.hydraspawnstatus",
-        "pk": 5,
-        "fields": { "name": "Failed" }
-    },
-    {
         "model": "hydra.hydraexecutable",
         "pk": 1,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "Unreal Editor (Cmd)",
             "slug": "ue_cmd",
-            "path_template": "{engine_root}/Engine/Binaries/Win64/UnrealEditor-Cmd.exe",
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "path_template": "{engine_root}/Engine/Binaries/Win64/UnrealEditor-Cmd.exe"
         }
     },
     {
         "model": "hydra.hydraexecutable",
         "pk": 2,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "Unreal Automation Tool",
             "slug": "uat",
-            "path_template": "{engine_root}/Engine/Build/BatchFiles/RunUAT.bat",
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "path_template": "{engine_root}/Engine/Build/BatchFiles/RunUAT.bat"
         }
     },
     {
         "model": "hydra.hydraexecutable",
         "pk": 3,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "Staged Game Executable",
             "slug": "game_exe",
-            "path_template": "{staging_dir}/Windows/{project_name}.exe",
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "path_template": "{staging_dir}/Windows/{project_name}.exe"
         }
     },
     {
         "model": "hydra.hydraswitch",
         "pk": 1,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "UProject Path",
             "executable": 1,
             "flag": "",
-            "value": "{project_root}/{project_name}.uproject",
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "value": "{project_root}/{project_name}.uproject"
         }
     },
     {
         "model": "hydra.hydraswitch",
         "pk": 2,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "Log Flag",
             "executable": 1,
             "flag": "-log",
-            "value": "",
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "value": ""
         }
     },
     {
         "model": "hydra.hydraswitch",
         "pk": 3,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "Unattended",
             "executable": 1,
             "flag": "-unattended",
-            "value": "",
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "value": ""
         }
     },
     {
         "model": "hydra.hydraswitch",
         "pk": 4,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "Exec Automation Tests",
             "executable": 1,
             "flag": "-ExecCmds=",
-            "value": "Automation RunTests HSH.Tests;Quit",
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "value": "Automation RunTests HSH.Tests;Quit"
         }
     },
     {
         "model": "hydra.hydraswitch",
         "pk": 5,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "Null RHI (Headless)",
             "executable": 1,
             "flag": "-nullrhi",
-            "value": "",
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "value": ""
         }
     },
     {
         "model": "hydra.hydraswitch",
         "pk": 6,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "No Splash",
             "executable": 1,
             "flag": "-nosplash",
-            "value": "",
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "value": ""
         }
     },
     {
         "model": "hydra.hydraswitch",
         "pk": 10,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "Command: BuildCookRun",
             "executable": 2,
             "flag": "BuildCookRun",
-            "value": "",
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "value": ""
         }
     },
     {
         "model": "hydra.hydraswitch",
         "pk": 11,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "Project Flag",
             "executable": 2,
             "flag": "-project=",
-            "value": "{project_root}/{project_name}.uproject",
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "value": "{project_root}/{project_name}.uproject"
         }
     },
     {
         "model": "hydra.hydraswitch",
         "pk": 12,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "Platform Win64",
             "executable": 2,
             "flag": "-platform=Win64",
-            "value": "",
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "value": ""
         }
     },
     {
         "model": "hydra.hydraswitch",
         "pk": 13,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "Staging Directory",
             "executable": 2,
             "flag": "-stagingdirectory=",
-            "value": "{staging_dir}",
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "value": "{staging_dir}"
         }
     },
     {
         "model": "hydra.hydraswitch",
         "pk": 14,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "Build Cook Stage Pak",
             "executable": 2,
             "flag": "-build -cook -stage -pak",
-            "value": "",
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "value": ""
         }
     },
     {
         "model": "hydra.hydraswitch",
         "pk": 20,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "Log PSO",
             "executable": 3,
             "flag": "-logPSO",
-            "value": "",
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "value": ""
         }
     },
     {
         "model": "hydra.hydraswitch",
         "pk": 21,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "Windowed 720p",
             "executable": 3,
             "flag": "-windowed -resX=1280 -resY=720",
-            "value": "",
+            "value": ""
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 22,
+        "fields": {
             "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "modified": "2026-01-01T00:00:00Z",
+            "name": "Game Log",
+            "executable": 3,
+            "flag": "-log",
+            "value": ""
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 23,
+        "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
+            "name": "Clear PSO Cache",
+            "executable": 3,
+            "flag": "-clearPSODriverCache",
+            "value": ""
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 24,
+        "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
+            "name": "Compile Shaders",
+            "executable": 3,
+            "flag": "-CompileShaders",
+            "value": ""
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 25,
+        "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
+            "name": "Auto Start",
+            "executable": 3,
+            "flag": "-AutoStart",
+            "value": ""
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 26,
+        "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
+            "name": "Auto Close",
+            "executable": 3,
+            "flag": "-AutoClose",
+            "value": ""
         }
     },
     {
         "model": "hydra.hydraspell",
         "pk": 1,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "Gatekeeper: Headless Unit Tests",
             "executable": 1,
             "order": 1,
-            "active_switches": [1, 2, 3, 4, 5, 6],
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "active_switches": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+            ]
         }
     },
     {
         "model": "hydra.hydraspell",
         "pk": 2,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z",
             "name": "Staging: Build Game",
             "executable": 2,
             "order": 2,
-            "active_switches": [10, 11, 12, 13, 14],
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "active_switches": [
+                10,
+                11,
+                12,
+                13,
+                14
+            ]
         }
     },
     {
         "model": "hydra.hydraspell",
         "pk": 3,
         "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-07T23:24:41.055Z",
             "name": "Staging: Record PSOs",
             "executable": 3,
             "order": 3,
-            "active_switches": [20, 21],
+            "active_switches": [
+                20,
+                21,
+                23,
+                24
+            ]
+        }
+    },
+    {
+        "model": "hydra.hydraspell",
+        "pk": 4,
+        "fields": {
             "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "modified": "2026-01-07T23:24:32.668Z",
+            "name": "Staging: Smoke Test",
+            "executable": 3,
+            "order": 1,
+            "active_switches": [
+                21,
+                26
+            ]
         }
     },
     {
         "model": "hydra.hydraspellbook",
+        "pk": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+        "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "description": "The original 7_Manager.py workflow",
+            "modified": "2026-01-01T00:00:00Z",
+            "name": "Legacy Full Pipeline",
+            "spells": [
+                1,
+                2,
+                3
+            ],
+            "outcomes": []
+        }
+    },
+    {
+        "model": "hydra.hydraspellbook",
+        "pk": "b8e9f0a1-2c3d-4e5f-6a7b-8c9d0e1f2b3c",
+        "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "description": "Headless Test Only",
+            "modified": "2026-01-01T00:00:00Z",
+            "name": "Fast Validate",
+            "spells": [
+                1
+            ],
+            "outcomes": []
+        }
+    },
+    {
+        "model": "hydra.hydraspellbook",
+        "pk": "c9f0a1b2-3d4e-5f6a-7b8c-9d0e1f2c3d4e",
+        "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "description": "Build Staging -> Run Staging (Rec PSO)",
+            "modified": "2026-01-07T23:26:02.609Z",
+            "name": "Staging Build&Record",
+            "spells": [
+                2,
+                3
+            ],
+            "outcomes": []
+        }
+    },
+    {
+        "model": "hydra.hydraspellbook",
+        "pk": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+        "fields": {
+            "created": "2026-01-01T00:00:00Z",
+            "description": "Run Staging Game (Smoke Test)",
+            "modified": "2026-01-01T00:00:00Z",
+            "name": "Staging Run Only",
+            "spells": [
+                4
+            ],
+            "outcomes": []
+        }
+    },
+    {
+        "model": "hydra.hydraspawnstatus",
         "pk": 1,
         "fields": {
-            "name": "Legacy Full Pipeline",
-            "description": "The original 7_Manager.py workflow",
-            "spells": [1, 2, 3],
-            "outcomes": [],
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "name": "Created"
         }
     },
     {
-        "model": "hydra.hydraspellbook",
+        "model": "hydra.hydraspawnstatus",
         "pk": 2,
         "fields": {
-            "name": "Fast Validate",
-            "description": "Headless Test Only",
-            "spells": [1],
-            "outcomes": [],
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "name": "Pending"
         }
     },
     {
-        "model": "hydra.hydraspellbook",
+        "model": "hydra.hydraspawnstatus",
         "pk": 3,
         "fields": {
-            "name": "Staging Operations",
-            "description": "Build Staging -> Run Staging (Rec PSO)",
-            "spells": [2, 3],
-            "outcomes": [],
-            "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z"
+            "name": "Running"
+        }
+    },
+    {
+        "model": "hydra.hydraspawnstatus",
+        "pk": 4,
+        "fields": {
+            "name": "Success"
+        }
+    },
+    {
+        "model": "hydra.hydraspawnstatus",
+        "pk": 5,
+        "fields": {
+            "name": "Failed"
+        }
+    },
+    {
+        "model": "hydra.hydraheadstatus",
+        "pk": 1,
+        "fields": {
+            "name": "Created"
+        }
+    },
+    {
+        "model": "hydra.hydraheadstatus",
+        "pk": 2,
+        "fields": {
+            "name": "Pending"
+        }
+    },
+    {
+        "model": "hydra.hydraheadstatus",
+        "pk": 3,
+        "fields": {
+            "name": "Running"
+        }
+    },
+    {
+        "model": "hydra.hydraheadstatus",
+        "pk": 4,
+        "fields": {
+            "name": "Success"
+        }
+    },
+    {
+        "model": "hydra.hydraheadstatus",
+        "pk": 5,
+        "fields": {
+            "name": "Failed"
+        }
+    },
+    {
+        "model": "hydra.hydraenvironment",
+        "pk": 1,
+        "fields": {
+            "created": "2026-01-07T22:44:57.957Z",
+            "modified": "2026-01-07T22:44:57.957Z",
+            "name": "Auto-Env for Talos Default Environment",
+            "project_environment": "2a898e21-b7f2-4442-94e4-f0acb87d57b6",
+            "executables": []
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "008d62ad-8afe-4ef0-8684-8eb489e1839c",
+        "fields": {
+            "created": "2026-01-07T22:48:41.898Z",
+            "modified": "2026-01-07T22:48:41.903Z",
+            "spellbook": "c9f0a1b2-3d4e-5f6a-7b8c-9d0e1f2c3d4e",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "05b9ad3c-6f7a-4b48-b6df-eee3f7e593c9",
+        "fields": {
+            "created": "2026-01-07T22:52:34.135Z",
+            "modified": "2026-01-07T22:52:34.141Z",
+            "spellbook": "c9f0a1b2-3d4e-5f6a-7b8c-9d0e1f2c3d4e",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "385f9b8b-7a28-441d-a192-ba8e7adaeb5c",
+        "fields": {
+            "created": "2026-01-07T23:08:43.988Z",
+            "modified": "2026-01-07T23:13:37.847Z",
+            "spellbook": "c9f0a1b2-3d4e-5f6a-7b8c-9d0e1f2c3d4e",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "66b184e9-35cc-4c7e-8c51-d9bdde842e2f",
+        "fields": {
+            "created": "2026-01-07T23:02:47.238Z",
+            "modified": "2026-01-07T23:02:47.244Z",
+            "spellbook": "c9f0a1b2-3d4e-5f6a-7b8c-9d0e1f2c3d4e",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "bb2fa87d-1ec1-4b62-a310-f69be0ae13e5",
+        "fields": {
+            "created": "2026-01-07T23:20:46.634Z",
+            "modified": "2026-01-07T23:21:10.020Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "bc08c51b-1e2a-405d-9493-23555d32fb7f",
+        "fields": {
+            "created": "2026-01-07T23:26:11.641Z",
+            "modified": "2026-01-07T23:26:26.491Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "d3cc5a32-8157-43f3-a8ac-28e3872cb3c9",
+        "fields": {
+            "created": "2026-01-07T22:44:57.960Z",
+            "modified": "2026-01-07T22:44:57.965Z",
+            "spellbook": "b8e9f0a1-2c3d-4e5f-6a7b-8c9d0e1f2b3c",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "e54e8cb8-f1bc-4315-a88f-09a47b54645a",
+        "fields": {
+            "created": "2026-01-07T22:58:23.399Z",
+            "modified": "2026-01-07T22:58:23.404Z",
+            "spellbook": "c9f0a1b2-3d4e-5f6a-7b8c-9d0e1f2c3d4e",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
         }
     }
 ]

@@ -1,6 +1,11 @@
 import collections
 import subprocess
+import threading
+import queue
+import time
+import os
 from celery import shared_task
+from django.db import transaction
 from .models import HydraHead, HydraHeadStatus
 
 # Rigid context structure
@@ -10,104 +15,175 @@ HydraContext = collections.namedtuple('HydraContext', [
     'build_root',
     'staging_dir',
     'project_name',
-    'dynamic_context'  # For the "Quarks" (Git hash, etc)
+    'dynamic_context'
 ])
 
 def resolve_template(template_str, context: HydraContext):
-    """
-    Substitutes {VARIABLES} in the string using the NamedTuple.
-    """
-    if not template_str:
-        return ""
-    
-    # Merge named fields and the dynamic dict for formatting
-    # This allows {project_root} AND {GIT_HASH} to work in the same string
+    if not template_str: return ""
     format_data = context._asdict()
     if context.dynamic_context:
         format_data.update(context.dynamic_context)
-        
     try:
         return template_str.format(**format_data)
     except KeyError:
         return template_str
 
 def build_command(hydra_head):
-    """
-    Constructs the CLI argument list for a HydraHead.
-    """
     spawn = hydra_head.spawn
     env = spawn.environment.project_environment
     spell = hydra_head.spell
     exe = spell.executable
     
-    # 1. Build Context
-    # Note: We treat spawn.context (if it existed) as the source of dynamic_context
-    # Since we can't use JSONField on SQLite easily, we assume this is handled elsewhere 
-    # or passed via a different mechanism. For now, empty dict.
     context = HydraContext(
         project_root=env.project_root,
         engine_root=env.engine_root,
         build_root=env.build_root,
         staging_dir=env.staging_dir or "",
         project_name=env.project_name,
-        dynamic_context=dict()
+        dynamic_context={} 
     )
 
-    # 2. Resolve Executable Path
-    exe_path = resolve_template(exe.path_template, context)
+    # 1. Resolve & Normalize Exe Path
+    raw_exe_path = resolve_template(exe.path_template, context)
+    exe_path = os.path.normpath(raw_exe_path)
     cmd = [exe_path]
     
-    # 3. Append Switches
+    # 2. Append Switches
     for switch in spell.active_switches.all():
         flag_str = resolve_template(switch.flag, context)
-        cmd.append(flag_str)
-        
+        val_str = ""
         if switch.value:
             val_str = resolve_template(switch.value, context)
-            cmd.append(val_str)
+
+        if val_str:
+            if flag_str.endswith('='):
+                cmd.append(f"{flag_str}{val_str}")
+            elif not flag_str:
+                cmd.append(val_str)
+            else:
+                cmd.append(flag_str)
+                cmd.append(val_str)
+        else:
+            if flag_str:
+                if " " in flag_str:
+                    cmd.extend(flag_str.split())
+                else:
+                    cmd.append(flag_str)
             
     return cmd
 
+def stream_command_to_db(cmd, head):
+    """
+    Executes command and flushes STDOUT/STDERR to DB every ~2s.
+    """
+    head.status_id = HydraHeadStatus.RUNNING
+    pretty_cmd = " ".join([f'"{c}"' if " " in c else c for c in cmd])
+    head.spell_log = f"=== LAUNCHING ===\nCmd: {pretty_cmd}\n\n"
+    head.save()
+
+    try:
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+            encoding='utf-8',
+            errors='replace',
+            cwd=head.spawn.environment.project_environment.project_root
+        )
+    except Exception as e:
+        head.spell_log += f"\n[FATAL] Failed to launch: {e}"
+        head.status_id = HydraHeadStatus.FAILED
+        head.save()
+        return -1
+
+    q = queue.Queue()
+    def reader():
+        try:
+            for line in iter(process.stdout.readline, ''):
+                q.put(line)
+        finally:
+            process.stdout.close()
+    
+    t = threading.Thread(target=reader, daemon=True)
+    t.start()
+
+    log_buffer = []
+    last_save = time.time()
+    
+    while True:
+        alive = process.poll() is None
+        while True:
+            try:
+                line = q.get_nowait()
+                log_buffer.append(line)
+            except queue.Empty:
+                break
+        
+        if (time.time() - last_save > 2.0) or (len(log_buffer) > 20):
+            if log_buffer:
+                chunk = "".join(log_buffer)
+                head.spell_log += chunk
+                head.save()
+                log_buffer = []
+                last_save = time.time()
+        
+        if not alive and q.empty():
+            break
+        time.sleep(0.1)
+
+    if log_buffer:
+        head.spell_log += "".join(log_buffer)
+        head.save()
+
+    return process.returncode
+
+@shared_task
+def check_next_wave(spawn_id):
+    """
+    Wakes up the Hydra Controller to check if the next wave can start.
+    Lazy import avoids circular dependency.
+    """
+    from .hydra import Hydra
+    # Re-hydrate the controller for this spawn
+    controller = Hydra(spawn_id=spawn_id)
+    # This method checks status and launches next order if ready
+    controller._dispatch_next_wave()
+
 @shared_task(bind=True)
 def cast_hydra_spell(self, hydrahead_id):
-    """
-    The Celery Task that actually runs the command.
-    """
     try:
-        hydra_head = HydraHead.objects.get(id=hydrahead_id)
+        head = HydraHead.objects.get(id=hydrahead_id)
+        head.celery_task_id = self.request.id
+        head.save()
         
-        # Build Command
-        cmd = build_command(hydra_head)
+        cmd = build_command(head)
+        retcode = stream_command_to_db(cmd, head)
         
-        # Update Status (Using ID constants)
-        hydra_head.status_id = HydraHeadStatus.RUNNING
-        hydra_head.celery_task_id = self.request.id
-        hydra_head.save()
-        
-        # Execute
-        process = subprocess.run(
-            cmd, 
-            capture_output=True, 
-            text=True,
-            cwd=hydra_head.spawn.environment.project_environment.project_root
-        )
-        
-        # Save Result
-        hydra_head.spell_log = f"STDOUT:\n{process.stdout}\n\nSTDERR:\n{process.stderr}"
-        hydra_head.result_code = process.returncode
-        
-        if process.returncode == 0:
-            hydra_head.status_id = HydraHeadStatus.SUCCESS
+        head.result_code = retcode
+        if retcode == 0:
+            head.status_id = HydraHeadStatus.SUCCESS
+            head.spell_log += "\n\n[SUCCESS] Spell Completed."
         else:
-            hydra_head.status_id = HydraHeadStatus.FAILED
+            head.status_id = HydraHeadStatus.FAILED
+            head.spell_log += f"\n\n[FAILURE] Exited with code {retcode}."
             
-        hydra_head.save()
+        head.save()
         
-        return f"Spell {hydra_head.spell.name} finished with {process.returncode}"
+        # CRITICAL: Chain Reaction
+        # If successful, trigger the next wave check
+        if retcode == 0:
+            transaction.on_commit(lambda: check_next_wave.delay(head.spawn.id))
+        
+        return f"Spell {head.spell.name} finished: {retcode}"
         
     except Exception as e:
-        if hydra_head:
-            hydra_head.status_id = HydraHeadStatus.FAILED
-            hydra_head.execution_log += f"\nInternal Error: {str(e)}"
-            hydra_head.save()
+        try:
+            head = HydraHead.objects.get(id=hydrahead_id)
+            head.status_id = HydraHeadStatus.FAILED
+            head.execution_log += f"\nInternal Error: {str(e)}"
+            head.save()
+        except:
+            pass
         raise e
