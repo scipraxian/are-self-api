@@ -4,6 +4,7 @@ import threading
 import queue
 import time
 import os
+import datetime
 from celery import shared_task
 from django.db import transaction
 from .models import HydraHead, HydraHeadStatus
@@ -17,6 +18,17 @@ HydraContext = collections.namedtuple('HydraContext', [
     'project_name',
     'dynamic_context'
 ])
+
+def get_timestamp():
+    return datetime.datetime.now().strftime("%H:%M:%S")
+
+def log_system(head, message):
+    """Helper to append to execution_log and save immediately."""
+    entry = f"[{get_timestamp()}] {message}\n"
+    # we fetch a fresh copy to avoid overwriting spell_log stream updates
+    # or just append safely since we are the primary writer
+    head.execution_log += entry
+    head.save(update_fields=['execution_log'])
 
 def resolve_template(template_str, context: HydraContext):
     if not template_str: return ""
@@ -78,8 +90,14 @@ def stream_command_to_db(cmd, head):
     """
     head.status_id = HydraHeadStatus.RUNNING
     pretty_cmd = " ".join([f'"{c}"' if " " in c else c for c in cmd])
+    
     head.spell_log = f"=== LAUNCHING ===\nCmd: {pretty_cmd}\n\n"
+    head.execution_log += f"[{get_timestamp()}] Initializing Process...\n"
+    head.execution_log += f"[{get_timestamp()}] Command constructed ({len(cmd)} tokens).\n"
     head.save()
+
+    cwd = head.spawn.environment.project_environment.project_root
+    log_system(head, f"Working Directory: {cwd}")
 
     try:
         process = subprocess.Popen(
@@ -90,9 +108,11 @@ def stream_command_to_db(cmd, head):
             bufsize=1,
             encoding='utf-8',
             errors='replace',
-            cwd=head.spawn.environment.project_environment.project_root
+            cwd=cwd
         )
+        log_system(head, f"Process Spawned. PID: {process.pid}")
     except Exception as e:
+        log_system(head, f"FATAL ERROR: Failed to launch process: {e}")
         head.spell_log += f"\n[FATAL] Failed to launch: {e}"
         head.status_id = HydraHeadStatus.FAILED
         head.save()
@@ -137,18 +157,13 @@ def stream_command_to_db(cmd, head):
         head.spell_log += "".join(log_buffer)
         head.save()
 
+    log_system(head, f"Process finished with Exit Code: {process.returncode}")
     return process.returncode
 
 @shared_task
 def check_next_wave(spawn_id):
-    """
-    Wakes up the Hydra Controller to check if the next wave can start.
-    Lazy import avoids circular dependency.
-    """
     from .hydra import Hydra
-    # Re-hydrate the controller for this spawn
     controller = Hydra(spawn_id=spawn_id)
-    # This method checks status and launches next order if ready
     controller._dispatch_next_wave()
 
 @shared_task(bind=True)
@@ -171,8 +186,6 @@ def cast_hydra_spell(self, hydrahead_id):
             
         head.save()
         
-        # CRITICAL: Chain Reaction
-        # If successful, trigger the next wave check
         if retcode == 0:
             transaction.on_commit(lambda: check_next_wave.delay(head.spawn.id))
         
@@ -182,7 +195,7 @@ def cast_hydra_spell(self, hydrahead_id):
         try:
             head = HydraHead.objects.get(id=hydrahead_id)
             head.status_id = HydraHeadStatus.FAILED
-            head.execution_log += f"\nInternal Error: {str(e)}"
+            log_system(head, f"INTERNAL EXCEPTION: {str(e)}")
             head.save()
         except:
             pass
