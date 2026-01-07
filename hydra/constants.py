@@ -1,0 +1,5 @@
+CREATED_LABEL = 'Created'
+PENDING_LABEL = 'Pending'
+RUNNING_LABEL = 'Running'
+SUCCESS_LABEL = 'Success'
+FAILED_LABEL = 'Failed'

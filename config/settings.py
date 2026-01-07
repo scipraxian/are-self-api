@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'dashboard',
     'talos_agent',
     'celery',
+    'hydra',
     'django_celery_results',
     'django.contrib.admin',
     'django.contrib.auth',

@@ -2,7 +2,7 @@ import uuid
 from django.db import models
 
 class ProjectEnvironment(models.Model):
-    """Configuration for where the build is running (e.g., Main Desktop vs Laptop)."""
+    """Configuration for where Executables may be run."""
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, unique=True, help_text="e.g., Mike Desktop 2024")

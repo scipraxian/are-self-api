@@ -1,0 +1,72 @@
+[
+    {
+        "model": "hydra.hydraheadstatus",
+        "pk": 1,
+        "fields": {
+            "name": "Created"
+        }
+    },
+    {
+        "model": "hydra.hydraheadstatus",
+        "pk": 2,
+        "fields": {
+            "name": "Pending"
+        }
+    },
+    {
+        "model": "hydra.hydraheadstatus",
+        "pk": 3,
+        "fields": {
+            "name": "Running"
+        }
+    },
+    {
+        "model": "hydra.hydraheadstatus",
+        "pk": 4,
+        "fields": {
+            "name": "Success"
+        }
+    },
+    {
+        "model": "hydra.hydraheadstatus",
+        "pk": 5,
+        "fields": {
+            "name": "Failed"
+        }
+    },
+    {
+        "model": "hydra.hydraspawnstatus",
+        "pk": 1,
+        "fields": {
+            "name": "Created"
+        }
+    },
+    {
+        "model": "hydra.hydraspawnstatus",
+        "pk": 2,
+        "fields": {
+            "name": "Pending"
+        }
+    },
+    {
+        "model": "hydra.hydraspawnstatus",
+        "pk": 3,
+        "fields": {
+            "name": "Running"
+        }
+    },
+    {
+        "model": "hydra.hydraspawnstatus",
+        "pk": 4,
+        "fields": {
+            "name": "Success"
+        }
+    },
+    {
+        "model": "hydra.hydraspawnstatus",
+        "pk": 5,
+        "fields": {
+            "name": "Failed"
+        }
+    }
+]
