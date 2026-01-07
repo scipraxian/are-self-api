@@ -1,8 +1,13 @@
-
-from hydra.models import HydraSpellbook
-from hydra.models import HydraSpawn
+import json
+import logging
 from django.utils import timezone
+from celery.result import AsyncResult
+from config.celery import app as celery_app
+from .models import HydraSpellbook, HydraSpawn, HydraHead, HydraHeadStatus, HydraSpawnStatus
+from .tasks import cast_hydra_spell
+from environments.models import ProjectEnvironment
 
+logger = logging.getLogger(__name__)
 
 class Hydra(object):
     """
@@ -17,27 +22,51 @@ class Hydra(object):
         elif spellbook_id and env_id:
             # Prepare a new beast
             book = HydraSpellbook.objects.get(id=spellbook_id)
+            # Find or default the status
+            status_created, _ = HydraSpawnStatus.objects.get_or_create(
+                id=HydraSpawnStatus.CREATED, 
+                defaults={'name': 'Created'}
+            )
+            
+            # Create Spawn
             self.spawn = HydraSpawn.objects.create(
                 spellbook=book,
-                environment_id=env_id
+                environment_id=env_id,
+                status=status_created
             )
+            
+            # Initialize empty context (JSON serialized to Text)
+            self.spawn.context_data = json.dumps({}) 
+            self.spawn.save()
         else:
             raise ValueError("Must provide either spawn_id or (spellbook_id + env_id)")
 
     def start(self):
         """
         Reads the Spellbook, creates the Heads (db objects), 
-        and dispatches the first batch (order 0).
+        and dispatches the first batch.
         """
-        self.spawn.status = 1
+        # Update Status to Running
+        status_running, _ = HydraSpawnStatus.objects.get_or_create(
+            id=HydraSpawnStatus.RUNNING, 
+            defaults={'name': 'Running'}
+        )
+        self.spawn.status = status_running
         self.spawn.save()
 
         # 1. Materialize the Heads from the Spells
-        spells = self.spawn.spellbook.spells.all().order_by('order')
+        spells = self.spawn.spellbook.spells.all()
+        
+        status_created, _ = HydraHeadStatus.objects.get_or_create(
+            id=HydraHeadStatus.CREATED, 
+            defaults={'name': 'Created'}
+        )
+
         for spell in spells:
             HydraHead.objects.create(
                 spawn=self.spawn,
-                spell=spell
+                spell=spell,
+                status=status_created
             )
         
         # 2. Trigger the first wave
@@ -45,40 +74,70 @@ class Hydra(object):
         
     def _dispatch_next_wave(self):
         """
-        Internal: Finds heads that are pending and have dependencies met.
+        Internal: Finds heads that are pending and dispatches them.
+        For V1 "Fast Validate", we just run everything that isn't finished.
         """
-        # Logic to find the next 'order' group that hasn't run
-        # For simple 'order' based grouping:
-        # Get lowest order that is NOT complete and NOT running.
-        pass
+        heads_to_run = self.spawn.heads.filter(status__id=HydraHeadStatus.CREATED)
+        
+        for head in heads_to_run:
+            logger.info(f"[HYDRA] Dispatching Head {head.id} (Spell: {head.spell.name})")
+            # Send to Celery
+            cast_hydra_spell.delay(head.id)
 
     def poll(self):
         """
         Updates state of all running heads from Celery.
+        Useful if the Celery task crashed without updating the DB.
         """
-        active_heads = self.spawn.heads.exclude(celery_task_id__isnull=True)
-        # Check AsyncResult for each...
-        pass
+        active_heads = self.spawn.heads.filter(status__id=HydraHeadStatus.RUNNING)
+        
+        for head in active_heads:
+            if not head.celery_task_id:
+                continue
+                
+            res = AsyncResult(head.celery_task_id)
+            if res.state == 'FAILURE':
+                # Task crashed hard (exception)
+                fail_status, _ = HydraHeadStatus.objects.get_or_create(
+                    id=HydraHeadStatus.FAILED, 
+                    defaults={'name': 'Failed'}
+                )
+                head.status = fail_status
+                head.execution_log += f"\n[HYDRA POLL] Task Failure detected: {res.info}"
+                head.save()
 
     def heartbeat(self):
         """
-        Called by a periodic task? 
-        Checks health, ensures no zombies, updates the 'last_seen' on the Spawn.
+        Updates the 'modified' timestamp on the Spawn to show it's alive.
         """
-        self.spawn.last_heartbeat = timezone.now()
         self.spawn.save()
-        # If headers are stuck, kill them or alert.
 
     def terminate(self):
         """
-        Cuts off all heads.
+        Cuts off all heads. Revokes Celery tasks and marks DB status.
         """
-        running_heads = self.spawn.heads.filter(result_code__isnull=True)
+        # 1. Kill Running Tasks
+        running_heads = self.spawn.heads.filter(status__id=HydraHeadStatus.RUNNING)
         for head in running_heads:
-            # revoke celery task
-            # update DB status to 'Severed'
-            pass
-        self.spawn.status = 'terminated'
+            if head.celery_task_id:
+                logger.info(f"[HYDRA] Revoking task {head.celery_task_id}")
+                celery_app.control.revoke(head.celery_task_id, terminate=True)
+            
+            # Update DB Status
+            fail_status, _ = HydraHeadStatus.objects.get_or_create(
+                id=HydraHeadStatus.FAILED, 
+                defaults={'name': 'Failed'}
+            )
+            head.status = fail_status
+            head.execution_log += "\n[HYDRA] Terminated by User."
+            head.save()
+
+        # 2. Update Spawn Status
+        fail_spawn, _ = HydraSpawnStatus.objects.get_or_create(
+            id=HydraSpawnStatus.FAILED, 
+            defaults={'name': 'Failed'}
+        )
+        self.spawn.status = fail_spawn
         self.spawn.save()
 
     def view(self):
@@ -86,13 +145,14 @@ class Hydra(object):
         Returns a dictionary summary for the frontend/API.
         """
         return {
-            "id": self.spawn.id,
-            "status": self.spawn.status,
+            "id": str(self.spawn.id),
+            "status": self.spawn.status.name,
             "heads": [
                 {
                     "name": h.spell.executable.name,
-                    "status": h.result_code,
-                    "log_preview": h.spell_log[:100]
+                    "status_id": h.status.id,
+                    "status_name": h.status.name,
+                    "log_preview": (h.spell_log or "")[:100]
                 }
                 for h in self.spawn.heads.all()
             ]

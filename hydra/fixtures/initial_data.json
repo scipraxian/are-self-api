@@ -144,6 +144,18 @@
     },
     {
         "model": "hydra.hydraswitch",
+        "pk": 6,
+        "fields": {
+            "name": "No Splash",
+            "executable": 1,
+            "flag": "-nosplash",
+            "value": "",
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
         "pk": 10,
         "fields": {
             "name": "Command: BuildCookRun",
@@ -232,7 +244,7 @@
         "fields": {
             "name": "Gatekeeper: Headless Unit Tests",
             "executable": 1,
-            "active_switches": [1, 2, 3, 4, 5],
+            "active_switches": [1, 2, 3, 4, 5, 6],
             "created": "2026-01-01T00:00:00Z",
             "modified": "2026-01-01T00:00:00Z"
         }

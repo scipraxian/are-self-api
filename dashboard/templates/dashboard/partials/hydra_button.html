@@ -1,0 +1,34 @@
+<div id="hydra-controls" style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem;">
+    <h3 style="color: #94a3b8; text-transform: uppercase; font-size: 0.9rem; margin-bottom: 1rem;">Hydra Protocols</h3>
+    
+    <button hx-post="{% url 'hydra_launch_fast_validate' %}"
+            hx-swap="afterend"
+            class="hydra-btn">
+        <span style="font-size: 1.2rem; margin-right: 8px;">🐉</span> 
+        Fast Validate
+    </button>
+
+    <style>
+        .hydra-btn {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+            display: inline-flex;
+            align-items: center;
+        }
+        .hydra-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.5);
+        }
+        .hydra-btn:active {
+            transform: translateY(0);
+        }
+    </style>
+</div>

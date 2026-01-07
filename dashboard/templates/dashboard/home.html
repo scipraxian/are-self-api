@@ -3,6 +3,9 @@
 {% block main_content %}
 <h1>Talos Command Center</h1>
 
+<hr>
+{% include "dashboard/partials/hydra_button.html" %}
+<hr>
 
 <div hx-get="{% url 'dashboard_campaign_section' %}" hx-trigger="load" hx-swap="outerHTML">
     <!-- Campaign Orchestrator loads here -->
