@@ -6,6 +6,7 @@ from config.celery import app as celery_app
 from .models import HydraSpellbook, HydraSpawn, HydraHead, HydraHeadStatus, HydraSpawnStatus
 from .tasks import cast_hydra_spell
 from environments.models import ProjectEnvironment
+from django.db.models import Min, Q
 
 logger = logging.getLogger(__name__)
 
@@ -55,32 +56,56 @@ class Hydra(object):
         self.spawn.save()
 
         # 1. Materialize the Heads from the Spells
-        spells = self.spawn.spellbook.spells.all()
-        
-        status_created, _ = HydraHeadStatus.objects.get_or_create(
-            id=HydraHeadStatus.CREATED, 
-            defaults={'name': 'Created'}
-        )
-
-        for spell in spells:
-            HydraHead.objects.create(
-                spawn=self.spawn,
-                spell=spell,
-                status=status_created
+        # Check if heads exist to avoid duplication if start is called twice
+        if not self.spawn.heads.exists():
+            spells = self.spawn.spellbook.spells.all()
+            
+            status_created, _ = HydraHeadStatus.objects.get_or_create(
+                id=HydraHeadStatus.CREATED, 
+                defaults={'name': 'Created'}
             )
+
+            for spell in spells:
+                HydraHead.objects.create(
+                    spawn=self.spawn,
+                    spell=spell,
+                    status=status_created
+                )
         
         # 2. Trigger the first wave
         self._dispatch_next_wave()
         
     def _dispatch_next_wave(self):
         """
-        Internal: Finds heads that are pending and dispatches them.
-        For V1 "Fast Validate", we just run everything that isn't finished.
+        Smart Dispatch: Finds the lowest 'order' that has PENDING/CREATED items
+        and runs them. If lower orders are still RUNNING, it waits.
         """
-        heads_to_run = self.spawn.heads.filter(status__id=HydraHeadStatus.CREATED)
+        # 1. Are there any active/running heads? If so, we can't advance to next order group yet.
+        # (Assuming strict blocking between orders. Parallel within same order is allowed)
+        active_heads = self.spawn.heads.filter(
+            Q(status__id=HydraHeadStatus.RUNNING) | Q(status__id=HydraHeadStatus.PENDING)
+        )
         
-        for head in heads_to_run:
-            logger.info(f"[HYDRA] Dispatching Head {head.id} (Spell: {head.spell.name})")
+        if active_heads.exists():
+            # We just wait. The poll() loop will call us again when they finish.
+            return
+
+        # 2. Find the next batch of Created tasks
+        # We want the minimum order of heads that are NOT finished.
+        pending_heads = self.spawn.heads.filter(status__id=HydraHeadStatus.CREATED)
+        
+        if not pending_heads.exists():
+            # Nothing left to run.
+            self._finalize_spawn()
+            return
+
+        next_order = pending_heads.aggregate(Min('spell__order'))['spell__order__min']
+        
+        # 3. Dispatch that batch
+        wave = pending_heads.filter(spell__order=next_order)
+        
+        for head in wave:
+            logger.info(f"[HYDRA] Dispatching Head {head.id} (Order: {next_order}, Spell: {head.spell.name})")
             # Send to Celery
             cast_hydra_spell.delay(head.id)
 
@@ -90,27 +115,52 @@ class Hydra(object):
         Useful if the Celery task crashed without updating the DB.
         """
         active_heads = self.spawn.heads.filter(status__id=HydraHeadStatus.RUNNING)
-        
+        state_changed = False
+
         for head in active_heads:
             if not head.celery_task_id:
                 continue
                 
             res = AsyncResult(head.celery_task_id)
-            if res.state == 'FAILURE':
-                # Task crashed hard (exception)
-                fail_status, _ = HydraHeadStatus.objects.get_or_create(
-                    id=HydraHeadStatus.FAILED, 
-                    defaults={'name': 'Failed'}
-                )
-                head.status = fail_status
-                head.execution_log += f"\n[HYDRA POLL] Task Failure detected: {res.info}"
-                head.save()
+            # Check if task is done but DB wasn't updated (Safety Net)
+            if res.ready():
+                if res.state == 'FAILURE':
+                    fail_status, _ = HydraHeadStatus.objects.get_or_create(
+                        id=HydraHeadStatus.FAILED, 
+                        defaults={'name': 'Failed'}
+                    )
+                    head.status = fail_status
+                    head.execution_log += f"\n[HYDRA POLL] Task Failure detected: {res.info}"
+                    head.save()
+                    state_changed = True
+                
+                # If SUCCESS, the task usually updates the DB itself. 
+                # But we could double check here if needed.
+
+        # Trigger next wave if things finished
+        self._dispatch_next_wave()
 
     def heartbeat(self):
         """
         Updates the 'modified' timestamp on the Spawn to show it's alive.
         """
         self.spawn.save()
+
+    def _finalize_spawn(self):
+        """Checks overall result and marks spawn finished."""
+        # If already done, exit
+        if self.spawn.status.id in [HydraSpawnStatus.SUCCESS, HydraSpawnStatus.FAILED]:
+            return
+
+        failed_heads = self.spawn.heads.filter(status__id=HydraHeadStatus.FAILED)
+        if failed_heads.exists():
+            status, _ = HydraSpawnStatus.objects.get_or_create(id=HydraSpawnStatus.FAILED, defaults={'name': 'Failed'})
+        else:
+            status, _ = HydraSpawnStatus.objects.get_or_create(id=HydraSpawnStatus.SUCCESS, defaults={'name': 'Success'})
+        
+        self.spawn.status = status
+        self.spawn.save()
+        logger.info(f"[HYDRA] Spawn {self.spawn.id} Finalized: {status.name}")
 
     def terminate(self):
         """
@@ -150,10 +200,12 @@ class Hydra(object):
             "heads": [
                 {
                     "name": h.spell.executable.name,
+                    "order": h.spell.order,
                     "status_id": h.status.id,
                     "status_name": h.status.name,
                     "log_preview": (h.spell_log or "")[:100]
                 }
-                for h in self.spawn.heads.all()
+                # Order by sequence
+                for h in self.spawn.heads.all().order_by('spell__order')
             ]
         }

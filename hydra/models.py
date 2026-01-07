@@ -42,7 +42,6 @@ class HydraSwitch(DefaultFieldsMixin):
                                    on_delete=models.CASCADE)
     flag = models.CharField(max_length=100,
                             help_text="The actual flag e.g. '-clean'")
-    # 'value' replaces 'default_value' from previous iteration
     value = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
@@ -55,9 +54,15 @@ class HydraSpell(DefaultFieldsMixin):
     """
     executable = models.ForeignKey(HydraExecutable, on_delete=models.PROTECT)
     active_switches = models.ManyToManyField(HydraSwitch, blank=True)
+    
+    # Restore Order Field
+    order = models.PositiveIntegerField(default=0, help_text="Execution sequence (1, 2, 3...)")
+
+    class Meta:
+        ordering = ['order']
 
     def __str__(self):
-        return f"Spell: {self.name}"
+        return f"[{self.order}] {self.name}"
 
 
 class HydraSpellOutcomeConfig(DefaultFieldsMixin):
@@ -128,7 +133,6 @@ class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
                                     null=True)
     status = models.ForeignKey(HydraSpawnStatus, on_delete=models.PROTECT)
 
-    # Replaced JSONField with TextField for manual serialization
     context_data = models.TextField(
         blank=True, help_text="Serialized JSON context variables")
 
@@ -168,5 +172,5 @@ class HydraSpellOutcome(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     """
     name = models.CharField(
         max_length=254, db_index=True
-    )  # Added to match DefaultFields usually expected, or remove if not needed.
+    )
     outcome_config = models.CharField(blank=True, max_length=500)

@@ -1,0 +1,74 @@
+from django.test import TestCase
+from hydra.models import HydraExecutable, HydraSwitch, HydraSpell, HydraSpawn, HydraHead, HydraHeadStatus, HydraSpawnStatus, HydraEnvironment, HydraSpellbook
+from hydra.tasks import build_command
+from environments.models import ProjectEnvironment
+
+class StagingPathTest(TestCase):
+    def setUp(self):
+        # 1. Statuses
+        self.st_created = HydraHeadStatus.objects.create(id=1, name='Created')
+        self.spawn_created = HydraSpawnStatus.objects.create(id=1, name='Created')
+
+        # 2. Environment (The Source of Truth)
+        self.env = ProjectEnvironment.objects.create(
+            name="ProdEnv",
+            project_root="C:/MyGame",
+            engine_root="C:/UE5",
+            build_root="C:/Builds",
+            staging_dir="D:/StagingBuffer", # <--- CRITICAL PATH
+            project_name="MyGame"
+        )
+        self.hydra_env = HydraEnvironment.objects.create(project_environment=self.env)
+
+        # 3. Setup BUILD Tools
+        self.exe_uat = HydraExecutable.objects.create(name="UAT", slug="uat", path_template="RunUAT.bat")
+        # -stagingdirectory={staging_dir}
+        self.sw_stage_dir = HydraSwitch.objects.create(
+            executable=self.exe_uat, 
+            flag="-stagingdirectory=", 
+            value="{staging_dir}"
+        )
+        self.spell_build = HydraSpell.objects.create(name="Build", executable=self.exe_uat)
+        self.spell_build.active_switches.add(self.sw_stage_dir)
+
+        # 4. Setup RUN Tools
+        # {staging_dir}/Windows/{project_name}.exe
+        self.exe_game = HydraExecutable.objects.create(
+            name="GameExe", 
+            slug="game_exe", 
+            path_template="{staging_dir}/Windows/{project_name}.exe"
+        )
+        self.spell_run = HydraSpell.objects.create(name="Run", executable=self.exe_game)
+
+    def test_paths_align(self):
+        """
+        Ensures that the output of the Builder matches the input of the Runner.
+        """
+        # Create Spawn
+        book = HydraSpellbook.objects.create(name="PathTestBook")
+        spawn = HydraSpawn.objects.create(
+            spellbook=book, 
+            environment=self.hydra_env, 
+            status=self.spawn_created
+        )
+
+        # Create Heads
+        head_build = HydraHead.objects.create(spawn=spawn, spell=self.spell_build, status=self.st_created)
+        head_run = HydraHead.objects.create(spawn=spawn, spell=self.spell_run, status=self.st_created)
+
+        # Generate Commands
+        cmd_build = build_command(head_build)
+        cmd_run = build_command(head_run)
+
+        # VERIFY BUILD OUTPUT PATH
+        # We expect one arg to be "-stagingdirectory=D:/StagingBuffer"
+        found_staging_arg = any("D:/StagingBuffer" in arg for arg in cmd_build)
+        self.assertTrue(found_staging_arg, f"Build command missing staging dir! Got: {cmd_build}")
+
+        # VERIFY RUN INPUT PATH
+        # We expect the executable itself to be "D:/StagingBuffer/Windows/MyGame.exe"
+        run_exe = cmd_run[0]
+        expected_run_path = "D:/StagingBuffer/Windows/MyGame.exe"
+        self.assertEqual(run_exe, expected_run_path, "Run command has wrong exe path!")
+
+        print(f"\n[TEST] Path Alignment Verified.\nBuilder Output: {cmd_build}\nRunner Input: {run_exe}")

@@ -244,6 +244,7 @@
         "fields": {
             "name": "Gatekeeper: Headless Unit Tests",
             "executable": 1,
+            "order": 1,
             "active_switches": [1, 2, 3, 4, 5, 6],
             "created": "2026-01-01T00:00:00Z",
             "modified": "2026-01-01T00:00:00Z"
@@ -255,6 +256,7 @@
         "fields": {
             "name": "Staging: Build Game",
             "executable": 2,
+            "order": 2,
             "active_switches": [10, 11, 12, 13, 14],
             "created": "2026-01-01T00:00:00Z",
             "modified": "2026-01-01T00:00:00Z"
@@ -266,6 +268,7 @@
         "fields": {
             "name": "Staging: Record PSOs",
             "executable": 3,
+            "order": 3,
             "active_switches": [20, 21],
             "created": "2026-01-01T00:00:00Z",
             "modified": "2026-01-01T00:00:00Z"
@@ -288,8 +291,20 @@
         "pk": 2,
         "fields": {
             "name": "Fast Validate",
-            "description": "Headless Test + Staging Build only",
-            "spells": [1, 2],
+            "description": "Headless Test Only",
+            "spells": [1],
+            "outcomes": [],
+            "created": "2026-01-01T00:00:00Z",
+            "modified": "2026-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "hydra.hydraspellbook",
+        "pk": 3,
+        "fields": {
+            "name": "Staging Operations",
+            "description": "Build Staging -> Run Staging (Rec PSO)",
+            "spells": [2, 3],
             "outcomes": [],
             "created": "2026-01-01T00:00:00Z",
             "modified": "2026-01-01T00:00:00Z"
