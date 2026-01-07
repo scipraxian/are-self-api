@@ -28,5 +28,25 @@
             "staging": true,
             "steam": true
         }
+    },
+    {
+        "model": "pipelines.buildprofile",
+        "pk": 4,
+        "fields": {
+            "name": "Build Staging",
+            "headless": false,
+            "staging": true,
+            "steam": false
+        }
+    },
+    {
+        "model": "pipelines.buildprofile",
+        "pk": 5,
+        "fields": {
+            "name": "Run Staging",
+            "headless": false,
+            "staging": false,
+            "steam": false
+        }
     }
 ]
