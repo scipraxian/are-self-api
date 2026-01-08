@@ -1,0 +1,9 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Hydra Monitor: {{ spawn.spellbook.name }}{% endblock %}
+
+{% block main_content %}
+    <div id="hydra-monitor-container" style="max-width: 1000px; margin: 0 auto;">
+        {% include "hydra/spawn_monitor.html" %}
+    </div>
+{% endblock %}

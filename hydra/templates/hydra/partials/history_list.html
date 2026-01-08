@@ -1,0 +1,30 @@
+<div id="hydra-history" hx-get="{% url 'hydra_history' %}" hx-trigger="load, every 10s" hx-swap="outerHTML">
+    <h4 style="color: #64748b; font-size: 0.8rem; text-transform: uppercase; margin: 1.5rem 0 1rem 0;">Hydra Mission Log</h4>
+    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        {% for spawn in recent_spawns %}
+        <div hx-get="{% url 'hydra_spawn_monitor' spawn.id %}" 
+             hx-target="#hydra-monitor-container" 
+             hx-swap="innerHTML"
+             style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255, 255, 255, 0.03); border-radius: 8px; cursor: pointer; transition: background 0.2s;">
+            
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; display: inline-block; 
+                    background: {% if spawn.status.name == 'Success' %}#4ade80{% elif spawn.status.name == 'Failed' %}#f87171{% elif spawn.status.name == 'Running' %}#60a5fa{% else %}#94a3b8{% endif %};">
+                </span>
+                
+                <span style="color: #f1f5f9; font-weight: 600; font-size: 0.9rem;">
+                    {{ spawn.spellbook.name }}
+                </span>
+                
+                <span style="color: #64748b; font-size: 0.8rem; font-family: monospace;">
+                    #{{ spawn.id|stringformat:"s"|slice:":6" }}
+                </span>
+            </div>
+            
+            <div style="color: #94a3b8; font-size: 0.8rem;">{{ spawn.created|timesince }} ago</div>
+        </div>
+        {% empty %}
+        <div style="color: #64748b; font-style: italic;">No missions recorded.</div>
+        {% endfor %}
+    </div>
+</div>

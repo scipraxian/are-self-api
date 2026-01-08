@@ -32,14 +32,14 @@ class FastValidateIntegrationTest(TestCase):
         # 1. Trigger Request using UUID
         url = reverse('hydra_launch', args=[self.book.id])
         
-        # CRITICAL: Capture on_commit callbacks (since we use transaction.on_commit in the view logic now)
+        # Capture commit callbacks
         with self.captureOnCommitCallbacks(execute=True):
             response = self.client.post(url)
 
-        # 2. Verify Response
+        # 2. Verify Response (Updated to expect Monitor)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'hydra/partials/spawn_feedback.html')
-        self.assertContains(response, "Hydra Protocol Initiated")
+        self.assertTemplateUsed(response, 'hydra/spawn_monitor.html') 
+        self.assertContains(response, "OPERATION: Fast Validate")
 
         # 3. Verify DB
         spawn = HydraSpawn.objects.first()

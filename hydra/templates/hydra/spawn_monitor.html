@@ -1,0 +1,144 @@
+<div id="spawn-monitor-{{ spawn.id }}" class="monitor-card" style="margin-top: 1rem;">
+    <div class="monitor-header" 
+         {% if is_active %}
+         hx-get="{% url 'hydra_spawn_monitor' spawn.id %}" 
+         hx-select=".monitor-header" 
+         hx-trigger="every 2s" 
+         hx-swap="outerHTML"
+         {% endif %}>
+        <div class="status-info">
+            <h3>OPERATION: {{ spawn.spellbook.name }}</h3>
+            <div class="status-line">
+                <span class="run-id">Spawn {{ spawn.id|stringformat:"s"|slice:":8" }}</span>
+                <span class="separator">|</span>
+                <span class="status-text status-{{ spawn.status.name|lower }}">{{ spawn.status.name }}</span>
+            </div>
+        </div>
+        <div class="actions">
+            {% if not is_active %}
+            <button onclick="document.getElementById('spawn-monitor-{{ spawn.id }}').remove()" class="btn-done">DISMISS</button>
+            {% else %}
+            <div class="spinner-small"></div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="monitor-table">
+            <thead>
+                <tr>
+                    <th class="col-ord">#</th>
+                    <th class="col-step">Spell Protocol</th>
+                    <th class="col-status">Status</th>
+                    <th class="col-time">Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for head in heads %}
+                <tr id="row-{{ head.id }}" class="step-row" onclick="toggleHydraLogs('{{ head.id }}');">
+                    <td class="col-ord">{{ head.spell.order }}</td>
+                    <td class="col-step">
+                        <span style="font-weight: 700; color: #e2e8f0;">{{ head.spell.name }}</span>
+                        <div style="font-size: 0.75rem; color: #64748b; font-family: monospace;">{{ head.spell.executable.slug }}</div>
+                    </td>
+                    
+                    <td class="col-status">
+                        <span id="status-badge-{{ head.id }}"
+                              class="status-badge status-{{ head.status.name|lower }}"
+                              {% if is_active %}
+                              hx-get="{% url 'hydra_spawn_monitor' spawn.id %}"
+                              hx-select="#status-badge-{{ head.id }}"
+                              hx-trigger="every 2s"
+                              hx-swap="outerHTML"
+                              {% endif %}>
+                            {{ head.status.name }}
+                        </span>
+                    </td>
+
+                    <td class="col-time">
+                        <span id="result-code-{{ head.id }}"
+                              style="font-family: monospace; color: {% if head.result_code == 0 %}#4ade80{% elif head.result_code %}#f87171{% else %}#64748b{% endif %};"
+                              {% if is_active %}
+                              hx-get="{% url 'hydra_spawn_monitor' spawn.id %}"
+                              hx-select="#result-code-{{ head.id }}"
+                              hx-trigger="every 2s"
+                              hx-swap="outerHTML"
+                              {% endif %}>
+                            {% if head.result_code is not None %}RC: {{ head.result_code }}{% else %}--{% endif %}
+                        </span>
+                    </td>
+                </tr>
+                
+                <tr id="logs-{{ head.id }}" class="log-container" style="display: none;" hx-preserve>
+                    <td colspan="4" style="padding: 0; border: none;">
+                        <div id="log-wrapper-{{ head.id }}" 
+                             class="log-wrapper" 
+                             style="text-align: left; background: #0f172a; border-top: 1px solid rgba(255,255,255,0.1); padding: 1rem;"
+                             hx-get="{% url 'hydra_head_logs' head.id %}?type=tool&partial=content" 
+                             hx-trigger="load_now, every 2s" 
+                             hx-target="#log-payload-{{ head.id }}"
+                             hx-swap="innerHTML">
+                             
+                            <div id="log-payload-{{ head.id }}" 
+                                 style="max-height: 400px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #cbd5e1; white-space: pre-wrap;">
+                                <span style="color: #94a3b8; font-style: italic;">Initializing stream...</span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function toggleHydraLogs(id) {
+        var row = document.getElementById('logs-' + id);
+        if (row.style.display === 'none') {
+            row.style.display = 'table-row';
+            
+            var wrapper = document.getElementById('log-wrapper-' + id);
+            // Trigger load if class 'loaded' is missing
+            if (wrapper && !wrapper.classList.contains('loaded')) {
+                if (typeof htmx !== 'undefined') {
+                    htmx.trigger(wrapper, 'load_now');
+                    wrapper.classList.add('loaded');
+                }
+            }
+        } else {
+            row.style.display = 'none';
+        }
+    }
+</script>
+
+<style>
+    .monitor-card { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem; backdrop-filter: blur(12px); animation: fadeIn 0.3s ease-out; }
+    .monitor-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+    .monitor-header h3 { color: #94a3b8; font-weight: 700; text-transform: uppercase; font-size: 0.9rem; margin: 0 0 0.5rem 0; letter-spacing: 0.05em; }
+    .status-line { font-size: 1.1rem; font-weight: 600; color: #f1f5f9; font-family: 'Outfit', sans-serif; display: flex; align-items: center; }
+    .separator { color: #475569; margin: 0 8px; }
+    .status-text.status-success { color: #4ade80; }
+    .status-text.status-failed { color: #f87171; }
+    .status-text.status-running { color: #818cf8; }
+    .btn-done { background: transparent; border: 1px solid #475569; color: #94a3b8; padding: 0.5rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8rem; }
+    .btn-done:hover { border-color: #cbd5e1; color: #f1f5f9; }
+    .table-wrapper { background: rgba(0, 0, 0, 0.2); border-radius: 12px; overflow: hidden; margin-top: 1rem; }
+    .monitor-table { width: 100%; border-collapse: collapse; }
+    .col-ord { width: 5%; text-align: center; color: #64748b; font-family: monospace; }
+    .col-step { width: 60%; text-align: left; }
+    .col-status { width: 20%; text-align: center; }
+    .col-time { width: 15%; text-align: right; }
+    .monitor-table th { padding: 1rem; color: #94a3b8; background: rgba(255, 255, 255, 0.02); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; }
+    .step-row { border-bottom: 1px solid rgba(255, 255, 255, 0.05); cursor: pointer; transition: background 0.2s; }
+    .step-row:hover { background: rgba(255, 255, 255, 0.05); }
+    .step-row td { padding: 1rem; vertical-align: middle; }
+    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; display: inline-block; }
+    .status-badge.status-running { background: rgba(99, 102, 241, 0.15); color: #818cf8; animation: pulse 2s infinite; }
+    .status-badge.status-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+    .status-badge.status-failed { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+    .status-badge.status-created { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+    .status-badge.status-pending { background: rgba(234, 179, 8, 0.15); color: #facc15; }
+    .spinner-small { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1); border-top-color: #60a5fa; border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
