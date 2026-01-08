@@ -1,11 +1,22 @@
 """Hydra Data Models."""
-from common.models import DescriptionMixin
 from django.db import models
+from common.models import (
+    BigIdMixin,
+    CreatedMixin,
+    DefaultFieldsMixin,
+    DescriptionMixin,
+    ModifiedMixin,
+    NameMixin,
+    UUIDIdMixin,
+)
 from environments.models import ProjectEnvironment
-from common.models import (DefaultFieldsMixin, UUIDIdMixin, BigIdMixin,
-                           NameMixin, CreatedMixin, ModifiedMixin)
-from .constants import (CREATED_LABEL, PENDING_LABEL, RUNNING_LABEL,
-                        SUCCESS_LABEL, FAILED_LABEL)
+from .constants import (
+    CREATED_LABEL,
+    FAILED_LABEL,
+    PENDING_LABEL,
+    RUNNING_LABEL,
+    SUCCESS_LABEL,
+)
 
 # --- DEFINITIONS (The Library) ---
 
@@ -19,6 +30,16 @@ class HydraStatusID(object):
     RUNNING = 3
     SUCCESS = 4
     FAILED = 5
+
+
+class HydraOutcomeActionID(object):
+    """
+    Centralized Integer IDs for Outcome Actions.
+    """
+    COPY = 1
+    MOVE = 2
+    VALIDATE_EXISTS = 3
+    DELETE = 4
 
 
 class HydraExecutable(DefaultFieldsMixin):
@@ -64,11 +85,14 @@ class HydraSpell(DefaultFieldsMixin):
         return f"[{self.order}] {self.name}"
 
 
-class HydraOutcomeAction(models.TextChoices):
-    COPY = 'COPY', 'Copy'
-    MOVE = 'MOVE', 'Move'
-    VALIDATE_EXISTS = 'VALIDATE_EXISTS', 'Validate Exists'
-    DELETE = 'DELETE', 'Delete'
+class HydraOutcomeAction(BigIdMixin, NameMixin):
+    """
+    Lookup table for Outcome Actions.
+    """
+    IDs = HydraOutcomeActionID
+
+    class Meta:
+        verbose_name = "Hydra Outcome Action"
 
 
 class HydraSpellOutcomeConfig(DefaultFieldsMixin):
@@ -78,9 +102,12 @@ class HydraSpellOutcomeConfig(DefaultFieldsMixin):
                               related_name='outcome_configs',
                               null=True,
                               blank=True)
-    action_type = models.CharField(max_length=20,
-                                   choices=HydraOutcomeAction.choices,
-                                   default=HydraOutcomeAction.COPY)
+    action = models.ForeignKey(
+        HydraOutcomeAction,
+        on_delete=models.PROTECT,
+        null=True,  # Allow null for migration compatibility if needed
+        default=HydraOutcomeActionID.COPY)
+
     source_path_template = models.CharField(
         max_length=500, help_text="Source path with {placeholders}", default='')
     dest_path_template = models.CharField(
@@ -92,7 +119,7 @@ class HydraSpellOutcomeConfig(DefaultFieldsMixin):
                                      help_text="Fail if source missing?")
 
     def __str__(self):
-        return f"{self.action_type} :: {self.source_path_template}"
+        return f"{self.action} :: {self.source_path_template}"
 
 
 class HydraSpellbook(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
@@ -191,10 +218,3 @@ class HydraResult(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     spell = models.ForeignKey(HydraSpell, on_delete=models.PROTECT)
     report = models.CharField(max_length=500, blank=True)
 
-
-class HydraSpellOutcome(UUIDIdMixin, CreatedMixin, ModifiedMixin):
-    """
-    Outcome instance data.
-    """
-    name = models.CharField(max_length=254, db_index=True)
-    outcome_config = models.CharField(blank=True, max_length=500)

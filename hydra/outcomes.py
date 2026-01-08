@@ -1,13 +1,15 @@
 import os
 import shutil
 import glob
-from .models import HydraHead, HydraHeadStatus, HydraOutcomeAction
+from .models import HydraHead, HydraHeadStatus, HydraOutcomeAction, HydraOutcomeActionID
 from .utils import HydraContext, resolve_template, log_system
 
 
 def process_outcomes(head_id):
     try:
-        head = HydraHead.objects.get(id=head_id)
+        # Select related to avoid N+1 on action lookup (though spelled out logic handles it cleanly too)
+        head = HydraHead.objects.select_related(
+            'spawn__environment__project_environment', 'spell').get(id=head_id)
     except HydraHead.DoesNotExist:
         return
 
@@ -21,7 +23,8 @@ def process_outcomes(head_id):
                            project_name=env.project_name,
                            dynamic_context={})
 
-    outcomes = head.spell.outcome_configs.all()
+    # prefetch actions?
+    outcomes = head.spell.outcome_configs.select_related('action').all()
     if not outcomes:
         return
 
@@ -31,6 +34,9 @@ def process_outcomes(head_id):
     )
 
     for outcome in outcomes:
+        action_code = outcome.action_id
+        action_name = outcome.action.name if outcome.action else "UNKNOWN"
+
         try:
             src_pattern = resolve_template(outcome.source_path_template,
                                            context)
@@ -51,25 +57,25 @@ def process_outcomes(head_id):
                 else:
                     log_system(
                         head,
-                        f"Skipping {outcome.action_type}: No matches for '{src_pattern}'"
+                        f"Skipping {action_name}: No matches for '{src_pattern}'"
                     )
                     continue
 
             for src in matches:
                 # Handle actions
-                if outcome.action_type == HydraOutcomeAction.DELETE:
+                if action_code == HydraOutcomeActionID.DELETE:
                     log_system(head, f"Outcome DELETE: {src}")
                     if os.path.isfile(src):
                         os.remove(src)
                     else:
                         shutil.rmtree(src)
 
-                elif outcome.action_type == HydraOutcomeAction.VALIDATE_EXISTS:
+                elif action_code == HydraOutcomeActionID.VALIDATE_EXISTS:
                     log_system(head, f"Outcome VALIDATE: Found {src}")
                     # implicit success if loop runs
 
-                elif outcome.action_type in (HydraOutcomeAction.COPY,
-                                             HydraOutcomeAction.MOVE):
+                elif action_code in (HydraOutcomeActionID.COPY,
+                                     HydraOutcomeActionID.MOVE):
                     if not dest_template:
                         raise ValueError(
                             "Destination path required for COPY/MOVE")
@@ -130,7 +136,7 @@ def process_outcomes(head_id):
                         os.makedirs(os.path.dirname(target_path), exist_ok=True)
                         dest_final = target_path
 
-                    if outcome.action_type == HydraOutcomeAction.MOVE:
+                    if action_code == HydraOutcomeActionID.MOVE:
                         log_system(head, f"Outcome MOVE: {src} -> {dest_final}")
                         shutil.move(src, dest_final)
                     else:  # COPY

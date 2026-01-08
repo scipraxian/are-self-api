@@ -1,5 +1,5 @@
 from django.test import TestCase
-from hydra.models import HydraHead, HydraSpawn, HydraSpell, HydraExecutable, HydraSpellOutcomeConfig, HydraOutcomeAction, HydraSpellbook, HydraEnvironment, HydraSpawnStatus, HydraHeadStatus
+from hydra.models import HydraHead, HydraSpawn, HydraSpell, HydraExecutable, HydraSpellOutcomeConfig, HydraOutcomeAction, HydraOutcomeActionID, HydraSpellbook, HydraEnvironment, HydraSpawnStatus, HydraHeadStatus
 from hydra.outcomes import process_outcomes
 from environments.models import ProjectEnvironment
 import tempfile
@@ -49,6 +49,17 @@ class OutcomesTestCase(TestCase):
             HydraSpawnStatus.objects.get_or_create(id=sid,
                                                    defaults={'name': name})
 
+        # Create Outcome Actions
+        HydraOutcomeAction.objects.get_or_create(id=HydraOutcomeActionID.COPY,
+                                                 defaults={'name': "Copy"})
+        HydraOutcomeAction.objects.get_or_create(id=HydraOutcomeActionID.MOVE,
+                                                 defaults={'name': "Move"})
+        HydraOutcomeAction.objects.get_or_create(
+            id=HydraOutcomeActionID.VALIDATE_EXISTS,
+            defaults={'name': "Validate"})
+        HydraOutcomeAction.objects.get_or_create(id=HydraOutcomeActionID.DELETE,
+                                                 defaults={'name': "Delete"})
+
         self.status_success = HydraHeadStatus.objects.get(
             id=HydraHeadStatus.SUCCESS)
         self.spawn_status = HydraSpawnStatus.objects.get(
@@ -77,7 +88,7 @@ class OutcomesTestCase(TestCase):
         # Config outcome
         outcome = HydraSpellOutcomeConfig.objects.create(
             spell=self.spell,
-            action_type=HydraOutcomeAction.MOVE,
+            action_id=HydraOutcomeActionID.MOVE,
             source_path_template="{staging_dir}/test_artifact.txt",
             dest_path_template="{build_root}/Moved/",
             must_exist=True)
@@ -104,7 +115,7 @@ class OutcomesTestCase(TestCase):
 
         outcome = HydraSpellOutcomeConfig.objects.create(
             spell=self.spell,
-            action_type=HydraOutcomeAction.COPY,
+            action_id=HydraOutcomeActionID.COPY,
             source_path_template="{staging_dir}/logs/*.log",
             dest_path_template="{build_root}/Logs/",
             must_exist=True)
@@ -121,7 +132,7 @@ class OutcomesTestCase(TestCase):
     def test_outcome_failure_missing(self):
         outcome = HydraSpellOutcomeConfig.objects.create(
             spell=self.spell,
-            action_type=HydraOutcomeAction.COPY,
+            action_id=HydraOutcomeActionID.COPY,
             source_path_template="{staging_dir}/missing.txt",
             dest_path_template="{build_root}/",
             must_exist=True)

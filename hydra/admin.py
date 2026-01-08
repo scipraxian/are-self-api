@@ -2,8 +2,8 @@ from django.contrib import admin
 from django.utils.html import format_html
 from .models import (HydraExecutable, HydraSwitch, HydraEnvironment,
                      HydraSpellOutcomeConfig, HydraSpellbook, HydraSpell,
-                     HydraSpellOutcome, HydraSpawnStatus, HydraSpawn,
-                     HydraHeadStatus, HydraHead, HydraResult)
+                     HydraSpawnStatus, HydraSpawn, HydraHeadStatus, HydraHead,
+                     HydraResult, HydraOutcomeAction)
 
 # --- Inlines ---
 
@@ -191,6 +191,7 @@ class HydraSpellOutcomeConfigAdmin(admin.ModelAdmin):
     list_display = ('name', 'created')
 
 
-@admin.register(HydraSpellOutcome)
-class HydraSpellOutcomeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'outcome_config')
+@admin.register(HydraOutcomeAction)
+class HydraOutcomeActionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    ordering = ('id',)
