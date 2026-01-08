@@ -9,6 +9,7 @@ from .constants import (CREATED_LABEL, PENDING_LABEL, RUNNING_LABEL,
 
 # --- DEFINITIONS (The Library) ---
 
+
 class HydraStatusID(object):
     """
     Centralized Integer IDs for Status lookups.
@@ -53,7 +54,8 @@ class HydraSpell(DefaultFieldsMixin):
     """
     executable = models.ForeignKey(HydraExecutable, on_delete=models.PROTECT)
     active_switches = models.ManyToManyField(HydraSwitch, blank=True)
-    order = models.PositiveIntegerField(default=0, help_text="Execution sequence (1, 2, 3...)")
+    order = models.PositiveIntegerField(
+        default=0, help_text="Execution sequence (1, 2, 3...)")
 
     class Meta:
         ordering = ['order']
@@ -62,9 +64,35 @@ class HydraSpell(DefaultFieldsMixin):
         return f"[{self.order}] {self.name}"
 
 
+class HydraOutcomeAction(models.TextChoices):
+    COPY = 'COPY', 'Copy'
+    MOVE = 'MOVE', 'Move'
+    VALIDATE_EXISTS = 'VALIDATE_EXISTS', 'Validate Exists'
+    DELETE = 'DELETE', 'Delete'
+
+
 class HydraSpellOutcomeConfig(DefaultFieldsMixin):
     """Configuration for expected outcomes."""
-    pass
+    spell = models.ForeignKey('HydraSpell',
+                              on_delete=models.CASCADE,
+                              related_name='outcome_configs',
+                              null=True,
+                              blank=True)
+    action_type = models.CharField(max_length=20,
+                                   choices=HydraOutcomeAction.choices,
+                                   default=HydraOutcomeAction.COPY)
+    source_path_template = models.CharField(
+        max_length=500, help_text="Source path with {placeholders}", default='')
+    dest_path_template = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="Destination path (if Copy/Move)",
+        default='')
+    must_exist = models.BooleanField(default=True,
+                                     help_text="Fail if source missing?")
+
+    def __str__(self):
+        return f"{self.action_type} :: {self.source_path_template}"
 
 
 class HydraSpellbook(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
@@ -168,7 +196,5 @@ class HydraSpellOutcome(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     """
     Outcome instance data.
     """
-    name = models.CharField(
-        max_length=254, db_index=True
-    )
+    name = models.CharField(max_length=254, db_index=True)
     outcome_config = models.CharField(blank=True, max_length=500)
