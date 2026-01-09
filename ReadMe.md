@@ -10,18 +10,24 @@ Talos isn't just a build runner—it's a mission control center. Every interacti
 
 ### ✨ Key Features
 
-#### 🚀 The Campaign Orchestrator
-* **Mission Control:** A centralized "Launcher" interface to trigger complex build profiles (e.g., "Fast Validate", "Nightly Full").
-* **Live Monitoring:** Real-time visualization of the build pipeline. Watch steps (Headless, Staging, UAT) progress with precise duration metrics.
-* **Dual-Stream Logging:** Simultaneously captures the Command Line output and tails the internal UE5 log files (`HSHVacancy.log`) in real-time, streaming them to the browser without page reloads.
-* **Run History:** Instant access to the results and artifacts of previous missions.
+#### 🚀 The Hydra Orchestrator
+* **Mission Control:** A centralized "Launch Protocol" interface to trigger complex build sequences (e.g., "Fast Validate", "Staging Build").
+* **Embedded Monitoring:** Real-time visualization of the build pipeline directly on the dashboard. Watch steps progress with precise duration metrics and automatic state finalization.
+* **Enhanced Log Viewer:** High-fidelity log streaming with "Smart Scroll" (Tail Follow), one-click **Copy to Clipboard**, and **Download as .log** functionality.
+* **Recent Missions:** Instant dashboard visibility into the last 5 orchestration runs, with color-coded status indicators and deep-links to mission logs.
+
+#### ⚡ Native Spell Architecture
+* **Parallel Distributor:** High-performance fleet distribution using multi-threaded Robocopy synchronization.
+* **Version Stamper:** Automated build metadata generation (Hex Hashes, Builder ID, Timestamps) that preserves static versioning.
+* **Context-Aware:** All spells use the `HydraContext` for robust path resolution across different project environments.
 
 #### 📡 Sonar & Fleet Management
 * **Auto-Discovery:** Automatically scans the subnet to identify and register Talos Remote Agents via custom handshake protocol.
-* **Remote Control:** * **Launch:** Start UE5 instances remotely with optimized flags (`-AutoStart`, `-resX=1280`, etc.).
+* **Remote Control:** 
+    * **Launch:** Start UE5 instances remotely with optimized flags (`-AutoStart`, `-resX=1280`, etc.).
     * **Kill:** Graceful, multi-stage process termination across Windows machines.
     * **Log Attachment:** View live logs from any agent in the fleet via HTMX streaming.
-* **Phoenix Update Protocol:** One-click "Push Update" securely transmits new code to remote agents, causing them to self-update and restart automatically using a detached batch process.
+* **Phoenix Update Protocol:** One-click "Push Update" securely transmits new code to remote agents, causing them to self-update and restart automatically.
 
 #### 🎨 Premium User Experience
 * **Visual Integrity:** Dark-mode interface featuring **Inter** & **Outfit** typography, glassmorphism, and hardware-accelerated animations.
@@ -35,10 +41,11 @@ Talos isn't just a build runner—it's a mission control center. Every interacti
 Talos is built for speed, stability, and maximum responsiveness:
 
 * **Backend:** Django 6.x (running on **Daphne ASGI** for high-concurrency).
-* **Task Queue:** **Celery 5.x** + **Redis** for true non-blocking execution and dynamic task chaining (Canvas).
+* **Task Queue:** **Celery 5.x** + **Redis** for true non-blocking execution and dynamic task chaining.
+* **Native Spells:** Python-native orchestration tasks (Distributor, Versioning) that execute within the worker context for maximum performance.
 * **Fleet Protocol:** Custom lightweight socket-based protocol (`v2.1.4`) for low-latency agent communication.
 * **Frontend:** **HTMX** for high-interactivity with near-zero Javascript.
-* **Database:** SQLite (Dev) / PostgreSQL (Prod) for persisting Pipeline Runs, Step Logs, and Agent Telemetry.
+* **Database:** SQLite (Dev) / PostgreSQL (Prod) for persisting Protocols, Missions, and Agent Telemetry.
 
 ---
 
@@ -47,8 +54,8 @@ Talos is built for speed, stability, and maximum responsiveness:
 We don't trust—we verify. Talos maintains strict testing tiers:
 
 1.  **Protocol Robustness (`test_agent_robust.py`):** Stress tests the agent against simultaneous connections, large payloads, and malformed command arguments.
-2.  **UI & Visual Integrity:** Playwright-driven browser tests that physically verify button colors (by hex value), ensure no raw Django template tags leak into the UI, and validate the "Big Red Button" is actually red.
-3.  **Integration Core:** Strict TDD approach for the Pipeline logic. Tests prove that "Fast Validate" triggers the correct sequence of Celery tasks before the code is even written.
+2.  **UI & Visual Integrity:** Playwright-driven browser tests that physically verify button colors, ensure responsive wrapping of log actions, and validate in-place monitor refreshes.
+3.  **Integration Core:** Strict TDD approach for the Hydra state machine. Tests prove that mission finalization, outcome processing, and wave dispatching work before code is committed.
 
 ---
 
@@ -76,10 +83,11 @@ python talos_agent/bin/agent_service.py
 ----
 ## 🛠 Operation Guide
 
-1.  **Sonar Scan:** Click **Scan Network** in the top right to discover new agents.
-2.  **Campaigns:** Select a profile (e.g., **🚀 Fast Validate**) to begin a build.
-3.  **Monitoring:** Watch the live steps. Click any step row to expand the real-time logs.
-4.  **Fleet Mgmt:** Drill down into specific agents to Launch/Kill processes or push code updates.
+1.  **Sonar Scan:** Click **Scan Network** in the top right to discover and probe new agents.
+2.  **Hydra Protocols:** Select a mission (e.g., **🚀 Fast Validate**) on the dashboard to begin.
+3.  **Monitoring:** Watch the live mission progress in the embedded dashboard monitor. Click any protocol row to expand real-time log streams.
+4.  **Audit History:** Scroll down to **Recent Missions** to review logs and result codes from past build sequences.
+5.  **Fleet Mgmt:** Drill down into specific agents to Launch/Kill processes or push code updates via the Sonar grid.
 
 ---
 
