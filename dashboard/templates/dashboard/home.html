@@ -7,11 +7,6 @@
 {% include "dashboard/partials/hydra_button.html" %}
 <hr>
 
-<div hx-get="{% url 'dashboard_campaign_section' %}" hx-trigger="load" hx-swap="outerHTML">
-    <!-- Campaign Orchestrator loads here -->
-</div>
-
-
 <div class="section-header"
     style="display: flex; justify-content: space-between; align-items: center; margin-top: 3rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
     <h2
@@ -23,28 +18,4 @@
 {% endblock %}
 
 {% block extra_style %}
-.big-red-button {
-background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
-color: white !important;
-border: none;
-padding: 1.5rem 3rem;
-font-size: 1.5rem;
-font-weight: 700;
-border-radius: 16px;
-cursor: pointer;
-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.4), 0 4px 6px -2px rgba(239, 68, 68, 0.2);
-text-transform: uppercase;
-letter-spacing: 0.05em;
-position: relative;
-overflow: hidden;
-}
-.big-red-button:hover {
-transform: translateY(-4px) scale(1.02);
-box-shadow: 0 20px 25px -5px rgba(239, 68, 68, 0.5), 0 10px 10px -5px rgba(239, 68, 68, 0.3);
-filter: brightness(1.1);
-}
-.big-red-button:active { transform: translateY(0) scale(0.98); }
-.big-red-button:disabled { background: #475569 !important; cursor: not-allowed; transform: none; box-shadow: none;
-filter: grayscale(1); }
 {% endblock %}

@@ -15,8 +15,8 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 class VisualIntegrityTests(StaticLiveServerTestCase):
     def setUp(self):
         ProjectEnvironment.objects.create(name="ProjectX", is_active=True)
-        from pipelines.models import BuildProfile
-        BuildProfile.objects.create(name="Fast Validate", headless=True)
+        from hydra.models import HydraSpellbook
+        HydraSpellbook.objects.create(name="Fast Validate")
         self.agent = RemoteTarget.objects.create(
             hostname="ColorTestAgent",
             ip_address="127.0.0.1",
@@ -29,17 +29,17 @@ class VisualIntegrityTests(StaticLiveServerTestCase):
             browser = p.chromium.launch(headless=True)
             page = browser.new_page()
             
-            # 1. HOME PAGE - BIG RED BUTTON
+            # 1. HOME PAGE - HYDRA BUTTON
             page.goto(self.live_server_url)
-            page.wait_for_selector(".big-red-button", state="visible")
+            page.wait_for_selector(".hydra-btn", state="visible")
             
-            build_btn = page.locator(".big-red-button")
+            hydra_btn = page.locator(".btn-validate")
             # Gradient is complex. Check both background and backgroundImage
-            bg_computed = build_btn.evaluate("el => { const s = window.getComputedStyle(el); return { image: s.backgroundImage, color: s.backgroundColor, bg: s.background }; }")
-            print(f"DEBUG: Big Red Button Style: {bg_computed}")
+            bg_computed = hydra_btn.evaluate("el => { const s = window.getComputedStyle(el); return { image: s.backgroundImage, color: s.backgroundColor, bg: s.background }; }")
+            print(f"DEBUG: Hydra Button Style: {bg_computed}")
             
-            is_red = "rgb(239, 68, 68)" in bg_computed['image'] or "rgb(239, 68, 68)" in bg_computed['bg']
-            self.assertTrue(is_red, f"Big Red Button is NOT the correct shade of red! Styles: {bg_computed}")
+            is_violet = "rgb(139, 92, 246)" in bg_computed['image'] or "rgb(139, 92, 246)" in bg_computed['bg']
+            self.assertTrue(is_violet, f"Hydra Button is NOT the correct shade of violet! Styles: {bg_computed}")
 
             # 2. DETAIL PAGE - CONTROL BUTTONS
             page.goto(f"{self.live_server_url}/agent-detail/{self.agent.pk}/")
