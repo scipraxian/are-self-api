@@ -14,6 +14,13 @@ class HydraSwitchInline(admin.TabularInline):
     fields = ('name', 'flag', 'value')
 
 
+class HydraSpellOutcomeConfigInline(admin.TabularInline):
+    model = HydraSpellOutcomeConfig
+    extra = 1
+    fields = ('name', 'action', 'source_path_template', 'dest_path_template',
+              'must_exist')
+
+
 class HydraSpellInline(admin.TabularInline):
     model = HydraSpellbook.spells.through
     extra = 1
@@ -63,6 +70,7 @@ class HydraSwitchAdmin(admin.ModelAdmin):
     list_display = ('name', 'flag', 'value', 'executable')
     list_filter = ('executable',)
     search_fields = ('name', 'flag')
+    list_select_related = ('executable',)
 
 
 @admin.register(HydraEnvironment)
@@ -75,19 +83,49 @@ class HydraEnvironmentAdmin(admin.ModelAdmin):
 
 @admin.register(HydraSpell)
 class HydraSpellAdmin(admin.ModelAdmin):
-    list_display = ('name', 'executable')
-    list_filter = ('executable',)
-    search_fields = ('name',)
+    list_display = ('order', 'name', 'executable', 'switch_count',
+                    'outcome_count', 'in_spellbooks', 'created')
+    list_filter = ('executable', 'created')
+    search_fields = ('name', 'executable__name', 'executable__slug')
     filter_horizontal = ('active_switches',)
+    list_select_related = ('executable',)
+    inlines = [HydraSpellOutcomeConfigInline]
     save_as = True
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related(
+            'active_switches', 'outcome_configs', 'hydraspellbook_set')
+
+    def switch_count(self, obj):
+        return obj.active_switches.count()
+
+    switch_count.short_description = 'Switches'
+
+    def outcome_count(self, obj):
+        return obj.outcome_configs.count()
+
+    outcome_count.short_description = 'Outcomes'
+
+    def in_spellbooks(self, obj):
+        return ", ".join([sb.name for sb in obj.hydraspellbook_set.all()])
+
+    in_spellbooks.short_description = 'In Spellbooks'
 
 
 @admin.register(HydraSpellbook)
 class HydraSpellbookAdmin(admin.ModelAdmin):
-    list_display = ('name', 'created')
+    list_display = ('name', 'spell_count', 'created')
     search_fields = ('name',)
     filter_horizontal = ('spells',)
     save_as = True
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('spells')
+
+    def spell_count(self, obj):
+        return obj.spells.count()
+
+    spell_count.short_description = 'Spells'
 
 
 @admin.register(HydraSpawn)
@@ -95,6 +133,7 @@ class HydraSpawnAdmin(admin.ModelAdmin):
     list_display = ('id', 'spellbook', 'environment', 'status_display',
                     'created')
     list_filter = ('status', 'environment', 'spellbook')
+    list_select_related = ('spellbook', 'environment', 'status')
     readonly_fields = ('created', 'modified', 'context_data_formatted')
     inlines = [HydraHeadInline]
     date_hierarchy = 'created'
@@ -128,14 +167,20 @@ class HydraSpawnAdmin(admin.ModelAdmin):
 
 @admin.register(HydraHead)
 class HydraHeadAdmin(admin.ModelAdmin):
-    list_display = ('id', 'spawn', 'spell', 'status_display', 'result_code',
-                    'created')
+    list_display = ('id', 'spellbook_name', 'spawn', 'spell', 'status_display',
+                    'result_code', 'created')
     list_filter = ('status', 'spell', 'spawn')
+    list_select_related = ('spawn', 'spell', 'status', 'spawn__spellbook')
     readonly_fields = ('celery_task_id', 'spell_log_formatted',
                        'execution_log_formatted', 'created', 'modified')
     exclude = ('spell_log', 'execution_log')
     date_hierarchy = 'created'
     ordering = ('-created',)
+
+    def spellbook_name(self, obj):
+        return obj.spawn.spellbook.name
+
+    spellbook_name.short_description = 'Spellbook'
 
     def status_display(self, obj):
         if not obj.status:
@@ -188,7 +233,11 @@ class HydraResultAdmin(admin.ModelAdmin):
 
 @admin.register(HydraSpellOutcomeConfig)
 class HydraSpellOutcomeConfigAdmin(admin.ModelAdmin):
-    list_display = ('name', 'created')
+    list_display = ('name', 'spell', 'action', 'source_path_template',
+                    'created')
+    list_filter = ('action', 'spell', 'created')
+    list_select_related = ('spell', 'action')
+    search_fields = ('name', 'source_path_template', 'dest_path_template')
 
 
 @admin.register(HydraOutcomeAction)
