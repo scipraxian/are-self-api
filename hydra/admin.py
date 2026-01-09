@@ -86,7 +86,7 @@ class HydraSpellAdmin(admin.ModelAdmin):
 class HydraSpellbookAdmin(admin.ModelAdmin):
     list_display = ('name', 'created')
     search_fields = ('name',)
-    filter_horizontal = ('spells', 'outcomes')
+    filter_horizontal = ('spells',)
     save_as = True
 
 

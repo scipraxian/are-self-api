@@ -128,7 +128,6 @@ class HydraSpellbook(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     Uses UUIDIdMixin to ensure IDs are URL-safe and distinct.
     """
     spells = models.ManyToManyField(HydraSpell, blank=True)
-    outcomes = models.ManyToManyField(HydraSpellOutcomeConfig, blank=True)
 
 
 # --- EXECUTION STATE (The Runtime) ---

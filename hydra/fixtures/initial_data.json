@@ -731,8 +731,7 @@
                 110,
                 120,
                 130
-            ],
-            "outcomes": []
+            ]
         }
     },
     {
@@ -747,8 +746,7 @@
                 100,
                 110,
                 130
-            ],
-            "outcomes": []
+            ]
         }
     },
     {
@@ -761,8 +759,7 @@
             "name": "Distribute to Agents",
             "spells": [
                 130
-            ],
-            "outcomes": []
+            ]
         }
     },
     {
@@ -775,8 +772,7 @@
             "name": "UAT Run",
             "spells": [
                 120
-            ],
-            "outcomes": []
+            ]
         }
     },
     {
@@ -791,8 +787,7 @@
                 1,
                 2,
                 3
-            ],
-            "outcomes": []
+            ]
         }
     },
     {
@@ -805,8 +800,7 @@
             "name": "Test",
             "spells": [
                 1
-            ],
-            "outcomes": []
+            ]
         }
     },
     {
@@ -820,8 +814,7 @@
             "spells": [
                 2,
                 3
-            ],
-            "outcomes": []
+            ]
         }
     },
     {
@@ -834,8 +827,7 @@
             "name": "Staging Run Only",
             "spells": [
                 4
-            ],
-            "outcomes": []
+            ]
         }
     },
     {
@@ -848,8 +840,7 @@
             "name": "Build Shaders Only",
             "spells": [
                 100
-            ],
-            "outcomes": []
+            ]
         }
     },
     {
@@ -862,8 +853,7 @@
             "name": "UAT Build",
             "spells": [
                 110
-            ],
-            "outcomes": []
+            ]
         }
     },
     {
