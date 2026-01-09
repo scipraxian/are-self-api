@@ -80,15 +80,13 @@
                     <td colspan="4" style="padding: 0; border: none;">
                         <div id="log-wrapper-{{ head.id }}" 
                              class="log-wrapper" 
-                             style="text-align: left; background: #0f172a; border-top: 1px solid rgba(255,255,255,0.1); padding: 1rem;"
-                             hx-get="{% url 'hydra_head_logs' head.id %}?type=tool&partial=content" 
-                             hx-trigger="load_now, every 2s" 
-                             hx-target="#log-payload-{{ head.id }}"
+                             hx-get="{% url 'hydra_head_logs' head.id %}?type=tool" 
+                             hx-trigger="load_now" 
                              hx-swap="innerHTML">
                              
-                            <div id="log-payload-{{ head.id }}" 
-                                 style="max-height: 400px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #cbd5e1; white-space: pre-wrap;">
-                                <span style="color: #94a3b8; font-style: italic;">Initializing stream...</span>
+                            <div style="padding: 2rem; text-align: center; color: #94a3b8; font-family: 'Inter', sans-serif; background: #0f172a; border-top: 1px solid rgba(255,255,255,0.1);">
+                                <div class="spinner-small" style="margin: 0 auto 10px;"></div>
+                                Loading Protocol Stream...
                             </div>
                         </div>
                     </td>
