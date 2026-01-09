@@ -12,6 +12,7 @@ class FastValidateIntegrationTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.status_created = HydraHeadStatus.objects.create(id=1, name="Created")
+        self.status_pending = HydraHeadStatus.objects.create(id=2, name="Pending")
         self.status_running = HydraHeadStatus.objects.create(id=3, name="Running")
         self.spawn_created = HydraSpawnStatus.objects.create(id=1, name="Created")
         self.spawn_running = HydraSpawnStatus.objects.create(id=3, name="Running")

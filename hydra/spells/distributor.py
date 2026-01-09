@@ -29,13 +29,19 @@ def distribute_build_native(head):
 
     log = [f"=== NATIVE DISTRIBUTION ===", f"Source: {source_path}"]
 
-    # 2. Get Targets (All ONLINE agents)
-    targets = RemoteTarget.objects.filter(is_enabled=True, status='ONLINE')
+    # 2. Get Targets (Include BUSY agents as they can still receive files)
+    all_enabled = RemoteTarget.objects.filter(is_enabled=True)
+    targets = all_enabled.filter(status__in=['ONLINE', 'BUSY'])
+    
+    skipped = all_enabled.exclude(status__in=['ONLINE', 'BUSY'])
+    if skipped.exists():
+        log.append(f"[INFO] Skipping {skipped.count()} OFFLINE/ERROR targets: {[t.hostname for t in skipped]}")
+
     if not targets.exists():
-        return 0, "\n".join(log + ["[SKIPPED] No ONLINE targets found."])
+        return 0, "\n".join(log + ["[SKIPPED] No ONLINE/BUSY targets found."])
 
     # 3. Define Exclusions
-    excludes = ['Saved', 'Intermediate', '.git', 'FileOpenOrder', 'DerivedDataCache']
+    excludes = ['Saved', 'Intermediate', '.git', 'FileOpenOrder', 'DerivedDataCache', 'PipelineCaches']
     log.append(f"Targets: {[t.hostname for t in targets]}")
     
     # 4. Parallel Execution
@@ -117,6 +123,13 @@ def _sync_target(target, source_path, env, excludes):
         rel_path = os.path.normpath(rel_path)
         dest_path = f"\\\\{target.hostname}\\steambuild\\{rel_path}"
 
+    # CRITICAL: Robocopy /subprocess quirk. 
+    # If a path ends in a backslash and is then quoted by subprocess, 
+    # Robocopy sees \" and thinks it's an escaped quote.
+    # We must ensure no trailing backslashes.
+    source_path = source_path.rstrip('\\')
+    dest_path = dest_path.rstrip('\\')
+
     # Robocopy /MIR requires the *directory* itself as destination
     cmd = [
         'robocopy',
@@ -124,17 +137,22 @@ def _sync_target(target, source_path, env, excludes):
         dest_path,
         '/MIR', '/MT:8', '/R:2', '/W:2',
         '/NFL', '/NDL', '/NJH', 
-        '/XD'
-    ] + excludes
+    ]
+    
+    if excludes:
+        cmd.append('/XD')
+        cmd.extend(excludes)
 
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True)
+        proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
         # Robocopy Exit Codes: 0=No Change, 1=Files Copied, <8=Success
         if proc.returncode < 8:
             stats = _parse_robocopy_summary(proc.stdout)
             status_tag = "(Files Copied)" if proc.returncode >= 1 else "(Up to Date)"
             return True, f"Synced to {dest_path} {status_tag} | {stats}"
             
-        return False, f"Robocopy Error {proc.returncode} ({dest_path})"
+        # If it failed, let's at least see the first line of error or the return code
+        err_hint = proc.stderr.splitlines()[0] if proc.stderr else "See Robocopy logs"
+        return False, f"Robocopy Error {proc.returncode} ({dest_path}): {err_hint}"
     except Exception as e:
         return False, f"Sys Error: {e}"

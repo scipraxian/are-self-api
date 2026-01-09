@@ -25,16 +25,10 @@ class Hydra(object):
             # Prepare a new beast
             book = HydraSpellbook.objects.get(id=spellbook_id)
             # Find or default the status
-            status_created, _ = HydraSpawnStatus.objects.get_or_create(
-                id=HydraSpawnStatus.CREATED, 
-                defaults={'name': 'Created'}
-            )
-            
-            # Create Spawn
             self.spawn = HydraSpawn.objects.create(
                 spellbook=book,
                 environment_id=env_id,
-                status=status_created
+                status_id=HydraSpawnStatus.CREATED
             )
             
             # Initialize empty context (JSON serialized to Text)
@@ -49,27 +43,18 @@ class Hydra(object):
         and dispatches the first batch.
         """
         # Update Status to Running
-        status_running, _ = HydraSpawnStatus.objects.get_or_create(
-            id=HydraSpawnStatus.RUNNING, 
-            defaults={'name': 'Running'}
-        )
-        self.spawn.status = status_running
+        self.spawn.status_id = HydraSpawnStatus.RUNNING
         self.spawn.save()
 
         # 1. Materialize the Heads from the Spells
         if not self.spawn.heads.exists():
             spells = self.spawn.spellbook.spells.all()
             
-            status_created, _ = HydraHeadStatus.objects.get_or_create(
-                id=HydraHeadStatus.CREATED, 
-                defaults={'name': 'Created'}
-            )
-
             for spell in spells:
                 HydraHead.objects.create(
                     spawn=self.spawn,
                     spell=spell,
-                    status=status_created
+                    status_id=HydraHeadStatus.CREATED
                 )
         
         # 2. Trigger the first wave
@@ -103,9 +88,12 @@ class Hydra(object):
         for head in wave:
             logger.info(f"[HYDRA] Dispatching Head {head.id} (Order: {next_order}, Spell: {head.spell.name})")
             
-            # CRITICAL FIX: Wait for DB commit before sending to Celery
-            # This prevents "HydraHead matching query does not exist" errors
-            transaction.on_commit(lambda: cast_hydra_spell.delay(head.id))
+            # Update status to PENDING immediately to prevent double-dispatch
+            head.status_id = HydraHeadStatus.PENDING
+            head.save()
+            
+            # Use a default argument to capture the current head.id in the lambda
+            transaction.on_commit(lambda h_id=head.id: cast_hydra_spell.delay(h_id))
 
     def poll(self):
         """
@@ -121,11 +109,7 @@ class Hydra(object):
             res = AsyncResult(head.celery_task_id)
             if res.ready():
                 if res.state == 'FAILURE':
-                    fail_status, _ = HydraHeadStatus.objects.get_or_create(
-                        id=HydraHeadStatus.FAILED, 
-                        defaults={'name': 'Failed'}
-                    )
-                    head.status = fail_status
+                    head.status_id = HydraHeadStatus.FAILED
                     head.execution_log += f"\n[HYDRA POLL] Task Failure detected: {res.info}"
                     head.save()
                     state_changed = True
@@ -136,18 +120,20 @@ class Hydra(object):
         self.spawn.save()
 
     def _finalize_spawn(self):
-        if self.spawn.status.id in [HydraSpawnStatus.SUCCESS, HydraSpawnStatus.FAILED]:
+        if self.spawn.status_id in [HydraSpawnStatus.SUCCESS, HydraSpawnStatus.FAILED]:
             return
 
         failed_heads = self.spawn.heads.filter(status__id=HydraHeadStatus.FAILED)
         if failed_heads.exists():
-            status, _ = HydraSpawnStatus.objects.get_or_create(id=HydraSpawnStatus.FAILED, defaults={'name': 'Failed'})
+            status_id = HydraSpawnStatus.FAILED
+            status_name = "Failed"
         else:
-            status, _ = HydraSpawnStatus.objects.get_or_create(id=HydraSpawnStatus.SUCCESS, defaults={'name': 'Success'})
+            status_id = HydraSpawnStatus.SUCCESS
+            status_name = "Success"
         
-        self.spawn.status = status
+        self.spawn.status_id = status_id
         self.spawn.save()
-        logger.info(f"[HYDRA] Spawn {self.spawn.id} Finalized: {status.name}")
+        logger.info(f"[HYDRA] Spawn {self.spawn.id} Finalized: {status_name}")
 
     def terminate(self):
         # 1. Kill Running Tasks
@@ -157,20 +143,12 @@ class Hydra(object):
                 logger.info(f"[HYDRA] Revoking task {head.celery_task_id}")
                 celery_app.control.revoke(head.celery_task_id, terminate=True)
             
-            fail_status, _ = HydraHeadStatus.objects.get_or_create(
-                id=HydraHeadStatus.FAILED, 
-                defaults={'name': 'Failed'}
-            )
-            head.status = fail_status
+            head.status_id = HydraHeadStatus.FAILED
             head.execution_log += "\n[HYDRA] Terminated by User."
             head.save()
 
         # 2. Update Spawn Status
-        fail_spawn, _ = HydraSpawnStatus.objects.get_or_create(
-            id=HydraSpawnStatus.FAILED, 
-            defaults={'name': 'Failed'}
-        )
-        self.spawn.status = fail_spawn
+        self.spawn.status_id = HydraSpawnStatus.FAILED
         self.spawn.save()
 
     def view(self):
