@@ -42,7 +42,7 @@ class HydraOutcomeActionID(object):
     DELETE = 4
 
 
-class HydraExecutable(DefaultFieldsMixin):
+class HydraExecutable(DefaultFieldsMixin, DescriptionMixin):
     """
     A base tool (e.g. Unreal Editor, Python).
     """

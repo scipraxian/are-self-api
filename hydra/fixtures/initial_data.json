@@ -4,6 +4,7 @@
         "pk": 1,
         "fields": {
             "created": "2026-01-01T00:00:00Z",
+            "description": null,
             "modified": "2026-01-01T00:00:00Z",
             "name": "Unreal Editor (Cmd)",
             "slug": "ue_cmd",
@@ -15,6 +16,7 @@
         "pk": 2,
         "fields": {
             "created": "2026-01-01T00:00:00Z",
+            "description": null,
             "modified": "2026-01-01T00:00:00Z",
             "name": "Unreal Automation Tool",
             "slug": "uat",
@@ -26,10 +28,47 @@
         "pk": 3,
         "fields": {
             "created": "2026-01-01T00:00:00Z",
+            "description": null,
             "modified": "2026-01-01T00:00:00Z",
             "name": "Staged Game Executable",
             "slug": "game_exe",
             "path_template": "{staging_dir}/Windows/{project_name}.exe"
+        }
+    },
+    {
+        "model": "hydra.hydraexecutable",
+        "pk": 4,
+        "fields": {
+            "created": "2026-01-08T12:00:00Z",
+            "description": null,
+            "modified": "2026-01-08T12:00:00Z",
+            "name": "Production Game (ReleaseTest)",
+            "slug": "prod_game_releasetest",
+            "path_template": "{build_root}/ReleaseTest/{project_name}.exe"
+        }
+    },
+    {
+        "model": "hydra.hydraexecutable",
+        "pk": 5,
+        "fields": {
+            "created": "2026-01-08T18:00:00Z",
+            "description": "Native Python Function: distributor.distribute_build_native (Standard Share Mode)",
+            "modified": "2026-01-09T08:00:00Z",
+            "name": "Native Parallel Distributor",
+            "slug": "distribute_fleet",
+            "path_template": ""
+        }
+    },
+    {
+        "model": "hydra.hydraexecutable",
+        "pk": 100,
+        "fields": {
+            "created": "2026-01-07T22:58:23.399Z",
+            "description": null,
+            "modified": "2026-01-07T22:58:23.404Z",
+            "name": "ShaderPipelineCacheTools",
+            "slug": "shader_cache_tool",
+            "path_template": "{engine_root}/Engine/Binaries/Win64/ShaderPipelineCacheTools.exe"
         }
     },
     {
@@ -312,8 +351,8 @@
         "model": "hydra.hydraswitch",
         "pk": 30,
         "fields": {
-            "created": "2026-01-08T16:00:00Z",
-            "modified": "2026-01-08T16:00:00Z",
+            "created": "2026-01-08T12:00:00Z",
+            "modified": "2026-01-08T12:00:00Z",
             "name": "Editor No Pause",
             "executable": 1,
             "flag": "-nopause",
@@ -324,8 +363,8 @@
         "model": "hydra.hydraswitch",
         "pk": 31,
         "fields": {
-            "created": "2026-01-08T16:00:00Z",
-            "modified": "2026-01-08T16:00:00Z",
+            "created": "2026-01-08T12:00:00Z",
+            "modified": "2026-01-08T12:00:00Z",
             "name": "No Live Coding",
             "executable": 1,
             "flag": "-NoLiveCoding",
@@ -336,11 +375,35 @@
         "model": "hydra.hydraswitch",
         "pk": 32,
         "fields": {
-            "created": "2026-01-08T16:00:00Z",
-            "modified": "2026-01-08T16:00:00Z",
+            "created": "2026-01-08T12:00:00Z",
+            "modified": "2026-01-08T12:00:00Z",
             "name": "Disable LC Var",
             "executable": 1,
             "flag": "-dpcvars=\"LiveCoding.Enable=0\"",
+            "value": ""
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 40,
+        "fields": {
+            "created": "2026-01-08T12:00:00Z",
+            "modified": "2026-01-08T12:00:00Z",
+            "name": "Prod: Windowed",
+            "executable": 4,
+            "flag": "-windowed -resX=1280 -resY=720",
+            "value": ""
+        }
+    },
+    {
+        "model": "hydra.hydraswitch",
+        "pk": 41,
+        "fields": {
+            "created": "2026-01-08T12:00:00Z",
+            "modified": "2026-01-08T12:00:00Z",
+            "name": "Prod: Log",
+            "executable": 4,
+            "flag": "-log",
             "value": ""
         }
     },
@@ -469,8 +532,8 @@
         "pk": 1,
         "fields": {
             "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-01T00:00:00Z",
-            "name": "Gatekeeper: Headless Unit Tests",
+            "modified": "2026-01-09T15:19:13.183Z",
+            "name": "Test",
             "executable": 1,
             "order": 1,
             "active_switches": [
@@ -523,8 +586,8 @@
         "pk": 4,
         "fields": {
             "created": "2026-01-01T00:00:00Z",
-            "modified": "2026-01-07T23:24:32.668Z",
-            "name": "Staging: Smoke Test",
+            "modified": "2026-01-09T15:19:52.695Z",
+            "name": "Stage Run",
             "executable": 3,
             "order": 1,
             "active_switches": [
@@ -538,7 +601,7 @@
         "pk": 100,
         "fields": {
             "created": "2026-01-07T22:58:23.399Z",
-            "modified": "2026-01-08T15:50:00Z",
+            "modified": "2026-01-09T15:17:58.456Z",
             "name": "Compile PSO Cache",
             "executable": 1,
             "order": 10,
@@ -561,8 +624,8 @@
         "pk": 110,
         "fields": {
             "created": "2026-01-08T15:50:00Z",
-            "modified": "2026-01-08T15:50:00Z",
-            "name": "UAT: Production Build",
+            "modified": "2026-01-09T15:17:37.850Z",
+            "name": "UAT Build",
             "executable": 2,
             "order": 20,
             "active_switches": [
@@ -581,6 +644,32 @@
                 113,
                 114
             ]
+        }
+    },
+    {
+        "model": "hydra.hydraspell",
+        "pk": 120,
+        "fields": {
+            "created": "2026-01-08T12:00:00Z",
+            "modified": "2026-01-09T15:20:09.858Z",
+            "name": "UAT Run",
+            "executable": 4,
+            "order": 30,
+            "active_switches": [
+                40
+            ]
+        }
+    },
+    {
+        "model": "hydra.hydraspell",
+        "pk": 130,
+        "fields": {
+            "created": "2026-01-08T18:00:00Z",
+            "modified": "2026-01-09T15:15:24.078Z",
+            "name": "Distribute",
+            "executable": 5,
+            "order": 40,
+            "active_switches": []
         }
     },
     {
@@ -616,13 +705,78 @@
         "pk": 100,
         "fields": {
             "created": "2026-01-07T22:58:23.399Z",
-            "modified": "2026-01-07T22:58:23.404Z",
+            "modified": "2026-01-08T12:00:00Z",
             "name": "Copy Generated SPC",
             "spell": 100,
             "action": 1,
             "source_path_template": "{staging_dir}/Windows/{project_name}/Content/PipelineCaches/{project_name}_PCD3D_SM6.spc",
-            "dest_path_template": "{project_root}/Build/Windows/PipelineCaches/",
+            "dest_path_template": "{project_root}/{project_name}/Build/Windows/PipelineCaches/",
             "must_exist": true
+        }
+    },
+    {
+        "model": "hydra.hydraspellbook",
+        "pk": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+        "fields": {
+            "created": "2026-01-08T16:10:00Z",
+            "description": "Full Chain: Test -> UAT",
+            "modified": "2026-01-09T15:11:45.514Z",
+            "name": "Full",
+            "spells": [
+                1,
+                4,
+                2,
+                3,
+                100,
+                110,
+                120,
+                130
+            ],
+            "outcomes": []
+        }
+    },
+    {
+        "model": "hydra.hydraspellbook",
+        "pk": "22334455-6677-8899-0011-aabbccddeeff",
+        "fields": {
+            "created": "2026-01-08T16:40:00Z",
+            "description": "Full Chain: Shaders -> Build -> Native Distribute.",
+            "modified": "2026-01-09T15:05:05.871Z",
+            "name": "Compile shaders build uat distribute",
+            "spells": [
+                100,
+                110,
+                130
+            ],
+            "outcomes": []
+        }
+    },
+    {
+        "model": "hydra.hydraspellbook",
+        "pk": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+        "fields": {
+            "created": "2026-01-08T21:58:00.568Z",
+            "description": "Distribute to Agents",
+            "modified": "2026-01-08T21:58:00.568Z",
+            "name": "Distribute to Agents",
+            "spells": [
+                130
+            ],
+            "outcomes": []
+        }
+    },
+    {
+        "model": "hydra.hydraspellbook",
+        "pk": "426765ff-7d90-46b7-a930-3b63ffb338db",
+        "fields": {
+            "created": "2026-01-08T19:08:27.159Z",
+            "description": "UAT Run",
+            "modified": "2026-01-08T19:08:27.159Z",
+            "name": "UAT Run",
+            "spells": [
+                120
+            ],
+            "outcomes": []
         }
     },
     {
@@ -631,8 +785,8 @@
         "fields": {
             "created": "2026-01-01T00:00:00Z",
             "description": "The original 7_Manager.py workflow",
-            "modified": "2026-01-01T00:00:00Z",
-            "name": "Legacy Full Pipeline",
+            "modified": "2026-01-09T15:05:35.482Z",
+            "name": "Test stage build stage run",
             "spells": [
                 1,
                 2,
@@ -647,8 +801,8 @@
         "fields": {
             "created": "2026-01-01T00:00:00Z",
             "description": "Headless Test Only",
-            "modified": "2026-01-01T00:00:00Z",
-            "name": "Fast Validate",
+            "modified": "2026-01-09T15:05:55.848Z",
+            "name": "Test",
             "spells": [
                 1
             ],
@@ -661,7 +815,7 @@
         "fields": {
             "created": "2026-01-01T00:00:00Z",
             "description": "Build Staging -> Run Staging (Rec PSO)",
-            "modified": "2026-01-07T23:26:02.609Z",
+            "modified": "2026-01-09T15:06:13.697Z",
             "name": "Staging Build&Record",
             "spells": [
                 2,
@@ -689,9 +843,9 @@
         "pk": "e1f2a3b4-5c6d-7e8f-9a0b-1c2d3e4f5a6b",
         "fields": {
             "created": "2026-01-08T15:50:00Z",
+            "description": "Step 3 Standalone: Compiles PSO caches and copies .spc results.",
             "modified": "2026-01-08T15:50:00Z",
             "name": "Build Shaders Only",
-            "description": "Step 3 Standalone: Compiles PSO caches and copies .spc results.",
             "spells": [
                 100
             ],
@@ -703,25 +857,10 @@
         "pk": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
         "fields": {
             "created": "2026-01-08T16:00:00Z",
-            "modified": "2026-01-08T16:00:00Z",
-            "name": "Production Build Only",
             "description": "Step 4 Standalone: UAT BuildCookRun with Archive.",
+            "modified": "2026-01-09T15:13:33.410Z",
+            "name": "UAT Build",
             "spells": [
-                110
-            ],
-            "outcomes": []
-        }
-    },
-    {
-        "model": "hydra.hydraspellbook",
-        "pk": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-        "fields": {
-            "created": "2026-01-08T16:10:00Z",
-            "modified": "2026-01-08T16:10:00Z",
-            "name": "Release Candidate 1",
-            "description": "Full Chain: Compile Shaders -> Production Build.",
-            "spells": [
-                100,
                 110
             ],
             "outcomes": []
@@ -806,6 +945,594 @@
             "name": "Auto-Env for Talos Default Environment",
             "project_environment": "2a898e21-b7f2-4442-94e4-f0acb87d57b6",
             "executables": []
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "008d62ad-8afe-4ef0-8684-8eb489e1839c",
+        "fields": {
+            "created": "2026-01-07T22:48:41.898Z",
+            "modified": "2026-01-07T22:48:41.903Z",
+            "spellbook": "c9f0a1b2-3d4e-5f6a-7b8c-9d0e1f2c3d4e",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "014acb84-3f3c-4c5a-affa-cd94f74655ba",
+        "fields": {
+            "created": "2026-01-08T00:16:37.610Z",
+            "modified": "2026-01-08T00:16:51.556Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "05b9ad3c-6f7a-4b48-b6df-eee3f7e593c9",
+        "fields": {
+            "created": "2026-01-07T22:52:34.135Z",
+            "modified": "2026-01-07T22:52:34.141Z",
+            "spellbook": "c9f0a1b2-3d4e-5f6a-7b8c-9d0e1f2c3d4e",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "0c47a7f4-0d71-47d4-b9c1-e4d322202bdd",
+        "fields": {
+            "created": "2026-01-08T17:48:10.575Z",
+            "modified": "2026-01-08T17:48:10.580Z",
+            "spellbook": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "0ee87238-842a-46c8-89ce-8be44ef21c61",
+        "fields": {
+            "created": "2026-01-08T19:08:38.659Z",
+            "modified": "2026-01-08T19:09:20.680Z",
+            "spellbook": "426765ff-7d90-46b7-a930-3b63ffb338db",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "0faf70c7-edb3-4e5f-8570-c0e1aa43e9e6",
+        "fields": {
+            "created": "2026-01-09T14:12:22.796Z",
+            "modified": "2026-01-09T14:12:22.800Z",
+            "spellbook": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "14591cb9-b712-4a4c-9c41-f45f1fcec33e",
+        "fields": {
+            "created": "2026-01-08T17:13:13.774Z",
+            "modified": "2026-01-08T17:13:13.779Z",
+            "spellbook": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "1b4c74ca-1e9c-4d03-999e-57c1d7e3f27b",
+        "fields": {
+            "created": "2026-01-09T15:03:34.952Z",
+            "modified": "2026-01-09T15:03:35.032Z",
+            "spellbook": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "2605cc9d-0d4c-427b-bdd1-ca6a274f7ec9",
+        "fields": {
+            "created": "2026-01-08T00:28:00.080Z",
+            "modified": "2026-01-08T00:28:14.028Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "29180676-0a44-4684-ab64-604eee3283d9",
+        "fields": {
+            "created": "2026-01-08T16:59:53.546Z",
+            "modified": "2026-01-08T17:00:09.115Z",
+            "spellbook": "e1f2a3b4-5c6d-7e8f-9a0b-1c2d3e4f5a6b",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "331dae66-fb76-415c-92fa-9093a0a5512d",
+        "fields": {
+            "created": "2026-01-08T17:12:00.776Z",
+            "modified": "2026-01-08T17:12:10.719Z",
+            "spellbook": "e1f2a3b4-5c6d-7e8f-9a0b-1c2d3e4f5a6b",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "385f9b8b-7a28-441d-a192-ba8e7adaeb5c",
+        "fields": {
+            "created": "2026-01-07T23:08:43.988Z",
+            "modified": "2026-01-07T23:13:37.847Z",
+            "spellbook": "c9f0a1b2-3d4e-5f6a-7b8c-9d0e1f2c3d4e",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "474f0dbc-9657-44a4-be64-ca25fb105249",
+        "fields": {
+            "created": "2026-01-08T00:02:03.277Z",
+            "modified": "2026-01-08T00:02:17.215Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "4e4618e0-989b-40d0-ae61-c0830231a245",
+        "fields": {
+            "created": "2026-01-09T14:28:25.554Z",
+            "modified": "2026-01-09T14:28:42.570Z",
+            "spellbook": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "58a06121-63e8-40fb-8fca-398e7d6de642",
+        "fields": {
+            "created": "2026-01-07T23:32:22.673Z",
+            "modified": "2026-01-07T23:32:36.628Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "66b184e9-35cc-4c7e-8c51-d9bdde842e2f",
+        "fields": {
+            "created": "2026-01-07T23:02:47.238Z",
+            "modified": "2026-01-07T23:02:47.244Z",
+            "spellbook": "c9f0a1b2-3d4e-5f6a-7b8c-9d0e1f2c3d4e",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "672ccae1-157a-49c9-bd86-2c2b98f70c3b",
+        "fields": {
+            "created": "2026-01-07T23:52:35.225Z",
+            "modified": "2026-01-07T23:52:48.054Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "6fe90962-cbdc-4efc-a863-f27fa1d4ca1a",
+        "fields": {
+            "created": "2026-01-08T00:05:13.540Z",
+            "modified": "2026-01-08T00:05:27.611Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "72b63f71-9277-4f6a-a88a-7f6f3fca7572",
+        "fields": {
+            "created": "2026-01-08T00:25:10.200Z",
+            "modified": "2026-01-08T00:25:24.272Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "734a8a61-1ccc-4f27-9965-3cfd78f1b979",
+        "fields": {
+            "created": "2026-01-08T18:50:10.341Z",
+            "modified": "2026-01-08T18:51:46.332Z",
+            "spellbook": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "75bf7356-5503-4d8b-b5cb-fe2725c82161",
+        "fields": {
+            "created": "2026-01-08T00:11:56.120Z",
+            "modified": "2026-01-08T00:12:09.964Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "821d0829-b0a3-45af-8856-52c4a451e3b6",
+        "fields": {
+            "created": "2026-01-07T23:52:02.775Z",
+            "modified": "2026-01-07T23:52:16.718Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "857c20b3-9b17-46f3-9807-9d1a5bf30f1d",
+        "fields": {
+            "created": "2026-01-08T16:02:10.754Z",
+            "modified": "2026-01-08T16:02:31.226Z",
+            "spellbook": "e1f2a3b4-5c6d-7e8f-9a0b-1c2d3e4f5a6b",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "86a62c32-ea03-4828-9f7e-0d8e98108194",
+        "fields": {
+            "created": "2026-01-08T17:34:20.030Z",
+            "modified": "2026-01-08T17:34:20.037Z",
+            "spellbook": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "90178276-c696-48a0-9453-24298127f4c3",
+        "fields": {
+            "created": "2026-01-08T17:33:54.912Z",
+            "modified": "2026-01-08T17:34:02.634Z",
+            "spellbook": "e1f2a3b4-5c6d-7e8f-9a0b-1c2d3e4f5a6b",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "91fa0ea2-4486-4a23-8514-349901ca6f80",
+        "fields": {
+            "created": "2026-01-08T00:01:16.207Z",
+            "modified": "2026-01-08T00:01:30.055Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "93c30843-8771-475a-be6b-efe1b2dcb1b1",
+        "fields": {
+            "created": "2026-01-08T18:48:05.006Z",
+            "modified": "2026-01-08T18:48:13.127Z",
+            "spellbook": "e1f2a3b4-5c6d-7e8f-9a0b-1c2d3e4f5a6b",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "9b8ff6b1-0e84-47bf-9187-787864ecca09",
+        "fields": {
+            "created": "2026-01-08T00:06:12.544Z",
+            "modified": "2026-01-08T00:06:26.480Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "a67e8ffa-e5ba-4a9e-8be1-77fc7b05cca1",
+        "fields": {
+            "created": "2026-01-08T18:00:21.029Z",
+            "modified": "2026-01-08T18:00:21.035Z",
+            "spellbook": "b8e9f0a1-2c3d-4e5f-6a7b-8c9d0e1f2b3c",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "addc4073-5691-4d07-886f-5b31a32f2ef5",
+        "fields": {
+            "created": "2026-01-07T23:42:58.234Z",
+            "modified": "2026-01-07T23:43:12.194Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "b4e58ca0-8522-419e-8674-eaee761d5ebb",
+        "fields": {
+            "created": "2026-01-07T23:45:01.928Z",
+            "modified": "2026-01-07T23:45:15.867Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "b5458f5e-e25e-4381-9a43-b32905408d25",
+        "fields": {
+            "created": "2026-01-08T00:21:01.279Z",
+            "modified": "2026-01-08T00:21:15.530Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "ba2e3726-08e6-4077-bc47-e0ec2c65f83a",
+        "fields": {
+            "created": "2026-01-08T22:09:21.251Z",
+            "modified": "2026-01-08T22:09:21.256Z",
+            "spellbook": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "bb2fa87d-1ec1-4b62-a310-f69be0ae13e5",
+        "fields": {
+            "created": "2026-01-07T23:20:46.634Z",
+            "modified": "2026-01-07T23:21:10.020Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "bb736276-11fb-4653-b422-b8608d836c96",
+        "fields": {
+            "created": "2026-01-07T23:37:04.650Z",
+            "modified": "2026-01-07T23:37:18.499Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "bc08c51b-1e2a-405d-9493-23555d32fb7f",
+        "fields": {
+            "created": "2026-01-07T23:26:11.641Z",
+            "modified": "2026-01-07T23:26:26.491Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "c4c38f8a-2de6-4b86-8202-ae9afcd57619",
+        "fields": {
+            "created": "2026-01-08T00:13:56.134Z",
+            "modified": "2026-01-08T00:14:10.499Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "cacdc096-1272-4b03-9d49-d560e9c3028b",
+        "fields": {
+            "created": "2026-01-08T22:15:46.433Z",
+            "modified": "2026-01-08T22:15:46.484Z",
+            "spellbook": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "cda84738-f6b2-417a-9553-a2b425a6e64c",
+        "fields": {
+            "created": "2026-01-08T17:47:49.767Z",
+            "modified": "2026-01-08T17:47:57.485Z",
+            "spellbook": "e1f2a3b4-5c6d-7e8f-9a0b-1c2d3e4f5a6b",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "cee0343b-efea-435d-956e-71f6865c705d",
+        "fields": {
+            "created": "2026-01-08T21:58:13.052Z",
+            "modified": "2026-01-08T21:58:13.057Z",
+            "spellbook": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "cfcf867d-f6d9-4d40-a72f-7909af1a85cb",
+        "fields": {
+            "created": "2026-01-08T00:16:55.805Z",
+            "modified": "2026-01-08T00:17:09.638Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "d2aa212f-d5e6-4979-8683-8a7e4d67a1f5",
+        "fields": {
+            "created": "2026-01-08T17:03:35.122Z",
+            "modified": "2026-01-08T17:03:35.127Z",
+            "spellbook": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "d3cc5a32-8157-43f3-a8ac-28e3872cb3c9",
+        "fields": {
+            "created": "2026-01-07T22:44:57.960Z",
+            "modified": "2026-01-07T22:44:57.965Z",
+            "spellbook": "b8e9f0a1-2c3d-4e5f-6a7b-8c9d0e1f2b3c",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "d4cfc039-4fd2-4cbb-9451-54c1e1eb92ea",
+        "fields": {
+            "created": "2026-01-09T14:57:57.264Z",
+            "modified": "2026-01-09T14:57:57.481Z",
+            "spellbook": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "d67013b0-4f61-4362-92fe-12f66d38a077",
+        "fields": {
+            "created": "2026-01-08T00:08:47.113Z",
+            "modified": "2026-01-08T00:09:01.062Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "e54e8cb8-f1bc-4315-a88f-09a47b54645a",
+        "fields": {
+            "created": "2026-01-07T22:58:23.399Z",
+            "modified": "2026-01-07T22:58:23.404Z",
+            "spellbook": "c9f0a1b2-3d4e-5f6a-7b8c-9d0e1f2c3d4e",
+            "environment": 1,
+            "status": 3,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "ecdf3dc3-9ba8-49b6-a46b-4a80d9833a70",
+        "fields": {
+            "created": "2026-01-08T00:05:53.265Z",
+            "modified": "2026-01-08T00:06:07.108Z",
+            "spellbook": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "f6df316f-29a6-4495-8c95-a960492129b9",
+        "fields": {
+            "created": "2026-01-08T19:04:41.559Z",
+            "modified": "2026-01-08T19:06:29.597Z",
+            "spellbook": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
+        }
+    },
+    {
+        "model": "hydra.hydraspawn",
+        "pk": "fcae6ae2-ee5c-419d-a422-610f411071fa",
+        "fields": {
+            "created": "2026-01-09T14:59:55.506Z",
+            "modified": "2026-01-09T14:59:55.583Z",
+            "spellbook": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+            "environment": 1,
+            "status": 4,
+            "context_data": "{}"
         }
     }
 ]

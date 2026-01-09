@@ -1,3 +1,4 @@
+from hydra.spells.native_executables import NativeExecutables
 import collections
 import datetime
 import os
@@ -16,7 +17,7 @@ from .utils import get_timestamp
 from .utils import HydraContext
 from .utils import log_system
 from .utils import resolve_template
-
+    
 
 def build_command(hydra_head):
     spawn = hydra_head.spawn
@@ -151,8 +152,25 @@ def cast_hydra_spell(self, hydrahead_id):
         head.celery_task_id = self.request.id
         head.save()
 
-        cmd = build_command(head)
-        retcode = stream_command_to_db(cmd, head)
+        native_handler = NativeExecutables.get_handler(head.spell.executable.slug)
+        
+        if native_handler:
+            # Native Execution Path
+            head.status_id = HydraHeadStatus.RUNNING
+            head.save()
+            log_system(head, f"Dispatching Native Handler: {head.spell.executable.slug}")
+            
+            try:
+                retcode, output_log = native_handler(head)
+                head.spell_log = output_log
+            except Exception as e:
+                retcode = 1
+                head.spell_log = f"Native Handler Exception: {str(e)}"
+        else:
+            # Legacy/Shell Execution Path
+            # REMOVED LOCAL IMPORT causing UnboundLocalError
+            cmd = build_command(head)
+            retcode = stream_command_to_db(cmd, head)
 
         head.result_code = retcode
         if retcode == 0:
