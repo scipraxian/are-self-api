@@ -33,8 +33,8 @@ class HydraExclusivityTests(StaticLiveServerTestCase):
             page.goto(self.live_server_url)
             page.wait_for_selector(".hydra-btn", state="visible")
             
-            expect(page.get_by_text("Fast Validate")).to_be_visible()
-            expect(page.get_by_text("Full Run")).to_be_visible()
+            expect(page.get_by_role("button", name="Fast Validate")).to_be_visible()
+            expect(page.get_by_role("button", name="Full Run")).to_be_visible()
             
             # 2. Simulate an active run with a head so it doesn't get cleaned up immediately
             from hydra.models import HydraSpell, HydraExecutable, HydraHead
@@ -66,8 +66,8 @@ class HydraExclusivityTests(StaticLiveServerTestCase):
             page.click("text=DISMISS")
             
             # 5. Buttons should return
-            expect(page.get_by_text("Fast Validate")).to_be_visible()
-            expect(page.get_by_text("Full Run")).to_be_visible()
+            expect(page.get_by_role("button", name="Fast Validate")).to_be_visible()
+            expect(page.get_by_role("button", name="Full Run")).to_be_visible()
             expect(page.get_by_text("OPERATION: Fast Validate")).not_to_be_visible()
 
             browser.close()
@@ -88,8 +88,8 @@ class HydraExclusivityTests(StaticLiveServerTestCase):
             page.goto(self.live_server_url)
             
             # 3. The nudge in DashboardHomeView should have fixed it immediately
-            expect(page.get_by_text("Fast Validate")).to_be_visible()
-            expect(page.get_by_text("Full Run")).to_be_visible()
+            expect(page.get_by_role("button", name="Fast Validate")).to_be_visible()
+            expect(page.get_by_role("button", name="Full Run")).to_be_visible()
             expect(page.get_by_text("RUNNING")).not_to_be_visible()
             
             # Verify DB state

@@ -1,30 +1,52 @@
-<div id="hydra-history" hx-get="{% url 'hydra_history' %}" hx-trigger="load, every 10s" hx-swap="outerHTML">
-    <h4 style="color: #64748b; font-size: 0.8rem; text-transform: uppercase; margin: 1.5rem 0 1rem 0;">Hydra Mission Log</h4>
-    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-        {% for spawn in recent_spawns %}
-        <div hx-get="{% url 'hydra_spawn_monitor' spawn.id %}" 
-             hx-target="#hydra-monitor-container" 
-             hx-swap="innerHTML"
-             style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255, 255, 255, 0.03); border-radius: 8px; cursor: pointer; transition: background 0.2s;">
+<div id="hydra-history" style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
+    <h3 style="color: #64748b; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 1rem; letter-spacing: 0.05em;">Recent Missions</h3>
+    
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        {% for spawn in spawn_history %}
+        <a href="{% url 'hydra_spawn_monitor' spawn.id %}?full=True" 
+           style="text-decoration: none; display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.25rem; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.03); border-radius: 12px; transition: all 0.2s;"
+           class="history-item">
             
             <div style="display: flex; align-items: center; gap: 1rem;">
-                <span style="width: 8px; height: 8px; border-radius: 50%; display: inline-block; 
-                    background: {% if spawn.status.name == 'Success' %}#4ade80{% elif spawn.status.name == 'Failed' %}#f87171{% elif spawn.status.name == 'Running' %}#60a5fa{% else %}#94a3b8{% endif %};">
-                </span>
+                <!-- Status Dot -->
+                <div class="status-dot status-{{ spawn.status.name|lower }}" 
+                     style="width: 10px; height: 10px; border-radius: 50%; 
+                     {% if spawn.status.name == 'Success' %}background: #4ade80; box-shadow: 0 0 10px rgba(74, 222, 128, 0.3);{% elif spawn.status.name == 'Failed' %}background: #f87171; box-shadow: 0 0 10px rgba(248, 113, 113, 0.3);{% elif spawn.status.name == 'Running' %}background: #818cf8; box-shadow: 0 0 10px rgba(129, 140, 248, 0.3);{% else %}background: #64748b;{% endif %}">
+                </div>
                 
-                <span style="color: #f1f5f9; font-weight: 600; font-size: 0.9rem;">
-                    {{ spawn.spellbook.name }}
-                </span>
-                
-                <span style="color: #64748b; font-size: 0.8rem; font-family: monospace;">
-                    #{{ spawn.id|stringformat:"s"|slice:":6" }}
-                </span>
+                <div style="text-align: left;">
+                    <div style="color: #f1f5f9; font-weight: 600; font-size: 0.95rem;">{{ spawn.spellbook.name }}</div>
+                    <div style="color: #64748b; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
+                        #{{ spawn.id|stringformat:"s"|slice:":8" }} • {{ spawn.created|date:"M d, H:i" }}
+                    </div>
+                </div>
             </div>
             
-            <div style="color: #94a3b8; font-size: 0.8rem;">{{ spawn.created|timesince }} ago</div>
-        </div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; 
+                    {% if spawn.status.name == 'Success' %}color: #4ade80;{% elif spawn.status.name == 'Failed' %}color: #f87171;{% elif spawn.status.name == 'Running' %}color: #818cf8;{% else %}color: #94a3b8;{% endif %}">
+                    {{ spawn.status.name }}
+                </span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </div>
+        </a>
         {% empty %}
-        <div style="color: #64748b; font-style: italic;">No missions recorded.</div>
+        <div style="padding: 2rem; text-align: center; color: #475569; font-style: italic; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.05);">
+            No mission history available.
+        </div>
         {% endfor %}
     </div>
+
+    <style>
+        .history-item:hover {
+            background: rgba(30, 41, 59, 0.7) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            transform: translateX(4px);
+        }
+        .history-item:hover svg {
+            stroke: #94a3b8;
+        }
+    </style>
 </div>

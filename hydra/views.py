@@ -36,7 +36,8 @@ class LaunchSpellbookView(View):
                         'active_spawn': active_spawn,
                         'spawn': active_spawn,
                         'heads': active_spawn.heads.all().order_by('spell__order'),
-                        'is_active': active_spawn.is_active
+                        'is_active': active_spawn.is_active,
+                        'spawn_history': HydraSpawn.objects.all().order_by('-created')[:5]
                     })
                 # Otherwise just redirect to monitor
                 return redirect('hydra_spawn_monitor', spawn_id=active_spawn.id)
@@ -76,7 +77,8 @@ class LaunchSpellbookView(View):
                 'active_spawn': spawn,
                 'spawn': spawn,
                 'heads': spawn.heads.all().order_by('spell__order'),
-                'is_active': spawn.is_active
+                'is_active': spawn.is_active,
+                'spawn_history': HydraSpawn.objects.all().order_by('-created')[:5]
             })
 
         return redirect('hydra_spawn_monitor', spawn_id=controller.spawn.id)
@@ -156,6 +158,7 @@ class HydraControlsView(View):
         context = {
             'active_spawn': active_spawn,
             'hydra_spellbooks': spellbooks,
+            'spawn_history': HydraSpawn.objects.all().order_by('-created')[:5]
         }
         if active_spawn:
             context.update({

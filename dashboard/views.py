@@ -57,6 +57,8 @@ class DashboardHomeView(TemplateView):
     else:
         context['active_spawn'] = None
 
+    context['spawn_history'] = HydraSpawn.objects.all().order_by('-created')[:5]
+
     return context
 
 
