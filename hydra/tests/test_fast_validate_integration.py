@@ -4,7 +4,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from hydra.models import (
     HydraSpellbook, HydraSpell, HydraExecutable, HydraSwitch, 
-    HydraSpawn, HydraHeadStatus, HydraSpawnStatus
+    HydraSpawn, HydraHeadStatus, HydraSpawnStatus, HydraHead
 )
 from environments.models import ProjectEnvironment
 
@@ -16,12 +16,18 @@ class FastValidateIntegrationTest(TestCase):
         self.status_running = HydraHeadStatus.objects.create(id=3, name="Running")
         self.spawn_created = HydraSpawnStatus.objects.create(id=1, name="Created")
         self.spawn_running = HydraSpawnStatus.objects.create(id=3, name="Running")
+        self.spawn_success = HydraSpawnStatus.objects.create(id=4, name="Success")
+        self.spawn_failed = HydraSpawnStatus.objects.create(id=5, name="Failed")
+        self.status_success = HydraHeadStatus.objects.create(id=4, name="Success")
+        self.status_failed = HydraHeadStatus.objects.create(id=5, name="Failed")
 
         self.env = ProjectEnvironment.objects.create(
             name="Integration Env", 
             is_active=True,
             project_root="C:/FakeProject"
         )
+        from hydra.models import HydraEnvironment
+        self.hydra_env = HydraEnvironment.objects.create(project_environment=self.env, name="TestEnv")
 
         self.exe = HydraExecutable.objects.create(name="TestRunner", slug="test_runner", path_template="Test.exe")
         self.spell = HydraSpell.objects.create(name="Run Headless", executable=self.exe)
@@ -37,10 +43,10 @@ class FastValidateIntegrationTest(TestCase):
         with self.captureOnCommitCallbacks(execute=True):
             response = self.client.post(url)
 
-        # 2. Verify Response (Updated to expect Monitor)
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'hydra/spawn_monitor.html') 
-        self.assertContains(response, "OPERATION: Fast Validate")
+        # 2. Verify Response (Updated to expect Redirect or 204 with HX-Redirect)
+        # If it's a standard POST, it returns 302.
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('hydra_spawn_monitor', args=[HydraSpawn.objects.first().id]), response.url)
 
         # 3. Verify DB
         spawn = HydraSpawn.objects.first()
@@ -51,3 +57,64 @@ class FastValidateIntegrationTest(TestCase):
         heads = spawn.heads.all()
         head = heads.first()
         mock_celery.assert_called_once_with(head.id)
+
+    @mock.patch('hydra.tasks.check_next_wave.delay')
+    def test_spawn_finalizes_when_last_head_succeeds(self, mock_check):
+        from hydra.hydra import Hydra
+        from hydra.tasks import cast_hydra_spell
+        
+        # 1. Setup a spawn with one head
+        spawn = HydraSpawn.objects.create(
+            spellbook=self.book,
+            environment=self.hydra_env,
+            status_id=HydraSpawnStatus.RUNNING
+        )
+        head = HydraHead.objects.create(
+            spawn=spawn,
+            spell=self.spell,
+            status_id=HydraHeadStatus.PENDING
+        )
+        
+        # 2. Run the task (it should finish and call check_next_wave)
+        # We need to mock the actual execution part to be fast/safe
+        with mock.patch('hydra.tasks.build_command') as mock_build, \
+             mock.patch('hydra.tasks.stream_command_to_db') as mock_stream:
+            mock_stream.return_value = 0 # Success
+            
+            cast_hydra_spell(head.id)
+            
+        # 3. Verify head is Success
+        head.refresh_from_db()
+        self.assertEqual(head.status_id, HydraHeadStatus.SUCCESS)
+        
+        # 4. Manually trigger check_next_wave logic (since we mocked the delay)
+        # In tasks.py: transaction.on_commit(lambda: check_next_wave.delay(head.spawn.id))
+        # We can just call the task function directly or Hydra._dispatch_next_wave
+        from hydra.tasks import check_next_wave
+        check_next_wave(spawn.id)
+        
+        # 5. Verify Spawn is SUCCESS
+        spawn.refresh_from_db()
+        self.assertEqual(spawn.status_id, HydraSpawnStatus.SUCCESS)
+
+    def test_active_spawn_blocking_new_launch(self):
+        # 1. Setup an active spawn with a head so it's not cleaned up as a zombie
+        spawn = HydraSpawn.objects.create(
+            spellbook=self.book,
+            environment=self.hydra_env,
+            status_id=HydraSpawnStatus.RUNNING
+        )
+        HydraHead.objects.create(
+            spawn=spawn,
+            spell=self.spell,
+            status_id=HydraHeadStatus.RUNNING
+        )
+        
+        # 2. Try to launch again
+        url = reverse('hydra_launch', args=[self.book.id])
+        response = self.client.post(url)
+        
+        # 3. Should redirect to existing monitor (not create new)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('hydra_spawn_monitor', args=[spawn.id]), response.url)
+        self.assertEqual(HydraSpawn.objects.count(), 1)

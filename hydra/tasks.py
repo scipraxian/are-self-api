@@ -148,7 +148,11 @@ def check_next_wave(spawn_id):
 @shared_task(bind=True)
 def cast_hydra_spell(self, hydrahead_id):
     try:
-        head = HydraHead.objects.get(id=hydrahead_id)
+        try:
+            head = HydraHead.objects.get(id=hydrahead_id)
+        except HydraHead.DoesNotExist:
+            return f"Task skipped: HydraHead {hydrahead_id} no longer exists."
+
         head.celery_task_id = self.request.id
         head.save()
 

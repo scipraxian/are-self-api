@@ -67,14 +67,14 @@ class Hydra(object):
         """
         # 1. Are there any active/running heads?
         active_heads = self.spawn.heads.filter(
-            Q(status__id=HydraHeadStatus.RUNNING) | Q(status__id=HydraHeadStatus.PENDING)
+            status_id__in=[HydraHeadStatus.RUNNING, HydraHeadStatus.PENDING]
         )
         
         if active_heads.exists():
             return
 
         # 2. Find the next batch of Created tasks
-        pending_heads = self.spawn.heads.filter(status__id=HydraHeadStatus.CREATED)
+        pending_heads = self.spawn.heads.filter(status_id=HydraHeadStatus.CREATED)
         
         if not pending_heads.exists():
             self._finalize_spawn()
@@ -99,7 +99,7 @@ class Hydra(object):
         """
         Updates state of all running heads from Celery.
         """
-        active_heads = self.spawn.heads.filter(status__id=HydraHeadStatus.RUNNING)
+        active_heads = self.spawn.heads.filter(status_id=HydraHeadStatus.RUNNING)
         state_changed = False
 
         for head in active_heads:
@@ -113,6 +113,13 @@ class Hydra(object):
                     head.execution_log += f"\n[HYDRA POLL] Task Failure detected: {res.info}"
                     head.save()
                     state_changed = True
+                elif res.state == 'SUCCESS':
+                    # If it's SUCCESS in Celery but still RUNNING in DB, 
+                    # it means the task finished but failed to update DB (unlikely but possible)
+                    # OR we are polling while it's in a transition.
+                    # We should probably let cast_hydra_spell handle it, 
+                    # but polling is a safety net.
+                    pass 
                 
         self._dispatch_next_wave()
 
@@ -120,10 +127,18 @@ class Hydra(object):
         self.spawn.save()
 
     def _finalize_spawn(self):
-        if self.spawn.status_id in [HydraSpawnStatus.SUCCESS, HydraSpawnStatus.FAILED]:
+        """
+        Final check to see if the entire spawn is done.
+        """
+        # Are there any heads still in a non-terminal state?
+        active_heads = self.spawn.heads.exclude(
+            status_id__in=[HydraHeadStatus.SUCCESS, HydraHeadStatus.FAILED]
+        )
+        
+        if active_heads.exists():
             return
 
-        failed_heads = self.spawn.heads.filter(status__id=HydraHeadStatus.FAILED)
+        failed_heads = self.spawn.heads.filter(status_id=HydraHeadStatus.FAILED)
         if failed_heads.exists():
             status_id = HydraSpawnStatus.FAILED
             status_name = "Failed"
@@ -137,7 +152,9 @@ class Hydra(object):
 
     def terminate(self):
         # 1. Kill Running Tasks
-        running_heads = self.spawn.heads.filter(status__id=HydraHeadStatus.RUNNING)
+        running_heads = self.spawn.heads.filter(
+            status_id__in=[HydraHeadStatus.RUNNING, HydraHeadStatus.PENDING]
+        )
         for head in running_heads:
             if head.celery_task_id:
                 logger.info(f"[HYDRA] Revoking task {head.celery_task_id}")

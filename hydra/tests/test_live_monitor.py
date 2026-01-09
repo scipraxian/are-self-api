@@ -17,16 +17,19 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 class LiveMonitorTests(StaticLiveServerTestCase):
     def setUp(self):
         self.env = ProjectEnvironment.objects.create(name="BrowserEnv", is_active=True)
-        status = HydraHeadStatus.objects.create(id=1, name="Created")
-        spawn_status = HydraSpawnStatus.objects.create(id=1, name="Created")
+        # Create full range of statuses to avoid IntegrityErrors during nudge/poll
+        for i, name in [(1, "Created"), (2, "Pending"), (3, "Running"), (4, "Success"), (5, "Failed")]:
+            HydraHeadStatus.objects.create(id=i, name=name)
+            HydraSpawnStatus.objects.create(id=i, name=name)
+            
         exe = HydraExecutable.objects.create(name="Tool", slug="tool")
         spell = HydraSpell.objects.create(name="Spell", executable=exe)
         book = HydraSpellbook.objects.create(name="Book")
-        self.spawn = HydraSpawn.objects.create(spellbook=book, status=spawn_status)
+        self.spawn = HydraSpawn.objects.create(spellbook=book, status_id=1)
         self.head = HydraHead.objects.create(
             spawn=self.spawn, 
             spell=spell, 
-            status=status,
+            status_id=1,
             spell_log="Initial Log Content..."
         )
 

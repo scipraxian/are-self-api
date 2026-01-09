@@ -1,7 +1,7 @@
 <div id="spawn-monitor-{{ spawn.id }}" class="monitor-card" style="margin-top: 1rem;">
     <div class="monitor-header" 
          {% if is_active %}
-         hx-get="{% url 'hydra_spawn_monitor' spawn.id %}" 
+         hx-get="{% url 'hydra_spawn_monitor' spawn.id %}?full={{ is_full_page|default:'' }}" 
          hx-select=".monitor-header" 
          hx-trigger="every 2s" 
          hx-swap="outerHTML"
@@ -16,7 +16,14 @@
         </div>
         <div class="actions">
             {% if not is_active %}
-            <button onclick="document.getElementById('spawn-monitor-{{ spawn.id }}').remove()" class="btn-done">DISMISS</button>
+                {% if is_full_page %}
+                <a href="/" class="btn-done" style="text-decoration: none;">DISMISS</a>
+                {% else %}
+                <button hx-get="{% url 'hydra_controls' %}" 
+                        hx-target="#hydra-controls" 
+                        hx-swap="outerHTML"
+                        class="btn-done">DISMISS</button>
+                {% endif %}
             {% else %}
             <div class="spinner-small"></div>
             {% endif %}

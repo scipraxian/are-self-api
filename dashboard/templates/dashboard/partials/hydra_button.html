@@ -1,20 +1,25 @@
 <div id="hydra-controls" style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem;">
-    <h3 style="color: #94a3b8; text-transform: uppercase; font-size: 0.9rem; margin-bottom: 1rem;">Hydra Protocols</h3>
-    
-    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-        {% for book in hydra_spellbooks %}
-        <button hx-post="{% url 'hydra_launch' book.id %}"
-                hx-swap="afterend"
-                class="hydra-btn {% if 'Fast' in book.name %}btn-validate{% else %}btn-staging{% endif %}">
-            <span style="font-size: 1.2rem; margin-right: 8px;">
-                {% if 'Fast' in book.name %}🧪{% else %}🏗️{% endif %}
-            </span> 
-            {{ book.name }}
-        </button>
-        {% empty %}
-        <div style="color: #64748b; font-style: italic;">No Hydra Spellbooks found. Run fixtures.</div>
-        {% endfor %}
-    </div>
+    {% if active_spawn %}
+        {% include "hydra/spawn_monitor.html" with spawn=active_spawn heads=heads is_active=is_active is_full_page=False %}
+    {% else %}
+        <h3 style="color: #94a3b8; text-transform: uppercase; font-size: 0.9rem; margin-bottom: 1rem;">Hydra Protocols</h3>
+        
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            {% for book in hydra_spellbooks %}
+            <button hx-post="{% url 'hydra_launch' book.id %}"
+                    hx-swap="outerHTML"
+                    hx-target="#hydra-controls"
+                    class="hydra-btn {% if 'Fast' in book.name %}btn-validate{% else %}btn-staging{% endif %}">
+                <span style="font-size: 1.2rem; margin-right: 8px;">
+                    {% if 'Fast' in book.name %}🧪{% else %}🏗️{% endif %}
+                </span> 
+                {{ book.name }}
+            </button>
+            {% empty %}
+            <div style="color: #64748b; font-style: italic;">No Hydra Spellbooks found. Run fixtures.</div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
     <style>
         .hydra-btn {
@@ -31,6 +36,23 @@
         }
         .hydra-btn:hover { transform: translateY(-2px); }
         .hydra-btn:active { transform: translateY(0); }
+
+        /* Active / Running Style */
+        .btn-active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        .btn-active:hover { box-shadow: 0 10px 20px rgba(16, 185, 129, 0.5); }
+
+        .pulse {
+            animation: pulse-animation 2s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
 
         /* Default / Staging Style */
         .btn-staging {

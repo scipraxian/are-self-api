@@ -1,7 +1,8 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
+from django.urls import reverse
 from django.views import View
-from .models import HydraSpellbook, HydraEnvironment, HydraSpawn, HydraHead
+from .models import HydraSpellbook, HydraEnvironment, HydraSpawn, HydraHead, HydraSpawnStatus
 from .hydra import Hydra
 from environments.models import ProjectEnvironment
 import logging
@@ -11,6 +12,35 @@ logger = logging.getLogger(__name__)
 
 class LaunchSpellbookView(View):
     def post(self, request, spellbook_id):
+        # 0. Check if any HydraSpawn is already active
+        active_spawn = HydraSpawn.objects.filter(
+            status_id__in=[
+                HydraSpawnStatus.CREATED,
+                HydraSpawnStatus.PENDING,
+                HydraSpawnStatus.RUNNING
+            ]
+        ).order_by('-created').first()
+
+        if active_spawn:
+            # Nudge it
+            try:
+                Hydra(spawn_id=active_spawn.id).poll()
+                active_spawn.refresh_from_db()
+            except Exception:
+                pass
+            
+            if active_spawn.is_active:
+                # If HTMX request, return the busy state UI
+                if request.headers.get('HX-Request'):
+                    return render(request, 'dashboard/partials/hydra_button.html', {
+                        'active_spawn': active_spawn,
+                        'spawn': active_spawn,
+                        'heads': active_spawn.heads.all().order_by('spell__order'),
+                        'is_active': active_spawn.is_active
+                    })
+                # Otherwise just redirect to monitor
+                return redirect('hydra_spawn_monitor', spawn_id=active_spawn.id)
+
         try:
             spellbook = HydraSpellbook.objects.get(id=spellbook_id)
         except HydraSpellbook.DoesNotExist:
@@ -34,12 +64,35 @@ class LaunchSpellbookView(View):
             logger.exception("[HYDRA] Launch Failed")
             return render(request, 'hydra/partials/error.html', {'message': str(e)}, status=500)
 
-        return spawn_monitor_view(request, controller.spawn.id)
+        # NEW: Trigger a page redirect to the monitor view, but for HTMX 
+        # we can also just swap the buttons to show the "Running" state if we wanted.
+        # However, the user said "GUI to just be the current running item".
+        # If we redirect to the monitor page, it fulfills that.
+        
+        if request.headers.get('HX-Request'):
+            # Return the embedded monitor fragment
+            spawn = controller.spawn
+            return render(request, 'dashboard/partials/hydra_button.html', {
+                'active_spawn': spawn,
+                'spawn': spawn,
+                'heads': spawn.heads.all().order_by('spell__order'),
+                'is_active': spawn.is_active
+            })
+
+        return redirect('hydra_spawn_monitor', spawn_id=controller.spawn.id)
 
 def spawn_monitor_view(request, spawn_id):
     spawn = get_object_or_404(HydraSpawn, id=spawn_id)
+    
+    # Nudge the state machine
+    if spawn.is_active:
+        controller = Hydra(spawn_id=spawn.id)
+        controller.poll()
+        spawn.refresh_from_db()
+
     heads = spawn.heads.all().order_by('spell__order')
-    is_active = spawn.status.name in ['Created', 'Pending', 'Running']
+    is_active = spawn.is_active
+    is_full_page = request.GET.get('full') == 'True'
     
     # Check if this is a standalone request (needs full page) or HTMX poll (partial)
     if not request.headers.get('HX-Request'):
@@ -48,7 +101,7 @@ def spawn_monitor_view(request, spawn_id):
         })
 
     return render(request, 'hydra/spawn_monitor.html', {
-        'spawn': spawn, 'heads': heads, 'is_active': is_active
+        'spawn': spawn, 'heads': heads, 'is_active': is_active, 'is_full_page': is_full_page
     })
 
 def head_log_view(request, head_id):
@@ -75,3 +128,40 @@ def head_log_view(request, head_id):
         'content': content,
         'log_type': log_type
     })
+
+class HydraControlsView(View):
+    def get(self, request):
+        active_spawn = HydraSpawn.objects.filter(
+            status_id__in=[
+                HydraSpawnStatus.CREATED,
+                HydraSpawnStatus.PENDING,
+                HydraSpawnStatus.RUNNING
+            ]
+        ).order_by('-created').first()
+
+        if active_spawn:
+            # Nudge it
+            try:
+                Hydra(spawn_id=active_spawn.id).poll()
+                active_spawn.refresh_from_db()
+            except Exception:
+                pass
+        
+        # Check again after nudge
+        if active_spawn and not active_spawn.is_active:
+            active_spawn = None
+
+        spellbooks = HydraSpellbook.objects.all().order_by('name')
+
+        context = {
+            'active_spawn': active_spawn,
+            'hydra_spellbooks': spellbooks,
+        }
+        if active_spawn:
+            context.update({
+                'spawn': active_spawn,
+                'heads': active_spawn.heads.all().order_by('spell__order'),
+                'is_active': True
+            })
+        
+        return render(request, 'dashboard/partials/hydra_button.html', context)

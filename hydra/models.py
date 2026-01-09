@@ -188,6 +188,15 @@ class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     context_data = models.TextField(
         blank=True, help_text="Serialized JSON context variables")
 
+    @property
+    def is_active(self):
+        """Returns True if the spawn is in a non-terminal state."""
+        return self.status_id in [
+            HydraSpawnStatus.CREATED,
+            HydraSpawnStatus.PENDING,
+            HydraSpawnStatus.RUNNING
+        ]
+
     def __str__(self):
         return f"Spawn {self.id} ({self.spellbook.name})"
 

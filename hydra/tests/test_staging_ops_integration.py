@@ -43,7 +43,7 @@ class StagingOpsIntegrationTest(TestCase):
         with self.captureOnCommitCallbacks(execute=True):
             response = self.client.post(url)
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
         # 2. Verify Spawn State
         spawn = HydraSpawn.objects.first()
