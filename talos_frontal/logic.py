@@ -29,14 +29,27 @@ def process_stimulus(stimulus):
         f"Received Stimulus: {stimulus.description}. Analyzing...",
         status_id=ConsciousStatusID.THINKING)
 
-    # 2. Perception (Occipital) - ALWAYS Read
-    log_data = read_build_log(spawn_id)
+    # 1. Fetch Directive for context/budget
+    try:
+        directive = SystemDirective.objects.get(
+            identifier_id=SystemDirectiveIdentifierID.ANALYSIS_CORE,
+            is_active=True)
+        token_budget = directive.context_window_size
+        max_output = directive.max_output_tokens
+        temp = directive.temperature
+    except SystemDirective.DoesNotExist:
+        directive = None
+        token_budget = 128000
+        max_output = 1024
+        temp = 0.1
+
+    # 2. Perception (Occipital) - DYNAMIC DILATION
+    log_data = read_build_log(spawn_id, max_token_budget=token_budget)
     error_count = log_data.count("Error:") + log_data.count("Exception:")
     has_errors = "ERROR SUMMARY" in log_data
 
     # 3. Decision Logic
     should_analyze = False
-
     if event_type == SignalTypeID.SPAWN_FAILED:
         should_analyze = True
     elif event_type == SignalTypeID.SPAWN_SUCCESS and has_errors:
@@ -55,32 +68,24 @@ def process_stimulus(stimulus):
         model_name = ModelRegistry.get_model('scout_light')
         client = OllamaClient(model=model_name)
 
-        try:
-            directive = SystemDirective.objects.get(
-                identifier_id=SystemDirectiveIdentifierID.ANALYSIS_CORE,
-                is_active=True)
+        options = {
+            "num_ctx": token_budget,
+            "num_predict": max_output,
+            "temperature": temp,
+        }
 
-            # Prepare Options from Directive
-            options = {
-                "num_predict": directive.max_output_tokens,
-                "temperature": directive.temperature,
-                # "num_ctx": directive.context_window_size # Optional
-            }
-
-            system_prompt = directive.format_prompt(
-                log_data=log_data,
-                spawn_id=str(spawn_id),
-                head_id=str(head_id) if head_id else "Unknown",
-                error_count=str(error_count),
-                event_type=str(event_type)
-            )
-        except SystemDirective.DoesNotExist:
-            # Fallback (Safety net)
+        if directive:
+            try:
+                system_prompt = directive.format_prompt(
+                    log_data=log_data,
+                    spawn_id=str(spawn_id),
+                    head_id=str(head_id) if head_id else "Unknown",
+                    error_count=str(error_count),
+                    event_type=str(event_type))
+            except KeyError:
+                return
+        else:
             system_prompt = "Analyze this log: " + log_data
-            options = {}
-        except KeyError:
-            # Handle missing variables
-            return
 
         # Call Synapse
         result = client.chat(system_prompt, log_data, options=options)

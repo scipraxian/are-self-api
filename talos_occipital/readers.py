@@ -27,10 +27,38 @@ IGNORE_PATTERNS = [
 ]
 
 
-def read_build_log(run_id):
+def extract_error_blocks(full_log_content):
+    """Refactored helper to extract error patterns with context."""
+    cleaned_lines = full_log_content.splitlines()
+
+    def is_concern(line):
+        for pattern in CONCERN_PATTERNS:
+            if re.search(pattern, line):
+                for ignore in IGNORE_PATTERNS:
+                    if re.search(ignore, line):
+                        return False
+                return True
+        return False
+
+    error_blocks = []
+    i = 0
+    while i < len(cleaned_lines):
+        line = cleaned_lines[i]
+        if is_concern(line):
+            start = max(0, i - 5)
+            end = min(len(cleaned_lines), i + 10)
+            block = "\n".join(cleaned_lines[start:end])
+            error_blocks.append(f"... {block} ...")
+            i = end
+        else:
+            i += 1
+    return "\n".join(error_blocks[:5])
+
+
+def read_build_log(run_id, max_token_budget=128000):
     """
     Retrieves and sanitizes log data for a specific Hydra Spawn.
-    Returns the last 200 lines + any Error blocks.
+    Implements dynamic truncation based on the provided token budget.
     """
     try:
         spawn = HydraSpawn.objects.get(id=run_id)
@@ -49,43 +77,34 @@ def read_build_log(run_id):
     full_log_content = ""
     for head in heads:
         full_log_content += f"\n--- HEAD {head.id} ({head.spell.name}) ---\n"
-        full_log_content += head.spell_log
+        full_log_content += head.spell_log or ""
 
-    # Processing
-    cleaned_lines = full_log_content.splitlines()
+    # Reserve tokens for Prompt + Overheads. 1 Token ~= 4 Chars.
+    safe_token_limit = max_token_budget - 2000
+    max_char_limit = safe_token_limit * 4
 
-    def is_concern(line):
-        for pattern in CONCERN_PATTERNS:
-            if re.search(pattern, line):
-                # Check ignores
-                for ignore in IGNORE_PATTERNS:
-                    if re.search(ignore, line):
-                        return False
-                return True
-        return False
+    # 1. Error Extraction (Vital Context)
+    error_summary = extract_error_blocks(full_log_content)
 
-    # 1. Capture Error Blocks (Context: 5 before, 10 after)
-    error_blocks = []
-    i = 0
-    while i < len(cleaned_lines):
-        line = cleaned_lines[i]
-        if is_concern(line):
-            start = max(0, i - 5)
-            end = min(len(cleaned_lines), i + 10)
-            block = "\n".join(cleaned_lines[start:end])
-            error_blocks.append(f"... {block} ...")
-            # Skip forward to avoid overlapping blocks for same error cluster
-            i = end
-        else:
-            i += 1
+    current_chars = len(error_summary)
+    remaining_chars = max_char_limit - current_chars
 
-    # Limit error blocks to avoid huge dumps
-    error_summary = "\n".join(error_blocks[:5])
+    if remaining_chars <= 0:
+        return f"ERROR SUMMARY ONLY (Log too huge):\n{error_summary}"
 
-    # 2. Last 200 lines
-    tail = "\n".join(cleaned_lines[-200:])
+    # 2. Dynamic Tail
+    if len(full_log_content) < remaining_chars:
+        tail = full_log_content
+    else:
+        # Take the last N chars
+        tail = full_log_content[-remaining_chars:]
+        # Snap to nearest line break
+        first_newline = tail.find('\n')
+        if first_newline != -1:
+            tail = tail[first_newline + 1:]
+        tail = f"... [TRUNCATED {len(full_log_content) - len(tail)} chars] ...\n{tail}"
 
     if error_summary:
-        return f"ERROR SUMMARY:\n{error_summary}\n\nLAST 200 LINES:\n{tail}"
+        return f"ERROR SUMMARY:\n{error_summary}\n\nLOG CONTEXT:\n{tail}"
     else:
-        return f"LAST 200 LINES:\n{tail}"
+        return f"LOG CONTEXT:\n{tail}"

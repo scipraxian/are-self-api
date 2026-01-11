@@ -86,7 +86,7 @@ class SystemDirective(DefaultFieldsMixin, UUIDIdMixin):
 
     # NEW FIELDS
     context_window_size = models.IntegerField(
-        default=32768, help_text="Max context window (e.g. 4096, 8192, 128k)")
+        default=128000, help_text="Max context window (e.g. 4096, 8192, 128k)")
     max_output_tokens = models.IntegerField(default=1024,
                                             help_text="Limit response length")
     temperature = models.FloatField(default=0.1,

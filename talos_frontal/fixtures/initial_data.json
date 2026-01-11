@@ -37,9 +37,9 @@
       "is_active": true,
       "created": "2026-01-11T10:00:00Z",
       "modified": "2026-01-11T12:00:00Z",
-      "context_window_size": 32768,
-      "max_output_tokens": 1024,
-      "temperature": 0.2
+      "context_window_size": 128000,
+      "max_output_tokens": 2048,
+      "temperature": 0.1
     }
   }
 ]
