@@ -55,7 +55,7 @@ class ReadersTest(SimpleTestCase):
 [2026-01-11 10:00:04] Cmd: Success - 0 Error(s), 0 Warning(s)
 """
         summary_clean = read_build_log(1)
-        # ERROR SUMMARY should be empty (just newlines or empty string)
-        self.assertNotIn("ERROR SUMMARY:\n...", summary_clean)
+        # ERROR SUMMARY header should be missing entirely
+        self.assertNotIn("ERROR SUMMARY:", summary_clean)
         self.assertNotIn("Cmd: Success",
                          summary_clean.split("LAST 200 LINES")[0])

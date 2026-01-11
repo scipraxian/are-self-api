@@ -27,11 +27,22 @@ def process_stimulus(stimulus):
         f"Received Stimulus: {stimulus.description}. Analyzing...",
         status_id=ConsciousStatusID.THINKING)
 
-    if event_type == SignalTypeID.SPAWN_FAILED:
-        # 2. Perception (Occipital)
-        log_data = read_build_log(spawn_id)
+    # 2. Perception (Occipital) - ALWAYS Read
+    log_data = read_build_log(spawn_id)
+    has_errors = "ERROR SUMMARY" in log_data
 
-        if not log_data:
+    # 3. Decision Logic
+    should_analyze = False
+
+    if event_type == SignalTypeID.SPAWN_FAILED:
+        should_analyze = True
+    elif event_type == SignalTypeID.SPAWN_SUCCESS and has_errors:
+        stream.current_thought = "Build 'Succeeded' (Exit 0), but Errors detected in logs. Analyzing..."
+        stream.save()
+        should_analyze = True
+
+    if should_analyze:
+        if not log_data or log_data == "Spawn not found." or log_data == "No execution heads found for this spawn.":
             stream.current_thought = "Analysis Failed: No log data found."
             stream.status_id = ConsciousStatusID.DONE
             stream.save()
@@ -54,7 +65,7 @@ def process_stimulus(stimulus):
         stream.status_id = ConsciousStatusID.DONE
         stream.save()
 
-    elif event_type == SignalTypeID.SPAWN_SUCCESS:
-        stream.current_thought = "Build Succeeded. No analysis needed."
+    elif event_type == SignalTypeID.SPAWN_SUCCESS and not has_errors:
+        stream.current_thought = "Build Succeeded. Log Verified Clean."
         stream.status_id = ConsciousStatusID.DONE
         stream.save()

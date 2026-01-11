@@ -98,4 +98,7 @@ def read_build_log(run_id):
     # 2. Last 200 lines
     tail = "\n".join(cleaned_lines[-200:])
 
-    return f"ERROR SUMMARY:\n{error_summary}\n\nLAST 200 LINES:\n{tail}"
+    if error_summary:
+        return f"ERROR SUMMARY:\n{error_summary}\n\nLAST 200 LINES:\n{tail}"
+    else:
+        return f"LAST 200 LINES:\n{tail}"
