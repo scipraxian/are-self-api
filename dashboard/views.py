@@ -150,7 +150,7 @@ class ShutdownView(View):
 
 
 class NeuralStatusView(View):
-    '''HTMX Partial for the global brain stream.'''
+    """HTMX Partial for the global brain stream."""
 
     def get(self, request, *args, **kwargs):
         from talos_frontal.models import ConsciousStream

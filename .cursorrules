@@ -24,3 +24,4 @@
    - Formatting: Do not reformat unrelated code.
    - One blank line at the end of files.
    - Favor strong typing.
+   - Triple double quotes for docstrings.

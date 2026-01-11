@@ -1,25 +1,28 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.utils import timezone
-
-from environments.models import ProjectEnvironment
-from hydra.models import HydraSpawn, HydraSpellbook, HydraEnvironment, HydraSpawnStatus
 from talos_frontal.models import ConsciousStream, ConsciousStatusID
+from hydra.models import HydraSpawn, HydraSpellbook, HydraEnvironment, HydraSpawnStatus
+from environments.models import ProjectEnvironment
 
 
 class NeuralMonitorTest(TestCase):
-    # Load fixtures to ensure Status IDs exist
+    # CRITICAL: Must load environments first, then hydra, then frontal
     fixtures = [
-        'talos_frontal/fixtures/initial_data.json',
-        'hydra/fixtures/initial_data.json'
+        'environments/fixtures/initial_data.json',  # <--- ADDED THIS
+        'hydra/fixtures/initial_data.json',
+        'talos_frontal/fixtures/initial_data.json'
     ]
 
     def setUp(self):
         self.client = Client()
         self.url = reverse('neural_status')
 
-        # Infrastructure for ForeignKeys
-        self.env = ProjectEnvironment.objects.create(name="TestEnv", is_active=True)
+        # We can fetch the env from fixtures instead of creating it to avoid ID conflicts
+        # or just create a new one for isolation. Given the fixture load,
+        # let's create a fresh isolated set for the test to be safe.
+
+        self.env = ProjectEnvironment.objects.create(name="NeuralTestEnv", is_active=True)
         self.hydra_env = HydraEnvironment.objects.create(project_environment=self.env)
         self.book = HydraSpellbook.objects.create(name="TestBook")
 
