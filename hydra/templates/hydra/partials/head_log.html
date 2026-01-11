@@ -1,16 +1,17 @@
 <div class="log-interface" style="background: #0f172a; border-top: 1px solid rgba(255,255,255,0.1); text-align: left;">
-    <div class="log-tabs" style="display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); padding: 0.5rem 1rem; box-sizing: border-box; flex-wrap: wrap; gap: 0.5rem; width: 100%;">
+    <div class="log-tabs"
+         style="display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); padding: 0.5rem 1rem; box-sizing: border-box; flex-wrap: wrap; gap: 0.5rem; width: 100%;">
         <div style="display: flex; min-width: 0; flex-wrap: wrap; gap: 0.25rem;">
-            <button class="log-tab {% if log_type == 'tool' %}active{% endif %}" 
-                    hx-get="{% url 'hydra_head_logs' head.id %}?type=tool" 
-                    hx-target="#log-wrapper-{{ head.id }}" 
+            <button class="log-tab {% if log_type == 'tool' %}active{% endif %}"
+                    hx-get="{% url 'hydra_head_logs' head.id %}?type=tool"
+                    hx-target="#log-wrapper-{{ head.id }}"
                     hx-swap="innerHTML">
                 Output Stream
             </button>
-            
-            <button class="log-tab {% if log_type == 'system' %}active{% endif %}" 
-                    hx-get="{% url 'hydra_head_logs' head.id %}?type=system" 
-                    hx-target="#log-wrapper-{{ head.id }}" 
+
+            <button class="log-tab {% if log_type == 'system' %}active{% endif %}"
+                    hx-get="{% url 'hydra_head_logs' head.id %}?type=system"
+                    hx-target="#log-wrapper-{{ head.id }}"
                     hx-swap="innerHTML">
                 System Context
             </button>
@@ -18,38 +19,50 @@
                     hx-get="{% url 'hydra_head_logs' head.id %}?type=analysis"
                     hx-target="#log-wrapper-{{ head.id }}"
                     hx-swap="innerHTML">
-                 Neural Analysis
+                Neural Analysis
             </button>
         </div>
 
         <div class="log-actions" style="display: flex; gap: 0.75rem;">
             <button class="action-btn" onclick="copyLog('{{ head.id }}')" title="Copy to Clipboard">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
                 Copy
             </button>
-            <button class="action-btn" onclick="downloadLog('{{ head.id }}', '{{ head.spell.name|slugify }}', '{{ log_type }}')" title="Download .log">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <button class="action-btn"
+                    onclick="downloadLog('{{ head.id }}', '{{ head.spell.name|slugify }}', '{{ log_type }}')"
+                    title="Download .log">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
                 Download
             </button>
         </div>
     </div>
-    
-    <div id="log-scroll-container-{{ head.id }}" class="log-content-box" style="padding: 1rem; max-height: 400px; overflow-y: auto;">
+
+    <div id="log-scroll-container-{{ head.id }}" class="log-content-box"
+         style="padding: 1rem; max-height: 400px; overflow-y: auto;">
         {% if log_type == 'analysis' %}
-            <div id="analysis-wrapper-{{ head.id }}" 
-                 hx-get="{% url 'hydra_head_analysis' head.id %}" 
-                 hx-trigger="load" 
+            <div id="analysis-wrapper-{{ head.id }}"
+                 hx-get="{% url 'hydra_head_analysis' head.id %}"
+                 hx-trigger="load"
                  hx-swap="innerHTML">
                 <div style="color: #64748b; font-style: italic;">Connecting to Neural Core...</div>
             </div>
         {% else %}
-            <div id="log-payload-{{ head.id }}" 
+            <div id="log-payload-{{ head.id }}"
                  style="margin: 0; white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #cbd5e1;"
-                 hx-get="{% url 'hydra_head_logs' head.id %}?type={{ log_type }}&partial=content" 
-                 hx-trigger="every 2s" 
+                 hx-get="{% url 'hydra_head_logs' head.id %}?type={{ log_type }}&partial=content"
+                 hx-trigger="every 2s"
                  hx-swap="innerHTML"
                  hx-on::after-swap="smartScroll('{{ head.id }}')">
-{{ content }}
+                {{ content }}
             </div>
         {% endif %}
     </div>
@@ -59,13 +72,13 @@
     function smartScroll(headId) {
         const container = document.getElementById('log-scroll-container-' + headId);
         if (!container) return;
-        
+
         if (container.dataset.follow === "false") return;
         container.scrollTop = container.scrollHeight;
     }
 
     // Initialize follow state and scroll listener
-    document.addEventListener('scroll', function(e) {
+    document.addEventListener('scroll', function (e) {
         if (e.target.id && e.target.id.startsWith('log-scroll-container-')) {
             const el = e.target;
             const isAtBottom = (el.scrollHeight - el.scrollTop - el.clientHeight) < 50;
@@ -83,27 +96,43 @@
     }, 100);
 
     function copyLog(headId) {
-        const payload = document.getElementById('log-payload-' + headId);
-        if (!payload) return;
-        
-        const text = payload.innerText;
+        // Try Log Payload first
+        let target = document.getElementById('log-payload-' + headId);
+
+        // If not found, try Analysis Wrapper
+        if (!target) {
+            target = document.querySelector(`#analysis-wrapper-${headId} .analysis-content`);
+        }
+
+        // Fallback to the whole wrapper if specific inner targets fail
+        if (!target) {
+            target = document.getElementById('log-wrapper-' + headId);
+        }
+
+        if (!target) {
+            console.error("Nothing to copy found.");
+            return;
+        }
+
+        const text = target.innerText;
         navigator.clipboard.writeText(text).then(() => {
-            // Visual feedback could be added here
-            console.log('Log copied to clipboard');
-        }).catch(err => {
-            console.error('Failed to copy log: ', err);
+            // Optional: Flash button text to "Copied!"
+            const btn = document.querySelector(`button[onclick="copyLog('${headId}')"]`);
+            const original = btn.innerHTML;
+            btn.innerHTML = "Copied!";
+            setTimeout(() => btn.innerHTML = original, 1000);
         });
     }
 
     function downloadLog(headId, spellSlug, type) {
         const payload = document.getElementById('log-payload-' + headId);
         if (!payload) return;
-        
+
         const text = payload.innerText;
-        const blob = new Blob([text], { type: 'text/plain' });
+        const blob = new Blob([text], {type: 'text/plain'});
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        
+
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
         a.href = url;
         a.download = `${spellSlug}_${type}_${timestamp}.log`;
@@ -115,9 +144,28 @@
 </script>
 
 <style>
-    .log-tab { background: transparent; border: none; color: #64748b; padding: 0.75rem 1.5rem; cursor: pointer; font-weight: 600; font-size: 0.8rem; border-bottom: 2px solid transparent; transition: all 0.2s; }
-    .log-tab:hover { color: #f1f5f9; background: rgba(255,255,255,0.05); }
-    .log-tab.active { color: #60a5fa; border-bottom-color: #60a5fa; background: rgba(96, 165, 250, 0.1); }
+    .log-tab {
+        background: transparent;
+        border: none;
+        color: #64748b;
+        padding: 0.75rem 1.5rem;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.8rem;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .log-tab:hover {
+        color: #f1f5f9;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .log-tab.active {
+        color: #60a5fa;
+        border-bottom-color: #60a5fa;
+        background: rgba(96, 165, 250, 0.1);
+    }
 
     .action-btn {
         background: rgba(255, 255, 255, 0.05);
@@ -133,6 +181,7 @@
         gap: 6px;
         transition: all 0.2s;
     }
+
     .action-btn:hover {
         background: rgba(255, 255, 255, 0.1);
         color: #f1f5f9;
