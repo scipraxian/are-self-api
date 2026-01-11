@@ -15,6 +15,7 @@ def process_stimulus(stimulus):
     # We assume stimulus.source is 'hydra' and description implies failure
     # or we check the context.
     spawn_id = stimulus.context_data.get('spawn_id')
+    head_id = stimulus.context_data.get('head_id')
     event_type = stimulus.context_data.get('event_type')
 
     if not spawn_id:
@@ -23,6 +24,7 @@ def process_stimulus(stimulus):
     # Create Conscious Stream Entry
     stream = ConsciousStream.objects.create(
         spawn_link_id=spawn_id,
+        head_link_id=head_id,
         current_thought=
         f"Received Stimulus: {stimulus.description}. Analyzing...",
         status_id=ConsciousStatusID.THINKING)

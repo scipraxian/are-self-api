@@ -27,6 +27,12 @@ class ConsciousStream(CreatedMixin, ModifiedMixin):
                                    on_delete=models.CASCADE,
                                    related_name='thoughts')
 
+    head_link = models.ForeignKey('hydra.HydraHead',
+                                  on_delete=models.SET_NULL,
+                                  null=True,
+                                  blank=True,
+                                  related_name='thoughts')
+
     current_thought = models.TextField(
         help_text="The internal monologue or analysis result")
 

@@ -2,14 +2,13 @@
 
 from django.urls import path, include
 
-from dashboard.views import AgentListView
+from dashboard.views import AgentListView, NeuralStatusView
 from dashboard.views import BuildStatusView
 from dashboard.views import DashboardHomeView
 from dashboard.views import DeleteAgentView
 from dashboard.views import ScanNetworkView
 from dashboard.views import ShutdownView
 from dashboard.views import TriggerBuildView
-
 
 urlpatterns = [
     path('', DashboardHomeView.as_view(), name='home'),
@@ -44,4 +43,5 @@ urlpatterns = [
         name='shutdown',
     ),
     path('agent-detail/', include('talos_agent.urls')),
+    path('neural-status/', NeuralStatusView.as_view(), name='neural_status')
 ]

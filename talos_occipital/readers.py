@@ -13,6 +13,7 @@ CONCERN_PATTERNS = [
     r"error LNK\d+:",  # Linker Errors
     r"BEWARE:",  # Memory Warnings (Special Case)
     r"Ensure condition failed:",  # Logic Breaks
+    r"LogProperty:\s+Error:",  # Explicit Property Errors
 ]
 
 # The "Noise" (Ignore these even if they match above)
@@ -24,19 +25,6 @@ IGNORE_PATTERNS = [
     r"LogAutomationController:",  # Test noise
     r"LogAudioCaptureCore:",  # "No Audio Capture" spam
 ]
-
-
-def strip_timestamps(text):
-    """
-    Removes standard timestamp patterns from log lines.
-    """
-    # Regex for [2026-01-11 10:00:00] or similar
-    # Adjust based on likely log format in tasks.py (get_timestamp())
-    # task.py uses get_timestamp(), let's assume it's like [YYYY-MM-DD HH:MM:SS]
-    return re.sub(r'^\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\] ',
-                  '',
-                  text,
-                  flags=re.MULTILINE)
 
 
 def read_build_log(run_id):
@@ -64,8 +52,7 @@ def read_build_log(run_id):
         full_log_content += head.spell_log
 
     # Processing
-    lines = full_log_content.splitlines()
-    cleaned_lines = [strip_timestamps(line) for line in lines]
+    cleaned_lines = full_log_content.splitlines()
 
     def is_concern(line):
         for pattern in CONCERN_PATTERNS:

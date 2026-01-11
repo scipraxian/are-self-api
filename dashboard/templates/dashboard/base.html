@@ -124,6 +124,7 @@
 </head>
 
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    {% include "dashboard/partials/neural_monitor.html" %}
     <div class="container">
         <div class="top-actions">
             {% block top_actions %}

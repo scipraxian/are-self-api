@@ -14,6 +14,12 @@
                     hx-swap="innerHTML">
                 System Context
             </button>
+            <button class="log-tab {% if log_type == 'analysis' %}active{% endif %}"
+                    hx-get="{% url 'hydra_head_logs' head.id %}?type=analysis"
+                    hx-target="#log-wrapper-{{ head.id }}"
+                    hx-swap="innerHTML">
+                 Neural Analysis
+            </button>
         </div>
 
         <div class="log-actions" style="display: flex; gap: 0.75rem;">
@@ -29,14 +35,23 @@
     </div>
     
     <div id="log-scroll-container-{{ head.id }}" class="log-content-box" style="padding: 1rem; max-height: 400px; overflow-y: auto;">
-        <div id="log-payload-{{ head.id }}" 
-             style="margin: 0; white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #cbd5e1;"
-             hx-get="{% url 'hydra_head_logs' head.id %}?type={{ log_type }}&partial=content" 
-             hx-trigger="every 2s" 
-             hx-swap="innerHTML"
-             hx-on::after-swap="smartScroll('{{ head.id }}')">
+        {% if log_type == 'analysis' %}
+            <div id="analysis-wrapper-{{ head.id }}" 
+                 hx-get="{% url 'hydra_head_analysis' head.id %}" 
+                 hx-trigger="load" 
+                 hx-swap="innerHTML">
+                <div style="color: #64748b; font-style: italic;">Connecting to Neural Core...</div>
+            </div>
+        {% else %}
+            <div id="log-payload-{{ head.id }}" 
+                 style="margin: 0; white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #cbd5e1;"
+                 hx-get="{% url 'hydra_head_logs' head.id %}?type={{ log_type }}&partial=content" 
+                 hx-trigger="every 2s" 
+                 hx-swap="innerHTML"
+                 hx-on::after-swap="smartScroll('{{ head.id }}')">
 {{ content }}
-        </div>
+            </div>
+        {% endif %}
     </div>
 </div>
 

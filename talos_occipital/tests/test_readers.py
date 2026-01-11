@@ -1,14 +1,10 @@
 from django.test import SimpleTestCase
-from talos_occipital.readers import read_build_log, strip_timestamps
+from django.test import SimpleTestCase
+from talos_occipital.readers import read_build_log
 from unittest.mock import patch, MagicMock
 
 
 class ReadersTest(SimpleTestCase):
-
-    def test_strip_timestamps(self):
-        line = "[2026-01-11 10:00:00] Hello World"
-        cleaned = strip_timestamps(line)
-        self.assertEqual(cleaned.strip(), "Hello World")
 
     @patch('talos_occipital.readers.HydraSpawn')
     def test_read_build_log_regex(self, mock_spawn_cls):
