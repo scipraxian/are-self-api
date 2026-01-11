@@ -1,6 +1,7 @@
 from django.dispatch import receiver
 from hydra.signals import spawn_failed, spawn_success
 from .models import Stimulus
+from .types import SignalTypeID
 from talos_frontal.logic import process_stimulus
 
 
@@ -10,7 +11,7 @@ def on_spawn_failed(sender, spawn, **kwargs):
                         description=f"Spawn {spawn.id} Failed",
                         context_data={
                             'spawn_id': spawn.id,
-                            'event_type': 'spawn_failed'
+                            'event_type': SignalTypeID.SPAWN_FAILED
                         })
     process_stimulus(stimulus)
 
@@ -21,6 +22,6 @@ def on_spawn_success(sender, spawn, **kwargs):
                         description=f"Spawn {spawn.id} Succeeded",
                         context_data={
                             'spawn_id': spawn.id,
-                            'event_type': 'spawn_success'
+                            'event_type': SignalTypeID.SPAWN_SUCCESS
                         })
     process_stimulus(stimulus)

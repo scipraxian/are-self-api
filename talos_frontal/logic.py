@@ -1,7 +1,8 @@
-from .models import ConsciousStream
+from .models import ConsciousStream, ConsciousStatusID
 from talos_parietal.registry import ModelRegistry
 from talos_parietal.synapse import OllamaClient
 from talos_occipital.readers import read_build_log
+from talos_thalamus.types import SignalTypeID
 
 
 def process_stimulus(stimulus):
@@ -24,15 +25,15 @@ def process_stimulus(stimulus):
         spawn_link_id=spawn_id,
         current_thought=
         f"Received Stimulus: {stimulus.description}. Analyzing...",
-        status=ConsciousStream.Status.THINKING)
+        status_id=ConsciousStatusID.THINKING)
 
-    if event_type == 'spawn_failed':
+    if event_type == SignalTypeID.SPAWN_FAILED:
         # 2. Perception (Occipital)
         log_data = read_build_log(spawn_id)
 
         if not log_data:
             stream.current_thought = "Analysis Failed: No log data found."
-            stream.status = ConsciousStream.Status.DONE
+            stream.status_id = ConsciousStatusID.DONE
             stream.save()
             return
 
@@ -50,10 +51,10 @@ def process_stimulus(stimulus):
 
         # 4. Update Consciousness
         stream.current_thought = f"Analysis Complete:\n{analysis}"
-        stream.status = ConsciousStream.Status.DONE
+        stream.status_id = ConsciousStatusID.DONE
         stream.save()
 
-    elif event_type == 'spawn_success':
+    elif event_type == SignalTypeID.SPAWN_SUCCESS:
         stream.current_thought = "Build Succeeded. No analysis needed."
-        stream.status = ConsciousStream.Status.DONE
+        stream.status_id = ConsciousStatusID.DONE
         stream.save()
