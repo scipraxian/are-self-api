@@ -2,7 +2,7 @@ from talos_occipital.readers import read_build_log
 from talos_parietal.registry import ModelRegistry
 from talos_parietal.synapse import OllamaClient
 from talos_thalamus.types import SignalTypeID
-from .models import ConsciousStream, ConsciousStatusID
+from .models import ConsciousStatusID, ConsciousStream, SystemDirective, SystemDirectiveIdentifierID
 
 
 def process_stimulus(stimulus):
@@ -54,20 +54,18 @@ def process_stimulus(stimulus):
         model_name = ModelRegistry.get_model('scout_light')
         client = OllamaClient(model=model_name)
 
-        system_prompt = (
-            """You are the consciousness of the Talos Build System. Your role is not just to report errors, but to interpret the health and intent of the build process.
-
-Directives:
-
-Contextualize: Do not just quote the error. Explain why it happened in the context of an Unreal Engine build (e.g., "The linker failed because the asset was cooked but the C++ class is missing").
-
-Respect Time: Use the provided timestamps to identify race conditions or timeouts.
-
-Holistic View: If you see multiple errors, identify the root cause, not just the symptoms.
-
-Format: Use concise Markdown. Use bold for key entities.
-
-Output Goal: Provide a hermeneutic analysis of the failure state.""")
+        try:
+            directive = SystemDirective.objects.get(
+                identifier_id=SystemDirectiveIdentifierID.ANALYSIS_CORE,
+                is_active=True
+            )
+            system_prompt = directive.format_prompt(log_data=log_data)
+        except SystemDirective.DoesNotExist:
+            # Fallback (Safety net)
+            system_prompt = "Analyze this log: " + log_data
+        except KeyError:
+            # Handle missing variables
+            return
 
         analysis = client.chat(system_prompt, log_data)
 

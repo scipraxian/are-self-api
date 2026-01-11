@@ -25,3 +25,8 @@
    - One blank line at the end of files.
    - Favor strong typing.
    - Triple double quotes for docstrings.
+   - Explicitly define objects e.g. class LikeThis(object):
+
+5. **OTHER:**
+   - There are no json fields in sqlite3.
+   - DO NOT use manage.py migrate. Use tests and fixtures to prove functionality before the user runs migrate.

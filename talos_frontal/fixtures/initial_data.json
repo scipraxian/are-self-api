@@ -1,17 +1,42 @@
 [
-    {
-        "model": "talos_frontal.consciousstatus",
-        "pk": 1,
-        "fields": { "name": "Thinking" }
-    },
-    {
-        "model": "talos_frontal.consciousstatus",
-        "pk": 2,
-        "fields": { "name": "Waiting" }
-    },
-    {
-        "model": "talos_frontal.consciousstatus",
-        "pk": 3,
-        "fields": { "name": "Done" }
+  {
+    "model": "talos_frontal.consciousstatus",
+    "pk": 1,
+    "fields": {
+      "name": "Thinking"
     }
+  },
+  {
+    "model": "talos_frontal.consciousstatus",
+    "pk": 2,
+    "fields": {
+      "name": "Waiting"
+    }
+  },
+  {
+    "model": "talos_frontal.consciousstatus",
+    "pk": 3,
+    "fields": {
+      "name": "Done"
+    }
+  },
+  {
+    "model": "talos_frontal.systemdirectiveidentifier",
+    "pk": 1,
+    "fields": {
+      "name": "Analysis Core"
+    }
+  },
+  {
+    "model": "talos_frontal.systemdirective",
+    "pk": "de305d54-75b4-431b-adb2-eb6b9e546013",
+    "fields": {
+      "identifier": 1,
+      "template": "...",
+      "version": 1,
+      "is_active": true,
+      "created": "2026-01-11T10:00:00Z",
+      "modified": "2026-01-11T10:00:00Z"
+    }
+  }
 ]
