@@ -165,14 +165,8 @@ def hydra_head_analysis(request, head_id):
     head = get_object_or_404(HydraHead, id=head_id)
     thought = head.thoughts.last()
 
-    content = ""
-    if thought:
-        content = thought.current_thought
-    else:
-        content = "_No neural analysis available yet._"
-
     return render(request, 'hydra/partials/head_analysis.html',
-                  {'content': content})
+                  {'thought': thought})
 
 
 class HydraControlsView(View):

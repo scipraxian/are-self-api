@@ -29,7 +29,12 @@ class ParanoidLogicTest(TestCase):
         """Scenario 1: Spawn Failed -> Analysis triggered."""
         mock_read_log.return_value = "ERROR SUMMARY:\nSome Error\n\nLAST 200 LINES:\n..."
         mock_client = mock_ollama_cls.return_value
-        mock_client.chat.return_value = "AI Analysis Result"
+        mock_client.chat.return_value = {
+            "content": "AI Analysis Result",
+            "tokens_input": 100,
+            "tokens_output": 50,
+            "model": "scout_light"
+        }
 
         stimulus = Stimulus(source='hydra',
                             description="Spawn Failed",
@@ -52,7 +57,12 @@ class ParanoidLogicTest(TestCase):
         # This is the "Paranoid" verification
         mock_read_log.return_value = "ERROR SUMMARY:\nHidden Error\n\nLAST 200 LINES:\n..."
         mock_client = mock_ollama_cls.return_value
-        mock_client.chat.return_value = "AI Analysis of Hidden Error"
+        mock_client.chat.return_value = {
+            "content": "AI Analysis of Hidden Error",
+            "tokens_input": 100,
+            "tokens_output": 50,
+            "model": "scout_light"
+        }
 
         stimulus = Stimulus(source='hydra',
                             description="Spawn Succeeded",
@@ -65,9 +75,7 @@ class ParanoidLogicTest(TestCase):
 
         stream = ConsciousStream.objects.get(spawn_link=self.spawn)
         self.assertEqual(stream.status_id, ConsciousStatusID.DONE)
-        # Verify the paranoid thought override
-        self.assertTrue(stream.current_thought.startswith("Analysis Complete"))
-        # Wait, logic code sets thought to: "Analysis Complete:\n{analysis}"
+        # Verify result
         self.assertIn("AI Analysis of Hidden Error", stream.current_thought)
 
         # We can also check if the intermediate thought was set, but saving overwrites it.

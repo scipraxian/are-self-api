@@ -31,6 +31,7 @@ def process_stimulus(stimulus):
 
     # 2. Perception (Occipital) - ALWAYS Read
     log_data = read_build_log(spawn_id)
+    error_count = log_data.count("Error:") + log_data.count("Exception:")
     has_errors = "ERROR SUMMARY" in log_data
 
     # 3. Decision Logic
@@ -57,20 +58,39 @@ def process_stimulus(stimulus):
         try:
             directive = SystemDirective.objects.get(
                 identifier_id=SystemDirectiveIdentifierID.ANALYSIS_CORE,
-                is_active=True
+                is_active=True)
+
+            # Prepare Options from Directive
+            options = {
+                "num_predict": directive.max_output_tokens,
+                "temperature": directive.temperature,
+                # "num_ctx": directive.context_window_size # Optional
+            }
+
+            system_prompt = directive.format_prompt(
+                log_data=log_data,
+                spawn_id=str(spawn_id),
+                head_id=str(head_id) if head_id else "Unknown",
+                error_count=str(error_count),
+                event_type=str(event_type)
             )
-            system_prompt = directive.format_prompt(log_data=log_data)
         except SystemDirective.DoesNotExist:
             # Fallback (Safety net)
             system_prompt = "Analyze this log: " + log_data
+            options = {}
         except KeyError:
             # Handle missing variables
             return
 
-        analysis = client.chat(system_prompt, log_data)
+        # Call Synapse
+        result = client.chat(system_prompt, log_data, options=options)
 
         # 4. Update Consciousness
-        stream.current_thought = f"Analysis Complete:\n{analysis}"
+        stream.current_thought = result['content']
+        stream.used_prompt = system_prompt
+        stream.tokens_input = result['tokens_input']
+        stream.tokens_output = result['tokens_output']
+        stream.model_name = result['model']
         stream.status_id = ConsciousStatusID.DONE
         stream.save()
 

@@ -57,6 +57,15 @@ class ConsciousStream(CreatedMixin, ModifiedMixin):
                                on_delete=models.PROTECT,
                                default=ConsciousStatusID.THINKING)
 
+    # NEW FIELDS
+    used_prompt = models.TextField(
+        blank=True, help_text="The exact prompt sent to the model.", default='')
+
+    # Metrics
+    tokens_input = models.IntegerField(default=0)
+    tokens_output = models.IntegerField(default=0)
+    model_name = models.CharField(max_length=50, blank=True, default='')
+
     def __str__(self):
         return f"Thought [{self.status.name}]: {self.current_thought[:50]}..."
 
@@ -69,19 +78,25 @@ class SystemDirective(DefaultFieldsMixin, UUIDIdMixin):
     identifier = models.ForeignKey(
         SystemDirectiveIdentifier,
         on_delete=models.PROTECT,
-        help_text="The functional type of this directive."
-    )
+        help_text="The functional type of this directive.")
 
     template = models.TextField()
     version = models.PositiveIntegerField(default=1, editable=False)
     is_active = models.BooleanField(default=True)
 
+    # NEW FIELDS
+    context_window_size = models.IntegerField(
+        default=32768, help_text="Max context window (e.g. 4096, 8192, 128k)")
+    max_output_tokens = models.IntegerField(default=1024,
+                                            help_text="Limit response length")
+    temperature = models.FloatField(default=0.1,
+                                    help_text="Creativity (0.0 - 1.0)")
+
     def save(self, *args, **kwargs):
         if not self.pk:
             # Auto-Increment Version based on identifier ID
             last = SystemDirective.objects.filter(
-                identifier=self.identifier
-            ).order_by('-version').first()
+                identifier=self.identifier).order_by('-version').first()
             if last:
                 self.version = last.version + 1
         super().save(*args, **kwargs)

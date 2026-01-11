@@ -1,4 +1,19 @@
 {% load markdown_format %}
+
+{% if thought %}
 <div class="analysis-content" style="padding: 1rem; color: #cbd5e1; font-family: 'Inter', sans-serif;">
-    {{ content|markdown }}
+    {{ thought.current_thought|markdown }}
 </div>
+
+<div class="analysis-footer" style="border-top: 1px solid rgba(255,255,255,0.1); padding: 0.5rem 1rem; margin-top: 1rem; font-size: 0.7rem; color: #64748b; font-family: monospace; display: flex; justify-content: space-between;">
+    <span>MODEL: {{ thought.model_name }}</span>
+    <span>TOKENS: {{ thought.tokens_input }} In / {{ thought.tokens_output }} Out</span>
+    <span>
+        <a href="#" onclick="alert('PROMPT:\n\n{{ thought.used_prompt|escapejs }}'); return false;" style="color: #60a5fa; text-decoration: none;">View Prompt</a>
+    </span>
+</div>
+{% else %}
+<div style="padding: 1rem; color: #64748b; font-style: italic;">
+    No neural analysis available yet.
+</div>
+{% endif %}

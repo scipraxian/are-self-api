@@ -33,7 +33,12 @@ class NeuroLoopTest(TestCase):
         # Setup Mocks
         mock_read_log.return_value = "Error: Something broke."
         mock_client = mock_ollama_cls.return_value
-        mock_client.chat.return_value = "Fix it by turning it off and on again."
+        mock_client.chat.return_value = {
+            "content": "Fix it by turning it off and on again.",
+            "tokens_input": 100,
+            "tokens_output": 50,
+            "model": "scout_light"
+        }
 
         # Stimulate
         stimulus = Stimulus(source='hydra',
