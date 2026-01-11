@@ -1,16 +1,44 @@
 [
-    {
-        "model": "environments.projectenvironment",
-        "pk": "2a898e21-b7f2-4442-94e4-f0acb87d57b6",
-        "fields": {
-            "name": "Talos Default Environment",
-            "project_root": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy",
-            "engine_root": "C:\\Program Files\\Epic Games\\UE_5.6",
-            "build_root": "C:\\steambuild",
-            "project_name": "HSHVacancy",
-            "staging_dir": "C:\\steambuild\\StagingBuffer",
-            "agent_port": 5005,
-            "is_active": true
-        }
+{
+    "model": "environments.projectenvironment",
+    "pk": "2a898e21-b7f2-4442-94e4-f0acb87d57b6",
+    "fields": {
+        "name": "Talos Default Environment",
+        "project_root": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy",
+        "engine_root": "C:\\Program Files\\Epic Games\\UE_5.6",
+        "build_root": "C:\\steambuild",
+        "project_name": "HSHVacancy",
+        "staging_dir": "C:\\steambuild\\StagingBuffer",
+        "agent_port": 5005,
+        "is_active": true
     }
+},
+{
+    "model": "environments.projectenvironment",
+    "pk": "a9f04dbc-ea47-4426-9a61-60c71c62f810",
+    "fields": {
+        "name": "Default Auto-Generated Env",
+        "project_root": "",
+        "engine_root": "",
+        "build_root": "C:/steambuild",
+        "project_name": "HSHVacancy",
+        "staging_dir": null,
+        "agent_port": 5005,
+        "is_active": true
+    }
+},
+{
+    "model": "environments.projectenvironment",
+    "pk": "c142aa46-9b5a-41af-b4c2-79cc11be5f65",
+    "fields": {
+        "name": "Test Env",
+        "project_root": "C:/Test",
+        "engine_root": "",
+        "build_root": "",
+        "project_name": "",
+        "staging_dir": null,
+        "agent_port": 5005,
+        "is_active": false
+    }
+}
 ]

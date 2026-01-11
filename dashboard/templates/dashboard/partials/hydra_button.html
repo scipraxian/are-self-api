@@ -6,15 +6,25 @@
         
         <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
             {% for book in hydra_spellbooks %}
-            <button hx-post="{% url 'hydra_launch' book.id %}"
-                    hx-swap="outerHTML"
-                    hx-target="#hydra-controls"
-                    class="hydra-btn {% if 'Fast' in book.name %}btn-validate{% else %}btn-staging{% endif %}">
-                <span style="font-size: 1.2rem; margin-right: 8px;">
-                    {% if 'Fast' in book.name %}🧪{% else %}🏗️{% endif %}
-                </span> 
-                {{ book.name }}
-            </button>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                <button hx-post="{% url 'hydra_launch' book.id %}"
+                        hx-swap="outerHTML"
+                        hx-target="#hydra-controls"
+                        class="hydra-btn {% if 'Fast' in book.name %}btn-validate{% else %}btn-staging{% endif %}">
+                    <span style="font-size: 1.2rem; margin-right: 8px;">
+                        {% if 'Fast' in book.name %}🧪{% else %}🏗️{% endif %}
+                    </span> 
+                    {{ book.name }}
+                </button>
+                {% if 'Fast' not in book.name %}
+                    <!-- Version Info for Stage/UAT -->
+                     {% if 'Stage' in book.name and latest_stage %}
+                        <div style="font-size: 0.7rem; color: #64748b;">Last Run: {{ latest_stage.created|timesince }} ago</div>
+                     {% elif 'UAT' in book.name and latest_uat %}
+                        <div style="font-size: 0.7rem; color: #64748b;">Last Run: {{ latest_uat.created|timesince }} ago</div>
+                     {% endif %}
+                {% endif %}
+            </div>
             {% empty %}
             <div style="color: #64748b; font-style: italic;">No Hydra Spellbooks found. Run fixtures.</div>
             {% endfor %}

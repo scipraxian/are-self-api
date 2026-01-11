@@ -1,0 +1,17 @@
+[
+    {
+        "model": "talos_frontal.consciousstatus",
+        "pk": 1,
+        "fields": { "name": "Thinking" }
+    },
+    {
+        "model": "talos_frontal.consciousstatus",
+        "pk": 2,
+        "fields": { "name": "Waiting" }
+    },
+    {
+        "model": "talos_frontal.consciousstatus",
+        "pk": 3,
+        "fields": { "name": "Done" }
+    }
+]

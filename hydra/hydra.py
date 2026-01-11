@@ -1,15 +1,16 @@
 import json
 import logging
-from django.utils import timezone
-from django.db import transaction  # <--- IMPORT ADDED
+
 from celery.result import AsyncResult
+from django.db import transaction  # <--- IMPORT ADDED
+from django.db.models import Min
+
 from config.celery import app as celery_app
 from .models import HydraSpellbook, HydraSpawn, HydraHead, HydraHeadStatus, HydraSpawnStatus
 from .tasks import cast_hydra_spell
-from environments.models import ProjectEnvironment
-from django.db.models import Min, Q
 
 logger = logging.getLogger(__name__)
+
 
 class Hydra(object):
     """
@@ -28,14 +29,14 @@ class Hydra(object):
             self.spawn = HydraSpawn.objects.create(
                 spellbook=book,
                 environment_id=env_id,
-                status_id=HydraSpawnStatus.CREATED
-            )
-            
+                status_id=HydraSpawnStatus.CREATED)
+
             # Initialize empty context (JSON serialized to Text)
-            self.spawn.context_data = json.dumps({}) 
+            self.spawn.context_data = json.dumps({})
             self.spawn.save()
         else:
-            raise ValueError("Must provide either spawn_id or (spellbook_id + env_id)")
+            raise ValueError(
+                "Must provide either spawn_id or (spellbook_id + env_id)")
 
     def start(self):
         """
@@ -49,17 +50,15 @@ class Hydra(object):
         # 1. Materialize the Heads from the Spells
         if not self.spawn.heads.exists():
             spells = self.spawn.spellbook.spells.all()
-            
+
             for spell in spells:
-                HydraHead.objects.create(
-                    spawn=self.spawn,
-                    spell=spell,
-                    status_id=HydraHeadStatus.CREATED
-                )
-        
+                HydraHead.objects.create(spawn=self.spawn,
+                                         spell=spell,
+                                         status_id=HydraHeadStatus.CREATED)
+
         # 2. Trigger the first wave
         self._dispatch_next_wave()
-        
+
     def _dispatch_next_wave(self):
         """
         Smart Dispatch: Finds the lowest 'order' that has PENDING/CREATED items
@@ -67,45 +66,50 @@ class Hydra(object):
         """
         # 1. Are there any active/running heads?
         active_heads = self.spawn.heads.filter(
-            status_id__in=[HydraHeadStatus.RUNNING, HydraHeadStatus.PENDING]
-        )
-        
+            status_id__in=[HydraHeadStatus.RUNNING, HydraHeadStatus.PENDING])
+
         if active_heads.exists():
             return
 
         # 2. Find the next batch of Created tasks
-        pending_heads = self.spawn.heads.filter(status_id=HydraHeadStatus.CREATED)
-        
+        pending_heads = self.spawn.heads.filter(
+            status_id=HydraHeadStatus.CREATED)
+
         if not pending_heads.exists():
             self._finalize_spawn()
             return
 
-        next_order = pending_heads.aggregate(Min('spell__order'))['spell__order__min']
-        
+        next_order = pending_heads.aggregate(
+            Min('spell__order'))['spell__order__min']
+
         # 3. Dispatch that batch
         wave = pending_heads.filter(spell__order=next_order)
-        
+
         for head in wave:
-            logger.info(f"[HYDRA] Dispatching Head {head.id} (Order: {next_order}, Spell: {head.spell.name})")
-            
+            logger.info(
+                f"[HYDRA] Dispatching Head {head.id} (Order: {next_order}, Spell: {head.spell.name})"
+            )
+
             # Update status to PENDING immediately to prevent double-dispatch
             head.status_id = HydraHeadStatus.PENDING
             head.save()
-            
+
             # Use a default argument to capture the current head.id in the lambda
-            transaction.on_commit(lambda h_id=head.id: cast_hydra_spell.delay(h_id))
+            transaction.on_commit(
+                lambda h_id=head.id: cast_hydra_spell.delay(h_id))
 
     def poll(self):
         """
         Updates state of all running heads from Celery.
         """
-        active_heads = self.spawn.heads.filter(status_id=HydraHeadStatus.RUNNING)
+        active_heads = self.spawn.heads.filter(
+            status_id=HydraHeadStatus.RUNNING)
         state_changed = False
 
         for head in active_heads:
             if not head.celery_task_id:
                 continue
-                
+
             res = AsyncResult(head.celery_task_id)
             if res.ready():
                 if res.state == 'FAILURE':
@@ -114,13 +118,13 @@ class Hydra(object):
                     head.save()
                     state_changed = True
                 elif res.state == 'SUCCESS':
-                    # If it's SUCCESS in Celery but still RUNNING in DB, 
+                    # If it's SUCCESS in Celery but still RUNNING in DB,
                     # it means the task finished but failed to update DB (unlikely but possible)
                     # OR we are polling while it's in a transition.
-                    # We should probably let cast_hydra_spell handle it, 
+                    # We should probably let cast_hydra_spell handle it,
                     # but polling is a safety net.
-                    pass 
-                
+                    pass
+
         self._dispatch_next_wave()
 
     def heartbeat(self):
@@ -132,9 +136,8 @@ class Hydra(object):
         """
         # Are there any heads still in a non-terminal state?
         active_heads = self.spawn.heads.exclude(
-            status_id__in=[HydraHeadStatus.SUCCESS, HydraHeadStatus.FAILED]
-        )
-        
+            status_id__in=[HydraHeadStatus.SUCCESS, HydraHeadStatus.FAILED])
+
         if active_heads.exists():
             return
 
@@ -145,21 +148,26 @@ class Hydra(object):
         else:
             status_id = HydraSpawnStatus.SUCCESS
             status_name = "Success"
-        
+
         self.spawn.status_id = status_id
         self.spawn.save()
         logger.info(f"[HYDRA] Spawn {self.spawn.id} Finalized: {status_name}")
 
+        from .signals import spawn_failed, spawn_success
+        if status_id == HydraSpawnStatus.FAILED:
+            spawn_failed.send(sender=self.spawn.__class__, spawn=self.spawn)
+        elif status_id == HydraSpawnStatus.SUCCESS:
+            spawn_success.send(sender=self.spawn.__class__, spawn=self.spawn)
+
     def terminate(self):
         # 1. Kill Running Tasks
         running_heads = self.spawn.heads.filter(
-            status_id__in=[HydraHeadStatus.RUNNING, HydraHeadStatus.PENDING]
-        )
+            status_id__in=[HydraHeadStatus.RUNNING, HydraHeadStatus.PENDING])
         for head in running_heads:
             if head.celery_task_id:
                 logger.info(f"[HYDRA] Revoking task {head.celery_task_id}")
                 celery_app.control.revoke(head.celery_task_id, terminate=True)
-            
+
             head.status_id = HydraHeadStatus.FAILED
             head.execution_log += "\n[HYDRA] Terminated by User."
             head.save()
@@ -170,16 +178,15 @@ class Hydra(object):
 
     def view(self):
         return {
-            "id": str(self.spawn.id),
-            "status": self.spawn.status.name,
-            "heads": [
-                {
-                    "name": h.spell.executable.name,
-                    "order": h.spell.order,
-                    "status_id": h.status.id,
-                    "status_name": h.status.name,
-                    "log_preview": (h.spell_log or "")[:100]
-                }
-                for h in self.spawn.heads.all().order_by('spell__order')
-            ]
+            "id":
+                str(self.spawn.id),
+            "status":
+                self.spawn.status.name,
+            "heads": [{
+                "name": h.spell.executable.name,
+                "order": h.spell.order,
+                "status_id": h.status.id,
+                "status_name": h.status.name,
+                "log_preview": (h.spell_log or "")[:100]
+            } for h in self.spawn.heads.all().order_by('spell__order')]
         }
