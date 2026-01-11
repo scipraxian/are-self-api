@@ -15,3 +15,4 @@ django-extensions>=3.2  # Useful admin features
 django-stubs>=5.2.8     # Type hints for Django
 pytest-django>=4.11.1      # Testing
 isort>=7.0.0            # Python import sorter
+celery-types>=0.24.0
