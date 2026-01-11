@@ -1,40 +1,23 @@
+from unittest.mock import patch
+
 from django.test import TestCase
-from unittest.mock import patch, MagicMock
-from talos_frontal.models import ConsciousStream, ConsciousStatus, ConsciousStatusID
+
+from environments.models import ProjectEnvironment
+from hydra.models import HydraSpawn, HydraSpellbook, HydraEnvironment, HydraSpawnStatus
+from talos_frontal.logic import process_stimulus
+from talos_frontal.models import ConsciousStream, ConsciousStatusID
 from talos_thalamus.models import Stimulus
 from talos_thalamus.types import SignalTypeID
-from talos_frontal.logic import process_stimulus
-from hydra.models import HydraSpawn, HydraSpellbook, HydraEnvironment, HydraSpawnStatus
-from environments.models import ProjectEnvironment
 
 
 class NeuroLoopTest(TestCase):
+    fixtures = [
+        'talos_frontal/fixtures/initial_data.json',
+        'hydra/fixtures/initial_data.json',
+        'environments/fixtures/initial_data.json'
+    ]
 
     def setUp(self):
-        # Create Conscious Statuses
-        if not ConsciousStatus.objects.filter(
-                id=ConsciousStatusID.THINKING).exists():
-            ConsciousStatus.objects.create(id=ConsciousStatusID.THINKING,
-                                           name='Thinking')
-            ConsciousStatus.objects.create(id=ConsciousStatusID.WAITING,
-                                           name='Waiting')
-            ConsciousStatus.objects.create(id=ConsciousStatusID.DONE,
-                                           name='Done')
-
-        # Populate Hydra Statuses
-        if not HydraSpawnStatus.objects.filter(
-                id=HydraSpawnStatus.CREATED).exists():
-            HydraSpawnStatus.objects.create(id=HydraSpawnStatus.CREATED,
-                                            name='Created')
-            HydraSpawnStatus.objects.create(id=HydraSpawnStatus.PENDING,
-                                            name='Pending')
-            HydraSpawnStatus.objects.create(id=HydraSpawnStatus.RUNNING,
-                                            name='Running')
-            HydraSpawnStatus.objects.create(id=HydraSpawnStatus.SUCCESS,
-                                            name='Success')
-            HydraSpawnStatus.objects.create(id=HydraSpawnStatus.FAILED,
-                                            name='Failed')
-
         self.pe = ProjectEnvironment.objects.create(name="TestEnv",
                                                     project_root="C:/Test")
         self.he = HydraEnvironment.objects.create(project_environment=self.pe)

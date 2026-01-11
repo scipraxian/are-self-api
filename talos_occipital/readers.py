@@ -1,6 +1,30 @@
 import re
 from hydra.models import HydraSpawn, HydraHead, HydraHeadStatus
 
+# Regex Patterns for Error Detection
+# The "Killers" (High Priority)
+CONCERN_PATTERNS = [
+    r"Log\w+:\s+Error:",  # Catch generic "LogProperty: Error:"
+    r"Log\w+:\s+Fatal:",  # Catch "LogWindows: Fatal:"
+    r"Log\w+:\s+Critical:",  # Catch Critical errors
+    r"LogScript:\s+Error:",  # Catch Blueprint Runtime Errors
+    r"Exception:",  # Python/C# Exceptions
+    r"error C\d+:",  # C++ Compiler Errors (C2065)
+    r"error LNK\d+:",  # Linker Errors
+    r"BEWARE:",  # Memory Warnings (Special Case)
+    r"Ensure condition failed:",  # Logic Breaks
+]
+
+# The "Noise" (Ignore these even if they match above)
+IGNORE_PATTERNS = [
+    r"0 Error\(s\)",  # "Success - 0 Error(s)"
+    r"0 error\(s\)",
+    r"Success -",
+    r"LogInit: Display:",  # Summary lines
+    r"LogAutomationController:",  # Test noise
+    r"LogAudioCaptureCore:",  # "No Audio Capture" spam
+]
+
 
 def strip_timestamps(text):
     """
@@ -43,14 +67,30 @@ def read_build_log(run_id):
     lines = full_log_content.splitlines()
     cleaned_lines = [strip_timestamps(line) for line in lines]
 
-    # 1. Capture Error Blocks (Context around "Error" or "Exception")
+    def is_concern(line):
+        for pattern in CONCERN_PATTERNS:
+            if re.search(pattern, line):
+                # Check ignores
+                for ignore in IGNORE_PATTERNS:
+                    if re.search(ignore, line):
+                        return False
+                return True
+        return False
+
+    # 1. Capture Error Blocks (Context: 5 before, 10 after)
     error_blocks = []
-    for i, line in enumerate(cleaned_lines):
-        if "error" in line.lower() or "exception" in line.lower():
+    i = 0
+    while i < len(cleaned_lines):
+        line = cleaned_lines[i]
+        if is_concern(line):
             start = max(0, i - 5)
-            end = min(len(cleaned_lines), i + 5)
+            end = min(len(cleaned_lines), i + 10)
             block = "\n".join(cleaned_lines[start:end])
             error_blocks.append(f"... {block} ...")
+            # Skip forward to avoid overlapping blocks for same error cluster
+            i = end
+        else:
+            i += 1
 
     # Limit error blocks to avoid huge dumps
     error_summary = "\n".join(error_blocks[:5])
