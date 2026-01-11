@@ -141,16 +141,23 @@ def head_log_view(request, head_id):
     content = ""
     if log_type == 'system':
         content = head.execution_log or "No system events logged."
+    elif log_type == 'stimulus':
+        thought = head.thoughts.last()
+        content = thought.used_prompt if thought else "No stimulus recorded for this head."
     else:
         content = head.spell_log or "Waiting for output..."
 
     if is_partial:
         # Return JUST the text content for the poller
         safe_content = escape(content)
+        # Add headers for context
         if log_type == 'system':
             return HttpResponse(
-                f'<div style="color: #60a5fa; margin-bottom: 10px;">--- SYSTEM DIAGNOSTICS ---</div>{safe_content}'
-            )
+                f'<div style="color: #60a5fa; margin-bottom: 10px;">--- SYSTEM DIAGNOSTICS ---</div>{safe_content}')
+        elif log_type == 'stimulus':
+            return HttpResponse(
+                f'<div style="color: #eab308; margin-bottom: 10px;">--- NEURAL STIMULUS (SYSTEM PROMPT) ---</div>{safe_content}')
+
         return HttpResponse(safe_content)
 
     # Return FULL UI for initial tab load

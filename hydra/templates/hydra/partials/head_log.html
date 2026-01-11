@@ -15,6 +15,12 @@
                     hx-swap="innerHTML">
                 System Context
             </button>
+            <button class="log-tab {% if log_type == 'stimulus' %}active{% endif %}"
+                    hx-get="{% url 'hydra_head_logs' head.id %}?type=stimulus"
+                    hx-target="#log-wrapper-{{ head.id }}"
+                    hx-swap="innerHTML">
+                Neural Stimulus
+            </button>
             <button class="log-tab {% if log_type == 'analysis' %}active{% endif %}"
                     hx-get="{% url 'hydra_head_logs' head.id %}?type=analysis"
                     hx-target="#log-wrapper-{{ head.id }}"
