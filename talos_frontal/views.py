@@ -1,22 +1,18 @@
-import logging
-
-from django.conf import settings
-from django.http import JsonResponse
 from django.shortcuts import render
+from django.http import JsonResponse
 from django.views import View
-
-from talos_frontal.models import SystemDirective
-from talos_frontal.utils import parse_ai_actions
-from talos_parietal.registry import ModelRegistry
-from talos_parietal.synapse import OllamaClient
-from talos_parietal.tools import ai_execute_task, ai_read_file, ai_search_file
+from django.conf import settings
+from talos_reasoning.models import ReasoningSession, ReasoningGoal, ReasoningStatusID
+from talos_reasoning.engine import ReasoningEngine
+import logging
 
 logger = logging.getLogger(__name__)
 
 
 class ChatOverrideView(View):
     """
-    MANUAL OVERRIDE: Directly chat with the Frontal Lobe.
+    MANUAL OVERRIDE: Directly chat with the Reasoning Engine.
+    Uses a persistent 'Manual Sandbox' session.
     """
 
     def post(self, request, *args, **kwargs):
@@ -24,80 +20,71 @@ class ChatOverrideView(View):
         if not message:
             return JsonResponse({'error': 'No message provided'}, status=400)
 
-        # 1. Load active SystemDirective (Manual Override - ID 2)
-        directive = SystemDirective.objects.filter(
-            identifier_id=SystemDirective.MANUAL_OVERRIDE_ID,
-            is_active=True).order_by('-version').first()
-
-        if not directive:
-            return JsonResponse({'error': 'No active Manual Override Directive found (ID 2)'}, status=500)
-
-        # 2. Prepare Context
-        context = {
-            'project_root': str(settings.BASE_DIR),  # Default to Talos root
-        }
-
         try:
-            system_prompt = directive.format_prompt(**context)
-        except KeyError as e:
-            logger.error(f"Failed to format system prompt: {e}")
-            system_prompt = directive.template
+            # 1. FIND OR CREATE SANDBOX SESSION
+            # We look for a specific session for manual testing
+            session = ReasoningSession.objects.filter(
+                goal="Manual Sandbox",
+                status_id__in=[ReasoningStatusID.ACTIVE, ReasoningStatusID.PENDING]
+            ).order_by('-created').first()
 
-        # 3. Inject into OllamaClient
-        model_name = ModelRegistry.get_model('scout_light')
-        client = OllamaClient(model=model_name)
+            if not session:
+                session = ReasoningSession.objects.create(
+                    goal="Manual Sandbox",
+                    status_id=ReasoningStatusID.ACTIVE,
+                    max_turns=100
+                )
 
-        options = {
-            'temperature': directive.temperature,
-            'num_ctx': directive.context_window_size,
-            'num_predict': directive.max_output_tokens,
-        }
+            # 2. INJECT GOAL (User Input)
+            # This tells the engine what to do on this tick
+            ReasoningGoal.objects.create(
+                session=session,
+                reasoning_prompt=message,
+                status_id=ReasoningStatusID.PENDING
+            )
 
-        response_data = client.chat(
-            system_prompt=system_prompt,
-            user_content=message,
-            options=options
-        )
+            # 3. TICK THE ENGINE
+            engine = ReasoningEngine()
+            engine.tick(session.id)
 
-        content = response_data.get('content', '')
+            # 4. FETCH RESULT
+            # Get the turn that was just created (the latest one)
+            latest_turn = session.turns.order_by('-turn_number').last()
 
-        # 4. TOOL EXECUTION LAYER
-        actions = parse_ai_actions(content)
+            response_text = ""
+            model_name = "System"
 
-        if actions:
-            tool_output = "\n\n--- MANUAL TOOL EXECUTION ---\n"
-            for action in actions:
-                tool_name = action.get('tool')
-                args = action.get('args', {})
+            if latest_turn:
+                # Basic thought
+                response_text = latest_turn.thought_process
 
-                # Safety Injection
-                if tool_name in ['ai_read_file', 'ai_search_file']:
-                    args['root_path'] = context['project_root']
+                # Append tool outputs for visibility
+                tools = latest_turn.tool_calls.all()
+                if tools.exists():
+                    response_text += "\n\n--- TOOLS EXECUTED ---\n"
+                    for t in tools:
+                        status_icon = "✅" if t.status.name == 'Completed' else "❌"
+                        # Show command and snippet of result
+                        response_text += f"{status_icon} {t.tool.name}\n"
+                        if t.result_payload:
+                            snippet = t.result_payload[:200] + "..." if len(
+                                t.result_payload) > 200 else t.result_payload
+                            response_text += f"   > {snippet}\n"
 
-                if tool_name == 'ai_read_file':
-                    res = ai_read_file(
-                        args.get('path'),
-                        root_path=args.get('root_path'),
-                        start_line=args.get('start_line', 1),
-                        max_lines=min(int(args.get('max_lines', 50)), 150)
-                    )
-                elif tool_name == 'ai_search_file':
-                    res = ai_search_file(args.get('path'), args.get('pattern'), root_path=args.get('root_path'))
-                elif tool_name == 'ai_execute_task':
-                    res = ai_execute_task(args.get('head_id'))
-                else:
-                    res = f"Error: Unknown tool '{tool_name}'"
+                model_name = "ReasoningEngine"
+            else:
+                response_text = "Engine ticked but produced no new turn (Check logs)."
 
-                tool_output += f"> {tool_name}: \n{res}\n"
+            return JsonResponse({
+                'response': response_text,
+                'tokens_input': 0,
+                'tokens_output': 0,
+                'model': model_name
+            })
 
-            content += tool_output
-
-        return JsonResponse({
-            'response': content,
-            'tokens_input': response_data.get('tokens_input', 0),
-            'tokens_output': response_data.get('tokens_output', 0),
-            'model': response_data.get('model', model_name)
-        })
+        except Exception as e:
+            logger.error(f"Chat Override Crash: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
 
     def get(self, request, *args, **kwargs):
         return render(request, 'dashboard/partials/chat_window.html')
