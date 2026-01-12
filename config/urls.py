@@ -22,4 +22,5 @@ urlpatterns = [
     path('', include('dashboard.urls')),
     path('hydra/', include('hydra.urls')),
     path('frontal/', include('talos_frontal.urls')),
+    path('reasoning/', include('talos_reasoning.urls')),
 ]
