@@ -74,7 +74,9 @@ class SystemDirective(DefaultFieldsMixin, UUIDIdMixin):
     """
     Defines the 'System Prompt'.
     """
-    # THE FIX: ForeignKey, not CharField
+    DEFAULT_ID = 1
+    MANUAL_OVERRIDE_ID = 2
+
     identifier = models.ForeignKey(
         SystemDirectiveIdentifier,
         on_delete=models.PROTECT,

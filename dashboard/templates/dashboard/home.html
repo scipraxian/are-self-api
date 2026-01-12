@@ -1,5 +1,9 @@
 {% extends "dashboard/base.html" %}
 
+{% block top_actions %}
+    {{ block.super }}
+{% endblock %}
+
 {% block main_content %}
 <h1>Talos Command Center</h1>
 
@@ -15,6 +19,7 @@
 </div>
 
 {% include "dashboard/partials/agent_list.html" %}
+{% include "dashboard/partials/chat_window.html" %}
 {% endblock %}
 
 {% block extra_style %}
