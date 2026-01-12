@@ -27,7 +27,7 @@ class OllamaClient:
         }
 
         try:
-            response = requests.post(self.BASE_URL, json=payload, timeout=30)
+            response = requests.post(self.BASE_URL, json=payload, timeout=300)
             response.raise_for_status()
             data = response.json()
 

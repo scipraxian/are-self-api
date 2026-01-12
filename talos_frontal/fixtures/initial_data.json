@@ -2,41 +2,33 @@
   {
     "model": "talos_frontal.consciousstatus",
     "pk": 1,
-    "fields": {
-      "name": "Thinking"
-    }
+    "fields": { "name": "Thinking" }
   },
   {
     "model": "talos_frontal.consciousstatus",
     "pk": 2,
-    "fields": {
-      "name": "Waiting"
-    }
+    "fields": { "name": "Waiting" }
   },
   {
     "model": "talos_frontal.consciousstatus",
     "pk": 3,
-    "fields": {
-      "name": "Done"
-    }
+    "fields": { "name": "Done" }
   },
   {
     "model": "talos_frontal.systemdirectiveidentifier",
     "pk": 1,
-    "fields": {
-      "name": "Analysis Core"
-    }
+    "fields": { "name": "Analysis Core" }
   },
   {
     "model": "talos_frontal.systemdirective",
     "pk": "de305d54-75b4-431b-adb2-eb6b9e546013",
     "fields": {
       "identifier": 1,
-      "template": "ROLE: Senior Build Engineer\nCONTEXT: Spawn {spawn_id} (Errors Detected: {error_count})\n\nDIRECTIVES:\n1. Analyze the LOG DATA below.\n2. Use the timestamp to find the first failure.\n3. Be concise.\n\nLOG DATA:\n{log_data}",
-      "version": 2,
+      "template": "ROLE: Senior Build Engineer\nCONTEXT: Spawn {spawn_id} (Errors: {error_count}). Project Root: {project_root}\n\nDIRECTIVES:\n1. Analyze the LOG DATA below.\n2. DO NOT explain usage. JUST USE THE TOOL.\n3. Output the tool block IMMEDIATELY if more info is needed.\n4. Paths must be relative (e.g. Config/DefaultEngine.ini).\n\nTOOL:\n- ai_read_file(path=\"...\"): Reads a file.\n\nFORMAT:\n:::ai_read_file(path=\"Config/DefaultEngine.ini\") :::\n\nLOG DATA:\n{log_data}",
+      "version": 5,
       "is_active": true,
       "created": "2026-01-11T10:00:00Z",
-      "modified": "2026-01-11T12:00:00Z",
+      "modified": "2026-01-11T16:00:00Z",
       "context_window_size": 128000,
       "max_output_tokens": 2048,
       "temperature": 0.1
