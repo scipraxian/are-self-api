@@ -18,16 +18,29 @@ class OllamaClient:
         """
         Send a thought to the model and receive a completion.
         """
+
+        # MERGE OPTIONS
+        final_options = options or {}
+
+        # CRITICAL: Stop the AI from hallucinating the tool's output
+        # If it writes "Result (", it's faking it. Stop it there.
+        # We also stop at standard breaks.
+        stop_tokens = ["Result (", "System:", "User:", "LOG DATA:"]
+
+        # Add to payload
         payload = {
             "model": self.model,
             "prompt": f"{system_prompt}\n\nUser Input:\n{user_content}",
             "stream": False,
-            "options":
-                options or {}  # Pass temperature/num_predict here
-        }
+            "options": {
+                "stop": stop_tokens,
+                **final_options
+            }}
 
+        logger.info(f"[Synapse] Sending payload: [ {len(json.dumps(payload))} chars]")
         try:
             response = requests.post(self.BASE_URL, json=payload, timeout=300)
+            logger.info(f"[Synapse] Response received")
             response.raise_for_status()
             data = response.json()
 

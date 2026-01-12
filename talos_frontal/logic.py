@@ -1,13 +1,14 @@
 import logging
 import traceback
+
 from hydra.models import HydraSpawn
 from talos_occipital.readers import read_build_log
 from talos_parietal.registry import ModelRegistry
 from talos_parietal.synapse import OllamaClient
+from talos_parietal.tools import ai_execute_task, ai_read_file, ai_search_file
 from talos_thalamus.types import SignalTypeID
 from .models import ConsciousStatusID, ConsciousStream, SystemDirective, SystemDirectiveIdentifierID
 from .utils import parse_ai_actions
-from talos_parietal.tools import ai_read_file, ai_execute_task
 
 logger = logging.getLogger(__name__)
 
@@ -149,7 +150,16 @@ def process_stimulus(stimulus):
                     stream.current_thought = final_thought + f"\n\n*(Thinking... Turn {turn})*"
                     stream.save()
 
-                result = client.chat(system_prompt, conversation_history, options=options)
+                # INJECT REMINDER: Force the syntax at the very end of the prompt
+                reminder = "\n\nSYSTEM: Waiting for command (e.g. :::ai_search_file(...) :::). Do not hallucinate results."
+
+                # We append this to conversation_history temporarily for the call
+                current_context = conversation_history + reminder
+
+                result = client.chat(system_prompt, current_context, options=options)
+                logger.info(
+                    f"[FRONTAL] Response processing."
+                )
 
                 content = result.get('content', "")
                 total_tokens_in += result.get('tokens_input', 0)
@@ -172,14 +182,28 @@ def process_stimulus(stimulus):
                     tool_name = action.get('tool')
                     args = action.get('args', {})
 
-                    logger.info(f"[FRONTAL] 🔨 Executing {tool_name} with {args}")
+                    # Inject the resolved project_root into the tool arguments
+                    # This tells tools.py: "Allow access to THIS folder, not just Talos."
+                    if project_root and project_root != "Unknown/Project/Root":
+                        args['root_path'] = project_root
+
+                    logger.info(
+                        f"[FRONTAL] 🔨 Executing {tool_name} with {args}")
 
                     if tool_name == 'ai_read_file':
-                        res = ai_read_file(args.get('path'))
+                        # Pass the injected root_path
+                        res = ai_read_file(args.get('path'), root_path=args.get('root_path'))
                         tool_results.append(f"Result (ai_read_file): {res}")
+
+                    elif tool_name == 'ai_search_file':
+                        # Pass the injected root_path
+                        res = ai_search_file(args.get('path'), args.get('pattern'), root_path=args.get('root_path'))
+                        tool_results.append(f"Result (ai_search_file): {res}")
+
                     elif tool_name == 'ai_execute_task':
                         res = ai_execute_task(args.get('head_id'))
                         tool_results.append(f"Result (ai_execute_task): {res}")
+
                     else:
                         res = f"Error: Unknown tool '{tool_name}'"
                         tool_results.append(res)

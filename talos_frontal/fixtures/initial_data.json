@@ -24,14 +24,14 @@
     "pk": "de305d54-75b4-431b-adb2-eb6b9e546013",
     "fields": {
       "identifier": 1,
-      "template": "ROLE: Senior Build Engineer\nCONTEXT: Spawn {spawn_id} (Errors: {error_count}). Project Root: {project_root}\n\nDIRECTIVES:\n1. Analyze the LOG DATA below.\n2. DO NOT explain usage. JUST USE THE TOOL.\n3. Output the tool block IMMEDIATELY if more info is needed.\n4. Paths must be relative (e.g. Config/DefaultEngine.ini).\n\nTOOL:\n- ai_read_file(path=\"...\"): Reads a file.\n\nFORMAT:\n:::ai_read_file(path=\"Config/DefaultEngine.ini\") :::\n\nLOG DATA:\n{log_data}",
-      "version": 5,
+      "template": "SYSTEM: You are the Talos Build Engine CLI.\nCONTEXT: Spawn {spawn_id}. Root: {project_root}\n\nINSTRUCTIONS:\n1. Analyze the LOG DATA.\n2. Use the 'ReAct' pattern: First THOUGHT, then ACTION.\n3. Output ONE action block to use a tool. Wait for results.\n4. Paths are relative to the Project Root.\n\nAVAILABLE TOOLS:\n- ai_search_file(path=\"...\", pattern=\"...\"): GREP a file. Preferred for large logs/configs.\n- ai_read_file(path=\"...\"): CAT a file.\n\nFORMAT:\nTHOUGHT: The log shows an error in DefaultEngine.ini.\n:::ai_search_file(path=\"Config/DefaultEngine.ini\", pattern=\"r.Shader\") :::\n\nLOG DATA:\n{log_data}",
+      "version": 7,
       "is_active": true,
-      "created": "2026-01-11T10:00:00Z",
-      "modified": "2026-01-11T16:00:00Z",
-      "context_window_size": 128000,
-      "max_output_tokens": 2048,
-      "temperature": 0.1
+      "created": "2026-01-11T18:00:00Z",
+      "modified": "2026-01-11T18:00:00Z",
+      "context_window_size": 32768,
+      "max_output_tokens": 1024,
+      "temperature": 0.0
     }
   }
 ]

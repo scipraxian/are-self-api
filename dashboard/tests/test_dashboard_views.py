@@ -1,12 +1,10 @@
-'''Tests for the dashboard application.'''
+"""Tests for the dashboard application."""
+from unittest.mock import MagicMock, patch
 
-from unittest.mock import MagicMock
-from unittest.mock import patch
-
-from django.test import Client
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 
+from config.celery import app as celery_app
 from dashboard.tasks import debug_task
 
 
@@ -108,11 +106,11 @@ class DashboardTaskTests(TestCase):
 
 
 class DashboardBrokerTests(TestCase):
-  '''Verifies connection to the message broker.'''
+  """Verifies connection to the message broker. (Integration tests, require LIVE Redis). """
 
   def test_broker_connection(self):
-    '''Verifies that Celery can connect to the configured broker (Redis).'''
-    from config.celery import app as celery_app
+    """Verifies that Celery can connect to the configured broker (Integration w/ Redis)."""
+
     try:
       with celery_app.connection() as connection:
         connection.connect()

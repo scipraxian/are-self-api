@@ -11,7 +11,16 @@
             <div class="status-line">
                 <span class="run-id">Spawn {{ spawn.id|stringformat:"s"|slice:":8" }}</span>
                 <span class="separator">|</span>
-                <span class="status-text status-{{ spawn.status.name|lower }}">{{ spawn.status.name }}</span>
+                
+                {% with thought=spawn.thoughts.last %}
+                    {% if spawn.status.name == 'Success' and thought and thought.status.name == 'Thinking' %}
+                        <span class="status-text status-running" style="color: #eab308; animation: pulse 1.5s infinite;">
+                            ANALYZING
+                        </span>
+                    {% else %}
+                        <span class="status-text status-{{ spawn.status.name|lower }}">{{ spawn.status.name }}</span>
+                    {% endif %}
+                {% endwith %}
             </div>
         </div>
         <div class="actions">

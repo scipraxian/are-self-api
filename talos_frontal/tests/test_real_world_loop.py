@@ -61,7 +61,7 @@ class RealWorldCognitionTest(TestCase):
         # 4. Assertions
 
         # Did we actually call the tool despite the weird syntax?
-        mock_scry.assert_called_with("Config/DefaultEngine.ini")
+        mock_scry.assert_called_with("Config/DefaultEngine.ini", root_path='C:/Real')
 
         # Did the stream capture the conversation?
         stream = ConsciousStream.objects.get(spawn_link=self.spawn)
