@@ -40,7 +40,7 @@ def process_stimulus(stimulus):
         logger.error(f"[FRONTAL] 💥 Failed to create ConsciousStream: {e}")
         return
 
-    # 1. FETCH DIRECTIVE
+    # 1. FETCH CONFIG
     # We do this early to get the token budget
     directive = None
     try:
@@ -54,7 +54,7 @@ def process_stimulus(stimulus):
         logger.info(f"[FRONTAL] 📜 Loaded Directive v{directive.version} (Budget: {token_budget})")
     except SystemDirective.DoesNotExist:
         logger.warning("[FRONTAL] ⚠️ No Directive found. Using Safety Fallbacks.")
-        token_budget = 128000
+        token_budget = 32768
         max_output = 1024
         temp = 0.1
 
@@ -118,7 +118,7 @@ def process_stimulus(stimulus):
                     head_id=str(head_id) if head_id else "Unknown",
                     error_count=str(error_count),
                     event_type=str(event_type),
-                    project_root=project_root  # <--- INJECTED
+                    project_root=str(project_root)
                 )
             except KeyError as e:
                 msg = f"**SYSTEM ERROR:** Prompt template missing variable: {e}"
@@ -128,14 +128,14 @@ def process_stimulus(stimulus):
                 stream.save()
                 return
         else:
-            system_prompt = f"Analyze this log:\n{log_data}"
+            system_prompt = f"Analyze log:\n{log_data}"
 
         # --- THE SPELLCASTER LOOP ---
         MAX_TURNS = 5
         turn = 0
-        conversation_history = log_data  # Initial context
-        total_tokens_in = 0
-        total_tokens_out = 0
+        conversation_history = ""
+        total_in = 0
+        total_out = 0
         final_thought = ""
 
         logger.info(f"[FRONTAL] ⚡ Starting Cognitive Loop (Max Turns: {MAX_TURNS})...")
@@ -157,16 +157,17 @@ def process_stimulus(stimulus):
                 current_context = conversation_history + reminder
 
                 result = client.chat(system_prompt, current_context, options=options)
-                logger.info(
-                    f"[FRONTAL] Response processing."
-                )
+                logger.info(f"[FRONTAL] Response processing.")
 
                 content = result.get('content', "")
-                total_tokens_in += result.get('tokens_input', 0)
-                total_tokens_out += result.get('tokens_output', 0)
+                total_in += result.get('tokens_input', 0)
+                total_out += result.get('tokens_output', 0)
 
                 # Append to thought stream
                 final_thought += content + "\n\n"
+
+                # Add to history so AI remembers what it said
+                conversation_history += f"\n\nASSISTANT:\n{content}"
 
                 # Parse Actions
                 actions = parse_ai_actions(content)
@@ -177,60 +178,73 @@ def process_stimulus(stimulus):
                 logger.info(f"[FRONTAL] 🛠️ Tool Use Requested: {len(actions)} actions.")
 
                 # Execute Actions
-                tool_results = []
+                tool_output_block = "\n\nSYSTEM (TOOL RESULTS):"
+
                 for action in actions:
                     tool_name = action.get('tool')
                     args = action.get('args', {})
 
-                    # Inject the resolved project_root into the tool arguments
-                    # This tells tools.py: "Allow access to THIS folder, not just Talos."
-                    if project_root and project_root != "Unknown/Project/Root":
+                    # INJECT PROJECT ROOT IF NEEDED
+                    if tool_name in ['ai_read_file', 'ai_search_file'] and project_root:
                         args['root_path'] = project_root
 
-                    logger.info(
-                        f"[FRONTAL] 🔨 Executing {tool_name} with {args}")
+                    logger.info(f"[FRONTAL] 🔨 Executing {tool_name} with {args}")
 
+                    res = ""
                     if tool_name == 'ai_read_file':
-                        # Pass the injected root_path
-                        res = ai_read_file(args.get('path'), root_path=args.get('root_path'))
-                        tool_results.append(f"Result (ai_read_file): {res}")
+                        # --- CLAMPING LOGIC START ---
+                        try:
+                            s_line = int(args.get('start_line', 1))
+                            requested_max = int(args.get('max_lines', 50))
+                            # Hard clamp: Max 150 lines per read, no matter what AI asks
+                            m_lines = min(requested_max, 150)
+                        except ValueError:
+                            s_line = 1
+                            m_lines = 50
+                        # --- CLAMPING LOGIC END ---
+
+                        res = ai_read_file(
+                            args.get('path'),
+                            root_path=args.get('root_path'),
+                            start_line=s_line,
+                            max_lines=m_lines
+                        )
+                        tool_results_str = f"Result (ai_read_file lines {s_line}-{s_line + m_lines}): \n{res}"
+                        tool_output_block += f"\n{tool_results_str}"
+                        final_thought += f"> **read_file** ({s_line}-{s_line + m_lines}) executed.\n"
 
                     elif tool_name == 'ai_search_file':
-                        # Pass the injected root_path
                         res = ai_search_file(args.get('path'), args.get('pattern'), root_path=args.get('root_path'))
-                        tool_results.append(f"Result (ai_search_file): {res}")
+                        tool_output_block += f"\nResult (ai_search_file): {res}"
+                        final_thought += f"> **search_file** executed.\n"
 
                     elif tool_name == 'ai_execute_task':
                         res = ai_execute_task(args.get('head_id'))
-                        tool_results.append(f"Result (ai_execute_task): {res}")
+                        tool_output_block += f"\nResult (ai_execute_task): {res}"
+                        final_thought += f"> **execute_task** executed.\n"
 
                     else:
                         res = f"Error: Unknown tool '{tool_name}'"
-                        tool_results.append(res)
+                        tool_output_block += f"\n{res}"
 
                     # Log result length to console
                     logger.info(f"[FRONTAL]    > Result length: {len(str(res))}")
 
-                # Update conversation for next turn
-                # We feed the tool results back into the history so the AI can read them
-                conversation_history += f"\n\nAssistant Response:\n{content}"
-                conversation_history += f"\n\nSystem Tool Results:\n" + "\n".join(tool_results)
-
-                # Update the visual log for the user
-                final_thought += "--- TOOL EXECUTION ---\n" + "\n".join(tool_results) + "\n\n"
+                # Feed results back to AI
+                conversation_history += tool_output_block
 
             # Final Save
             stream.current_thought = final_thought
             stream.used_prompt = system_prompt
-            stream.tokens_input = total_tokens_in
-            stream.tokens_output = total_tokens_out
+            stream.tokens_input = total_in
+            stream.tokens_output = total_out
             stream.model_name = result.get('model', model_name)
             stream.status_id = ConsciousStatusID.DONE
             stream.save()
             logger.info("[FRONTAL] ✅ Cognitive Loop Finished successfully.")
 
         except Exception as e:
-            err_msg = f"**CRITICAL FAILURE:** Logic Loop Crashed.\nError: {str(e)}\nTraceback:\n{traceback.format_exc()}"
+            err_msg = f"**CRITICAL FAILURE:** Logic Loop Crashed.\n{str(e)}\n{traceback.format_exc()}"
             logger.error(f"[FRONTAL] 💥 {err_msg}")
             stream.current_thought += f"\n\n{err_msg}"
             stream.status_id = ConsciousStatusID.DONE

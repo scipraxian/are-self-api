@@ -32,6 +32,7 @@ class OllamaClient:
             "model": self.model,
             "prompt": f"{system_prompt}\n\nUser Input:\n{user_content}",
             "stream": False,
+            "keep_alive": 0,
             "options": {
                 "stop": stop_tokens,
                 **final_options

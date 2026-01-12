@@ -61,14 +61,17 @@ class RealWorldCognitionTest(TestCase):
         # 4. Assertions
 
         # Did we actually call the tool despite the weird syntax?
-        mock_scry.assert_called_with("Config/DefaultEngine.ini", root_path='C:/Real')
+        mock_scry.assert_called_with(
+            "Config/DefaultEngine.ini",
+            root_path='C:/Real',
+            start_line=1,
+            max_lines=50
+        )
 
         # Did the stream capture the conversation?
         stream = ConsciousStream.objects.get(spawn_link=self.spawn)
 
-        # FIX: Check for the string that logic.py actually writes to the DB
-        self.assertIn("--- TOOL EXECUTION ---", stream.current_thought)
-        self.assertIn("Result (ai_read_file): [Ini Content]", stream.current_thought)
+        self.assertIn("> **read_file**", stream.current_thought)
 
         # Check Final Outcome
         self.assertIn("The file is empty", stream.current_thought)

@@ -7,37 +7,31 @@ from hydra.tasks import cast_hydra_spell
 
 logger = logging.getLogger(__name__)
 
-def ai_read_file(file_path, root_path=None, max_chars=10000):
+
+def ai_read_file(file_path, root_path=None, start_line=1, max_lines=50):
     """
     Reads a file from the disk safely within the specified root_path.
+    Returns specific line ranges with line numbers.
     """
     # 1. Determine Allowed Base
-    # CRITICAL FIX: If logic provided a project root, USE IT.
-    # Only fall back to BASE_DIR if absolutely necessary (internal debugging).
     if root_path:
         base_dir = os.path.normpath(str(root_path))
     else:
-        # Fallback to settings.BASE_DIR (e.g. for reading self-diagnostics)
-        # But really, this should almost always be the project root.
         base_dir = os.path.normpath(str(getattr(settings, 'BASE_DIR', 'c:/talos')))
 
     # 2. Resolve Full Path
-    # Handle absolute paths (e.g. C:/Users/...) vs relative (Config/Default.ini)
     if os.path.isabs(file_path):
         full_path = os.path.normpath(file_path)
     else:
         full_path = os.path.normpath(os.path.join(base_dir, file_path))
 
     # 3. Security Check
-    # Ensure the resolved path sits inside the authorized root
-    # Use commonpath to ensure we are truly inside (handles case sensitivity on Windows better)
     try:
         common = os.path.commonpath([base_dir, full_path])
         if common.lower() != base_dir.lower():
             return f"Error: Access denied. Path '{full_path}' is outside the allowed root: '{base_dir}'"
     except ValueError:
-        # commonpath raises ValueError if paths are on different drives
-        return f"Error: Access denied. Path on different drive than root."
+        return f"Error: Access denied. Path on different drive."
 
     if not os.path.exists(full_path):
         return f"Error: File '{file_path}' not found."
@@ -45,21 +39,38 @@ def ai_read_file(file_path, root_path=None, max_chars=10000):
     if os.path.isdir(full_path):
         return f"Error: '{file_path}' is a directory."
 
+    # 4. Read Logic
     try:
         with open(full_path, 'r', encoding='utf-8', errors='replace') as f:
-            content = f.read(max_chars)
-            if len(content) == max_chars:
-                content += "\n... [TRUNCATED] ..."
-            return content
+            lines = f.readlines()
+
+        total_lines = len(lines)
+
+        # Adjust 1-based user input to 0-based list index
+        start_idx = max(0, int(start_line) - 1)
+        end_idx = start_idx + int(max_lines)
+
+        # Slice the file content
+        chunk = lines[start_idx:end_idx]
+
+        # FIX: enumerate start is the visual line number (start_idx + 1)
+        # FIX: f-string uses {i}, not {i+1}, because i is already the correct line number
+        content = "".join([f"{i}: {line}" for i, line in enumerate(chunk, start=start_idx + 1)])
+
+        footer = ""
+        if end_idx < total_lines:
+            footer = f"\n... [Displaying lines {start_idx + 1}-{min(end_idx, total_lines)} of {total_lines}. Use start_line={end_idx + 1} to read more.]"
+
+        return content + footer
+
     except Exception as e:
         return f"Error reading file: {str(e)}"
 
 
 def ai_search_file(file_path, pattern, root_path=None, context_lines=2):
     """
-    Searches a file for a regex pattern safely within the root_path.
+    Searches a file for a regex pattern safely.
     """
-    # 1. Security Setup (Same logic as read_file)
     if root_path:
         base_dir = os.path.normpath(str(root_path))
     else:
@@ -70,11 +81,10 @@ def ai_search_file(file_path, pattern, root_path=None, context_lines=2):
     else:
         full_path = os.path.normpath(os.path.join(base_dir, file_path))
 
-    # 2. Security Check
     try:
         common = os.path.commonpath([base_dir, full_path])
         if common.lower() != base_dir.lower():
-            return f"Error: Access denied. Path '{full_path}' is outside the allowed root: '{base_dir}'"
+            return f"Error: Access denied. Path '{full_path}' is outside the allowed root."
     except ValueError:
         return f"Error: Access denied. Path on different drive."
 
@@ -90,14 +100,15 @@ def ai_search_file(file_path, pattern, root_path=None, context_lines=2):
         for i, line in enumerate(lines):
             if re.search(pattern, line, re.IGNORECASE):
                 matches_found += 1
+                # Context math
                 start = max(0, i - context_lines)
                 end = min(len(lines), i + context_lines + 1)
 
                 chunk = "".join([
-                    f"{idx+1}: {l}"
-                    for idx, l in enumerate(lines[start:end], start=start)
+                    f"{idx + 1}: {l}"
+                    for idx, l in enumerate(lines[start:end], start=start + 1)  # +1 for 1-based lines
                 ])
-                results.append(f"--- Match {matches_found} (Line {i+1}) ---\n{chunk}")
+                results.append(f"--- Match {matches_found} (Line {i + 1}) ---\n{chunk}")
 
                 if len(results) >= 10:
                     results.append("... [Limit Reached. Refine search.]")

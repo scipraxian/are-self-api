@@ -19,16 +19,16 @@
     "pk": 1,
     "fields": { "name": "Analysis Core" }
   },
-  {
+{
     "model": "talos_frontal.systemdirective",
     "pk": "de305d54-75b4-431b-adb2-eb6b9e546013",
     "fields": {
       "identifier": 1,
-      "template": "SYSTEM: You are the Talos Build Engine CLI.\nCONTEXT: Spawn {spawn_id}. Root: {project_root}\n\nINSTRUCTIONS:\n1. Analyze the LOG DATA.\n2. Use the 'ReAct' pattern: First THOUGHT, then ACTION.\n3. Output ONE action block to use a tool. Wait for results.\n4. Paths are relative to the Project Root.\n\nAVAILABLE TOOLS:\n- ai_search_file(path=\"...\", pattern=\"...\"): GREP a file. Preferred for large logs/configs.\n- ai_read_file(path=\"...\"): CAT a file.\n\nFORMAT:\nTHOUGHT: The log shows an error in DefaultEngine.ini.\n:::ai_search_file(path=\"Config/DefaultEngine.ini\", pattern=\"r.Shader\") :::\n\nLOG DATA:\n{log_data}",
-      "version": 7,
+      "template": "SYSTEM: You are the Talos Build Engine CLI.\nCONTEXT: Spawn {spawn_id}. Root: {project_root}\n\nRULES:\n1. You are an AGENT. EXECUTE tools. DO NOT simulate output.\n2. syntax: :::tool_name(arg=\"value\") :::\n3. STOP immediately after issuing a command.\n\nAVAILABLE TOOLS:\n- ai_search_file(path, pattern): GREP a file. Use this FIRST to find line numbers.\n- ai_read_file(path, start_line=1, max_lines=50): Read specific lines. DO NOT read entire files.\n\nFORMAT:\nTHOUGHT: I need to check the shader config.\n:::ai_search_file(path=\"Config/DefaultEngine.ini\", pattern=\"r.Shader\") :::\n\nLOG DATA:\n{log_data}",
+      "version": 8,
       "is_active": true,
-      "created": "2026-01-11T18:00:00Z",
-      "modified": "2026-01-11T18:00:00Z",
+      "created": "2026-01-11T19:00:00Z",
+      "modified": "2026-01-11T19:00:00Z",
       "context_window_size": 32768,
       "max_output_tokens": 1024,
       "temperature": 0.0

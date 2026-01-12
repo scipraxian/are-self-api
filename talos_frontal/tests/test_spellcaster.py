@@ -69,6 +69,21 @@ class ToolTest(TestCase):
         self.assertIn("Successfully queued", result)
         mock_celery.assert_called_with(valid_uuid)
 
+    def test_ai_read_file_slicing(self):
+        fpath = os.path.join(self.temp_dir, "long_file.txt")
+        with open(fpath, "w") as f:
+            for i in range(100):
+                f.write(f"Line {i + 1}\n")
+
+        # Read lines 10-12
+        content = ai_read_file("long_file.txt", root_path=self.temp_dir, start_line=10, max_lines=3)
+
+        self.assertIn("10: Line 10", content)
+        self.assertIn("11: Line 11", content)
+        self.assertIn("12: Line 12", content)
+        self.assertNotIn("13: Line 13", content)
+        self.assertIn("Use start_line=13 to read more", content)
+
 
 class CognitiveLoopTest(TestCase):
     fixtures = [
@@ -102,7 +117,7 @@ class CognitiveLoopTest(TestCase):
         # 2. Setup AI Responses
         client = mock_ollama_cls.return_value
 
-        # Turn 1: AI asks to read a file (Python syntax)
+        # Turn 1: AI asks to read a file
         response_turn_1 = {
             "content": ':::ai_read_file(path="config.ini") :::',
             "tokens_input": 10, "tokens_output": 10, "model": "test-bot"
@@ -126,9 +141,12 @@ class CognitiveLoopTest(TestCase):
         # 4. Verification
         stream = ConsciousStream.objects.get(spawn_link=self.spawn)
 
-        # Check call args - Ensure root_path was passed correctly
-        mock_ai_read_file.assert_called_with("config.ini", root_path="C:/FakeProject")
+        # Check call args - Explicitly check for defaults passed by logic
+        mock_ai_read_file.assert_called_with(
+            "config.ini",
+            root_path="C:/FakeProject",
+            start_line=1,  # Default
+            max_lines=50  # Default
+        )
 
-        # Check conversation history update
-        self.assertIn("--- TOOL EXECUTION ---", stream.current_thought)
-        self.assertIn("Result (ai_read_file): [Config Content]", stream.current_thought)
+        self.assertIn("> **read_file**", stream.current_thought)
