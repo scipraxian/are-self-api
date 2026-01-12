@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'talos_parietal',
     'talos_occipital',
     'talos_temporal',
+    'talos_reasoning',
 ]
 
 MIDDLEWARE = [
