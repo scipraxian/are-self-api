@@ -20,7 +20,11 @@
 </div>
 
 {% include "dashboard/partials/agent_list.html" %}
-{% include "dashboard/partials/chat_window.html" %}
+<div id="chat-sidebar-container"
+ hx-get="{% url 'talos_frontal:chat_override' %}"
+ hx-trigger="load"
+ hx-swap="innerHTML">
+</div>
 {% endblock %}
 
 {% block extra_style %}

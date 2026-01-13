@@ -1,4 +1,5 @@
-from django.shortcuts import get_object_or_404, redirect, render  # Add this import at the top
+# [file: talos_reasoning/views.py]
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import DetailView, View
 
 from .engine import ReasoningEngine
@@ -43,8 +44,6 @@ class CortexStreamPartialView(View):
         turns = session.turns.all().prefetch_related(
             'tool_calls', 'tool_calls__tool').order_by('turn_number')
 
-        # We might also want to return the goals and engrams if they changed,
-        # but for now let's focus on the turns and the session status.
         return render(request, "talos_reasoning/partials/cognitive_stream.html",
                       {
                           'session': session,
@@ -75,13 +74,27 @@ class CortexTickActionView(View):
 
 class CortexLaunchView(View):
     """
-    Spins up a fresh, empty session for manual testing.
+    Launches the Manual Cortex.
+    REUSE LOGIC: Finds the most recent 'Manual' session (no spawn link).
     """
 
     def get(self, request):
-        session = ReasoningSession.objects.create(
-            goal="Manual Investigation (User Initiated)",
-            status_id=ReasoningStatusID.ACTIVE,
-            max_turns=20
-        )
+        # 1. Look for existing manual session
+        session = ReasoningSession.objects.filter(
+            spawn_link__isnull=True
+        ).order_by('-created').first()
+
+        if session:
+            # Wake it up if it was sleeping/completed
+            if session.status_id in [ReasoningStatusID.COMPLETED, ReasoningStatusID.MAXED_OUT, ReasoningStatusID.ERROR]:
+                session.status_id = ReasoningStatusID.ACTIVE
+                session.save()
+        else:
+            # 2. Only create if none exists
+            session = ReasoningSession.objects.create(
+                goal="Manual Investigation (User Initiated)",
+                status_id=ReasoningStatusID.ACTIVE,
+                max_turns=20
+            )
+
         return redirect('talos_reasoning:cortex_view', session_id=session.id)

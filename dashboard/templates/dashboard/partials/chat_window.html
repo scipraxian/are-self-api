@@ -16,8 +16,22 @@
 
         <div id="chat-history" class="chat-history">
             <div class="chat-message system">
-                <span class="text">Manual Override active. Connected to Frontal Lobe (Scout Light).</span>
+                <span class="text">Talos Chat</span>
             </div>
+            {% for msg in history %}
+                {% if msg.type == 'user' %}
+                    <div class="chat-message user">
+                        <span class="sender">User</span>
+                        <div class="text">{{ msg.text }}</div>
+                    </div>
+                {% else %}
+                    <div class="chat-message ai">
+                        <span class="sender">AI</span>
+                        <div class="text">{{ msg.text|linebreaksbr }}</div>
+                        <div class="metrics">Restored from Memory</div>
+                    </div>
+                {% endif %}
+            {% endfor %}
         </div>
 
         <div class="chat-input-area">

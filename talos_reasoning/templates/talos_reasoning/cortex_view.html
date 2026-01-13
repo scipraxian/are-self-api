@@ -406,6 +406,11 @@
             </div>
         </aside>
     </div>
+    <div id="chat-sidebar-container"
+         hx-get="{% url 'talos_frontal:chat_override' %}"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+    </div>
 {% endblock %}
 
 {% block extra_script %}
