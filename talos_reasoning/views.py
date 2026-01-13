@@ -18,11 +18,17 @@ class CortexSessionView(DetailView):
         context = super().get_context_data(**kwargs)
         session = self.get_object()
 
-        # Prefetch related data
+        # 1. Active Data
         context['turns'] = session.turns.all().prefetch_related(
             'tool_calls', 'tool_calls__tool').order_by('turn_number')
         context['goals'] = session.goals.all().order_by('created')
         context['engrams'] = session.engrams.all().order_by('-relevance_score')
+
+        # 2. History Data (Previous Sessions)
+        # Exclude current, order by newest
+        context['history_sessions'] = ReasoningSession.objects.exclude(
+            id=session.id
+        ).order_by('-modified')[:20]
 
         return context
 

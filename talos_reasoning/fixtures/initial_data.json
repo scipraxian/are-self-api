@@ -1,79 +1,32 @@
 [
     {
-        "model": "talos_reasoning.reasoningstatus",
-        "pk": 1,
-        "fields": {
-            "name": "Pending"
-        }
+        "model": "talos_reasoning.reasoningstatus", "pk": 1, "fields": { "name": "Pending" }
     },
     {
-        "model": "talos_reasoning.reasoningstatus",
-        "pk": 2,
-        "fields": {
-            "name": "Active"
-        }
+        "model": "talos_reasoning.reasoningstatus", "pk": 2, "fields": { "name": "Active" }
     },
     {
-        "model": "talos_reasoning.reasoningstatus",
-        "pk": 3,
-        "fields": {
-            "name": "Paused"
-        }
+        "model": "talos_reasoning.reasoningstatus", "pk": 3, "fields": { "name": "Paused" }
     },
     {
-        "model": "talos_reasoning.reasoningstatus",
-        "pk": 4,
-        "fields": {
-            "name": "Completed"
-        }
+        "model": "talos_reasoning.reasoningstatus", "pk": 4, "fields": { "name": "Completed" }
     },
     {
-        "model": "talos_reasoning.reasoningstatus",
-        "pk": 5,
-        "fields": {
-            "name": "Maxed Out"
-        }
+        "model": "talos_reasoning.reasoningstatus", "pk": 5, "fields": { "name": "Maxed Out" }
     },
     {
-        "model": "talos_reasoning.reasoningstatus",
-        "pk": 6,
-        "fields": {
-            "name": "Error"
-        }
+        "model": "talos_reasoning.reasoningstatus", "pk": 6, "fields": { "name": "Error" }
     },
     {
-        "model": "talos_reasoning.reasoningstatus",
-        "pk": 7,
-        "fields": {
-            "name": "Attention Required"
-        }
+        "model": "talos_reasoning.reasoningstatus", "pk": 7, "fields": { "name": "Attention Required" }
     },
     {
         "model": "talos_reasoning.tooldefinition",
         "pk": 1,
         "fields": {
             "name": "ai_read_file",
-            "system_prompt_context": "ai_read_file(path, start_line=1, max_lines=50): Reads specific lines from a file. Use this to examine code or log segments. Parameters: 'path' (str), 'start_line' (int), 'max_lines' (int).",
+            "system_prompt_context": "ai_read_file(path=\"file_path\", start_line=1, max_lines=50): Reads lines.",
             "is_async": false,
-            "parameters_schema": {
-                "type": "object",
-                "properties": {
-                    "path": {
-                        "type": "string"
-                    },
-                    "start_line": {
-                        "type": "integer",
-                        "default": 1
-                    },
-                    "max_lines": {
-                        "type": "integer",
-                        "default": 50
-                    }
-                },
-                "required": [
-                    "path"
-                ]
-            },
             "created": "2026-01-12T12:00:00Z",
             "modified": "2026-01-12T12:00:00Z"
         }
@@ -83,23 +36,19 @@
         "pk": 2,
         "fields": {
             "name": "ai_search_file",
-            "system_prompt_context": "ai_search_file(path, pattern): Searches for a regex pattern in a file. Use this FIRST to find relevant line numbers before reading. Parameters: 'path' (str), 'pattern' (str).",
+            "system_prompt_context": "ai_search_file(path=\"file_path\", pattern=\"regex\"): Grep file.",
             "is_async": false,
-            "parameters_schema": {
-                "type": "object",
-                "properties": {
-                    "path": {
-                        "type": "string"
-                    },
-                    "pattern": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "path",
-                    "pattern"
-                ]
-            },
+            "created": "2026-01-12T12:00:00Z",
+            "modified": "2026-01-12T12:00:00Z"
+        }
+    },
+    {
+        "model": "talos_reasoning.tooldefinition",
+        "pk": 3,
+        "fields": {
+            "name": "ai_list_files",
+            "system_prompt_context": "ai_list_files(path=\".\"): List files in directory.",
+            "is_async": false,
             "created": "2026-01-12T12:00:00Z",
             "modified": "2026-01-12T12:00:00Z"
         }

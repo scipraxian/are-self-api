@@ -35,6 +35,20 @@ class ChatOverrideView(View):
                     max_turns=100
                 )
 
+            # --- THE FIX: INTERRUPT PROTOCOL ---
+            # Before creating the new goal, retire any existing active goals.
+            # This tells the Engine: "Stop what you are doing, look at this."
+            active_goals = session.goals.filter(
+                status_id__in=[ReasoningStatusID.ACTIVE, ReasoningStatusID.PENDING]
+            )
+            if active_goals.exists():
+                # Mark them as superseded or simply completed so they don't block the queue
+                # Using 'COMPLETED' is cleaner for history, 'ABANDONED' if we want to show it was cut short.
+                # Let's use COMPLETED to denote "Done with this instruction".
+                # We need to ensure we don't break the FKs, but status update is safe.
+                active_goals.update(status_id=ReasoningStatusID.COMPLETED)
+            # -----------------------------------
+
             # 2. INJECT GOAL (User Input)
             # This tells the engine what to do on this tick
             ReasoningGoal.objects.create(
