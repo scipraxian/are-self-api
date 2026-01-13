@@ -49,7 +49,7 @@ class ReasoningMatrixTest(TestCase):
 
     @patch('talos_reasoning.engine.OllamaClient')
     def test_goal_switching_interrupt(self, mock_client_cls):
-        """Test 2: Goal Switching - PENDING goals must interrupt and isolate context."""
+        """Test 2: Goal Switching - PENDING goals must interrupt but RETAIN context."""
         mock_instance = mock_client_cls.return_value
 
         # Goal A
@@ -65,8 +65,6 @@ class ReasoningMatrixTest(TestCase):
             status_id=ReasoningStatusID.PENDING)
         self.engine.tick(self.session.id)
 
-        # Because we are linear now, tick() does one step.
-        # We assume the user would create Goal B next.
         goal_a.status_id = ReasoningStatusID.COMPLETED
         goal_a.save()
         self.session.rolling_context_summary = "Summary A"
@@ -82,9 +80,10 @@ class ReasoningMatrixTest(TestCase):
 
         self.engine.tick(self.session.id)
 
-        # Isolated context check
+        # CHECK CONTINUITY
         turn_b = self.session.turns.filter(active_goal=goal_b).first()
-        self.assertNotIn("A.txt", turn_b.input_context_snapshot)
+        # The history of Goal A SHOULD be present now
+        self.assertIn("A.txt", turn_b.input_context_snapshot)
         self.assertIn("Summary A", turn_b.input_context_snapshot)
 
     @patch('talos_reasoning.engine.OllamaClient')

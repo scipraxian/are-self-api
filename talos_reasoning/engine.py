@@ -142,23 +142,27 @@ class ReasoningEngine:
                 reasoning_prompt=session.goal,
                 status_id=ReasoningStatusID.ACTIVE)
 
-        # History (Limited to last 3 turns of current goal)
-        history_turns = session.turns.filter(
-            active_goal=active_goal).order_by('-turn_number')[:3][::-1]
+        # --- MEMORY FIX: LOAD FULL SESSION HISTORY ---
+        # Previously filtered by active_goal, causing amnesia.
+        # Now fetches the last 15 turns of the ENTIRE session to provide context.
+        history_turns = session.turns.all().order_by('-turn_number')[:15][::-1]
 
         history_text = ""
         if history_turns:
-            history_text = "### RAW HISTORY (Current Goal) ###\n"
+            history_text = "### SESSION HISTORY ###\n"
             for t in history_turns:
-                history_text += f"THOUGHT: {t.thought_process}\n"
+                # Add a marker if this turn belonged to a previous goal
+                goal_context = f" (Goal: {t.active_goal.reasoning_prompt})" if t.active_goal else ""
+
+                history_text += f"THOUGHT{goal_context}: {t.thought_process}\n"
                 for call in t.tool_calls.all():
-                    res_snippet = (call.result_payload[:500] + "...") if len(
-                        call.result_payload) > 500 else call.result_payload
+                    res_snippet = (call.result_payload[:800] + "...") if len(
+                        call.result_payload) > 800 else call.result_payload
                     history_text += f"SYSTEM (Result {call.tool.name}): {res_snippet}\n"
 
-        # Memory/Summary
+        # Memory/Summary (Long term)
         memory_text = (
-            f"### SHORT-TERM MEMORY (Session Summary) ###\n"
+            f"### SHORT-TERM MEMORY (Summarized) ###\n"
             f"{session.rolling_context_summary or 'No summary yet.'}")
 
         # Tools Documentation
@@ -168,7 +172,7 @@ class ReasoningEngine:
 
         system_prompt = (
             "SYSTEM: You are the Talos Build Engineer.\n"
-            "MISSION: Fulfill the current objective.\n"
+            "MISSION: Fulfill the current objective using the Session History as context.\n"
             "LINEAR COMMAND MODE: You MUST use the following CLI syntax for actions.\n"
             "COMMANDS:\n"
             "1. READ_FILE: <path> [start_line]\n"
@@ -176,7 +180,7 @@ class ReasoningEngine:
             "3. LIST_DIR: <path>\n\n"
             "RULES:\n"
             "- Output exactly one command per turn if an action is needed.\n"
-            "- If you have the answer, just state it clearly and the engine will stop.\n\n"
+            "- If you have the answer based on HISTORY, state it and do not use a tool.\n\n"
             "AVAILABLE TOOLS:\n"
             f"{tool_docs}")
 

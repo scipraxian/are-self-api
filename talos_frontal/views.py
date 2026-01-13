@@ -1,10 +1,10 @@
-from django.shortcuts import render
+import logging
+
 from django.http import JsonResponse
 from django.views import View
-from django.conf import settings
-from talos_reasoning.models import ReasoningSession, ReasoningGoal, ReasoningStatusID
+
 from talos_reasoning.engine import ReasoningEngine
-import logging
+from talos_reasoning.models import ReasoningGoal, ReasoningSession, ReasoningStatusID
 
 logger = logging.getLogger(__name__)
 
@@ -17,16 +17,27 @@ class ChatOverrideView(View):
 
     def post(self, request, *args, **kwargs):
         message = request.POST.get('message', '')
+        # Get the session ID from the form if it exists
+        session_id = request.POST.get('session_id', '')
+
         if not message:
             return JsonResponse({'error': 'No message provided'}, status=400)
 
         try:
-            # 1. FIND OR CREATE SANDBOX SESSION
-            # We look for a specific session for manual testing
-            session = ReasoningSession.objects.filter(
-                goal="Manual Sandbox",
-                status_id__in=[ReasoningStatusID.ACTIVE, ReasoningStatusID.PENDING]
-            ).order_by('-created').first()
+            session = None
+
+            # 1. TRY TO RESUME EXISTING SESSION
+            if session_id:
+                try:
+                    session = ReasoningSession.objects.get(id=session_id)
+                except ReasoningSession.DoesNotExist:
+                    pass
+
+            # 2. FALLBACK: FIND OR CREATE SANDBOX
+            if not session:
+                session = ReasoningSession.objects.filter(
+                    goal="Manual Sandbox"
+                ).order_by('-created').first()
 
             if not session:
                 session = ReasoningSession.objects.create(
@@ -35,65 +46,58 @@ class ChatOverrideView(View):
                     max_turns=100
                 )
 
-            # --- THE FIX: INTERRUPT PROTOCOL ---
-            # Before creating the new goal, retire any existing active goals.
-            # This tells the Engine: "Stop what you are doing, look at this."
+            # Ensure session is awake
+            if session.status_id in [ReasoningStatusID.COMPLETED, ReasoningStatusID.MAXED_OUT, ReasoningStatusID.ERROR]:
+                session.status_id = ReasoningStatusID.ACTIVE
+                session.save()
+
+            # --- INTERRUPT PROTOCOL ---
             active_goals = session.goals.filter(
                 status_id__in=[ReasoningStatusID.ACTIVE, ReasoningStatusID.PENDING]
             )
             if active_goals.exists():
-                # Mark them as superseded or simply completed so they don't block the queue
-                # Using 'COMPLETED' is cleaner for history, 'ABANDONED' if we want to show it was cut short.
-                # Let's use COMPLETED to denote "Done with this instruction".
-                # We need to ensure we don't break the FKs, but status update is safe.
                 active_goals.update(status_id=ReasoningStatusID.COMPLETED)
-            # -----------------------------------
 
-            # 2. INJECT GOAL (User Input)
-            # This tells the engine what to do on this tick
+            # 3. INJECT GOAL (User Input)
             ReasoningGoal.objects.create(
                 session=session,
                 reasoning_prompt=message,
                 status_id=ReasoningStatusID.PENDING
             )
 
-            # 3. TICK THE ENGINE
+            # 4. TICK THE ENGINE
             engine = ReasoningEngine()
             engine.tick(session.id)
 
-            # 4. FETCH RESULT
-            # Get the turn that was just created (the latest one)
-            latest_turn = session.turns.order_by('-turn_number').last()
+            # 5. FETCH RESULT (THE FIX IS HERE)
+            # We want the NEWEST turn.
+            latest_turn = session.turns.order_by('-turn_number').first()
 
             response_text = ""
             model_name = "System"
 
             if latest_turn:
-                # Basic thought
                 response_text = latest_turn.thought_process
-
-                # Append tool outputs for visibility
                 tools = latest_turn.tool_calls.all()
                 if tools.exists():
                     response_text += "\n\n--- TOOLS EXECUTED ---\n"
                     for t in tools:
                         status_icon = "✅" if t.status.name == 'Completed' else "❌"
-                        # Show command and snippet of result
                         response_text += f"{status_icon} {t.tool.name}\n"
                         if t.result_payload:
                             snippet = t.result_payload[:200] + "..." if len(
                                 t.result_payload) > 200 else t.result_payload
                             response_text += f"   > {snippet}\n"
-
                 model_name = "ReasoningEngine"
             else:
-                response_text = "Engine ticked but produced no new turn (Check logs)."
+                response_text = "Engine ticked but produced no new turn."
 
             return JsonResponse({
                 'response': response_text,
                 'tokens_input': 0,
                 'tokens_output': 0,
-                'model': model_name
+                'model': model_name,
+                'session_id': str(session.id)  # Send back ID for the JS to lock onto
             })
 
         except Exception as e:
