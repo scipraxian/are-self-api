@@ -38,7 +38,11 @@ class GoalSwitchingTest(TestCase):
 
         # 3. Tick (Mock AI to ignore output, we only care about state transition)
         with patch('talos_reasoning.engine.OllamaClient') as mock_client:
-            mock_client.return_value.chat.return_value = {"content": "Doing B"}
+            # Provide two responses: 1 for Reasoning, 1 for Summary
+            mock_client.return_value.chat.side_effect = [
+                {"content": "Doing B"},
+                {"content": "Summary B"}
+            ]
             self.engine.tick(self.session.id)
 
         # 4. Assertions
@@ -46,10 +50,13 @@ class GoalSwitchingTest(TestCase):
         goal_b.refresh_from_db()
 
         self.assertEqual(goal_a.status.name, "Completed", "Old goal should be auto-completed by Engine.")
-        self.assertEqual(goal_b.status.name, "Active", "New goal should be active.")
+
+        # The engine is recursive now, so it finishes Goal B immediately.
+        self.assertEqual(goal_b.status.name, "Completed", "New goal should be completed (Recursive run).")
 
         # Verify the Turn is linked to Goal B
-        turn = self.session.turns.last()
+        turn = self.session.turns.filter(active_goal=goal_b).first()
+        self.assertIsNotNone(turn)
         self.assertEqual(turn.active_goal, goal_b)
 
     def test_context_isolation(self):
@@ -74,18 +81,23 @@ class GoalSwitchingTest(TestCase):
         # 3. Tick & Capture Prompt
         with patch('talos_reasoning.engine.OllamaClient') as mock_client:
             mock_instance = mock_client.return_value
-            mock_instance.chat.return_value = {"content": "Ok"}
+            # The engine makes TWO calls: 1. Reasoning (Doing the task), 2. Summarizing.
+            mock_instance.chat.side_effect = [
+                {"content": "Ok, reading requirements."},
+                {"content": "Summary: Read requirements."}
+            ]
 
             self.engine.tick(self.session.id)
 
-            # Get the args passed to chat()
-            call_args = mock_instance.chat.call_args
-            prompt_content = call_args[0][1]  # user_content
-
-            print(f"\n[DEBUG] PROMPT SENT TO AI:\n{prompt_content}\n")
+            # Get the args passed to the FIRST chat() call (The Reasoning Step)
+            if mock_instance.chat.call_args_list:
+                call_args = mock_instance.chat.call_args_list[0]
+                prompt_content = call_args[0][1]  # user_content
+            else:
+                self.fail("Ollama was not called.")
 
             # 4. Verify Isolation
             self.assertIn("requirements.txt", prompt_content, "Prompt must contain new goal")
             self.assertNotIn("manage.py", prompt_content, "Prompt must NOT contain old goal history")
-            # UPDATED: Matched string from engine.py
-            self.assertIn("(New Goal. No previous context for this specific task.)", prompt_content)
+            # UPDATED MATCH STRING TO ALIGN WITH ENGINE.PY
+            self.assertIn("No raw history yet for this objective", prompt_content)

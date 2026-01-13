@@ -15,6 +15,7 @@ from talos_reasoning.engine import ReasoningEngine
 # 1. PARSER STRESS MATRIX
 # ==========================================
 class ParserMatrixTest(SimpleTestCase):
+
     def assert_action(self, text, tool, arg_key, arg_val):
         actions = parse_ai_actions(text)
         self.assertTrue(len(actions) > 0, f"Failed to parse: {text}")
@@ -25,12 +26,18 @@ class ParserMatrixTest(SimpleTestCase):
         """Verify the parser handles every weird way an LLM might write."""
         matrix = [
             (':::ai_read_file(path="A") :::', 'ai_read_file', 'path', 'A'),
-            (':::ai_read_file(path="A"):::', 'ai_read_file', 'path', 'A'),  # No space
-            ('::: ai_read_file ( path = "A" ) :::', 'ai_read_file', 'path', 'A'),  # Spaced
-            (':::ai_read_file(\'A\') :::', 'ai_read_file', 'path', 'A'),  # Positional Single Quote
-            (':::ai_read_file("A") :::', 'ai_read_file', 'path', 'A'),  # Positional Double Quote
-            (':::ACTION {"tool": "ai_read_file", "args": {"path": "A"}} :::', 'ai_read_file', 'path', 'A'),  # JSON
-            (':::ai_read_file {"path": "A"} :::', 'ai_read_file', 'path', 'A'),  # Drifted JSON
+            (':::ai_read_file(path="A"):::', 'ai_read_file', 'path',
+             'A'),  # No space
+            ('::: ai_read_file ( path = "A" ) :::', 'ai_read_file', 'path',
+             'A'),  # Spaced
+            (':::ai_read_file(\'A\') :::', 'ai_read_file', 'path',
+             'A'),  # Positional Single Quote
+            (':::ai_read_file("A") :::', 'ai_read_file', 'path',
+             'A'),  # Positional Double Quote
+            (':::ACTION {"tool": "ai_read_file", "args": {"path": "A"}} :::',
+             'ai_read_file', 'path', 'A'),  # JSON
+            (':::ai_read_file {"path": "A"} :::', 'ai_read_file', 'path',
+             'A'),  # Drifted JSON
             # Lazy / EOF cases
             (':::ai_read_file(path="A")', 'ai_read_file', 'path', 'A'),
         ]
@@ -43,15 +50,18 @@ class ParserMatrixTest(SimpleTestCase):
 # 2. TOOL SAFETY MATRIX
 # ==========================================
 class ToolSafetyMatrixTest(TestCase):
+
     def setUp(self):
         self.root = tempfile.mkdtemp()
         self.safe_file = os.path.join(self.root, "safe.txt")
-        with open(self.safe_file, 'w') as f: f.write("safe")
+        with open(self.safe_file, 'w') as f:
+            f.write("safe")
 
         # Create a file OUTSIDE the root
         self.outside_root = tempfile.mkdtemp()
         self.secret_file = os.path.join(self.outside_root, "secret.txt")
-        with open(self.secret_file, 'w') as f: f.write("secret")
+        with open(self.secret_file, 'w') as f:
+            f.write("secret")
 
     def tearDown(self):
         shutil.rmtree(self.root)
@@ -63,10 +73,11 @@ class ToolSafetyMatrixTest(TestCase):
             ("safe.txt", self.safe_file, None),  # Standard
             ("./safe.txt", self.safe_file, None),  # Dot prefix
             ("subdir/../safe.txt", self.safe_file, None),  # Traversal internal
-            ("../secret.txt", None, "Access denied"),  # Jailbreak relative (BLOCKED)
+            ("../secret.txt", None,
+             "Access denied"),  # Jailbreak relative (BLOCKED)
 
-            # ABSOLUTE PATH -> ALLOWED (User Requirement: "Any file anywhere")
-            (self.secret_file, self.secret_file, None),
+            # ABSOLUTE PATH -> BLOCKED if outside root (Security Stabilization)
+            (self.secret_file, None, "Access denied"),
         ]
 
         for input_path, expected, err_fragment in scenarios:
@@ -74,11 +85,9 @@ class ToolSafetyMatrixTest(TestCase):
                 path, error = _resolve_path(input_path, self.root)
 
                 if err_fragment:
-                    self.assertIsNone(path, f"Path should be None for jailbreak: {input_path}")
-                    self.assertIsNotNone(error, f"Error should be returned for: {input_path}")
-                    # This assertion was failing because the text slightly differed in Python versions/implementations
-                    # We relax it to just check for "Access denied"
-                    self.assertIn("Access denied", error)
+                    self.assertIsNone(path)
+                    self.assertTrue("Access denied" in error or
+                                    "outside the context root" in error)
                 else:
                     self.assertIsNone(error)
                     self.assertEqual(path, expected)
@@ -92,9 +101,7 @@ class EngineLogicTest(TestCase):
 
     def setUp(self):
         self.session = ReasoningSession.objects.create(
-            goal="Logic Test",
-            status_id=ReasoningStatusID.ACTIVE
-        )
+            goal="Logic Test", status_id=ReasoningStatusID.ACTIVE)
         self.engine = ReasoningEngine()
 
     def test_interrupt_logic(self):
@@ -103,7 +110,8 @@ class EngineLogicTest(TestCase):
         stops the Engine from caring about the old goal.
         """
         # 1. Goal A (Active)
-        g1 = ReasoningGoal.objects.create(session=self.session, reasoning_prompt="Goal A",
+        g1 = ReasoningGoal.objects.create(session=self.session,
+                                          reasoning_prompt="Goal A",
                                           status_id=ReasoningStatusID.ACTIVE)
 
         # 2. Inject Goal B (Pending) - Simulate Chat Override
@@ -111,15 +119,19 @@ class EngineLogicTest(TestCase):
         g1.status_id = ReasoningStatusID.COMPLETED
         g1.save()
 
-        g2 = ReasoningGoal.objects.create(session=self.session, reasoning_prompt="Goal B",
+        g2 = ReasoningGoal.objects.create(session=self.session,
+                                          reasoning_prompt="Goal B",
                                           status_id=ReasoningStatusID.PENDING)
 
         # 3. Tick
         with patch('talos_reasoning.engine.OllamaClient') as mock_client:
-            mock_client.return_value.chat.return_value = {"content": "Thinking about Goal B"}
+            mock_client.return_value.chat.return_value = {
+                "content": "Thinking about Goal B"
+            }
             self.engine.tick(self.session.id)
 
         # 4. Verify Goal B was selected
         self.session.refresh_from_db()
         turn = self.session.turns.last()
-        self.assertEqual(turn.active_goal, g2, "Engine failed to switch to new goal!")
+        self.assertEqual(turn.active_goal, g2,
+                         "Engine failed to switch to new goal!")

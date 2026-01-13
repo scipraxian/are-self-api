@@ -17,12 +17,12 @@ logger = logging.getLogger(__name__)
 class ReasoningEngine:
     """
     The Executive Driver for Reasoning Sessions.
-    STABILIZED VERSION (V1.1).
+    STABILIZED VERSION (V1.2) - Recursive Execution & Context Hygiene.
     """
 
     def tick(self, session_id):
         """
-        Executes a single turn of reasoning with goal priority and context isolation.
+        Executes a single turn of reasoning with recursion and context isolation.
         """
         logger.info(f"[ReasoningEngine] 🧠 Ticking Session: {session_id}")
 
@@ -40,61 +40,59 @@ class ReasoningEngine:
                 f"[ReasoningEngine] Session {session_id} inactive. Aborting.")
             return
 
+        # 2. Safety: Max Turns Check
+        turn_count = session.turns.count()
+        if turn_count >= session.max_turns:
+            return
+
+        is_cleanup = False
+        if (turn_count + 1) >= session.max_turns:
+            logger.warning(
+                f"[ReasoningEngine] Max turns reached. Final cleanup.")
+            session.status_id = ReasoningStatusID.MAXED_OUT
+            session.save()
+            is_cleanup = True
+
         if session.status_id == ReasoningStatusID.PENDING:
             session.status_id = ReasoningStatusID.ACTIVE
             session.save()
 
-        # 2. Turn Count Check
-        if session.turns.count() >= session.max_turns:
-            logger.warning(f"[ReasoningEngine] Max turns reached.")
-            session.status_id = ReasoningStatusID.MAXED_OUT
-            session.save()
-            return
-
-        # 3. GOAL SELECTION (THE FIX: INTERRUPT PRIORITY)
-        # Check for NEW commands (Pending) which supersede current work.
+        # 3. GOAL SELECTION & SUMMARIZATION LOGIC
         new_goal = session.goals.filter(
-            status_id=ReasoningStatusID.PENDING
-        ).order_by('created').first()
+            status_id=ReasoningStatusID.PENDING).order_by('created').first()
+
+        active_goal = session.goals.filter(
+            status_id=ReasoningStatusID.ACTIVE).order_by('created').first()
 
         if new_goal:
-            # INTERRUPT: Retire the currently active goal
-            active_goals = session.goals.filter(
-                status_id=ReasoningStatusID.ACTIVE
-            ).exclude(id=new_goal.id)
-
-            if active_goals.exists():
+            # INTERRUPT: Summarize what we have so far if active_goal exists
+            if active_goal:
                 logger.info(
-                    f"[ReasoningEngine] ⚡ Interrupting {active_goals.count()} goals for New Goal {new_goal.id}")
-                active_goals.update(status_id=ReasoningStatusID.COMPLETED)
+                    f"[ReasoningEngine] ⚡ Goal Transition: {active_goal.id} -> {new_goal.id}"
+                )
+                self._update_rolling_summary(session, active_goal)
+                active_goal.status_id = ReasoningStatusID.COMPLETED
+                active_goal.save()
 
-            # Activate the new goal
             active_goal = new_goal
             active_goal.status_id = ReasoningStatusID.ACTIVE
             active_goal.save()
-        else:
-            # Continue working on existing active goal
-            active_goal = session.goals.filter(
-                status_id=ReasoningStatusID.ACTIVE
-            ).order_by('created').first()
 
-        # Fallback
+        # Fallback to Session Goal if nothing active
         if not active_goal:
-            goal_text = session.goal
             active_goal = ReasoningGoal.objects.create(
                 session=session,
-                reasoning_prompt=goal_text,
+                reasoning_prompt=session.goal,
                 status_id=ReasoningStatusID.ACTIVE)
-        else:
-            goal_text = active_goal.reasoning_prompt
 
-        # 4. CONTEXT ISOLATION
-        # Only fetch history for the CURRENT goal to prevent loop stuckness
-        history_turns = session.turns.filter(active_goal=active_goal).order_by('-turn_number')[:3][::-1]
+        # 4. CONTEXT BUILDING (The Lobotomy Check)
+        # History is ISOLATED to the current goal.
+        history_turns = session.turns.filter(
+            active_goal=active_goal).order_by('-turn_number')[:3][::-1]
 
         history_text = ""
         if history_turns:
-            history_text = "### RECENT HISTORY (This Goal) ###\n"
+            history_text = "### RAW HISTORY (Current Goal Only) ###\n"
             for t in history_turns:
                 history_text += f"THOUGHT: {t.thought_process}\n"
                 for call in t.tool_calls.all():
@@ -102,7 +100,10 @@ class ReasoningEngine:
                         call.result_payload) > 500 else call.result_payload
                     history_text += f"SYSTEM (Result {call.tool.name}): {res_snippet}\n"
         else:
-            history_text = "(New Goal. No previous context for this specific task.)"
+            history_text = "(New Goal focus. No raw history yet for this objective.)"
+
+        # Long Term Memory
+        memory_text = f"### SHORT-TERM MEMORY (Session Summary) ###\n{session.rolling_context_summary or 'No summary yet.'}"
 
         # Fetch Tools
         tools = ToolDefinition.objects.all()
@@ -111,20 +112,18 @@ class ReasoningEngine:
 
         system_prompt = (
             "SYSTEM: You are the Talos Build Engineer.\n"
-            "MISSION: Fulfill the user's specific command IMMEDIATELY.\n"
+            "MISSION: Fulfill the current objective. You are in AUTO-DRIVE mode.\n"
             "RULES:\n"
-            "1. Execute ONE tool call that directly addresses the CURRENT GOAL.\n"
-            "2. Use RELATIVE paths (e.g. 'manage.py'). Do NOT use absolute paths.\n"
-            "3. Do NOT explore or list files unless explicitly asked or you don't know the file path.\n"
-            "4. Output ONLY the tool command: :::tool_name(path=\"...\") :::\n"
-            "5. Do NOT chat or explain yourself.\n\n"
+            "1. Tool calls trigger another tick. Pure thoughts (synthesis) stop the engine.\n"
+            "2. Use RELATIVE paths.\n"
+            "3. Output ONLY the tool command: :::tool_name(path=\"...\") :::\n"
+            "4. If finished with the goal, provide a final synthesis thought with NO tool call.\n\n"
             "AVAILABLE TOOLS:\n"
-            f"{tool_docs}\n\n"
-            "THOUGHT FORMAT:\n"
-            "THOUGHT: I will fulfill the request.\n"
-            ":::tool_name(...) :::")
+            f"{tool_docs}")
+
         user_content = (
-            f"### CURRENT GOAL ###\n{active_goal.reasoning_prompt}\n\n"
+            f"{memory_text}\n\n"
+            f"### CURRENT OBJECTIVE ###\n{active_goal.reasoning_prompt}\n\n"
             f"{history_text}\n\n"
             "Next action?")
 
@@ -149,19 +148,40 @@ class ReasoningEngine:
         turn = ReasoningTurn.objects.create(
             session=session,
             active_goal=active_goal,
-            turn_number=session.turns.count() + 1,
+            turn_number=turn_count + 1,
             input_context_snapshot=user_content,
             thought_process=ai_thought,
             status_id=ReasoningStatusID.COMPLETED)
 
-        # 7. TOOL DISPATCH (IMPLICIT CONTEXT)
+        # 7. TOOL DISPATCH & RECURSION
         actions = parse_ai_actions(ai_thought)
 
-        if actions:
-            logger.info(
-                f"[ReasoningEngine] 🛠️ Dispatching {len(actions)} actions.")
+        # LOOP GUARD: Deduplication (Anti-Loop)
+        prev_turn = session.turns.filter(
+            id__lt=turn.id).order_by('-turn_number').first()
+        if actions and prev_turn:
+            prev_calls = prev_turn.tool_calls.all()
+            if prev_calls.exists():
+                pc = prev_calls.first()
+                curr_action = actions[0]
+                curr_tool = curr_action.get('tool')
+                curr_args = json.dumps(curr_action.get('args', {}))
 
-            # Resolve Root Path once
+                if curr_tool == pc.tool.name and curr_args == pc.arguments:
+                    logger.warning(
+                        f"[ReasoningEngine] Loop detected! Repeating {curr_tool}. Stopping."
+                    )
+                    turn.thought_process = "SYSTEM: You just ran this command. Do not repeat it. Check the history."
+                    turn.save()
+                    session.status_id = ReasoningStatusID.ATTENTION_REQUIRED
+                    session.save()
+                    return
+
+        if actions and session.status_id != ReasoningStatusID.MAXED_OUT:
+            logger.info(
+                f"[ReasoningEngine] 🛠️ Dispatching {len(actions)} actions. Recursing."
+            )
+
             project_root = str(settings.BASE_DIR)
             if session.spawn_link and session.spawn_link.environment and session.spawn_link.environment.project_environment:
                 project_root = session.spawn_link.environment.project_environment.project_root
@@ -170,7 +190,6 @@ class ReasoningEngine:
                 tool_name = action.get('tool')
                 args = action.get('args', {})
 
-                # Record ToolCall
                 try:
                     tool_def = ToolDefinition.objects.get(name=tool_name)
                     call = ToolCall.objects.create(
@@ -179,20 +198,16 @@ class ReasoningEngine:
                         arguments=json.dumps(args),
                         status_id=ReasoningStatusID.ACTIVE)
                 except ToolDefinition.DoesNotExist:
-                    logger.warning(f"AI requested unknown tool: {tool_name}")
                     continue
 
-                # SILENT ROOT INJECTION
                 if tool_name in [
                         'ai_read_file', 'ai_search_file', 'ai_list_files'
                 ]:
                     args['root_path'] = project_root
 
-                # Execution
                 try:
                     tool_func = getattr(parietal_tools, tool_name, None)
                     if tool_func:
-                        # Safety: Clamp max_lines for AI reads
                         if tool_name == 'ai_read_file':
                             try:
                                 args['max_lines'] = min(
@@ -204,7 +219,7 @@ class ReasoningEngine:
                         call.result_payload = str(res)
                         call.status_id = ReasoningStatusID.COMPLETED
                     else:
-                        call.result_payload = f"Error: Implementation for '{tool_name}' not found."
+                        call.result_payload = f"Error: '{tool_name}' implementation not found."
                         call.status_id = ReasoningStatusID.ERROR
                 except Exception as e:
                     logger.error(
@@ -212,27 +227,57 @@ class ReasoningEngine:
                     call.result_payload = f"CRASH: {str(e)}"
                     call.traceback = traceback.format_exc()
                     call.status_id = ReasoningStatusID.ERROR
-                    session.status_id = ReasoningStatusID.ATTENTION_REQUIRED
 
                 call.save()
-        else:
-            logger.info("[ReasoningEngine] No tool actions found.")
 
-        logger.info(f"[ReasoningEngine] ✅ Turn {turn.turn_number} finished.")
+            # RECURSE IMMEDIATELY
+            self.tick(session_id)
+        else:
+            # SYNTHESIS (NO TOOLS)
+            logger.info(
+                f"[ReasoningEngine] ✅ Goal Synthesis detected. Stopping.")
+            active_goal.status_id = ReasoningStatusID.COMPLETED
+            active_goal.save()
+            self._update_rolling_summary(session, active_goal)
+
+    def _update_rolling_summary(self, session, goal):
+        """Asks the AI to summarize the goal's results and updates memory."""
+        logger.info(
+            f"[ReasoningEngine] 📝 Updating rolling summary for session {session.id}"
+        )
+
+        # Fetch relevant turns for this goal
+        turns = session.turns.filter(active_goal=goal).order_by('turn_number')
+        if not turns.exists():
+            return
+
+        events = []
+        for t in turns:
+            events.append(f"Thought: {t.thought_process}")
+            for call in t.tool_calls.all():
+                snippet = call.result_payload[:200]
+                events.append(f"Action {call.tool.name} Result: {snippet}...")
+
+        summary_prompt = (
+            "Summarize the progress and outcome of the following work in 2-3 concise sentences.\n"
+            "Focus on what was discovered or performed.\n\n"
+            f"WORK LOG:\n" + "\n".join(events))
+
+        model_name = ModelRegistry.get_model('scout_light')
+        client = OllamaClient(model=model_name)
+
+        try:
+            res = client.chat("SYSTEM: You are a technical summarizer.",
+                              summary_prompt)
+            summary = res.get('content', '').strip()
+
+            existing = session.rolling_context_summary
+            new_summary = f"{existing}\n- {summary}" if existing else f"- {summary}"
+            session.rolling_context_summary = new_summary
+            session.save()
+        except Exception as e:
+            logger.error(f"[ReasoningEngine] Summary generation failed: {e}")
 
     def run_to_completion(self, session_id):
-        """Helper to loop ticks."""
-        while True:
-            session = ReasoningSession.objects.get(id=session_id)
-            if session.status_id not in [
-                    ReasoningStatusID.PENDING, ReasoningStatusID.ACTIVE
-            ]:
-                break
-            self.tick(session_id)
-            session.refresh_from_db()
-            if session.status_id in [
-                    ReasoningStatusID.MAXED_OUT, ReasoningStatusID.ERROR,
-                    ReasoningStatusID.COMPLETED,
-                    ReasoningStatusID.ATTENTION_REQUIRED
-            ]:
-                break
+        """Helper to loop ticks (now redundant but kept for compatibility)."""
+        self.tick(session_id)

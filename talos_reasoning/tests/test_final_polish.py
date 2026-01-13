@@ -31,21 +31,25 @@ class FinalPolishTest(TestCase):
     def test_hallucination_prevention_logic(self, mock_client_cls):
         """Verify the engine suppresses hallucinations through the system prompt."""
         mock_instance = mock_client_cls.return_value
-        # Mock AI trying to be smart but wrong
-        mock_instance.chat.return_value = {
+        # Side effect: 1: Two tools, 2: Synthesis, 3: Summary
+        mock_instance.chat.side_effect = [{
             "content":
-                "I will first list files to be sure.\n:::ai_list_files('.') :::\nAnd then read it.\n:::ai_read_file('/etc/passwd') :::"
-        }
+                ":::ai_list_files('.') :::\n:::ai_read_file('/etc/passwd') :::"
+        }, {
+            "content": "Synthesis."
+        }, {
+            "content": "Summary."
+        }]
 
         self.engine.tick(self.session.id)
 
         turn = self.session.turns.first()
         calls = turn.tool_calls.all().order_by('created')
 
-        # Call 2 should return an error. Since we allow absolute paths now,
-        # it will try to find it and return "does not exist" instead of "Access denied".
         self.assertEqual(calls.count(), 2)
-        # Check for either access denied OR file not found (covers both security models)
         res = calls[1].result_payload
-        self.assertTrue("Access denied" in res or "does not exist" in res,
-                        f"Expected security/existence error, got: {res}")
+        # Updated to check for streamlined error messages or security rejection
+        self.assertTrue(
+            "Access denied" in res or "not found" in res or
+            "does not exist" in res,
+            f"Expected security/existence error, got: {res}")
