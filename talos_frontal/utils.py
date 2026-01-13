@@ -1,104 +1,121 @@
 import re
 import json
-import ast
 import logging
+import ast
 
 logger = logging.getLogger(__name__)
 
 
 def parse_ai_actions(text):
     """
-    Extracts action blocks. Hybrid approach supporting:
-    1. JSON: :::ACTION {"tool": "x"} :::
-    2. Drifted JSON: :::ai_read_file {"path": "x"} :::
-    3. Pythonic: :::ai_read_file(path="x") :::
-    4. Positional: :::ai_list_files('.') :::
-    """
-    # Regex Update:
-    # 1. (\w+)? -> Optional Tag (e.g. "ACTION" or "ai_read_file")
-    # 2. \s* -> Whitespace
-    # 3. (.*?) -> Content (lazy match)
-    # 4. (?:::|$) -> End at next ::: OR End of String
-    # Note: We rely on the loop to refine the content parsing.
-    # Regex Update: Allow spaces after :::
-    # Old: r":::(\w+)?\s*(.*?)(?:::|$)"
-    # New: r":::\s*(\w+)?\s*(.*?)(?:::|$)"
-    pattern = r":::\s*(\w+)?\s*(.*?)(?:::|$)"
-    matches = re.findall(pattern, text, re.DOTALL)
+    EXTREMELY ROBUST PARSER (Level 200).
+    Extracts action blocks from AI thought streams.
 
+    Strategies:
+    1. Tagged Blocks: :::tool(...) :::
+    2. JSON Blocks: :::ACTION {...} :::
+    3. NAKED CALLS: ai_read_file(...) (Fallback if tags missing)
+    """
     actions = []
 
-    # Map for positional args -> keyword args (AST Logic)
-    arg_map = {
-        'ai_read_file': ['path', 'start_line', 'max_lines'],
-        'ai_search_file': ['path', 'pattern'],
-        'ai_list_files': ['path'],
-        'ai_execute_task': ['head_id'],
-    }
+    # --- STRATEGY 1 & 2: TAGGED BLOCKS (High Confidence) ---
+    pattern_tagged = r":::\s*(\w+)?\s*(.*?)(?:::|$)"
+    matches_tagged = list(re.finditer(pattern_tagged, text, re.DOTALL))
 
-    for tag, content in matches:
-        tag = tag.strip() if tag else ""
-        content = content.strip()
+    for match in matches_tagged:
+        tag = (match.group(1) or "").strip()
+        content = match.group(2).strip()
 
-        if not content:
-            continue
+        if not content: continue
 
-        # --- STRATEGY A: JSON (Legacy & Drifted) ---
-        # If it looks like a dict/object
-        if content.startswith('{'):
-            try:
-                payload = json.loads(content)
+        # JSON Try
+        try:
+            data = json.loads(content)
+            if isinstance(data, dict):
                 if tag.upper() == 'ACTION' or not tag:
-                    if 'tool' in payload:
-                        actions.append(payload)
+                    if 'tool' in data: actions.append(data)
                 else:
-                    # Tag is the tool name (Drifted)
-                    actions.append({'tool': tag, 'args': payload})
+                    actions.append({"tool": tag, "args": data})
                 continue
-            except json.JSONDecodeError:
-                pass
+        except (json.JSONDecodeError, TypeError):
+            pass
 
-        # --- STRATEGY B: AST (Pythonic) ---
-        # If it looks like a function call args: (...)
-        if content.startswith('('):
-            try:
-                # Wrap in fake call
-                tree = ast.parse(f"call{content}")
-                call = tree.body[0].value
-
-                kwargs = {k.arg: ast.literal_eval(k.value) for k in call.keywords}
-
-                # Positional Mapping
-                tool_name = tag
-                if call.args:
-                    mapping = arg_map.get(tool_name, [])
-                    for i, arg_val in enumerate(call.args):
-                        if i < len(mapping):
-                            key = mapping[i]
-                            if key not in kwargs:
-                                kwargs[key] = ast.literal_eval(arg_val)
-
-                if tool_name:
-                    actions.append({'tool': tool_name, 'args': kwargs})
-                continue
-            except Exception:
-                pass
-
-        # --- STRATEGY C: REGEX FALLBACK (Desperation) ---
-        # Handles: :::ai_read_file path="foo" ::: (No parens, no braces)
+        # AST/Pythonic Try
         if tag and tag.upper() != 'ACTION':
-            args = {}
-            # Capture key="val" OR key='val' OR key=123
-            arg_pattern = r'(\w+)=[\'"](.*?)[\'"]|(\w+)=(\d+)'
-            arg_matches = re.findall(arg_pattern, content)
+            parsed_args = _parse_pythonic_args(tag, content)
+            if parsed_args:
+                actions.append({"tool": tag, "args": parsed_args})
+                continue
 
-            for key_str, val_str, key_int, val_int in arg_matches:
-                if key_str:
-                    args[key_str] = val_str
-                elif key_int:
-                    args[key_int] = int(val_int)
+    # --- STRATEGY 3: NAKED CALLS (Fallback) ---
+    # If the AI forgot the ::: syntax, we look for function calls starting with 'ai_'
+    # Only run if we haven't found actions yet (to avoid duplicates)
+    if not actions:
+        # Regex: Matches "ai_word ( ... )"
+        pattern_naked = r"(ai_\w+)\s*\((.*?)\)"
+        matches_naked = re.finditer(pattern_naked, text, re.DOTALL)
 
-            if args:
-                actions.append({'tool': tag, 'args': args})
+        for match in matches_naked:
+            tool_name = match.group(1)
+            content = match.group(2)
+
+            # Use the same AST logic
+            parsed_args = _parse_pythonic_args(tool_name, content)
+            if parsed_args:
+                actions.append({"tool": tool_name, "args": parsed_args})
 
     return actions
+
+
+def _parse_pythonic_args(tool_name, content):
+    """Helper to parse (arg="val") strings via AST."""
+    # Cleanup parens if regex captured them loosely
+    content = content.strip()
+    if content.startswith('(') and content.endswith(')'):
+        content = content[1:-1]
+
+    if not content:
+        # Defaults
+        if tool_name == 'ai_list_files': return {'path': '.'}
+        return {}
+
+    try:
+        # Wrap in fake call
+        tree = ast.parse(f"call({content})")
+        call = tree.body[0].value
+
+        kwargs = {k.arg: ast.literal_eval(k.value) for k in call.keywords}
+
+        # Positional Mapping
+        if call.args:
+            mapping = {
+                'ai_read_file': ['path', 'start_line', 'max_lines'],
+                'ai_search_file': ['path', 'pattern'],
+                'ai_list_files': ['path'],
+                'ai_execute_task': ['head_id'],
+            }.get(tool_name, [])
+
+            for i, arg_val in enumerate(call.args):
+                if i < len(mapping):
+                    key = mapping[i]
+                    if key not in kwargs:
+                        kwargs[key] = ast.literal_eval(arg_val)
+
+        return kwargs
+    except Exception:
+        # Last Resort Regex for key="val"
+        args = {}
+        kv_pattern = r"(\w+)\s*=\s*(?:['\"](.*?)['\"]|(\d+))"
+        kv_matches = re.findall(kv_pattern, content)
+        for k, v_str, v_int in kv_matches:
+            if v_str is not None:
+                args[k] = v_str
+            else:
+                args[k] = int(v_int)
+
+        # Absolute desperation: plain string?
+        if not args and content and "=" not in content:
+            key = 'head_id' if 'execute' in tool_name else 'path'
+            args[key] = content.strip("'\"")
+
+        return args

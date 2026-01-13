@@ -87,4 +87,5 @@ class GoalSwitchingTest(TestCase):
             # 4. Verify Isolation
             self.assertIn("requirements.txt", prompt_content, "Prompt must contain new goal")
             self.assertNotIn("manage.py", prompt_content, "Prompt must NOT contain old goal history")
-            self.assertIn("(No history for this specific task. Start fresh.)", prompt_content)
+            # UPDATED: Matched string from engine.py
+            self.assertIn("(New Goal. No previous context for this specific task.)", prompt_content)

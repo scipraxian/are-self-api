@@ -1,7 +1,7 @@
 import logging
 import os
-import re
-import uuid
+import re  # <--- RESTORED
+import uuid  # <--- RESTORED
 from django.conf import settings
 from hydra.tasks import cast_hydra_spell
 
@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 def _resolve_path(path, root_path):
     """
     Helper to resolve paths based on context.
-    - If path is absolute: Use it directly (Power User override).
-    - If path is relative: Join with root_path and ensure safety.
+    - If path is absolute: Use it directly (Power User override / Bypass Sandbox).
+    - If path is relative: Join with root_path and ENFORCE sandbox.
     """
     # 1. Determine Context Root
     if root_path:
@@ -21,34 +21,31 @@ def _resolve_path(path, root_path):
         # Default to Talos Root if no context provided
         base_dir = os.path.normpath(str(getattr(settings, 'BASE_DIR', 'c:/talos')))
 
-    # 2. Handle Absolute Paths (The "Any file anywhere" rule)
+    # 2. Handle Absolute Paths (BYPASS SANDBOX)
     if os.path.isabs(path):
         full_path = os.path.normpath(path)
         if not os.path.exists(full_path):
             return None, f"Error: Absolute path '{path}' does not exist."
         return full_path, None
 
-    # 3. Handle Relative Paths (The Sandbox)
+    # 3. Handle Relative Paths (ENFORCE SANDBOX)
     full_path = os.path.normpath(os.path.join(base_dir, path))
 
-    # Security: Prevent '..' from escaping the root
+    # Security Check
     try:
         common = os.path.commonpath([base_dir, full_path])
         if common.lower() != base_dir.lower():
-            return None, f"Error: Access denied. '{path}' traverses outside the context root."
+            return None, f"Error: Access denied. '{path}' is outside the context root."
     except ValueError:
-        return None, f"Error: Access denied. Drive mismatch."
+        return None, f"Error: Access denied. Partition/Drive mismatch."
 
     if not os.path.exists(full_path):
-        return None, f"Error: File '{path}' not found in context."
+        return None, f"Error: Path '{path}' not found."
 
     return full_path, None
 
 
 def ai_read_file(path, root_path=None, start_line=1, max_lines=50):
-    """
-    Reads a file slice.
-    """
     full_path, error = _resolve_path(path, root_path)
     if error: return error
 
@@ -68,7 +65,7 @@ def ai_read_file(path, root_path=None, start_line=1, max_lines=50):
 
         footer = ""
         if end_idx < total_lines:
-            footer = f"\n... [Displaying lines {start_idx+1}-{min(end_idx, total_lines)} of {total_lines}. Use start_line={end_idx+1} to read more.]"
+            footer = f"\n... [Displaying lines {start_idx + 1}-{min(end_idx, total_lines)} of {total_lines}. Use start_line={end_idx + 1} to read more.]"
 
         return content + footer
 
@@ -77,9 +74,6 @@ def ai_read_file(path, root_path=None, start_line=1, max_lines=50):
 
 
 def ai_search_file(path, pattern, root_path=None, context_lines=2):
-    """
-    Greps a file.
-    """
     full_path, error = _resolve_path(path, root_path)
     if error: return error
 
@@ -110,9 +104,6 @@ def ai_search_file(path, pattern, root_path=None, context_lines=2):
 
 
 def ai_list_files(path, root_path=None):
-    """
-    Lists directory contents.
-    """
     full_path, error = _resolve_path(path, root_path)
     if error: return error
 
@@ -123,7 +114,7 @@ def ai_list_files(path, root_path=None):
         items = os.listdir(full_path)
         items.sort()
 
-        result = [f"Listing for: {path}"]
+        result = [f"Listing for: {full_path}"]
         for item in items[:50]:
             item_path = os.path.join(full_path, item)
             kind = "[DIR] " if os.path.isdir(item_path) else "[FILE]"
@@ -142,7 +133,6 @@ def ai_execute_task(head_id):
         val = uuid.UUID(str(head_id))
     except ValueError:
         return f"Error: Invalid Head ID '{head_id}'. Must be a UUID."
-
     try:
         cast_hydra_spell.delay(str(head_id))
         return f"Successfully queued spell for Head {head_id}."
