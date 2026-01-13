@@ -8,7 +8,7 @@ from talos_parietal.synapse import OllamaClient
 from talos_parietal.tools import ai_execute_task, ai_read_file, ai_search_file
 from talos_thalamus.types import SignalTypeID
 from .models import ConsciousStatusID, ConsciousStream, SystemDirective, SystemDirectiveIdentifierID
-from .utils import parse_ai_actions
+from .utils import parse_command_string
 
 logger = logging.getLogger(__name__)
 
@@ -33,27 +33,28 @@ def process_stimulus(stimulus):
         stream = ConsciousStream.objects.create(
             spawn_link_id=spawn_id,
             head_link_id=head_id,
-            current_thought=f"Received Stimulus: {stimulus.description}. Initializing Cortex...",
-            status_id=ConsciousStatusID.THINKING
-        )
+            current_thought=
+            f"Received Stimulus: {stimulus.description}. Initializing Cortex...",
+            status_id=ConsciousStatusID.THINKING)
     except Exception as e:
         logger.error(f"[FRONTAL] 💥 Failed to create ConsciousStream: {e}")
         return
 
     # 1. FETCH CONFIG
-    # We do this early to get the token budget
     directive = None
     try:
         directive = SystemDirective.objects.get(
             identifier_id=SystemDirectiveIdentifierID.ANALYSIS_CORE,
-            is_active=True
-        )
+            is_active=True)
         token_budget = directive.context_window_size
         max_output = directive.max_output_tokens
         temp = directive.temperature
-        logger.info(f"[FRONTAL] 📜 Loaded Directive v{directive.version} (Budget: {token_budget})")
+        logger.info(
+            f"[FRONTAL] 📜 Loaded Directive v{directive.version} (Budget: {token_budget})"
+        )
     except SystemDirective.DoesNotExist:
-        logger.warning("[FRONTAL] ⚠️ No Directive found. Using Safety Fallbacks.")
+        logger.warning(
+            "[FRONTAL] ⚠️ No Directive found. Using Safety Fallbacks.")
         token_budget = 32768
         max_output = 1024
         temp = 0.1
@@ -64,7 +65,9 @@ def process_stimulus(stimulus):
 
     error_count = log_data.count("Error:") + log_data.count("Exception:")
     has_errors = "ERROR SUMMARY" in log_data
-    logger.info(f"[FRONTAL] 📊 Log Analysis: {len(log_data)} chars, {error_count} errors detected.")
+    logger.info(
+        f"[FRONTAL] 📊 Log Analysis: {len(log_data)} chars, {error_count} errors detected."
+    )
 
     # 3. DECISION LOGIC
     should_analyze = False
@@ -88,7 +91,8 @@ def process_stimulus(stimulus):
             return
 
         # 4. COGNITION (Parietal)
-        model_name = ModelRegistry.get_model('scout_light')
+        # Use COMMANDER (Gemma 27B) if available, fallback to Scout
+        model_name = ModelRegistry.get_model(ModelRegistry.COMMANDER)
         client = OllamaClient(model=model_name)
 
         options = {
@@ -100,7 +104,6 @@ def process_stimulus(stimulus):
         # Context Gathering
         try:
             spawn_obj = HydraSpawn.objects.get(id=spawn_id)
-            # Default to "Unknown" if env missing, safe access
             if spawn_obj.environment and spawn_obj.environment.project_environment:
                 project_root = spawn_obj.environment.project_environment.project_root
             else:
@@ -118,8 +121,7 @@ def process_stimulus(stimulus):
                     head_id=str(head_id) if head_id else "Unknown",
                     error_count=str(error_count),
                     event_type=str(event_type),
-                    project_root=str(project_root)
-                )
+                    project_root=str(project_root))
             except KeyError as e:
                 msg = f"**SYSTEM ERROR:** Prompt template missing variable: {e}"
                 logger.error(f"[FRONTAL] 💥 {msg}")
@@ -128,7 +130,7 @@ def process_stimulus(stimulus):
                 stream.save()
                 return
         else:
-            system_prompt = f"Analyze log:\n{log_data}"
+            system_prompt = f"Analyze log. Use READ_FILE: <path> to see files.\n{log_data}"
 
         # --- THE SPELLCASTER LOOP ---
         MAX_TURNS = 5
@@ -138,85 +140,92 @@ def process_stimulus(stimulus):
         total_out = 0
         final_thought = ""
 
-        logger.info(f"[FRONTAL] ⚡ Starting Cognitive Loop (Max Turns: {MAX_TURNS})...")
+        logger.info(
+            f"[FRONTAL] ⚡ Starting Cognitive Loop (Max Turns: {MAX_TURNS})...")
 
         try:
             while turn < MAX_TURNS:
                 turn += 1
-                logger.info(f"[FRONTAL] 🔄 Turn {turn}/{MAX_TURNS}: Querying {model_name}...")
+                logger.info(
+                    f"[FRONTAL] 🔄 Turn {turn}/{MAX_TURNS}: Querying {model_name}..."
+                )
 
-                # Update stream so user sees we are thinking
                 if turn > 1:
                     stream.current_thought = final_thought + f"\n\n*(Thinking... Turn {turn})*"
                     stream.save()
 
-                # INJECT REMINDER: Force the syntax at the very end of the prompt
-                reminder = "\n\nSYSTEM: Waiting for command (e.g. :::ai_search_file(...) :::). Do not hallucinate results."
+                # INJECT REMINDER (CLI SYNTAX)
+                reminder = "\n\nSYSTEM: Waiting for command (e.g. READ_FILE: <path>). Do not hallucinate results."
 
-                # We append this to conversation_history temporarily for the call
                 current_context = conversation_history + reminder
 
-                result = client.chat(system_prompt, current_context, options=options)
+                result = client.chat(system_prompt,
+                                     current_context,
+                                     options=options)
                 logger.info(f"[FRONTAL] Response processing.")
 
                 content = result.get('content', "")
                 total_in += result.get('tokens_input', 0)
                 total_out += result.get('tokens_output', 0)
 
-                # Append to thought stream
                 final_thought += content + "\n\n"
-
-                # Add to history so AI remembers what it said
                 conversation_history += f"\n\nASSISTANT:\n{content}"
 
-                # Parse Actions
-                actions = parse_ai_actions(content)
-                if not actions:
-                    logger.info("[FRONTAL] 🛑 No actions requested. Loop complete.")
+                # Parse Actions (Using New CLI Parser)
+                action = parse_command_string(content)
+                if not action:
+                    logger.info(
+                        "[FRONTAL] 🛑 No valid command found. Loop complete.")
                     break
 
-                logger.info(f"[FRONTAL] 🛠️ Tool Use Requested: {len(actions)} actions.")
+                # Support list for loop logic compatibility
+                actions = [action]
 
-                # Execute Actions
+                logger.info(
+                    f"[FRONTAL] 🛠️ Tool Use Requested: {len(actions)} actions.")
+
                 tool_output_block = "\n\nSYSTEM (TOOL RESULTS):"
 
                 for action in actions:
                     tool_name = action.get('tool')
                     args = action.get('args', {})
 
-                    # INJECT PROJECT ROOT IF NEEDED
                     if tool_name in ['ai_read_file', 'ai_search_file'] and project_root:
                         args['root_path'] = project_root
 
-                    logger.info(f"[FRONTAL] 🔨 Executing {tool_name} with {args}")
+                    logger.info(
+                        f"[FRONTAL] 🔨 Executing {tool_name} with {args}")
 
                     res = ""
                     if tool_name == 'ai_read_file':
-                        # --- CLAMPING LOGIC START ---
                         try:
                             s_line = int(args.get('start_line', 1))
                             requested_max = int(args.get('max_lines', 50))
-                            # Hard clamp: Max 150 lines per read, no matter what AI asks
                             m_lines = min(requested_max, 150)
                         except ValueError:
                             s_line = 1
                             m_lines = 50
-                        # --- CLAMPING LOGIC END ---
 
-                        res = ai_read_file(
-                            args.get('path'),
-                            root_path=args.get('root_path'),
-                            start_line=s_line,
-                            max_lines=m_lines
-                        )
+                        res = ai_read_file(args.get('path'),
+                                           root_path=args.get('root_path'),
+                                           start_line=s_line,
+                                           max_lines=m_lines)
                         tool_results_str = f"Result (ai_read_file lines {s_line}-{s_line + m_lines}): \n{res}"
                         tool_output_block += f"\n{tool_results_str}"
-                        final_thought += f"> **read_file** ({s_line}-{s_line + m_lines}) executed.\n"
+                        final_thought += f"> **read_file** executed.\n"
 
                     elif tool_name == 'ai_search_file':
-                        res = ai_search_file(args.get('path'), args.get('pattern'), root_path=args.get('root_path'))
+                        res = ai_search_file(args.get('path'),
+                                             args.get('pattern'),
+                                             root_path=args.get('root_path'))
                         tool_output_block += f"\nResult (ai_search_file): {res}"
                         final_thought += f"> **search_file** executed.\n"
+
+                    elif tool_name == 'ai_list_files':
+                        from talos_parietal.tools import ai_list_files
+                        res = ai_list_files(args.get('path'), root_path=args.get('root_path'))
+                        tool_output_block += f"\nResult (ai_list_files): {res}"
+                        final_thought += f"> **list_files** executed.\n"
 
                     elif tool_name == 'ai_execute_task':
                         res = ai_execute_task(args.get('head_id'))
@@ -227,13 +236,11 @@ def process_stimulus(stimulus):
                         res = f"Error: Unknown tool '{tool_name}'"
                         tool_output_block += f"\n{res}"
 
-                    # Log result length to console
-                    logger.info(f"[FRONTAL]    > Result length: {len(str(res))}")
+                    logger.info(
+                        f"[FRONTAL]    > Result length: {len(str(res))}")
 
-                # Feed results back to AI
                 conversation_history += tool_output_block
 
-            # Final Save
             stream.current_thought = final_thought
             stream.used_prompt = system_prompt
             stream.tokens_input = total_in
@@ -249,7 +256,7 @@ def process_stimulus(stimulus):
             stream.current_thought += f"\n\n{err_msg}"
             stream.status_id = ConsciousStatusID.DONE
             stream.save()
-            raise e  # Re-raise to ensure Celery marks task as failed
+            raise e
 
     elif event_type == SignalTypeID.SPAWN_SUCCESS and not has_errors:
         stream.current_thought = "Build Succeeded. Log Verified Clean."

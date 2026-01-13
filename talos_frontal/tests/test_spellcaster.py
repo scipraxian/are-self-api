@@ -4,7 +4,7 @@ import tempfile
 from unittest.mock import patch, MagicMock
 from django.test import TestCase
 
-from talos_frontal.utils import parse_ai_actions
+from talos_frontal.utils import parse_command_string
 from talos_parietal.tools import ai_read_file, ai_execute_task, ai_search_file
 from talos_frontal.logic import process_stimulus
 from talos_frontal.models import ConsciousStream, ConsciousStatusID
@@ -18,26 +18,18 @@ class SpellcasterUtilsTest(TestCase):
     def test_parse_valid_action(self):
         text = """
         I need to check the config.
-        :::ACTION {"tool": "ai_read_file", "args": {"path": "config.ini"}} :::
+        READ_FILE: config.ini
         That should tell us more.
         """
-        actions = parse_ai_actions(text)
-        self.assertEqual(len(actions), 1)
-        self.assertEqual(actions[0]['tool'], "ai_read_file")
-        self.assertEqual(actions[0]['args']['path'], "config.ini")
-
-    def test_parse_drifted_python_syntax(self):
-        text = ':::ai_read_file(path="config.ini") :::'
-        actions = parse_ai_actions(text)
-        self.assertEqual(len(actions), 1)
-        self.assertEqual(actions[0]['tool'], "ai_read_file")
-        self.assertEqual(actions[0]['args']['path'], "config.ini")
+        action = parse_command_string(text)
+        self.assertIsNotNone(action)
+        self.assertEqual(action['tool'], "ai_read_file")
+        self.assertEqual(action['args']['path'], "config.ini")
 
 
 class ToolTest(TestCase):
     def setUp(self):
         self.temp_dir = tempfile.mkdtemp()
-        # Create a dummy file
         self.fpath = os.path.join(self.temp_dir, "test.txt")
         with open(self.fpath, "w") as f:
             f.write("Hello World\nLine 2\nLine 3")
@@ -46,18 +38,14 @@ class ToolTest(TestCase):
         shutil.rmtree(self.temp_dir)
 
     def test_ai_read_file_read(self):
-        # Pass root_path explicitly to simulate logic.py behavior
         content = ai_read_file("test.txt", root_path=self.temp_dir)
         self.assertIn("Hello World", content)
 
     def test_ai_read_file_traversal_attempt(self):
-        """Test the explicit security check."""
-        # UPDATE: Expect the new "Access denied" message from commonpath check
         result = ai_read_file("../outside.txt", root_path=self.temp_dir)
         self.assertIn("Access denied", result)
 
     def test_ai_search_file(self):
-        # Pass root_path explicitly
         result = ai_search_file("test.txt", "Line 2", root_path=self.temp_dir)
         self.assertIn("Match 1", result)
         self.assertIn("Line 2", result)
@@ -75,7 +63,6 @@ class ToolTest(TestCase):
             for i in range(100):
                 f.write(f"Line {i + 1}\n")
 
-        # Read lines 10-12
         content = ai_read_file("long_file.txt", root_path=self.temp_dir, start_line=10, max_lines=3)
 
         self.assertIn("10: Line 10", content)
@@ -94,7 +81,6 @@ class CognitiveLoopTest(TestCase):
 
     def setUp(self):
         self.book = HydraSpellbook.objects.create(name="TestBook")
-        # CRITICAL FIX: We MUST provide project_root so logic.py can extract it
         self.env = ProjectEnvironment.objects.create(
             name="TestEnv",
             is_active=True,
@@ -117,9 +103,9 @@ class CognitiveLoopTest(TestCase):
         # 2. Setup AI Responses
         client = mock_ollama_cls.return_value
 
-        # Turn 1: AI asks to read a file
+        # Turn 1: AI asks to read a file (NEW SYNTAX)
         response_turn_1 = {
-            "content": ':::ai_read_file(path="config.ini") :::',
+            "content": 'READ_FILE: config.ini',
             "tokens_input": 10, "tokens_output": 10, "model": "test-bot"
         }
 
@@ -141,12 +127,12 @@ class CognitiveLoopTest(TestCase):
         # 4. Verification
         stream = ConsciousStream.objects.get(spawn_link=self.spawn)
 
-        # Check call args - Explicitly check for defaults passed by logic
+        # Check call args
         mock_ai_read_file.assert_called_with(
             "config.ini",
             root_path="C:/FakeProject",
-            start_line=1,  # Default
-            max_lines=50  # Default
+            start_line=1,
+            max_lines=50
         )
 
         self.assertIn("> **read_file**", stream.current_thought)

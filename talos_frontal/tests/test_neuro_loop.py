@@ -1,7 +1,5 @@
 from unittest.mock import patch
-
 from django.test import TestCase
-
 from environments.models import ProjectEnvironment
 from hydra.models import HydraSpawn, HydraSpellbook, HydraEnvironment, HydraSpawnStatus
 from talos_frontal.logic import process_stimulus
@@ -18,8 +16,7 @@ class NeuroLoopTest(TestCase):
     ]
 
     def setUp(self):
-        self.pe = ProjectEnvironment.objects.create(name="TestEnv",
-                                                    project_root="C:/Test")
+        self.pe = ProjectEnvironment.objects.create(name="TestEnv", project_root="C:/Test")
         self.he = HydraEnvironment.objects.create(project_environment=self.pe)
         self.book = HydraSpellbook.objects.create(name="TestBook")
         self.spawn = HydraSpawn.objects.create(
@@ -30,17 +27,15 @@ class NeuroLoopTest(TestCase):
     @patch('talos_frontal.logic.read_build_log')
     @patch('talos_frontal.logic.OllamaClient')
     def test_thought_creation_success(self, mock_ollama_cls, mock_read_log):
-        # Setup Mocks
         mock_read_log.return_value = "Error: Something broke."
         mock_client = mock_ollama_cls.return_value
         mock_client.chat.return_value = {
-            "content": "Fix it by turning it off and on again.",
+            "content": "Fix it by turning it off.",
             "tokens_input": 100,
             "tokens_output": 50,
             "model": "scout_light"
         }
 
-        # Stimulate
         stimulus = Stimulus(source='hydra',
                             description="Spawn Failed",
                             context_data={
@@ -50,7 +45,6 @@ class NeuroLoopTest(TestCase):
 
         process_stimulus(stimulus)
 
-        # Assertions
         stream = ConsciousStream.objects.get(spawn_link=self.spawn)
         self.assertEqual(stream.status_id, ConsciousStatusID.DONE)
         self.assertIn("Fix it", stream.current_thought)

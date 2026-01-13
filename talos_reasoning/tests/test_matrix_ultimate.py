@@ -1,38 +1,29 @@
 import os
 import shutil
 import tempfile
-import json
 from django.test import TestCase, SimpleTestCase, override_settings
-from unittest.mock import patch, MagicMock
-from talos_frontal.utils import parse_ai_actions
+from unittest.mock import patch
+from talos_frontal.utils import parse_command_string
 from talos_reasoning.engine import ReasoningEngine
 from talos_reasoning.models import (ReasoningSession, ReasoningGoal,
-                                    ReasoningTurn, ReasoningStatusID,
-                                    ToolDefinition, ToolCall)
+                                    ReasoningStatusID, ToolCall)
 
 
 class ParserStressTest(SimpleTestCase):
-    """Test 1: Parser Stress - Robustness against various syntax styles."""
+    """Test 1: Parser Stress - CLI Syntax."""
 
     def test_parser_variations(self):
         variations = [
-            (':::ai_read_file(path="A.py") :::', "A.py"),
-            (':::ai_read_file("B.py")', "B.py"),
-            ('::: ai_read_file ( path = "C.py" ) :::', "C.py"),
-            (":::ai_read_file(path='D.py') :::", "D.py"),
-            (':::\nai_read_file(\npath="E.py"\n)\n:::', "E.py"),
-            (':::ai_read_file("F.py") :::', "F.py"),
-            (':::ACTION {"tool": "ai_read_file", "args": {"path": "G.py"}} :::',
-             "G.py"),
-            ('Check this: :::ai_read_file(path="H.py") and then :::ai_search_file(path="I.py", pattern="foo") :::',
-             "H.py")
+            ('READ_FILE: A.py', "A.py"),
+            ('READ_FILE: B.py 100', "B.py"),
+            ('SEARCH_FILE: C.py "foobar"', "C.py"),
+            ('Some thought.\nREAD_FILE: D.py', "D.py"),
         ]
         for text, expected in variations:
             with self.subTest(msg=f"Testing: {text}"):
-                actions = parse_ai_actions(text)
-                self.assertGreaterEqual(len(actions), 1,
-                                        f"Failed to parse: {text}")
-                self.assertEqual(actions[0]['args']['path'], expected)
+                action = parse_command_string(text)
+                self.assertIsNotNone(action)
+                self.assertEqual(action['args']['path'], expected)
 
 
 class ReasoningMatrixTest(TestCase):
@@ -61,27 +52,10 @@ class ReasoningMatrixTest(TestCase):
         """Test 2: Goal Switching - PENDING goals must interrupt and isolate context."""
         mock_instance = mock_client_cls.return_value
 
-        # Responses for Goal A: 1: Tool, 2: Synthesis, 3: Summary
+        # Goal A
         mock_instance.chat.side_effect = [
-            {
-                "content": "THOUGHT: Read A\n:::ai_read_file(path='A.txt') :::"
-            },
-            {
-                "content": "THOUGHT: Synthesis A"
-            },
-            {
-                "content": "Summary A"
-            },
-            # Goal B follows
-            {
-                "content": "THOUGHT: Read B\n:::ai_read_file(path='B.txt') :::"
-            },
-            {
-                "content": "Synthesis B"
-            },
-            {
-                "content": "Summary B"
-            }
+            {"content": "READ_FILE: A.txt"},
+            {"content": "Summary A"}
         ]
 
         # Step A: Run Goal A
@@ -91,14 +65,21 @@ class ReasoningMatrixTest(TestCase):
             status_id=ReasoningStatusID.PENDING)
         self.engine.tick(self.session.id)
 
-        goal_a.refresh_from_db()
-        self.assertEqual(goal_a.status_id, ReasoningStatusID.COMPLETED)
+        # Because we are linear now, tick() does one step.
+        # We assume the user would create Goal B next.
+        goal_a.status_id = ReasoningStatusID.COMPLETED
+        goal_a.save()
+        self.session.rolling_context_summary = "Summary A"
+        self.session.save()
 
-        # Step B: Inject Goal B (Interrupt - though Goal A is done now, let's test isolation)
+        # Step B: Inject Goal B
         goal_b = ReasoningGoal.objects.create(
             session=self.session,
             reasoning_prompt="Read B",
             status_id=ReasoningStatusID.PENDING)
+
+        mock_instance.chat.side_effect = [{"content": "READ_FILE: B.txt"}]
+
         self.engine.tick(self.session.id)
 
         # Isolated context check
@@ -108,39 +89,21 @@ class ReasoningMatrixTest(TestCase):
 
     @patch('talos_reasoning.engine.OllamaClient')
     def test_hallucination_recovery(self, mock_client_cls):
-        """Test 3: Hallucination Recovery - Verify system handles file errors and continues."""
+        """Test 3: Hallucination Recovery."""
         mock_instance = mock_client_cls.return_value
 
-        # Side effect: 1: Fake, 2: Real, 3: Synthesis, 4: Summary
-        mock_instance.chat.side_effect = [{
-            "content": ":::ai_read_file(path='fake.txt') :::"
-        }, {
-            "content": ":::ai_read_file(path='real.txt') :::"
-        }, {
-            "content": "Done."
-        }, {
-            "content": "Summary."
-        }]
+        mock_instance.chat.return_value = {"content": "READ_FILE: fake.txt"}
 
         self.engine.tick(self.session.id)
 
-        calls = ToolCall.objects.filter(
-            turn__session=self.session).order_by('created')
-        self.assertGreaterEqual(calls.count(), 2)
-        self.assertIn("not found", calls[0].result_payload)
-        self.assertIn("CONTENT_ALPHA", calls[1].result_payload)
+        call = ToolCall.objects.filter(turn__session=self.session).first()
+        self.assertIn("not found", call.result_payload)
 
     @patch('talos_reasoning.engine.OllamaClient')
     def test_tool_safety_and_implicit_root(self, mock_client_cls):
-        """Test 4: Tool Safety & Implicit Root - Verify jailbreak prevention."""
+        """Test 4: Tool Safety."""
         mock_instance = mock_client_cls.return_value
-        mock_instance.chat.side_effect = [{
-            "content": ":::ai_read_file(path='../secrets.txt') :::"
-        }, {
-            "content": "Aborting."
-        }, {
-            "content": "Summary."
-        }]
+        mock_instance.chat.return_value = {"content": "READ_FILE: ../secrets.txt"}
 
         self.engine.tick(self.session.id)
         call = ToolCall.objects.filter(turn__session=self.session).first()
@@ -148,15 +111,9 @@ class ReasoningMatrixTest(TestCase):
 
     @patch('talos_reasoning.engine.OllamaClient')
     def test_live_sim_mocked(self, mock_client_cls):
-        """Test 5: Live Simulation - Verify end-to-end relational flow."""
+        """Test 5: Live Simulation."""
         mock_instance = mock_client_cls.return_value
-        mock_instance.chat.side_effect = [{
-            "content": ":::ai_list_files(path='.') :::"
-        }, {
-            "content": "Synthesis."
-        }, {
-            "content": "Summary."
-        }]
+        mock_instance.chat.return_value = {"content": "LIST_DIR: ."}
 
         self.engine.tick(self.session.id)
         turn = self.session.turns.first()

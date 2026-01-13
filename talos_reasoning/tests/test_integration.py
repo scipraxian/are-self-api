@@ -23,7 +23,7 @@ class EngineSimulationTest(TestCase):
         # 2. Mock AI Response: 1: Tool, 2: Synthesis, 3: Summary
         mock_instance = mock_client_cls.return_value
         mock_instance.chat.side_effect = [{
-            "content": ":::ai_read_file(path='manage.py') :::"
+            "content": "READ_FILE: manage.py"
         }, {
             "content": "Done."
         }, {
@@ -35,6 +35,8 @@ class EngineSimulationTest(TestCase):
 
         # 4. Verify
         self.session.refresh_from_db()
+        # Since it's linear, we might need another tick to see the next step if we were testing recursion
+        # But here we just check the first turn's tool call.
         last_turn = self.session.turns.filter(tool_calls__isnull=False).last()
         tool_call = last_turn.tool_calls.first()
 
@@ -50,7 +52,7 @@ class EngineSimulationTest(TestCase):
         # 2. Mock AI Hallucination: 1: Tool, 2: Synthesis, 3: Summary
         mock_instance = mock_client_cls.return_value
         mock_instance.chat.side_effect = [{
-            "content": ":::ai_read_file(path='Config/Default.ini') :::"
+            "content": "READ_FILE: Config/Default.ini"
         }, {
             "content": "Fail."
         }, {

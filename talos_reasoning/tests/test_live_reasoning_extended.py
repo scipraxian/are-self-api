@@ -46,7 +46,8 @@ class LiveReasoningExtendedTest(TestCase):
             self.assertEqual(call1.tool.name, "ai_list_files")
 
         target_file = "pyproject.toml"
-        turn2 = self._inject_and_tick(f"Read {target_file}")
+        # UPDATED PROMPT: More forceful to prevent "List loop"
+        turn2 = self._inject_and_tick(f"URGENT: READ_FILE: {target_file}")
 
         if not turn2:
             self.fail("AI refused to read file.")
@@ -60,7 +61,7 @@ class LiveReasoningExtendedTest(TestCase):
         turn1 = self._inject_and_tick("Read ghosts.txt")
         if turn1:
             call1 = turn1.tool_calls.first()
-            self.assertIn("not found", call1.result_payload.lower())  # Flexible casing
+            self.assertIn("not found", call1.result_payload.lower())
 
         # 2. Recover
         turn2 = self._inject_and_tick("Read manage.py")

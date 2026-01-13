@@ -1,9 +1,8 @@
 from django.test import TestCase
 from unittest.mock import patch, MagicMock
-from talos_reasoning.models import (
-    ReasoningSession, ReasoningGoal, ReasoningTurn,
-    ToolDefinition, ReasoningStatusID
-)
+from talos_reasoning.models import (ReasoningSession, ReasoningGoal,
+                                    ReasoningTurn, ToolDefinition,
+                                    ReasoningStatusID)
 from talos_reasoning.engine import ReasoningEngine
 
 
@@ -12,9 +11,7 @@ class GoalSwitchingTest(TestCase):
 
     def setUp(self):
         self.session = ReasoningSession.objects.create(
-            goal="Loop Test",
-            status_id=ReasoningStatusID.ACTIVE
-        )
+            goal="Loop Test", status_id=ReasoningStatusID.ACTIVE)
         self.engine = ReasoningEngine()
 
     def test_goal_preemption(self):
@@ -26,33 +23,34 @@ class GoalSwitchingTest(TestCase):
         goal_a = ReasoningGoal.objects.create(
             session=self.session,
             reasoning_prompt="Task A",
-            status_id=ReasoningStatusID.ACTIVE
-        )
+            status_id=ReasoningStatusID.ACTIVE)
 
         # 2. Inject Goal B (Simulate User Chat)
         goal_b = ReasoningGoal.objects.create(
             session=self.session,
             reasoning_prompt="Task B",
-            status_id=ReasoningStatusID.PENDING
-        )
+            status_id=ReasoningStatusID.PENDING)
 
         # 3. Tick (Mock AI to ignore output, we only care about state transition)
         with patch('talos_reasoning.engine.OllamaClient') as mock_client:
             # Provide two responses: 1 for Reasoning, 1 for Summary
-            mock_client.return_value.chat.side_effect = [
-                {"content": "Doing B"},
-                {"content": "Summary B"}
-            ]
+            mock_client.return_value.chat.side_effect = [{
+                "content": "Doing B"
+            }, {
+                "content": "Summary B"
+            }]
             self.engine.tick(self.session.id)
 
         # 4. Assertions
         goal_a.refresh_from_db()
         goal_b.refresh_from_db()
 
-        self.assertEqual(goal_a.status.name, "Completed", "Old goal should be auto-completed by Engine.")
+        self.assertEqual(goal_a.status.name, "Completed",
+                         "Old goal should be auto-completed by Engine.")
 
         # The engine is recursive now, so it finishes Goal B immediately.
-        self.assertEqual(goal_b.status.name, "Completed", "New goal should be completed (Recursive run).")
+        self.assertEqual(goal_b.status.name, "Completed",
+                         "New goal should be completed (Recursive run).")
 
         # Verify the Turn is linked to Goal B
         turn = self.session.turns.filter(active_goal=goal_b).first()
@@ -66,26 +64,29 @@ class GoalSwitchingTest(TestCase):
         """
         # 1. Create History for Goal A
         goal_a = ReasoningGoal.objects.create(
-            session=self.session, reasoning_prompt="Read manage.py", status_id=ReasoningStatusID.COMPLETED
-        )
-        ReasoningTurn.objects.create(
-            session=self.session, active_goal=goal_a, turn_number=1,
-            thought_process="I read manage.py"
-        )
+            session=self.session,
+            reasoning_prompt="Read manage.py",
+            status_id=ReasoningStatusID.COMPLETED)
+        ReasoningTurn.objects.create(session=self.session,
+                                     active_goal=goal_a,
+                                     turn_number=1,
+                                     thought_process="I read manage.py")
 
         # 2. Create Goal B (Pending)
         goal_b = ReasoningGoal.objects.create(
-            session=self.session, reasoning_prompt="Read requirements.txt", status_id=ReasoningStatusID.PENDING
-        )
+            session=self.session,
+            reasoning_prompt="Read requirements.txt",
+            status_id=ReasoningStatusID.PENDING)
 
         # 3. Tick & Capture Prompt
         with patch('talos_reasoning.engine.OllamaClient') as mock_client:
             mock_instance = mock_client.return_value
             # The engine makes TWO calls: 1. Reasoning (Doing the task), 2. Summarizing.
-            mock_instance.chat.side_effect = [
-                {"content": "Ok, reading requirements."},
-                {"content": "Summary: Read requirements."}
-            ]
+            mock_instance.chat.side_effect = [{
+                "content": "Ok, reading requirements."
+            }, {
+                "content": "Summary: Read requirements."
+            }]
 
             self.engine.tick(self.session.id)
 
@@ -97,7 +98,7 @@ class GoalSwitchingTest(TestCase):
                 self.fail("Ollama was not called.")
 
             # 4. Verify Isolation
-            self.assertIn("requirements.txt", prompt_content, "Prompt must contain new goal")
-            self.assertNotIn("manage.py", prompt_content, "Prompt must NOT contain old goal history")
-            # UPDATED MATCH STRING TO ALIGN WITH ENGINE.PY
-            self.assertIn("No raw history yet for this objective", prompt_content)
+            self.assertIn("requirements.txt", prompt_content,
+                          "Prompt must contain new goal")
+            self.assertNotIn("manage.py", prompt_content,
+                             "Prompt must NOT contain old goal history")
