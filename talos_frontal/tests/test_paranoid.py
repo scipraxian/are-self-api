@@ -1,101 +1,80 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from django.test import TestCase
 from hydra.models import HydraSpawn, HydraSpellbook, HydraEnvironment, HydraSpawnStatus
 from talos_frontal.logic import process_stimulus
 from talos_frontal.models import ConsciousStream, ConsciousStatusID
 from talos_thalamus.models import Stimulus
 from talos_thalamus.types import SignalTypeID
+from talos_reasoning.models import ReasoningSession, ReasoningStatusID
 
 
 class ParanoidLogicTest(TestCase):
     fixtures = [
         'talos_frontal/fixtures/initial_data.json',
         'hydra/fixtures/initial_data.json',
-        'environments/fixtures/initial_data.json'
+        'environments/fixtures/initial_data.json',
+        'talos_reasoning/fixtures/initial_data.json'
     ]
 
     def setUp(self):
-        # Create minimal required objects
-        # We don't need real Environments/Spellbooks since we mock read_build_log,
-        # but we need a valid spawn_id for the checks.
         self.book = HydraSpellbook.objects.create(name="TestBook")
         self.spawn = HydraSpawn.objects.create(
             spellbook=self.book, status_id=HydraSpawnStatus.CREATED)
 
     @patch('talos_frontal.logic.read_build_log')
-    @patch('talos_frontal.logic.OllamaClient')
-    def test_spawn_failed_triggers_analysis(self, mock_ollama_cls,
-                                            mock_read_log):
-        """Scenario 1: Spawn Failed -> Analysis triggered."""
-        mock_read_log.return_value = "ERROR SUMMARY:\nSome Error\n\nLAST 200 LINES:\n..."
-        mock_client = mock_ollama_cls.return_value
-        mock_client.chat.return_value = {
-            "content": "AI Analysis Result",
-            "tokens_input": 100,
-            "tokens_output": 50,
-            "model": "scout_light"
-        }
+    @patch('talos_frontal.logic.ReasoningEngine')
+    def test_spawn_failed_triggers_analysis(self, mock_engine_cls, mock_read_log):
+        """Scenario 1: Spawn Failed -> Session Created & Engine Ticked."""
+        mock_read_log.return_value = "ERROR SUMMARY: Failure"
 
-        stimulus = Stimulus(source='hydra',
-                            description="Spawn Failed",
-                            context_data={
-                                'spawn_id': self.spawn.id,
-                                'event_type': SignalTypeID.SPAWN_FAILED
-                            })
+        # FIX: The mock engine must actually COMPLETE the work, or the loop spins forever.
+        def mock_tick(session_id):
+            s = ReasoningSession.objects.get(id=session_id)
+            s.status_id = ReasoningStatusID.COMPLETED
+            s.save()
 
-        process_stimulus(stimulus)
+        mock_engine_cls.return_value.tick.side_effect = mock_tick
 
-        stream = ConsciousStream.objects.get(spawn_link=self.spawn)
-        self.assertEqual(stream.status_id, ConsciousStatusID.DONE)
-        self.assertIn("AI Analysis Result", stream.current_thought)
+        process_stimulus(Stimulus('hydra', 'Fail', {
+            'spawn_id': self.spawn.id,
+            'event_type': SignalTypeID.SPAWN_FAILED
+        }))
+
+        session = ReasoningSession.objects.get(spawn_link=self.spawn)
+        self.assertIn("failed", session.goals.first().reasoning_prompt)
+
+        mock_engine_cls.return_value.tick.assert_called()
 
     @patch('talos_frontal.logic.read_build_log')
-    @patch('talos_frontal.logic.OllamaClient')
-    def test_spawn_success_with_errors_triggers_analysis(
-            self, mock_ollama_cls, mock_read_log):
-        """Scenario 2: Spawn Success + Errors (Hidden Failure) -> Analysis triggered."""
-        # This is the "Paranoid" verification
-        mock_read_log.return_value = "ERROR SUMMARY:\nHidden Error\n\nLAST 200 LINES:\n..."
-        mock_client = mock_ollama_cls.return_value
-        mock_client.chat.return_value = {
-            "content": "AI Analysis of Hidden Error",
-            "tokens_input": 100,
-            "tokens_output": 50,
-            "model": "scout_light"
-        }
+    @patch('talos_frontal.logic.ReasoningEngine')
+    def test_spawn_success_with_errors_triggers_analysis(self, mock_engine_cls, mock_read_log):
+        """Scenario 2: Success + Errors -> Session Created."""
+        mock_read_log.return_value = "ERROR SUMMARY: Hidden Error"
 
-        stimulus = Stimulus(source='hydra',
-                            description="Spawn Succeeded",
-                            context_data={
-                                'spawn_id': self.spawn.id,
-                                'event_type': SignalTypeID.SPAWN_SUCCESS
-                            })
+        def mock_tick(session_id):
+            s = ReasoningSession.objects.get(id=session_id)
+            s.status_id = ReasoningStatusID.COMPLETED
+            s.save()
 
-        process_stimulus(stimulus)
+        mock_engine_cls.return_value.tick.side_effect = mock_tick
 
-        stream = ConsciousStream.objects.get(spawn_link=self.spawn)
-        self.assertEqual(stream.status_id, ConsciousStatusID.DONE)
-        # Verify result
-        self.assertIn("AI Analysis of Hidden Error", stream.current_thought)
+        process_stimulus(Stimulus('hydra', 'Success', {
+            'spawn_id': self.spawn.id,
+            'event_type': SignalTypeID.SPAWN_SUCCESS
+        }))
 
-        # We can also check if the intermediate thought was set, but saving overwrites it.
-        # So checking final state is best.
+        session = ReasoningSession.objects.get(spawn_link=self.spawn)
+        # FIX: Matches logic.py casing "paranoid analysis"
+        self.assertIn("paranoid analysis", session.goals.first().reasoning_prompt)
 
     @patch('talos_frontal.logic.read_build_log')
     def test_spawn_success_clean_log(self, mock_read_log):
-        """Scenario 3: Spawn Success + Clean Log -> No Analysis."""
-        mock_read_log.return_value = "LAST 200 LINES:\nAll good."
+        """Scenario 3: Success + Clean -> No Session."""
+        mock_read_log.return_value = "Clean log"
 
-        stimulus = Stimulus(source='hydra',
-                            description="Spawn Succeeded",
-                            context_data={
-                                'spawn_id': self.spawn.id,
-                                'event_type': SignalTypeID.SPAWN_SUCCESS
-                            })
+        process_stimulus(Stimulus('hydra', 'Success', {
+            'spawn_id': self.spawn.id,
+            'event_type': SignalTypeID.SPAWN_SUCCESS
+        }))
 
-        process_stimulus(stimulus)
-
-        stream = ConsciousStream.objects.get(spawn_link=self.spawn)
-        self.assertEqual(stream.status_id, ConsciousStatusID.DONE)
-        self.assertEqual(stream.current_thought,
-                         "Build Succeeded. Log Verified Clean.")
+        self.assertFalse(ReasoningSession.objects.filter(spawn_link=self.spawn).exists())

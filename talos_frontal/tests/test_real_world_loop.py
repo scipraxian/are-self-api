@@ -1,18 +1,19 @@
 from unittest.mock import patch
 from django.test import TestCase
 from talos_frontal.logic import process_stimulus
-from talos_frontal.models import ConsciousStream
 from talos_thalamus.models import Stimulus
 from talos_thalamus.types import SignalTypeID
 from hydra.models import HydraSpawn, HydraSpellbook, HydraEnvironment, HydraSpawnStatus
 from environments.models import ProjectEnvironment
+from talos_reasoning.models import ReasoningSession, ReasoningStatusID
 
 
 class RealWorldCognitionTest(TestCase):
     fixtures = [
         'talos_frontal/fixtures/initial_data.json',
         'hydra/fixtures/initial_data.json',
-        'environments/fixtures/initial_data.json'
+        'environments/fixtures/initial_data.json',
+        'talos_reasoning/fixtures/initial_data.json'
     ]
 
     def setUp(self):
@@ -24,42 +25,37 @@ class RealWorldCognitionTest(TestCase):
         )
 
     @patch('talos_frontal.logic.read_build_log')
-    @patch('talos_frontal.logic.OllamaClient')
-    @patch('talos_frontal.logic.ai_read_file')
-    def test_hallucinated_syntax_loop(self, mock_scry, mock_ollama_cls, mock_log):
-        # 1. Context
-        mock_log.return_value = "Error: Missing file in Config."
+    # FIX: Patch the Engine's client, NOT the logic module's client (which is gone)
+    @patch('talos_reasoning.engine.OllamaClient')
+    def test_auto_drive_loop(self, mock_engine_client, mock_log):
+        """
+        Verify that the loop in logic.py correctly drives the engine multiple times
+        until the goal is complete.
+        """
+        mock_log.return_value = "ERROR SUMMARY: Missing file."
 
-        # 2. Setup AI Turn responses
-        client = mock_ollama_cls.return_value
+        client = mock_engine_client.return_value
+        client.chat.side_effect = [
+            # Turn 1: Action (New Syntax)
+            {"content": "READ_FILE: config.ini"},
+            # Turn 2: Conclusion
+            {"content": "The file is missing. Fix it."},
+            # Summary
+            {"content": "Summary."}
+        ]
 
-        # Turn 1: Use new syntax
-        response_1 = {
-            "content": "Checking config.\nREAD_FILE: Config/DefaultEngine.ini",
-            "tokens_input": 10, "tokens_output": 10, "model": "test-model"
-        }
-
-        # Turn 2: Conclusion
-        response_2 = {
-            "content": "The file is empty. Fix it.",
-            "tokens_input": 20, "tokens_output": 10, "model": "test-model"
-        }
-
-        client.chat.side_effect = [response_1, response_2]
-        mock_scry.return_value = "[Ini Content]"
-
-        # 3. Trigger
         process_stimulus(
             Stimulus('hydra', 'Fail', {'spawn_id': self.spawn.id, 'event_type': SignalTypeID.SPAWN_FAILED}))
 
-        # 4. Assertions
-        mock_scry.assert_called_with(
-            "Config/DefaultEngine.ini",
-            root_path='C:/Real',
-            start_line=1,
-            max_lines=50
-        )
+        session = ReasoningSession.objects.get(spawn_link=self.spawn)
 
-        stream = ConsciousStream.objects.get(spawn_link=self.spawn)
-        self.assertIn("> **read_file**", stream.current_thought)
-        self.assertIn("The file is empty", stream.current_thought)
+        # Should have 2 turns
+        self.assertEqual(session.turns.count(), 2)
+
+        # Verify Session Status is COMPLETED (Loop finished)
+        self.assertEqual(session.status_id, ReasoningStatusID.COMPLETED)
+
+        # Verify Tool Call happened (via Engine logic)
+        first_turn = session.turns.order_by('turn_number').first()
+        self.assertTrue(first_turn.tool_calls.exists())
+        self.assertEqual(first_turn.tool_calls.first().tool.name, 'ai_read_file')

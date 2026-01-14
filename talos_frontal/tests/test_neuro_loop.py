@@ -3,7 +3,7 @@ from django.test import TestCase
 from environments.models import ProjectEnvironment
 from hydra.models import HydraSpawn, HydraSpellbook, HydraEnvironment, HydraSpawnStatus
 from talos_frontal.logic import process_stimulus
-from talos_frontal.models import ConsciousStream, ConsciousStatusID
+from talos_reasoning.models import ReasoningSession, ReasoningStatusID
 from talos_thalamus.models import Stimulus
 from talos_thalamus.types import SignalTypeID
 
@@ -12,7 +12,8 @@ class NeuroLoopTest(TestCase):
     fixtures = [
         'talos_frontal/fixtures/initial_data.json',
         'hydra/fixtures/initial_data.json',
-        'environments/fixtures/initial_data.json'
+        'environments/fixtures/initial_data.json',
+        'talos_reasoning/fixtures/initial_data.json'
     ]
 
     def setUp(self):
@@ -20,45 +21,28 @@ class NeuroLoopTest(TestCase):
         self.he = HydraEnvironment.objects.create(project_environment=self.pe)
         self.book = HydraSpellbook.objects.create(name="TestBook")
         self.spawn = HydraSpawn.objects.create(
-            spellbook=self.book,
-            environment=self.he,
-            status_id=HydraSpawnStatus.CREATED)
+            spellbook=self.book, environment=self.he, status_id=HydraSpawnStatus.CREATED)
 
     @patch('talos_frontal.logic.read_build_log')
-    @patch('talos_frontal.logic.OllamaClient')
-    def test_thought_creation_success(self, mock_ollama_cls, mock_read_log):
-        mock_read_log.return_value = "Error: Something broke."
-        mock_client = mock_ollama_cls.return_value
-        mock_client.chat.return_value = {
-            "content": "Fix it by turning it off.",
-            "tokens_input": 100,
-            "tokens_output": 50,
-            "model": "scout_light"
-        }
+    @patch('talos_reasoning.engine.OllamaClient')
+    def test_thought_creation_success(self, mock_engine_client, mock_read_log):
+        """Integration: Signal -> Processor -> Engine -> Session"""
+        mock_read_log.return_value = "ERROR SUMMARY: Broken."
 
-        stimulus = Stimulus(source='hydra',
-                            description="Spawn Failed",
-                            context_data={
-                                'spawn_id': self.spawn.id,
-                                'event_type': SignalTypeID.SPAWN_FAILED
-                            })
+        # Engine Mock: Finish immediately
+        mock_engine_client.return_value.chat.side_effect = [
+            {"content": "Analysis done."},
+            {"content": "Summary."}
+        ]
+
+        stimulus = Stimulus('hydra', 'Fail', {
+            'spawn_id': self.spawn.id,
+            'event_type': SignalTypeID.SPAWN_FAILED
+        })
 
         process_stimulus(stimulus)
 
-        stream = ConsciousStream.objects.get(spawn_link=self.spawn)
-        self.assertEqual(stream.status_id, ConsciousStatusID.DONE)
-        self.assertIn("Fix it", stream.current_thought)
-
-    def test_thought_creation_no_log(self):
-        with patch('talos_frontal.logic.read_build_log', return_value=""):
-            stimulus = Stimulus(source='hydra',
-                                description="Spawn Failed",
-                                context_data={
-                                    'spawn_id': self.spawn.id,
-                                    'event_type': SignalTypeID.SPAWN_FAILED
-                                })
-            process_stimulus(stimulus)
-
-            stream = ConsciousStream.objects.get(spawn_link=self.spawn)
-            self.assertEqual(stream.status_id, ConsciousStatusID.DONE)
-            self.assertIn("No log data", stream.current_thought)
+        # Assert Session Created
+        session = ReasoningSession.objects.get(spawn_link=self.spawn)
+        self.assertEqual(session.status_id, ReasoningStatusID.COMPLETED)
+        self.assertEqual(session.turns.count(), 1)

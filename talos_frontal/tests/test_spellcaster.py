@@ -1,17 +1,11 @@
 import os
 import shutil
 import tempfile
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from django.test import TestCase
 
 from talos_frontal.utils import parse_command_string
 from talos_parietal.tools import ai_read_file, ai_execute_task, ai_search_file
-from talos_frontal.logic import process_stimulus
-from talos_frontal.models import ConsciousStream, ConsciousStatusID
-from talos_thalamus.models import Stimulus
-from talos_thalamus.types import SignalTypeID
-from hydra.models import HydraSpawn, HydraSpellbook, HydraEnvironment, HydraSpawnStatus
-from environments.models import ProjectEnvironment
 
 
 class SpellcasterUtilsTest(TestCase):
@@ -70,69 +64,3 @@ class ToolTest(TestCase):
         self.assertIn("12: Line 12", content)
         self.assertNotIn("13: Line 13", content)
         self.assertIn("Use start_line=13 to read more", content)
-
-
-class CognitiveLoopTest(TestCase):
-    fixtures = [
-        'talos_frontal/fixtures/initial_data.json',
-        'hydra/fixtures/initial_data.json',
-        'environments/fixtures/initial_data.json'
-    ]
-
-    def setUp(self):
-        self.book = HydraSpellbook.objects.create(name="TestBook")
-        self.env = ProjectEnvironment.objects.create(
-            name="TestEnv",
-            is_active=True,
-            project_root="C:/FakeProject"
-        )
-        self.h_env = HydraEnvironment.objects.create(project_environment=self.env)
-        self.spawn = HydraSpawn.objects.create(
-            spellbook=self.book,
-            environment=self.h_env,
-            status_id=HydraSpawnStatus.FAILED
-        )
-
-    @patch('talos_frontal.logic.read_build_log')
-    @patch('talos_frontal.logic.OllamaClient')
-    @patch('talos_frontal.logic.ai_read_file')
-    def test_multiturn_tool_execution(self, mock_ai_read_file, mock_ollama_cls, mock_read_log):
-        # 1. Setup Inputs
-        mock_read_log.return_value = "Error: Config missing."
-
-        # 2. Setup AI Responses
-        client = mock_ollama_cls.return_value
-
-        # Turn 1: AI asks to read a file (NEW SYNTAX)
-        response_turn_1 = {
-            "content": 'READ_FILE: config.ini',
-            "tokens_input": 10, "tokens_output": 10, "model": "test-bot"
-        }
-
-        # Turn 2: Conclusion
-        response_turn_2 = {
-            "content": "The config is empty.",
-            "tokens_input": 20, "tokens_output": 10, "model": "test-bot"
-        }
-
-        client.chat.side_effect = [response_turn_1, response_turn_2]
-        mock_ai_read_file.return_value = "[Config Content]"
-
-        # 3. Trigger Stimulus
-        process_stimulus(Stimulus('hydra', 'Fail', {
-            'spawn_id': self.spawn.id,
-            'event_type': SignalTypeID.SPAWN_FAILED
-        }))
-
-        # 4. Verification
-        stream = ConsciousStream.objects.get(spawn_link=self.spawn)
-
-        # Check call args
-        mock_ai_read_file.assert_called_with(
-            "config.ini",
-            root_path="C:/FakeProject",
-            start_line=1,
-            max_lines=50
-        )
-
-        self.assertIn("> **read_file**", stream.current_thought)

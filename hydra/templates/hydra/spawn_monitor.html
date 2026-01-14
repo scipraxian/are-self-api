@@ -20,6 +20,18 @@
                     {% else %}
                         <span class="status-text status-{{ spawn.status.name|lower }}">{{ spawn.status.name }}</span>
                     {% endif %}
+
+                    {% if thought and thought.spawn_link %}
+                        {% with session=thought.spawn_link.reasoning_sessions.last %}
+                            {% if session %}
+                                <a href="{% url 'talos_reasoning:cortex_view' session.id %}"
+                                   class="btn-secondary"
+                                   style="margin-left: 15px; text-decoration: none; font-size: 0.7rem; padding: 4px 10px; border-color: #a855f7; color: #a855f7;">
+                                   🧠 VIEW CORTEX
+                                </a>
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
                 {% endwith %}
             </div>
         </div>
@@ -28,8 +40,8 @@
                 {% if is_full_page %}
                 <a href="/" class="btn-done" style="text-decoration: none;">DISMISS</a>
                 {% else %}
-                <button hx-get="{% url 'hydra_controls' %}" 
-                        hx-target="#hydra-controls" 
+                <button hx-get="{% url 'hydra_controls' %}"
+                        hx-target="#hydra-controls"
                         hx-swap="outerHTML"
                         class="btn-done">DISMISS</button>
                 {% endif %}
@@ -38,7 +50,6 @@
             {% endif %}
         </div>
     </div>
-
     <div class="table-wrapper">
         <table class="monitor-table">
             <thead>
