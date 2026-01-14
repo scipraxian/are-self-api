@@ -2,3 +2,14 @@
 profile = "google"
 line_length = 80
 multi_line_output = 3
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+pythonpath = ["."]
+markers = [
+    "live: Tests that require a live Ollama connection (slow).",
+]
+# Default to skipping tests marked as 'live'
+addopts = "-m \"not live\""
+

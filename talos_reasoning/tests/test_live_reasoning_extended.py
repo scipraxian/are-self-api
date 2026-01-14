@@ -1,10 +1,11 @@
 import pytest
-import json
 from django.test import TestCase
-from talos_reasoning.engine import ReasoningEngine
-from talos_reasoning.models import ReasoningSession, ReasoningGoal, ReasoningStatusID
-from talos_parietal.synapse import OllamaClient
 
+from talos_parietal.synapse import OllamaClient
+from talos_reasoning.engine import ReasoningEngine
+from talos_reasoning.models import ReasoningGoal, ReasoningSession, ReasoningStatusID
+
+pytestmark = pytest.mark.live
 
 @pytest.mark.django_db
 class LiveReasoningExtendedTest(TestCase):

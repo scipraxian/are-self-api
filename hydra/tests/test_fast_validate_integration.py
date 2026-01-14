@@ -1,12 +1,12 @@
-import json
 from unittest import mock
-from django.test import TestCase, Client
+
+import pytest
+from django.test import Client, TestCase
 from django.urls import reverse
-from hydra.models import (
-    HydraSpellbook, HydraSpell, HydraExecutable, HydraSwitch,
-    HydraSpawn, HydraHeadStatus, HydraSpawnStatus, HydraHead
-)
+
 from environments.models import ProjectEnvironment
+from hydra.models import (HydraExecutable, HydraHead, HydraHeadStatus, HydraSpawn, HydraSpawnStatus, HydraSpell,
+                          HydraSpellbook)
 
 
 class FastValidateIntegrationTest(TestCase):
@@ -69,9 +69,9 @@ class FastValidateIntegrationTest(TestCase):
         head = heads.first()
         mock_celery.assert_called_once_with(head.id)
 
+    @pytest.mark.live
     @mock.patch('hydra.tasks.check_next_wave.delay')
     def test_spawn_finalizes_when_last_head_succeeds(self, mock_check):
-        from hydra.hydra import Hydra
         from hydra.tasks import cast_hydra_spell
 
         # 1. Setup a spawn with one head
@@ -90,13 +90,16 @@ class FastValidateIntegrationTest(TestCase):
         with mock.patch('hydra.tasks.build_command') as mock_build, \
                 mock.patch('hydra.tasks.stream_command_to_db') as mock_stream:
             mock_stream.return_value = 0  # Success
-            cast_hydra_spell(head.id)
+
+            # --- THE FIX: EXECUTE ON_COMMIT CALLBACKS ---
+            with self.captureOnCommitCallbacks(execute=True):
+                cast_hydra_spell(head.id)
 
         # 3. Verify head is Success
         head.refresh_from_db()
         self.assertEqual(head.status_id, HydraHeadStatus.SUCCESS)
 
-        # 4. Manually trigger check_next_wave logic
+        # 4. Trigger check_next_wave logic
         from hydra.tasks import check_next_wave
         check_next_wave(spawn.id)
 

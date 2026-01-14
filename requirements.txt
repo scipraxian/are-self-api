@@ -17,3 +17,5 @@ pytest-django>=4.11.1      # Testing
 isort>=7.0.0            # Python import sorter
 celery-types>=0.24.0
 Markdown>=3.10
+
+pytest
