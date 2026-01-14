@@ -1,24 +1,22 @@
+import asyncio
 import os
 import sys
-import asyncio
 import time
 
 import pytest
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from playwright.sync_api import sync_playwright, expect
-from core.models import RemoteTarget
+from playwright.sync_api import expect, sync_playwright
+
 from environments.models import ProjectEnvironment
-from hydra.models import (
-    HydraSpellbook, HydraSpawn, HydraSpawnStatus, HydraHeadStatus, 
-    HydraEnvironment, HydraHead, HydraExecutable, HydraSpell
-)
+from hydra.models import (HydraEnvironment, HydraExecutable, HydraHead, HydraHeadStatus, HydraSpawn, HydraSpawnStatus,
+                          HydraSpell, HydraSpellbook)
 
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
-@pytest.skip  # this test fails occasionally.
+@pytest.mark.skip(reason='Occasional Fail')  # this test fails occasionally.
 class LogFeaturesTests(StaticLiveServerTestCase):
     def setUp(self):
         # Clean up existing data to ensure fresh IDs if needed, 
