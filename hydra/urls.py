@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import LaunchSpellbookView, spawn_monitor_view, head_log_view, HydraControlsView, hydra_head_analysis
+from .views import LaunchSpellbookView, spawn_monitor_view, head_log_view, HydraControlsView, hydra_head_analysis, hydra_spawn_terminate
 
 urlpatterns = [
     path('launch/<uuid:spellbook_id>/',
@@ -12,5 +12,8 @@ urlpatterns = [
     path('analysis/<uuid:head_id>/',
          hydra_head_analysis,
          name='hydra_head_analysis'),
+    path('terminate/<uuid:spawn_id>/',
+         hydra_spawn_terminate,
+         name='hydra_spawn_terminate'),
     path('controls/', HydraControlsView.as_view(), name='hydra_controls'),
 ]

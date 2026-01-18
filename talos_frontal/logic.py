@@ -28,21 +28,26 @@ class StimulusProcessor:
             return
 
         # 1. Initialize Consciousness
-        stream = self._create_conscious_stream(spawn_id, head_id, stimulus.description)
-        if not stream: return
+        stream = self._create_conscious_stream(spawn_id, head_id,
+                                               stimulus.description)
+        if not stream:
+            return
 
         # 2. Evaluate Necessity
         should_analyze, prompt = self._evaluate_necessity(spawn_id, event_type)
 
         if not should_analyze:
-            self._finalize_stream(stream, "Build Succeeded. No anomalies detected.")
+            self._finalize_stream(stream,
+                                  "Build Succeeded. No anomalies detected.")
             return
 
         # 3. Handover to Cortex
         try:
             session = self._initialize_cortex_session(spawn_id, prompt)
             self._execute_auto_drive(session, stream)
-            self._finalize_stream(stream, f"Analysis Complete. See Reasoning Session {session.id}.")
+            self._finalize_stream(
+                stream,
+                f"Analysis Complete. See Reasoning Session {session.id}.")
 
         except Exception as e:
             self._handle_crash(stream, e)
@@ -53,9 +58,9 @@ class StimulusProcessor:
             return ConsciousStream.objects.create(
                 spawn_link_id=spawn_id,
                 head_link_id=head_id,
-                current_thought=f"Received Stimulus: {description}. Delegating...",
-                status_id=ConsciousStatusID.THINKING
-            )
+                current_thought=
+                f"Received Stimulus: {description}. Delegating...",
+                status_id=ConsciousStatusID.THINKING)
         except Exception as e:
             logger.error(f"[FRONTAL] 💥 Stream Creation Failed: {e}")
             return None
@@ -74,6 +79,12 @@ class StimulusProcessor:
             logger.info(f"[FRONTAL] 🕵️ Paranoid Analysis initiated.")
             return True, "The build succeeded (Exit 0) but errors were detected in the logs. Perform a paranoid analysis."
 
+        if event_type == SignalTypeID.MULTIPLAYER_DEBUG:
+            logger.info(
+                "[FRONTAL] 🕶️ Multiplayer Debug Discrepancy Analysis initiated."
+            )
+            return True, "Compare the Remote Server logs with the Local Client logs. Identify any replication issues, RPC failures, or state discrepancies (e.g. Server says X, Client sees Y)."
+
         return False, None
 
     def _initialize_cortex_session(self, spawn_id, initial_prompt):
@@ -85,14 +96,12 @@ class StimulusProcessor:
             spawn_link_id=spawn_id,
             goal="Automated Build Analysis",
             status_id=ReasoningStatusID.ACTIVE,
-            max_turns=10
-        )
+            max_turns=10)
 
         ReasoningGoal.objects.create(
             session=session,
             reasoning_prompt=f"{initial_prompt}\n\nCONTEXT DATA:\n{full_log}",
-            status_id=ReasoningStatusID.ACTIVE
-        )
+            status_id=ReasoningStatusID.ACTIVE)
         return session
 
     def _execute_auto_drive(self, session, stream):
@@ -104,10 +113,14 @@ class StimulusProcessor:
             session.refresh_from_db()
 
             # Stop conditions
-            if session.status_id not in [ReasoningStatusID.ACTIVE, ReasoningStatusID.PENDING]:
+            if session.status_id not in [
+                    ReasoningStatusID.ACTIVE, ReasoningStatusID.PENDING
+            ]:
                 break
 
-            active_goals = session.goals.filter(status_id__in=[ReasoningStatusID.ACTIVE, ReasoningStatusID.PENDING])
+            active_goals = session.goals.filter(status_id__in=[
+                ReasoningStatusID.ACTIVE, ReasoningStatusID.PENDING
+            ])
             if not active_goals.exists():
                 session.status_id = ReasoningStatusID.COMPLETED
                 session.save()

@@ -50,6 +50,43 @@
             {% endif %}
         </div>
     </div>
+    {% if spawn.spellbook.name == "Multiplayer Debug" %}
+    <div class="multiplayer-battle-station">
+        <div class="split-pane-wrapper">
+            {% for head in heads %}
+            <div class="log-pane">
+                <div class="pane-header">
+                    <span class="pane-title">
+                        {% if "Remote" in head.spell.name %}🌐 REMOTE SERVER{% else %}💻 LOCAL CLIENT{% endif %}
+                    </span>
+                    <span class="status-badge status-{{ head.status.name|lower }}">{{ head.status.name }}</span>
+                </div>
+                <div id="log-wrapper-{{ head.id }}" 
+                     class="log-wrapper" 
+                     hx-get="{% url 'hydra_head_logs' head.id %}?type=tool&partial=content" 
+                     hx-trigger="every 3s" 
+                     hx-swap="innerHTML">
+                    <div class="spinner-small" style="margin: 20px auto;"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="battle-station-controls" style="gap: 1rem;">
+            <button hx-post="{% url 'hydra_spawn_terminate' spawn.id %}?action=terminate"
+                    class="btn-analyze"
+                    style="background: #334155; box-shadow: none; border: 1px solid #475569;">
+                🛑 STOP SESSION
+            </button>
+
+            <button hx-post="{% url 'hydra_spawn_terminate' spawn.id %}?action=analyze"
+                    hx-confirm="Finalize session and trigger Cortex analysis (Heavy Load)?"
+                    class="btn-analyze">
+                🧠 STOP & ANALYZE
+            </button>
+        </div>
+    </div>
+    {% else %}
     <div class="table-wrapper">
         <table class="monitor-table">
             <thead>
@@ -115,16 +152,17 @@
             </tbody>
         </table>
     </div>
+    {% endif %}
 </div>
 
 <script>
     function toggleHydraLogs(id) {
         var row = document.getElementById('logs-' + id);
+        if (!row) return;
         if (row.style.display === 'none') {
             row.style.display = 'table-row';
             
             var wrapper = document.getElementById('log-wrapper-' + id);
-            // Trigger load if class 'loaded' is missing
             if (wrapper && !wrapper.classList.contains('loaded')) {
                 if (typeof htmx !== 'undefined') {
                     htmx.trigger(wrapper, 'load_now');
@@ -135,6 +173,13 @@
             row.style.display = 'none';
         }
     }
+
+    // Auto-scroll for multiplayer battle station
+    document.addEventListener('htmx:afterSettle', function(evt) {
+        if (evt.detail.target.classList.contains('log-wrapper')) {
+            evt.detail.target.scrollTop = evt.detail.target.scrollHeight;
+        }
+    });
 </script>
 
 <style>
@@ -165,5 +210,19 @@
     .status-badge.status-created { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
     .status-badge.status-pending { background: rgba(234, 179, 8, 0.15); color: #facc15; }
     .spinner-small { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1); border-top-color: #60a5fa; border-radius: 50%; animation: spin 1s linear infinite; }
+    
+    /* Battle Station Styles */
+    .multiplayer-battle-station { display: flex; flex-direction: column; gap: 1.5rem; height: 70vh; }
+    .split-pane-wrapper { display: flex; gap: 1rem; flex: 1; min-height: 0; }
+    .log-pane { flex: 1; display: flex; flex-direction: column; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; overflow: hidden; }
+    .pane-header { padding: 0.75rem 1rem; background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: space-between; align-items: center; }
+    .pane-title { font-weight: 700; color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .log-pane .log-wrapper { flex: 1; overflow-y: auto; padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #cbd5e1; background: #020617; white-space: pre-wrap; line-height: 1.4; scroll-behavior: smooth; }
+    
+    .battle-station-controls { display: flex; justify-content: center; padding: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+    .btn-analyze { background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3); transition: transform 0.2s, box-shadow 0.2s; }
+    .btn-analyze:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4); }
+    .btn-analyze:active { transform: translateY(0); }
+
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 </style>

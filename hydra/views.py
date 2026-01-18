@@ -7,6 +7,9 @@ from .hydra import Hydra
 from environments.models import ProjectEnvironment
 import logging
 from django.utils.html import escape
+from talos_thalamus.types import SignalTypeID
+from talos_thalamus.models import Stimulus
+from talos_frontal.logic import process_stimulus
 
 logger = logging.getLogger(__name__)
 
@@ -153,10 +156,12 @@ def head_log_view(request, head_id):
         # Add headers for context
         if log_type == 'system':
             return HttpResponse(
-                f'<div style="color: #60a5fa; margin-bottom: 10px;">--- SYSTEM DIAGNOSTICS ---</div>{safe_content}')
+                f'<div style="color: #60a5fa; margin-bottom: 10px;">--- SYSTEM DIAGNOSTICS ---</div>{safe_content}'
+            )
         elif log_type == 'stimulus':
             return HttpResponse(
-                f'<div style="color: #eab308; margin-bottom: 10px;">--- NEURAL STIMULUS (SYSTEM PROMPT) ---</div>{safe_content}')
+                f'<div style="color: #eab308; margin-bottom: 10px;">--- NEURAL STIMULUS (SYSTEM PROMPT) ---</div>{safe_content}'
+            )
 
         return HttpResponse(safe_content)
 
@@ -211,3 +216,26 @@ class HydraControlsView(View):
             })
 
         return render(request, 'dashboard/partials/hydra_button.html', context)
+
+
+def hydra_spawn_terminate(request, spawn_id):
+    spawn = get_object_or_404(HydraSpawn, id=spawn_id)
+    action = request.GET.get('action')
+
+    controller = Hydra(spawn_id=spawn.id)
+    controller.terminate()
+
+    # ONLY Trigger AI if explicitly requested
+    if action == 'analyze':
+        stimulus = Stimulus(
+            source='hydra',
+            description=f"Multiplayer Debug Session {spawn.id} Finalized",
+            context_data={
+                'spawn_id': str(spawn.id),
+                'event_type': SignalTypeID.MULTIPLAYER_DEBUG
+            })
+        process_stimulus(stimulus)
+        return HttpResponse("Session terminated. Analysis started.")
+
+    # Default: Just stop
+    return HttpResponse("Session terminated. No analysis triggered.")
