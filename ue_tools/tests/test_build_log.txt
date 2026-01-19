@@ -1,4 +1,4 @@
-Log started at 1/8/2026 10:13:29 AM (2026-01-08T18:13:29Z)
+Log started at 1/19/2026 7:26:16 AM (2026-01-19T15:26:16Z)
 Starting AutomationTool...
 Parsing command line: BuildCookRun -project="C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject" -platform=Win64 -clientconfig=Development -serverconfig=Development -build -cook -stage -pak -archive -archivedirectory=C:\steambuild -unversionedcookedcontent -zenstore -compressed -nocompileeditor -utf8output -nopause
 Found 1 scripts to execute:
@@ -87,7 +87,7 @@ Loaded script module build record C:\Program Files\Epic Games\UE_5.6\Engine\Inte
 Loaded script module build record C:\Program Files\Epic Games\UE_5.6\Engine\Intermediate\ScriptModules\VisionOS.Automation.json
 Loaded script module build record C:\Program Files\Epic Games\UE_5.6\Engine\Intermediate\ScriptModules\Win.Automation.json
 Loaded script module build record C:\Program Files\Epic Games\UE_5.6\Engine\Intermediate\ScriptModules\XLocLocalization.Automation.json
-Total script module initialization time: 0.39 s.
+Total script module initialization time: 0.40 s.
 IsBuildMachine=False
 ShouldKillProcesses=True
 Setting up command environment.
@@ -102,7 +102,7 @@ GetEnvironmentVariable uebp_LogFolder=
 GetEnvironmentVariable uebp_LOCAL_ROOT=C:/Program Files/Epic Games/UE_5.6
 SetEnvVar uebp_LogFolder=C:/Users/micha/AppData/Roaming/Unreal Engine/AutomationTool/Logs/C+Program+Files+Epic+Games+UE_5.6
 DeleteDirectoryContents(C:/Users/micha/AppData/Roaming/Unreal Engine/AutomationTool/Logs/C+Program+Files+Epic+Games+UE_5.6)
-SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\Cook-2026.01.08-10.12.25.txt
+SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\Cook-2026.01.19-07.20.08.txt
 SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\FinalCopyWin64_NonUFSFiles.txt
 SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\FinalCopyWin64_NonUFSFilesDebug.txt
 SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\FinalCopyWin64_UFSFiles.txt
@@ -118,10 +118,12 @@ SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\
 SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\PrePak_Windows_UFSFiles.txt
 SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UBA-HSHVacancy-Win64-Development.json
 SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UBA-HSHVacancy-Win64-Development.txt
-SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak-2026.01.08-10.12.30.txt
-SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak-2026.01.08-10.12.31.txt
-SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak_CreateIoStoreContainers-2026.01.08-10.12.43.txt
-SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak_CreateMultiplePaks-2026.01.08-10.12.30.txt
+SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak-2026.01.19-07.20.11.txt
+SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak-2026.01.19-07.20.13.txt
+SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak-2026.01.19-07.20.14.txt
+SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak_CreateIoStoreContainers-2026.01.19-07.20.20.txt
+SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak_CreateMultiplePaks-2026.01.19-07.20.14.txt
+SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak_ZenAutoLaunch-2026.01.19-07.20.12.txt
 GetEnvironmentVariable uebp_FinalLogFolder=
 SetEnvVar uebp_FinalLogFolder=C:/Users/micha/AppData/Roaming/Unreal Engine/AutomationTool/Logs/C+Program+Files+Epic+Games+UE_5.6
 SafeFileExists C:\WINDOWS\system32\robocopy.exe=True
@@ -145,7 +147,7 @@ MountExe=C:\WINDOWS\system32\mount.exe
 FrameworkMsbuildExe=C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe
 DotnetMsbuildExe=C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\ThirdParty\DotNet\8.0.300\win-x64\dotnet.exe
 RobocopyExe=C:\WINDOWS\system32\robocopy.exe
-TimestampAsString=2026-01-08_10.13.30
+TimestampAsString=2026-01-19_07.26.17
 AutomationToolDll=C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\DotNET\AutomationTool\AutomationTool.dll
 
 No project directory provided for project scope BuildConfiguration.xml resolution.
@@ -419,8 +421,8 @@ Writing manifest to C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Intermed
 Target is up to date
 
 Result: Succeeded
-Total execution time: 3.17 seconds
-Took 3.30s to run dotnet.exe, ExitCode=0
+Total execution time: 4.84 seconds
+Took 4.94s to run dotnet.exe, ExitCode=0
 SafeFileExists C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Binaries\Win64\D3D12\x64\D3D12Core.dll=True
 SafeFileExists C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Binaries\Win64\D3D12\x64\D3D12Core.dll=True
 SafeFileExists C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Binaries\Win64\D3D12\x64\d3d12SDKLayers.dll=True
@@ -458,7 +460,7 @@ C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Binaries\Win64\tbb12.dll
 SafeFileExists C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Binaries\Win64\tbbmalloc.dll=True
 C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Binaries\Win64\tbbmalloc.dll
 End Build products *******
-Build command time: 3.31 s
+Build command time: 4.95 s
 ********** BUILD COMMAND COMPLETED **********
 SafeFileExists C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject=True
 ********** COOK COMMAND STARTED **********
@@ -479,9 +481,9 @@ Adding target: HSHVacancyServerTarget (Server)
 Loading ini files for C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject
 SafeFileExists C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor-Cmd.exe=True
 Running UnrealEditor Cook for project C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject
-Commandlet log file is C:\Program Files\Epic Games\UE_5.6\Engine\Programs\AutomationTool\Saved\Cook-2026.01.08-10.13.34.txt
+Commandlet log file is C:\Program Files\Epic Games\UE_5.6\Engine\Programs\AutomationTool\Saved\Cook-2026.01.19-07.26.23.txt
 SafeFileExists C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor-Cmd.exe=True
-Running: C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor-Cmd.exe "C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject" -run=Cook  -TargetPlatform=Windows  -zenstore -unversioned -ZenStore -fileopenlog -abslog="C:\Program Files\Epic Games\UE_5.6\Engine\Programs\AutomationTool\Saved\Cook-2026.01.08-10.13.34.txt" -stdout -CrashForUAT -unattended -NoLogTimes
+Running: C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor-Cmd.exe "C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject" -run=Cook  -TargetPlatform=Windows  -zenstore -unversioned -ZenStore -fileopenlog -abslog="C:\Program Files\Epic Games\UE_5.6\Engine\Programs\AutomationTool\Saved\Cook-2026.01.19-07.26.23.txt" -stdout -CrashForUAT -unattended -NoLogTimes
 LogInit: Display: Running engine for game: HSHVacancy
 LogCore: Display: Requested channels: 'cpu,gpu,frame,log,bookmark,screenshot,region'
 LogTrace: Display: Control listening on port 1985
@@ -495,7 +497,7 @@ LogCsvProfiler: Display: Metadata set : pgoenabled="0"
 LogCsvProfiler: Display: Metadata set : pgoprofilingenabled="0"
 LogCsvProfiler: Display: Metadata set : ltoenabled="0"
 LogCsvProfiler: Display: Metadata set : asan="0"
-LogCsvProfiler: Display: Metadata set : commandline="" "C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject" -run=Cook -TargetPlatform=Windows -zenstore -unversioned -ZenStore -fileopenlog -abslog="C:\Program Files\Epic Games\UE_5.6\Engine\Programs\AutomationTool\Saved\Cook-2026.01.08-10.13.34.txt" -stdout -CrashForUAT -unattended -NoLogTimes""
+LogCsvProfiler: Display: Metadata set : commandline="" "C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject" -run=Cook -TargetPlatform=Windows -zenstore -unversioned -ZenStore -fileopenlog -abslog="C:\Program Files\Epic Games\UE_5.6\Engine\Programs\AutomationTool\Saved\Cook-2026.01.19-07.26.23.txt" -stdout -CrashForUAT -unattended -NoLogTimes""
 LogCsvProfiler: Display: Metadata set : loginid="cfbf58484b72c64c27c90e93036de0cf"
 LogCsvProfiler: Display: Metadata set : llm="0"
 LogPluginManager: Display: By default, prioritizing project plugin (C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Plugins/SteamCorePro/SteamCorePro.uplugin) over the corresponding engine version (../../../Engine/Plugins/Marketplace/SteamCor7b5ed4851e5eV11/SteamCorePro.uplugin).
@@ -503,16 +505,16 @@ LogPluginManager: Display: By default, prioritizing project plugin (C:/Users/mic
 LogCsvProfiler: Display: Metadata set : systemresolution.resx="1280"
 LogCsvProfiler: Display: Metadata set : systemresolution.resy="720"
 LogAudio: Display: Audio Device Manager not initializing due to all audio being disabled. If this is not intentional, please check command line arguments for "-nosound".
-LogConfig: Display: Loading VulkanPC ini files took 0.05 seconds
-LogConfig: Display: Loading Android ini files took 0.05 seconds
-LogConfig: Display: Loading IOS ini files took 0.05 seconds
+LogConfig: Display: Loading VulkanPC ini files took 0.04 seconds
 LogConfig: Display: Loading Mac ini files took 0.05 seconds
-LogConfig: Display: Loading Unix ini files took 0.06 seconds
-LogConfig: Display: Loading VisionOS ini files took 0.06 seconds
-LogConfig: Display: Loading Windows ini files took 0.06 seconds
+LogConfig: Display: Loading Android ini files took 0.05 seconds
+LogConfig: Display: Loading Windows ini files took 0.05 seconds
+LogConfig: Display: Loading IOS ini files took 0.05 seconds
+LogConfig: Display: Loading Unix ini files took 0.05 seconds
 LogConfig: Display: Loading TVOS ini files took 0.06 seconds
+LogConfig: Display: Loading VisionOS ini files took 0.06 seconds
 LogConfig: Display: Loading Linux ini files took 0.06 seconds
-LogAssetRegistry: Display: Asset registry cache read as 229.8 MiB from ../../../../../../Users/micha/Documents/Unreal Projects/HSHVacancy/Intermediate/CachedAssetRegistry_0.bin.
+LogAssetRegistry: Display: Asset registry cache read as 231.7 MiB from ../../../../../../Users/micha/Documents/Unreal Projects/HSHVacancy/Intermediate/CachedAssetRegistry_0.bin.
 RenderDocPlugin: Display: RenderDoc plugin will not be loaded. Use '-AttachRenderDoc' on the cmd line or enable 'renderdoc.AutoAttach' in the plugin settings.
 LogHAL: Display: Platform has ~ 32 GB [33513902080 / 34359738368 / 32], which maps to Largest [LargestMinGB=32, LargerMinGB=12, DefaultMinGB=8, SmallerMinGB=6, SmallestMinGB=0)
 LogCsvProfiler: Display: Metadata set : extradevelopmentmemorymb="0"
@@ -563,16 +565,16 @@ LogCsvProfiler: Display: Metadata set : rhifeaturelevel="SM6"
 LogCsvProfiler: Display: Metadata set : shaderplatform="PCD3D_SM6"
 LogDerivedDataCache: Display: Memory: Max Cache Size: -1 MB
 LogDerivedDataCache: Display: ../../../Engine/DerivedDataCache/Compressed.ddp: Opened pak cache for reading. (1350 MiB)
-LogZenServiceInstance: Display: Launching executable 'C:/Users/micha/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe', working dir 'C:/Users/micha/AppData/Local/UnrealEngine/Common/Zen/Install', data dir 'C:/Users/micha/AppData/Local/UnrealEngine/Common/Zen/Data', args '--port 8558 --data-dir "C:\Users\micha\AppData\Local\UnrealEngine\Common\Zen\Data" --http asio --gc-cache-duration-seconds 1209600 --gc-interval-seconds 21600 --gc-low-diskspace-threshold 2147483648 --quiet --http-forceloopback --owner-pid 436776  --child-id Zen_436776_Startup'
+LogZenServiceInstance: Display: Launching executable 'C:/Users/micha/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe', working dir 'C:/Users/micha/AppData/Local/UnrealEngine/Common/Zen/Install', data dir 'C:/Users/micha/AppData/Local/UnrealEngine/Common/Zen/Data', args '--port 8558 --data-dir "C:\Users\micha\AppData\Local\UnrealEngine\Common\Zen\Data" --http asio --gc-cache-duration-seconds 1209600 --gc-interval-seconds 21600 --gc-low-diskspace-threshold 2147483648 --quiet --http-forceloopback --owner-pid 173092  --child-id Zen_173092_Startup'
 LogZenServiceInstance: Display: Unreal Zen Storage Server HTTP service at [::1]:8558 status: OK!.
 LogDerivedDataCache: Display: ZenLocal: Using ZenServer HTTP service at http://[::1]:8558/ with namespace ue.ddc status: OK!.
-LogDerivedDataCache: Display: C:/Users/micha/AppData/Local/UnrealEngine/Common/DerivedDataCache: Performance: Latency=0.02ms. RandomReadSpeed=784.88MBs, RandomWriteSpeed=270.26MBs. Assigned SpeedClass 'Local'
+LogDerivedDataCache: Display: C:/Users/micha/AppData/Local/UnrealEngine/Common/DerivedDataCache: Performance: Latency=0.07ms. RandomReadSpeed=17.71MBs, RandomWriteSpeed=217.19MBs. Assigned SpeedClass 'Local'
 LogUbaHorde: Display: UBA/Horde Configuration [Uba.Provider.Horde]: Not Enabled
 LogShaderCompilers: Display: Using 29 local workers for shader compilation
 LogShaderCompilers: Display: Compiling shader autogen file: ../../../../../../Users/micha/Documents/Unreal Projects/HSHVacancy/Intermediate/ShaderAutogen/PCD3D_SM6/AutogenShaderHeaders.ush
 LogShaderCompilers: Display: Autogen file is unchanged, skipping write.
-LogEditorDomain: Display: EditorDomain is Disabled
 LogAssetRegistry: Display: AssetDataGatherer spent 0.001s loading caches ../../../../../../Users/micha/Documents/Unreal Projects/HSHVacancy/Intermediate/CachedAssetRegistry_*.bin.
+LogEditorDomain: Display: EditorDomain is Disabled
 LogDeviceProfileManager: Display: Deviceprofile LinuxArm64Editor not found.
 LogDeviceProfileManager: Display: Deviceprofile LinuxArm64 not found.
 LogCsvProfiler: Display: Metadata set : deviceprofile="WindowsEditor"
@@ -610,7 +612,7 @@ LogMeshReduction: Display: No distributed automatic mesh merging module availabl
 LogVirtualization: Display: VirtualizationSystem name found in ini file: None
 LogVirtualization: Display: FNullVirtualizationSystem mounted, virtualization will be disabled
 LogWorldPartition: Display: FWorldPartitionClassDescRegistry::Initialize started...
-LogWorldPartition: Display: FWorldPartitionClassDescRegistry::Initialize took 1.608 ms
+LogWorldPartition: Display: FWorldPartitionClassDescRegistry::Initialize took 5.261 ms
 LogMetaSound: Display: MetaSound Page Target Initialized to 'Default'
 LogAudio: Display: Registering Engine Module Parameter Interfaces...
 LogAudioCaptureCore: Display: No Audio Capture implementations found. Audio input will be silent.
@@ -628,22 +630,28 @@ LogCook: Display: CookSettings for Memory:
 	SoftGCTimeBudgetTrigger enabled (0.05 budget, 30s min period)
 LogCook: Display: SkipOnlyEditorOnly is enabled, unsolicited packages will not be cooked unless they are referenced from the cooked version of the instigator package.
 LogAssetRegistry: Display: Triggering cache save on discovery complete
-LogEditorDomain: Display: Cycle detected in parents of class /Script/RigVMDeveloper.RigVMUnitNode. Allow flags for editordomain and incremental cooking will be invalid.
 LogEditorDomain: Display: Class /script/PropertyBindingUtilsModule.PropertyBindingPropertyAccess is imported by a package but does not exist in memory. EditorDomain keys for packages using it will be invalid if it still exists.
 	To clear this message, resave packages that use the deleted class, or load its module earlier than the packages that use it are referenced.
+LogEditorDomain: Display: Cycle detected in parents of class /Script/RigVMDeveloper.RigVMUnitNode. Allow flags for editordomain and incremental cooking will be invalid.
 LogZenStore: Display: Establishing oplog 'HSHVacancy.099ab4d7/EditorDomain'
 LogZenStore: Display: Zen project 'HSHVacancy.099ab4d7' already exists
 LogZenStore: Display: Zen oplog 'HSHVacancy.099ab4d7/EditorDomain' already exists
 LogCook: Display: Waiting for Asset Registry
 LogPlacementMode: Display: The Asset Registry is done with its initial scan, the list of placeable classes has been updated.
-LogAssetRegistry: Display: Asset registry cache written as 229.8 MiB to ../../../../../../Users/micha/Documents/Unreal Projects/HSHVacancy/Intermediate/CachedAssetRegistry_*.bin
+LogAssetRegistry: Display: Asset registry cache written as 231.7 MiB to ../../../../../../Users/micha/Documents/Unreal Projects/HSHVacancy/Intermediate/CachedAssetRegistry_*.bin
+LogStorageServerPlatformFile: Display: Found 'C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/ue.projectstore'
+LogStorageServerPlatformFile: Display: Using connection settings from ue.projectstore: HostAddrs='[::1]+192.168.1.51+172.29.160.1' and HostPort='8558'
+LogStorageServerPlatformFile: Display: Found 'C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/ue.projectstore'
+LogStorageServerPlatformFile: Display: Using settings from ue.projectstore: ServerProject='HSHVacancy.099ab4d7' and ServerPlatform='Windows'
+LogStorageServerConnection: Display: Creating zen store connection to [::1]:8558 ("::1").
+LogStorageServerConnection: Display: Zen store connection established to [::1]:8558.
 LogZenStore: Display: Establishing oplog 'HSHVacancy.099ab4d7/Windows'
 LogZenStore: Display: Zen project 'HSHVacancy.099ab4d7' already exists
 LogCook: Display: FULL COOK: Neither -legacyiterative nor -cookincremental were specified. Deleting previously cooked packages for platform Windows and recooking all packages discovered in the current cook.
 LogZenStore: Display: Deleting oplog 'HSHVacancy.099ab4d7/Windows' if it exists
 LogZenStoreWriter: Display: Deleting C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/...
 LogZenStore: Display: Zen oplog 'HSHVacancy.099ab4d7/Windows' created
-LogCook: Display: Sandbox cleanup took 3.260 seconds for platforms Windows
+LogCook: Display: Sandbox cleanup took 0.026 seconds for platforms Windows
 LogCook: Display: Compiling global changed shaders for platform 'Windows'
 LogShaderCompilers: Display: Compiling shader autogen file: ../../../../../../Users/micha/Documents/Unreal Projects/HSHVacancy/Intermediate/ShaderAutogen/PCD3D_SM5/AutogenShaderHeaders.ush
 LogShaderCompilers: Display: Autogen file is unchanged, skipping write.
@@ -691,79 +699,73 @@ LogCook: Display: Saved scl.csv C:/Users/micha/Documents/Unreal Projects/HSHVaca
 LogCook: Display: Discovering localized assets for cultures: en
 LogCook: Display: Found 1 localized assets
 LogCook: Display: Cooked packages 0 Packages Remain 424 Total 424
-LogCook: Display: Cook Diagnostics: OpenFileHandles=251, VirtualMemory=2182MiB, VirtualMemoryAvailable=19742MiB
+LogCook: Display: Cook Diagnostics: OpenFileHandles=251, VirtualMemory=2198MiB, VirtualMemoryAvailable=18127MiB
 LogLinker: Warning: [AssetLog] C:\Program Files\Epic Games\UE_5.6\Engine\Plugins\Marketplace\AppAndGaf151bc972cf0V9\Content\BP_FunctionLib_Inputs.uasset: Asset has been saved with empty engine version. The asset will be loaded but may be incompatible.
 LogBlueprint: Warning: [AssetLog] C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Content\App\Blueprints\Activities\ActivityStation\BP_ActivityStation.uasset: [Compiler] SetSelector : Usage of 'SetSelector' has been deprecated. Please replace or remove it.
 LogBlueprint: Warning: [AssetLog] C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Content\App\Engine\EngineControllers\Ghost\BP_GhostController.uasset: [Compiler] GhastDerezCheck : Usage of 'GhastDerezCheck' has been deprecated. Please replace or remove it.
 LogBlueprint: Warning: [AssetLog] C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Content\App\Engine\EngineControllers\Logger\BP_Logger.uasset: [Compiler] LogQuery : Usage of 'LogQuery' has been deprecated. Please replace or remove it.
 LogCook: Display: Cooked packages 0 Packages Remain 5296 Total 5296
-LogCook: Display: Cook Diagnostics: OpenFileHandles=5359, VirtualMemory=5419MiB, VirtualMemoryAvailable=16509MiB
 LogCook: Display: Garbage collection triggered (Soft). Triggered by conditions:
   CookSettings.SoftGCTimeTrigger: Periodic triggering of SoftGC: No duration data.
 LogCookCommandlet: Display: GarbageCollection... (Periodic GC)
-LogSkeletalMesh: Display: Waiting for skinned assets to be ready 0/2 (Deep_1_v27) ...
-LogSkeletalMesh: Display: Waiting for skinned assets to be ready 1/2 (Stem_Captain_1v009) ...
+LogSkeletalMesh: Display: Waiting for skinned assets to be ready 29/31 (Deep_1_v27) ...
+LogSkeletalMesh: Display: Waiting for skinned assets to be ready 30/31 (Stem_Captain_1v009) ...
+LogTextureFormatOodle: Display: Oodle Texture loading DLL: oo2tex_win64_2.9.10.dll
 LogWorldPartition: Display: [Cook] Gathering packages to cook from generators for owner object World /Game/App/Levels/L_HSH_Hotel.L_HSH_Hotel.
 LogWorldPartition: Display: WorldPartition initialize started...
-LogWorldPartition: Display: WorldPartition initialize took 43.286 ms
+LogWorldPartition: Display: WorldPartition initialize took 44.143 ms
 LogWorldPartition: Display: GenerateStreaming for 'L_HSH_Hotel' started...
-LogWorldPartition: Display: GenerateStreaming for 'L_HSH_Hotel' took 48.406 ms
+LogWorldPartition: Display: GenerateStreaming for 'L_HSH_Hotel' took 46.772 ms
 LogWorldPartition: Display: [Cook] Gathered 70 packages to generate from 1 Generators.
 LogWorldPartition: Display: [Cook] Sending 70 packages to be generated.
 LogWorldPartition: Display: [Cook] Debug(GetGenerateList) : OwnerObject=World /Game/App/Levels/L_HSH_Hotel.L_HSH_Hotel bForceInitializedWorld=1 bInitializedPhysicsSceneForSave=1
 LogCook: Display: Splitting Package /Game/App/Levels/L_HSH_Hotel with splitter FWorldPartitionCookPackageSplitter acting on object World /Game/App/Levels/L_HSH_Hotel.L_HSH_Hotel.
 LogWorldPartition: Display: [Cook][PopulateGeneratorPackage] Processing 70 packages
 LogWorldPartition: Display: [Cook][PopulateGeneratorPackage] Gathered 22 modified packages
-LogTextureFormatOodle: Display: Oodle Texture loading DLL: oo2tex_win64_2.9.10.dll
-LogCook: Display: Cooked packages 153 Packages Remain 5229 Total 5382
-LogStaticMesh: Display: Waiting for static meshes to be ready 1,947/2,350 (/Game/Bin/HSH_Meshes/Spacecraft/Zygnus/Zyggy/ZygDetails/ZygStorage/ZygPipes/ZygPipes_182) ...
-LogStaticMesh: Display: Waiting for static meshes to be ready 2,011/2,350 (/Game/Bin/HSH_Meshes/Spacecraft/Zygnus/Zyggy/ZYGHull/ZygInnerHull1/ZygInnerHull1_048) ...
-LogStaticMesh: Display: Waiting for static meshes to be ready 2,082/2,350 (/Game/Bin/HSH_Meshes/Spacecraft/Zygnus/Zyggy/ZygDetails/ZygStorage/HexContainerS9/HexContainerS9_023) ...
-LogStaticMesh: Display: Waiting for static meshes to be ready 2,166/2,350 (/Game/Bin/HSH_Meshes/Spacecraft/Zygnus/Zyggy/ZygDetails/ZygOffice1/ZygHologram/ZygHologram_034) ...
-LogStaticMesh: Display: Waiting for static meshes to be ready 2,258/2,350 (/Game/Bin/HSH_Meshes/Spacecraft/Zygnus/Zyggy/ZygDetails/ZygStorage/ZygLifeSupport/LifeSupport_012) ...
-LogCook: Display: Cooked packages 240 Packages Remain 8317 Total 8557
-LogAsyncCompilation: Display: BEWARE: AssetCompile memory estimate is greater than available, but we're running it [StaticMesh] anyway! RequiredMemory = 0.000 MiB + 4956.245117 MiB, MemoryLimit = 2847.515625 MiB
-LogAsyncCompilation: Display: BEWARE: AssetCompile memory estimate is greater than available, but we're running it [StaticMesh] anyway! RequiredMemory = 0.000 MiB + 4956.245117 MiB, MemoryLimit = 2847.574219 MiB
+LogCook: Display: Cooked packages 147 Packages Remain 5235 Total 5382
+LogStaticMesh: Display: Waiting for static meshes to be ready 2,167/2,865 (/Game/Bin/HSH_Meshes/Spacecraft/Zygnus/Zyggy/ZygDetails/ZygStorage/HexContainerS6/HexContainerS6_031) ...
+LogStaticMesh: Display: Waiting for static meshes to be ready 2,238/2,865 (/Game/Bin/HSH_Meshes/Spacecraft/Zygnus/Zyggy/ZygDetails/ZygStorage/RombusContainerS1/RombusContainerS1_007) ...
+LogStaticMesh: Display: Waiting for static meshes to be ready 2,316/2,865 (/Game/Bin/HSH_Meshes/Spacecraft/Zygnus/Zyggy/ZygDetails/ZygStorage/ZygPipes/ZygPipes_044) ...
+LogStaticMesh: Display: Waiting for static meshes to be ready 2,400/2,865 (/Game/Bin/HSH_Meshes/Spacecraft/Zygnus/Zyggy/ZygDetails/ZygStorage/ZygPipes/ZygPipes_167) ...
+LogStaticMesh: Display: Waiting for static meshes to be ready 2,462/2,865 (/Game/Bin/HSH_Meshes/Spacecraft/Zygnus/Zyggy/ZYGHull/ZygInnerHull1/ZygInnerHull1_046) ...
+LogStaticMesh: Display: Waiting for static meshes to be ready 2,542/2,865 (/Game/Bin/HSH_Meshes/Spacecraft/Zygnus/Zyggy/ZygDetails/ZygStorage/RombusContainerS3/RombusContainerS3_008) ...
+LogStaticMesh: Display: Waiting for static meshes to be ready 2,642/2,865 (/Game/Bin/HSH_Meshes/Spacecraft/Zygnus/Zyggy/ZygDetails/ZygEngine/ZygEngine_004) ...
+LogStaticMesh: Display: Waiting for static meshes to be ready 2,714/2,865 (/Game/Bin/HSH_Meshes/Spacecraft/Zygnus/Zyggy/ZygDetails/ZygOffice1/ZygOffice1_077) ...
+LogStaticMesh: Display: Waiting for static meshes to be ready 2,807/2,865 (/Game/Bin/HSH_Meshes/Spacecraft/Zygnus/Zyggy/ZygDetails/ZygStorage/ZygPipes/ZygPipes_253) ...
+LogStaticMesh: Display: Waiting for static meshes to be ready 2,863/2,865 (/Game/Bin/HSH_Meshes/Stations/AcadamyStation_001) ...
 LogMetaSound: Display: Resave recommended: Asset 'MS_Electric+Sparks_Preset01-Tesla' at '/Game/ThirdParty/ElectricArcs/Sounds/MS_Electric+Sparks_Preset01-Tesla.MS_Electric+Sparks_Preset01-Tesla' skipped migrated editor data/creation of input template nodes during cook to target document version 'v1.12'.
 LogMetaSound: Display: Resave recommended: Asset 'MS_Electric+Sparks_MASTER' at '/Game/ThirdParty/ElectricArcs/Sounds/MS_Electric+Sparks_MASTER.MS_Electric+Sparks_MASTER' skipped migrated editor data/creation of input template nodes during cook to target document version 'v1.12'.
-LogCook: Display: Cooked packages 256 Packages Remain 8301 Total 8557
+LogCook: Display: Cooked packages 248 Packages Remain 8309 Total 8557
+LogCook: Display: Cook Diagnostics: OpenFileHandles=9259, VirtualMemory=8778MiB, VirtualMemoryAvailable=11599MiB
+LogSkeletalMesh: Display: Waiting for skinned assets to be ready 0/1 (SKM_GT2) ...
+LogAsyncCompilation: Display: BEWARE: AssetCompile memory estimate is greater than available, but we're running it [StaticMesh] anyway! RequiredMemory = 0.000 MiB + 4956.245117 MiB, MemoryLimit = 2242.59375 MiB
+LogAsyncCompilation: Display: BEWARE: AssetCompile memory estimate is greater than available, but we're running it [StaticMesh] anyway! RequiredMemory = 0.000 MiB + 4956.245117 MiB, MemoryLimit = 2242.597656 MiB
 LogWorldPartition: Display: [Cook] Debug(TearDown): OwnerObject=World /Game/App/Levels/L_HSH_Hotel.L_HSH_Hotel bForceInitializedWorld=1 bInitializedPhysicsSceneForSave=1
-LogCook: Display: Garbage collection triggered (Soft). Triggered by conditions:
-  CookSettings.SoftGCTimeTrigger: Periodic triggering of SoftGC: SoftGCTimeFractionBudget == 0.050. TimeSinceLastGCSeconds == 31.244. CurrentTimeBudget == 1.644. ExpectedDuration == 0.502.
-LogCook: Display: Cooked packages 272 Packages Remain 8613 Total 8885
-LogCook: Display: Cook Diagnostics: OpenFileHandles=10075, VirtualMemory=8834MiB, VirtualMemoryAvailable=13126MiB
-LogCookCommandlet: Display: GarbageCollection... (Periodic GC)
-LogMetaSound: Display: Auto-Updating '/Game/ThirdParty/ElectricArcs/Sounds/MS_Electric+Sparks_MASTER.MS_Electric+Sparks_MASTER' node class 'Array.Random Get.WaveAsset:Array': Newer version 'v1.1' found.
-LogMetaSound: Display: Auto-Updating '/Game/ThirdParty/ElectricArcs/Sounds/MS_Electric+Sparks_MASTER.MS_Electric+Sparks_MASTER' node class 'Array.Random Get.WaveAsset:Array': Newer version 'v1.1' found.
-LogMetaSound: Display: Auto-Updating '/Game/ThirdParty/ElectricArcs/Sounds/MS_Electric+Sparks_MASTER.MS_Electric+Sparks_MASTER' node class 'UE.Wave Player.Stereo (v1.0)': Interface change detected.
-LogCook: Display: Cooked packages 640 Packages Remain 8279 Total 8919
-LogTextureFormatOodle: Display: Oodle Texture loading DLL: oo2tex_win64_2.9.8.dll
-LogTextureFormatOodle: Display: Oodle Texture loading DLL: oo2tex_win64_2.9.12.dll
-LogCook: Display: Cooked packages 1440 Packages Remain 7479 Total 8919
-LogCook: Display: Cooked packages 3808 Packages Remain 5112 Total 8920
-LogCook: Display: Cooked packages 4651 Packages Remain 4269 Total 8920
+LogCook: Display: Cooked packages 264 Packages Remain 8500 Total 8764
+LogAsyncCompilation: Display: BEWARE: AssetCompile memory estimate is greater than available, but we're running it [TextureDerivedData] anyway! RequiredMemory = 0.000 MiB + 3713.000 MiB, MemoryLimit = 2238.550781 MiB
+LogAsyncCompilation: Display: BEWARE: AssetCompile memory estimate is greater than available, but we're running it [TextureDerivedData] anyway! RequiredMemory = 0.000 MiB + 3713.000 MiB, MemoryLimit = 2238.550781 MiB
 LogCook: Display: Garbage collection triggered (Full). Triggered by conditions:
-  CookSettings.MemoryMinFreePhysical: Available physical memory 1989MiB is less than 2048MiB.
+  CookSettings.MemoryMinFreePhysical: Available physical memory 2010MiB is less than 2048MiB.
 LogCookCommandlet: Display: GarbageCollection... (Exceeded Max Memory)
 LogCook: Display: GarbageCollection Results: Garbage Collection was not very impactful.
 LogCook: Display: 	MemoryAnalysis: General:
 		Type: Full
-	Duration: 0.292s
+	Duration: 0.505s
 LogCook: Display: 	MemoryAnalysis: NumObjects:
 		Capacity:           25231360
-		Process Min:           49197
-		Process Max:          399308
-		Process Spread:       350111
-		Before GC:            309904
-		After GC:             246727
-		Freed by GC:           63177
+		Process Min:           49212
+		Process Max:          399325
+		Process Spread:       350113
+		Before GC:            366901
+		After GC:             246984
+		Freed by GC:          119917
 LogCook: Display: 	MemoryAnalysis: Virtual Memory:
-		Process Min:            1914 MB
-		Process Max:           10128 MB
-		Process Spread:         8213 MB
-		Before GC:              9958 MB
-		After GC:              10128 MB
-		Freed by GC:            -169 MB
+		Process Min:            1995 MB
+		Process Max:           10010 MB
+		Process Spread:         8015 MB
+		Before GC:              9525 MB
+		After GC:              10010 MB
+		Freed by GC:            -485 MB
 LogCook: Display: 	MemoryAnalysis: Allocator Stats Before:
 		Item Malloc calls 0
 		Item Realloc calls 0
@@ -775,26 +777,35 @@ LogCook: Display: 	MemoryAnalysis: Allocator Stats After:
 		Item Free calls 0
 		Item Total Allocator calls 0
 LogCook: Display: See log for memory use information for UObject classes and LLM tags.
-LogCook: Display: Cooked packages 5198 Packages Remain 3722 Total 8920
-LogTextureFormatOodle: Display: Oodle Texture loading DLL: oo2tex_win64_2.9.11.dll
-LogCook: Display: Cooked packages 5641 Packages Remain 3279 Total 8920
-LogAsyncCompilation: Display: BEWARE: AssetCompile memory estimate is greater than available, but we're running it [TextureDerivedData] anyway! RequiredMemory = 0.000 MiB + 3713.000 MiB, MemoryLimit = 2443.4375 MiB
-LogAsyncCompilation: Display: BEWARE: AssetCompile memory estimate is greater than available, but we're running it [TextureDerivedData] anyway! RequiredMemory = 0.000 MiB + 3713.000 MiB, MemoryLimit = 2443.4375 MiB
-LogCook: Display: Garbage collection triggers ignored: Out of memory condition has been detected, but is only 5s after the last GC. It will be prevented until 60 seconds have passed and we may run out of memory.
+LogCook: Display: Garbage collection triggers ignored: Out of memory condition has been detected, but is only 1s after the last GC. It will be prevented until 60 seconds have passed and we may run out of memory.
 Garbage collection triggered by conditions:
-  CookSettings.MemoryMinFreePhysical: Available physical memory 1723MiB is less than 2048MiB.
-LogCook: Display: Cooked packages 6206 Packages Remain 2714 Total 8920
-LogCook: Display: Cooked packages 6743 Packages Remain 2177 Total 8920
-LogAsyncCompilation: Display: BEWARE: AssetCompile memory estimate is greater than available, but we're running it [TextureDerivedData] anyway! RequiredMemory = 0.000 MiB + 3713.000 MiB, MemoryLimit = 2387.675781 MiB
-LogAsyncCompilation: Display: BEWARE: AssetCompile memory estimate is greater than available, but we're running it [TextureDerivedData] anyway! RequiredMemory = 0.000 MiB + 3713.000 MiB, MemoryLimit = 2387.667969 MiB
-LogCook: Display: Cooked packages 7884 Packages Remain 1036 Total 8920
-LogSkeletalMesh: Display: Waiting for skinned assets to be ready 0/1 (AnkCurGhost_00_Visible) ...
-LogCook: Display: Cooked packages 8848 Packages Remain 72 Total 8920
+  CookSettings.MemoryMinFreePhysical: Available physical memory 2046MiB is less than 2048MiB.
+LogCook: Display: Cooked packages 308 Packages Remain 8610 Total 8918
+LogMetaSound: Display: Resave recommended: Asset 'MS_Electric+Sparks_MASTER' at '/Game/ThirdParty/ElectricArcs/Sounds/MS_Electric+Sparks_MASTER.MS_Electric+Sparks_MASTER' skipped migrated editor data/creation of input template nodes during cook to target document version 'v1.12'.
+LogAsyncCompilation: Display: BEWARE: AssetCompile memory estimate is greater than available, but we're running it [StaticMesh] anyway! RequiredMemory = 0.000 MiB + 4956.245117 MiB, MemoryLimit = 2711.605469 MiB
+LogAsyncCompilation: Display: BEWARE: AssetCompile memory estimate is greater than available, but we're running it [StaticMesh] anyway! RequiredMemory = 0.000 MiB + 4956.245117 MiB, MemoryLimit = 2711.605469 MiB
+LogMetaSound: Display: Auto-Updating '/Game/ThirdParty/ElectricArcs/Sounds/MS_Electric+Sparks_MASTER.MS_Electric+Sparks_MASTER' node class 'Array.Random Get.WaveAsset:Array': Newer version 'v1.1' found.
+LogMetaSound: Display: Auto-Updating '/Game/ThirdParty/ElectricArcs/Sounds/MS_Electric+Sparks_MASTER.MS_Electric+Sparks_MASTER' node class 'Array.Random Get.WaveAsset:Array': Newer version 'v1.1' found.
+LogMetaSound: Display: Auto-Updating '/Game/ThirdParty/ElectricArcs/Sounds/MS_Electric+Sparks_MASTER.MS_Electric+Sparks_MASTER' node class 'UE.Wave Player.Stereo (v1.0)': Interface change detected.
+LogMetaSound: Display: Resave recommended: Asset 'MS_Electric+Sparks_Preset01-Tesla' at '/Game/ThirdParty/ElectricArcs/Sounds/MS_Electric+Sparks_Preset01-Tesla.MS_Electric+Sparks_Preset01-Tesla' skipped migrated editor data/creation of input template nodes during cook to target document version 'v1.12'.
+LogCook: Display: Cooked packages 393 Packages Remain 8525 Total 8918
+LogTextureFormatOodle: Display: Oodle Texture loading DLL: oo2tex_win64_2.9.8.dll
+LogCook: Display: Cooked packages 689 Packages Remain 8230 Total 8919
+LogTextureFormatOodle: Display: Oodle Texture loading DLL: oo2tex_win64_2.9.12.dll
+LogCook: Display: Cooked packages 1469 Packages Remain 7450 Total 8919
+LogCook: Display: Cooked packages 3808 Packages Remain 5112 Total 8920
+LogCook: Display: Cooked packages 4478 Packages Remain 4442 Total 8920
+LogCook: Display: Cooked packages 5488 Packages Remain 3432 Total 8920
+LogTextureFormatOodle: Display: Oodle Texture loading DLL: oo2tex_win64_2.9.11.dll
+LogCook: Display: Cooked packages 6380 Packages Remain 2540 Total 8920
+LogAsyncCompilation: Display: BEWARE: AssetCompile memory estimate is greater than available, but we're running it [TextureDerivedData] anyway! RequiredMemory = 0.000 MiB + 3713.000 MiB, MemoryLimit = 2602.500 MiB
+LogAsyncCompilation: Display: BEWARE: AssetCompile memory estimate is greater than available, but we're running it [TextureDerivedData] anyway! RequiredMemory = 0.000 MiB + 3713.000 MiB, MemoryLimit = 2602.523438 MiB
+LogCook: Display: Cooked packages 8804 Packages Remain 116 Total 8920
 LogCook: Display: Cooked packages 8920 Packages Remain 0 Total 8920
-LogCook: Display: Cook Diagnostics: OpenFileHandles=11820, VirtualMemory=10173MiB, VirtualMemoryAvailable=11837MiB
+LogCook: Display: Cook Diagnostics: OpenFileHandles=12221, VirtualMemory=10378MiB, VirtualMemoryAvailable=10124MiB
 LogCook: Display: Finishing up...
 LogAssetRegistryGenerator: Display: Saving asset registry v21.
-LogAssetRegistryGenerator: Display: Generated development asset registry C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Metadata/DevelopmentAssetRegistry.bin num assets 9478, size is 7297.31kb, XxHash64[LE] = 0x74E09CF2FC210611, waited on hash 0.00 seconds
+LogAssetRegistryGenerator: Display: Generated development asset registry C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Metadata/DevelopmentAssetRegistry.bin num assets 9478, size is 7297.32kb, XxHash64[LE] = 0x10B0FE15986F61CB, waited on hash 0.00 seconds
 LogAssetRegistryGenerator: Display: Generated asset registry num assets 9469, size is 3199.68kb
 LogShaderLibrary: Display:
 LogShaderLibrary: Display: Shader Library 'HSHVacancy' (PCD3D_SM6-PCD3D_SM6) Stats:
@@ -837,8 +848,8 @@ LogShaderLibrary: Display: Textual dump saved to '../../../../../../Users/micha/
 LogShaderLibrary: Display: =================
 LogCook: Display: Saved scl.csv C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Metadata/PipelineCaches/ShaderStableInfo-Global-PCD3D_SM6.shk for platform Windows, 370964 bytes
 LogCook: Display: Saved scl.csv C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Metadata/PipelineCaches/ShaderStableInfo-Global-PCD3D_SM5.shk for platform Windows, 219290 bytes
-LogCook: Display: Saved scl.csv C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Metadata/PipelineCaches/ShaderStableInfo-HSHVacancy-PCD3D_SM6.shk for platform Windows, 623632 bytes
-LogCook: Display: Saved scl.csv C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Metadata/PipelineCaches/ShaderStableInfo-HSHVacancy-PCD3D_SM5.shk for platform Windows, 471563 bytes
+LogCook: Display: Saved scl.csv C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Metadata/PipelineCaches/ShaderStableInfo-HSHVacancy-PCD3D_SM6.shk for platform Windows, 613491 bytes
+LogCook: Display: Saved scl.csv C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Metadata/PipelineCaches/ShaderStableInfo-HSHVacancy-PCD3D_SM5.shk for platform Windows, 471181 bytes
 LogCook: Display: ---- Running UShaderPipelineCacheToolsCommandlet for platform Windows  shader format PCD3D_SM6
 LogCook: Display:   With Args: build  "C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Metadata/PipelineCaches/ShaderStableInfo-Global-PCD3D_SM6.shk" "C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Metadata/PipelineCaches/ShaderStableInfo-HSHVacancy-PCD3D_SM6.shk" -chunkinfodir="C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Content"  -library=HSHVacancy  -platform=Windows "C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Content/PipelineCaches/Windows/HSHVacancy_PCD3D_SM6.stable.upipelinecache"
 LogShaderPipelineCacheTools: Display: Sorting input stable cache files into chronological order for merge processing...
@@ -885,47 +896,47 @@ LogCook: Display: Dependent plugin "SteamShared" referenced by "EOS Shared" wasn
 LogCook: Display: Finalize package store(s)...
 LogZenStoreWriter: Display: Flushing...
 LogZenStoreWriter: Display: Saving Zen filesystem manifest 'C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Metadata/zenfs.manifest'
-LogZenStoreWriter: Display: Output:	44221 Public runtime script objects
-LogCook: Display: Cook by the book total time in tick 87.833627s total time 97.110703
-LogCook: Display: Peak Used virtual 12511 MiB Peak Used physical 11204 MiB
+LogZenStoreWriter: Display: Output:	44236 Public runtime script objects
+LogCook: Display: Cook by the book total time in tick 53.966675s total time 60.985397
+LogCook: Display: Peak Used virtual 12587 MiB Peak Used physical 11551 MiB
 LogCook: Display: Packages Cooked: 8911, Packages Incrementally Skipped: 0, Packages Skipped by Platform: 9, Total Packages: 8920
 LogCookStats: Display: Hierarchy Timer Information:
 LogCookStats: Display:   Root: 0.000s (0)
-LogCookStats: Display:     CleanSandbox: 3.260s (1)
-LogCookStats: Display:     CollectFilesToCook: 0.003s (1)
+LogCookStats: Display:     CleanSandbox: 0.026s (1)
+LogCookStats: Display:     CollectFilesToCook: 0.004s (1)
 LogCookStats: Display:       CookModificationDelegate: 0.000s (1)
 LogCookStats: Display:     GenerateLongPackageName: 0.000s (1)
-LogCookStats: Display:     TickMainCookLoop: 87.834s (4)
-LogCookStats: Display:       PumpPollables: 0.007s (4)
-LogCookStats: Display:       PumpRequests: 0.083s (279)
-LogCookStats: Display:       LoadPackageForCooking: 37.082s (16870)
+LogCookStats: Display:     TickMainCookLoop: 53.967s (3)
+LogCookStats: Display:       PumpPollables: 0.002s (2)
+LogCookStats: Display:       PumpRequests: 0.091s (279)
+LogCookStats: Display:       LoadPackageForCooking: 22.240s (20107)
 LogCookStats: Display:       ValidateSourcePackage: 0.000s (8920)
-LogCookStats: Display:       SavingPackages: 47.238s (1071)
-LogCookStats: Display:         PollPendingCookedPlatformDatas: 1.330s (202844)
-LogCookStats: Display:         PrepareSave: 18.112s (194582)
-LogCookStats: Display:         PrecachePlatformDataForNextPackage: 7.474s (8914)
-LogCookStats: Display:           PrepareSave: 7.472s (10734)
-LogCookStats: Display:         SaveCookedPackage: 19.266s (8920)
-LogCookStats: Display:           GEditorSavePackage: 18.804s (8920)
-LogCookStats: Display:             VerifyCanCookPackage: 0.021s (8911)
-LogCookStats: Display:         ClearAllCachedCookedPlatformData: 0.430s (8920)
+LogCookStats: Display:       SavingPackages: 30.638s (954)
+LogCookStats: Display:         PollPendingCookedPlatformDatas: 1.361s (43032)
+LogCookStats: Display:         PrepareSave: 5.449s (34874)
+LogCookStats: Display:         PrecachePlatformDataForNextPackage: 3.954s (8915)
+LogCookStats: Display:           PrepareSave: 3.951s (10981)
+LogCookStats: Display:         SaveCookedPackage: 18.848s (8920)
+LogCookStats: Display:           GEditorSavePackage: 18.379s (8920)
+LogCookStats: Display:             VerifyCanCookPackage: 0.022s (8911)
+LogCookStats: Display:         ClearAllCachedCookedPlatformData: 0.434s (8920)
 LogCookStats: Display:       PostLoadPackageFixup: 0.000s (2)
-LogCookStats: Display:       WaitForAsync: 2.835s (312896)
-LogCookStats: Display:     CookByTheBookFinished: 1.003s (1)
-LogCookStats: Display:       SavingCurrentIniSettings: 0.045s (1)
+LogCookStats: Display:       WaitForAsync: 0.489s (57931)
+LogCookStats: Display:     CookByTheBookFinished: 0.965s (1)
+LogCookStats: Display:       SavingCurrentIniSettings: 0.046s (1)
 LogCookStats: Display:         ProcessingAccessedStrings: 0.005s (1)
 LogCookStats: Display:       ChunkGeneration: 0.009s (1)
 LogCookStats: Display:       CalculateReferencedSet: 0.001s (1)
 LogCookStats: Display:       FinishPopulateShaderLibrary: 0.001s (1)
-LogCookStats: Display:       GeneratorPreSave: 0.003s (1)
-LogCookStats: Display:       BuildChunkManifest: 0.131s (1)
-LogCookStats: Display:         FixupPackageDependenciesForChunks: 0.008s (1)
+LogCookStats: Display:       GeneratorPreSave: 0.002s (1)
+LogCookStats: Display:       BuildChunkManifest: 0.136s (1)
+LogCookStats: Display:         FixupPackageDependenciesForChunks: 0.009s (1)
 LogCookStats: Display:       SaveManifests: 0.000s (1)
-LogCookStats: Display:       SaveAssetRegistry: 0.342s (1)
+LogCookStats: Display:       SaveAssetRegistry: 0.361s (1)
 LogCookStats: Display:       WriteCookerOpenOrder: 0.015s (1)
 LogCookStats: Display:       WriteCookMetadata: 0.001s (1)
-LogCookStats: Display:       WriteReferencedSet: 0.008s (1)
-LogCookStats: Display:       FinalizePackageStore: 0.154s (1)
+LogCookStats: Display:       WriteReferencedSet: 0.009s (1)
+LogCookStats: Display:       FinalizePackageStore: 0.155s (1)
 LogCookStats: Display: Misc Cook Stats
 LogCookStats: Display: ===============
 LogCookStats: Display: Niagara
@@ -936,32 +947,32 @@ LogCookStats: Display:     NiagaraCpuScriptDdcCacheMissCount=0
 LogCookStats: Display:     NiagaraGpuScriptCompileCount=0
 LogCookStats: Display:     NiagaraGpuScriptDdcCacheHitCount=30
 LogCookStats: Display:     NiagaraGpuScriptDdcCacheMissCount=0
-LogCookStats: Display:     NiagaraSystemWaitForCompilationCompleteTime=0.000587
-LogCookStats: Display: ComputeKernelShader.Misc
-LogCookStats: Display:     ShadersCompiled=0
+LogCookStats: Display:     NiagaraSystemWaitForCompilationCompleteTime=0.000607
 LogCookStats: Display: NiagaraShader.Misc
 LogCookStats: Display:     ShadersCompiled=0
 LogCookStats: Display: OpenColorIOShader.Misc
 LogCookStats: Display:     ShadersCompiled=0
+LogCookStats: Display: ComputeKernelShader.Misc
+LogCookStats: Display:     ShadersCompiled=0
 LogCookStats: Display: ShaderCompiler
-LogCookStats: Display:     BlockingTimeSec=0.000103
+LogCookStats: Display:     BlockingTimeSec=0.000143
 LogCookStats: Display:     AsyncCompileTimeSec=0.000000
 LogCookStats: Display:     GlobalBeginCompileShaderTimeSec=0.000000
 LogCookStats: Display:     GlobalBeginCompileShaderCalls=0
-LogCookStats: Display:     ProcessAsyncResultsTimeSec=0.000350
+LogCookStats: Display:     ProcessAsyncResultsTimeSec=0.000323
 LogCookStats: Display: GlobalShader.Misc
 LogCookStats: Display:     ShadersCompiled=0
 LogCookStats: Display: Material
-LogCookStats: Display:     FinishCacheShadersSec=0.600204
+LogCookStats: Display:     FinishCacheShadersSec=0.646788
 LogCookStats: Display: Package.Load
-LogCookStats: Display:     NumRequestedLoads=6421
-LogCookStats: Display:     NumPackagesLoaded=18080
-LogCookStats: Display:     NumInlineLoads=11659
-LogCookStats: Display:     LoadPackageTimeSec=59.340114
+LogCookStats: Display:     NumRequestedLoads=6463
+LogCookStats: Display:     NumPackagesLoaded=17362
+LogCookStats: Display:     NumInlineLoads=10899
+LogCookStats: Display:     LoadPackageTimeSec=29.341243
 LogCookStats: Display: Package.Save
 LogCookStats: Display:     NumPackagesIncrementallySkipped=0
 LogCookStats: Display:     NumPackagesSaved=8920
-LogCookStats: Display:     SavePackageTimeSec=12.454888
+LogCookStats: Display:     SavePackageTimeSec=12.961049
 LogCookStats: Display:     TagPackageExportsPresaveTimeSec=0.000000
 LogCookStats: Display:     TagPackageExportsTimeSec=0.000000
 LogCookStats: Display:     FullyLoadLoadersTimeSec=0.000000
@@ -971,13 +982,13 @@ LogCookStats: Display:     TagPackageExportsGetObjectsWithMarks=0.000000
 LogCookStats: Display:     SerializeImportsTimeSec=0.000000
 LogCookStats: Display:     SortExportsSeekfreeInnerTimeSec=0.000000
 LogCookStats: Display:     SerializeExportsTimeSec=0.000000
-LogCookStats: Display:     SerializeBulkDataTimeSec=0.075549
+LogCookStats: Display:     SerializeBulkDataTimeSec=0.073237
 LogCookStats: Display:     AsyncWriteTimeSec=0.000000
 LogCookStats: Display:     MBWritten=0.000000
 LogCookStats: Display: CookOnTheFlyServer
-LogCookStats: Display:     PeakRequestQueueSize=8566
-LogCookStats: Display:     PeakLoadQueueSize=3341
-LogCookStats: Display:     PeakSaveQueueSize=1527
+LogCookStats: Display:     PeakRequestQueueSize=8534
+LogCookStats: Display:     PeakLoadQueueSize=152
+LogCookStats: Display:     PeakSaveQueueSize=279
 LogCookStats: Display: Package.DifferentPackagesSizeMBPerAsset
 LogCookStats: Display: Package.NumberOfDifferencesInPackagesPerAsset
 LogCookStats: Display: Package.PackageDifferencesSizeMBPerAsset
@@ -995,24 +1006,24 @@ LogCookStats: Display:     BitfieldWasteKB=0
 LogCookStats: Display:
 LogCookStats: Display: Cook Profile
 LogCookStats: Display: ============
-LogCookStats: Display:  0.CookWallTimeSec=101.770651
-LogCookStats: Display:  0. 0.StartupWallTimeSec=4.129584
-LogCookStats: Display:  0. 1.StartCookByTheBookTimeSec=6.960368
-LogCookStats: Display:  0. 1. 0.BlockOnAssetRegistryTimeSec=1.240190
-LogCookStats: Display:  0. 1. 1.GameCookModificationDelegateTimeSec=0.000067
-LogCookStats: Display:  0. 2.TickCookOnTheSideTimeSec=74.046000
-LogCookStats: Display:  0. 2. 0.TickCookOnTheSideLoadPackagesTimeSec=37.083413
-LogCookStats: Display:  0. 2. 1.TickCookOnTheSideSaveCookedPackageTimeSec=19.266569
+LogCookStats: Display:  0.CookWallTimeSec=77.345484
+LogCookStats: Display:  0. 0.StartupWallTimeSec=15.788642
+LogCookStats: Display:  0. 1.StartCookByTheBookTimeSec=4.389969
+LogCookStats: Display:  0. 1. 0.BlockOnAssetRegistryTimeSec=1.081258
+LogCookStats: Display:  0. 1. 1.GameCookModificationDelegateTimeSec=0.000390
+LogCookStats: Display:  0. 2.TickCookOnTheSideTimeSec=33.377006
+LogCookStats: Display:  0. 2. 0.TickCookOnTheSideLoadPackagesTimeSec=22.241660
+LogCookStats: Display:  0. 2. 1.TickCookOnTheSideSaveCookedPackageTimeSec=18.848060
 LogCookStats: Display:  0. 2. 1. 0.TickCookOnTheSideResolveRedirectorsTimeSec=0.000000
-LogCookStats: Display:  0. 2. 2.TickCookOnTheSidePrepareSaveTimeSec=25.591809
-LogCookStats: Display:  0. 3.TickLoopGCTimeSec=1.832790
+LogCookStats: Display:  0. 2. 2.TickCookOnTheSidePrepareSaveTimeSec=9.402426
+LogCookStats: Display:  0. 3.TickLoopGCTimeSec=2.223497
 LogCookStats: Display:  0. 4.TickLoopRecompileShaderRequestsTimeSec=0.000000
-LogCookStats: Display:  0. 5.TickLoopShaderProcessAsyncResultsTimeSec=0.000018
-LogCookStats: Display:  0. 6.TickLoopProcessDeferredCommandsTimeSec=0.000006
-LogCookStats: Display:  0. 7.TickLoopTickCommandletStatsTimeSec=0.000002
-LogCookStats: Display:  0. 8.TickLoopFlushRenderingCommandsTimeSec=0.006985
+LogCookStats: Display:  0. 5.TickLoopShaderProcessAsyncResultsTimeSec=0.000156
+LogCookStats: Display:  0. 6.TickLoopProcessDeferredCommandsTimeSec=0.000003
+LogCookStats: Display:  0. 7.TickLoopTickCommandletStatsTimeSec=0.000001
+LogCookStats: Display:  0. 8.TickLoopFlushRenderingCommandsTimeSec=0.001233
 LogCookStats: Display:  0. 9.ShaderFlushTimeSec=0.000000
-LogCookStats: Display:  0. 10.ValidationTimeSec=0.001074
+LogCookStats: Display:  0. 10.ValidationTimeSec=0.000903
 LogCookStats: Display:  1.CookParameters=
 LogCookStats: Display:  1. 0.TargetPlatforms=Windows
 LogCookStats: Display:  1. 1.CookProject=HSHVacancy
@@ -1031,9 +1042,9 @@ LogCookStats: Display: HasLocalCache   =      true
 LogCookStats: Display: HasSharedCache  =     false
 LogCookStats: Display: HasCloudCache   =     false
 LogCookStats: Display: HasZenCache     =      true
-LogCookStats: Display: TotalGetHits    =     43682
+LogCookStats: Display: TotalGetHits    =     44343
 LogCookStats: Display: TotalGetMisses  =         1
-LogCookStats: Display: TotalGets       =     43683
+LogCookStats: Display: TotalGets       =     44344
 LogCookStats: Display: TotalGetHitPct  =  0.999977
 LogCookStats: Display: GetMissPct      =  0.000023
 LogCookStats: Display: TotalPutHits    =         1
@@ -1041,15 +1052,15 @@ LogCookStats: Display: TotalPutMisses  =         0
 LogCookStats: Display: TotalPuts       =         1
 LogCookStats: Display: TotalPutHitPct  =  1.000000
 LogCookStats: Display: PutMissPct      =  0.000000
-LogCookStats: Display: LocalGetHits    =     43170
+LogCookStats: Display: LocalGetHits    =     43825
 LogCookStats: Display: LocalGetMisses  =         1
-LogCookStats: Display: LocalGetTotal   =     43171
+LogCookStats: Display: LocalGetTotal   =     43826
 LogCookStats: Display: LocalGetHitPct  =  0.999977
 LogCookStats: Display: SharedGetHits   =         0
 LogCookStats: Display: SharedGetTotal  =         0
 LogCookStats: Display: SharedGetHitPct =  0.000000
-LogCookStats: Display: ZenLocalGetHits =     43170
-LogCookStats: Display: ZenLocalGetTotal=     43171
+LogCookStats: Display: ZenLocalGetHits =     43825
+LogCookStats: Display: ZenLocalGetTotal=     43826
 LogCookStats: Display: ZenLocalGetHitPct=  0.999977
 LogCookStats: Display: ZenRemoteGetHits=         0
 LogCookStats: Display: ZenRemoteGetTotal=         0
@@ -1057,9 +1068,9 @@ LogCookStats: Display: ZenRemoteGetHitPct=  0.000000
 LogCookStats: Display: CloudGetHits    =         0
 LogCookStats: Display: CloudGetTotal   =         0
 LogCookStats: Display: CloudGetHitPct  =  0.000000
-LogCookStats: Display: LocalLatency    =  0.262661
-LogCookStats: Display: LocalReadSpeed  =367.731010
-LogCookStats: Display: LocalWriteSpeed =  0.957404
+LogCookStats: Display: LocalLatency    =  0.238087
+LogCookStats: Display: LocalReadSpeed  =423.844697
+LogCookStats: Display: LocalWriteSpeed =  0.632644
 LogCookStats: Display: SharedLatency   =  0.000000
 LogCookStats: Display: SharedReadSpeed =  0.000000
 LogCookStats: Display: SharedWriteSpeed=  0.000000
@@ -1071,27 +1082,27 @@ LogCookStats: Display: DDC Resource Stats
 LogCookStats: Display: =======================================================================================================
 LogCookStats: Display: Asset Type                          Total Time (Sec)  GameThread Time (Sec)  Assets Built  MB Processed
 LogCookStats: Display: ----------------------------------  ----------------  ---------------------  ------------  ------------
-LogCookStats: Display: Texture                                         6.16                   0.00             0       1076.53
-LogCookStats: Display: StaticMesh                                      0.14                   0.00             0        370.11
-LogCookStats: Display: DistanceField                                   0.11                   0.00             0        434.89
-LogCookStats: Display: NavCollision                                    0.11                   0.00             0          3.11
-LogCookStats: Display: CardRepresentation                              0.11                   0.00             0          1.98
-LogCookStats: Display: BulkDataList                                    0.08                   0.00             0          0.72
-LogCookStats: Display: MaterialShader                                  0.02                   0.59             0        165.02
-LogCookStats: Display: GlobalShader                                    0.02                   0.03             0        108.40
+LogCookStats: Display: Texture                                         5.13                   0.00             0       1076.53
+LogCookStats: Display: StaticMesh                                      0.16                   0.01             0        372.15
+LogCookStats: Display: DistanceField                                   0.13                   0.01             0        437.34
+LogCookStats: Display: CardRepresentation                              0.13                   0.00             0          2.01
+LogCookStats: Display: NavCollision                                    0.13                   0.00             0          3.02
+LogCookStats: Display: BulkDataList                                    0.06                   0.00             0          0.72
+LogCookStats: Display: MaterialShader                                  0.02                   0.63             0        171.07
+LogCookStats: Display: GlobalShader                                    0.01                   0.03             0        108.40
 LogCookStats: Display: STREAMEDAUDIO                                   0.01                   0.00             0         30.71
-LogCookStats: Display: Audio                                           0.00                   0.00             0         30.65
 LogCookStats: Display: GeometryCollection                              0.00                   0.00             1          0.00
 LogCookStats: Display: NiagaraScript                                   0.00                   0.00             0          2.14
-LogCookStats: Display: BodySetup                                       0.00                   0.00             0         45.18
+LogCookStats: Display: Audio                                           0.00                   0.00             0         30.65
 LogCookStats: Display: BulkDataPayloadId                               0.00                   0.00             0          0.02
+LogCookStats: Display: BodySetup                                       0.00                   0.00             0         47.86
+LogCookStats: Display: SkeletalMesh                                    0.00                   0.00             0        268.97
 LogCookStats: Display: AnimationSequence                               0.00                   0.00             0          4.20
-LogCookStats: Display: SkeletalMesh                                    0.00                   0.00             0        268.65
 LogCookStats: Display: CKERSM                                          0.00                   0.00             0          0.39
-LogPackageBuildDependencyTracker: Display: Package Accesses (8922 referencing packages with a total of 105181 unique accesses)
-LogConfigBuildDependencyTracker: Display: Config Accesses (7898 referencing packages with a total of 49922 unique accesses). 3011 unique accesses that were not associated with a package.
+LogPackageBuildDependencyTracker: Display: Package Accesses (8928 referencing packages with a total of 105908 unique accesses)
+LogConfigBuildDependencyTracker: Display: Config Accesses (7899 referencing packages with a total of 49939 unique accesses). 3285 unique accesses that were not associated with a package.
 LogCook: Display: Done!
-LogSavePackage: Display: Took 0.016107s to verify the EDL loading graph.
+LogSavePackage: Display: Took 0.017275s to verify the EDL loading graph.
 LogInit: Display:
 LogInit: Display: Warning/Error Summary (Unique only)
 LogInit: Display: -----------------------------------
@@ -1103,13 +1114,13 @@ LogInit: Display:
 LogInit: Display: Success - 0 error(s), 4 warning(s)
 LogInit: Display:
 
-Execution of commandlet took:  1m 37s (97.67 seconds)
+Execution of commandlet took:  1m 1s (61.59 seconds)
 LogShaderCompilers: Display: Shaders left to compile 0
-Took 104.95s to run UnrealEditor-Cmd.exe, ExitCode=0
-SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\Cook-2026.01.08-10.15.19.txt
-SafeCopyFile C:\Program Files\Epic Games\UE_5.6\Engine\Programs\AutomationTool\Saved\Cook-2026.01.08-10.13.34.txt C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\Cook-2026.01.08-10.15.19.txt
-SafeDeleteFile C:\Program Files\Epic Games\UE_5.6\Engine\Programs\AutomationTool\Saved\Cook-2026.01.08-10.13.34.txt
-Cook command time: 105.00 s
+Took 81.14s to run UnrealEditor-Cmd.exe, ExitCode=0
+SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\Cook-2026.01.19-07.27.44.txt
+SafeCopyFile C:\Program Files\Epic Games\UE_5.6\Engine\Programs\AutomationTool\Saved\Cook-2026.01.19-07.26.23.txt C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\Cook-2026.01.19-07.27.44.txt
+SafeDeleteFile C:\Program Files\Epic Games\UE_5.6\Engine\Programs\AutomationTool\Saved\Cook-2026.01.19-07.26.23.txt
+Cook command time: 81.19 s
 ********** COOK COMMAND COMPLETED **********
 SafeFileExists C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject=True
 ********** STAGE COMMAND STARTED **********
@@ -1208,21 +1219,21 @@ Excluding config file C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Config
 Excluding config file C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Config\Localization\Game_ImportDialogue.ini
 Excluding config file C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Config\Localization\Game_ImportDialogueScript.ini
 Reading oplog from Zen...
-Running UnrealPak with arguments: "C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject" IoStore -StartZenServerForStage -SponsorProcessID=458092 -ProjectStore="C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Cooked\Windows\ue.projectstore"
+Running UnrealPak with arguments: "C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject" IoStore -StartZenServerForStage -SponsorProcessID=169352 -ProjectStore="C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Cooked\Windows\ue.projectstore"
 SafeFileExists C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealPak.exe=True
-Running: C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealPak.exe "C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject" IoStore -StartZenServerForStage -SponsorProcessID=458092 -ProjectStore="C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Cooked\Windows\ue.projectstore"
-LogPluginManager: Display: By default, prioritizing project plugin (../../../../../../Users/micha/Documents/Unreal Projects/HSHVacancy/Plugins/VisualStudioTools/VisualStudioTools.uplugin) over the corresponding engine version (../../../Engine/Plugins/VisualStudioTools/VisualStudioTools.uplugin).
+Running: C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealPak.exe "C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject" IoStore -StartZenServerForStage -SponsorProcessID=169352 -ProjectStore="C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Cooked\Windows\ue.projectstore"
 LogPluginManager: Display: By default, prioritizing project plugin (../../../../../../Users/micha/Documents/Unreal Projects/HSHVacancy/Plugins/SteamCorePro/SteamCorePro.uplugin) over the corresponding engine version (../../../Engine/Plugins/Marketplace/SteamCor7b5ed4851e5eV11/SteamCorePro.uplugin).
+LogPluginManager: Display: By default, prioritizing project plugin (../../../../../../Users/micha/Documents/Unreal Projects/HSHVacancy/Plugins/VisualStudioTools/VisualStudioTools.uplugin) over the corresponding engine version (../../../Engine/Plugins/VisualStudioTools/VisualStudioTools.uplugin).
 LogPakFile: Display: ProjectDir: ../../../../../../Users/micha/Documents/Unreal Projects/HSHVacancy/
 LogIoStore: Display: ==================== IoStore Utils ====================
 LogIoStore: Display: Using command line for crypto configuration
-LogZenServiceInstance: Display: Launching executable 'C:/Users/micha/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe', working dir 'C:/Users/micha/AppData/Local/UnrealEngine/Common/Zen/Install', data dir 'C:/Users/micha/AppData/Local/UnrealEngine/Common/Zen/Data', args '--port 8558 --data-dir "C:\Users\micha\AppData\Local\UnrealEngine\Common\Zen\Data" --http asio --gc-cache-duration-seconds 1209600 --gc-interval-seconds 21600 --gc-low-diskspace-threshold 2147483648 --quiet --http-forceloopback --owner-pid 458988  --child-id Zen_458988_Startup'
+LogZenServiceInstance: Display: Launching executable 'C:/Users/micha/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe', working dir 'C:/Users/micha/AppData/Local/UnrealEngine/Common/Zen/Install', data dir 'C:/Users/micha/AppData/Local/UnrealEngine/Common/Zen/Data', args '--port 8558 --data-dir "C:\Users\micha\AppData\Local\UnrealEngine\Common\Zen\Data" --http asio --gc-cache-duration-seconds 1209600 --gc-interval-seconds 21600 --gc-low-diskspace-threshold 2147483648 --quiet --http-forceloopback --owner-pid 172044  --child-id Zen_172044_Startup'
 LogZenServiceInstance: Display: Unreal Zen Storage Server HTTP service at [::1]:8558 status: OK!.
 LogZenServiceInstance: Display: Unreal Zen Storage Server HTTP service at [::1]:8558 status: OK!.
-LogPakFile: Display: UnrealPak executed in 1.115338 seconds
-Took 1.36s to run UnrealPak.exe, ExitCode=0
-SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak_ZenAutoLaunch-2026.01.08-10.15.23.txt
-SafeCopyFile C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Logs\UnrealPak.log C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak_ZenAutoLaunch-2026.01.08-10.15.23.txt
+LogPakFile: Display: UnrealPak executed in 1.083250 seconds
+Took 1.30s to run UnrealPak.exe, ExitCode=0
+SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak_ZenAutoLaunch-2026.01.19-07.27.48.txt
+SafeCopyFile C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Logs\UnrealPak.log C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak_ZenAutoLaunch-2026.01.19-07.27.48.txt
 SafeFileExists C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Cooked\Windows\HSHVacancy\Metadata\TemporaryNonUFSFiles.txt=False
 Cleaning Stage Directory: C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\StagedBuilds\Windows
 SafeDeleteDirectory C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\StagedBuilds\Windows
@@ -1500,9 +1511,9 @@ LogPakFile: Display: Parsing crypto keys from a crypto key cache file
 LogPakFile: Display: CompressionFormats in priority order: Oodle, Zlib
 LogZenServiceInstance: Display: Unreal Zen Storage Server HTTP service at [::1]:8558 status: OK!.
 LogZenStore: Display: Establishing oplog HSHVacancy.099ab4d7 / Windows
-LogIoStore: Display: Fetched 8913 oplog items from Zen in 0.43 seconds
-LogIoStore: Display: Parsed 8913 oplog items 0.03 seconds, 17753 chunks
-LogIoStore: Display: Loaded 15012 chunk hashes from Zen in 0.38 seconds, 15012 hashes updated in 0.00 seconds
+LogIoStore: Display: Fetched 8913 oplog items from Zen in 0.42 seconds
+LogIoStore: Display: Parsed 8913 oplog items 0.03 seconds, 17754 chunks
+LogIoStore: Display: Loaded 15012 chunk hashes from Zen in 0.40 seconds, 15012 hashes updated in 0.00 seconds
 LogPakFile: Display: Oodle enabled on 'NoPluginCompression' files
 LogPakFile: Display: Loading response file C:\Program Files\Epic Games\UE_5.6\Engine\Programs\AutomationTool\Saved\ResponseFiles\PakList_HSHVacancy-Windows.txt
 LogPakFile: Display: Added 1715 entries to add to pak file.
@@ -1511,20 +1522,20 @@ LogPakFile: Display: Collected 1715 files in 0.00s.
 LogPakFile: Display: Creating pak C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\StagedBuilds\Windows\HSHVacancy\Content\Paks\HSHVacancy-Windows.pak.
 OodleDataCompression: Display: Oodle v2.9.13 format for pak/iostore with method=Kraken, level=4=Normal
 LogPakFile: Display: Created pak file: C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\StagedBuilds\Windows\HSHVacancy\Content\Paks\HSHVacancy-Windows.pak
-LogPakFile: Display: CompressionFormat 0 [Oodle] : 387 files, 30349808 -> 9936289 bytes
+LogPakFile: Display: CompressionFormat 0 [Oodle] : 387 files, 30349814 -> 9936294 bytes
 LogPakFile: Display: CompressionFormat 2 [None] : 1328 files, 785280 -> 785280 bytes
 LogPakFile: Display: Added 1715 files, 11394803 bytes total
 LogPakFile: Display: PrimaryIndex size: 24010 bytes
 LogPakFile: Display: PathHashIndex size: 55871 bytes
 LogPakFile: Display: FullDirectoryIndex size: 59367 bytes
-LogPakFile: Display: Compression summary: 32.74% of original size. Compressed Size 9936289 bytes, Original Size 30349808 bytes.
+LogPakFile: Display: Compression summary: 32.74% of original size. Compressed Size 9936294 bytes, Original Size 30349814 bytes.
 LogPakFile: Display: Encryption - DISABLED
 LogPakFile: Display:
 LogPakFile: Display: Writer and Compression Threads exited.
-LogPakFile: Display: UnrealPak executed in 1.088182 seconds
-Took 1.28s to run UnrealPak.exe, ExitCode=0
-SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak_CreateMultiplePaks-2026.01.08-10.15.25.txt
-SafeCopyFile C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Logs\UnrealPak.log C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak_CreateMultiplePaks-2026.01.08-10.15.25.txt
+LogPakFile: Display: UnrealPak executed in 0.981918 seconds
+Took 1.14s to run UnrealPak.exe, ExitCode=0
+SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak_CreateMultiplePaks-2026.01.19-07.27.49.txt
+SafeCopyFile C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Logs\UnrealPak.log C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak_CreateMultiplePaks-2026.01.19-07.27.49.txt
 Running UnrealPak with arguments: "C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject" -CreateGlobalContainer="C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\StagedBuilds\Windows\HSHVacancy\Content\Paks\global.utoc" -ProjectStore="C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Cooked\Windows\ue.projectstore" -CookedDirectory="C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Cooked\Windows" -Commands="C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\IoStoreCommands.txt" -patchpaddingalign=2048 -compressionformats=Oodle -compresslevel=4 -compressmethod=Kraken   -cryptokeys="C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Cooked\Windows\HSHVacancy\Metadata\Crypto.json" -compressionMinBytesSaved=1024 -compressionMinPercentSaved=5 -WriteBackMetadataToAssetRegistry=Disabled 
 SafeFileExists C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealPak.exe=True
 Running: C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealPak.exe "C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject" -CreateGlobalContainer="C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\StagedBuilds\Windows\HSHVacancy\Content\Paks\global.utoc" -ProjectStore="C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Cooked\Windows\ue.projectstore" -CookedDirectory="C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Cooked\Windows" -Commands="C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\IoStoreCommands.txt" -patchpaddingalign=2048 -compressionformats=Oodle -compresslevel=4 -compressmethod=Kraken   -cryptokeys="C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Cooked\Windows\HSHVacancy\Metadata\Crypto.json" -compressionMinBytesSaved=1024 -compressionMinPercentSaved=5 -WriteBackMetadataToAssetRegistry=Disabled
@@ -1547,8 +1558,8 @@ LogIoStore: Display: Using command list file: 'C:\Users\micha\AppData\Roaming\Un
 LogIoStore: Display: Selected Oodle level 4 (Normal) from command line for shaders
 LogZenServiceInstance: Display: Unreal Zen Storage Server HTTP service at [::1]:8558 status: OK!.
 LogZenStore: Display: Establishing oplog HSHVacancy.099ab4d7 / Windows
-LogIoStore: Display: Fetched 8913 oplog items from Zen in 1.12 seconds
-LogIoStore: Display: Parsed 8913 oplog items 0.03 seconds, 17753 chunks
+LogIoStore: Display: Fetched 8913 oplog items from Zen in 0.22 seconds
+LogIoStore: Display: Parsed 8913 oplog items 0.03 seconds, 17754 chunks
 LogIoStore: Display: Loaded 15012 chunk hashes from Zen in 0.03 seconds, 15012 hashes updated in 0.00 seconds
 LogIoStore: Display: Searching for cooked assets in folder 'C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Cooked\Windows'
 LogIoStore: Display: Found '8' files
@@ -1569,13 +1580,13 @@ LogIoStore: Display: Processing redirects...
 LogIoStore: Display: Creating disk layout...
 LogIoStore: Display: Ordered 8911 packages using fallback bundle order
 LogIoStore: Display: Serializing container(s)...
-LogIoStore: Display: Writing chunks 9756/16848... [8131 compressed] [5729 compression tasks] [Physical: 3103 MiB, Virtual: 5773 MiB]
-LogIoStore: Display: Writing chunks 16637/16848... [14824 compressed] [25 compression tasks] [Physical: 1745 MiB, Virtual: 3830 MiB]
-LogIoStore: Display: Writing and compressing took 4.23 seconds, writes to disk took 1.73 seconds for 1,970,933,040 bytes @ 1,139,371,052 bytes per second.
+LogIoStore: Display: Writing chunks 9756/16848... [8131 compressed] [6939 compression tasks] [Physical: 3060 MiB, Virtual: 5741 MiB]
+LogIoStore: Display: Writing chunks 15295/16848... [13494 compressed] [31 compression tasks] [Physical: 1792 MiB, Virtual: 3844 MiB]
+LogIoStore: Display: Writing and compressing took 4.57 seconds, writes to disk took 1.83 seconds for 1,970,935,856 bytes @ 1,079,536,528 bytes per second.
 LogIoStore: Display: global: Found perfect hashmap for 1 items.
 LogIoStore: Display: HSHVacancy-Windows: Found perfect hashmap for 16847 items.
-LogIoStore: Display: Finalize took 0.0 seconds for 2 writers to write 2,965,657 bytes, 93,254,961 bytes per second
-LogIoStore: Display: Writing tocs... [Physical: 1733 MiB, Virtual: 3784 MiB]
+LogIoStore: Display: Finalize took 0.0 seconds for 2 writers to write 2,965,657 bytes, 85,735,426 bytes per second
+LogIoStore: Display: Writing tocs... [Physical: 1779 MiB, Virtual: 3808 MiB]
 LogIoStore: Display: 15,012 / 16,848 hashes were loaded from the hash database, by type:
 LogIoStore: Display:     ExportBundleData           8,911
 LogIoStore: Display:     BulkData                   6,101
@@ -1587,8 +1598,8 @@ LogIoStore: Display:     ContainerHeader            0 / 1
 LogIoStore: Display:     ShaderCodeLibrary          0 / 4
 LogIoStore: Display:     ShaderCode                 0 / 1,830
 LogIoStore: Display: Source bytes read:
-LogIoStore: Display:     Zen:                      6,929,477,492
-LogIoStore: Display:         ExportBundleData       4,125,720,945 bytes over 8,911 reads
+LogIoStore: Display:     Zen:                      6,929,477,495
+LogIoStore: Display:         ExportBundleData       4,125,720,948 bytes over 8,911 reads
 LogIoStore: Display:         BulkData               2,803,756,547 bytes over 6,101 reads
 LogIoStore: Display:     Loose File:                           0
 LogIoStore: Display:     Memory:                     192,941,646
@@ -1602,13 +1613,13 @@ LogIoStore: Display:
 LogIoStore: Display: Container                                               Flags      Chunk(s) #       TOC (KiB)       Raw Size (MiB)           Size (MiB)
 LogIoStore: Display: ----------------------------------------------------------------------------------------------------------------------------------------------
 LogIoStore: Display: global                                              -/-/-/-/-               1            0.72                 2.76                 2.76 -
-LogIoStore: Display: HSHVacancy-Windows                                  C/-/-/I/-           16847         2895.43              6712.59              1876.87 (72.04% Oodle)
+LogIoStore: Display: HSHVacancy-Windows                                  C/-/-/I/-           16847         2895.43              6712.60              1876.87 (72.04% Oodle)
 LogIoStore: Display: ----------------------------------------------------------------------------------------------------------------------------------------------
 LogIoStore: Display: Total                                                                   16848         2896.15              6715.36              1879.63
 LogIoStore: Display:
 LogIoStore: Display: ** Flags: (C)ompressed / (E)ncrypted / (S)igned) / (I)ndexed) / (O)nDemand **
 LogIoStore: Display:
-LogIoStore: Display: Compression block padding:    11.73 MiB
+LogIoStore: Display: Compression block padding:    11.74 MiB
 LogIoStore: Display:
 LogIoStore: Display: Container Directory Index
 LogIoStore: Display: ==========================
@@ -1650,10 +1661,10 @@ LogIoStore: Display: Output:     1422 Packages without imports
 LogIoStore: Display: Output:        0 Public runtime script objects
 LogIoStore: Display: Output:     2.76 MB InitialLoadData
 LogIoStore: Display:
-LogPakFile: Display: UnrealPak executed in 6.040817 seconds
-Took 6.24s to run UnrealPak.exe, ExitCode=0
-SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak_CreateIoStoreContainers-2026.01.08-10.15.31.txt
-SafeCopyFile C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Logs\UnrealPak.log C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak_CreateIoStoreContainers-2026.01.08-10.15.31.txt
+LogPakFile: Display: UnrealPak executed in 5.492111 seconds
+Took 5.67s to run UnrealPak.exe, ExitCode=0
+SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak_CreateIoStoreContainers-2026.01.19-07.27.55.txt
+SafeCopyFile C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\Logs\UnrealPak.log C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\UnrealPak_CreateIoStoreContainers-2026.01.19-07.27.55.txt
 DumpManifest: C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\FinalCopyWin64_UFSFiles.txt, NumItems: 16732
 SafeWriteAllLines C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\FinalCopyWin64_UFSFiles.txt
 DumpManifest: C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\FinalCopyWin64_NonUFSFiles.txt, NumItems: 35
@@ -1733,7 +1744,7 @@ SafeDeleteFile C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\StagedB
 SafeDeleteFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\Manifest_DebugFiles_Win64.txt
 SafeWriteAllLines C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\Manifest_DebugFiles_Win64.txt
 SafeCopyFile C:\Users\micha\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.6\Manifest_DebugFiles_Win64.txt C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\StagedBuilds\Windows\Manifest_DebugFiles_Win64.txt
-Stage command time: 12.47 s
+Stage command time: 11.59 s
 ********** STAGE COMMAND COMPLETED **********
 SafeFileExists C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject=True
 Deployment Context **************
@@ -1873,12 +1884,12 @@ SafeCopyFile C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\StagedBui
 SafeCreateDirectory C:\steambuild\Windows\Engine\Plugins\NNE\NNERuntimeORT\Binaries\ThirdParty\Onnxruntime\Win64
 SafeCopyFile C:\Users\micha\Documents\Unreal Projects\HSHVacancy\Saved\StagedBuilds\Windows\HSHVacancy\Plugins\SteamCorePro\Source\ThirdParty\SteamLibrary\redistributable_bin\win64\steam_api64.dll C:\steambuild\Windows\HSHVacancy\Plugins\SteamCorePro\Source\ThirdParty\SteamLibrary\redistributable_bin\win64\steam_api64.dll
 SafeCreateDirectory C:\steambuild\Windows\HSHVacancy\Plugins\SteamCorePro\Source\ThirdParty\SteamLibrary\redistributable_bin\win64
-Archive command time: 0.74 s
+Archive command time: 0.90 s
 ********** ARCHIVE COMMAND COMPLETED **********
 SafeFileExists C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject=True
 SafeFileExists C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject=True
 SafeFileExists C:\Users\micha\Documents\Unreal Projects\HSHVacancy\HSHVacancy.uproject=True
-BuildCookRun time: 122.23 s
+BuildCookRun time: 99.42 s
 BUILD SUCCESSFUL
-AutomationTool executed for 0h 2m 3s
+AutomationTool executed for 0h 1m 40s
 AutomationTool exiting with ExitCode=0 (Success)

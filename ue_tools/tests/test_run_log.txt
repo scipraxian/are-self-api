@@ -1,0 +1,1585 @@
+﻿Log file open, 01/19/26 07:25:06
+LogWindows: Failed to load 'aqProf.dll' (GetLastError=126)
+LogWindows: File 'aqProf.dll' does not exist
+LogProfilingDebugging: Loading WinPixEventRuntime.dll for PIX profiling (from ../../../Engine/Binaries/ThirdParty/Windows/WinPixEventRuntime/x64).
+LogWindows: Failed to load 'VtuneApi.dll' (GetLastError=126)
+LogWindows: File 'VtuneApi.dll' does not exist
+LogWindows: Failed to load 'VtuneApi32e.dll' (GetLastError=126)
+LogWindows: File 'VtuneApi32e.dll' does not exist
+LogWindows: Custom abort handler registered for crash reporting.
+LogCore: Display: UTS: The Unreal Trace Server binary is not available ('../../../Engine/Binaries/Win64/UnrealTraceServer.exe')
+LogTrace: Initializing trace...
+LogTrace: Finished trace initialization.
+LogCsvProfiler: Display: Metadata set : platform="Windows"
+LogCsvProfiler: Display: Metadata set : config="Development"
+LogCsvProfiler: Display: Metadata set : buildversion="++UE5+Release-5.6-CL-44394996"
+LogCsvProfiler: Display: Metadata set : engineversion="5.6.1-44394996+++UE5+Release-5.6"
+LogCsvProfiler: Display: Metadata set : os="Windows 11 (24H2) [10.0.26100.7462] "
+LogCsvProfiler: Display: Metadata set : cpu="AuthenticAMD|AMD Ryzen 9 7950X3D 16-Core Processor"
+LogCsvProfiler: Display: Metadata set : pgoenabled="0"
+LogCsvProfiler: Display: Metadata set : pgoprofilingenabled="0"
+LogCsvProfiler: Display: Metadata set : ltoenabled="0"
+LogCsvProfiler: Display: Metadata set : asan="0"
+LogCsvProfiler: Display: Metadata set : commandline="" HSHVacancy -log -windowed -resX=1280 -resY=720""
+LogCsvProfiler: Display: Metadata set : loginid="cfbf58484b72c64c27c90e93036de0cf"
+LogCsvProfiler: Display: Metadata set : llm="0"
+LogPakFile: Initializing PakPlatformFile
+LogIoDispatcher: Display: Reading toc: ../../../HSHVacancy/Content/Paks/global.utoc
+LogIoDispatcher: Display: Toc loaded : ../../../HSHVacancy/Content/Paks/global.utoc, Id=ffffffffffffffff, Order=0, EntryCount=1, SignatureHash=0000000000000000000000000000000000000000
+LogIoDispatcher: Display: Mounting container '../../../HSHVacancy/Content/Paks/global.utoc' in location slot 0
+LogPakFile: Display: Initialized I/O dispatcher file backend. Mounted the global container: ../../../HSHVacancy/Content/Paks/global.utoc
+LogPakFile: Display: Found Pak file ../../../HSHVacancy/Content/Paks/HSHVacancy-Windows.pak attempting to mount.
+LogPakFile: Display: Mounting pak file ../../../HSHVacancy/Content/Paks/HSHVacancy-Windows.pak.
+LogIoDispatcher: Display: Reading toc: ../../../HSHVacancy/Content/Paks/HSHVacancy-Windows.utoc
+LogIoDispatcher: Display: Toc loaded : ../../../HSHVacancy/Content/Paks/HSHVacancy-Windows.utoc, Id=9ae8fd59b9ab1019, Order=4, EntryCount=16847, SignatureHash=0000000000000000000000000000000000000000
+LogIoDispatcher: Display: Mounting container '../../../HSHVacancy/Content/Paks/HSHVacancy-Windows.utoc' in location slot 0
+LogPakFile: Display: Mounted IoStore container "../../../HSHVacancy/Content/Paks/HSHVacancy-Windows.utoc"
+LogFilePackageStore: Mounting container: Id=9ae8fd59b9ab1019, Order=4, NumPackages=8911
+LogPakFile: Display: Mounted Pak file '../../../HSHVacancy/Content/Paks/HSHVacancy-Windows.pak', mount point: '../../../'
+LogStats: Stats thread started at 0.262107
+LogAssetRegistry: Premade AssetRegistry loaded from '../../../HSHVacancy/AssetRegistry.bin'
+LogCsvProfiler: Display: Metadata set : systemresolution.resx="1280"
+LogCsvProfiler: Display: Metadata set : systemresolution.resy="720"
+LogICUInternationalization: OS requested locale 'en-US' is not supported. Using the OS requested language of 'en-US' as the locale.
+LogICUInternationalization: ICU TimeZone Detection - Raw Offset: -8:00, Platform Override: ''
+LogInit: Session CrashGUID >====================================================
+         Session CrashGUID >   UECC-Windows-D16DD51E460C68261330EFAF0BF9E5AB
+         Session CrashGUID >====================================================
+LogConfig: No local boot hotfix file found at: [../../../HSHVacancy/Saved/PersistentDownloadDir/HotfixForNextBoot.txt]
+LogAudio: Display: Pre-Initializing Audio Device Manager...
+LogAudio: Display: AudioInfo: 'OPUS' Registered
+LogAudioDebug: Display: Lib vorbis DLL was dynamically loaded.
+LogAudio: Display: AudioInfo: 'OGG' Registered
+LogAudio: Display: AudioInfo: 'ADPCM' Registered
+LogAudio: Display: AudioInfo: 'PCM' Registered
+LogAudio: Display: AudioInfo: 'BINKA' Registered
+LogAudio: Display: AudioInfo: 'RADA' Registered
+LogAudio: Display: Audio Device Manager Pre-Initialized
+LogPluginManager: Mounting Engine plugin Paper2D
+LogPluginManager: Mounting Engine plugin AISupport
+LogPluginManager: Mounting Engine plugin EnvironmentQueryEditor
+LogPluginManager: Mounting Engine plugin ACLPlugin
+LogPluginManager: Mounting Engine plugin AnimationData
+LogPluginManager: Mounting Engine plugin ControlRigModules
+LogPluginManager: Mounting Engine plugin ControlRigSpline
+LogPluginManager: Mounting Engine plugin ControlRig
+LogPluginManager: Mounting Engine plugin DeformerGraph
+LogPluginManager: Mounting Engine plugin IKRig
+LogPluginManager: Mounting Engine plugin RigLogic
+LogPluginManager: Mounting Engine plugin SkeletalMeshModelingTools
+LogPluginManager: Mounting Engine plugin TweeningUtils
+LogPluginManager: Mounting Engine plugin BlueprintFileUtils
+LogPluginManager: Mounting Engine plugin Bridge
+LogPluginManager: Mounting Engine plugin CameraShakePreviewer
+LogPluginManager: Mounting Engine plugin EngineCameras
+LogPluginManager: Mounting Engine plugin GameplayCameras
+LogPluginManager: Mounting Engine plugin ChaosClothAsset
+LogPluginManager: Mounting Engine plugin ChaosCloth
+LogPluginManager: Mounting Engine plugin ChaosVD
+LogPluginManager: Mounting Engine plugin OpenColorIO
+LogPluginManager: Mounting Engine plugin OodleNetwork
+LogPluginManager: Mounting Engine plugin AnimationSharing
+LogPluginManager: Mounting Engine plugin ConcertMain
+LogPluginManager: Mounting Engine plugin ConcertSyncClient
+LogPluginManager: Mounting Engine plugin ConcertSyncCore
+LogPluginManager: Mounting Engine plugin ConcertSharedSlate
+LogPluginManager: Mounting Engine plugin DumpGPUServices
+LogPluginManager: Mounting Engine plugin NamingTokens
+LogPluginManager: Mounting Engine plugin PluginUtils
+LogPluginManager: Mounting Engine plugin RenderDocPlugin
+LogPluginManager: Mounting Engine plugin UObjectPlugin
+LogPluginManager: Mounting Engine plugin AssetManagerEditor
+LogPluginManager: Mounting Engine plugin BlueprintHeaderView
+LogPluginManager: Mounting Engine plugin BlueprintMaterialTextureNodes
+LogPluginManager: Mounting Engine plugin ColorGrading
+LogPluginManager: Mounting Engine plugin ConsoleVariables
+LogPluginManager: Mounting Engine plugin ContentBrowserAssetDataSource
+LogPluginManager: Mounting Engine plugin CurveEditorTools
+LogPluginManager: Mounting Engine plugin DataValidation
+LogPluginManager: Mounting Engine plugin EditorScriptingUtilities
+LogPluginManager: Mounting Engine plugin EngineAssetDefinitions
+LogPluginManager: Mounting Engine plugin FacialAnimation
+LogPluginManager: Mounting Engine plugin GameplayTagsEditor
+LogPluginManager: Mounting Engine plugin GeometryMode
+LogPluginManager: Mounting Engine plugin ModelingToolsEditorMode
+LogPluginManager: Mounting Engine plugin LightMixer
+LogPluginManager: Mounting Engine plugin ObjectMixer
+LogPluginManager: Mounting Engine plugin SequencerAnimTools
+LogPluginManager: Mounting Engine plugin SpeedTreeImporter
+LogPluginManager: Mounting Engine plugin UMGWidgetPreview
+LogPluginManager: Mounting Engine plugin UVEditor
+LogPluginManager: Mounting Engine plugin EnhancedInput
+LogPluginManager: Mounting Engine plugin DatasmithContent
+LogPluginManager: Mounting Engine plugin GLTFExporter
+LogPluginManager: Mounting Engine plugin VariantManagerContent
+LogPluginManager: Mounting Engine plugin VariantManager
+LogPluginManager: Mounting Engine plugin AnimToTexture
+LogPluginManager: Mounting Engine plugin AutomationUtils
+LogPluginManager: Mounting Engine plugin BackChannel
+LogPluginManager: Mounting Engine plugin BlueprintStats
+LogPluginManager: Mounting Engine plugin ChaosCaching
+LogPluginManager: Mounting Engine plugin ChaosEditor
+LogPluginManager: Mounting Engine plugin ChaosNiagara
+LogPluginManager: Mounting Engine plugin ChaosSolverPlugin
+LogPluginManager: Mounting Engine plugin ChaosUserDataPT
+LogPluginManager: Mounting Engine plugin CharacterAI
+LogPluginManager: Mounting Engine plugin CompositeCore
+LogPluginManager: Mounting Engine plugin Dataflow
+LogPluginManager: Mounting Engine plugin EditorDataStorageFeatures
+LogPluginManager: Mounting Engine plugin EditorDataStorage
+LogPluginManager: Mounting Engine plugin Fracture
+LogPluginManager: Mounting Engine plugin FullBodyIK
+LogPluginManager: Mounting Engine plugin GameplayBehaviors
+LogPluginManager: Mounting Engine plugin GeometryCollectionPlugin
+LogPluginManager: Mounting Engine plugin GeometryDataflow
+LogPluginManager: Mounting Engine plugin Landmass
+LogPluginManager: Mounting Engine plugin LevelSequenceNavigatorBridge
+LogPluginManager: Mounting Engine plugin LocalizableMessage
+LogPluginManager: Mounting Engine plugin NFORDenoise
+LogPluginManager: Mounting Engine plugin PlatformCrypto
+LogPluginManager: Mounting Engine plugin PythonScriptPlugin
+LogPluginManager: Mounting Engine plugin RuntimeTelemetry
+LogPluginManager: Mounting Engine plugin TextToSpeech
+LogPluginManager: Mounting Engine plugin ToolPresets
+LogPluginManager: Mounting Engine plugin Volumetrics
+LogPluginManager: Mounting Engine plugin CascadeToNiagaraConverter
+LogPluginManager: Mounting Engine plugin Cascade
+LogPluginManager: Mounting Engine plugin NiagaraMRQ
+LogPluginManager: Mounting Engine plugin NiagaraSimCaching
+LogPluginManager: Mounting Engine plugin Niagara
+LogPluginManager: Mounting Engine plugin Fab
+LogPluginManager: Mounting Engine plugin AlembicHairImporter
+LogPluginManager: Mounting Engine plugin AlembicImporter
+LogPluginManager: Mounting Engine plugin InterchangeAssets
+LogPluginManager: Mounting Engine plugin InterchangeEditor
+LogPluginManager: Mounting Engine plugin Interchange
+LogPluginManager: Mounting Engine plugin JsonBlueprintUtilities
+LogPluginManager: Mounting Engine plugin AppAndGamepadUtils
+LogPluginManager: Mounting Engine plugin BlueprintAssist
+LogPluginManager: Mounting Engine plugin CheckCompileBP
+LogPluginManager: Mounting Engine plugin DTDataTable
+LogPluginManager: Mounting Engine plugin ElectronicNodes
+LogPluginManager: Mounting Engine plugin Flocks
+LogPluginManager: Mounting Engine plugin RealTimeImport
+LogPluginManager: Mounting Engine plugin SimplePathTracer
+LogPluginManager: Mounting Engine plugin AvfMedia
+LogPluginManager: Mounting Engine plugin ImgMedia
+LogPluginManager: Mounting Engine plugin MediaCompositing
+LogPluginManager: Mounting Engine plugin MediaPlate
+LogPluginManager: Mounting Engine plugin WebMMedia
+LogPluginManager: Mounting Engine plugin WmfMedia
+LogPluginManager: Mounting Engine plugin MeshPainting
+LogPluginManager: Mounting Engine plugin TcpMessaging
+LogPluginManager: Mounting Engine plugin UdpMessaging
+LogPluginManager: Mounting Engine plugin MetaHumanSDK
+LogPluginManager: Mounting Engine plugin ActorSequence
+LogPluginManager: Mounting Engine plugin LevelSequenceEditor
+LogPluginManager: Mounting Engine plugin MoviePipelineMaskRenderPass
+LogPluginManager: Mounting Engine plugin MovieRenderPipeline
+LogPluginManager: Mounting Engine plugin MovieSceneTextTrack
+LogPluginManager: Mounting Engine plugin SequencerScripting
+LogPluginManager: Mounting Engine plugin TemplateSequence
+LogPluginManager: Mounting Engine plugin NNEDenoiser
+LogPluginManager: Mounting Engine plugin NNERuntimeORT
+LogPluginManager: Mounting Engine plugin OnlineBase
+LogPluginManager: Mounting Engine plugin OnlineServices
+LogPluginManager: Mounting Engine plugin OnlineSubsystemNull
+LogPluginManager: Mounting Engine plugin OnlineSubsystemUtils
+LogPluginManager: Mounting Engine plugin OnlineSubsystem
+LogPluginManager: Mounting Engine plugin LauncherChunkInstaller
+LogPluginManager: Mounting Engine plugin ActorLayerUtilities
+LogPluginManager: Mounting Engine plugin AndroidFileServer
+LogPluginManager: Mounting Engine plugin AndroidPermission
+LogPluginManager: Mounting Engine plugin AppleImageUtils
+LogPluginManager: Mounting Engine plugin ArchVisCharacter
+LogPluginManager: Mounting Engine plugin AssetTags
+LogPluginManager: Mounting Engine plugin AudioCapture
+LogPluginManager: Mounting Engine plugin AudioSynesthesia
+LogPluginManager: Mounting Engine plugin AudioWidgets
+LogPluginManager: Mounting Engine plugin CableComponent
+LogPluginManager: Mounting Engine plugin ChunkDownloader
+LogPluginManager: Mounting Engine plugin CommonUI
+LogPluginManager: Mounting Engine plugin ComputeFramework
+LogPluginManager: Mounting Engine plugin CustomMeshComponent
+LogPluginManager: Mounting Engine plugin DataRegistry
+LogPluginManager: Mounting Engine plugin SQLiteCore
+LogPluginManager: Mounting Engine plugin ExampleDeviceProfileSelector
+LogPluginManager: Mounting Engine plugin GameplayAbilities
+LogPluginManager: Mounting Engine plugin GeometryCache
+LogPluginManager: Mounting Engine plugin GeometryProcessing
+LogPluginManager: Mounting Engine plugin GooglePAD
+LogPluginManager: Mounting Engine plugin HairStrands
+LogPluginManager: Mounting Engine plugin InputDebugging
+LogPluginManager: Mounting Engine plugin LocationServicesBPLibrary
+LogPluginManager: Mounting Engine plugin Metasound
+LogPluginManager: Mounting Engine plugin MobilePatchingUtils
+LogPluginManager: Mounting Engine plugin MsQuic
+LogPluginManager: Mounting Engine plugin GeForceNOWWrapper
+LogPluginManager: Mounting Engine plugin PreLoadScreenMoviePlayer
+LogPluginManager: Mounting Engine plugin ProceduralMeshComponent
+LogPluginManager: Mounting Engine plugin PropertyAccessEditor
+LogPluginManager: Mounting Engine plugin PropertyBindingUtils
+LogPluginManager: Mounting Engine plugin ResonanceAudio
+LogPluginManager: Mounting Engine plugin RigVM
+LogPluginManager: Mounting Engine plugin SignificanceManager
+LogPluginManager: Mounting Engine plugin SoundFields
+LogPluginManager: Mounting Engine plugin StateTree
+LogPluginManager: Mounting Engine plugin Synthesis
+LogPluginManager: Mounting Engine plugin WaveTable
+LogPluginManager: Mounting Engine plugin WebMMoviePlayer
+LogPluginManager: Mounting Engine plugin WindowsDeviceProfileSelector
+LogPluginManager: Mounting Engine plugin WindowsMoviePlayer
+LogPluginManager: Mounting Engine plugin XInputDevice
+LogPluginManager: Mounting Engine plugin InterchangeTests
+LogPluginManager: Mounting Engine plugin TraceUtilities
+LogPluginManager: Mounting Engine plugin CameraCalibrationCore
+LogPluginManager: Mounting Engine plugin Takes
+LogPluginManager: Mounting Engine plugin WorldMetrics
+LogPluginManager: Mounting Project plugin StatementEditor
+LogPluginManager: Mounting Project plugin SteamCorePro
+LogPluginManager: Mounting Project plugin VisualStudioTools
+LogGeForceNow: GeForceNow SDK initialized: 1
+LogGeForceNow: GeForceNow IsRunningInCloud 0
+LogConfig: Applying CVar settings from Section [/Script/RenderDocPlugin.RenderDocPluginSettings] File [Engine]
+RenderDocPlugin: Display: RenderDoc plugin will not be loaded. Use '-AttachRenderDoc' on the cmd line or enable 'renderdoc.AutoAttach' in the plugin settings.
+LogConfig: Applying CVar settings from Section [/Script/CompositeCore.CompositeCorePluginSettings] File [Engine]
+LogNFORDenoise: NFORDenoise function starting up
+LogStudioTelemetry: Started StudioTelemetry Session
+LogInit: Using libcurl 8.12.1
+LogInit:  - built for Windows
+LogInit:  - supports SSL with OpenSSL/1.1.1t
+LogInit:  - supports HTTP deflate (compression) using libz 1.3
+LogInit:  - other features:
+LogInit:      CURL_VERSION_SSL
+LogInit:      CURL_VERSION_LIBZ
+LogInit:      CURL_VERSION_IPV6
+LogInit:      CURL_VERSION_ASYNCHDNS
+LogInit:      CURL_VERSION_LARGEFILE
+LogInit:      CURL_VERSION_TLSAUTH_SRP
+LogInit:      CURL_VERSION_HTTP2
+LogInit:  CurlRequestOptions (configurable via config and command line):
+LogInit:  - bVerifyPeer = true  - Libcurl will verify peer certificate
+LogInit:  - bUseHttpProxy = false  - Libcurl will NOT use HTTP proxy
+LogInit:  - bDontReuseConnections = false  - Libcurl will reuse connections
+LogInit:  - MaxHostConnections = 16  - Libcurl will limit the number of connections to a host
+LogInit:  - LocalHostAddr = Default
+LogInit:  - BufferSize = 65536
+LogInit: CreateHttpThread using FCurlMultiPollEventLoopHttpThread
+LogInit: Creating http thread with maximum 256 concurrent requests
+LogTemp: net.MinHandshakeVersion: 0
+LogTemp: net.CurrentHandshakeVersion: 0
+LogOnline: OSS: Created online subsystem instance for: SteamCore
+LogOnline: OSS: TryLoadSubsystemAndSetDefault: Loaded subsystem for type [SteamCore]
+LogInit: ExecutableName: HSHVacancy.exe
+LogInit: Build: ++UE5+Release-5.6-CL-44394996
+LogInit: Platform=Windows
+LogInit: MachineId=cfbf58484b72c64c27c90e93036de0cf
+LogInit: DeviceId=
+LogInit: Engine Version: 5.6.1-44394996+++UE5+Release-5.6
+LogInit: Compatible Engine Version: 5.6.0-43139311+++UE5+Release-5.6
+LogInit: Net CL: 43139311
+LogInit: OS: Windows 11 (24H2) [10.0.26100.7462] (), CPU: AMD Ryzen 9 7950X3D 16-Core Processor          , GPU: NVIDIA GeForce RTX 4090
+LogInit: Compiled (64-bit): Jul 28 2025 21:02:46
+LogInit: Architecture: x64
+LogInit: Compiled with Visual C++: 19.38.33130.00
+LogInit: Build Configuration: Development
+LogInit: Branch Name: ++UE5+Release-5.6
+LogInit: Command Line: -log -windowed -resX=1280 -resY=720
+LogInit: Base Directory: C:/steambuild/ReleaseTest/HSHVacancy/Binaries/Win64/
+LogInit: Allocator: Binned2
+LogInit: Installed Engine Build: 0
+LogInit: This binary is optimized with LTO: no, PGO: no, instrumented for PGO data collection: no
+LogDevObjectVersion: Number of dev versions registered: 42
+LogDevObjectVersion:   Dev-Blueprints (B0D832E4-1F89-4F0D-ACCF-7EB736FD4AA2): 10
+LogDevObjectVersion:   Dev-Build (E1C64328-A22C-4D53-A36C-8E866417BD8C): 0
+LogDevObjectVersion:   Dev-Core (375EC13C-06E4-48FB-B500-84F0262A717E): 4
+LogDevObjectVersion:   Dev-Editor (E4B068ED-F494-42E9-A231-DA0B2E46BB41): 40
+LogDevObjectVersion:   Dev-Framework (CFFC743F-43B0-4480-9391-14DF171D2073): 37
+LogDevObjectVersion:   Dev-Mobile (B02B49B5-BB20-44E9-A304-32B752E40360): 3
+LogDevObjectVersion:   Dev-Networking (A4E4105C-59A1-49B5-A7C5-40C4547EDFEE): 0
+LogDevObjectVersion:   Dev-Online (39C831C9-5AE6-47DC-9A44-9C173E1C8E7C): 0
+LogDevObjectVersion:   Dev-Physics (78F01B33-EBEA-4F98-B9B4-84EACCB95AA2): 20
+LogDevObjectVersion:   Dev-Platform (6631380F-2D4D-43E0-8009-CF276956A95A): 0
+LogDevObjectVersion:   Dev-Rendering (12F88B9F-8875-4AFC-A67C-D90C383ABD29): 49
+LogDevObjectVersion:   Dev-Sequencer (7B5AE74C-D270-4C10-A958-57980B212A5A): 13
+LogDevObjectVersion:   Dev-VR (D7296918-1DD6-4BDD-9DE2-64A83CC13884): 3
+LogDevObjectVersion:   Dev-LoadTimes (C2A15278-BFE7-4AFE-6C17-90FF531DF755): 1
+LogDevObjectVersion:   Private-Geometry (6EACA3D4-40EC-4CC1-B786-8BED09428FC5): 3
+LogDevObjectVersion:   Dev-AnimPhys (29E575DD-E0A3-4627-9D10-D276232CDCEA): 17
+LogDevObjectVersion:   Dev-Anim (AF43A65D-7FD3-4947-9873-3E8ED9C1BB05): 15
+LogDevObjectVersion:   Dev-ReflectionCapture (6B266CEC-1EC7-4B8F-A30B-E4D90942FC07): 1
+LogDevObjectVersion:   Dev-Automation (0DF73D61-A23F-47EA-B727-89E90C41499A): 1
+LogDevObjectVersion:   FortniteMain (601D1886-AC64-4F84-AA16-D3DE0DEAC7D6): 207
+LogDevObjectVersion:   FortniteValkyrie (8DBC2C5B-54A7-43E0-A768-FCBB7DA29060): 8
+LogDevObjectVersion:   FortniteSeason (5B4C06B7-2463-4AF8-805B-BF70CDF5D0DD): 13
+LogDevObjectVersion:   FortniteRelease (E7086368-6B23-4C58-8439-1B7016265E91): 17
+LogDevObjectVersion:   Dev-Enterprise (9DFFBCD6-494F-0158-E221-12823C92A888): 11
+LogDevObjectVersion:   Dev-Niagara (F2AED0AC-9AFE-416F-8664-AA7FFA26D6FC): 1
+LogDevObjectVersion:   Dev-Destruction (174F1F0B-B4C6-45A5-B13F-2EE8D0FB917D): 10
+LogDevObjectVersion:   Dev-Physics-Ext (35F94A83-E258-406C-A318-09F59610247C): 41
+LogDevObjectVersion:   Dev-PhysicsMaterial-Chaos (B68FC16E-8B1B-42E2-B453-215C058844FE): 1
+LogDevObjectVersion:   Dev-CineCamera (B2E18506-4273-CFC2-A54E-F4BB758BBA07): 1
+LogDevObjectVersion:   Dev-VirtualProduction (64F58936-FD1B-42BA-BA96-7289D5D0FA4E): 1
+LogDevObjectVersion:   UE5-Main (697DD581-E64F-41AB-AA4A-51ECBEB7B628): 121
+LogDevObjectVersion:   UE5-Release (D89B5E42-24BD-4D46-8412-ACA8DF641779): 56
+LogDevObjectVersion:   UE5-SpecialProject (59DA5D52-1232-4948-B878-597870B8E98B): 9
+LogDevObjectVersion:   Dev-MediaFramework (6F0ED827-A609-4895-9C91-998D90180EA4): 2
+LogDevObjectVersion:   Dev-NaniteResearch (30D58BE3-95EA-4282-A6E3-B159D8EBB06A): 1
+LogDevObjectVersion:   Dev-ComputeFramework (6304A3E7-0059-4F59-8CFC-21BD7721FD4E): 0
+LogDevObjectVersion:   Dev-RigVM (DC49959B-53C0-4DE7-9156-EA885E7C5D39): 18
+LogDevObjectVersion:   Dev-ControlRig (A7820CFB-20A7-4359-8C54-2C149623CF50): 38
+LogDevObjectVersion:   Dev-Optimus (93EDE1AA-10CA-7375-4DF9-8A2849B157A0): 14
+LogDevObjectVersion:   Dev-IKRig (F6DFBB78-BB50-A0E4-4018-B84D60CBAF23): 6
+LogDevObjectVersion:   LensFileVersion (8652A554-966A-466C-9FD7-1C6DD61B1ADB): 1
+LogDevObjectVersion:   FN-Main-InterchangePipeline (B69D2E47-E2A8-4003-BF77-18A492C4D899): 1
+LogInit: Presizing for max 2097152 objects, including 1 objects not considered by GC.
+LogOnlineSubsystemSteamCore: Warning: [FOnlineAsyncTaskManagerSteamCore::OnUserStatsReceived] Failed to obtain steam user stats, user: [HSH] ☠️GeneralDread [0x1100001009E466E] has no stats entries
+LogInit: Object subsystem initialized
+LogConfig: Set CVar [[con.DebugEarlyDefault:1]]
+LogConfig: CVar [[con.DebugLateDefault:1]] deferred - dummy variable created
+LogConfig: CVar [[con.DebugLateCheat:1]] deferred - dummy variable created
+LogConfig: CVar [[LogNamedEventFilters:Frame *]] deferred - dummy variable created
+LogConfig: Set CVar [[r.setres:1280x720]]
+LogConfig: CVar [[framepro.ScopeMinTimeMicroseconds:10]] deferred - dummy variable created
+LogConfig: Set CVar [[fx.NiagaraAllowRuntimeScalabilityChanges:1]]
+LogConfig: CVar [[QualityLevelMapping:high]] deferred - dummy variable created
+LogConfig: CVar [[r.Occlusion.SingleRHIThreadStall:1]] deferred - dummy variable created
+LogConfig: Set CVar [[r.Nanite.Streaming.ReservedResources:1]]
+LogConfig: Set CVar [[D3D12.Bindless.ResourceDescriptorHeapSize:32768]]
+LogConfig: Set CVar [[D3D12.Bindless.SamplerDescriptorHeapSize:2048]]
+LogConfig: Set CVar [[r.PSOPrecache.GlobalShaders:1]]
+LogConfig: Set CVar [[r.VRS.EnableSoftware:1]]
+LogConfig: Set CVar [[r.VRS.ContrastAdaptiveShading:1]]
+LogConfig: Set CVar [[r.ShaderPipelineCache.Enabled:1]]
+LogConfig: Set CVar [[r.Streaming.AmortizeCPUToGPUCopy:1]]
+[2026.01.19-15.25.07:374][  0]LogConfig: CVar [[con.DebugLateDefault:1]] deferred - dummy variable created
+[2026.01.19-15.25.07:377][  0]LogConfig: CVar [[con.DebugLateCheat:1]] deferred - dummy variable created
+[2026.01.19-15.25.07:377][  0]LogConfig: CVar [[LogNamedEventFilters:Frame *]] deferred - dummy variable created
+[2026.01.19-15.25.07:377][  0]LogConfig: CVar [[framepro.ScopeMinTimeMicroseconds:10]] deferred - dummy variable created
+[2026.01.19-15.25.07:377][  0]LogConfig: CVar [[QualityLevelMapping:high]] deferred - dummy variable created
+[2026.01.19-15.25.07:377][  0]LogConfig: CVar [[r.Occlusion.SingleRHIThreadStall:1]] deferred - dummy variable created
+[2026.01.19-15.25.07:378][  0]LogConfig: Applying CVar settings from Section [/Script/Engine.RendererSettings] File [Engine]
+[2026.01.19-15.25.07:378][  0]LogConfig: CVar [[VisualizeCalibrationColorMaterialPath:/Engine/EngineMaterials/PPM_DefaultCalibrationColor.PPM_DefaultCalibrationColor]] deferred - dummy variable created
+[2026.01.19-15.25.07:378][  0]LogConfig: CVar [[VisualizeCalibrationGrayscaleMaterialPath:/Engine/EngineMaterials/PPM_DefaultCalibrationGrayscale.PPM_DefaultCalibrationGrayscale]] deferred - dummy variable created
+[2026.01.19-15.25.07:378][  0]LogConfig: Set CVar [[r.GPUCrashDebugging:0]]
+[2026.01.19-15.25.07:378][  0]LogConfig: CVar [[MaxSkinBones:(Default=65536,PerPlatform=(("Mobile", 256)))]] deferred - dummy variable created
+[2026.01.19-15.25.07:378][  0]LogConfig: Set CVar [[r.Shaders.RemoveUnusedInterpolators:1]]
+[2026.01.19-15.25.07:378][  0]LogConfig: Set CVar [[r.Shadow.DetectVertexShaderLayerAtRuntime:1]]
+[2026.01.19-15.25.07:378][  0]LogConfig: CVar [[r.Mobile.EnableNoPrecomputedLightingCSMShader:1]] deferred - dummy variable created
+[2026.01.19-15.25.07:379][  0]LogConfig: Set CVar [[r.GenerateMeshDistanceFields:1]]
+[2026.01.19-15.25.07:379][  0]LogConfig: Set CVar [[r.DynamicGlobalIlluminationMethod:0]]
+[2026.01.19-15.25.07:379][  0]LogConfig: Set CVar [[r.ReflectionMethod:1]]
+[2026.01.19-15.25.07:379][  0]LogConfig: Set CVar [[r.SkinCache.CompileShaders:0]]
+[2026.01.19-15.25.07:379][  0]LogConfig: Set CVar [[r.RayTracing:0]]
+[2026.01.19-15.25.07:379][  0]LogConfig: Set CVar [[r.Shadow.Virtual.Enable:1]]
+[2026.01.19-15.25.07:379][  0]LogConfig: Set CVar [[r.DefaultFeature.AutoExposure.ExtendDefaultLuminanceRange:1]]
+[2026.01.19-15.25.07:379][  0]LogConfig: Set CVar [[r.DefaultFeature.LocalExposure.HighlightContrastScale:0.8]]
+[2026.01.19-15.25.07:379][  0]LogConfig: Set CVar [[r.DefaultFeature.LocalExposure.ShadowContrastScale:0.8]]
+[2026.01.19-15.25.07:379][  0]LogConfig: Set CVar [[r.Lumen.HardwareRayTracing:0]]
+[2026.01.19-15.25.07:380][  0]LogConfig: Set CVar [[r.SkinCache.DefaultBehavior:0]]
+[2026.01.19-15.25.07:380][  0]LogConfig: Set CVar [[r.Shadow.TranslucentPerObject.ProjectEnabled:1]]
+[2026.01.19-15.25.07:380][  0]LogConfig: Set CVar [[r.Mobile.EnableMovableSpotlightsShadow:1]]
+[2026.01.19-15.25.07:380][  0]LogConfig: Set CVar [[r.AntiAliasingMethod:4]]
+[2026.01.19-15.25.07:380][  0]LogConfig: Set CVar [[r.DefaultFeature.AutoExposure:0]]
+[2026.01.19-15.25.07:380][  0]LogConfig: Set CVar [[r.CustomDepth:3]]
+[2026.01.19-15.25.07:380][  0]LogConfig: Set CVar [[r.CustomDepthTemporalAAJitter:1]]
+[2026.01.19-15.25.07:380][  0]LogConfig: Set CVar [[r.Lumen.Reflections.HardwareRayTracing.Translucent.Refraction.EnableForProject:0]]
+[2026.01.19-15.25.07:380][  0]LogConfig: Set CVar [[r.PostProcessing.PropagateAlpha:1]]
+[2026.01.19-15.25.07:380][  0]LogConfig: CVar [[r.UseShaderCaching:1 ; Always]] deferred - dummy variable created
+[2026.01.19-15.25.07:381][  0]LogConfig: Set CVar [[r.PSOPrecaching:1 ; UAT / Prod Precaching On.]]
+[2026.01.19-15.25.07:381][  0]LogConfig: CVar [[r.UseShaderPredraw:1 ; UAT / Prod Predraw On.]] deferred - dummy variable created
+[2026.01.19-15.25.07:381][  0]LogConfig: Applying CVar settings from Section [/Script/Engine.RendererOverrideSettings] File [Engine]
+[2026.01.19-15.25.07:381][  0]LogConfig: Applying CVar settings from Section [/Script/Engine.StreamingSettings] File [Engine]
+[2026.01.19-15.25.07:381][  0]LogConfig: Set CVar [[s.MinBulkDataSizeForAsyncLoading:131072]]
+[2026.01.19-15.25.07:381][  0]LogConfig: Set CVar [[s.AsyncLoadingThreadEnabled:1]]
+[2026.01.19-15.25.07:381][  0]LogConfig: Set CVar [[s.EventDrivenLoaderEnabled:1]]
+[2026.01.19-15.25.07:381][  0]LogConfig: Set CVar [[s.WarnIfTimeLimitExceeded:0]]
+[2026.01.19-15.25.07:382][  0]LogConfig: Set CVar [[s.TimeLimitExceededMultiplier:1.5]]
+[2026.01.19-15.25.07:382][  0]LogConfig: Set CVar [[s.TimeLimitExceededMinTime:0.005]]
+[2026.01.19-15.25.07:382][  0]LogConfig: Set CVar [[s.UseBackgroundLevelStreaming:1]]
+[2026.01.19-15.25.07:382][  0]LogConfig: Set CVar [[s.PriorityAsyncLoadingExtraTime:15.0]]
+[2026.01.19-15.25.07:382][  0]LogConfig: Set CVar [[s.LevelStreamingActorsUpdateTimeLimit:5.0]]
+[2026.01.19-15.25.07:382][  0]LogConfig: Set CVar [[s.PriorityLevelStreamingActorsUpdateExtraTime:5.0]]
+[2026.01.19-15.25.07:382][  0]LogConfig: Set CVar [[s.LevelStreamingComponentsRegistrationGranularity:10]]
+[2026.01.19-15.25.07:382][  0]LogConfig: Set CVar [[s.UnregisterComponentsTimeLimit:1.0]]
+[2026.01.19-15.25.07:382][  0]LogConfig: Set CVar [[s.LevelStreamingComponentsUnregistrationGranularity:5]]
+[2026.01.19-15.25.07:382][  0]LogConfig: CVar [[s.MaxPackageSummarySize:16384]] deferred - dummy variable created
+[2026.01.19-15.25.07:382][  0]LogConfig: Set CVar [[s.FlushStreamingOnExit:1]]
+[2026.01.19-15.25.07:382][  0]LogConfig: CVar [[FixedBootOrder:/Script/Engine/Default__SoundBase]] deferred - dummy variable created
+[2026.01.19-15.25.07:382][  0]LogConfig: CVar [[FixedBootOrder:/Script/Engine/Default__MaterialInterface]] deferred - dummy variable created
+[2026.01.19-15.25.07:382][  0]LogConfig: CVar [[FixedBootOrder:/Script/Engine/Default__DeviceProfileManager]] deferred - dummy variable created
+[2026.01.19-15.25.07:382][  0]LogConfig: Applying CVar settings from Section [/Script/Engine.GarbageCollectionSettings] File [Engine]
+[2026.01.19-15.25.07:382][  0]LogConfig: Set CVar [[gc.MaxObjectsNotConsideredByGC:1]]
+[2026.01.19-15.25.07:384][  0]LogConfig: Set CVar [[gc.FlushStreamingOnGC:0]]
+[2026.01.19-15.25.07:384][  0]LogConfig: Set CVar [[gc.NumRetriesBeforeForcingGC:10]]
+[2026.01.19-15.25.07:384][  0]LogConfig: Set CVar [[gc.AllowParallelGC:1]]
+[2026.01.19-15.25.07:384][  0]LogConfig: Set CVar [[gc.TimeBetweenPurgingPendingKillObjects:61.1]]
+[2026.01.19-15.25.07:384][  0]LogConfig: Set CVar [[gc.MaxObjectsInEditor:25165824]]
+[2026.01.19-15.25.07:384][  0]LogConfig: Set CVar [[gc.IncrementalBeginDestroyEnabled:1]]
+[2026.01.19-15.25.07:384][  0]LogConfig: Set CVar [[gc.CreateGCClusters:1]]
+[2026.01.19-15.25.07:384][  0]LogConfig: Set CVar [[gc.MinGCClusterSize:5]]
+[2026.01.19-15.25.07:384][  0]LogConfig: Set CVar [[gc.AssetClustreringEnabled:0]]
+[2026.01.19-15.25.07:384][  0]LogConfig: Set CVar [[gc.ActorClusteringEnabled:0]]
+[2026.01.19-15.25.07:384][  0]LogConfig: Set CVar [[gc.VerifyUObjectsAreNotFGCObjects:0]]
+[2026.01.19-15.25.07:385][  0]LogConfig: Set CVar [[gc.GarbageEliminationEnabled:1]]
+[2026.01.19-15.25.07:385][  0]LogConfig: Applying CVar settings from Section [/Script/Engine.NetworkSettings] File [Engine]
+[2026.01.19-15.25.07:385][  0]LogConfig: CVar [[NetworkEmulationProfiles:(ProfileName="Average",ToolTip="Simulates average internet conditions")]] deferred - dummy variable created
+[2026.01.19-15.25.07:385][  0]LogConfig: CVar [[NetworkEmulationProfiles:(ProfileName="Bad",ToolTip="Simulates laggy internet conditions")]] deferred - dummy variable created
+[2026.01.19-15.25.07:395][  0]LogConfig: Applying CVar settings from Section [ViewDistanceQuality@3] File [Scalability]
+[2026.01.19-15.25.07:395][  0]LogConfig: Set CVar [[r.SkeletalMeshLODBias:0]]
+[2026.01.19-15.25.07:395][  0]LogConfig: Set CVar [[r.ViewDistanceScale:1.0]]
+[2026.01.19-15.25.07:395][  0]LogConfig: Applying CVar settings from Section [AntiAliasingQuality@3] File [Scalability]
+[2026.01.19-15.25.07:395][  0]LogConfig: Set CVar [[r.FXAA.Quality:4]]
+[2026.01.19-15.25.07:395][  0]LogConfig: Set CVar [[r.TemporalAA.Quality:2]]
+[2026.01.19-15.25.07:395][  0]LogConfig: Set CVar [[r.TSR.History.R11G11B10:1]]
+[2026.01.19-15.25.07:395][  0]LogConfig: Set CVar [[r.TSR.History.ScreenPercentage:200]]
+[2026.01.19-15.25.07:395][  0]LogConfig: Set CVar [[r.TSR.History.UpdateQuality:3]]
+[2026.01.19-15.25.07:395][  0]LogConfig: Set CVar [[r.TSR.ShadingRejection.Flickering:1]]
+[2026.01.19-15.25.07:395][  0]LogConfig: Set CVar [[r.TSR.RejectionAntiAliasingQuality:2]]
+[2026.01.19-15.25.07:396][  0]LogConfig: Set CVar [[r.TSR.ReprojectionField:1]]
+[2026.01.19-15.25.07:396][  0]LogConfig: Set CVar [[r.TSR.Resurrection:1]]
+[2026.01.19-15.25.07:396][  0]LogConfig: Applying CVar settings from Section [ShadowQuality@3] File [Scalability]
+[2026.01.19-15.25.07:396][  0]LogConfig: Set CVar [[r.LightFunctionQuality:1]]
+[2026.01.19-15.25.07:396][  0]LogConfig: Set CVar [[r.ShadowQuality:5]]
+[2026.01.19-15.25.07:396][  0]LogConfig: Set CVar [[r.Shadow.CSM.MaxCascades:10]]
+[2026.01.19-15.25.07:396][  0]LogConfig: Set CVar [[r.Shadow.MaxResolution:2048]]
+[2026.01.19-15.25.07:396][  0]LogConfig: Set CVar [[r.Shadow.MaxCSMResolution:2048]]
+[2026.01.19-15.25.07:396][  0]LogConfig: Set CVar [[r.Shadow.RadiusThreshold:0.01]]
+[2026.01.19-15.25.07:396][  0]LogConfig: Set CVar [[r.Shadow.DistanceScale:1.0]]
+[2026.01.19-15.25.07:396][  0]LogConfig: Set CVar [[r.Shadow.CSM.TransitionScale:1.0]]
+[2026.01.19-15.25.07:396][  0]LogConfig: Set CVar [[r.Shadow.PreShadowResolutionFactor:1.0]]
+[2026.01.19-15.25.07:396][  0]LogConfig: Set CVar [[r.DistanceFieldShadowing:1]]
+[2026.01.19-15.25.07:396][  0]LogConfig: Set CVar [[r.VolumetricFog:1]]
+[2026.01.19-15.25.07:397][  0]LogConfig: Set CVar [[r.VolumetricFog.GridPixelSize:8]]
+[2026.01.19-15.25.07:397][  0]LogConfig: Set CVar [[r.VolumetricFog.GridSizeZ:128]]
+[2026.01.19-15.25.07:397][  0]LogConfig: Set CVar [[r.VolumetricFog.HistoryMissSupersampleCount:4]]
+[2026.01.19-15.25.07:397][  0]LogConfig: Set CVar [[r.LightMaxDrawDistanceScale:1]]
+[2026.01.19-15.25.07:397][  0]LogConfig: Set CVar [[r.CapsuleShadows:1]]
+[2026.01.19-15.25.07:397][  0]LogConfig: Set CVar [[r.Shadow.Virtual.MaxPhysicalPages:4096]]
+[2026.01.19-15.25.07:397][  0]LogConfig: Set CVar [[r.Shadow.Virtual.ResolutionLodBiasDirectional:-1.5]]
+[2026.01.19-15.25.07:397][  0]LogConfig: Set CVar [[r.Shadow.Virtual.ResolutionLodBiasDirectionalMoving:-1.5]]
+[2026.01.19-15.25.07:397][  0]LogConfig: Set CVar [[r.Shadow.Virtual.ResolutionLodBiasLocal:0.0]]
+[2026.01.19-15.25.07:397][  0]LogConfig: Set CVar [[r.Shadow.Virtual.ResolutionLodBiasLocalMoving:1.0]]
+[2026.01.19-15.25.07:397][  0]LogConfig: Set CVar [[r.Shadow.Virtual.SMRT.RayCountDirectional:8]]
+[2026.01.19-15.25.07:397][  0]LogConfig: Set CVar [[r.Shadow.Virtual.SMRT.SamplesPerRayDirectional:4]]
+[2026.01.19-15.25.07:397][  0]LogConfig: Set CVar [[r.Shadow.Virtual.SMRT.RayCountLocal:8]]
+[2026.01.19-15.25.07:397][  0]LogConfig: Set CVar [[r.Shadow.Virtual.SMRT.SamplesPerRayLocal:4]]
+[2026.01.19-15.25.07:397][  0]LogConfig: Applying CVar settings from Section [GlobalIlluminationQuality@3] File [Scalability]
+[2026.01.19-15.25.07:398][  0]LogConfig: Set CVar [[r.DistanceFieldAO:1]]
+[2026.01.19-15.25.07:398][  0]LogConfig: Set CVar [[r.SkylightIntensityMultiplier:1.0]]
+[2026.01.19-15.25.07:398][  0]LogConfig: Set CVar [[r.AOQuality:2]]
+[2026.01.19-15.25.07:398][  0]LogConfig: Set CVar [[r.Lumen.DiffuseIndirect.Allow:1]]
+[2026.01.19-15.25.07:398][  0]LogConfig: Set CVar [[r.LumenScene.DirectLighting.MaxLightsPerTile:8]]
+[2026.01.19-15.25.07:398][  0]LogConfig: Set CVar [[r.LumenScene.DirectLighting.UpdateFactor:32]]
+[2026.01.19-15.25.07:398][  0]LogConfig: Set CVar [[r.LumenScene.Radiosity.UpdateFactor:64]]
+[2026.01.19-15.25.07:398][  0]LogConfig: Set CVar [[r.LumenScene.Radiosity.ProbeSpacing:4]]
+[2026.01.19-15.25.07:398][  0]LogConfig: Set CVar [[r.LumenScene.Radiosity.HemisphereProbeResolution:4]]
+[2026.01.19-15.25.07:398][  0]LogConfig: Set CVar [[r.Lumen.TraceMeshSDFs.Allow:1]]
+[2026.01.19-15.25.07:398][  0]LogConfig: Set CVar [[r.Lumen.ScreenProbeGather.RadianceCache.ProbeResolution:32]]
+[2026.01.19-15.25.07:398][  0]LogConfig: Set CVar [[r.Lumen.ScreenProbeGather.RadianceCache.NumProbesToTraceBudget:100]]
+[2026.01.19-15.25.07:399][  0]LogConfig: Set CVar [[r.Lumen.ScreenProbeGather.DownsampleFactor:16]]
+[2026.01.19-15.25.07:399][  0]LogConfig: Set CVar [[r.Lumen.ScreenProbeGather.NumAdaptiveProbes:8]]
+[2026.01.19-15.25.07:399][  0]LogConfig: Set CVar [[r.Lumen.ScreenProbeGather.TracingOctahedronResolution:8]]
+[2026.01.19-15.25.07:399][  0]LogConfig: Set CVar [[r.Lumen.ScreenProbeGather.IrradianceFormat:0]]
+[2026.01.19-15.25.07:399][  0]LogConfig: Set CVar [[r.Lumen.ScreenProbeGather.StochasticInterpolation:0]]
+[2026.01.19-15.25.07:399][  0]LogConfig: Set CVar [[r.Lumen.ScreenProbeGather.FullResolutionJitterWidth:1]]
+[2026.01.19-15.25.07:399][  0]LogConfig: Set CVar [[r.Lumen.ScreenProbeGather.TwoSidedFoliageBackfaceDiffuse:1]]
+[2026.01.19-15.25.07:399][  0]LogConfig: Set CVar [[r.Lumen.ScreenProbeGather.ScreenTraces.HZBTraversal.FullResDepth:1]]
+[2026.01.19-15.25.07:399][  0]LogConfig: Set CVar [[r.Lumen.ScreenProbeGather.ShortRangeAO.HardwareRayTracing:0]]
+[2026.01.19-15.25.07:399][  0]LogConfig: Set CVar [[r.Lumen.ScreenProbeGather.ShortRangeAO.BentNormal:1]]
+[2026.01.19-15.25.07:399][  0]LogConfig: Set CVar [[r.Lumen.TranslucencyVolume.GridPixelSize:32]]
+[2026.01.19-15.25.07:399][  0]LogConfig: Set CVar [[r.Lumen.TranslucencyVolume.TraceFromVolume:1]]
+[2026.01.19-15.25.07:399][  0]LogConfig: Set CVar [[r.Lumen.TranslucencyVolume.TracingOctahedronResolution:3]]
+[2026.01.19-15.25.07:399][  0]LogConfig: Set CVar [[r.Lumen.TranslucencyVolume.RadianceCache.ProbeResolution:8]]
+[2026.01.19-15.25.07:400][  0]LogConfig: Set CVar [[r.Lumen.TranslucencyVolume.RadianceCache.NumProbesToTraceBudget:70]]
+[2026.01.19-15.25.07:400][  0]LogConfig: Set CVar [[r.RayTracing.Scene.BuildMode:1]]
+[2026.01.19-15.25.07:400][  0]LogConfig: Applying CVar settings from Section [ReflectionQuality@3] File [Scalability]
+[2026.01.19-15.25.07:400][  0]LogConfig: Set CVar [[r.SSR.Quality:3]]
+[2026.01.19-15.25.07:400][  0]LogConfig: Set CVar [[r.SSR.HalfResSceneColor:0]]
+[2026.01.19-15.25.07:400][  0]LogConfig: Set CVar [[r.Lumen.Reflections.Allow:1]]
+[2026.01.19-15.25.07:400][  0]LogConfig: Set CVar [[r.Lumen.Reflections.DownsampleFactor:1]]
+[2026.01.19-15.25.07:400][  0]LogConfig: Set CVar [[r.Lumen.Reflections.MaxRoughnessToTraceForFoliage:0.4]]
+[2026.01.19-15.25.07:400][  0]LogConfig: Set CVar [[r.Lumen.ScreenProbeGather.MaxRoughnessToEvaluateRoughSpecularForFoliage:0.8]]
+[2026.01.19-15.25.07:400][  0]LogConfig: Set CVar [[r.Lumen.Reflections.ScreenSpaceReconstruction.NumSamples:5]]
+[2026.01.19-15.25.07:400][  0]LogConfig: Set CVar [[r.Lumen.Reflections.ScreenSpaceReconstruction.MinWeight:0]]
+[2026.01.19-15.25.07:400][  0]LogConfig: Set CVar [[r.Lumen.TranslucencyReflections.FrontLayer.Allow:1]]
+[2026.01.19-15.25.07:400][  0]LogConfig: Set CVar [[r.Lumen.TranslucencyReflections.FrontLayer.Enable:0]]
+[2026.01.19-15.25.07:400][  0]LogConfig: Applying CVar settings from Section [PostProcessQuality@3] File [Scalability]
+[2026.01.19-15.25.07:400][  0]LogConfig: Set CVar [[r.MotionBlurQuality:4]]
+[2026.01.19-15.25.07:400][  0]LogConfig: Set CVar [[r.MotionBlur.HalfResGather:0]]
+[2026.01.19-15.25.07:401][  0]LogConfig: Set CVar [[r.AmbientOcclusionMipLevelFactor:0.4]]
+[2026.01.19-15.25.07:401][  0]LogConfig: Set CVar [[r.AmbientOcclusionMaxQuality:100]]
+[2026.01.19-15.25.07:401][  0]LogConfig: Set CVar [[r.AmbientOcclusionLevels:-1]]
+[2026.01.19-15.25.07:401][  0]LogConfig: Set CVar [[r.AmbientOcclusionRadiusScale:1.0]]
+[2026.01.19-15.25.07:401][  0]LogConfig: Set CVar [[r.DepthOfFieldQuality:2]]
+[2026.01.19-15.25.07:401][  0]LogConfig: Set CVar [[r.RenderTargetPoolMin:400]]
+[2026.01.19-15.25.07:401][  0]LogConfig: Set CVar [[r.LensFlareQuality:2]]
+[2026.01.19-15.25.07:401][  0]LogConfig: Set CVar [[r.SceneColorFringeQuality:1]]
+[2026.01.19-15.25.07:401][  0]LogConfig: Set CVar [[r.EyeAdaptationQuality:2]]
+[2026.01.19-15.25.07:401][  0]LogConfig: Set CVar [[r.BloomQuality:5]]
+[2026.01.19-15.25.07:401][  0]LogConfig: Set CVar [[r.Bloom.ScreenPercentage:50.000]]
+[2026.01.19-15.25.07:401][  0]LogConfig: Set CVar [[r.FastBlurThreshold:100]]
+[2026.01.19-15.25.07:401][  0]LogConfig: Set CVar [[r.Upscale.Quality:3]]
+[2026.01.19-15.25.07:401][  0]LogConfig: Set CVar [[r.LightShaftQuality:1]]
+[2026.01.19-15.25.07:401][  0]LogConfig: Set CVar [[r.Filter.SizeScale:1]]
+[2026.01.19-15.25.07:402][  0]LogConfig: Set CVar [[r.Tonemapper.Quality:5]]
+[2026.01.19-15.25.07:402][  0]LogConfig: Set CVar [[r.DOF.Gather.ResolutionDivisor:2         ; lower gathering resolution]]
+[2026.01.19-15.25.07:402][  0]LogConfig: Set CVar [[r.DOF.Gather.AccumulatorQuality:1        ; higher gathering accumulator quality]]
+[2026.01.19-15.25.07:402][  0]LogConfig: Set CVar [[r.DOF.Gather.PostfilterMethod:1          ; Median3x3 postfilering method]]
+[2026.01.19-15.25.07:402][  0]LogConfig: Set CVar [[r.DOF.Gather.EnableBokehSettings:0       ; no bokeh simulation when gathering]]
+[2026.01.19-15.25.07:402][  0]LogConfig: Set CVar [[r.DOF.Gather.RingCount:4                 ; medium number of samples when gathering]]
+[2026.01.19-15.25.07:402][  0]LogConfig: Set CVar [[r.DOF.Scatter.ForegroundCompositing:1    ; additive foreground scattering]]
+[2026.01.19-15.25.07:402][  0]LogConfig: Set CVar [[r.DOF.Scatter.BackgroundCompositing:2    ; additive background scattering]]
+[2026.01.19-15.25.07:402][  0]LogConfig: Set CVar [[r.DOF.Scatter.EnableBokehSettings:1      ; bokeh simulation when scattering]]
+[2026.01.19-15.25.07:402][  0]LogConfig: Set CVar [[r.DOF.Scatter.MaxSpriteRatio:0.1         ; only a maximum of 10% of scattered bokeh]]
+[2026.01.19-15.25.07:402][  0]LogConfig: Set CVar [[r.DOF.Recombine.Quality:1                ; cheap slight out of focus]]
+[2026.01.19-15.25.07:402][  0]LogConfig: Set CVar [[r.DOF.Recombine.EnableBokehSettings:0    ; no bokeh simulation on slight out of focus]]
+[2026.01.19-15.25.07:402][  0]LogConfig: Set CVar [[r.DOF.TemporalAAQuality:1                ; more stable temporal accumulation]]
+[2026.01.19-15.25.07:402][  0]LogConfig: Set CVar [[r.DOF.Kernel.MaxForegroundRadius:0.025]]
+[2026.01.19-15.25.07:402][  0]LogConfig: Set CVar [[r.DOF.Kernel.MaxBackgroundRadius:0.025]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Applying CVar settings from Section [TextureQuality@3] File [Scalability]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.Streaming.MipBias:0]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.Streaming.MaxNumTexturesToStreamPerFrame:0]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.Streaming.Boost:1]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.MaxAnisotropy:8]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.VT.MaxAnisotropy:8]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.Streaming.LimitPoolSizeToVRAM:0]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.Streaming.PoolSize:1000]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.Streaming.MaxEffectiveScreenSize:0]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Applying CVar settings from Section [EffectsQuality@3] File [Scalability]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.TranslucencyLightingVolumeDim:64]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.RefractionQuality:2]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.SceneColorFormat:4]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.DetailMode:3]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.TranslucencyVolumeBlur:1]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.MaterialQualityLevel:1 ; High quality]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.SSS.Scale:1]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.SSS.SampleSet:2]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.SSS.Quality:1]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.SSS.HalfRes:0]]
+[2026.01.19-15.25.07:403][  0]LogConfig: Set CVar [[r.SSGI.Quality:3]]
+[2026.01.19-15.25.07:404][  0]LogConfig: Set CVar [[r.EmitterSpawnRateScale:1.0]]
+[2026.01.19-15.25.07:405][  0]LogConfig: Set CVar [[r.ParticleLightQuality:2]]
+[2026.01.19-15.25.07:406][  0]LogConfig: Set CVar [[r.SkyAtmosphere.AerialPerspectiveLUT.FastApplyOnOpaque:1 ; Always have FastSkyLUT 1 in this case to avoid wrong sky]]
+[2026.01.19-15.25.07:406][  0]LogConfig: Set CVar [[r.SkyAtmosphere.AerialPerspectiveLUT.SampleCountMaxPerSlice:4]]
+[2026.01.19-15.25.07:406][  0]LogConfig: Set CVar [[r.SkyAtmosphere.AerialPerspectiveLUT.DepthResolution:16.0]]
+[2026.01.19-15.25.07:406][  0]LogConfig: Set CVar [[r.SkyAtmosphere.FastSkyLUT:1]]
+[2026.01.19-15.25.07:406][  0]LogConfig: Set CVar [[r.SkyAtmosphere.FastSkyLUT.SampleCountMin:4.0]]
+[2026.01.19-15.25.07:406][  0]LogConfig: Set CVar [[r.SkyAtmosphere.FastSkyLUT.SampleCountMax:128.0]]
+[2026.01.19-15.25.07:406][  0]LogConfig: Set CVar [[r.SkyAtmosphere.SampleCountMin:4.0]]
+[2026.01.19-15.25.07:406][  0]LogConfig: Set CVar [[r.SkyAtmosphere.SampleCountMax:128.0]]
+[2026.01.19-15.25.07:406][  0]LogConfig: Set CVar [[r.SkyAtmosphere.TransmittanceLUT.UseSmallFormat:0]]
+[2026.01.19-15.25.07:406][  0]LogConfig: Set CVar [[r.SkyAtmosphere.TransmittanceLUT.SampleCount:10.0]]
+[2026.01.19-15.25.07:406][  0]LogConfig: Set CVar [[r.SkyAtmosphere.MultiScatteringLUT.SampleCount:15.0]]
+[2026.01.19-15.25.07:406][  0]LogConfig: Set CVar [[fx.Niagara.QualityLevel:3]]
+[2026.01.19-15.25.07:406][  0]LogConfig: Set CVar [[r.Refraction.OffsetQuality:1]]
+[2026.01.19-15.25.07:406][  0]LogConfig: Set CVar [[r.HeterogeneousVolumes.DownsampleFactor:2]]
+[2026.01.19-15.25.07:406][  0]LogConfig: Set CVar [[r.HeterogeneousVolumes.MaxStepCount:256]]
+[2026.01.19-15.25.07:406][  0]LogConfig: Set CVar [[r.HeterogeneousVolumes.Shadows.Resolution:256]]
+[2026.01.19-15.25.07:406][  0]LogConfig: Set CVar [[r.HeterogeneousVolumes.Shadows.MaxSampleCount:8]]
+[2026.01.19-15.25.07:407][  0]LogConfig: Set CVar [[r.HeterogeneousVolumes.UseExistenceMask:0]]
+[2026.01.19-15.25.07:407][  0]LogConfig: Applying CVar settings from Section [FoliageQuality@3] File [Scalability]
+[2026.01.19-15.25.07:407][  0]LogConfig: Set CVar [[foliage.DensityScale:1.0]]
+[2026.01.19-15.25.07:407][  0]LogConfig: Set CVar [[grass.DensityScale:1.0]]
+[2026.01.19-15.25.07:407][  0]LogConfig: Applying CVar settings from Section [ShadingQuality@3] File [Scalability]
+[2026.01.19-15.25.07:407][  0]LogConfig: Set CVar [[r.HairStrands.SkyLighting.IntegrationType:2]]
+[2026.01.19-15.25.07:407][  0]LogConfig: Set CVar [[r.HairStrands.SkyAO.SampleCount:4]]
+[2026.01.19-15.25.07:407][  0]LogConfig: Set CVar [[r.HairStrands.Visibility.MSAA.SamplePerPixel:4]]
+[2026.01.19-15.25.07:407][  0]LogConfig: Set CVar [[r.AnisotropicMaterials:1]]
+[2026.01.19-15.25.07:407][  0]LogConfig: Applying CVar settings from Section [LandscapeQuality@3] File [Scalability]
+[2026.01.19-15.25.07:415][  0]LogD3D12RHI: Loading WinPixEventRuntime.dll for PIX profiling (from ../../../Engine/Binaries/ThirdParty/Windows/WinPixEventRuntime/x64).
+[2026.01.19-15.25.07:849][  0]LogD3D12RHI: Found D3D12 adapter 0: NVIDIA GeForce RTX 4090 (VendorId: 10de, DeviceId: 2684, SubSysId: 40bf1458, Revision: 00a1
+[2026.01.19-15.25.07:849][  0]LogD3D12RHI:   Max supported Feature Level 12_2, shader model 6.7, binding tier 3, wave ops supported, atomic64 supported
+[2026.01.19-15.25.07:850][  0]LogD3D12RHI:   Adapter has 24142MB of dedicated video memory, 0MB of dedicated system memory, and 15980MB of shared system memory, 1 output[s], UMA:false
+[2026.01.19-15.25.07:850][  0]LogD3D12RHI:   Driver Version: 581.80 (internal:32.0.15.8180, unified:581.80)
+[2026.01.19-15.25.07:850][  0]LogD3D12RHI:      Driver Date: 10-29-2025
+[2026.01.19-15.25.08:021][  0]LogD3D12RHI: Found D3D12 adapter 1: AMD Radeon(TM) Graphics (VendorId: 1002, DeviceId: 164e, SubSysId: 88771043, Revision: 00c9
+[2026.01.19-15.25.08:038][  0]LogD3D12RHI:   Max supported Feature Level 12_1, shader model 6.7, binding tier 3, wave ops supported, atomic64 supported
+[2026.01.19-15.25.08:039][  0]LogD3D12RHI:   Adapter has 485MB of dedicated video memory, 0MB of dedicated system memory, and 15980MB of shared system memory, 0 output[s], UMA:true
+[2026.01.19-15.25.08:039][  0]LogD3D12RHI:   Driver Version: AMD Software: Adrenalin Edition 24.10.16 (internal:32.0.11016.3, unified:32.0.11016.3)
+[2026.01.19-15.25.08:039][  0]LogD3D12RHI:      Driver Date: 5-28-2024
+[2026.01.19-15.25.08:054][  0]LogD3D12RHI: Found D3D12 adapter 2: Microsoft Basic Render Driver (VendorId: 1414, DeviceId: 008c, SubSysId: 0000, Revision: 0000
+[2026.01.19-15.25.08:054][  0]LogD3D12RHI:   Max supported Feature Level 12_1, shader model 6.7, binding tier 3, wave ops supported, atomic64 supported
+[2026.01.19-15.25.08:054][  0]LogD3D12RHI:   Adapter has 0MB of dedicated video memory, 0MB of dedicated system memory, and 15980MB of shared system memory, 0 output[s], UMA:true
+[2026.01.19-15.25.08:054][  0]LogD3D12RHI: DirectX Agility SDK runtime found.
+[2026.01.19-15.25.08:055][  0]LogD3D12RHI: Chosen D3D12 Adapter Id = 0
+[2026.01.19-15.25.08:055][  0]LogInit: Selected Device Profile: [Windows]
+[2026.01.19-15.25.08:055][  0]LogHAL: Display: Platform has ~ 32 GB [33513902080 / 34359738368 / 32], which maps to Largest [LargestMinGB=32, LargerMinGB=12, DefaultMinGB=8, SmallerMinGB=6, SmallestMinGB=0)
+[2026.01.19-15.25.08:056][  0]LogDeviceProfileManager: Going up to parent DeviceProfile []
+[2026.01.19-15.25.08:056][  0]LogDeviceProfileManager: Pushing Device Profile CVar: [[UI.SlateSDFText.RasterizationMode:Bitmap -> Msdf]]
+[2026.01.19-15.25.08:057][  0]LogDeviceProfileManager: Pushing Device Profile CVar: [[UI.SlateSDFText.ResolutionLevel:2 -> 2]]
+[2026.01.19-15.25.08:057][  0]LogConfig: Applying CVar settings from Section [Startup] File [../../../Engine/Config/ConsoleVariables.ini]
+[2026.01.19-15.25.08:057][  0]LogConfig: Set CVar [[r.DumpShaderDebugInfo:2]]
+[2026.01.19-15.25.08:057][  0]LogConfig: Set CVar [[p.chaos.AllowCreatePhysxBodies:1]]
+[2026.01.19-15.25.08:057][  0]LogConfig: Set CVar [[fx.SkipVectorVMBackendOptimizations:1]]
+[2026.01.19-15.25.08:057][  0]LogConfig: CVar [[ds.CADTranslator.Meshing.ActivateThinZoneMeshing:0]] deferred - dummy variable created
+[2026.01.19-15.25.08:057][  0]LogConfig: CVar [[ds.CADTranslator.Stitching.RemoveThinFaces:0]] deferred - dummy variable created
+[2026.01.19-15.25.08:057][  0]LogConfig: Applying CVar settings from Section [Startup_Windows] File [../../../Engine/Config/ConsoleVariables.ini]
+[2026.01.19-15.25.08:057][  0]LogConfig: Applying CVar settings from Section [ConsoleVariables] File [Engine]
+[2026.01.19-15.25.08:057][  0]LogInit: Computer: MIKEDESKTOP2024
+[2026.01.19-15.25.08:057][  0]LogInit: User: micha
+[2026.01.19-15.25.08:057][  0]LogInit: CPU Page size=4096, Cores=16
+[2026.01.19-15.25.08:057][  0]LogInit: High frequency timer resolution =10.000000 MHz
+[2026.01.19-15.25.08:057][  0]LogMemory: Memory total: Physical=31.2GB (32GB approx) Virtual=64.0GB
+[2026.01.19-15.25.08:057][  0]LogMemory: Platform Memory Stats for Windows
+[2026.01.19-15.25.08:057][  0]LogMemory: Process Physical Memory: 244.06 MB used, 346.26 MB peak
+[2026.01.19-15.25.08:057][  0]LogMemory: Process Virtual Memory: 196.66 MB used, 205.32 MB peak
+[2026.01.19-15.25.08:057][  0]LogMemory: Physical Memory: 21228.16 MB used,  10733.19 MB free, 31961.35 MB total
+[2026.01.19-15.25.08:057][  0]LogMemory: Virtual Memory: 44558.54 MB used,  20945.55 MB free, 65504.09 MB total
+[2026.01.19-15.25.08:057][  0]LogCsvProfiler: Display: Metadata set : extradevelopmentmemorymb="0"
+[2026.01.19-15.25.08:063][  0]LogWindows: WindowsPlatformFeatures enabled
+[2026.01.19-15.25.08:065][  0]LogChaosDD: Chaos Debug Draw Startup
+[2026.01.19-15.25.08:066][  0]LogInit: Physics initialised using underlying interface: Chaos
+[2026.01.19-15.25.08:067][  0]LogInit: Using OS detected language (en-US).
+[2026.01.19-15.25.08:067][  0]LogInit: Using OS detected locale (en-US).
+[2026.01.19-15.25.08:067][  0]LogTextLocalizationManager: No specific localization for 'en-US' exists, so 'en' will be used for the language.
+[2026.01.19-15.25.08:112][  0]LogWindowsTextInputMethodSystem: Available input methods:
+[2026.01.19-15.25.08:112][  0]LogWindowsTextInputMethodSystem:   - English (United States) - (Keyboard).
+[2026.01.19-15.25.08:112][  0]LogWindowsTextInputMethodSystem: Activated input method: English (United States) - (Keyboard).
+[2026.01.19-15.25.08:124][  0]LogWindowsTouchpad: Display: CacheForceMaxTouchpadSensitivityMode SetMaxTouchpadSensitivity
+[2026.01.19-15.25.08:133][  0]LogObj: Display: Attempting to load config data for Default__SlateThemeManager before the Class has been constructed/registered/linked (likely during module loading or early startup). This will result in the load silently failing and should be fixed.
+[2026.01.19-15.25.08:137][  0]LogSlate: New Slate User Created. Platform User Id 0, User Index 0, Is Virtual User: 0
+[2026.01.19-15.25.08:137][  0]LogSlate: Slate User Registered.  User Index 0, Is Virtual User: 0
+[2026.01.19-15.25.08:213][  0]LogD3D12RHI: Integrated GPU (iGPU): false
+[2026.01.19-15.25.08:213][  0]LogD3D12RHI: Display: Creating D3D12 RHI with Max Feature Level SM6
+[2026.01.19-15.25.08:214][  0]LogWindows: Attached monitors:
+[2026.01.19-15.25.08:214][  0]LogWindows:     resolution: 3440x1440, work area: (0, 0) -> (3440, 1392), device: '\\.\DISPLAY1' [PRIMARY]
+[2026.01.19-15.25.08:215][  0]LogWindows: Found 1 attached monitors.
+[2026.01.19-15.25.08:215][  0]LogWindows: Gathering driver information using Windows Setup API
+[2026.01.19-15.25.08:216][  0]LogD3D12RHI:     GPU DeviceId: 0x2684 (for the marketing name, search the web for "GPU Device Id")
+[2026.01.19-15.25.08:216][  0]LogD3D12RHI: InitD3DDevice: -D3DDebug = off -D3D12GPUValidation = off
+[2026.01.19-15.25.08:369][  0]LogNvidiaAftermath: Aftermath initialized
+[2026.01.19-15.25.08:370][  0]LogD3D12RHI: Emitting draw events for PIX profiling.
+[2026.01.19-15.25.08:455][  0]LogNvidiaAftermath: Aftermath enabled. Active feature flags: 
+[2026.01.19-15.25.08:456][  0]LogNvidiaAftermath:  - Feature: EnableResourceTracking
+[2026.01.19-15.25.08:457][  0]LogD3D12RHI: ID3D12Device1 is supported.
+[2026.01.19-15.25.08:457][  0]LogD3D12RHI: ID3D12Device2 is supported.
+[2026.01.19-15.25.08:457][  0]LogD3D12RHI: ID3D12Device3 is supported.
+[2026.01.19-15.25.08:457][  0]LogD3D12RHI: ID3D12Device4 is supported.
+[2026.01.19-15.25.08:457][  0]LogD3D12RHI: ID3D12Device5 is supported.
+[2026.01.19-15.25.08:457][  0]LogD3D12RHI: ID3D12Device6 is supported.
+[2026.01.19-15.25.08:457][  0]LogD3D12RHI: ID3D12Device7 is supported.
+[2026.01.19-15.25.08:457][  0]LogD3D12RHI: ID3D12Device8 is supported.
+[2026.01.19-15.25.08:457][  0]LogD3D12RHI: ID3D12Device9 is supported.
+[2026.01.19-15.25.08:457][  0]LogD3D12RHI: ID3D12Device10 is supported.
+[2026.01.19-15.25.08:458][  0]LogD3D12RHI: ID3D12Device11 is supported.
+[2026.01.19-15.25.08:458][  0]LogD3D12RHI: ID3D12Device12 is supported.
+[2026.01.19-15.25.08:458][  0]LogD3D12RHI: Bindless resources are supported
+[2026.01.19-15.25.08:458][  0]LogD3D12RHI: Stencil ref from pixel shader is not supported
+[2026.01.19-15.25.08:458][  0]LogD3D12RHI: Raster order views are supported
+[2026.01.19-15.25.08:458][  0]LogD3D12RHI: Wave Operations are supported (wave size: min=32 max=32).
+[2026.01.19-15.25.08:458][  0]LogD3D12RHI: D3D12 ray tracing tier 1.1 and bindless resources are supported.
+[2026.01.19-15.25.08:458][  0]LogD3D12RHI: Mesh shader tier 1.0 is supported
+[2026.01.19-15.25.08:458][  0]LogD3D12RHI: AtomicInt64OnTypedResource is supported
+[2026.01.19-15.25.08:458][  0]LogD3D12RHI: AtomicInt64OnGroupShared is supported
+[2026.01.19-15.25.08:458][  0]LogD3D12RHI: AtomicInt64OnDescriptorHeapResource is supported
+[2026.01.19-15.25.08:458][  0]LogD3D12RHI: Shader Model 6.6 atomic64 is supported
+[2026.01.19-15.25.08:459][  0]LogD3D12RHI: Work Graphs are supported
+[2026.01.19-15.25.08:542][  0]LogD3D12RHI: [GPUBreadCrumb] Successfully setup breadcrumb resource for DiagnosticBuffer (Queue: 0x000001A675C050C0)
+[2026.01.19-15.25.08:542][  0]LogD3D12RHI: [GPUBreadCrumb] Successfully setup breadcrumb resource for DiagnosticBuffer (Queue: 0x000001A675C05380)
+[2026.01.19-15.25.08:543][  0]LogD3D12RHI: [GPUBreadCrumb] Successfully setup breadcrumb resource for DiagnosticBuffer (Queue: 0x000001A675C05640)
+[2026.01.19-15.25.08:543][  0]LogD3D12RHI: Display: Not using pipeline state disk cache per r.D3D12.PSO.DiskCache=0
+[2026.01.19-15.25.08:543][  0]LogD3D12RHI: Display: Not using driver-optimized pipeline state disk cache per r.D3D12.PSO.DriverOptimizedDiskCache=0
+[2026.01.19-15.25.09:105][  0]LogD3D12RHI: NVIDIA Shader Execution Reordering interface supported!
+[2026.01.19-15.25.09:105][  0]LogD3D12RHI: Display: Batched command list execution is disabled for async queues due to known bugs in the current driver.
+[2026.01.19-15.25.09:106][  0]LogD3D12RHI: Async texture creation enabled
+[2026.01.19-15.25.09:106][  0]LogD3D12RHI: RHI has support for 64 bit atomics
+[2026.01.19-15.25.09:106][  0]LogD3D12RHI: HDR output is supported on adapter 0, display 0:
+[2026.01.19-15.25.09:106][  0]LogD3D12RHI: 		MinLuminance = 0.233400
+[2026.01.19-15.25.09:106][  0]LogD3D12RHI: 		MaxLuminance = 408.760010
+[2026.01.19-15.25.09:106][  0]LogD3D12RHI: 		MaxFullFrameLuminance = 408.760010
+[2026.01.19-15.25.09:153][  0]LogVRS: Current RHI supports per-draw and screenspace Variable Rate Shading
+[2026.01.19-15.25.09:160][  0]LogCsvProfiler: Display: Metadata set : verbatimrhiname="D3D12"
+[2026.01.19-15.25.09:161][  0]LogCsvProfiler: Display: Metadata set : rhiname="D3D12"
+[2026.01.19-15.25.09:161][  0]LogCsvProfiler: Display: Metadata set : rhifeaturelevel="SM6"
+[2026.01.19-15.25.09:161][  0]LogCsvProfiler: Display: Metadata set : shaderplatform="PCD3D_SM6"
+[2026.01.19-15.25.09:161][  0]LogInit: Initializing FReadOnlyCVARCache
+[2026.01.19-15.25.09:165][  0]LogRendererCore: Ray tracing is disabled. Reason: disabled through project setting (r.RayTracing=0).
+[2026.01.19-15.25.09:169][  0]LogShaderLibrary: Display: Using IoDispatcher for shader code library Global. Total 7990 unique shaders.
+[2026.01.19-15.25.09:169][  0]LogShaderLibrary: Display: Cooked Context: Using Shared Shader Library Global
+[2026.01.19-15.25.09:169][  0]LogShaderLibrary: Display: Logical shader library 'Global' has been created as a monolithic library
+[2026.01.19-15.25.09:170][  0]LogTemp: Display: Clearing the OS Cache
+[2026.01.19-15.25.09:183][  0]LogInit: FStereoShaderAspects: --- StereoAspects begin ---
+[2026.01.19-15.25.09:183][  0]LogInit: FStereoShaderAspects: Platform=PCD3D_SM6 (49)
+[2026.01.19-15.25.09:184][  0]LogInit: FStereoShaderAspects: bInstancedStereo = 0
+[2026.01.19-15.25.09:184][  0]LogInit: FStereoShaderAspects: bMobilePlatform = 0
+[2026.01.19-15.25.09:184][  0]LogInit: FStereoShaderAspects: bMobilePostprocessing = 1
+[2026.01.19-15.25.09:184][  0]LogInit: FStereoShaderAspects: bMobileMultiView = 0
+[2026.01.19-15.25.09:184][  0]LogInit: FStereoShaderAspects: bMultiViewportCapable = 1
+[2026.01.19-15.25.09:184][  0]LogInit: FStereoShaderAspects: bInstancedStereoNative = 0
+[2026.01.19-15.25.09:184][  0]LogInit: FStereoShaderAspects: ---
+[2026.01.19-15.25.09:184][  0]LogInit: FStereoShaderAspects: bMobileMultiViewCoreSupport = 0
+[2026.01.19-15.25.09:184][  0]LogInit: FStereoShaderAspects: bMobileMultiViewNative = 0
+[2026.01.19-15.25.09:184][  0]LogInit: FStereoShaderAspects: bMobileMultiViewFallback = 0
+[2026.01.19-15.25.09:184][  0]LogInit: FStereoShaderAspects: ---
+[2026.01.19-15.25.09:184][  0]LogInit: FStereoShaderAspects: bInstancedMultiViewportEnabled = 0
+[2026.01.19-15.25.09:185][  0]LogInit: FStereoShaderAspects: bInstancedStereoEnabled = 0
+[2026.01.19-15.25.09:185][  0]LogInit: FStereoShaderAspects: bMobileMultiViewEnabled = 0
+[2026.01.19-15.25.09:185][  0]LogInit: FStereoShaderAspects: --- StereoAspects end ---
+[2026.01.19-15.25.09:201][  0]LogInit: XR: Instanced Stereo Rendering is Disabled
+[2026.01.19-15.25.09:201][  0]LogInit: XR: MultiViewport is Disabled
+[2026.01.19-15.25.09:201][  0]LogInit: XR: Mobile Multiview is Disabled
+[2026.01.19-15.25.09:216][  0]LogSlate: Using FreeType 2.10.0
+[2026.01.19-15.25.09:218][  0]LogSlate: SlateFontServices - WITH_FREETYPE: 1, WITH_HARFBUZZ: 1
+[2026.01.19-15.25.09:292][  0]LogShaderLibrary: Display: Using IoDispatcher for shader code library HSHVacancy. Total 5798 unique shaders.
+[2026.01.19-15.25.09:292][  0]LogShaderLibrary: Display: Cooked Context: Using Shared Shader Library HSHVacancy
+[2026.01.19-15.25.09:293][  0]LogShaderLibrary: Display: Logical shader library 'HSHVacancy' has been created as a monolithic library
+[2026.01.19-15.25.09:293][  0]LogShaderLibrary: Display: Tried to open again shader library 'HSHVacancy', but could not find new components for it (existing components: 1).
+[2026.01.19-15.25.09:293][  0]LogInit: Using OS detected language (en-US).
+[2026.01.19-15.25.09:293][  0]LogInit: Using OS detected locale (en-US).
+[2026.01.19-15.25.09:293][  0]LogTextLocalizationManager: No specific localization for 'en-US' exists, so 'en' will be used for the language.
+[2026.01.19-15.25.09:297][  0]LogAssetRegistry: FAssetRegistry took 0.0028 seconds to start up
+[2026.01.19-15.25.09:299][  0]LogPakFile: New pak file ../../../HSHVacancy/Content/Paks/HSHVacancy-Windows.pak added to pak precacher.
+[2026.01.19-15.25.09:374][  0]LogRHI: Warning: FShaderPipelineCache HSHVacancy completed 17 tasks in 0.00s (0.05s wall time since intial open).
+[2026.01.19-15.25.09:500][  0]LogStreaming: Display: FlushAsyncLoading(1): 1 QueuedPackages, 0 AsyncPackages
+[2026.01.19-15.25.09:501][  0]LogFilePackageStore: Updated: NewPackages=8911, OldPackages=0, TotalPackages=8912
+[2026.01.19-15.25.09:508][  0]LogDeviceProfileManager: Display: Deviceprofile LinuxArm64Editor not found.
+[2026.01.19-15.25.09:508][  0]LogDeviceProfileManager: Display: Deviceprofile LinuxArm64 not found.
+[2026.01.19-15.25.09:509][  0]LogDeviceProfileManager: Active device profile: [00007FF40DFAB808][000001A63FA39250 66] Windows
+[2026.01.19-15.25.09:509][  0]LogCsvProfiler: Display: Metadata set : deviceprofile="Windows"
+[2026.01.19-15.25.09:721][  0]LogAudioCaptureCore: Display: No Audio Capture implementations found. Audio input will be silent.
+[2026.01.19-15.25.09:771][  0]LogMetaSound: Display: MetaSound Page Target Initialized to 'Default'
+[2026.01.19-15.25.09:776][  0]LogPackageLocalizationCache: Processed 86 localized package path(s) for 1 prioritized culture(s) in 0.000318 seconds
+[2026.01.19-15.25.09:787][  0]LogStats: UGameplayTagsManager::InitializeManager -  0.001 s
+[2026.01.19-15.25.09:794][  0]LogConfig: Applying CVar settings from Section [/Script/NNEDenoiser.NNEDenoiserSettings] File [Engine]
+[2026.01.19-15.25.09:801][  0]LogAudioCaptureCore: Display: No Audio Capture implementations found. Audio input will be silent.
+[2026.01.19-15.25.09:819][  0]LogIris: FNetObjectFactoryRegistry::UnregisterFactory is unregistering factory: NetActorFactory name: NetActorFactory id: 0
+[2026.01.19-15.25.09:819][  0]LogIris: FNetObjectFactoryRegistry::UnregisterFactory is unregistering factory: NetSubObjectFactory name: NetSubObjectFactory id: 1
+[2026.01.19-15.25.09:819][  0]LogInit: WinSock: version 1.1 (2.2), MaxSocks=32767, MaxUdp=65467
+[2026.01.19-15.25.09:826][  0]LogPreloadMoviePlayer: Init failed for PreLoadMoviePlayerScreenBase
+[2026.01.19-15.25.09:836][  0]LogNiagaraDebuggerClient: Niagara Debugger Client Initialized | Session: 52767F09A4FB4CE18000000000003C00 | Instance: BB0AD48C477B427945672DAC258BFA50 (MIKEDESKTOP2024-172244).
+[2026.01.19-15.25.09:965][  0]LogNNERuntimeORT: Available graphics and compute adapters:
+[2026.01.19-15.25.09:965][  0]LogNNERuntimeORT: Selecting NPU adapter: AMD Radeon(TM) Graphics
+[2026.01.19-15.25.10:021][  0]LogNNERuntimeORT: MakeRuntimeORTDml:
+[2026.01.19-15.25.10:022][  0]LogNNERuntimeORT:   DirectML:  yes
+[2026.01.19-15.25.10:022][  0]LogNNERuntimeORT:   RHI D3D12: yes
+[2026.01.19-15.25.10:022][  0]LogNNERuntimeORT:   D3D12:     yes
+[2026.01.19-15.25.10:022][  0]LogNNERuntimeORT:   NPU:       yes
+[2026.01.19-15.25.10:022][  0]LogNNERuntimeORT: Interface availability:
+[2026.01.19-15.25.10:022][  0]LogNNERuntimeORT:   GPU: yes
+[2026.01.19-15.25.10:022][  0]LogNNERuntimeORT:   RDG: yes
+[2026.01.19-15.25.10:022][  0]LogNNERuntimeORT:   NPU: yes
+[2026.01.19-15.25.10:077][  0]LogNNERuntimeORT: Available graphics and compute adapters:
+[2026.01.19-15.25.10:077][  0]LogNNERuntimeORT: Selecting NPU adapter: AMD Radeon(TM) Graphics
+[2026.01.19-15.25.10:171][  0]LogAudio: Display: Registering Engine Module Parameter Interfaces...
+[2026.01.19-15.25.10:173][  0]LogMetaSound: MetaSound Engine Initialized
+[2026.01.19-15.25.10:175][  0]LogTemp: --------------------------------------------------------------------------------
+[2026.01.19-15.25.10:175][  0]LogTemp: Using SteamCorePro Version: 1.0.7
+[2026.01.19-15.25.10:175][  0]LogTemp: --------------------------------------------------------------------------------
+[2026.01.19-15.25.10:175][  0]LogSockets: bUseSteamNetworking is TRUE. Overriding default socket subsystem with SteamCoreSockets
+[2026.01.19-15.25.10:175][  0]LogSockets: SteamCoreSockets: Initializing Network Relay
+[2026.01.19-15.25.10:182][  0]LogSteamCoreSocketsAPI: Verbose: SteamCoreSockets API: Log Certificate expires in 47h21m at 1769006828 (current time 1768836312), will renew in 45h21m
+[2026.01.19-15.25.10:194][  0]LogAndroidPermission: UAndroidPermissionCallbackProxy::GetInstance
+[2026.01.19-15.25.10:205][  0]LogUObjectArray: 32096 objects as part of root set at end of initial load.
+[2026.01.19-15.25.10:205][  0]LogUObjectArray: 4 objects are not in the root set, but can never be destroyed because they are in the DisregardForGC set.
+[2026.01.19-15.25.10:205][  0]LogUObjectArray: CloseDisregardForGC: 32096/32096 objects in disregard for GC pool
+[2026.01.19-15.25.10:383][  0]LogMoviePlayer: Warning: PassLoadingScreenWindowBackToGame failed.  No Window
+[2026.01.19-15.25.10:384][  0]LogEngine: Initializing Engine...
+[2026.01.19-15.25.10:406][  0]LogNetVersion: Set ProjectVersion to 0.0.4.3. Version Checksum will be recalculated on next use.
+[2026.01.19-15.25.10:407][  0]LogInit: Texture streaming: Enabled
+[2026.01.19-15.25.10:411][  0]LogAudio: Display: Initializing Audio Device Manager...
+[2026.01.19-15.25.10:412][  0]LogAudio: Display: Loading Default Audio Settings Objects...
+[2026.01.19-15.25.10:412][  0]LogAudio: Display: No default SoundConcurrencyObject specified (or failed to load).
+[2026.01.19-15.25.10:412][  0]LogAudio: Display: Audio Device Manager Initialized
+[2026.01.19-15.25.10:413][  0]LogAudio: Display: Creating Audio Device:                 Id: 1, Scope: Shared, Realtime: True
+[2026.01.19-15.25.10:414][  0]LogAudioMixer: Display: Audio Mixer Platform Settings:
+[2026.01.19-15.25.10:414][  0]LogAudioMixer: Display: 	Sample Rate:						  48000
+[2026.01.19-15.25.10:415][  0]LogAudioMixer: Display: 	Callback Buffer Frame Size Requested: 1024
+[2026.01.19-15.25.10:415][  0]LogAudioMixer: Display: 	Callback Buffer Frame Size To Use:	  1024
+[2026.01.19-15.25.10:416][  0]LogAudioMixer: Display: 	Number of buffers to queue:			  1
+[2026.01.19-15.25.10:416][  0]LogAudioMixer: Display: 	Max Channels (voices):				  32
+[2026.01.19-15.25.10:416][  0]LogAudioMixer: Display: 	Number of Async Source Workers:		  4
+[2026.01.19-15.25.10:417][  0]LogAudio: Display: AudioDevice MaxSources: 32
+[2026.01.19-15.25.10:417][  0]LogAudio: Display: Audio Spatialization Plugin: None (built-in).
+[2026.01.19-15.25.10:417][  0]LogAudio: Display: Audio Reverb Plugin: None (built-in).
+[2026.01.19-15.25.10:417][  0]LogAudio: Display: Audio Occlusion Plugin: None (built-in).
+[2026.01.19-15.25.10:435][  0]LogAudioMixer: Display: Initializing audio mixer using platform API: 'XAudio2'
+[2026.01.19-15.25.10:468][  0]LogSteamCoreSocketsAPI: Warning: SteamCoreSockets API: Warning SDR network config fetch attempt #1 failed.  HTTP 504.  .  Trying again.
+[2026.01.19-15.25.10:502][  0]LogAudioMixer: Display: Using Audio Hardware Device Voicemeeter Input (VB-Audio Voicemeeter VAIO)
+[2026.01.19-15.25.10:503][  0]LogAudioMixer: Display: Initializing Sound Submixes...
+[2026.01.19-15.25.10:505][  0]LogAudioMixer: Display: Creating Master Submix 'MasterSubmixDefault'
+[2026.01.19-15.25.10:505][  0]LogAudioMixer: Display: Creating Master Submix 'MasterReverbSubmixDefault'
+[2026.01.19-15.25.10:510][  0]LogAudioMixer: FMixerPlatformXAudio2::StartAudioStream() called. InstanceID=1
+[2026.01.19-15.25.10:510][  0]LogAudioMixer: Display: Output buffers initialized: Frames=1024, Channels=2, Samples=2048, InstanceID=1
+[2026.01.19-15.25.10:511][  0]LogAudioMixer: Display: Starting AudioMixerPlatformInterface::RunInternal(), InstanceID=1
+[2026.01.19-15.25.10:511][  0]LogAudioMixer: Display: FMixerPlatformXAudio2::SubmitBuffer() called for the first time. InstanceID=1
+[2026.01.19-15.25.10:511][  0]LogInit: FAudioDevice initialized with ID 1.
+[2026.01.19-15.25.10:512][  0]LogAudioMixer: Initializing Audio Bus Subsystem for audio device with ID 1
+[2026.01.19-15.25.10:514][  0]LogCsvProfiler: Display: Metadata set : largeworldcoordinates="1"
+[2026.01.19-15.25.10:531][  0]LogSteamCoreSocketsAPI: Verbose: SteamCoreSockets API: Log Got SDR network config.  Loaded revision 1763157357 OK
+[2026.01.19-15.25.10:531][  0]LogSteamCoreSocketsAPI: Verbose: SteamCoreSockets API: Log Performing ping measurement
+[2026.01.19-15.25.10:531][  0]LogSteamCoreSocketsAPI: Verbose: SteamCoreSockets API: Log SDR RelayNetworkStatus:  avail=Attempting  config=OK  anyrelay=Attempting   (Performing ping measurement)
+[2026.01.19-15.25.10:531][  0]LogSteamCoreSocketsAPI: Verbose: SteamCoreSockets API: Log AuthStatus (steamid:76561197970638446):  OK  (OK)
+[2026.01.19-15.25.10:901][  0]LogSteamCoreSocketsAPI: Verbose: SteamCoreSockets API: Log L4S detection: no.  up_ecn1=dropped  down_dscp45=dropped
+[2026.01.19-15.25.10:901][  0]LogSteamCoreSocketsAPI: Verbose: SteamCoreSockets API: Log We will send ECN=0 (ECN config value=-1)
+[2026.01.19-15.25.11:138][  0]LogStaticMesh: [SM_OctagonForNiagara_wCPU] Mesh is marked for CPU read.
+[2026.01.19-15.25.11:467][  0]LogShaderLibrary: Warning: Spent 627.47 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:469][  0]LogShaderLibrary: Warning: Spent 623.19 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:469][  0]LogShaderLibrary: Warning: Spent 575.85 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:470][  0]LogShaderLibrary: Warning: Spent 572.58 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:470][  0]LogShaderLibrary: Warning: Spent 352.61 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:471][  0]LogShaderLibrary: Warning: Spent 513.23 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:471][  0]LogShaderLibrary: Warning: Spent 577.02 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:471][  0]LogShaderLibrary: Warning: Spent 387.56 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:472][  0]LogShaderLibrary: Warning: Spent 549.29 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:472][  0]LogShaderLibrary: Warning: Spent 127.95 ms in a blocking wait for shader preload, NumRefs: 64, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:472][  0]LogShaderLibrary: Warning: Spent 399.83 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:472][  0]LogShaderLibrary: Warning: Spent 255.03 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:472][  0]LogShaderLibrary: Warning: Spent 123.90 ms in a blocking wait for shader preload, NumRefs: 14, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:473][  0]LogShaderLibrary: Warning: Spent 247.89 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:474][  0]LogShaderLibrary: Warning: Spent 121.43 ms in a blocking wait for shader preload, NumRefs: 65, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:474][  0]LogShaderLibrary: Warning: Spent 245.33 ms in a blocking wait for shader preload, NumRefs: 64, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:474][  0]LogShaderLibrary: Warning: Spent 364.29 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:474][  0]LogShaderLibrary: Warning: Spent 351.56 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:475][  0]LogShaderLibrary: Warning: Spent 176.09 ms in a blocking wait for shader preload, NumRefs: 64, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:475][  0]LogShaderLibrary: Warning: Spent 176.06 ms in a blocking wait for shader preload, NumRefs: 64, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:475][  0]LogShaderLibrary: Warning: Spent 175.01 ms in a blocking wait for shader preload, NumRefs: 65, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:475][  0]LogShaderLibrary: Warning: Spent 175.99 ms in a blocking wait for shader preload, NumRefs: 64, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:475][  0]LogShaderLibrary: Warning: Spent 175.89 ms in a blocking wait for shader preload, NumRefs: 64, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:476][  0]LogShaderLibrary: Warning: Spent 288.81 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:476][  0]LogShaderLibrary: Warning: Spent 254.96 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:476][  0]LogShaderLibrary: Warning: Spent 169.64 ms in a blocking wait for shader preload, NumRefs: 65, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:477][  0]LogShaderLibrary: Warning: Spent 174.24 ms in a blocking wait for shader preload, NumRefs: 65, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:477][  0]LogShaderLibrary: Warning: Spent 168.72 ms in a blocking wait for shader preload, NumRefs: 65, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:477][  0]LogShaderLibrary: Warning: Spent 247.98 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:477][  0]LogShaderLibrary: Warning: Spent 168.01 ms in a blocking wait for shader preload, NumRefs: 65, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:477][  0]LogShaderLibrary: Warning: Spent 286.98 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:478][  0]LogShaderLibrary: Warning: Spent 247.99 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:478][  0]LogShaderLibrary: Warning: Spent 127.87 ms in a blocking wait for shader preload, NumRefs: 64, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:478][  0]LogShaderLibrary: Warning: Spent 253.73 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:478][  0]LogShaderLibrary: Warning: Spent 288.84 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:478][  0]LogShaderLibrary: Warning: Spent 255.12 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:480][  0]LogShaderLibrary: Warning: Spent 121.42 ms in a blocking wait for shader preload, NumRefs: 13, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:480][  0]LogShaderLibrary: Warning: Spent 167.88 ms in a blocking wait for shader preload, NumRefs: 64, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:480][  0]LogShaderLibrary: Warning: Spent 175.85 ms in a blocking wait for shader preload, NumRefs: 64, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:480][  0]LogShaderLibrary: Warning: Spent 249.54 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:481][  0]LogShaderLibrary: Warning: Spent 175.91 ms in a blocking wait for shader preload, NumRefs: 64, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:481][  0]LogShaderLibrary: Warning: Spent 255.27 ms in a blocking wait for shader preload, NumRefs: 13, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:481][  0]LogShaderLibrary: Warning: Spent 413.19 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:481][  0]LogShaderLibrary: Warning: Spent 125.30 ms in a blocking wait for shader preload, NumRefs: 65, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:481][  0]LogShaderLibrary: Warning: Spent 377.60 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:481][  0]LogShaderLibrary: Warning: Spent 285.47 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:486][  0]LogShaderLibrary: Warning: Spent 123.94 ms in a blocking wait for shader preload, NumRefs: 14, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:486][  0]LogShaderLibrary: Warning: Spent 176.05 ms in a blocking wait for shader preload, NumRefs: 64, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:486][  0]LogShaderLibrary: Warning: Spent 254.54 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:487][  0]LogShaderLibrary: Warning: Spent 254.47 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:487][  0]LogShaderLibrary: Warning: Spent 402.26 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:487][  0]LogShaderLibrary: Warning: Spent 400.21 ms in a blocking wait for shader preload, NumRefs: 66, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:487][  0]LogShaderLibrary: Warning: Spent 213.38 ms in a blocking wait for shader preload, NumRefs: 65, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:487][  0]LogShaderLibrary: Warning: Spent 11.96 ms in a blocking wait for shader preload, NumRefs: 28, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:488][  0]LogShaderLibrary: Warning: Spent 511.47 ms in a blocking wait for shader preload, NumRefs: 12, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:489][  0]LogShaderLibrary: Warning: Spent 10.46 ms in a blocking wait for shader preload, NumRefs: 28, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:489][  0]LogShaderLibrary: Warning: Spent 9.65 ms in a blocking wait for shader preload, NumRefs: 28, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:489][  0]LogShaderLibrary: Warning: Spent 9.56 ms in a blocking wait for shader preload, NumRefs: 28, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:489][  0]LogShaderLibrary: Warning: Spent 10.47 ms in a blocking wait for shader preload, NumRefs: 28, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:489][  0]LogShaderLibrary: Warning: Spent 9.43 ms in a blocking wait for shader preload, NumRefs: 28, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:490][  0]LogShaderLibrary: Warning: Spent 8.78 ms in a blocking wait for shader preload, NumRefs: 28, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:490][  0]LogShaderLibrary: Warning: Spent 9.61 ms in a blocking wait for shader preload, NumRefs: 5, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:490][  0]LogShaderLibrary: Warning: Spent 9.35 ms in a blocking wait for shader preload, NumRefs: 28, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:491][  0]LogShaderLibrary: Warning: Spent 9.83 ms in a blocking wait for shader preload, NumRefs: 4, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:491][  0]LogShaderLibrary: Warning: Spent 9.82 ms in a blocking wait for shader preload, NumRefs: 4, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:491][  0]LogShaderLibrary: Warning: Spent 8.50 ms in a blocking wait for shader preload, NumRefs: 23, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:494][  0]LogShaderLibrary: Warning: Spent 8.52 ms in a blocking wait for shader preload, NumRefs: 23, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:494][  0]LogShaderLibrary: Warning: Spent 7.98 ms in a blocking wait for shader preload, NumRefs: 23, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:494][  0]LogShaderLibrary: Warning: Spent 7.98 ms in a blocking wait for shader preload, NumRefs: 23, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:495][  0]LogShaderLibrary: Warning: Spent 7.92 ms in a blocking wait for shader preload, NumRefs: 23, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:495][  0]LogShaderLibrary: Warning: Spent 7.84 ms in a blocking wait for shader preload, NumRefs: 23, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:495][  0]LogShaderLibrary: Warning: Spent 7.86 ms in a blocking wait for shader preload, NumRefs: 23, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:495][  0]LogShaderLibrary: Warning: Spent 7.85 ms in a blocking wait for shader preload, NumRefs: 23, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:497][  0]LogShaderLibrary: Warning: Spent 7.99 ms in a blocking wait for shader preload, NumRefs: 4, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:497][  0]LogShaderLibrary: Warning: Spent 7.80 ms in a blocking wait for shader preload, NumRefs: 23, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:497][  0]LogShaderLibrary: Warning: Spent 8.01 ms in a blocking wait for shader preload, NumRefs: 23, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:501][  0]LogShaderLibrary: Warning: Spent 8.56 ms in a blocking wait for shader preload, NumRefs: 23, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:501][  0]LogShaderLibrary: Warning: Spent 8.73 ms in a blocking wait for shader preload, NumRefs: 4, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:501][  0]LogShaderLibrary: Warning: Spent 8.68 ms in a blocking wait for shader preload, NumRefs: 4, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:502][  0]LogShaderLibrary: Warning: Spent 365.32 ms in a blocking wait for shader preload, NumRefs: 28, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:502][  0]LogShaderLibrary: Warning: Spent 365.30 ms in a blocking wait for shader preload, NumRefs: 28, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:502][  0]LogShaderLibrary: Warning: Spent 7.95 ms in a blocking wait for shader preload, NumRefs: 4, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.11:843][  0]LogProperty: Error: Struct type unknown for property 'StructProperty /Game/FluidNinjaLive/NinjaLive_PresetManager.NinjaLive_PresetManager_C:MarkForSave_UE426_BugWorkaround:K2Node_MakeStruct_AssetRenameData'; perhaps the USTRUCT() was renamed or deleted?
+[2026.01.19-15.25.11:844][  0]LogProperty: Error: Struct type unknown for property 'StructProperty /Game/FluidNinjaLive/NinjaLive_PresetManager.NinjaLive_PresetManager_C:MarkForSave_UE426_BugWorkaround:K2Node_MakeArray_Array.K2Node_MakeArray_Array'; perhaps the USTRUCT() was renamed or deleted?
+[2026.01.19-15.25.11:844][  0]LogProperty: Error: Struct type unknown for property 'StructProperty /Game/FluidNinjaLive/NinjaLive_PresetManager.NinjaLive_PresetManager_C:RenderTargetExportSingleV2:K2Node_MakeStruct_AssetRenameData'; perhaps the USTRUCT() was renamed or deleted?
+[2026.01.19-15.25.11:847][  0]LogProperty: Error: Struct type unknown for property 'StructProperty /Game/FluidNinjaLive/NinjaLive_PresetManager.NinjaLive_PresetManager_C:RenderTargetExportSingleV2:K2Node_MakeArray_Array.K2Node_MakeArray_Array'; perhaps the USTRUCT() was renamed or deleted?
+[2026.01.19-15.25.12:026][  0]LogChaosDD: Creating Chaos Debug Draw Scene for world Untitled
+[2026.01.19-15.25.12:078][  0]LogAudio: Display: Audio Device (ID: 1) registered with world 'Untitled'.
+[2026.01.19-15.25.12:080][  0]LogSlate: Updating window title bar state: overlay mode, drag disabled, window buttons hidden, title bar hidden
+[2026.01.19-15.25.12:083][  0]LogUIActionRouter: Display: Found 0 derived classes when attemping to create action router (CommonUIActionRouterBase)
+[2026.01.19-15.25.12:085][  0]LogInit: Display: Game Engine Initialized.
+[2026.01.19-15.25.12:088][  0]LogNNEDenoiser: Ray Tracing is not enabled, therefore NNEDenoiser is not registered!
+[2026.01.19-15.25.12:100][  0]LogInit: Display: Starting Game.
+[2026.01.19-15.25.12:101][  0]LogGlobalStatus: UEngine::Browse Started Browse: "/Game/App/Levels/L_HSH_Hotel?Name=Player?listen"
+[2026.01.19-15.25.12:101][  0]LogNet: Browse: /Game/App/Levels/L_HSH_Hotel?Name=Player?listen
+[2026.01.19-15.25.12:101][  0]LogLoad: LoadMap: /Game/App/Levels/L_HSH_Hotel?Name=Player?listen
+[2026.01.19-15.25.12:101][  0]LogWorld: BeginTearingDown for /Temp/Untitled_0
+[2026.01.19-15.25.12:103][  0]LogWorld: UWorld::CleanupWorld for Untitled, bSessionEnded=true, bCleanupResources=true
+[2026.01.19-15.25.12:127][  0]LogAudio: Display: Audio Device unregistered from world 'None'.
+[2026.01.19-15.25.12:138][  0]LogUObjectHash: Compacting FUObjectHashTables data took   0.85ms
+[2026.01.19-15.25.12:363][  0]LogWorldPartition: UWorldPartitionRuntimeSpatialHash::PostLoad : UseAlignedGridLevels = 1, SnapNonAlignedGridLevelsToLowerLevels = 1
+[2026.01.19-15.25.12:363][  0]LogAudio: Display: Audio Device (ID: 1) registered with world 'L_HSH_Hotel'.
+[2026.01.19-15.25.12:364][  0]LogChaosDD: Creating Chaos Debug Draw Scene for world L_HSH_Hotel
+[2026.01.19-15.25.12:367][  0]LogWorldPartition: ULevel::OnLevelLoaded(L_HSH_Hotel)(bIsOwningWorldGameWorld=1, bIsOwningWorldPartitioned=1, InitializeForMainWorld=1, InitializeForEditor=0, InitializeForGame=1)
+[2026.01.19-15.25.12:367][  0]LogWorldPartition: Display: WorldPartition initialize started...
+[2026.01.19-15.25.12:367][  0]LogWorldPartition: UWorldPartition::Initialize : World = /Game/App/Levels/L_HSH_Hotel.L_HSH_Hotel, World Type = Game, IsMainWorldPartition = 1, Location = V(0), Rotation = R(0), IsEditor = 0, IsGame = 1, IsPIEWorldTravel = 0, IsCooking = 0
+[2026.01.19-15.25.12:367][  0]LogWorldPartition: UWorldPartition::Initialize Context : World NetMode = Standalone, IsServer = 0, IsDedicatedServer = 0, IsServerStreamingEnabled = 0, IsServerStreamingOutEnabled = 0, IsUsingMakingVisibleTransaction = 0, IsUsingMakingInvisibleTransaction = 0
+[2026.01.19-15.25.12:367][  0]LogWorldPartition: Initial Data Layer Effective States Activated(DL_Hotel_Foundation) Loaded(DL_GalaxySystems_Hex_Homeworld,DL_Seed_Homeworld,DL_GalaxySystems_Deep_Homeworld,DL_GalaxySystems_Stem_Homeworld,DL_GalaxySystems_Dread_Homeworld,DL_CenterOfTheGalaxy,DL_MovementPhase,DL_Hotel_Tron_SecondaryExit,DL_Zygnus,DL_Hotel_GreatEngramCollective,DL_Seed_BigHabRing,DL_Seed_BarAssociation,DL_Seed_GamblingCommission,DL_Seed_ActorsGuild,DL_Seed_TheChurch,DL_Seed_SeekerSociety,DL_Seed_ScienceAcademy,DL_Deep_Homeworld_w_Station,DL_Deep_ScienceAcademy,DL_Deep_Homeworld_No_Station,DL_Deep_TheChurch,DL_Deep_ActorsGuild,DL_Deep_BarAssociation,DL_Deep_GamblingCommission,DL_Deep_SeekerSociety,DL_Stem_ActorsGuild,DL_Stem_BarAssociation,DL_Stem_Homeworld_No_Station,DL_Stem_ScienceAcademy,DL_Stem_SeekerSociety,DL_Stem_TheChurch,DL_Hex_ActorsGuild,DL_Hex_BarAssociation,DL_Hex_Homeworld_No_Station,DL_Hex_ScienceAcademy,DL_Hex_SeekerSociety,DL_Hex_TheChurch,DL_Dread_ActorsGuild,DL_Dread_BarAssociation,DL_Dread_GamblingCommission,DL_Dread_Homeworld_No_Station,DL_Dread_ScienceAcademy,DL_Dread_SeekerSociety,DL_Dread_TheChurch,DL_Honored_ActorsGuild,DL_Honored_BarAssociation,DL_Honored_GamblingCommission,DL_Honored_Homeworld_No_Station,DL_Honored_ScienceAcademy,DL_Honored_SeekerSociety,DL_Honored_TheChurch,DL_Admin_ShaderLoading)
+[2026.01.19-15.25.12:368][  0]LogWorldPartition: Display: WorldPartition initialize took 257 us
+[2026.01.19-15.25.12:368][  0]LogLoad: Game class is 'BP_HSH_MP_GameMode_C'
+[2026.01.19-15.25.12:369][  0]LogCsvProfiler: Display: Metadata set : iris="0"
+[2026.01.19-15.25.12:370][  0]LogNet: ReplicationDriverClass is null! Not using ReplicationDriver.
+[2026.01.19-15.25.12:370][  0]LogNetCore: DDoS detection status: detection enabled: 0 analytics enabled: 0
+[2026.01.19-15.25.12:371][  0]LogNet: InitBase GameNetDriver (NetDriverDefinition GameNetDriver) using replication model Generic
+[2026.01.19-15.25.12:373][  0]PacketHandlerLog: Loaded PacketHandler component: Engine.EngineHandlerComponentFactory (StatelessConnectHandlerComponent)
+[2026.01.19-15.25.12:374][  0]LogSockets: SteamCoreSockets: Now tracking socket 65536 for addr 76561197970638446:7777, has parent? 0
+[2026.01.19-15.25.12:374][  0]LogNet: Name:GameNetDriver Def:GameNetDriver SteamCoreSocketsNetDriver_2147482443 started listening on 7777
+[2026.01.19-15.25.12:374][  0]LogNet: SteamCoreSockets: Listening with handle 65536
+[2026.01.19-15.25.12:388][  0]LogWorld: Bringing World /Game/App/Levels/L_HSH_Hotel.L_HSH_Hotel up for play (max tick rate 0) at 2026.01.19-07.25.12
+[2026.01.19-15.25.12:496][  0]LogWorld: Bringing up level for play took: 0.122457
+[2026.01.19-15.25.12:497][  0]LogNavigation: Warning: NavData RegistrationFailed_AgentNotValid, NavData instance contains navmesh that doesn't support any of expected agent types.
+[2026.01.19-15.25.12:500][  0]LogNavigation: Warning: NavData RegistrationFailed_AgentNotValid, NavData instance contains navmesh that doesn't support any of expected agent types.
+[2026.01.19-15.25.12:505][  0]LogNavigation: Warning: NavData RegistrationFailed_AgentNotValid, NavData instance contains navmesh that doesn't support any of expected agent types.
+[2026.01.19-15.25.12:508][  0]LogNavigation: Warning: NavData RegistrationFailed_AgentNotValid, NavData instance contains navmesh that doesn't support any of expected agent types.
+[2026.01.19-15.25.12:511][  0]LogNavigation: Warning: NavData RegistrationFailed_AgentNotValid, NavData instance contains navmesh that doesn't support any of expected agent types.
+[2026.01.19-15.25.12:515][  0]LogNavigation: Warning: NavData RegistrationFailed_AgentNotValid, NavData instance contains navmesh that doesn't support any of expected agent types.
+[2026.01.19-15.25.12:526][  0]LogEnhancedInput: Enhanced Input local player subsystem has initalized the user settings!
+[2026.01.19-15.25.12:527][  0]LogBlueprintUserMessages: [BP_HSH_MP_GameMode_C_2147482444] GameMode: OnPostLogin
+[2026.01.19-15.25.12:531][  0]LogSlate: New Slate User Created. Platform User Id 8, User Index 8, Is Virtual User: 1
+[2026.01.19-15.25.12:531][  0]LogSlate: Slate User Registered.  User Index 8, Is Virtual User: 1
+[2026.01.19-15.25.12:531][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - MP_Hero Posessed
+[2026.01.19-15.25.12:531][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Possessed Set Movement Tick To Off.
+[2026.01.19-15.25.12:531][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Possessed Set Movement Mode to None
+[2026.01.19-15.25.12:531][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Update Steam Group
+[2026.01.19-15.25.12:533][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Steam Group Set to 76561197970638446
+[2026.01.19-15.25.12:533][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Client sets Steam Group to 76561197970638446
+[2026.01.19-15.25.12:533][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] SeeThroughWalls true
+[2026.01.19-15.25.12:534][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] MP_Hero Attempt To Update Volitiles
+[2026.01.19-15.25.12:535][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] UpdatePlayerVolitiles: Name: [HSH] ☠️GeneralDread  IsFactionSelected true Hex IsLoaded:true
+[2026.01.19-15.25.12:546][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] MP_Hero Set Selected Character Hex HexShadow1_001
+[2026.01.19-15.25.12:546][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Warning: Waiting for Name Tag
+[2026.01.19-15.25.12:546][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] MP_Hero Attempt To Update Volitiles
+[2026.01.19-15.25.12:546][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] UpdatePlayerVolitiles: Name: [HSH] ☠️GeneralDread  IsFactionSelected true Hex IsLoaded:true
+[2026.01.19-15.25.12:547][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] MP_Hero Set Selected Character Hex HexShadow1_001
+[2026.01.19-15.25.12:547][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] MP_Hero Attempt To Update Volitiles
+[2026.01.19-15.25.12:547][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] UpdatePlayerVolitiles: Name: [HSH] ☠️GeneralDread  IsFactionSelected true Hex IsLoaded:true
+[2026.01.19-15.25.12:547][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] MP_Hero Set Selected Character Hex HexShadow1_001
+[2026.01.19-15.25.12:547][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Show online status
+[2026.01.19-15.25.12:547][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - Show Widget Requested OnlineStatus
+[2026.01.19-15.25.12:554][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - On Possesed Locally controlled, start character movement tick
+[2026.01.19-15.25.12:555][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - HeroPossessed
+[2026.01.19-15.25.12:555][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - Init Proper Loadscreen
+[2026.01.19-15.25.12:555][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - Switch has authority to Proper Loadscreen
+[2026.01.19-15.25.12:555][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - Player Loadscreen
+[2026.01.19-15.25.12:555][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - Show Widget Requested LoadScreen
+[2026.01.19-15.25.12:555][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - Casting to Hero
+[2026.01.19-15.25.12:555][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - Hero Cast
+[2026.01.19-15.25.12:555][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - On Possess Engage Bindings
+[2026.01.19-15.25.12:555][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - Show Widget Requested Dialog
+[2026.01.19-15.25.12:557][  0]LogAudioMixer: Display: Sending SubmixBufferListener 'Flite Text-To-Speech Listener' register command...
+[2026.01.19-15.25.12:566][  0]LogAudioMixer: Display: Submix buffer listener 'Flite Text-To-Speech Listener' registered with submix 'MasterSubmixDefault'
+[2026.01.19-15.25.12:566][  0]LogBlueprintUserMessages: [BP_HSH_MP_GameMode_C_2147482444] GameMode: StartingNewPlayer
+[2026.01.19-15.25.12:566][  0]LogBlueprintUserMessages: [BP_HSH_MP_GameMode_C_2147482444] HSH MP Game Mode - Steam Group Size Set to 1
+[2026.01.19-15.25.13:431][  0]LogShaderLibrary: Warning: Spent 827.60 ms in a blocking wait for shader preload, NumRefs: 48, FramePreloadStarted: 1, CurrentFrame: 1
+[2026.01.19-15.25.14:144][  0]LogStaticMesh: [ZygnessOutterHull_032] Mesh is marked for CPU read.
+[2026.01.19-15.25.14:300][  0]LogSteamCoreSocketsAPI: Verbose: SteamCoreSockets API: Log Ping measurement completed in 3.7s.  Relays: 24 valid, 1 great, 6 good+, 10 ok+, 6 ignored
+[2026.01.19-15.25.14:300][  0]LogSteamCoreSocketsAPI: Verbose: SteamCoreSockets API: Log Ping location: lax=13+1,sea=37+3/36+1,dfw=45+4/45+1,ord=69+6/59+1,atl=61+6/62+4,iad=73+7/77+1,lim=147+14/114+1,tyo=114+11,scl=172+17/144+1,fra=163+16/158+1,sgp=185+18/186+18,gru=195+19/191+1
+[2026.01.19-15.25.14:301][  0]LogSteamCoreSocketsAPI: Verbose: SteamCoreSockets API: Log SDR RelayNetworkStatus:  avail=OK  config=OK  anyrelay=OK   (OK.  Relays: 24 valid, 1 great, 6 good+, 10 ok+, 6 ignored)
+[2026.01.19-15.25.14:435][  0]LogBlueprintUserMessages: [BP_TrolleyNPC_C_UAID_107C614CBA2763B202_1230225374] NPC 0 None (S) - Posessed
+[2026.01.19-15.25.14:636][  0]LogBlueprintUserMessages: [L_HSH_Hotel_C_1] <<<<<<<<<<<<<<<<<<<<<SERVER<<<<<SERVER<<<<<<<<<<<<<<<<<<<<<<<<<<<Hotel Loaded<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+[2026.01.19-15.25.14:637][  0]r.VolumetricFog.GridPixelSize = "5"
+[2026.01.19-15.25.14:637][  0]r.VolumetricFog.HistoryWeight = "0.9"
+[2026.01.19-15.25.14:639][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481466] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:639][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481466] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:641][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481466] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:641][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481466] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:644][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481383] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:644][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481383] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:645][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481383] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:646][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481383] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:648][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481300] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:650][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481300] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:650][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481300] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:651][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481300] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:653][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481217] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:654][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481217] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:654][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481217] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:655][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481217] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:657][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481134] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:658][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481134] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:659][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481134] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:659][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481134] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:661][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481051] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:662][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481051] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:663][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481051] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:664][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481051] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:666][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480968] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:666][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480968] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:666][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480968] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:668][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480968] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:670][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480885] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:671][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480885] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:672][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480885] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:672][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480885] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:674][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480802] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:675][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480802] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:675][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480802] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:676][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480802] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:678][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480719] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:678][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480719] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:679][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480719] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:680][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480719] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:682][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480636] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:684][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480636] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:684][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480636] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:685][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480636] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:687][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480553] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:687][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480553] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:689][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480553] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:689][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480553] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:691][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480470] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:692][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480470] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:693][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480470] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:693][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480470] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:695][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480387] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:696][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480387] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:697][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480387] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:697][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480387] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:700][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480304] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:701][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480304] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:702][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480304] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:703][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480304] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:704][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480221] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:706][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480221] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:707][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480221] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:707][  0]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480221] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:709][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480138] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:711][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480127] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:712][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480116] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:712][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480105] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:714][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480094] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:716][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480083] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:717][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480072] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:718][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480061] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:720][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480050] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:720][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480039] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:770][  0]LogBlueprintUserMessages: [BP_HSH_MP_GameMode_C_2147482444] GameMode: BeginPlay
+[2026.01.19-15.25.14:780][  0]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] ]]]]]]HSH Engine Core Controllers Engaged[[[[[[
+[2026.01.19-15.25.14:780][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - Begin Play
+[2026.01.19-15.25.14:780][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - Init Proper Loadscreen
+[2026.01.19-15.25.14:780][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - Switch has authority to Proper Loadscreen
+[2026.01.19-15.25.14:780][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - Player Loadscreen
+[2026.01.19-15.25.14:780][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - Show Widget Requested LoadScreen
+[2026.01.19-15.25.14:781][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - BeginPlay engage bindings
+[2026.01.19-15.25.14:781][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - Show Widget Requested Dialog
+[2026.01.19-15.25.14:781][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - Show Widget Requested LiveLogger
+[2026.01.19-15.25.14:783][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Hero BeginPlay | IsServer: true
+[2026.01.19-15.25.14:784][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Begin Play Set Movement Tick To Off.
+[2026.01.19-15.25.14:785][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Begin Play Set Movement Mode to None
+[2026.01.19-15.25.14:785][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Player State is now Valid
+[2026.01.19-15.25.14:785][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] MP_Hero Attempt To Update Volitiles
+[2026.01.19-15.25.14:785][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] UpdatePlayerVolitiles: Name: [HSH] ☠️GeneralDread  IsFactionSelected true Hex IsLoaded:true
+[2026.01.19-15.25.14:785][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] MP_Hero Set Selected Character Hex HexShadow1_001
+[2026.01.19-15.25.14:785][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Server Leave Limbo
+[2026.01.19-15.25.14:785][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - To Limbo
+[2026.01.19-15.25.14:797][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - i Server_AttachToDock
+[2026.01.19-15.25.14:797][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Dock Hero Requested
+[2026.01.19-15.25.14:798][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] Hide Widget HUD Hotel
+[2026.01.19-15.25.14:799][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Dock Movement mode to None
+[2026.01.19-15.25.14:799][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Dock Collision Off
+[2026.01.19-15.25.14:799][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Dock Gravity Off
+[2026.01.19-15.25.14:799][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Switch to docking keys
+[2026.01.19-15.25.14:799][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Hero Docked to Component
+[2026.01.19-15.25.14:800][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Hero should be docked.
+[2026.01.19-15.25.14:800][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Client_LocalDockToDock
+[2026.01.19-15.25.14:800][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - PassedActorValid Setting Docked to Actor
+[2026.01.19-15.25.14:800][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Dock Hero Requested
+[2026.01.19-15.25.14:800][  0]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] Hide Widget HUD Hotel
+[2026.01.19-15.25.14:800][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Dock Movement mode to None
+[2026.01.19-15.25.14:800][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Dock Collision Off
+[2026.01.19-15.25.14:801][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Dock Gravity Off
+[2026.01.19-15.25.14:801][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Switch to docking keys
+[2026.01.19-15.25.14:801][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Hero Docked to Component
+[2026.01.19-15.25.14:801][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Hero should be docked.
+[2026.01.19-15.25.14:801][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Limbo Assigned Location - Empty Room
+[2026.01.19-15.25.14:801][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Update Steam Group
+[2026.01.19-15.25.14:801][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Steam Group Set to 76561197970638446
+[2026.01.19-15.25.14:801][  0]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Client sets Steam Group to 76561197970638446
+[2026.01.19-15.25.14:801][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:801][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.14:801][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0] BuildingIcon T:Plain Bed Room A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.14:801][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0] BuildingIcon T:Plain Bed Room A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0
+[2026.01.19-15.25.14:801][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound1_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:802][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound1_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.14:802][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound1_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.14:802][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound1_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound1_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0
+[2026.01.19-15.25.14:802][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound2_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:802][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound2_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.14:803][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound2_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.14:803][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound2_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound2_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0
+[2026.01.19-15.25.14:803][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound3_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.14:804][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound3_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.14:804][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound3_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.14:804][  0]LogBlueprintUserMessages: [BP_BuildingIcon_Bound3_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound3_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_0
+[2026.01.19-15.25.14:866][  0]LogLoad: Took 2.764181 seconds to LoadMap(/Game/App/Levels/L_HSH_Hotel)
+[2026.01.19-15.25.14:866][  0]LogGlobalStatus: UEngine::LoadMap Load map complete /Game/App/Levels/L_HSH_Hotel
+[2026.01.19-15.25.14:985][  1]LogPakFile: AllPaks IndexSizes: DirectoryHashSize=32, PathHashSize=16, EntriesSize=32752, DirTreeIndexSize=190296, TotalSize=223096
+[2026.01.19-15.25.15:011][  1]LogInit: Display: Engine is initialized. Leaving FEngineLoop::Init()
+[2026.01.19-15.25.15:011][  1]LogLoad: (Engine Initialization) Total time: 8.41 seconds
+[2026.01.19-15.25.15:044][  1]LogSlate: Took 0.000271 seconds to synchronously load lazily loaded font '../../../HSHVacancy/Content/Bin/HSH_Materials/Canonical/Fonts/FF_SpaceGrotesque.ufont' (131K)
+[2026.01.19-15.25.15:049][  1]LogSlate: Took 0.000517 seconds to synchronously load lazily loaded font '../../../Engine/Content/EngineFonts/Faces/RobotoBold.ufont' (160K)
+[2026.01.19-15.25.15:096][  1]LogContentStreaming: Texture pool size now 1000 MB
+[2026.01.19-15.25.15:096][  1]LogCsvProfiler: Display: Metadata set : streamingpoolsizemb="1000"
+[2026.01.19-15.25.15:647][  1]LogSlate: Took 0.000432 seconds to synchronously load lazily loaded font '../../../Engine/Content/Slate/Fonts/Roboto-Regular.ttf' (155K)
+[2026.01.19-15.25.15:679][  1]LogMoviePlayer: Initializing movie player
+[2026.01.19-15.25.15:684][  1]LogTrace: Display: Control listening on port 1985
+[2026.01.19-15.25.15:709][  2]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero Ley Lumen is false
+[2026.01.19-15.25.15:723][  2]LogScript: Error: Script Msg: File not found: ../../../HSHVacancy/Config/UserSettings.json
+[2026.01.19-15.25.15:724][  2]LogScript: Error: Script call stack:
+	/Game/App/Core/GameInstance/BP_HSH_GameInstance.BP_HSH_GameInstance_C.ExecuteUbergraph_BP_HSH_GameInstance <---
+	/Game/App/Core/GameInstance/BP_HSH_GameInstance.BP_HSH_GameInstance_C.EasyMenuInit
+	/Game/App/Core/GameInstance/BP_HSH_GameInstance.BP_HSH_GameInstance_C.ExecuteUbergraph_BP_HSH_GameInstance
+
+[2026.01.19-15.25.15:724][  2]LogScript: Warning: Script Msg: Field 'Resolution Scale' was not found on the provided JSON object.
+[2026.01.19-15.25.15:724][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:724][  2]r.ScreenPercentage = "100"
+[2026.01.19-15.25.15:724][  2]LogScript: Warning: Script Msg: Field 'Upscaling Quality' was not found on the provided JSON object.
+[2026.01.19-15.25.15:724][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:725][  2]LogScript: Warning: Script Msg: Field 'Upscaling Method' was not found on the provided JSON object.
+[2026.01.19-15.25.15:725][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:725][  2]LogScript: Warning: Script Msg: Field 'AA Method' was not found on the provided JSON object.
+[2026.01.19-15.25.15:725][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:725][  2]r.AntiAliasingMethod = "4"
+[2026.01.19-15.25.15:725][  2]r.ScreenPercentage = "66.6"
+[2026.01.19-15.25.15:725][  2]LogScript: Warning: Script Msg: Field 'Lumen Hardware RT Enabled' was not found on the provided JSON object.
+[2026.01.19-15.25.15:725][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:770][  2]r.Lumen.HardwareRayTracing = "0"
+[2026.01.19-15.25.15:770][  2]LogScript: Warning: Script Msg: Field 'Virtual Shadow Maps Enabled' was not found on the provided JSON object.
+[2026.01.19-15.25.15:771][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:809][  2]r.Shadow.Virtual.Enable = "1"
+[2026.01.19-15.25.15:810][  2]LogScript: Warning: Script Msg: Field 'Contact Shadows' was not found on the provided JSON object.
+[2026.01.19-15.25.15:810][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:810][  2]r.ContactShadows = "1"
+[2026.01.19-15.25.15:810][  2]LogScript: Warning: Script Msg: Field 'Volumetrics Quality' was not found on the provided JSON object.
+[2026.01.19-15.25.15:810][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:811][  2]r.VolumetricFog = "1"
+[2026.01.19-15.25.15:811][  2]r.VolumetricFog.GridPixelSize = "16"
+[2026.01.19-15.25.15:811][  2]r.VolumetricFog.GridSizeZ = "64"
+[2026.01.19-15.25.15:811][  2]r.VolumetricFog.HistoryMissSupersampleCount = "4"
+[2026.01.19-15.25.15:811][  2]LogScript: Warning: Script Msg: Field 'Motion Blur Quality' was not found on the provided JSON object.
+[2026.01.19-15.25.15:811][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:811][  2]r.MotionBlurQuality = "4"
+[2026.01.19-15.25.15:811][  2]LogScript: Warning: Script Msg: Field 'Gamma' was not found on the provided JSON object.
+[2026.01.19-15.25.15:811][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:811][  2]LogScript: Warning: Script Msg: Field 'VSync Interval' was not found on the provided JSON object.
+[2026.01.19-15.25.15:811][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:811][  2]rhi.SyncInterval = "1"
+[2026.01.19-15.25.15:812][  2]LogScript: Warning: Script Msg: Field 'Textures Filtering' was not found on the provided JSON object.
+[2026.01.19-15.25.15:812][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:812][  2]r.MaxAnisotropy = "8"
+[2026.01.19-15.25.15:812][  2]LogScript: Warning: Script Msg: Field 'Audio Volumes' was not found on the provided JSON object.
+[2026.01.19-15.25.15:812][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:812][  2]LogScript: Warning: Script Msg: Field 'Hold To Sprint' was not found on the provided JSON object.
+[2026.01.19-15.25.15:812][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:812][  2]LogScript: Warning: Script Msg: Field 'Invert Y Axis' was not found on the provided JSON object.
+[2026.01.19-15.25.15:813][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:813][  2]LogScript: Warning: Script Msg: Field 'Invert X Axis' was not found on the provided JSON object.
+[2026.01.19-15.25.15:813][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:813][  2]LogScript: Warning: Script Msg: Field 'Camera Sensitivity' was not found on the provided JSON object.
+[2026.01.19-15.25.15:813][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:813][  2]LogScript: Warning: Script Msg: Field 'Camera FOV' was not found on the provided JSON object.
+[2026.01.19-15.25.15:813][  2]LogScript: Warning: Script Msg called by: BP_HSH_GameInstance_C /Engine/Transient.GameEngine_2147482608:BP_HSH_GameInstance_C_2147482554
+[2026.01.19-15.25.15:917][  2]LogBlueprintUserMessages: [L_HSH_Hotel_C_1] Data Layers have Loaded (Macro)
+[2026.01.19-15.25.15:918][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481466] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:918][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481466] BuildingIcon T:Reception A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:918][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481466] BuildingIcon T:Reception A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147481466
+[2026.01.19-15.25.15:918][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481383] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:918][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481383] BuildingIcon T:Action Room Research A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:919][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481383] BuildingIcon T:Action Room Research A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147481383
+[2026.01.19-15.25.15:919][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481300] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:919][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481300] BuildingIcon T:Honored Weakness Room A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:919][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481300] BuildingIcon T:Honored Weakness Room A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147481300
+[2026.01.19-15.25.15:919][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481217] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:920][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481217] BuildingIcon T:Action Room Staff A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:920][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481217] BuildingIcon T:Action Room Staff A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147481217
+[2026.01.19-15.25.15:920][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481134] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:920][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481134] BuildingIcon T:Action Room Renovation A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:920][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481134] BuildingIcon T:Action Room Renovation A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147481134
+[2026.01.19-15.25.15:920][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481051] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:921][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481051] BuildingIcon T:Upgraded Action Room Advertisement A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:921][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481051] BuildingIcon T:Upgraded Action Room Advertisement A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147481051
+[2026.01.19-15.25.15:921][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480968] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:921][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480968] BuildingIcon T:Action Room Ghost A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:921][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480968] BuildingIcon T:Action Room Ghost A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480968
+[2026.01.19-15.25.15:922][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480885] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:922][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480885] BuildingIcon T:Plain Bed Room A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:922][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480885] BuildingIcon T:Plain Bed Room A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480885
+[2026.01.19-15.25.15:922][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480802] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:922][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480802] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:922][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480802] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480802
+[2026.01.19-15.25.15:923][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480719] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:923][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480719] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:923][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480719] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480719
+[2026.01.19-15.25.15:923][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480636] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:923][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480636] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:923][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480636] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480636
+[2026.01.19-15.25.15:924][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480553] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:924][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480553] BuildingIcon T:Bridge A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:924][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480553] BuildingIcon T:Bridge A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480553
+[2026.01.19-15.25.15:924][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480470] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:925][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480470] BuildingIcon T:Dock A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:925][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480470] BuildingIcon T:Dock A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480470
+[2026.01.19-15.25.15:925][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480387] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:925][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480387] BuildingIcon T:Dock A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:925][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480387] BuildingIcon T:Dock A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480387
+[2026.01.19-15.25.15:926][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480304] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:926][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480304] BuildingIcon T:Dock A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:926][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480304] BuildingIcon T:Dock A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480304
+[2026.01.19-15.25.15:926][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480221] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:927][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480221] BuildingIcon T:Dock A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:927][  2]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480221] BuildingIcon T:Dock A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480221
+[2026.01.19-15.25.15:927][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480138] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:927][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480138] BuildingIcon T:Reception A:true () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:927][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480138] BuildingIcon T:Reception A:true () - Activation Indicator Emissiveness 2 BP_BuildingIcon_Bound_C_2147480138
+[2026.01.19-15.25.15:927][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480127] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:927][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480127] BuildingIcon T:Action Room Research A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:928][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480127] BuildingIcon T:Action Room Research A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480127
+[2026.01.19-15.25.15:928][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480116] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:928][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480116] BuildingIcon T:Honored Weakness Room A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:928][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480116] BuildingIcon T:Honored Weakness Room A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480116
+[2026.01.19-15.25.15:928][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480105] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:928][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480105] BuildingIcon T:Action Room Staff A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:928][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480105] BuildingIcon T:Action Room Staff A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480105
+[2026.01.19-15.25.15:928][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480094] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:928][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480094] BuildingIcon T:Action Room Renovation A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:928][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480094] BuildingIcon T:Action Room Renovation A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480094
+[2026.01.19-15.25.15:928][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480083] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:929][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480083] BuildingIcon T:Upgraded Action Room Advertisement A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:929][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480083] BuildingIcon T:Upgraded Action Room Advertisement A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480083
+[2026.01.19-15.25.15:929][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480072] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:929][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480072] BuildingIcon T:Action Room Ghost A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:929][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480072] BuildingIcon T:Action Room Ghost A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480072
+[2026.01.19-15.25.15:929][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480061] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:929][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480061] BuildingIcon T:Plain Bed Room A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:929][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480061] BuildingIcon T:Plain Bed Room A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480061
+[2026.01.19-15.25.15:929][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480050] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:929][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480050] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:929][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480050] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480050
+[2026.01.19-15.25.15:929][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480039] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.15:929][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480039] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.15:929][  2]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480039] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480039
+[2026.01.19-15.25.16:724][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147480028] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.16:725][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147480028] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.16:725][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147480028] BuildingIcon T:Reception A:true () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.16:725][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147480028] BuildingIcon T:Reception A:true () - Activation Indicator Emissiveness 2 BP_Renovation_HotelIcon_C_2147480028
+[2026.01.19-15.25.16:726][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147480000] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.16:726][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147480000] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.16:726][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147480000] BuildingIcon T:Action Room Research A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.16:726][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147480000] BuildingIcon T:Action Room Research A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147480000
+[2026.01.19-15.25.16:726][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479972] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.16:727][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479972] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.16:727][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479972] BuildingIcon T:Honored Weakness Room A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.16:727][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479972] BuildingIcon T:Honored Weakness Room A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147479972
+[2026.01.19-15.25.16:727][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479944] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.16:728][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479944] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.16:728][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479944] BuildingIcon T:Action Room Staff A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.16:728][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479944] BuildingIcon T:Action Room Staff A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147479944
+[2026.01.19-15.25.16:728][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479916] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.16:728][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479916] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.16:729][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479916] BuildingIcon T:Action Room Renovation A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.16:729][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479916] BuildingIcon T:Action Room Renovation A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147479916
+[2026.01.19-15.25.16:729][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479888] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.16:729][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479888] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.16:729][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479888] BuildingIcon T:Upgraded Action Room Advertisement A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.16:729][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479888] BuildingIcon T:Upgraded Action Room Advertisement A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147479888
+[2026.01.19-15.25.16:729][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479860] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.16:730][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479860] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.16:730][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479860] BuildingIcon T:Action Room Ghost A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.16:730][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479860] BuildingIcon T:Action Room Ghost A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147479860
+[2026.01.19-15.25.16:730][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479832] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.16:730][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479832] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.16:730][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479832] BuildingIcon T:Plain Bed Room A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.16:730][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479832] BuildingIcon T:Plain Bed Room A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147479832
+[2026.01.19-15.25.16:731][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479804] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.16:732][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479804] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.16:732][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479804] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.16:732][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479804] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147479804
+[2026.01.19-15.25.16:732][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479776] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.16:732][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479776] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.16:732][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479776] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.16:732][ 28]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479776] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147479776
+[2026.01.19-15.25.17:321][ 53]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] SeeThroughWalls true
+[2026.01.19-15.25.17:698][ 83]LogWorldPartition: Data Layer Instance 'DL_Hotel_GreatEngramCollective' state changed: Loaded -> Unloaded
+[2026.01.19-15.25.17:698][ 83]LogWorldPartition: Data Layer Instance 'DL_Hotel_GreatEngramCollective' effective state changed: Loaded -> Unloaded
+[2026.01.19-15.25.17:698][ 83]LogWorldPartition: Data Layer Instance 'DL_Zygnus' state changed: Loaded -> Unloaded
+[2026.01.19-15.25.17:699][ 83]LogWorldPartition: Data Layer Instance 'DL_Zygnus' effective state changed: Loaded -> Unloaded
+[2026.01.19-15.25.17:699][ 83]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] Loading Hotel Layer
+[2026.01.19-15.25.17:699][ 83]LogWorldPartition: Data Layer Instance 'DL_Hotel_Tron_Foundation' state changed: Unloaded -> Activated
+[2026.01.19-15.25.17:699][ 83]LogWorldPartition: Data Layer Instance 'DL_Hotel_Tron_Foundation' effective state changed: Unloaded -> Activated
+[2026.01.19-15.25.17:699][ 83]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] Loading Tron
+[2026.01.19-15.25.17:699][ 83]LogWorldPartition: Data Layer Instance 'DL_Hotel_Tron_SecondaryExit' state changed: Loaded -> Activated
+[2026.01.19-15.25.17:699][ 83]LogWorldPartition: Data Layer Instance 'DL_Hotel_Tron_SecondaryExit' effective state changed: Loaded -> Activated
+[2026.01.19-15.25.17:699][ 83]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:699][ 83]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:708][ 84]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:721][ 85]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:730][ 86]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:741][ 87]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:751][ 88]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:762][ 89]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:774][ 90]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:865][ 91]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:874][ 92]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:886][ 93]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:896][ 94]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:906][ 95]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:916][ 96]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:926][ 97]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:940][ 98]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:950][ 99]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:962][100]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:977][101]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.17:994][102]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:007][103]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:017][104]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:028][105]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:038][106]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:048][107]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:059][108]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:068][109]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:080][110]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:090][111]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:101][112]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:117][113]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:127][114]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:135][115]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:144][116]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:161][117]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:168][118]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:177][119]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:186][120]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:196][121]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:209][122]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:223][123]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:245][124]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:254][125]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:264][126]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:273][127]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:282][128]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:292][129]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:313][130]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:325][131]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:335][132]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:344][133]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:352][134]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:365][135]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:384][136]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:429][137]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:646][138]LogStreaming: Warning: Took 211.32ms to ProcessLoadedPackages
+[2026.01.19-15.25.18:652][138]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.18:665][139]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.19:020][139]LogStreaming: Display: UWorld::AddToWorld: updating components for /Game/App/Levels/L_HSH_Hotel/_Generated_/9DZ07Z6M4KZ5PJQGWY1IF3VCK took (less than) 353.42 ms
+[2026.01.19-15.25.19:376][140]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.19:670][140]LogStreaming: Display: UWorld::AddToWorld: updating components for /Game/App/Levels/L_HSH_Hotel/_Generated_/9DZ07Z6M4KZ5PJQGWY1IF3VCK took (less than) 293.38 ms
+[2026.01.19-15.25.20:056][141]LogBlueprintUserMessages: [L_HSH_Hotel_C_1] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.20:059][141]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.20:133][142]LogBlueprintUserMessages: [L_HSH_Hotel_C_1] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.20:133][142]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.20:162][143]LogBlueprintUserMessages: [L_HSH_Hotel_C_1] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.20:164][143]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.20:190][143]LogStreaming: Display: UWorld::AddToWorld: routing Initialize on actors for /Game/App/Levels/L_HSH_Hotel/_Generated_/9DZ07Z6M4KZ5PJQGWY1IF3VCK took (less than) 25.96 ms
+[2026.01.19-15.25.20:200][144]LogBlueprintUserMessages: [L_HSH_Hotel_C_1] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.20:200][144]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.20:214][145]LogBlueprintUserMessages: [L_HSH_Hotel_C_1] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.20:214][145]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] WPS Says Assets are streaming (Macro)
+[2026.01.19-15.25.20:226][146]LogBlueprintUserMessages: [L_HSH_Hotel_C_1] Data Layers have Loaded (Macro)
+[2026.01.19-15.25.20:226][146]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] Data Layers have Loaded (Macro)
+[2026.01.19-15.25.20:227][146]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] >>>>>>>>>Map Assets Loaded<<<<<<<
+[2026.01.19-15.25.20:383][146]LogWorldPartition: Data Layer Instance 'DL_Honored_Homeworld_No_Station' state changed: Loaded -> Activated
+[2026.01.19-15.25.20:383][146]LogWorldPartition: Data Layer Instance 'DL_Honored_Homeworld_No_Station' effective state changed: Loaded -> Activated
+[2026.01.19-15.25.20:418][146]LogBlueprintUserMessages: [BP_HSH_GameEngine_C_2147479555] ]]]]]]All HSH Engine 3d Controllers Engaged[[[[[[
+[2026.01.19-15.25.20:511][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475213] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.20:511][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475213] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.20:511][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475213] BuildingIcon T:Reception A:true () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:512][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475213] BuildingIcon T:Reception A:true () - Activation Indicator Emissiveness 2 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475213
+[2026.01.19-15.25.20:512][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475213] BuildingIcon T:Action Room Staff A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:512][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475213] BuildingIcon T:Action Room Staff A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475213
+[2026.01.19-15.25.20:515][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475200] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.20:516][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475200] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.20:516][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475200] BuildingIcon T:Reception A:true () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:516][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475200] BuildingIcon T:Reception A:true () - Activation Indicator Emissiveness 2 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475200
+[2026.01.19-15.25.20:516][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475200] BuildingIcon T:Honored Weakness Room A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:516][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475200] BuildingIcon T:Honored Weakness Room A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475200
+[2026.01.19-15.25.20:519][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475187] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.20:520][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475187] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.20:520][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475187] BuildingIcon T:Reception A:true () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:520][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475187] BuildingIcon T:Reception A:true () - Activation Indicator Emissiveness 2 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475187
+[2026.01.19-15.25.20:520][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475187] BuildingIcon T:Action Room Research A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:520][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475187] BuildingIcon T:Action Room Research A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475187
+[2026.01.19-15.25.20:535][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480138] BuildingIcon T:Action Room Research A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:535][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480138] BuildingIcon T:Action Room Research A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480138
+[2026.01.19-15.25.20:536][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480127] BuildingIcon T:Honored Weakness Room A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:536][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480127] BuildingIcon T:Honored Weakness Room A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480127
+[2026.01.19-15.25.20:536][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480116] BuildingIcon T:Action Room Staff A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:536][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480116] BuildingIcon T:Action Room Staff A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480116
+[2026.01.19-15.25.20:537][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480105] BuildingIcon T:Action Room Renovation A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:537][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480105] BuildingIcon T:Action Room Renovation A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480105
+[2026.01.19-15.25.20:537][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480094] BuildingIcon T:Upgraded Action Room Advertisement A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:537][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480094] BuildingIcon T:Upgraded Action Room Advertisement A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480094
+[2026.01.19-15.25.20:538][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480083] BuildingIcon T:Action Room Ghost A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:538][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480083] BuildingIcon T:Action Room Ghost A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480083
+[2026.01.19-15.25.20:538][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480072] BuildingIcon T:Plain Bed Room A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:538][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480072] BuildingIcon T:Plain Bed Room A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480072
+[2026.01.19-15.25.20:538][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480061] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:538][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480061] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480061
+[2026.01.19-15.25.20:538][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480050] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:538][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480050] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480050
+[2026.01.19-15.25.20:538][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480039] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:538][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_C_2147480039] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_C_2147480039
+[2026.01.19-15.25.20:539][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147480028] BuildingIcon T:Action Room Research A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:540][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147480028] BuildingIcon T:Action Room Research A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147480028
+[2026.01.19-15.25.20:540][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147480000] BuildingIcon T:Honored Weakness Room A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:540][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147480000] BuildingIcon T:Honored Weakness Room A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147480000
+[2026.01.19-15.25.20:540][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479972] BuildingIcon T:Action Room Staff A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:541][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479972] BuildingIcon T:Action Room Staff A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147479972
+[2026.01.19-15.25.20:541][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479944] BuildingIcon T:Action Room Renovation A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:541][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479944] BuildingIcon T:Action Room Renovation A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147479944
+[2026.01.19-15.25.20:541][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479916] BuildingIcon T:Upgraded Action Room Advertisement A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:541][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479916] BuildingIcon T:Upgraded Action Room Advertisement A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147479916
+[2026.01.19-15.25.20:541][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479888] BuildingIcon T:Action Room Ghost A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:541][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479888] BuildingIcon T:Action Room Ghost A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147479888
+[2026.01.19-15.25.20:541][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479860] BuildingIcon T:Plain Bed Room A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:541][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479860] BuildingIcon T:Plain Bed Room A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147479860
+[2026.01.19-15.25.20:541][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479832] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:541][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479832] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147479832
+[2026.01.19-15.25.20:541][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479804] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:541][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479804] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147479804
+[2026.01.19-15.25.20:541][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479776] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:541][147]LogBlueprintUserMessages: [BP_Renovation_HotelIcon_C_2147479776] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_Renovation_HotelIcon_C_2147479776
+[2026.01.19-15.25.20:545][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475147] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.20:545][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475147] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.20:545][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475147] BuildingIcon T:Reception A:true () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:545][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475147] BuildingIcon T:Reception A:true () - Activation Indicator Emissiveness 2 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475147
+[2026.01.19-15.25.20:546][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475147] BuildingIcon T:Action Room Renovation A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:546][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475147] BuildingIcon T:Action Room Renovation A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475147
+[2026.01.19-15.25.20:548][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475134] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.20:549][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475134] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.20:549][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475134] BuildingIcon T:Reception A:true () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:549][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475134] BuildingIcon T:Reception A:true () - Activation Indicator Emissiveness 2 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475134
+[2026.01.19-15.25.20:549][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475134] BuildingIcon T:Upgraded Action Room Advertisement A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:549][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475134] BuildingIcon T:Upgraded Action Room Advertisement A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475134
+[2026.01.19-15.25.20:553][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475121] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.20:553][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475121] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.20:553][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475121] BuildingIcon T:Reception A:true () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:553][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475121] BuildingIcon T:Reception A:true () - Activation Indicator Emissiveness 2 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475121
+[2026.01.19-15.25.20:554][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475121] BuildingIcon T:Action Room Ghost A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:554][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475121] BuildingIcon T:Action Room Ghost A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475121
+[2026.01.19-15.25.20:557][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475108] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.20:558][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475108] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.20:558][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475108] BuildingIcon T:Reception A:true () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:558][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475108] BuildingIcon T:Reception A:true () - Activation Indicator Emissiveness 2 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475108
+[2026.01.19-15.25.20:558][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475108] BuildingIcon T:Plain Bed Room A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:558][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475108] BuildingIcon T:Plain Bed Room A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475108
+[2026.01.19-15.25.20:560][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475095] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.20:561][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475095] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.20:561][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475095] BuildingIcon T:Reception A:true () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:561][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475095] BuildingIcon T:Reception A:true () - Activation Indicator Emissiveness 2 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475095
+[2026.01.19-15.25.20:561][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475095] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:562][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475095] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475095
+[2026.01.19-15.25.20:564][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475082] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.20:565][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475082] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.20:565][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475082] BuildingIcon T:Reception A:true () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:565][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475082] BuildingIcon T:Reception A:true () - Activation Indicator Emissiveness 2 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475082
+[2026.01.19-15.25.20:565][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475082] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:565][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475082] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475082
+[2026.01.19-15.25.20:568][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475069] BuildingIcon T:Action Ghost A:false () - Set Materials for dynamic activation indicators
+[2026.01.19-15.25.20:568][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475069] BuildingIcon T:Action Ghost A:false () - Update and Bind to Building
+[2026.01.19-15.25.20:568][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475069] BuildingIcon T:Reception A:true () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:569][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475069] BuildingIcon T:Reception A:true () - Activation Indicator Emissiveness 2 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475069
+[2026.01.19-15.25.20:569][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475069] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.20:569][147]LogBlueprintUserMessages: [BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475069] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_Bound_GEN_VARIABLE_BP_BuildingIcon_Bound_C_CAT_2147475069
+[2026.01.19-15.25.20:731][151]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Hero Start Menu Launch and Bind
+[2026.01.19-15.25.20:731][151]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Hiding the load screen before showing start menu
+[2026.01.19-15.25.20:731][151]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] Hide Widget LoadScreen
+[2026.01.19-15.25.20:731][151]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] Hero 256 (S) - Launch and Bind Start Menu
+[2026.01.19-15.25.20:731][151]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - Show Widget Requested MainMenu
+[2026.01.19-15.25.20:731][151]LogViewport: Display: Viewport MouseLockMode Changed, LockOnCapture -> DoNotLock
+[2026.01.19-15.25.20:731][151]LogViewport: Display: Viewport HideCursorDuringCapture Changed, False -> True
+[2026.01.19-15.25.20:731][151]LogViewport: Display: Viewport MouseCaptureMode Changed, CapturePermanently_IncludingInitialMouseDown -> CaptureDuringMouseDown
+[2026.01.19-15.25.21:595][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481466] BuildingIcon T:Reception A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.21:595][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481466] BuildingIcon T:Reception A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147481466
+[2026.01.19-15.25.21:596][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481383] BuildingIcon T:Action Room Research A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.21:596][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481383] BuildingIcon T:Action Room Research A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147481383
+[2026.01.19-15.25.21:596][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481300] BuildingIcon T:Honored Weakness Room A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.21:596][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481300] BuildingIcon T:Honored Weakness Room A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147481300
+[2026.01.19-15.25.21:596][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481217] BuildingIcon T:Action Room Staff A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.21:597][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481217] BuildingIcon T:Action Room Staff A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147481217
+[2026.01.19-15.25.21:597][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481134] BuildingIcon T:Action Room Renovation A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.21:597][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481134] BuildingIcon T:Action Room Renovation A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147481134
+[2026.01.19-15.25.21:597][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481051] BuildingIcon T:Upgraded Action Room Advertisement A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.21:597][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147481051] BuildingIcon T:Upgraded Action Room Advertisement A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147481051
+[2026.01.19-15.25.21:597][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480968] BuildingIcon T:Action Room Ghost A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.21:597][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480968] BuildingIcon T:Action Room Ghost A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480968
+[2026.01.19-15.25.21:597][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480885] BuildingIcon T:Plain Bed Room A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.21:597][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480885] BuildingIcon T:Plain Bed Room A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480885
+[2026.01.19-15.25.21:597][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480802] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.21:597][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480802] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480802
+[2026.01.19-15.25.21:597][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480719] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.21:597][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480719] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480719
+[2026.01.19-15.25.21:598][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480636] BuildingIcon T:Snohe Crash A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.21:598][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480636] BuildingIcon T:Snohe Crash A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480636
+[2026.01.19-15.25.21:598][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480553] BuildingIcon T:Bridge A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.21:599][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480553] BuildingIcon T:Bridge A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480553
+[2026.01.19-15.25.21:599][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480470] BuildingIcon T:Dock A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.21:599][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480470] BuildingIcon T:Dock A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480470
+[2026.01.19-15.25.21:599][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480387] BuildingIcon T:Dock A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.21:600][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480387] BuildingIcon T:Dock A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480387
+[2026.01.19-15.25.21:600][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480304] BuildingIcon T:Dock A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.21:600][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480304] BuildingIcon T:Dock A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480304
+[2026.01.19-15.25.21:600][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480221] BuildingIcon T:Dock A:false () - Emissiveness of Activation Indicators
+[2026.01.19-15.25.21:600][172]LogBlueprintUserMessages: [BP_BuildingIcon_GhostHandlers_Bound_C_2147480221] BuildingIcon T:Dock A:false () - Activation Indicator Emissiveness -1 BP_BuildingIcon_GhostHandlers_Bound_C_2147480221
+[2026.01.19-15.25.21:693][174]LogBlueprintUserMessages: [BP_HSH_MP_PlayerController_C_2147482358] PC 256 (S) - Show Widget Requested Voiceover
+[2026.01.19-15.25.23:976][309]Closing by request
+[2026.01.19-15.25.23:976][309]LogWindows: FPlatformMisc::RequestExit(0, UGameEngine::HandleExitCommand)
+[2026.01.19-15.25.23:977][309]LogWindows: FPlatformMisc::RequestExitWithStatus(0, 0, UGameEngine::HandleExitCommand)
+[2026.01.19-15.25.23:977][309]LogCore: Engine exit requested (reason: Win RequestExit)
+[2026.01.19-15.25.23:993][310]LogCore: Engine exit requested (reason: EngineExit() was called; note: exit was already requested)
+[2026.01.19-15.25.24:001][310]LogInit: Display: PreExit Game.
+[2026.01.19-15.25.24:002][310]LogWorld: BeginTearingDown for /Game/App/Levels/L_HSH_Hotel
+[2026.01.19-15.25.24:007][310]LogCrowdFollowing: Warning: Unable to find RecastNavMesh instance while trying to create UCrowdManager instance
+[2026.01.19-15.25.24:019][310]LogNet: World NetDriver shutdown SteamCoreSocketsNetDriver_2147482443 [GameNetDriver]
+[2026.01.19-15.25.24:019][310]LogNet: DestroyNamedNetDriver: Name:GameNetDriver Def:GameNetDriver SteamCoreSocketsNetDriver_2147482443 
+[2026.01.19-15.25.24:232][310]LogBlueprintUserMessages: [BP_MP_Hero_C_2147482344] MP_Hero Unpossessed
+[2026.01.19-15.25.24:237][310]LogBlueprintUserMessages: [BP_HSH_MP_GameMode_C_2147482444] HSH MP Game Mode - Player Has Logged Out. Waiting to Update Steam.
+[2026.01.19-15.25.24:237][310]LogWorld: UWorld::CleanupWorld for L_HSH_Hotel, bSessionEnded=true, bCleanupResources=true
+[2026.01.19-15.25.24:269][310]LogSlate: InvalidateAllWidgets triggered.  All widgets were invalidated
+[2026.01.19-15.25.24:269][310]LogWorldPartition: UWorldPartition::Uninitialize : World = /Game/App/Levels/L_HSH_Hotel.L_HSH_Hotel
+[2026.01.19-15.25.24:273][310]LogRuntimeTelemetry: Recording EnginePreExit events
+[2026.01.19-15.25.24:273][310]LogStudioTelemetry: Ended StudioTelemetry Session
+[2026.01.19-15.25.24:396][310]LogAudioMixer: Display: Unregistering submix buffer listener 'Flite Text-To-Speech Listener' from submix 'MasterSubmixDefault'
+[2026.01.19-15.25.24:397][310]LogAudio: Display: Beginning Audio Device Manager Shutdown (Module: AudioMixerXAudio2)...
+[2026.01.19-15.25.24:397][310]LogAudio: Display: Destroying 1 Remaining Audio Device(s)...
+[2026.01.19-15.25.24:397][310]LogAudio: Display: Audio Device unregistered from world 'L_HSH_Hotel'.
+[2026.01.19-15.25.24:397][310]LogAudio: Display: Shutting down audio device while 1 references to it are still alive. For more information, compile with INSTRUMENT_AUDIODEVICE_HANDLES.
+[2026.01.19-15.25.24:452][310]LogAudioMixer: Display: FMixerPlatformXAudio2::StopAudioStream() called. InstanceID=1, StreamState=4
+[2026.01.19-15.25.24:453][310]LogAudioMixer: Display: FMixerPlatformXAudio2::StopAudioStream() called. InstanceID=1, StreamState=2
+[2026.01.19-15.25.24:459][310]LogAudioMixer: Deinitializing Audio Bus Subsystem for audio device with ID -1
+[2026.01.19-15.25.24:460][310]LogAudio: Display: Audio Device Manager Shutdown
+[2026.01.19-15.25.24:460][310]LogSlate: Request Window 'Haunted Space Hotel: Vacancy (64-bit Development PCD3D_SM6) ' being destroyed
+[2026.01.19-15.25.24:461][310]LogSlate: Window 'Haunted Space Hotel: Vacancy (64-bit Development PCD3D_SM6) ' being destroyed
+[2026.01.19-15.25.24:465][310]LogWindowsTextInputMethodSystem: Activated input method: English (United States) - (Keyboard).
+[2026.01.19-15.25.24:475][310]LogSlate: Slate User Destroyed.  User Index 0, Is Virtual User: 0
+[2026.01.19-15.25.24:475][310]LogSlate: Slate User Destroyed.  User Index 8, Is Virtual User: 1
+[2026.01.19-15.25.24:475][310]LogExit: Preparing to exit.
+[2026.01.19-15.25.24:475][310]LogMoviePlayer: Shutting down movie player
+[2026.01.19-15.25.24:521][310]LogSlate: Updating window title bar state: overlay mode, drag disabled, window buttons hidden, title bar hidden
+[2026.01.19-15.25.24:572][310]LogDemo: Cleaned up 0 splitscreen connections, owner deletion: enabled
+[2026.01.19-15.25.24:617][310]LogExit: Game engine shut down
+[2026.01.19-15.25.25:277][310]LogExit: Object subsystem successfully closed.
+[2026.01.19-15.25.25:316][310]LogSockets: SteamCoreSockets: Cleaning up
+[2026.01.19-15.25.25:323][310]LogChaosDD: Chaos Debug Draw Shutdown
+[2026.01.19-15.25.25:324][310]LogSteamCoreSocketsAPI: Verbose: SteamCoreSockets API: Log Shutting down low level socket/threading support.
+[2026.01.19-15.25.25:351][310]LogNFORDenoise: NFORDenoise function shutting down
+[2026.01.19-15.25.25:352][310]RenderDocPlugin: plugin has been unloaded.
+[2026.01.19-15.25.25:354][310]LogIris: FNetObjectFactoryRegistry::UnregisterFactory is unregistering factory: None name: NetActorFactory id: 0
+[2026.01.19-15.25.25:354][310]LogIris: FNetObjectFactoryRegistry::UnregisterFactory is unregistering factory: None name: NetSubObjectFactory id: 1
+[2026.01.19-15.25.25:354][310]LogPakFile: Destroying PakPlatformFile
+[2026.01.19-15.25.25:730][310]LogD3D12RHI: ~FD3D12DynamicRHI
+[2026.01.19-15.25.25:767][310]LogExit: Exiting.
+[2026.01.19-15.25.25:774][310]Log file closed, 01/19/26 07:25:25
