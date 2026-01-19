@@ -1,5 +1,8 @@
 from django.urls import path
-from .views import LaunchSpellbookView, spawn_monitor_view, head_log_view, HydraControlsView, hydra_head_analysis, hydra_spawn_terminate
+
+from .views import (LaunchSpellbookView, spawn_monitor_view, head_log_view,
+                    HydraControlsView, hydra_head_analysis,
+                    hydra_spawn_terminate, battle_station_stream)
 
 urlpatterns = [
     path('launch/<uuid:spellbook_id>/',
@@ -9,6 +12,9 @@ urlpatterns = [
          spawn_monitor_view,
          name='hydra_spawn_monitor'),
     path('logs/<uuid:head_id>/', head_log_view, name='hydra_head_logs'),
+    path('battle-stream/<uuid:spawn_id>/',
+         battle_station_stream,
+         name='hydra_battle_stream'),
     path('analysis/<uuid:head_id>/',
          hydra_head_analysis,
          name='hydra_head_analysis'),

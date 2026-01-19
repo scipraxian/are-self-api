@@ -281,19 +281,27 @@ class TalosAgent:
 
   def _stream_logs(self, conn: socket.socket, path: str):
     if not path or not os.path.exists(path):
-      conn.sendall(json.dumps({'type': 'error', 'content': 'Log not found'}).encode() + b'\n')
+      try:
+        conn.sendall(json.dumps({'type': 'error', 'content': 'Log not found'}).encode() + b'\n')
+      except OSError:
+        pass
       return
 
     self.logger.info('Streaming: %s', path)
-    with open(path, 'r', errors='ignore') as f:
-      f.seek(0, os.SEEK_END)
-      while self.running:
-        line = f.readline()
-        if line:
-          payload = json.dumps({'type': 'log', 'content': line.strip()})
-          conn.sendall((payload + '\n').encode('utf-8'))
-        else:
-          time.sleep(0.1)
+    try:
+      with open(path, 'r', errors='ignore') as f:
+        f.seek(0, os.SEEK_END)
+        while self.running:
+          line = f.readline()
+          if line:
+            payload = json.dumps({'type': 'log', 'content': line.strip()})
+            conn.sendall((payload + '\n').encode('utf-8'))
+          else:
+            time.sleep(0.1)
+    except (ConnectionAbortedError, BrokenPipeError, ConnectionResetError):
+      self.logger.info("Log stream client disconnected.")
+    except Exception as e:
+      self.logger.error(f"Stream error: {e}")
 
   def run(self):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:

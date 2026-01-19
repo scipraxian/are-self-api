@@ -10,6 +10,7 @@ from django.utils.html import escape
 from talos_thalamus.types import SignalTypeID
 from talos_thalamus.models import Stimulus
 from talos_frontal.logic import process_stimulus
+from .utils import merge_logs
 
 logger = logging.getLogger(__name__)
 
@@ -239,3 +240,54 @@ def hydra_spawn_terminate(request, spawn_id):
 
     # Default: Just stop
     return HttpResponse("Session terminated. No analysis triggered.")
+
+
+def battle_station_stream(request, spawn_id):
+    spawn = get_object_or_404(HydraSpawn, id=spawn_id)
+
+    # --- CRASH FIX: SAFE INTEGER PARSING ---
+    try:
+        val = request.GET.get('local_cursor')
+        local_cursor = int(val) if val and val != 'undefined' else 0
+    except (ValueError, TypeError):
+        local_cursor = 0
+
+    try:
+        val = request.GET.get('remote_cursor')
+        remote_cursor = int(val) if val and val != 'undefined' else 0
+    except (ValueError, TypeError):
+        remote_cursor = 0
+    # ---------------------------------------
+
+    # Identify the heads
+    heads = spawn.heads.all()
+    local_head = heads.filter(spell__name__icontains="Local").first()
+    remote_head = heads.filter(spell__name__icontains="Remote").first()
+
+    if not local_head or not remote_head:
+        return HttpResponse(
+            '<div style="color: #f87171; padding: 10px;">Error: Local or Remote heads not found for synchronization.</div>'
+        )
+
+    # Get new chunks
+    local_raw = local_head.spell_log or ""
+    remote_raw = remote_head.spell_log or ""
+
+    # Slice safely
+    new_local = local_raw[local_cursor:]
+    new_remote = remote_raw[remote_cursor:]
+
+    # Parse and merge (Now robust)
+    merged_events = merge_logs(new_local, new_remote)
+
+    # Update cursors
+    new_local_cursor = local_cursor + len(new_local)
+    new_remote_cursor = remote_cursor + len(new_remote)
+
+    return render(
+        request, 'hydra/partials/battle_stream.html', {
+            'events': merged_events,
+            'new_local_cursor': new_local_cursor,  # Changed context key to match template expectation
+            'new_remote_cursor': new_remote_cursor,  # Changed context key to match template expectation
+            'spawn': spawn
+        })

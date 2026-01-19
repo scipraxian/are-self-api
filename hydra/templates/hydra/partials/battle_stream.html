@@ -1,0 +1,20 @@
+{% for event in events %}
+<div class="log-row source-{{ event.source }}">
+    <div class="col-msg col-local">
+        {% if event.source == 'local' %}
+            <span class="msg-content">{{ event.msg }}</span>
+        {% endif %}
+    </div>
+    <div class="col-ts">{{ event.display_ts }}</div>
+    <div class="col-msg col-remote">
+        {% if event.source == 'remote' %}
+            <span class="msg-content">{{ event.msg }}</span>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+
+<div id="battle-station-cursors" hx-swap-oob="true"
+     data-local="{{ new_local_cursor|default:0 }}"
+     data-remote="{{ new_remote_cursor|default:0 }}">
+</div>
