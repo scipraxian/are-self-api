@@ -1,12 +1,17 @@
 import os
 import re
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 
 class LogConstants(object):
     """Constants for dictionary keys and semantic labels."""
+    # Strategy Types
+    TYPE_BUILD = 'build'
+    TYPE_RUN = 'run'
+
     # Metadata Keys
     KEY_CAMERA = 'camera'
     KEY_GPU_MS = 'gpu_ms'
@@ -45,10 +50,6 @@ class LogConstants(object):
     LVL_ERROR = 'Error'
     LVL_WARNING = 'Warning'
 
-    # Strategies
-    STRAT_EXPLICIT = 'EXPLICIT'
-    STRAT_IMPLICIT = 'IMPLICIT'
-
 
 class LogPatterns(object):
     """Central repository for Log Regex Patterns."""
@@ -56,12 +57,7 @@ class LogPatterns(object):
     ANCHOR = re.compile(
         r'Log started at (\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2}:\d{2} [AP]M)')
 
-    # Timestamp Only: Used for detection [YYYY.MM.DD-HH.MM.SS:MS]
-    TIMESTAMP_DETECTOR = re.compile(
-        r'\[\d{4}\.\d{2}\.\d{2}-\d{2}\.\d{2}\.\d{2}:\d{3}\]')
-
     # Standard UE: "[2026.01.08-10.13.34:123][  0]LogCook: Display: ..."
-    # Captures: 1=FullTS, 2=Category, 3=Level(Optional), 4=Message
     STANDARD_UE = re.compile(
         r'^\[(\d{4}\.\d{2}\.\d{2}-\d{2}\.\d{2}\.\d{2}:\d{3})\](?:\[\s*\d+\])?\s*([^:]+):(?:\s*([^:]+):)?\s*(.*)'
     )
@@ -119,213 +115,58 @@ class LogSession:
     source_name: str = LogConstants.SOURCE_UNKNOWN
 
 
-def merge_sessions(session_a: LogSession, session_b: LogSession) -> LogSession:
-    """Combines two log sessions into a single chronological stream."""
-    merged = LogSession()
-    merged.source_name = f'{session_a.source_name}+{session_b.source_name}'
+class LogParserStrategy(ABC):
+    """Abstract Base Class for stateful log parsing strategies."""
 
-    # Interleave entries
-    merged.entries = session_a.entries + session_b.entries
-    merged.entries.sort(key=lambda x: x.timestamp)
+    def __init__(self, source_name: str = LogConstants.SOURCE_UNKNOWN):
+        self.source_name = source_name
+        self.current_timestamp: datetime = datetime.now()
+        self.stats = LogStats()
+        self._pending_entry: Optional[LogEntry] = None
+        self._line_counter = 0
 
-    # Merge Stats
-    merged.stats.error_count = (
-            session_a.stats.error_count + session_b.stats.error_count)
-    merged.stats.warning_count = (
-            session_a.stats.warning_count + session_b.stats.warning_count)
+    @abstractmethod
+    def parse_chunk(self, lines: List[str]) -> List[LogEntry]:
+        """Process a list of lines and return completed entries."""
+        pass
 
-    # Duration is roughly the union
-    start_a = session_a.entries[0].timestamp if session_a.entries else datetime.max
-    start_b = session_b.entries[0].timestamp if session_b.entries else datetime.max
-    end_a = session_a.entries[-1].timestamp if session_a.entries else datetime.min
-    end_b = session_b.entries[-1].timestamp if session_b.entries else datetime.min
+    def flush(self) -> List[LogEntry]:
+        """Return any remaining pending entry."""
+        if self._pending_entry:
+            e = self._pending_entry
+            self._pending_entry = None
+            return [e]
+        return []
 
-    effective_start = min(start_a, start_b)
-    effective_end = max(end_a, end_b)
+    def _finalize_pending(self) -> Optional[LogEntry]:
+        """Completes the current entry and updates stats."""
+        if self._pending_entry:
+            entry = self._pending_entry
+            self._enrich_entry(entry)
+            self._pending_entry = None
+            return entry
+        return None
 
-    if effective_start != datetime.max and effective_end != datetime.min:
-        merged.stats.duration_seconds = (
-                effective_end - effective_start).total_seconds()
+    def _create_pending(self, dt: datetime, process: str, category: str,
+                        level: str, message: str, raw: str):
+        """Starts a new pending entry."""
+        safe_level = level if level else LogConstants.LVL_DISPLAY
+        self._pending_entry = LogEntry(timestamp=dt,
+                                       line_num=self._line_counter,
+                                       process=process,
+                                       category=category,
+                                       level=safe_level,
+                                       message=message,
+                                       raw=raw,
+                                       source=self.source_name)
 
-    return merged
-
-
-class LogIngestor(object):
-    """
-    Forensic Log Ingestion Engine.
-    Detects format, parses lines, and aggregates statistics.
-    """
-
-    def ingest(self, file_path: str, source_label: str) -> LogSession:
-        """
-        Main Entry Point. Reads file and produces a LogSession.
-        Using utf-8-sig to handle Byte Order Marks (BOM) automatically.
-        """
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f'Log file not found: {file_path}')
-
-        with open(file_path, 'r', encoding='utf-8-sig', errors='replace') as f:
-            lines = f.readlines()
-
-        session = LogSession(source_name=source_label)
-
-        # 1. Strategy Detection (Scan more lines to be safe)
-        strategy = self._detect_strategy(lines[:200])
-
-        # 2. Parsing Loop
-        current_anchor = datetime.now()  # Fallback
-
-        for idx, line in enumerate(lines):
-            line = line.rstrip('\r\n')
-            if not line:
-                continue
-
-            line_num = idx + 1
-            entry = None
-
-            # Check for Anchor Updates (Universal priority)
-            anchor_match = LogPatterns.ANCHOR.search(line)
-            if anchor_match:
-                try:
-                    current_anchor = datetime.strptime(
-                        anchor_match.group(1), LogConstants.FMT_ANCHOR)
-                    # Create entry for the anchor itself
-                    entry = LogEntry(current_anchor, line_num,
-                                     LogConstants.PROC_SYSTEM,
-                                     LogConstants.CAT_LOG_START,
-                                     LogConstants.LVL_DISPLAY, line, line)
-                except ValueError:
-                    pass
-
-            # Dispatch to Strategy
-            if not entry:
-                if strategy == LogConstants.STRAT_EXPLICIT:
-                    entry, current_anchor = self._parse_explicit(
-                        line, line_num, current_anchor)
-                else:
-                    entry, current_anchor = self._parse_implicit(
-                        line, line_num, current_anchor)
-
-            # 3. Aggregation (Map/Reduce)
-            if entry:
-                entry.source = source_label
-                self._enrich_entry(entry, session.stats)
-                session.entries.append(entry)
-            else:
-                # Stack Trace / Continuation Recovery
-                if session.entries:
-                    last = session.entries[-1]
-                    last.message += '\n' + line
-                    last.raw += '\n' + line
-
-        # 4. Finalize Stats
-        if session.entries:
-            start = session.entries[0].timestamp
-            end = session.entries[-1].timestamp
-            session.stats.duration_seconds = (end - start).total_seconds()
-
-        return session
-
-    def _detect_strategy(self, snippet: List[str]) -> str:
-        """
-        Heuristic: If we see standard bracketed timestamps, it's EXPLICIT.
-        Otherwise, it's IMPLICIT (Build/UAT) requiring anchor inheritance.
-        """
-        for line in snippet:
-            # Using search instead of match handles indented timestamps or noise
-            if LogPatterns.TIMESTAMP_DETECTOR.search(line):
-                return LogConstants.STRAT_EXPLICIT
-        return LogConstants.STRAT_IMPLICIT
-
-    def _parse_explicit(self, line: str, line_num: int,
-                        current_anchor: datetime) -> Tuple[Optional[LogEntry],
-    datetime]:
-        """
-        Parses Runtime logs. Expects timestamps.
-        Lines without timestamps are treated as None (stack traces).
-        """
-        # 1. Standard UE
-        m_std = LogPatterns.STANDARD_UE.match(line)
-        if m_std:
-            # 4 Groups: TS, Cat, Level, Msg
-            ts_str, cat, lvl, msg = m_std.groups()
-
-            # Default level if missing
-            if lvl is None:
-                lvl = LogConstants.LVL_DISPLAY
-
-            try:
-                dt = datetime.strptime(ts_str, LogConstants.FMT_UE_TIMESTAMP)
-                return LogEntry(dt, line_num, LogConstants.PROC_EDITOR,
-                                cat.strip(), lvl.strip(), msg, line), dt
-            except ValueError:
-                pass
-
-        # 2. Agent Format
-        m_agent = LogPatterns.AGENT_HEADER.match(line)
-        if m_agent:
-            time_str, lvl, msg = m_agent.groups()
-            dt = self._resolve_time(time_str, current_anchor)
-            return LogEntry(dt, line_num, LogConstants.PROC_AGENT,
-                            LogConstants.CAT_AGENT_LOG, lvl.strip(), msg,
-                            line), dt
-
-        # No timestamp match -> Return None to trigger stack trace accumulation
-        return None, current_anchor
-
-    def _parse_implicit(self, line: str, line_num: int,
-                        current_anchor: datetime) -> Tuple[Optional[LogEntry],
-    datetime]:
-        """
-        Parses Build/UAT logs. Aggressively inherits timestamps.
-        """
-        # 1. Check for Explicit timestamp inside Build log
-        m_std = LogPatterns.STANDARD_UE.match(line)
-        if m_std:
-            ts_str, cat, lvl, msg = m_std.groups()
-
-            if lvl is None:
-                lvl = LogConstants.LVL_DISPLAY
-
-            try:
-                dt = datetime.strptime(ts_str, LogConstants.FMT_UE_TIMESTAMP)
-                return LogEntry(dt, line_num, LogConstants.PROC_EDITOR,
-                                cat.strip(), lvl.strip(), msg, line), dt
-            except ValueError:
-                pass
-
-        # 2. Check for UAT Header
-        m_uat = LogPatterns.UAT_HEADER.match(line)
-        if m_uat:
-            cat, lvl, msg = m_uat.groups()
-            # Inherit current_anchor
-            return LogEntry(current_anchor, line_num, LogConstants.PROC_UAT,
-                            cat.strip(), lvl.strip(), msg, line), current_anchor
-
-        # 3. Fallback: Treat as generic line inheriting timestamp
-        # In implicit mode, we don't assume stack traces as aggressively
-        if line.startswith(' ') or line.startswith('\t'):
-            return None, current_anchor  # Treat as stack trace
-
-        # Otherwise, new entry with inherited time
-        return LogEntry(current_anchor, line_num, LogConstants.PROC_UAT,
-                        LogConstants.CAT_INFO, LogConstants.LVL_DISPLAY, line,
-                        line), current_anchor
-
-    def _resolve_time(self, time_str: str, base_date: datetime) -> datetime:
-        try:
-            t = datetime.strptime(time_str, LogConstants.FMT_AGENT_TIME).time()
-            return datetime.combine(base_date.date(), t)
-        except ValueError:
-            return base_date
-
-    def _enrich_entry(self, entry: LogEntry, stats: LogStats) -> None:
+    def _enrich_entry(self, entry: LogEntry) -> None:
         """Map/Reduce logic. Updates stats in-place."""
         # 1. Counters
         if LogConstants.LVL_ERROR in entry.level or LogConstants.LVL_ERROR in entry.message:
-            stats.error_count += 1
+            self.stats.error_count += 1
         if LogConstants.LVL_WARNING in entry.level or LogConstants.LVL_WARNING in entry.message:
-            stats.warning_count += 1
+            self.stats.warning_count += 1
 
         # 2. GPU Profiling
         m_gpu = LogPatterns.GPU_PROFILE.search(entry.message)
@@ -335,22 +176,203 @@ class LogIngestor(object):
             entry.metadata[LogConstants.KEY_CAMERA] = cam
             entry.metadata[LogConstants.KEY_GPU_MS] = ms
 
-            # Update Rolling Average
-            total_ms = (stats.avg_gpu_ms * stats.gpu_frames_captured) + ms
-            stats.gpu_frames_captured += 1
-            stats.avg_gpu_ms = total_ms / stats.gpu_frames_captured
+            total_ms = (self.stats.avg_gpu_ms *
+                        self.stats.gpu_frames_captured) + ms
+            self.stats.gpu_frames_captured += 1
+            self.stats.avg_gpu_ms = total_ms / self.stats.gpu_frames_captured
 
         # 3. Cook Stats
         m_cook = LogPatterns.COOK_STATS.search(entry.message)
         if m_cook:
-            stats.cook_open_handles = int(m_cook.group(1))
-            stats.cook_virtual_mem_mb = int(m_cook.group(2))
+            self.stats.cook_open_handles = int(m_cook.group(1))
+            self.stats.cook_virtual_mem_mb = int(m_cook.group(2))
             entry.metadata[LogConstants.KEY_COOK_STATS] = True
 
         # 4. Build Outcome
         if LogPatterns.BUILD_SUCCESS.search(entry.message):
-            stats.build_outcome = LogConstants.OUTCOME_SUCCESS
-            entry.metadata[LogConstants.KEY_BUILD_OUTCOME] = LogConstants.OUTCOME_SUCCESS
+            self.stats.build_outcome = LogConstants.OUTCOME_SUCCESS
+            entry.metadata[
+                LogConstants.KEY_BUILD_OUTCOME] = LogConstants.OUTCOME_SUCCESS
         elif LogPatterns.BUILD_FAILURE.search(entry.message):
-            stats.build_outcome = LogConstants.OUTCOME_FAILURE
-            entry.metadata[LogConstants.KEY_BUILD_OUTCOME] = LogConstants.OUTCOME_FAILURE
+            self.stats.build_outcome = LogConstants.OUTCOME_FAILURE
+            entry.metadata[
+                LogConstants.KEY_BUILD_OUTCOME] = LogConstants.OUTCOME_FAILURE
+
+    def _resolve_agent_time(self, time_str: str) -> datetime:
+        try:
+            t = datetime.strptime(time_str, LogConstants.FMT_AGENT_TIME).time()
+            return datetime.combine(self.current_timestamp.date(), t)
+        except ValueError:
+            return self.current_timestamp
+
+
+class UEBuildLogStrategy(LogParserStrategy):
+    """
+    Strategy for Build/UAT Logs (Implicit Mode).
+    Logic: Anchors time, assumes subsequent lines inherit timestamp unless updated.
+    """
+
+    def parse_chunk(self, lines: List[str]) -> List[LogEntry]:
+        completed = []
+
+        for line in lines:
+            self._line_counter += 1
+            line = line.rstrip('\r\n')
+            if not line:
+                continue
+
+            # 1. Check for Anchor (High Priority Update)
+            m_anchor = LogPatterns.ANCHOR.search(line)
+            if m_anchor:
+                if self._pending_entry:
+                    completed.append(self._finalize_pending())
+
+                try:
+                    self.current_timestamp = datetime.strptime(
+                        m_anchor.group(1), LogConstants.FMT_ANCHOR)
+                    self._create_pending(self.current_timestamp,
+                                         LogConstants.PROC_SYSTEM,
+                                         LogConstants.CAT_LOG_START,
+                                         LogConstants.LVL_DISPLAY, line, line)
+                    continue
+                except ValueError:
+                    pass
+
+            # 2. Check for Explicit Timestamp (Dynamic Update)
+            m_std = LogPatterns.STANDARD_UE.match(line)
+            if m_std:
+                if self._pending_entry:
+                    completed.append(self._finalize_pending())
+
+                ts_str, cat, lvl, msg = m_std.groups()
+                try:
+                    self.current_timestamp = datetime.strptime(
+                        ts_str, LogConstants.FMT_UE_TIMESTAMP)
+                    self._create_pending(self.current_timestamp,
+                                         LogConstants.PROC_EDITOR, cat.strip(),
+                                         lvl, msg, line)
+                    continue
+                except ValueError:
+                    pass
+
+            # 3. Check for UAT Header (Inherit Time)
+            m_uat = LogPatterns.UAT_HEADER.match(line)
+            if m_uat:
+                if self._pending_entry:
+                    completed.append(self._finalize_pending())
+
+                cat, lvl, msg = m_uat.groups()
+
+                # Heuristic: Detect Editor lines masquerading as UAT
+                proc = LogConstants.PROC_UAT
+                if cat.startswith('Log') or cat == 'Cmd':
+                    proc = LogConstants.PROC_EDITOR
+
+                self._create_pending(self.current_timestamp, proc, cat.strip(),
+                                     lvl, msg, line)
+                continue
+
+            # 4. Fallback (Append to Pending / Stack Trace)
+            if self._pending_entry:
+                self._pending_entry.message += '\n' + line
+                self._pending_entry.raw += '\n' + line
+            else:
+                self._create_pending(self.current_timestamp,
+                                     LogConstants.PROC_UAT,
+                                     LogConstants.CAT_INFO,
+                                     LogConstants.LVL_DISPLAY, line, line)
+
+        return completed
+
+
+class UERunLogStrategy(LogParserStrategy):
+    """
+    Strategy for Runtime/Server/Client Logs (Explicit Mode).
+    Logic: Strictly requires timestamps for new entries.
+    """
+
+    def parse_chunk(self, lines: List[str]) -> List[LogEntry]:
+        completed = []
+
+        for line in lines:
+            self._line_counter += 1
+            line = line.rstrip('\r\n')
+            if not line:
+                continue
+
+            # 1. Standard UE Check
+            m_std = LogPatterns.STANDARD_UE.match(line)
+            if m_std:
+                if self._pending_entry:
+                    completed.append(self._finalize_pending())
+
+                ts_str, cat, lvl, msg = m_std.groups()
+                try:
+                    self.current_timestamp = datetime.strptime(
+                        ts_str, LogConstants.FMT_UE_TIMESTAMP)
+                    self._create_pending(self.current_timestamp,
+                                         LogConstants.PROC_EDITOR, cat.strip(),
+                                         lvl, msg, line)
+                    continue
+                except ValueError:
+                    pass
+
+            # 2. Agent Check
+            m_agent = LogPatterns.AGENT_HEADER.match(line)
+            if m_agent:
+                if self._pending_entry:
+                    completed.append(self._finalize_pending())
+
+                time_str, lvl, msg = m_agent.groups()
+                dt = self._resolve_agent_time(time_str)
+                self.current_timestamp = dt
+                self._create_pending(dt, LogConstants.PROC_AGENT,
+                                     LogConstants.CAT_AGENT_LOG, lvl.strip(),
+                                     msg, line)
+                continue
+
+            # 3. Fallback: Append to pending
+            if self._pending_entry:
+                self._pending_entry.message += '\n' + line
+                self._pending_entry.raw += '\n' + line
+            else:
+                self._create_pending(self.current_timestamp,
+                                     LogConstants.PROC_SYSTEM,
+                                     LogConstants.CAT_INFO,
+                                     LogConstants.LVL_DISPLAY, line, line)
+
+        return completed
+
+
+class LogParserFactory(object):
+    """Factory to create the correct strategy."""
+
+    @staticmethod
+    def create(log_type: str, source_label: str) -> LogParserStrategy:
+        if log_type == LogConstants.TYPE_BUILD:
+            return UEBuildLogStrategy(source_name=source_label)
+        elif log_type == LogConstants.TYPE_RUN:
+            return UERunLogStrategy(source_name=source_label)
+        else:
+            raise ValueError(f'Unknown log type: {log_type}')
+
+
+def merge_sessions(session_a: LogSession, session_b: LogSession) -> LogSession:
+    """Combines two log sessions into a single chronological stream."""
+    merged = LogSession()
+    merged.source_name = f'{session_a.source_name}+{session_b.source_name}'
+
+    merged.entries = session_a.entries + session_b.entries
+    merged.entries.sort(key=lambda x: x.timestamp)
+
+    merged.stats.error_count = (
+        session_a.stats.error_count + session_b.stats.error_count)
+    merged.stats.warning_count = (
+        session_a.stats.warning_count + session_b.stats.warning_count)
+
+    if merged.entries:
+        start = merged.entries[0].timestamp
+        end = merged.entries[-1].timestamp
+        merged.stats.duration_seconds = (end - start).total_seconds()
+
+    return merged

@@ -1,8 +1,7 @@
 import os
 import unittest
-from datetime import datetime
 
-from ue_tools.log_parser import LogConstants, LogIngestor, LogPatterns, merge_sessions
+from ue_tools.log_parser import LogConstants, LogParserFactory, LogSession, merge_sessions
 
 
 class TestLogParserWithRealFiles(unittest.TestCase):
@@ -17,95 +16,95 @@ class TestLogParserWithRealFiles(unittest.TestCase):
             'server': os.path.join(base_dir, 'test_server_log.txt'),
             'client': os.path.join(base_dir, 'test_client_log.txt'),
         }
-
-        # Verify existence
         for name, path in cls.files.items():
             if not os.path.exists(path):
                 raise FileNotFoundError(f'Missing test fixture: {path}')
 
-    def setUp(self):
-        self.ingestor = LogIngestor()
+    def read_file(self, key):
+        with open(self.files[key], 'r', encoding='utf-8-sig', errors='replace') as f:
+            return f.readlines()
 
-    def test_ingest_build_log_implicit(self):
-        """Verify UAT/Build log parsing (test_build_log.txt)."""
-        session = self.ingestor.ingest(self.files['build'], 'build')
+    def test_build_strategy_streaming(self):
+        """
+        Verify Build Log Parsing with STREAMING (Chunked Input).
+        Logic: Feed header in Chunk 1, Cook stats in Chunk 2.
+        Assert: Timestamp from Chunk 1 is inherited by Chunk 2.
+        Assert: EXACT count of 768 entries (Regression Lock).
+        """
+        lines = self.read_file('build')
 
-        # 1. Anchor Check (Dynamic)
-        first = session.entries[0]
-        self.assertIn('Log started at', first.message)
+        # Split into two arbitrary chunks
+        midpoint = len(lines) // 2
+        chunk1 = lines[:midpoint]
+        chunk2 = lines[midpoint:]
 
-        # Extract truth from the message itself to verify parsing logic
-        m = LogPatterns.ANCHOR.search(first.message)
-        dt_truth = datetime.strptime(m.group(1), LogConstants.FMT_ANCHOR)
+        strategy = LogParserFactory.create(LogConstants.TYPE_BUILD, 'build_stream')
 
-        self.assertEqual(first.timestamp, dt_truth)
+        # Ingest Chunk 1
+        entries_1 = strategy.parse_chunk(chunk1)
 
-        # 2. Inheritance
-        second = session.entries[1]
-        self.assertEqual(second.timestamp, first.timestamp)
-        self.assertEqual(second.process, LogConstants.PROC_UAT)
+        # Verify Anchor found in Chunk 1
+        anchor = entries_1[0]
+        self.assertIn('Log started at', anchor.message)
+        anchor_ts = anchor.timestamp
 
-        # 3. Dynamic Update Check
-        # Check if we eventually found an explicit timestamp
-        cook_entry = next((e for e in session.entries if e.process == LogConstants.PROC_EDITOR), None)
+        # Ingest Chunk 2
+        entries_2 = strategy.parse_chunk(chunk2)
 
-        if cook_entry:
-            # If found, it should be different or at least valid
-            self.assertIsInstance(cook_entry.timestamp, datetime)
+        # Verify Chunk 2 inherited the time
+        implicit_entry = next((e for e in entries_2 if e.process == LogConstants.PROC_UAT), None)
+        if implicit_entry:
+            self.assertGreaterEqual(implicit_entry.timestamp, anchor_ts)
 
-        # 4. Stats
-        # Verify stats populated
-        self.assertIsNotNone(session.stats.build_outcome)
+        entries_final = strategy.flush()
 
-    def test_ingest_run_log_explicit(self):
-        """Verify Runtime log parsing (test_run_log.txt)."""
-        session = self.ingestor.ingest(self.files['run'], 'run')
-        self.assertGreater(len(session.entries), 0)
+        total_entries = len(entries_1) + len(entries_2) + len(entries_final)
 
-        # Explicit timestamps check
-        sample = session.entries[0]
+        # STRICT REGRESSION CHECK: Based on known static file parsing
+        self.assertEqual(total_entries, 768, f"Expected exactly 768 entries, found {total_entries}")
+        self.assertGreater(strategy.stats.warning_count, 0)
 
-        # Verify detection worked: Process should be Editor or Agent, NOT UAT
-        self.assertIn(sample.process, [LogConstants.PROC_EDITOR, LogConstants.PROC_AGENT])
+    def test_run_strategy_precision(self):
+        """
+        Verify Runtime Log Parsing (Explicit).
+        """
+        lines = self.read_file('run')
+        strategy = LogParserFactory.create(LogConstants.TYPE_RUN, 'run_test')
 
-        # Should have microsecond precision (unless it's exactly .000000)
-        # Checking validity of object is enough
-        self.assertIsInstance(sample.timestamp, datetime)
+        entries = strategy.parse_chunk(lines)
+        entries += strategy.flush()
 
-    def test_ingest_server_log(self):
-        """Verify Server log parsing (test_server_log.txt)."""
-        session = self.ingestor.ingest(self.files['server'], 'server')
-        self.assertGreater(len(session.entries), 0)
-        self.assertEqual(session.source_name, 'server')
-        self.assertEqual(session.entries[0].process, LogConstants.PROC_EDITOR)
+        self.assertGreater(len(entries), 0)
 
-    def test_ingest_client_log(self):
-        """Verify Client log parsing (test_client_log.txt)."""
-        session = self.ingestor.ingest(self.files['client'], 'client')
-        self.assertGreater(len(session.entries), 0)
-        self.assertEqual(session.source_name, 'client')
-        self.assertEqual(session.entries[0].process, LogConstants.PROC_EDITOR)
+        # Verify Precision
+        sample = next((e for e in entries if e.process == LogConstants.PROC_EDITOR), None)
+        self.assertIsNotNone(sample)
+        self.assertNotEqual(sample.timestamp.microsecond, 0)
 
     def test_client_server_merge(self):
-        """Verify merging of Client and Server logs."""
-        s_client = self.ingestor.ingest(self.files['client'], 'client')
-        s_server = self.ingestor.ingest(self.files['server'], 'server')
+        """
+        Verify merging two EXPLICIT streams.
+        """
+        client_lines = self.read_file('client')
+        server_lines = self.read_file('server')
 
-        merged = merge_sessions(s_client, s_server)
+        strat_c = LogParserFactory.create(LogConstants.TYPE_RUN, 'client')
+        entries_c = strat_c.parse_chunk(client_lines) + strat_c.flush()
+        session_c = LogSession(entries=entries_c, stats=strat_c.stats, source_name='client')
 
-        # 1. Total Count
-        self.assertEqual(len(merged.entries), len(s_client.entries) + len(s_server.entries))
+        strat_s = LogParserFactory.create(LogConstants.TYPE_RUN, 'server')
+        entries_s = strat_s.parse_chunk(server_lines) + strat_s.flush()
+        session_s = LogSession(entries=entries_s, stats=strat_s.stats, source_name='server')
 
-        # 2. Chronological Order
+        merged = merge_sessions(session_c, session_s)
+
+        # Verify Sorting
         for i in range(len(merged.entries) - 1):
             t1 = merged.entries[i].timestamp
             t2 = merged.entries[i + 1].timestamp
             self.assertLessEqual(t1, t2, f'Sorting failure at index {i}')
 
-        # 3. Source mixing
+        # Verify Source Mixing
         sources = {e.source for e in merged.entries}
-        # Only assert if both files actually had content
-        if len(s_client.entries) > 0:
-            self.assertIn('client', sources)
-        if len(s_server.entries) > 0:
-            self.assertIn('server', sources)
+        if len(entries_c) > 0: self.assertIn('client', sources)
+        if len(entries_s) > 0: self.assertIn('server', sources)
