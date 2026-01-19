@@ -1,4 +1,3 @@
-import os
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -58,6 +57,7 @@ class LogPatterns(object):
         r'Log started at (\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2}:\d{2} [AP]M)')
 
     # Standard UE: "[2026.01.08-10.13.34:123][  0]LogCook: Display: ..."
+    # Group 1: Full TS, Group 2: Category, Group 3: Level (Optional), Group 4: Message
     STANDARD_UE = re.compile(
         r'^\[(\d{4}\.\d{2}\.\d{2}-\d{2}\.\d{2}\.\d{2}:\d{3})\](?:\[\s*\d+\])?\s*([^:]+):(?:\s*([^:]+):)?\s*(.*)'
     )
@@ -134,6 +134,8 @@ class LogParserStrategy(ABC):
         """Return any remaining pending entry."""
         if self._pending_entry:
             e = self._pending_entry
+            # CRITICAL FIX: Must enrich the final entry before returning it
+            self._enrich_entry(e)
             self._pending_entry = None
             return [e]
         return []
@@ -209,7 +211,6 @@ class LogParserStrategy(ABC):
 class UEBuildLogStrategy(LogParserStrategy):
     """
     Strategy for Build/UAT Logs (Implicit Mode).
-    Logic: Anchors time, assumes subsequent lines inherit timestamp unless updated.
     """
 
     def parse_chunk(self, lines: List[str]) -> List[LogEntry]:
@@ -288,7 +289,6 @@ class UEBuildLogStrategy(LogParserStrategy):
 class UERunLogStrategy(LogParserStrategy):
     """
     Strategy for Runtime/Server/Client Logs (Explicit Mode).
-    Logic: Strictly requires timestamps for new entries.
     """
 
     def parse_chunk(self, lines: List[str]) -> List[LogEntry]:

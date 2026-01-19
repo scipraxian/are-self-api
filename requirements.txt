@@ -19,3 +19,4 @@ celery-types>=0.24.0
 Markdown>=3.10
 
 pytest
+coverage
