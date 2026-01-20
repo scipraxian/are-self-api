@@ -43,12 +43,23 @@ class HydraOutcomeActionID(object):
     ANALYZE = 5
 
 
+class HydraExecutableType(DefaultFieldsMixin):
+    """
+    Centralized Integer IDs for Executable Types.
+    """
+    LOCAL_PYTHON = 1
+    REMOTE_PYTHON = 2
+    LOCAL_POPEN = 3
+    REMOTE_POPEN = 4
+
+
 class HydraExecutable(DefaultFieldsMixin, DescriptionMixin):
     """
     A base tool (e.g. Unreal Editor, Python).
     """
     slug = models.SlugField(unique=True,
                             help_text="Internal ID for bridge mapping")
+    type = models.ForeignKey(HydraExecutableType, on_delete=models.PROTECT, default=HydraExecutableType.LOCAL_POPEN)
     path_template = models.CharField(max_length=500, blank=True)
 
     class Meta:

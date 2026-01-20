@@ -1,5 +1,41 @@
 [
   {
+    "model": "hydra.hydraexecutabletype",
+    "pk": 1,
+    "fields": {
+      "name": "Local Python",
+      "created": "2026-01-01T00:00:00Z",
+      "modified": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "hydra.hydraexecutabletype",
+    "pk": 2,
+    "fields": {
+      "name": "Remote Python",
+      "created": "2026-01-01T00:00:00Z",
+      "modified": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "hydra.hydraexecutabletype",
+    "pk": 3,
+    "fields": {
+      "name": "Local Popen",
+      "created": "2026-01-01T00:00:00Z",
+      "modified": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "hydra.hydraexecutabletype",
+    "pk": 4,
+    "fields": {
+      "name": "Remote Popen",
+      "created": "2026-01-01T00:00:00Z",
+      "modified": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
     "model": "hydra.hydraexecutable",
     "pk": 1,
     "fields": {
