@@ -24,14 +24,6 @@ class SpellContext(NamedTuple):
     dynamic_context: dict
 
 
-class GenericSpellTypes(object):
-    LOCAL_PYTHON = 1
-    REMOTE_PYTHON = 2
-    LOCAL_POPEN = 3
-    REMOTE_POPEN = 4
-
-
-
 class GenericSpellCaster(object):
     LOG_START_MESSAGE = 'Starting spell execution.'
 
@@ -47,7 +39,7 @@ class GenericSpellCaster(object):
 
     HEAD_STATUS_FIELD_NAME = 'status'
 
-    def __init__(self, head_id: uuid, context: SpellContext, callback = None): # todo: strongly type callback
+    def __init__(self, head_id: uuid, context: SpellContext, callback=None):  # todo: strongly type callback
         self.status = self.STATUS_CREATED
         self.head_id = head_id
         self.context = context
@@ -104,7 +96,12 @@ class GenericSpellCaster(object):
     def _get_command(self):
         return f'{self.context.executable} {self.switch_string}'
 
-    def _block_for_log(self):
+    def _post_head_log(self):
+        """Save the log to the DB. TODO: do this asynchronously, it may block."""
+        self._debug_log(f"Post Log {self.context.log_file}")
+        self.head.spell_log = "".join(self.running_log)
+
+    def _block_for_log_file(self):
         """Block until the log file is created."""
         stop_counter = 0
         while not exists(self.context.log_file):
@@ -113,20 +110,31 @@ class GenericSpellCaster(object):
             if stop_counter > 100:
                 raise TimeoutError(f"Log file creation timed out after {stop_counter} attempts")
 
-    def _post_log(self):
-        """Save the log to the DB. TODO: do this asynchronously, it may block."""
-        self._debug_log(f"Post Log {self.context.log_file}")
-        self.head.spell_log = "".join(self.running_log)
-
-    def _stream_log(self):
+    def _stream_log_file(self):
         """While running_subprocess, read the entire log each loop and post to the DB."""
         self.status = self.STATUS_STREAMING_LOGS
         with open(self.context.log_file, 'r', encoding='utf-8', errors='replace') as local_log:
             while self.running_subprocess.poll() is not None and self.status not in self.STATUSES_WHICH_HALT:
                 self.running_log = local_log.read()
-                self._post_log()
+                self._post_head_log()
                 # TODO: strongly consider a hook here, the agent would know if it updated.
                 sleep(0.1)
+
+    def _log_router(self):
+        match self.executable_type:
+            case HydraExecutableType.LOCAL_PYTHON:
+                pass
+            case HydraExecutableType.REMOTE_PYTHON:
+                pass
+            case HydraExecutableType.LOCAL_POPEN:
+                self._debug_log(f"Blocking for Log {self.context.log_file}")
+                self._block_for_log_file()
+                self._debug_log(f"Streaming Log {self.context.log_file}")
+                self._stream_log_file()
+            case HydraExecutableType.REMOTE_POPEN:
+                pass
+            case _:
+                raise ValueError(f"Unknown spell type: {self.executable_type}")
 
     def _execute_local_python(self):
         handlers = dict(
@@ -165,18 +173,18 @@ class GenericSpellCaster(object):
     def _execute_remote_popen(self):
         pass
 
-
     def _executable_router(self):
-        if self.executable_type == HydraExecutableType.LOCAL_PYTHON:
-            self._execute_local_python()
-        elif self.executable_type == HydraExecutableType.REMOTE_PYTHON:
-            self._execute_remote_python()
-        elif self.executable_type == HydraExecutableType.LOCAL_POPEN:
-            self._execute_local_popen()
-        elif self.executable_type == HydraExecutableType.REMOTE_POPEN:
-            self._execute_remote_popen()
-        else:
-            raise ValueError(f"Unknown spell type: {self.executable_type}")
+        match self.executable_type:
+            case HydraExecutableType.LOCAL_PYTHON:
+                self._execute_local_python()
+            case HydraExecutableType.REMOTE_PYTHON:
+                self._execute_remote_python()
+            case HydraExecutableType.LOCAL_POPEN:
+                self._execute_local_popen()
+            case HydraExecutableType.REMOTE_POPEN:
+                self._execute_remote_popen()
+            case _:
+                raise ValueError(f"Unknown spell type: {self.executable_type}")
 
     def _post_processor(self):
         """Run post processing steps after streaming logs."""
@@ -189,17 +197,17 @@ class GenericSpellCaster(object):
             self.callback(self)
         self.status = self.STATUS_COMPLETE
 
-
     def _cast_spell(self):
         self._debug_log(f"Launching {self.spell.name}")
         self._update_head_status(HydraHeadStatus.RUNNING)
         self._executable_router()
-        self._debug_log(f"Blocking for Log {self.context.log_file}")
-        self._block_for_log()
-        self._debug_log(f"Streaming Log {self.context.log_file}")
-        self._stream_log()
+        self._debug_log(f"Logging {self.spell.name}")
+        self._log_router()
         self._debug_log(f"Post Processing {self.spell.name}")
         self._post_processor()
-        self.status = self.STATUS_COMPLETE
-
-
+        self._debug_log(f"Clean Up {self.spell.name}")
+        if self.running_subprocess:
+            self.running_subprocess.kill()
+        if self.status not in self.STATUSES_WHICH_HALT:
+            self.status = self.STATUS_COMPLETE
+        self._debug_log(f"{self.spell.name} END OF LINE")

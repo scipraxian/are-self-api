@@ -81,3 +81,16 @@ class NativeDistributorTest(TestCase):
         test_generic_spellcaster = GenericSpellCaster(head.id, None, None)
         test_generic_spellcaster.executable_type = HydraExecutableType.LOCAL_PYTHON
         assert test_generic_spellcaster._resolve_switches('') == []
+
+    def test_generic_spellcaster_process_is_killed_on_cancel(self):
+        """Assert process is killed on cancel."""
+        pass
+
+    def test_generic_spellcaster_log_router_routes_to_correct_logging_type(self):
+        """Assert log router routes to correct logging type, e.g. local python."""
+        pass
+
+    def test_generic_spellcaster_blocks_and_streams_local_popen_log(self):
+        """Assert LOCAL_POPEN streams logs."""
+        pass
+
