@@ -29,9 +29,9 @@
     "fields": {
       "created": "2026-01-01T00:00:00Z",
       "description": null,
-      "modified": "2026-01-01T00:00:00Z",
-      "name": "Staged Game Executable",
-      "slug": "game_exe",
+      "modified": "2026-01-20T15:59:42.627Z",
+      "name": "Staging Executable",
+      "slug": "staging",
       "path_template": "{staging_dir}/Windows/{project_name}.exe"
     }
   },
@@ -41,9 +41,9 @@
     "fields": {
       "created": "2026-01-08T12:00:00Z",
       "description": null,
-      "modified": "2026-01-08T12:00:00Z",
-      "name": "Production Game (ReleaseTest)",
-      "slug": "prod_game_releasetest",
+      "modified": "2026-01-20T16:00:37.173Z",
+      "name": "Release Test Executable",
+      "slug": "release_test",
       "path_template": "{build_root}/ReleaseTest/{project_name}.exe"
     }
   },
@@ -77,22 +77,10 @@
     "fields": {
       "created": "2026-01-09T12:00:00Z",
       "description": "Run UE Locally and Stream Logs to Talos",
-      "modified": "2026-01-09T12:00:00Z",
-      "name": "Local Game Launcher",
+      "modified": "2026-01-20T15:56:39.237Z",
+      "name": "Native Local Client",
       "slug": "native_local_client",
       "path_template": ""
-    }
-  },
-  {
-    "model": "hydra.hydraspell",
-    "pk": 143,
-    "fields": {
-      "name": "Local Client",
-      "executable": 7,
-      "order": 1,
-      "active_switches": [21, 22],
-      "created": "2026-01-01T00:00:00Z",
-      "modified": "2026-01-01T00:00:00Z"
     }
   },
   {
@@ -588,6 +576,18 @@
     }
   },
   {
+    "model": "hydra.hydraswitch",
+    "pk": 141,
+    "fields": {
+      "created": "2026-01-19T14:35:40.553Z",
+      "modified": "2026-01-19T15:18:12.934Z",
+      "name": "Log",
+      "executable": 2,
+      "flag": "-log",
+      "value": ""
+    }
+  },
+  {
     "model": "hydra.hydraspell",
     "pk": 1,
     "fields": {
@@ -920,6 +920,19 @@
       "name": "UAT Run",
       "spells": [
         120
+      ]
+    }
+  },
+  {
+    "model": "hydra.hydraspellbook",
+    "pk": "559cecbd-2128-478a-be50-436ba30b7396",
+    "fields": {
+      "created": "2026-01-20T00:54:46.432Z",
+      "description": "Local Game Launcher",
+      "modified": "2026-01-20T01:03:01.418Z",
+      "name": "**LocalGameLauncher**",
+      "spells": [
+        143
       ]
     }
   },
