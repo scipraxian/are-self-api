@@ -41,8 +41,8 @@
     "fields": {
       "created": "2026-01-08T12:00:00Z",
       "description": null,
-      "modified": "2026-01-20T16:00:37.173Z",
-      "name": "Release Test Executable",
+      "modified": "2026-01-20T16:22:40.470Z",
+      "name": "Release Test Executable (legacy)",
       "slug": "release_test",
       "path_template": "{build_root}/ReleaseTest/{project_name}.exe"
     }
@@ -588,6 +588,18 @@
     }
   },
   {
+    "model": "hydra.hydraswitch",
+    "pk": 142,
+    "fields": {
+      "created": "2026-01-20T16:20:20.661Z",
+      "modified": "2026-01-20T16:20:20.661Z",
+      "name": "Auto Quit",
+      "executable": 4,
+      "flag": "-AutoQuit",
+      "value": ""
+    }
+  },
+  {
     "model": "hydra.hydraspell",
     "pk": 1,
     "fields": {
@@ -646,8 +658,8 @@
     "pk": 4,
     "fields": {
       "created": "2026-01-01T00:00:00Z",
-      "modified": "2026-01-09T15:19:52.695Z",
-      "name": "Stage Run",
+      "modified": "2026-01-20T16:07:44.573Z",
+      "name": "Staging",
       "executable": 3,
       "order": 1,
       "active_switches": [
@@ -711,12 +723,14 @@
     "pk": 120,
     "fields": {
       "created": "2026-01-08T12:00:00Z",
-      "modified": "2026-01-09T15:20:09.858Z",
-      "name": "UAT Run",
+      "modified": "2026-01-20T16:24:06.085Z",
+      "name": "UAT Run (Legacy)",
       "executable": 4,
       "order": 30,
       "active_switches": [
-        40
+        40,
+        41,
+        142
       ]
     }
   },
@@ -751,8 +765,8 @@
     "pk": 142,
     "fields": {
       "created": "2026-01-17T02:00:50.152Z",
-      "modified": "2026-01-17T02:00:50.152Z",
-      "name": "Remote Server",
+      "modified": "2026-01-20T16:14:01.054Z",
+      "name": "MP Remotes",
       "executable": 106,
       "order": 1,
       "active_switches": []
@@ -763,41 +777,11 @@
     "pk": 143,
     "fields": {
       "created": "2026-01-17T02:00:50.156Z",
-      "modified": "2026-01-17T02:00:50.156Z",
-      "name": "Local Client",
-      "executable": 3,
-      "order": 1,
-      "active_switches": [
-        21,
-        22
-      ]
-    }
-  },
-  {
-    "model": "hydra.hydraspell",
-    "pk": 200,
-    "fields": {
-      "created": "2026-01-09T12:00:00Z",
-      "modified": "2026-01-09T12:00:00Z",
-      "name": "Launch Remote Server",
-      "executable": 106,
+      "modified": "2026-01-20T16:13:25.985Z",
+      "name": "MP Local UAT",
+      "executable": 7,
       "order": 1,
       "active_switches": []
-    }
-  },
-  {
-    "model": "hydra.hydraspell",
-    "pk": 201,
-    "fields": {
-      "created": "2026-01-09T12:00:00Z",
-      "modified": "2026-01-09T12:00:00Z",
-      "name": "Launch Local Client",
-      "executable": 3,
-      "order": 2,
-      "active_switches": [
-        21,
-        22
-      ]
     }
   },
   {
@@ -855,13 +839,13 @@
     "fields": {
       "created": "2026-01-08T16:10:00Z",
       "description": "Full Chain: Test -> UAT",
-      "modified": "2026-01-09T15:11:45.514Z",
+      "modified": "2026-01-20T16:19:19.230Z",
       "name": "Full",
       "spells": [
         1,
-        4,
         2,
         3,
+        140,
         100,
         110,
         120,
@@ -875,8 +859,8 @@
     "fields": {
       "created": "2026-01-09T20:16:00.695Z",
       "description": "Version Stamp",
-      "modified": "2026-01-09T20:16:00.695Z",
-      "name": "Version Stamp",
+      "modified": "2026-01-20T16:15:44.857Z",
+      "name": "Stamp",
       "spells": [
         140
       ]
@@ -887,13 +871,11 @@
     "pk": "22334455-6677-8899-0011-aabbccddeeff",
     "fields": {
       "created": "2026-01-08T16:40:00Z",
-      "description": "Full Chain: Shaders -> Build -> Native Distribute.",
-      "modified": "2026-01-09T15:05:05.871Z",
-      "name": "Compile shaders build uat distribute",
+      "description": "Compile Shaders",
+      "modified": "2026-01-20T16:16:24.355Z",
+      "name": "Compile Shaders",
       "spells": [
-        100,
-        110,
-        130
+        100
       ]
     }
   },
@@ -903,23 +885,10 @@
     "fields": {
       "created": "2026-01-08T21:58:00.568Z",
       "description": "Distribute to Agents",
-      "modified": "2026-01-08T21:58:00.568Z",
-      "name": "Distribute to Agents",
+      "modified": "2026-01-20T16:16:35.220Z",
+      "name": "Distribute",
       "spells": [
         130
-      ]
-    }
-  },
-  {
-    "model": "hydra.hydraspellbook",
-    "pk": "426765ff-7d90-46b7-a930-3b63ffb338db",
-    "fields": {
-      "created": "2026-01-08T19:08:27.159Z",
-      "description": "UAT Run",
-      "modified": "2026-01-08T19:08:27.159Z",
-      "name": "UAT Run",
-      "spells": [
-        120
       ]
     }
   },
@@ -941,11 +910,10 @@
     "pk": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
     "fields": {
       "created": "2026-01-01T00:00:00Z",
-      "description": "The original 7_Manager.py workflow",
-      "modified": "2026-01-09T15:05:35.482Z",
-      "name": "Test stage build stage run",
+      "description": null,
+      "modified": "2026-01-20T16:27:09.721Z",
+      "name": "Stage",
       "spells": [
-        1,
         2,
         3
       ]
@@ -966,20 +934,6 @@
   },
   {
     "model": "hydra.hydraspellbook",
-    "pk": "c9f0a1b2-3d4e-5f6a-7b8c-9d0e1f2c3d4e",
-    "fields": {
-      "created": "2026-01-01T00:00:00Z",
-      "description": "Build Staging -> Run Staging (Rec PSO)",
-      "modified": "2026-01-09T15:06:13.697Z",
-      "name": "Staging Build&Record",
-      "spells": [
-        2,
-        3
-      ]
-    }
-  },
-  {
-    "model": "hydra.hydraspellbook",
     "pk": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
     "fields": {
       "created": "2026-01-01T00:00:00Z",
@@ -993,25 +947,12 @@
   },
   {
     "model": "hydra.hydraspellbook",
-    "pk": "e1f2a3b4-5c6d-7e8f-9a0b-1c2d3e4f5a6b",
-    "fields": {
-      "created": "2026-01-08T15:50:00Z",
-      "description": "Step 3 Standalone: Compiles PSO caches and copies .spc results.",
-      "modified": "2026-01-08T15:50:00Z",
-      "name": "Build Shaders Only",
-      "spells": [
-        100
-      ]
-    }
-  },
-  {
-    "model": "hydra.hydraspellbook",
     "pk": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
     "fields": {
       "created": "2026-01-17T02:00:50.162Z",
       "description": "Side-by-side Live Debugging (Remote Server + Local Client)",
-      "modified": "2026-01-17T02:00:50.162Z",
-      "name": "Multiplayer Debug",
+      "modified": "2026-01-20T16:26:43.143Z",
+      "name": "Multiplayer (C&S)",
       "spells": [
         142,
         143
