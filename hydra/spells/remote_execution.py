@@ -1,9 +1,8 @@
 import time
 import logging
-import json
 from talos_agent.utils.client import TalosAgentClient
 from core.models import RemoteTarget
-from hydra.models import HydraHeadStatus
+from hydra.models import HydraHeadStatus, HydraHead
 
 logger = logging.getLogger(__name__)
 
@@ -11,72 +10,92 @@ logger = logging.getLogger(__name__)
 def remote_launch_native(head):
     """
     Native handler to launch a process on a remote agent and stream logs.
-    Relies on Agent v2.1.5+ to handle log file waiting and buffering.
+    Implements 'Authoritative Writer' pattern to match Local Execution.
     """
-    # 1. Selection Logic
-    target = RemoteTarget.objects.filter(is_enabled=True,
-                                         status='ONLINE').first()
-    if not target:
-        return 1, "Error: No ONLINE agents available for remote launch."
+    # Init Log Buffer (In-Memory Source of Truth)
+    log_buffer = [head.spell_log or f"=== REMOTE LAUNCH DIAGNOSTICS ==="]
 
-    client = TalosAgentClient(target.ip_address or target.hostname,
-                              port=target.agent_port)
+    def flush_log():
+        """Writes memory buffer to DB."""
+        try:
+            full_content = "".join(log_buffer)
+            # Update ONLY the spell_log field
+            HydraHead.objects.filter(pk=head.pk).update(spell_log=full_content)
+        except Exception as e:
+            logger.error(f"Failed to flush remote logs: {e}")
+
+    def append_log(msg):
+        log_buffer.append(msg)
+
+    # 1. Selection Logic
+    target = RemoteTarget.objects.filter(is_enabled=True, status='ONLINE').first()
+    if not target:
+        append_log("\n[FATAL] No ONLINE agents available.")
+        flush_log()
+        return 1, "".join(log_buffer)
+
+    client = TalosAgentClient(target.ip_address or target.hostname, port=target.agent_port)
 
     exe_path = target.remote_exe_path
     log_path = target.remote_log_path
 
+    append_log(f"\nTarget: {target.hostname} ({client.host})")
+    append_log(f"\nExe: {exe_path}")
+    append_log(f"\nLog: {log_path}\n")
+
     if not exe_path:
-        return 1, f"Error: Agent {target.hostname} has no remote_exe_path configured."
+        append_log("\n[FATAL] Agent has no remote_exe_path configured.")
+        flush_log()
+        return 1, "".join(log_buffer)
 
     # 2. Launch
-    # We explicitly pass -log to ensure the file is generated
     params = ["-server", "-log", "-windowed", "-resX=1280", "-resY=720"]
 
-    head.spell_log = f"=== REMOTE LAUNCH ===\nTarget: {target.hostname} ({client.host})\nExe: {exe_path}\nLog: {log_path}\n\n"
     head.status_id = HydraHeadStatus.RUNNING
-    head.save()
+    head.save(update_fields=['status'])
+    append_log(f"Launching with params: {params}\n")
+    flush_log()
 
     res = client.launch(exe_path, params)
     if res.get('status') != 'LAUNCHED':
-        return 1, f"Error: Agent failed to launch: {res.get('message')}"
+        append_log(f"\n[ERROR] Agent launch failed: {res.get('message')}")
+        flush_log()
+        return 1, "".join(log_buffer)
 
-    head.spell_log += f"Process LAUNCHED. Connecting to log stream...\n"
-    head.save()
+    append_log(f"Process LAUNCHED. Connecting to stream...\n")
+    flush_log()
 
-    # 3. Stream Logs (Passive Mode)
-    # The agent will block until the file exists, then push data.
+    # 3. Stream Logs (Authoritative)
     if log_path:
         try:
             last_save = time.time()
-            log_buffer = []
 
-            # Client.stream_logs yields lines as they arrive
+            # This generator yields lines as they arrive from the agent
             for line in client.stream_logs(log_path):
-                log_buffer.append(line)
+                # The agent sends JSON lines, client.stream_logs yields raw text content
+                append_log(line)  # line already includes newline from the file usually?
+                # If stream_logs strips newline, add it back:
+                if not line.endswith('\n'):
+                    append_log('\n')
 
-                # Batch updates to DB to avoid thrashing (1s interval)
-                if time.time() - last_save > 1.0:
-                    head.refresh_from_db()
+                # Lightweight Stop Check
+                status = HydraHead.objects.filter(pk=head.pk).values_list('status', flat=True).first()
+                if status == HydraHeadStatus.FAILED:
+                    # We can't easily kill the remote process from here without a new client call
+                    # But we can stop listening.
+                    append_log("\n[STOP] Terminated by User (Stream Disconnected).")
+                    flush_log()
+                    return 1, "".join(log_buffer)
 
-                    # TERMINATION CHECK (Stop Button)
-                    if head.status_id == HydraHeadStatus.FAILED:
-                        # We don't need to do anything here, the terminate() signal
-                        # will have killed the process. We just stop listening.
-                        return 1, head.spell_log + "\n[REMOTE] Stream disconnected by User."
-
-                    if log_buffer:
-                        head.spell_log += "\n".join(log_buffer) + "\n"
-                        head.save()
-                        log_buffer = []
-                        last_save = time.time()
-
-            # Flush remaining buffer on exit
-            if log_buffer:
-                head.spell_log += "\n".join(log_buffer) + "\n"
-                head.save()
+                # Batch Save (1s)
+                if (time.time() - last_save > 1.0):
+                    flush_log()
+                    last_save = time.time()
 
         except Exception as e:
-            head.spell_log += f"\n[ERROR] Log streaming interrupted: {e}"
-            head.save()
+            append_log(f"\n[ERROR] Stream interrupted: {e}")
+            flush_log()
 
-    return 0, head.spell_log + "\n[REMOTE] Stream ended normally."
+    append_log("\n[REMOTE] Execution finished or stream closed.")
+    flush_log()
+    return 0, "".join(log_buffer)

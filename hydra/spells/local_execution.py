@@ -12,11 +12,10 @@ def local_launch_native(head):
     """
     Robust Local Launcher.
     1. Captures launch timestamp.
-    2. Launches process (with correct argument splitting).
+    2. Launches process.
     3. Waits for log file creation/update (Timestamp > LaunchTime).
-    4. Streams logs using Authoritative Writer (No DB collisions).
+    4. Streams logs using Authoritative Writer pattern.
     """
-    # 1. Resolve Context & Paths
     env = head.spawn.environment.project_environment
     context = HydraContext(
         project_root=env.project_root,
@@ -31,14 +30,13 @@ def local_launch_native(head):
     # We only accept logs modified AFTER this moment.
     launch_start_time = time.time()
 
-    # Init Log Buffer (In-Memory Source of Truth)
-    log_buffer = [head.spell_log or f"=== LOCAL LAUNCH DIAGNOSTICS ==="]
+    # Init Log Buffer
+    log_buffer = [f"=== LOCAL LAUNCH DIAGNOSTICS ==="]
 
     def flush_log():
         """Writes memory buffer to DB."""
         try:
             full_content = "".join(log_buffer)
-            # Update ONLY the spell_log field
             HydraHead.objects.filter(pk=head.pk).update(spell_log=full_content)
         except Exception as e:
             logger.error(f"Failed to flush logs: {e}")
@@ -67,18 +65,13 @@ def local_launch_native(head):
         flush_log()
         return 1, "".join(log_buffer)
 
-    if os.path.isdir(exe_path):
-        append_log(f"[FATAL] Target is a DIRECTORY. Check path_template.")
-        flush_log()
-        return 1, "".join(log_buffer)
-
-    # 3. Launch Process (With Argument Splitting Fix)
+    # 3. Launch Process
     cmd = [exe_path]
     for switch in head.spell.active_switches.all():
         flag = resolve_template(switch.flag, context)
         val = resolve_template(switch.value, context)
 
-        # CRITICAL FIX: Split composite flags ("-windowed -resX=...")
+        # Split composite flags
         if flag:
             if " " in flag:
                 cmd.extend(flag.split())
@@ -90,7 +83,6 @@ def local_launch_native(head):
 
     if "-log" not in cmd: cmd.append("-log")
 
-    # Reset DB Status
     head.status_id = HydraHeadStatus.RUNNING
     head.save(update_fields=['status'])
     append_log(f"Cmd: {cmd}\n\n")
@@ -106,7 +98,6 @@ def local_launch_native(head):
         return 1, "".join(log_buffer)
 
     # 4. Tail Loop (Stale File Protection)
-    # We wait until the log file's modification time is GREATER than our launch time.
     retries = 0
     log_found = False
 
@@ -114,7 +105,6 @@ def local_launch_native(head):
         time.sleep(1)
         retries += 1
 
-        # Check Process Life
         if proc.poll() is not None:
             append_log(f"\n[FATAL] Process died immediately (Exit {proc.returncode}). No new log generated.\n")
             flush_log()
@@ -123,14 +113,10 @@ def local_launch_native(head):
         # Check File Freshness
         if os.path.exists(log_path):
             try:
-                # Windows: getctime is creation, getmtime is modify.
-                # UE usually recreates the file (creation time updates).
-                # We check modification just to be safe.
                 file_mtime = os.path.getmtime(log_path)
-
-                # Allow a small clock skew buffer (0.5s) if filesystems are weird
+                # Allow a small clock buffer
                 if file_mtime >= (launch_start_time - 1.0):
-                    append_log(f"[CONNECTED] Found fresh log (Modified: {file_mtime} >= Launch: {launch_start_time})\n")
+                    append_log(f"[CONNECTED] Found fresh log.\n")
                     flush_log()
                     log_found = True
                     break
@@ -139,14 +125,14 @@ def local_launch_native(head):
                         append_log(f"... Waiting for update (Stale log found from {file_mtime})...\n")
                         flush_log()
             except OSError:
-                pass  # Locked? Retry.
+                pass
 
         if retries > 30:
             append_log(f"[TIMEOUT] New log file never appeared after 30s.\n")
             flush_log()
             return 1, "".join(log_buffer)
 
-    # 5. Stream (Authoritative)
+    # 5. Stream
     try:
         with open(log_path, 'r', encoding='utf-8', errors='replace') as f:
             last_save = time.time()
@@ -159,7 +145,6 @@ def local_launch_native(head):
                     flush_log()
                     return proc.returncode, "".join(log_buffer)
 
-                # Lightweight Stop Check
                 status = HydraHead.objects.filter(pk=head.pk).values_list('status', flat=True).first()
                 if status == HydraHeadStatus.FAILED:
                     proc.kill()
