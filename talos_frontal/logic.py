@@ -31,16 +31,8 @@ class StimulusProcessor:
         stream = self._create_conscious_stream(spawn_id, head_id,
                                                stimulus.description)
         if not stream:
+            logger.error("[FRONTAL] ❌ No Stream. Aborting.")
             return
-
-        # --- BYPASS: MANUAL OVERRIDE FOR SPEED ---
-        # User requested to disable AI analysis while debugging core systems.
-        if True:
-            self._finalize_stream(stream, "Analysis Bypassed (System Override).")
-            return
-        # -----------------------------------------
-
-
 
         # 2. Evaluate Necessity
         should_analyze, prompt = self._evaluate_necessity(spawn_id, event_type)
