@@ -1,7 +1,6 @@
-import re
 import collections
 import datetime
-from datetime import datetime as dt_class
+from ue_tools.log_parser import LogConstants, LogParserFactory, merge_sessions
 
 HydraContext = collections.namedtuple('HydraContext', [
     'project_root', 'engine_root', 'build_root', 'staging_dir', 'project_name',
@@ -33,72 +32,39 @@ def resolve_template(template_str, context: HydraContext):
 
 def merge_logs(local_content, remote_content):
     """
-    Parses and merges log lines. Handles UE5 and Agent timestamp formats.
+    Parses and merges log chunks using the State-of-the-Art ue_tools parser.
     """
-    events = []
+    # 1. Parse Local (Editor/UAT format)
+    parser_local = LogParserFactory.create(LogConstants.TYPE_RUN, 'local')
+    local_entries = parser_local.parse_chunk(local_content.splitlines())
+    # Flush ensures we catch any final line
+    local_entries += parser_local.flush()
 
-    # Pattern 1: UE Standard [YYYY.MM.DD-HH.MM.SS:MS]
-    ue_pattern = re.compile(r'^\[(\d{4}\.\d{2}\.\d{2}-\d{2}\.\d{2}\.\d{2}:\d{3})\]')
+    # 2. Parse Remote (Agent format)
+    parser_remote = LogParserFactory.create(LogConstants.TYPE_RUN, 'remote')
+    remote_entries = parser_remote.parse_chunk(remote_content.splitlines())
+    remote_entries += parser_remote.flush()
 
-    # Pattern 2: Agent/Simple HH:MM:SS
-    # Matches "07:44:18 [INFO]" or just "07:44:18 "
-    agent_pattern = re.compile(r'^(\d{2}:\d{2}:\d{2})\s+')
+    # 3. Create Session Wrappers for the Merger
+    from ue_tools.log_parser import LogSession
 
-    def parse_source(content, source_label):
-        if not content: return
+    session_local = LogSession(entries=local_entries, source_name='local')
+    session_remote = LogSession(entries=remote_entries, source_name='remote')
 
-        current_entry = None
+    # 4. Merge
+    merged_session = merge_sessions(session_local, session_remote)
 
-        for line in content.splitlines():
-            line = line.rstrip()
-            if not line: continue
+    # 5. Adapt to UI Format
+    ui_events = []
 
-            # Check UE Format
-            match_ue = ue_pattern.match(line)
-            if match_ue:
-                ts_str = match_ue.group(1)
-                try:
-                    dt = dt_class.strptime(ts_str, '%Y.%m.%d-%H.%M.%S:%f')
-                    display_ts = ts_str.split('-')[1]  # HH.MM.SS:MS
-                    msg = re.sub(r'^\[.*?\](\[\s*\d*\])?', '', line).strip()
+    for entry in merged_session.entries:
+        ui_events.append({
+            'source': entry.source,
+            'display_ts': entry.timestamp.strftime('%H:%M:%S'),
+            # 'raw' contains the original line with headers, which might be preferred for debug
+            # 'message' is cleaner. Let's use message to keep the UI tidy.
+            'msg': entry.message,
+            'full_ts': entry.timestamp
+        })
 
-                    current_entry = {'full_ts': dt, 'display_ts': display_ts, 'msg': msg, 'source': source_label}
-                    events.append(current_entry)
-                    continue
-                except ValueError:
-                    pass
-
-            # Check Agent Format
-            match_agent = agent_pattern.match(line)
-            if match_agent:
-                time_str = match_agent.group(1)
-                try:
-                    # Construct a full datetime using today for sorting
-                    now = datetime.datetime.now()
-                    t = dt_class.strptime(time_str, '%H:%M:%S').time()
-                    dt = datetime.datetime.combine(now.date(), t)
-
-                    current_entry = {'full_ts': dt, 'display_ts': time_str, 'msg': line, 'source': source_label}
-                    events.append(current_entry)
-                    continue
-                except ValueError:
-                    pass
-
-            # Fallback: Append to previous or create orphan
-            if current_entry:
-                current_entry['msg'] += f"\n{line}"
-            else:
-                # Use current time for orphans to ensure they appear at the end/current spot
-                events.append({
-                    'full_ts': datetime.datetime.now(),
-                    'display_ts': '..:..:..',
-                    'msg': line,
-                    'source': source_label
-                })
-
-    parse_source(local_content, 'local')
-    parse_source(remote_content, 'remote')
-
-    # Sort chronologically
-    events.sort(key=lambda x: x['full_ts'])
-    return events
+    return ui_events

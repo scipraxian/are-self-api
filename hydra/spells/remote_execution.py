@@ -1,5 +1,6 @@
 import time
 import logging
+import json
 from talos_agent.utils.client import TalosAgentClient
 from core.models import RemoteTarget
 from hydra.models import HydraHeadStatus
@@ -10,7 +11,7 @@ logger = logging.getLogger(__name__)
 def remote_launch_native(head):
     """
     Native handler to launch a process on a remote agent and stream logs.
-    Targets the first available ONLINE agent.
+    Relies on Agent v2.1.5+ to handle log file waiting and buffering.
     """
     # 1. Selection Logic
     target = RemoteTarget.objects.filter(is_enabled=True,
@@ -28,10 +29,10 @@ def remote_launch_native(head):
         return 1, f"Error: Agent {target.hostname} has no remote_exe_path configured."
 
     # 2. Launch
-    # We might want to pass specific params for a server, e.g. -server -log
+    # We explicitly pass -log to ensure the file is generated
     params = ["-server", "-log", "-windowed", "-resX=1280", "-resY=720"]
 
-    head.spell_log = f"=== REMOTE LAUNCH ===\nTarget: {target.hostname} ({client.host})\nExe: {exe_path}\nParams: {params}\n\n"
+    head.spell_log = f"=== REMOTE LAUNCH ===\nTarget: {target.hostname} ({client.host})\nExe: {exe_path}\nLog: {log_path}\n\n"
     head.status_id = HydraHeadStatus.RUNNING
     head.save()
 
@@ -39,28 +40,29 @@ def remote_launch_native(head):
     if res.get('status') != 'LAUNCHED':
         return 1, f"Error: Agent failed to launch: {res.get('message')}"
 
-    head.spell_log += f"Process LAUNCHED on agent. Attaching to log: {log_path}\n"
+    head.spell_log += f"Process LAUNCHED. Connecting to log stream...\n"
     head.save()
 
-    # 3. Stream Logs
-    # Note: This is running inside a Celery worker.
-    # We can block here and yield logs to the DB.
+    # 3. Stream Logs (Passive Mode)
+    # The agent will block until the file exists, then push data.
     if log_path:
         try:
-            # We need a way to stop streaming if the head is terminated.
-            # But for now, simple loop.
             last_save = time.time()
             log_buffer = []
 
+            # Client.stream_logs yields lines as they arrive
             for line in client.stream_logs(log_path):
                 log_buffer.append(line)
 
-                # Check for termination? (Maybe check DB status)
+                # Batch updates to DB to avoid thrashing (1s interval)
                 if time.time() - last_save > 1.0:
                     head.refresh_from_db()
+
+                    # TERMINATION CHECK (Stop Button)
                     if head.status_id == HydraHeadStatus.FAILED:
-                        # Terminated
-                        return 1, head.spell_log + "\n[REMOTE] Streaming terminated."
+                        # We don't need to do anything here, the terminate() signal
+                        # will have killed the process. We just stop listening.
+                        return 1, head.spell_log + "\n[REMOTE] Stream disconnected by User."
 
                     if log_buffer:
                         head.spell_log += "\n".join(log_buffer) + "\n"
@@ -68,11 +70,13 @@ def remote_launch_native(head):
                         log_buffer = []
                         last_save = time.time()
 
-                # Check if process died on agent side?
-                # The agent stream_logs generator might close if the connection drops.
+            # Flush remaining buffer on exit
+            if log_buffer:
+                head.spell_log += "\n".join(log_buffer) + "\n"
+                head.save()
 
         except Exception as e:
             head.spell_log += f"\n[ERROR] Log streaming interrupted: {e}"
             head.save()
 
-    return 0, head.spell_log + "\n[REMOTE] Execution finished or detached."
+    return 0, head.spell_log + "\n[REMOTE] Stream ended normally."

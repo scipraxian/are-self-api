@@ -73,6 +73,30 @@
   },
   {
     "model": "hydra.hydraexecutable",
+    "pk": 7,
+    "fields": {
+      "created": "2026-01-09T12:00:00Z",
+      "description": "Run UE Locally and Stream Logs to Talos",
+      "modified": "2026-01-09T12:00:00Z",
+      "name": "Local Game Launcher",
+      "slug": "native_local_client",
+      "path_template": ""
+    }
+  },
+  {
+    "model": "hydra.hydraspell",
+    "pk": 143,
+    "fields": {
+      "name": "Local Client",
+      "executable": 7,
+      "order": 1,
+      "active_switches": [21, 22],
+      "created": "2026-01-01T00:00:00Z",
+      "modified": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "hydra.hydraexecutable",
     "pk": 100,
     "fields": {
       "created": "2026-01-07T22:58:23.399Z",

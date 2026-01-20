@@ -20,22 +20,10 @@
                     {% else %}
                         <span class="status-text status-{{ spawn.status.name|lower }}">{{ spawn.status.name }}</span>
                     {% endif %}
-
-                    {% if thought and thought.spawn_link %}
-                        {% with session=thought.spawn_link.reasoning_sessions.last %}
-                            {% if session %}
-                                <a href="{% url 'talos_reasoning:cortex_view' session.id %}"
-                                   class="btn-secondary"
-                                   style="margin-left: 15px; text-decoration: none; font-size: 0.7rem; padding: 4px 10px; border-color: #a855f7; color: #a855f7;">
-                                   🧠 VIEW CORTEX
-                                </a>
-                            {% endif %}
-                        {% endwith %}
-                    {% endif %}
                 {% endwith %}
             </div>
         </div>
-        <div class="actions">
+        <div class="actions" style="display: flex; gap: 10px; align-items: center;">
             {% if not is_active %}
                 {% if is_full_page %}
                 <a href="/" class="btn-done" style="text-decoration: none;">DISMISS</a>
@@ -46,51 +34,18 @@
                         class="btn-done">DISMISS</button>
                 {% endif %}
             {% else %}
-            <div class="spinner-small"></div>
+                <button hx-post="{% url 'hydra_spawn_terminate' spawn.id %}"
+                        class="btn-done"
+                        style="border-color: #ef4444; color: #ef4444;">
+                    STOP
+                </button>
+                <div class="spinner-small"></div>
             {% endif %}
         </div>
     </div>
+
     {% if spawn.spellbook.name == "Multiplayer Debug" %}
-    <div class="multiplayer-battle-station">
-        <div class="battle-station-header">
-            <div class="header-col">LOCAL CLIENT</div>
-            <div class="header-col center">TIMESTAMP</div>
-            <div class="header-col">REMOTE SERVER</div>
-        </div>
-
-        <!-- Hidden store for cursors, updated via OOB -->
-        <div id="battle-station-cursors" data-local="0" data-remote="0" style="display: none;"></div>
-
-        <div id="battle-stream-container"
-             class="log-wrapper battle-stream"
-             hx-get="{% url 'hydra_battle_stream' spawn.id %}"
-             hx-trigger="every 1s"
-             hx-vals='js:{
-                 local_cursor: document.getElementById("battle-station-cursors")?.dataset.local || 0,
-                 remote_cursor: document.getElementById("battle-station-cursors")?.dataset.remote || 0
-             }'
-             hx-swap="beforeend">
-            
-            <div style="padding: 2rem; text-align: center; color: #94a3b8; font-family: 'Inter', sans-serif;">
-                <div class="spinner-small" style="margin: 0 auto 10px;"></div>
-                Synchronizing Log Streams...
-            </div>
-        </div>
-
-        <div class="battle-station-controls" style="gap: 1rem;">
-            <button hx-post="{% url 'hydra_spawn_terminate' spawn.id %}?action=terminate"
-                    class="btn-analyze"
-                    style="background: #334155; box-shadow: none; border: 1px solid #475569;">
-                🛑 STOP SESSION
-            </button>
-
-            <button hx-post="{% url 'hydra_spawn_terminate' spawn.id %}?action=analyze"
-                    hx-confirm="Finalize session and trigger Cortex analysis (Heavy Load)?"
-                    class="btn-analyze">
-                🧠 STOP & ANALYZE
-            </button>
-        </div>
-    </div>
+       {% include "hydra/partials/battle_stream.html" %}
     {% else %}
     <div class="table-wrapper">
         <table class="monitor-table">
@@ -110,7 +65,6 @@
                         <span style="font-weight: 700; color: #e2e8f0;">{{ head.spell.name }}</span>
                         <div style="font-size: 0.75rem; color: #64748b; font-family: monospace;">{{ head.spell.executable.slug }}</div>
                     </td>
-                    
                     <td class="col-status">
                         <span id="status-badge-{{ head.id }}"
                               class="status-badge status-{{ head.status.name|lower }}"
@@ -123,7 +77,6 @@
                             {{ head.status.name }}
                         </span>
                     </td>
-
                     <td class="col-time">
                         <span id="result-code-{{ head.id }}"
                               style="font-family: monospace; color: {% if head.result_code == 0 %}#4ade80{% elif head.result_code %}#f87171{% else %}#64748b{% endif %};"
@@ -137,19 +90,17 @@
                         </span>
                     </td>
                 </tr>
-                
                 <tr id="logs-{{ head.id }}" class="log-container" style="display: none;" hx-preserve>
                     <td colspan="4" style="padding: 0; border: none;">
-                        <div id="log-wrapper-{{ head.id }}" 
-                             class="log-wrapper" 
-                             hx-get="{% url 'hydra_head_logs' head.id %}?type=tool" 
-                             hx-trigger="load_now" 
+                        <div id="log-wrapper-{{ head.id }}"
+                             class="log-wrapper"
+                             hx-get="{% url 'hydra_head_logs' head.id %}?type=tool"
+                             hx-trigger="load_now"
                              hx-swap="innerHTML">
-                             
-                            <div style="padding: 2rem; text-align: center; color: #94a3b8; font-family: 'Inter', sans-serif; background: #0f172a; border-top: 1px solid rgba(255,255,255,0.1);">
+                           <div style="padding: 2rem; text-align: center; color: #94a3b8;">
                                 <div class="spinner-small" style="margin: 0 auto 10px;"></div>
                                 Loading Protocol Stream...
-                            </div>
+                           </div>
                         </div>
                     </td>
                 </tr>
@@ -159,89 +110,39 @@
     </div>
     {% endif %}
 </div>
-
 <script>
     function toggleHydraLogs(id) {
         var row = document.getElementById('logs-' + id);
         if (!row) return;
         if (row.style.display === 'none') {
             row.style.display = 'table-row';
-            
             var wrapper = document.getElementById('log-wrapper-' + id);
-            if (wrapper && !wrapper.classList.contains('loaded')) {
-                if (typeof htmx !== 'undefined') {
-                    htmx.trigger(wrapper, 'load_now');
-                    wrapper.classList.add('loaded');
-                }
+            if (wrapper && !wrapper.classList.contains('loaded') && typeof htmx !== 'undefined') {
+                htmx.trigger(wrapper, 'load_now');
+                wrapper.classList.add('loaded');
             }
         } else {
             row.style.display = 'none';
         }
     }
-
-    // Auto-scroll for multiplayer battle station
-    document.addEventListener('htmx:afterSettle', function(evt) {
-        if (evt.detail.target.classList.contains('log-wrapper') || evt.detail.target.id === 'battle-stream-container') {
-            evt.detail.target.scrollTop = evt.detail.target.scrollHeight;
-        }
-    });
 </script>
-
 <style>
-    .monitor-card { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem; backdrop-filter: blur(12px); animation: fadeIn 0.3s ease-out; }
+    .monitor-card { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem; backdrop-filter: blur(12px); }
     .monitor-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
-    .monitor-header h3 { color: #94a3b8; font-weight: 700; text-transform: uppercase; font-size: 0.9rem; margin: 0 0 0.5rem 0; letter-spacing: 0.05em; }
-    .status-line { font-size: 1.1rem; font-weight: 600; color: #f1f5f9; font-family: 'Outfit', sans-serif; display: flex; align-items: center; }
-    .separator { color: #475569; margin: 0 8px; }
-    .status-text.status-success { color: #4ade80; }
-    .status-text.status-failed { color: #f87171; }
-    .status-text.status-running { color: #818cf8; }
+    .status-line { font-size: 1.1rem; font-weight: 600; color: #f1f5f9; display: flex; align-items: center; }
     .btn-done { background: transparent; border: 1px solid #475569; color: #94a3b8; padding: 0.5rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8rem; }
     .btn-done:hover { border-color: #cbd5e1; color: #f1f5f9; }
+    .spinner-small { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1); border-top-color: #60a5fa; border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
     .table-wrapper { background: rgba(0, 0, 0, 0.2); border-radius: 12px; overflow-x: auto; margin-top: 1rem; }
     .monitor-table { width: 100%; border-collapse: collapse; }
-    .col-ord { width: 5%; text-align: center; color: #64748b; font-family: monospace; }
-    .col-step { width: 60%; text-align: left; }
-    .col-status { width: 20%; text-align: center; }
-    .col-time { width: 15%; text-align: right; }
-    .monitor-table th { padding: 1rem; color: #94a3b8; background: rgba(255, 255, 255, 0.02); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; }
-    .step-row { border-bottom: 1px solid rgba(255, 255, 255, 0.05); cursor: pointer; transition: background 0.2s; }
+    .step-row { border-bottom: 1px solid rgba(255, 255, 255, 0.05); cursor: pointer; }
     .step-row:hover { background: rgba(255, 255, 255, 0.05); }
-    .step-row td { padding: 1rem; vertical-align: middle; }
-    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; display: inline-block; }
-    .status-badge.status-running { background: rgba(99, 102, 241, 0.15); color: #818cf8; animation: pulse 2s infinite; }
-    .status-badge.status-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
-    .status-badge.status-failed { background: rgba(239, 68, 68, 0.15); color: #f87171; }
-    .status-badge.status-created { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
-    .status-badge.status-pending { background: rgba(234, 179, 8, 0.15); color: #facc15; }
-    .spinner-small { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1); border-top-color: #60a5fa; border-radius: 50%; animation: spin 1s linear infinite; }
-    
-    /* Battle Station Styles */
-    .multiplayer-battle-station { display: flex; flex-direction: column; gap: 0; height: 75vh; background: #020617; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); overflow: hidden; }
-    
-    .battle-station-header { display: grid; grid-template-columns: 1fr 120px 1fr; background: rgba(15, 23, 42, 0.9); border-bottom: 2px solid rgba(124, 58, 237, 0.3); padding: 0.75rem 0; z-index: 10; }
-    .header-col { color: #94a3b8; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; padding: 0 1.5rem; }
-    .header-col.center { text-align: center; color: #a855f7; }
-
-    .battle-stream { flex: 1; overflow-y: auto; padding: 1rem 0; display: flex; flex-direction: column; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; scroll-behavior: smooth; }
-    
-    .log-row { display: grid; grid-template-columns: 1fr 120px 1fr; border-bottom: 1px solid rgba(255, 255, 255, 0.02); transition: background 0.1s; }
-    .log-row:hover { background: rgba(255, 255, 255, 0.03); }
-    
-    .col-msg { padding: 0.25rem 1.5rem; color: #cbd5e1; white-space: pre-wrap; word-break: break-all; }
-    .col-ts { padding: 0.25rem 0; color: #60a5fa; text-align: center; font-weight: 700; background: rgba(0, 0, 0, 0.2); border-left: 1px solid rgba(255, 255, 255, 0.05); border-right: 1px solid rgba(255, 255, 255, 0.05); }
-    
-    .source-local .col-local { color: #f1f5f9; }
-    .source-remote .col-remote { color: #94a3b8; }
-    
-    .msg-content { display: inline-block; position: relative; }
-    .source-local .msg-content { border-left: 2px solid #3b82f6; padding-left: 8px; }
-    .source-remote .msg-content { border-left: 2px solid #a855f7; padding-left: 8px; }
-    
-    .battle-station-controls { display: flex; justify-content: center; padding: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.05); }
-    .btn-analyze { background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3); transition: transform 0.2s, box-shadow 0.2s; }
-    .btn-analyze:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4); }
-    .btn-analyze:active { transform: translateY(0); }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .monitor-table th { padding: 1rem; color: #94a3b8; background: rgba(255, 255, 255, 0.02); text-transform: uppercase; font-size: 0.75rem; text-align: left; }
+    .monitor-table td { padding: 1rem; vertical-align: middle; }
+    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+    .status-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+    .status-failed { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+    .status-running { background: rgba(99, 102, 241, 0.15); color: #818cf8; animation: pulse 2s infinite; }
+    .status-pending { background: rgba(234, 179, 8, 0.15); color: #facc15; }
 </style>
