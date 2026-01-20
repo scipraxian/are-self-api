@@ -12,7 +12,6 @@ from django.db import transaction
 
 from .models import HydraHead
 from .models import HydraHeadStatus
-from .outcomes import process_outcomes
 from .utils import get_timestamp
 from .utils import HydraContext
 from .utils import log_system
@@ -182,7 +181,8 @@ def cast_hydra_spell(self, hydrahead_id):
             head.spell_log += "\n\n[SUCCESS] Spell Completed."
             head.save()
 
-            # Outcome Logic
+            # Outcome Logic.... i moved this import due to: from partially initialized module 'talos_frontal.logic'
+            from .outcomes import process_outcomes
             process_outcomes(head.id)
 
             # Check if outcome failed the head

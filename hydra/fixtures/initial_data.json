@@ -829,6 +829,13 @@
     }
   },
   {
+    "model": "hydra.hydraoutcomeaction",
+    "pk": 5,
+    "fields": {
+      "name": "Analyze"
+    }
+  },
+  {
     "model": "hydra.hydraspelloutcomeconfig",
     "pk": 100,
     "fields": {

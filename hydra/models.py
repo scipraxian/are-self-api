@@ -40,6 +40,7 @@ class HydraOutcomeActionID(object):
     MOVE = 2
     VALIDATE_EXISTS = 3
     DELETE = 4
+    ANALYZE = 5
 
 
 class HydraExecutable(DefaultFieldsMixin, DescriptionMixin):
