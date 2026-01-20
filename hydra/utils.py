@@ -1,11 +1,16 @@
-import collections
 import datetime
+from typing import NamedTuple
+
 from ue_tools.log_parser import LogConstants, LogParserFactory, merge_sessions
 
-HydraContext = collections.namedtuple('HydraContext', [
-    'project_root', 'engine_root', 'build_root', 'staging_dir', 'project_name',
-    'dynamic_context'
-])
+
+class HydraContext(NamedTuple):
+    project_root: str
+    engine_root: str
+    build_root: str
+    staging_dir: str
+    project_name: str
+    dynamic_context: dict
 
 
 def get_timestamp():
