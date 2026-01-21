@@ -14,42 +14,56 @@ from hydra.spells.version_stamper import version_stamp_native
 from environments.models import ProjectEnvironment
 
 class VersionStamperTest(TestCase):
+    fixtures = [
+        'talos_frontal/fixtures/initial_data.json',
+        'hydra/fixtures/initial_data.json',
+        'environments/fixtures/initial_data.json',
+        'talos_reasoning/fixtures/initial_data.json'
+    ]
+
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
-        
-        # 1. Infrastructure
-        self.status_created = HydraHeadStatus.objects.create(id=1, name="Created")
-        self.status_success = HydraHeadStatus.objects.create(id=4, name="Success")
-        
+
+        # 1. Setup Models
+        self.status_created = HydraHeadStatus.objects.first()
+        self.status_success = HydraHeadStatus.objects.get(name="Success")
+
+        # Create the Env pointing to TEMP dir
         self.proj_env = ProjectEnvironment.objects.create(
-            name="TestEnv", 
-            project_root=self.test_dir, 
-            engine_root=self.test_dir, 
-            build_root=self.test_dir, 
+            name="TestEnv",
+            project_root=self.test_dir,
+            engine_root=self.test_dir,
+            build_root=self.test_dir,
             staging_dir=self.test_dir,
             project_name="TestProject"
         )
-        self.hydra_env = HydraEnvironment.objects.create(name="H_Env", project_environment=self.proj_env)
-        self.book = HydraSpellbook.objects.create(name="Test Book")
-        self.spawn_status = HydraSpawnStatus.objects.create(id=1, name="Created")
-        
-        self.spawn = HydraSpawn.objects.create(
-            spellbook=self.book, environment=self.hydra_env, status=self.spawn_status
+
+        # Create Hydra Env linking to Project Env
+        self.hydra_env = HydraEnvironment.objects.create(
+            project_environment=self.proj_env
         )
 
-        # 2. Executable & Spell
-        self.exe = HydraExecutable.objects.create(
-            name="Version Stamper",
-            slug="version_stamper",
-            path_template=""
+        self.spellbook = HydraSpellbook.objects.first()
+
+        # Create Spawn linking to Hydra Env
+        self.spawn = HydraSpawn.objects.create(
+            spellbook=self.spellbook,
+            environment=self.hydra_env,
+            status=HydraSpawnStatus.objects.get(pk=1)
         )
-        self.spell = HydraSpell.objects.create(name="Stamp Version", executable=self.exe)
-        
-        # 3. Head
+
+        self.exe = HydraExecutable.objects.first()
+        self.spell = HydraSpell.objects.create(
+            name="Version Stamp",
+            executable=self.exe,
+            order=1
+        )
+
+        # Create Head linking to Spawn
         self.head = HydraHead.objects.create(
-            status=self.status_created, 
+            spawn=self.spawn,
             spell=self.spell,
-            spawn=self.spawn
+            status=self.status_created
         )
 
     def tearDown(self):

@@ -13,6 +13,12 @@ if sys.platform == 'win32':
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 class HydraExclusivityTests(StaticLiveServerTestCase):
+    fixtures = [
+        'talos_frontal/fixtures/initial_data.json',
+        'hydra/fixtures/initial_data.json',
+        'environments/fixtures/initial_data.json',
+        'talos_reasoning/fixtures/initial_data.json'
+    ]
     def setUp(self):
         self.env = ProjectEnvironment.objects.create(name="ProjectX", is_active=True)
         self.hydra_env = HydraEnvironment.objects.create(project_environment=self.env, name="TestEnv")

@@ -26,19 +26,5 @@
         "agent_port": 5005,
         "is_active": true
     }
-},
-{
-    "model": "environments.projectenvironment",
-    "pk": "c142aa46-9b5a-41af-b4c2-79cc11be5f65",
-    "fields": {
-        "name": "Test Env",
-        "project_root": "C:/Test",
-        "engine_root": "",
-        "build_root": "",
-        "project_name": "",
-        "staging_dir": null,
-        "agent_port": 5005,
-        "is_active": false
-    }
 }
 ]

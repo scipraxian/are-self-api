@@ -8,13 +8,19 @@ from hydra.models import (
 from environments.models import ProjectEnvironment
 
 class StagingOpsIntegrationTest(TestCase):
+    fixtures = [
+        'talos_frontal/fixtures/initial_data.json',
+        'hydra/fixtures/initial_data.json',
+        'environments/fixtures/initial_data.json',
+        'talos_reasoning/fixtures/initial_data.json'
+    ]
     def setUp(self):
         self.client = Client()
-        self.status_created = HydraHeadStatus.objects.create(id=1, name="Created")
-        self.status_pending = HydraHeadStatus.objects.create(id=2, name="Pending")
-        self.status_running = HydraHeadStatus.objects.create(id=3, name="Running")
-        self.spawn_created = HydraSpawnStatus.objects.create(id=1, name="Created")
-        self.spawn_running = HydraSpawnStatus.objects.create(id=3, name="Running")
+        self.status_created = HydraHeadStatus.objects.first()
+        self.status_pending = HydraHeadStatus.objects.get(name="Pending")
+        self.status_running = HydraHeadStatus.objects.get(name="Running")
+        self.spawn_created = HydraSpawnStatus.objects.first()
+        self.spawn_running = HydraSpawnStatus.objects.get(name="Running")
 
         self.env = ProjectEnvironment.objects.create(
             name="Staging Env", 
@@ -25,13 +31,13 @@ class StagingOpsIntegrationTest(TestCase):
             staging_dir="C:/Staging"
         )
 
-        self.exe_uat = HydraExecutable.objects.create(name="UAT", slug="uat", path_template="RunUAT.bat")
-        self.exe_game = HydraExecutable.objects.create(name="Game", slug="game", path_template="Game.exe")
+        self.exe_uat = HydraExecutable.objects.create(name="test UAT", slug="test_uat", path_template="RunUAT.bat")
+        self.exe_game = HydraExecutable.objects.create(name="tes Game", slug="test_game", path_template="Game.exe")
         
-        self.spell_build = HydraSpell.objects.create(name="Staging: Build Game", executable=self.exe_uat, order=10)
-        self.spell_run = HydraSpell.objects.create(name="Staging: Record PSOs", executable=self.exe_game, order=20)
+        self.spell_build = HydraSpell.objects.create(name="TestStaging: Build Game", executable=self.exe_uat, order=10)
+        self.spell_run = HydraSpell.objects.create(name="TestStaging: Record PSOs", executable=self.exe_game, order=20)
         
-        self.book = HydraSpellbook.objects.create(name="Staging Operations")
+        self.book = HydraSpellbook.objects.create(name="tes Staging Operations")
         self.book.spells.add(self.spell_build, self.spell_run)
 
     @mock.patch('hydra.hydra.cast_hydra_spell.delay')

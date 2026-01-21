@@ -1,6 +1,7 @@
 """Tests for the dashboard application."""
 from unittest.mock import MagicMock, patch
 
+import pytest
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -108,6 +109,7 @@ class DashboardTaskTests(TestCase):
 class DashboardBrokerTests(TestCase):
   """Verifies connection to the message broker. (Integration tests, require LIVE Redis). """
 
+  @pytest.mark.live
   def test_broker_connection(self):
     """Verifies that Celery can connect to the configured broker (Integration w/ Redis)."""
 

@@ -9,6 +9,12 @@ from hydra.tasks import stream_command_to_db
 from environments.models import ProjectEnvironment
 
 class TaskExecutionTest(TestCase):
+    fixtures = [
+        'talos_frontal/fixtures/initial_data.json',
+        'hydra/fixtures/initial_data.json',
+        'environments/fixtures/initial_data.json',
+        'talos_reasoning/fixtures/initial_data.json'
+    ]
     def setUp(self):
         # 1. Setup minimal DB state
         self.env = ProjectEnvironment.objects.create(
@@ -20,10 +26,10 @@ class TaskExecutionTest(TestCase):
         )
         self.hydra_env = HydraEnvironment.objects.create(project_environment=self.env)
         
-        self.status_created = HydraHeadStatus.objects.create(id=1, name='Created')
-        self.status_running = HydraHeadStatus.objects.create(id=3, name='Running')
-        self.status_failed = HydraHeadStatus.objects.create(id=5, name='Failed')
-        self.spawn_status = HydraSpawnStatus.objects.create(id=1, name='Created')
+        self.status_created = HydraHeadStatus.objects.first()
+        self.status_running = HydraHeadStatus.objects.get(name='Running')
+        self.status_failed = HydraHeadStatus.objects.get(name='Failed')
+        self.spawn_status = HydraSpawnStatus.objects.first()
 
         self.exe = HydraExecutable.objects.create(name="TestExe", slug="test", path_template="echo")
         self.spell = HydraSpell.objects.create(name="TestSpell", executable=self.exe)

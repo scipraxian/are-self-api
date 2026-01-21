@@ -9,18 +9,24 @@ from hydra.models import (
 from hydra.spells.native_executables import NativeExecutables
 
 class CastHydraSpellTest(TestCase):
+    fixtures = [
+        'talos_frontal/fixtures/initial_data.json',
+        'hydra/fixtures/initial_data.json',
+        'environments/fixtures/initial_data.json',
+        'talos_reasoning/fixtures/initial_data.json'
+    ]
     def setUp(self):
         # 1. Infrastructure
-        self.status_created = HydraHeadStatus.objects.create(id=1, name="Created")
-        self.status_success = HydraHeadStatus.objects.create(id=4, name="Success")
-        self.status_failed = HydraHeadStatus.objects.create(id=5, name="Failed")
+        self.status_created = HydraHeadStatus.objects.first()
+        self.status_success = HydraHeadStatus.objects.get(name="Success")
+        self.status_failed = HydraHeadStatus.objects.get(name="Failed")
         
         self.proj_env = ProjectEnvironment.objects.create(
             name="TestEnv", project_root="C:/", engine_root="C:/", build_root="C:/", staging_dir="C:/"
         )
         self.hydra_env = HydraEnvironment.objects.create(name="H_Env", project_environment=self.proj_env)
         self.book = HydraSpellbook.objects.create(name="Test Book")
-        self.spawn_status = HydraSpawnStatus.objects.create(id=1, name="Created")
+        self.spawn_status = HydraSpawnStatus.objects.first()
         
         self.spawn = HydraSpawn.objects.create(
             spellbook=self.book, environment=self.hydra_env, status=self.spawn_status

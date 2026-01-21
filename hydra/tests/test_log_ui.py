@@ -9,12 +9,18 @@ from hydra.models import (
 from environments.models import ProjectEnvironment
 
 class LogUITest(TestCase):
+    fixtures = [
+        'talos_frontal/fixtures/initial_data.json',
+        'hydra/fixtures/initial_data.json',
+        'environments/fixtures/initial_data.json',
+        'talos_reasoning/fixtures/initial_data.json'
+    ]
     def setUp(self):
         self.client = Client()
-        self.env = ProjectEnvironment.objects.create(name="LogEnv", is_active=True)
-        status = HydraHeadStatus.objects.create(id=1, name="Created")
-        spawn_status = HydraSpawnStatus.objects.create(id=1, name="Created")
-        exe = HydraExecutable.objects.create(name="Tool", slug="tool")
+        self.env = ProjectEnvironment.objects.first()
+        status = HydraHeadStatus.objects.first()
+        spawn_status = HydraSpawnStatus.objects.first()
+        exe = HydraExecutable.objects.first()
         spell = HydraSpell.objects.create(name="Spell", executable=exe)
         book = HydraSpellbook.objects.create(name="Book")
         spawn = HydraSpawn.objects.create(spellbook=book, status=spawn_status)

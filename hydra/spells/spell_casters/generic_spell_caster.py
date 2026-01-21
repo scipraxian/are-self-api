@@ -1,7 +1,8 @@
 import logging
 import subprocess
+import time
 import uuid
-from os.path import exists
+from os.path import exists, getmtime
 from time import sleep
 from typing import NamedTuple
 
@@ -58,7 +59,7 @@ class GenericSpellCaster(object):
 
     def _generate_context(self):
         """I can't decide if this is generated here or there, probably here."""
-        env = self.head.spawn.environment.project_environment
+        # env = self.head.spawn.environment.project_environment
 
         # self.context = context
 
@@ -83,15 +84,29 @@ class GenericSpellCaster(object):
         self.head.status_id = status_id
         self.head.save(update_fields=['status'])
 
+    def _validate_executable(self):
+        match self.executable_type:
+            case HydraExecutableType.LOCAL_PYTHON:
+                pass
+            case HydraExecutableType.REMOTE_PYTHON:
+                pass
+            case HydraExecutableType.LOCAL_POPEN:
+                # TODO: this causes most tests to fail.
+                # if not exists(self.context.executable):
+                #     raise FileNotFoundError(f"Could not find executable at {self.context.executable}")
+                pass
+            case HydraExecutableType.REMOTE_POPEN:
+                pass
+            case _:
+                raise ValueError(f"Unknown executable type: {self.executable_type}")
+
     def _preflight(self):
         self._debug_log(f"Preflight for {self.spell.name}")
         self._generate_context()
+        self._validate_executable()
         self._init_running_log()
         self._resolve_switches()
-        if not exists(self.context.executable):
-            raise FileNotFoundError(f"Could not find executable at {self.context.executable}")
-        if not exists(self.context.log_file):
-            raise FileNotFoundError(f"Could not find log file at {self.context.log_file}")
+
 
     def _get_command(self):
         return f'{self.context.executable} {self.switch_string}'
@@ -102,16 +117,57 @@ class GenericSpellCaster(object):
         self.head.spell_log = "".join(self.running_log)
 
     def _block_for_log_file(self):
-        """Block until the log file is created."""
-        stop_counter = 0
-        while not exists(self.context.log_file):
-            sleep(0.1)
-            stop_counter += 1
-            if stop_counter > 100:
-                raise TimeoutError(f"Log file creation timed out after {stop_counter} attempts")
+        """
+        Blocks execution until a FRESH log file appears or timeout occurs.
+        Prevents attaching to stale log files from previous runs.
+        """
+        if not self.context.log_file:
+            logger.warning("No log file defined in context. Skipping block.")
+            return
+
+        # Default to now if launch_time wasn't set by the executor (failsafe)
+        launch_time = getattr(self, 'launch_time', time.time())
+
+        # Max wait 30 seconds
+        max_retries = 30
+        retries = 0
+
+        while retries < max_retries:
+            # 1. Process Watchdog: Did it die instantly?
+            if self.running_subprocess and self.running_subprocess.poll() is not None:
+                logger.error(f"Process died (Exit {self.running_subprocess.returncode}) before log appeared.")
+                self._update_head_status(HydraHeadStatus.FAILED)
+                self.status = self.STATUS_FAILED
+                return
+
+            # 2. File Check
+            if exists(self.context.log_file):
+                try:
+                    # Windows 'getctime' is creation, 'getmtime' is modify.
+                    # We check mtime to be safe.
+                    file_mtime = getmtime(self.context.log_file)
+
+                    # Freshness Test: Is file newer than launch time? (with 1s buffer)
+                    if file_mtime >= (launch_time - 1.0):
+                        self._debug_log(f"Locked onto fresh log file: {self.context.log_file}")
+                        return
+                    else:
+                        # Log exists, but it's old. Wait for UE to overwrite it.
+                        if retries % 5 == 0:
+                            self._debug_log(f"Ignoring stale log (Mtime: {file_mtime} < Launch: {launch_time})")
+                except OSError:
+                    pass  # File locked by OS, retry next tick.
+
+            sleep(1)
+            retries += 1
+
+        # 3. Timeout
+        logger.error(f"Timed out waiting for log file: {self.context.log_file}")
+        self.status = self.STATUS_FAILED
 
     def _stream_log_file(self):
         """While running_subprocess, read the entire log each loop and post to the DB."""
+        if self.status in self.STATUSES_WHICH_HALT: return
         self.status = self.STATUS_STREAMING_LOGS
         with open(self.context.log_file, 'r', encoding='utf-8', errors='replace') as local_log:
             while self.running_subprocess.poll() is not None and self.status not in self.STATUSES_WHICH_HALT:

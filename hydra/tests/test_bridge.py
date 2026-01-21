@@ -5,11 +5,15 @@ from environments.models import ProjectEnvironment
 from hydra.tasks import build_command
 
 class HydraBridgeTest(TestCase):
+    fixtures = [
+        'environments/fixtures/initial_data.json',
+        'hydra/fixtures/initial_data.json',
+    ]
     def setUp(self):
-        self.status_running = HydraHeadStatus.objects.create(id=1, name='Running')
-        self.status_success = HydraHeadStatus.objects.create(id=2, name='Success')
-        self.status_failed = HydraHeadStatus.objects.create(id=3, name='Failed')
-        self.spawn_status = HydraSpawnStatus.objects.create(id=1, name='Created')
+        self.status_running = HydraHeadStatus.objects.get(name='Running')
+        self.status_success = HydraHeadStatus.objects.get(name='Success')
+        self.status_failed = HydraHeadStatus.objects.get(name='Failed')
+        self.spawn_status = HydraSpawnStatus.objects.get(name='Created')
 
         self.proj_env = ProjectEnvironment.objects.create(
             name="TestEnv",
@@ -24,8 +28,8 @@ class HydraBridgeTest(TestCase):
         )
         
         self.exe = HydraExecutable.objects.create(
-            name="Unreal Automation Tool",
-            slug="uat",
+            name="TEST Unreal Automation Tool",
+            slug="test_uat",
             path_template="{engine_root}/Build/BatchFiles/RunUAT.bat"
         )
         

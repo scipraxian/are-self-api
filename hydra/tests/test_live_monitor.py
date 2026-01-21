@@ -1,6 +1,8 @@
 import os
 import sys
 import asyncio
+
+import pytest
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from playwright.sync_api import sync_playwright, expect
 from hydra.models import (
@@ -15,14 +17,13 @@ if sys.platform == 'win32':
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 class LiveMonitorTests(StaticLiveServerTestCase):
+    fixtures = [
+        'environments/fixtures/initial_data.json',
+        'hydra/fixtures/initial_data.json',
+    ]
     def setUp(self):
-        self.env = ProjectEnvironment.objects.create(name="BrowserEnv", is_active=True)
-        # Create full range of statuses to avoid IntegrityErrors during nudge/poll
-        for i, name in [(1, "Created"), (2, "Pending"), (3, "Running"), (4, "Success"), (5, "Failed")]:
-            HydraHeadStatus.objects.create(id=i, name=name)
-            HydraSpawnStatus.objects.create(id=i, name=name)
-            
-        exe = HydraExecutable.objects.create(name="Tool", slug="tool")
+        self.env = ProjectEnvironment.objects.first()
+        exe = HydraExecutable.objects.first()
         spell = HydraSpell.objects.create(name="Spell", executable=exe)
         book = HydraSpellbook.objects.create(name="Book")
         self.spawn = HydraSpawn.objects.create(spellbook=book, status_id=1)
@@ -33,6 +34,7 @@ class LiveMonitorTests(StaticLiveServerTestCase):
             spell_log="Initial Log Content..."
         )
 
+    @pytest.mark.live
     def test_log_interaction_stability(self):
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)

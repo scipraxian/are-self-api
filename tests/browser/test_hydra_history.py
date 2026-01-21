@@ -13,8 +13,14 @@ if sys.platform == 'win32':
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 class HydraHistoryTests(StaticLiveServerTestCase):
+    fixtures = [
+        'talos_frontal/fixtures/initial_data.json',
+        'hydra/fixtures/initial_data.json',
+        'environments/fixtures/initial_data.json',
+        'talos_reasoning/fixtures/initial_data.json'
+    ]
     def setUp(self):
-        self.env = ProjectEnvironment.objects.create(name="ProjectX", is_active=True)
+        self.env = ProjectEnvironment.objects.first()
         self.hydra_env = HydraEnvironment.objects.create(project_environment=self.env, name="TestEnv")
         self.book = HydraSpellbook.objects.create(name="Fast Validate")
         

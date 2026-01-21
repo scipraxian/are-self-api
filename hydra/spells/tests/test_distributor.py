@@ -10,10 +10,14 @@ from hydra.models import (
 from hydra.spells.distributor import distribute_build_native
 
 class NativeDistributorTest(TestCase):
+    fixtures = [
+        'environments/fixtures/initial_data.json',
+        'hydra/fixtures/initial_data.json',
+    ]
     def setUp(self):
         # 1. Setup Statuses
-        self.status_pending = HydraHeadStatus.objects.create(id=1, name="Pending")
-        self.spawn_status = HydraSpawnStatus.objects.create(id=1, name="Running")
+        self.status_pending = HydraHeadStatus.objects.get(id=2)  # pending
+        self.spawn_status = HydraSpawnStatus.objects.get(id=3)  # running
 
         # 2. Setup Environment
         self.proj_env = ProjectEnvironment.objects.create(
@@ -37,10 +41,8 @@ class NativeDistributorTest(TestCase):
             status=self.spawn_status
         )
         
-        self.exe = HydraExecutable.objects.create(
-            name="Native Dist",
-            slug="distribute_fleet",
-            path_template="" 
+        self.exe = HydraExecutable.objects.get(
+            slug="distribute_fleet"
         )
         self.spell = HydraSpell.objects.create(name="Dist Spell", executable=self.exe)
         

@@ -4,7 +4,7 @@ import asyncio
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from playwright.sync_api import sync_playwright, expect
 from hydra.models import (
-    HydraHead, HydraSpell, HydraExecutable, HydraSpellbook, 
+    HydraExecutableType, HydraHead, HydraSpell, HydraExecutable, HydraSpellbook,
     HydraSpawn, HydraHeadStatus, HydraSpawnStatus, HydraEnvironment
 )
 from environments.models import ProjectEnvironment
@@ -15,6 +15,10 @@ if sys.platform == 'win32':
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 class LogClippingTests(StaticLiveServerTestCase):
+    fixtures = [
+        'environments/fixtures/initial_data.json',
+        'hydra/fixtures/initial_data.json',
+    ]
     def setUp(self):
         self.env = ProjectEnvironment.objects.create(name="ClippingEnv", is_active=True)
         self.hydra_env = HydraEnvironment.objects.create(project_environment=self.env, name="TestEnv")
@@ -23,7 +27,7 @@ class LogClippingTests(StaticLiveServerTestCase):
             HydraHeadStatus.objects.get_or_create(id=i, name=name)
             HydraSpawnStatus.objects.get_or_create(id=i, name=name)
             
-        exe = HydraExecutable.objects.create(name="Tool", slug="tool")
+        exe = HydraExecutable.objects.create(name="Tool", slug="tool", type_id=HydraExecutableType.LOCAL_PYTHON)
         spell = HydraSpell.objects.create(name="Spell", executable=exe)
         book = HydraSpellbook.objects.create(name="Book")
         self.spawn = HydraSpawn.objects.create(

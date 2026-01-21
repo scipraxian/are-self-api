@@ -13,7 +13,10 @@ class FastValidateIntegrationTest(TestCase):
     # ADDED: Load the brains needed for the signal handlers to work
     fixtures = [
         'talos_reasoning/fixtures/initial_data.json',
-        'talos_frontal/fixtures/initial_data.json'
+        'talos_frontal/fixtures/initial_data.json',
+        'hydra/fixtures/initial_data.json',
+        'environments/fixtures/initial_data.json',
+        'talos_reasoning/fixtures/initial_data.json'
     ]
 
     def setUp(self):

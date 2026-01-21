@@ -5,9 +5,15 @@ from hydra.tasks import build_command
 from environments.models import ProjectEnvironment
 
 class StagingPathTest(TestCase):
+    fixtures = [
+        'talos_frontal/fixtures/initial_data.json',
+        'hydra/fixtures/initial_data.json',
+        'environments/fixtures/initial_data.json',
+        'talos_reasoning/fixtures/initial_data.json'
+    ]
     def setUp(self):
-        self.st_created = HydraHeadStatus.objects.create(id=1, name='Created')
-        self.spawn_created = HydraSpawnStatus.objects.create(id=1, name='Created')
+        self.st_created = HydraHeadStatus.objects.first()
+        self.spawn_created = HydraSpawnStatus.objects.first()
 
         self.env = ProjectEnvironment.objects.create(
             name="ProdEnv",
@@ -19,7 +25,7 @@ class StagingPathTest(TestCase):
         )
         self.hydra_env = HydraEnvironment.objects.create(project_environment=self.env)
 
-        self.exe_uat = HydraExecutable.objects.create(name="UAT", slug="uat", path_template="RunUAT.bat")
+        self.exe_uat = HydraExecutable.objects.create(name="testUAT", slug="testuat", path_template="RunUAT.bat")
         self.sw_stage_dir = HydraSwitch.objects.create(
             executable=self.exe_uat, 
             flag="-stagingdirectory=", 
@@ -29,8 +35,8 @@ class StagingPathTest(TestCase):
         self.spell_build.active_switches.add(self.sw_stage_dir)
 
         self.exe_game = HydraExecutable.objects.create(
-            name="GameExe", 
-            slug="game_exe", 
+            name="TestGameExe",
+            slug="test_game_exe",
             path_template="{staging_dir}/Windows/{project_name}.exe"
         )
         self.spell_run = HydraSpell.objects.create(name="Run", executable=self.exe_game)

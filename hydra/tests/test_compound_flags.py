@@ -8,6 +8,12 @@ from hydra.tasks import build_command
 from environments.models import ProjectEnvironment
 
 class CompoundFlagTest(TestCase):
+    fixtures = [
+        'talos_frontal/fixtures/initial_data.json',
+        'hydra/fixtures/initial_data.json',
+        'environments/fixtures/initial_data.json',
+        'talos_reasoning/fixtures/initial_data.json'
+    ]
     def setUp(self):
         # 1. Setup Environment
         self.env = ProjectEnvironment.objects.create(
@@ -17,15 +23,16 @@ class CompoundFlagTest(TestCase):
             build_root="C:/Builds",
             project_name="TestGame"
         )
-        self.hydra_env = HydraEnvironment.objects.create(project_environment=self.env)
+        self.hydra_env = HydraEnvironment.objects.first()
+        self.hydra_env.project_environment = self.env
         
-        self.status_created = HydraHeadStatus.objects.create(id=1, name='Created')
-        self.spawn_created = HydraSpawnStatus.objects.create(id=1, name='Created')
+        self.status_created = HydraHeadStatus.objects.get(id=1)
+        self.spawn_created = HydraSpawnStatus.objects.get(id=1)
 
         # 2. Setup Tool
         self.exe = HydraExecutable.objects.create(
-            name="UAT", 
-            slug="uat", 
+            name="testUAT",
+            slug="testuat",
             path_template="RunUAT.bat"
         )
 
