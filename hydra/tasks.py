@@ -1,6 +1,4 @@
-from hydra.spells.native_executables import NativeExecutables
-import collections
-import datetime
+import logging
 import os
 import queue
 import subprocess
@@ -8,15 +6,15 @@ import threading
 import time
 
 from celery import shared_task
-from django.db import transaction
 
-from .models import HydraHead
-from .models import HydraHeadStatus
-from .utils import get_timestamp
-from .utils import HydraContext
-from .utils import log_system
-from .utils import resolve_template
-    
+from .models import HydraHead, HydraHeadStatus
+from .spells.spell_casters.generic_spell_caster import GenericSpellCaster
+from .utils import HydraContext, get_timestamp, log_system, resolve_template
+
+logger = logging.getLogger(__name__)
+
+
+
 
 def build_command(hydra_head):
     spawn = hydra_head.spawn
@@ -145,67 +143,18 @@ def check_next_wave(spawn_id):
 
 
 @shared_task(bind=True)
-def cast_hydra_spell(self, hydrahead_id):
+def cast_hydra_spell(self, head_id):
+    logger.info(f"Task starting for Head ID: {head_id}")
     try:
-        try:
-            head = HydraHead.objects.get(id=hydrahead_id)
-        except HydraHead.DoesNotExist:
-            return f"Task skipped: HydraHead {hydrahead_id} no longer exists."
-
-        head.celery_task_id = self.request.id
-        head.save()
-
-        native_handler = NativeExecutables.get_handler(head.spell.executable.slug)
-        
-        if native_handler:
-            # Native Execution Path
-            head.status_id = HydraHeadStatus.RUNNING
-            head.save()
-            log_system(head, f"Dispatching Native Handler: {head.spell.executable.slug}")
-            
-            try:
-                retcode, output_log = native_handler(head)
-                head.spell_log = output_log
-            except Exception as e:
-                retcode = 1
-                head.spell_log = f"Native Handler Exception: {str(e)}"
-        else:
-            # Legacy/Shell Execution Path
-            # REMOVED LOCAL IMPORT causing UnboundLocalError
-            cmd = build_command(head)
-            retcode = stream_command_to_db(cmd, head)
-
-        head.result_code = retcode
-        if retcode == 0:
-            head.status_id = HydraHeadStatus.SUCCESS
-            head.spell_log += "\n\n[SUCCESS] Spell Completed."
-            head.save()
-
-            # Outcome Logic.... i moved this import due to: from partially initialized module 'talos_frontal.logic'
-            from .outcomes import process_outcomes
-            process_outcomes(head.id)
-
-            # Check if outcome failed the head
-            head.refresh_from_db()
-            if head.status_id == HydraHeadStatus.FAILED:
-                pass  # Already failed
-            else:
-                transaction.on_commit(
-                    lambda: check_next_wave.delay(head.spawn.id))
-
-        else:
-            head.status_id = HydraHeadStatus.FAILED
-            head.spell_log += f"\n\n[FAILURE] Exited with code {retcode}."
-            head.save()
-
-        return f"Spell {head.spell.name} finished: {retcode}"
-
+        GenericSpellCaster(head_id=head_id)
+        logger.info(f"Task completed successfully for Head ID: {head_id}")
     except Exception as e:
+        logger.exception(f"GenericSpellCaster raised exception for Head ID {head_id}")
+        from .models import HydraHead
         try:
-            head = HydraHead.objects.get(id=hydrahead_id)
+            head = HydraHead.objects.get(id=head_id)
             head.status_id = HydraHeadStatus.FAILED
-            log_system(head, f"INTERNAL EXCEPTION: {str(e)}")
             head.save()
-        except:
-            pass
+        except HydraHead.DoesNotExist:
+            logger.exception(f"Head Does Not Exist: {str(e)}")
         raise e

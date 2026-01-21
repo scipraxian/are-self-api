@@ -1,6 +1,9 @@
 import uuid
 from django.db import models
 
+from common.models import CreatedMixin, DefaultFieldsMixin, DescriptionMixin, ModifiedMixin, UUIDIdMixin
+
+
 class ProjectEnvironment(models.Model):
     """Configuration for where Executables may be run."""
     
@@ -25,3 +28,38 @@ class ProjectEnvironment(models.Model):
         if self.is_active:
             ProjectEnvironment.objects.exclude(id=self.id).update(is_active=False)
         super().save(*args, **kwargs)
+
+
+class TalosExecutableSwitch(DefaultFieldsMixin):
+    """
+    An option or flag for a Talos executable.
+    """
+    flag = models.CharField(max_length=100,
+                            help_text="The actual flag e.g. '-clean', include equals or space if value is present.")
+    value = models.CharField(max_length=255, blank=True, help_text="The value of the flag, if any.")
+
+    def __str__(self):
+        return f'{self.flag}{self.value}'
+
+class TalosExecutable(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
+    """Reference to an executable usable by Talos."""
+    INTERNAL_FUNCTION = 1  # use executable for the function name, which will be hard mapped in the spell caster.
+    PYTHON = 2  # venv/Scripts/python.exe
+    DJANGO = 3  # venv/Scripts/python.exe manage.py
+    UNREAL_CMD = 4  # C:\\Program Files\\Epic Games\\UE_5.6/Engine/Binaries/Win64/UnrealEditor-Cmd.exe
+    UNREAL_AUTOMATION_TOOL = 5  # C:\\Program Files\\Epic Games\\UE_5.6/Engine/Build/BatchFiles/RunUAT.bat
+    UNREAL_STAGING=6  # C:\steambuild\Windows\HSHVacancy.exe
+    UNREAL_RELEASE_TEST = 7  # C:\steambuild\ReleaseTest\HSHVacancy.exe
+    UNREAL_SHADER_TOOL = 8  # C:\\Program Files\\Epic Games\\UE_5.6/Engine/Binaries/Win64/ShaderPipelineCacheTools.exe
+
+    working_path = models.CharField(max_length=500, help_text="Where to run the executable.")
+    executable = models.CharField(max_length=500, help_text="Full path to the executable, including filename.")
+    log = models.CharField(max_length=500, help_text="Full path to the log, including filename.")
+    switches = models.ManyToManyField(TalosExecutableSwitch, blank=True)
+
+
+class TalosExecutableSupplementaryFileOrPath(DefaultFieldsMixin):
+    """The name should be treated like a json field name. e.g. name=destination_file, path=c:/temp/temp.txt"""
+    executable = models.ForeignKey(TalosExecutable, on_delete=models.CASCADE)
+    path = models.CharField(max_length=500, help_text="Full path to the file.")
+

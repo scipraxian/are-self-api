@@ -11,7 +11,7 @@ from hydra.spells.spell_casters.generic_spell_caster import GenericSpellCaster, 
 MODULE_PATH = 'hydra.spells.spell_casters.generic_spell_caster'
 
 
-class NativeDistributorTest(TestCase):
+class GenericSpellcasterTest(TestCase):
     fixtures = [
         'talos_frontal/fixtures/initial_data.json',
         'hydra/fixtures/initial_data.json',
@@ -48,7 +48,7 @@ class NativeDistributorTest(TestCase):
     def test_generic_spellcaster_instantiates(self):
         """Asserts that the GenericSpellCaster can be instantiated."""
         try:
-            GenericSpellCaster(self.head.id, self.context, None)
+            GenericSpellCaster(self.head.id)
         except Exception:
             self.fail("Failed to instantiate GenericSpellCaster.")
         self.mock_cast.assert_called_once()
@@ -74,7 +74,7 @@ class NativeDistributorTest(TestCase):
             with patch(f'{MODULE_PATH}.GenericSpellCaster._get_command', return_value=['python', 'script.py']):
                 self.head.spell.executable.type_id = 3
                 self.head.spell.executable.save()
-                GenericSpellCaster(self.head.id, self.context, None)
+                GenericSpellCaster(self.head.id)
 
         mock_popen.assert_called_once()
         self.head.refresh_from_db()
@@ -83,7 +83,7 @@ class NativeDistributorTest(TestCase):
 
     def test_generic_spellcaster_executable_router(self):
         """Assert executable router selects the correct executable."""
-        caster = GenericSpellCaster(self.head.id, self.context, None)
+        caster = GenericSpellCaster(self.head.id)
 
         caster._execute_local_python = MagicMock()
         caster._execute_local_popen = MagicMock()
@@ -102,7 +102,7 @@ class NativeDistributorTest(TestCase):
     @patch(f'{MODULE_PATH}.getmtime')
     def test_generic_spellcaster_block_for_log_file(self, mock_mtime, mock_exists):
         """Assert block for log is called with the correct arguments."""
-        caster = GenericSpellCaster(self.head.id, self.context, None)
+        caster = GenericSpellCaster(self.head.id)
         caster.launch_time = time.time()
 
         mock_proc = MagicMock()
@@ -119,7 +119,7 @@ class NativeDistributorTest(TestCase):
 
     def test_generic_spellcaster_get_command_returns_correct_command(self):
         """Assert get command returns the correct command."""
-        caster = GenericSpellCaster(self.head.id, self.context, None)
+        caster = GenericSpellCaster(self.head.id)
         caster._resolve_switches = MagicMock(return_value=[])
 
         cmd = caster._get_command()
@@ -136,7 +136,7 @@ class NativeDistributorTest(TestCase):
         s2 = HydraSwitch.objects.create(name="sw2", executable=self.head.spell.executable, flag="--test2", value="")
         self.head.spell.active_switches.add(s1, s2)
 
-        caster = GenericSpellCaster(self.head.id, self.context, None)
+        caster = GenericSpellCaster(self.head.id)
         result = caster._resolve_switches()
 
         # If the method is not implemented yet (returns None), we assert the DB state was correct
@@ -152,14 +152,14 @@ class NativeDistributorTest(TestCase):
         """Assert resolve switches returns an empty list (or None) for empty DB switches."""
         self.head.spell.active_switches.clear()
 
-        caster = GenericSpellCaster(self.head.id, self.context, None)
+        caster = GenericSpellCaster(self.head.id)
         result = caster._resolve_switches()
 
         self.assertFalse(result)
 
     def test_generic_spellcaster_log_router_routes_to_correct_logging_type(self):
         """Assert log router routes to correct logging type."""
-        caster = GenericSpellCaster(self.head.id, self.context, None)
+        caster = GenericSpellCaster(self.head.id)
 
         # Mock methods on the instance
         caster._stream_log_file = MagicMock()
@@ -189,7 +189,7 @@ class NativeDistributorTest(TestCase):
     @patch(f'{MODULE_PATH}.sleep')
     def test_block_for_log_waits_for_fresh_file(self, mock_sleep, mock_mtime, mock_exists):
         """Ensures the caster does NOT attach to a log file older than the launch time."""
-        caster = GenericSpellCaster(self.head.id, self.context, None)
+        caster = GenericSpellCaster(self.head.id)
         caster.launch_time = 1000.0
 
         mock_proc = MagicMock()
@@ -207,7 +207,7 @@ class NativeDistributorTest(TestCase):
     @patch(f'{MODULE_PATH}.sleep')
     def test_block_for_log_timeouts_if_no_file(self, mock_sleep, mock_exists):
         """Ensures we don't wait forever if the game fails to create a log."""
-        caster = GenericSpellCaster(self.head.id, self.context, None)
+        caster = GenericSpellCaster(self.head.id)
         caster.launch_time = time.time()
 
         mock_proc = MagicMock()
@@ -221,7 +221,7 @@ class NativeDistributorTest(TestCase):
 
     def test_generic_spellcaster_process_is_killed_on_cancel(self):
         """Assert process is killed if we manually trigger cleanup."""
-        caster = GenericSpellCaster(self.head.id, self.context, None)
+        caster = GenericSpellCaster(self.head.id)
 
         mock_proc = MagicMock()
         caster.running_subprocess = mock_proc

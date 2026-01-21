@@ -40,11 +40,9 @@ class GenericSpellCaster(object):
 
     HEAD_STATUS_FIELD_NAME = 'status'
 
-    def __init__(self, head_id: uuid, context: SpellContext, callback=None):  # todo: strongly type callback
+    def __init__(self, head_id: uuid):  # todo: callback
         self.status = self.STATUS_CREATED
         self.head_id = head_id
-        self.context = context
-        self.callback = callback
 
         self.head = HydraHead.objects.get(id=head_id)
         self.spell = self.head.spell
@@ -59,9 +57,9 @@ class GenericSpellCaster(object):
 
     def _generate_context(self):
         """I can't decide if this is generated here or there, probably here."""
-        # env = self.head.spawn.environment.project_environment
+        env = self.head.spawn.environment.project_environment
 
-        # self.context = context
+        self.context = context
 
     def _init_running_log(self):
         """Create the log array."""

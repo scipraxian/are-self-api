@@ -87,14 +87,14 @@ class HydraSpellAdmin(admin.ModelAdmin):
                     'outcome_count', 'in_spellbooks', 'created')
     list_filter = ('executable', 'created')
     search_fields = ('name', 'executable__name', 'executable__slug')
-    filter_horizontal = ('active_switches',)
+    filter_horizontal = ('switches',)
     list_select_related = ('executable',)
     inlines = [HydraSpellOutcomeConfigInline]
     save_as = True
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related(
-            'active_switches', 'outcome_configs', 'hydraspellbook_set')
+            'switches', 'outcome_configs', 'hydraspellbook_set')
 
     def switch_count(self, obj):
         return obj.active_switches.count()

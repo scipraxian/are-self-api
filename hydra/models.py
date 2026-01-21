@@ -9,7 +9,7 @@ from common.models import (
     NameMixin,
     UUIDIdMixin,
 )
-from environments.models import ProjectEnvironment
+from environments.models import ProjectEnvironment, TalosExecutableSwitch
 from .constants import (
     CREATED_LABEL,
     FAILED_LABEL,
@@ -87,6 +87,7 @@ class HydraSpell(DefaultFieldsMixin):
     """
     executable = models.ForeignKey(HydraExecutable, on_delete=models.PROTECT)
     active_switches = models.ManyToManyField(HydraSwitch, blank=True)
+    switches = models.ManyToManyField(TalosExecutableSwitch, blank=True)
     order = models.PositiveIntegerField(
         default=0, help_text="Execution sequence (1, 2, 3...)")
 
