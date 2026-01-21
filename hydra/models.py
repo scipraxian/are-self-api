@@ -9,7 +9,7 @@ from common.models import (
     NameMixin,
     UUIDIdMixin,
 )
-from environments.models import ProjectEnvironment, TalosExecutableSwitch
+from environments.models import ProjectEnvironment, TalosExecutable, TalosExecutableSwitch
 from .constants import (
     CREATED_LABEL,
     FAILED_LABEL,
@@ -66,7 +66,7 @@ class HydraExecutable(DefaultFieldsMixin, DescriptionMixin):
         verbose_name = "Hydra Executable"
 
 
-class HydraSwitch(DefaultFieldsMixin):
+class HydraSwitch(DefaultFieldsMixin):    # DEPRECIATED
     """
     An option or flag for a tool.
     """
@@ -85,8 +85,10 @@ class HydraSpell(DefaultFieldsMixin):
     """
     A configured action (Tool + specific Switches).
     """
+    talos_executable = models.ForeignKey(TalosExecutable, on_delete=models.PROTECT,
+                                         default=1)
     executable = models.ForeignKey(HydraExecutable, on_delete=models.PROTECT)
-    active_switches = models.ManyToManyField(HydraSwitch, blank=True)
+    active_switches = models.ManyToManyField(HydraSwitch, blank=True)  # DEPRECIATED
     switches = models.ManyToManyField(TalosExecutableSwitch, blank=True)
     order = models.PositiveIntegerField(
         default=0, help_text="Execution sequence (1, 2, 3...)")

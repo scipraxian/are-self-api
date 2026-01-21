@@ -2,10 +2,6 @@ from django.contrib import admin
 from .models import RemoteTarget, PipelineStage, BuildJob, JobLog
 from environments.models import ProjectEnvironment
 
-@admin.register(ProjectEnvironment)
-class EnvAdmin(admin.ModelAdmin):
-    list_display = ('name', 'is_active', 'project_root')
-
 @admin.register(PipelineStage)
 class StageAdmin(admin.ModelAdmin):
     list_display = ('order_index', 'name', 'script_filename')
