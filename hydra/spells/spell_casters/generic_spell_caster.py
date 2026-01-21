@@ -128,8 +128,7 @@ class GenericSpellCaster(object):
         # Default to now if launch_time wasn't set by the executor (failsafe)
         launch_time = getattr(self, 'launch_time', time.time())
 
-        # Max wait 30 seconds
-        max_retries = 30
+        max_retries = 100
         retries = 0
 
         while retries < max_retries:
@@ -142,7 +141,7 @@ class GenericSpellCaster(object):
 
             # 2. File Check
             if exists(self.context.log_file):
-                try:
+                try:  # TODO: tighten this try/except.
                     # Windows 'getctime' is creation, 'getmtime' is modify.
                     # We check mtime to be safe.
                     file_mtime = getmtime(self.context.log_file)
@@ -158,7 +157,7 @@ class GenericSpellCaster(object):
                 except OSError:
                     pass  # File locked by OS, retry next tick.
 
-            sleep(1)
+            sleep(0.5)
             retries += 1
 
         # 3. Timeout
@@ -197,6 +196,11 @@ class GenericSpellCaster(object):
             distribute_fleet=distribute_build_native,
             version_stamper=version_stamp_native,
         )
+
+        # Safety check for missing handlers
+        if self.spell.executable.slug not in handlers:
+            raise NotImplementedError(f"No handler found for slug: {self.spell.executable.slug}")
+
         handler = handlers[self.spell.executable.slug]
 
         # TODO: consider an async option here (no return).
@@ -206,8 +210,7 @@ class GenericSpellCaster(object):
             return_code, output_log = handler(self.head_id)
         except Exception as e:
             self.head.spell_log = f'Native Handler Exception: {str(e)}'
-            self.head.status_id = HydraHeadStatus.FAILED
-            self.head.save()
+            self._update_head_status(HydraHeadStatus.FAILED)
         self.head.spell_log = output_log
         self.head.status_id = (HydraHeadStatus.SUCCESS
                                if return_code == 0 else HydraHeadStatus.FAILED)

@@ -217,7 +217,7 @@ class NativeDistributorTest(TestCase):
         caster._block_for_log_file()
 
         self.assertEqual(caster.status, caster.STATUS_FAILED)
-        self.assertEqual(mock_sleep.call_count, 30)
+        self.assertEqual(mock_sleep.call_count, 100)
 
     def test_generic_spellcaster_process_is_killed_on_cancel(self):
         """Assert process is killed if we manually trigger cleanup."""
