@@ -41,7 +41,7 @@ class TalosExecutableSwitch(DefaultFieldsMixin):
     def __str__(self):
         return f'{self.flag}{self.value}'
 
-class TalosExecutable(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
+class TalosExecutable(DefaultFieldsMixin, DescriptionMixin):
     """Reference to an executable usable by Talos."""
     INTERNAL_FUNCTION = 1  # use executable for the function name, which will be hard mapped in the spell caster.
     PYTHON = 2  # venv/Scripts/python.exe
