@@ -1,31 +1,68 @@
 from django.contrib import admin
-from .models import (
-    ProjectEnvironment,
-    TalosExecutable,
-    TalosExecutableSwitch,
-    TalosExecutableSupplementaryFileOrPath
-)
 
-@admin.register(ProjectEnvironment)
-class ProjectEnvironmentAdmin(admin.ModelAdmin):
-    list_display = ('name', 'project_name', 'is_active', 'agent_port')
-    list_filter = ('is_active',)
-    search_fields = ('name', 'project_name')
+from .models import (TalosExecutable, TalosExecutableArgument, TalosExecutableArgumentAssignment,
+                     TalosExecutableSupplementaryFileOrPath, TalosExecutableSwitch)
+
 
 @admin.register(TalosExecutableSwitch)
 class TalosExecutableSwitchAdmin(admin.ModelAdmin):
     list_display = ('name', 'flag', 'value', 'id')
     search_fields = ('name', 'flag')
     ordering = ('flag',)
+    list_editable = ('flag', 'value')
+
+
+@admin.register(TalosExecutableArgument)
+class TalosExecutableArgumentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'argument')
+    search_fields = ('name', 'argument',)
+
+
+class ArgumentAssignmentInline(admin.TabularInline):
+    """Allows ordering arguments directly on the Executable page."""
+    model = TalosExecutableArgumentAssignment
+    extra = 1
+    autocomplete_fields = ['argument']  # Requires search_fields on ArgumentAdmin
+    ordering = ('order',)
+
 
 class SupplementaryFileInline(admin.TabularInline):
+    """Manages output paths/manifests associated with the tool."""
     model = TalosExecutableSupplementaryFileOrPath
     extra = 1
 
+
 @admin.register(TalosExecutable)
 class TalosExecutableAdmin(admin.ModelAdmin):
-    list_display = ('name', 'working_path', 'executable')
+    list_display = ('name', 'executable_short', 'working_path', 'switch_count')
     search_fields = ('name', 'executable')
-    # This makes selecting default switches for the tool much easier
+    list_filter = ('working_path',)
+
+    # The Power User Interface
+    inlines = [ArgumentAssignmentInline, SupplementaryFileInline]
     filter_horizontal = ('switches',)
-    inlines = [SupplementaryFileInline]
+
+    fieldsets = (
+        ('Identity', {
+            'fields': ('name', 'description')
+        }),
+        ('Execution', {
+            'fields': ('executable', 'working_path', 'log'),
+            'description': "Absolute paths to the binary, CWD, and log output."
+        }),
+        ('Flags & Options', {
+            'fields': ('switches',),
+            'description': "Global flags (unordered) that always apply."
+        }),
+    )
+
+    def executable_short(self, obj):
+        """Truncate long paths for the list view."""
+        return (obj.executable[:50] + '..') if len(obj.executable) > 50 else obj.executable
+
+    executable_short.short_description = "Executable Path"
+
+    def switch_count(self, obj):
+        return obj.switches.count()
+
+    switch_count.short_description = "# Switches"

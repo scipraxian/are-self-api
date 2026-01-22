@@ -4,25 +4,18 @@ import time
 import uuid
 from os.path import exists, getmtime
 from time import sleep
-from typing import NamedTuple
 
-from hydra.models import HydraExecutableType, HydraHead, HydraHeadStatus
+from environments.models import TalosExecutable
+from hydra.models import HydraHead, HydraHeadStatus
 from hydra.spells.distributor import distribute_build_native
 from hydra.spells.version_stamper import version_stamp_native
 
 logger = logging.getLogger(__name__)
 
-
-class SpellContext(NamedTuple):
-    """Context for spell execution, containing paths and dynamic data.
-
-    executable: this is the entire path e.g., c:/stuff/things/thing.exe
-    log_file: the path to the log file for the spell which is streamed to the DB.
-    dynamic_context: a dictionary of dynamic data to be passed to the spell.
-    """
-    executable: str
-    log_file: str
-    dynamic_context: dict
+HANDLERS = dict(
+    distribute_fleet=distribute_build_native,
+    version_stamper=version_stamp_native,
+)
 
 
 class GenericSpellCaster(object):
@@ -46,7 +39,6 @@ class GenericSpellCaster(object):
 
         self.head = HydraHead.objects.get(id=head_id)
         self.spell = self.head.spell
-        self.executable_type = self.spell.executable.type_id
         self.running_log = []
         self._preflight()
         self._cast_spell()
@@ -54,12 +46,6 @@ class GenericSpellCaster(object):
     def _debug_log(self, message: str):
         # TODO: build nice message?
         logger.debug(message)
-
-    def _generate_context(self):
-        """I can't decide if this is generated here or there, probably here."""
-        env = self.head.spawn.environment.project_environment
-
-        self.context = context
 
     def _init_running_log(self):
         """Create the log array."""
@@ -72,46 +58,47 @@ class GenericSpellCaster(object):
         TODO: resolve switch templates.
         """
         switch_string = ''
-        for switch in self.spell.active_switches.all():
+
+        for switch in self.spell.talos_executable.switches.all():
             switch_string += ' ' + switch.flag
             if switch.value:
                 switch_string += switch.value
+
+        for switch in self.spell.switches.all():
+            switch_string += ' ' + switch.flag
+            if switch.value:
+                switch_string += switch.value
+
         self.switch_string = switch_string.strip()
+
+    def _resolve_arguments(self):
+        """Resolve the arguments for the spell."""
+        ordered_arguments_string = ''
+
+        for assignment in self.spell.talos_executable.talosexecutableargumentassignment_set.all():
+            ordered_arguments_string += ' ' + assignment.argument.argument
+
+        for assignment in self.spell.hydraspellargumentassignment_set.all():
+            ordered_arguments_string += ' ' + assignment.argument.argument
+
+        self.ordered_arguments_string = ordered_arguments_string.strip()
 
     def _update_head_status(self, status_id: int):
         self.head.status_id = status_id
         self.head.save(update_fields=['status'])
 
-    def _validate_executable(self):
-        match self.executable_type:
-            case HydraExecutableType.LOCAL_PYTHON:
-                pass
-            case HydraExecutableType.REMOTE_PYTHON:
-                pass
-            case HydraExecutableType.LOCAL_POPEN:
-                # TODO: this causes most tests to fail.
-                # if not exists(self.context.executable):
-                #     raise FileNotFoundError(f"Could not find executable at {self.context.executable}")
-                pass
-            case HydraExecutableType.REMOTE_POPEN:
-                pass
-            case _:
-                raise ValueError(f"Unknown executable type: {self.executable_type}")
-
     def _preflight(self):
         self._debug_log(f"Preflight for {self.spell.name}")
-        self._generate_context()
-        self._validate_executable()
         self._init_running_log()
         self._resolve_switches()
-
+        self._resolve_arguments()
 
     def _get_command(self):
-        return f'{self.context.executable} {self.switch_string}'
+        return f'{self.spell.talos_executable.executable} {self.ordered_arguments_string} {self.switch_string}'
 
     def _post_head_log(self):
         """Save the log to the DB. TODO: do this asynchronously, it may block."""
-        self._debug_log(f"Post Log {self.context.log_file}")
+        self._debug_log(f"Post Log to DB {self.spell.talos_executable.log}")
         self.head.spell_log = "".join(self.running_log)
 
     def _block_for_log_file(self):
@@ -119,8 +106,8 @@ class GenericSpellCaster(object):
         Blocks execution until a FRESH log file appears or timeout occurs.
         Prevents attaching to stale log files from previous runs.
         """
-        if not self.context.log_file:
-            logger.warning("No log file defined in context. Skipping block.")
+        if not self.spell.talos_executable.log:
+            logger.warning('No log file defined in context. Skipping block.')
             return
 
         # Default to now if launch_time wasn't set by the executor (failsafe)
@@ -132,26 +119,26 @@ class GenericSpellCaster(object):
         while retries < max_retries:
             # 1. Process Watchdog: Did it die instantly?
             if self.running_subprocess and self.running_subprocess.poll() is not None:
-                logger.error(f"Process died (Exit {self.running_subprocess.returncode}) before log appeared.")
+                logger.error(f'Process died (Exit {self.running_subprocess.returncode}) before log appeared.')
                 self._update_head_status(HydraHeadStatus.FAILED)
                 self.status = self.STATUS_FAILED
                 return
 
             # 2. File Check
-            if exists(self.context.log_file):
+            if exists(self.spell.talos_executable.log):
                 try:  # TODO: tighten this try/except.
                     # Windows 'getctime' is creation, 'getmtime' is modify.
                     # We check mtime to be safe.
-                    file_mtime = getmtime(self.context.log_file)
+                    file_mtime = getmtime(self.spell.talos_executable.log)
 
                     # Freshness Test: Is file newer than launch time? (with 1s buffer)
                     if file_mtime >= (launch_time - 1.0):
-                        self._debug_log(f"Locked onto fresh log file: {self.context.log_file}")
+                        self._debug_log(f'Locked onto fresh log file: {self.spell.talos_executable.log}')
                         return
                     else:
                         # Log exists, but it's old. Wait for UE to overwrite it.
                         if retries % 5 == 0:
-                            self._debug_log(f"Ignoring stale log (Mtime: {file_mtime} < Launch: {launch_time})")
+                            self._debug_log(f'Ignoring stale log (Mtime: {file_mtime} < Launch: {launch_time})')
                 except OSError:
                     pass  # File locked by OS, retry next tick.
 
@@ -159,14 +146,14 @@ class GenericSpellCaster(object):
             retries += 1
 
         # 3. Timeout
-        logger.error(f"Timed out waiting for log file: {self.context.log_file}")
+        logger.error(f'Timed out waiting for log file: {self.spell.talos_executable.log}')
         self.status = self.STATUS_FAILED
 
     def _stream_log_file(self):
         """While running_subprocess, read the entire log each loop and post to the DB."""
         if self.status in self.STATUSES_WHICH_HALT: return
         self.status = self.STATUS_STREAMING_LOGS
-        with open(self.context.log_file, 'r', encoding='utf-8', errors='replace') as local_log:
+        with open(self.spell.talos_executable.log, 'r', encoding='utf-8', errors='replace') as local_log:
             while self.running_subprocess.poll() is not None and self.status not in self.STATUSES_WHICH_HALT:
                 self.running_log = local_log.read()
                 self._post_head_log()
@@ -174,32 +161,20 @@ class GenericSpellCaster(object):
                 sleep(0.1)
 
     def _log_router(self):
-        match self.executable_type:
-            case HydraExecutableType.LOCAL_PYTHON:
-                pass
-            case HydraExecutableType.REMOTE_PYTHON:
-                pass
-            case HydraExecutableType.LOCAL_POPEN:
-                self._debug_log(f"Blocking for Log {self.context.log_file}")
-                self._block_for_log_file()
-                self._debug_log(f"Streaming Log {self.context.log_file}")
-                self._stream_log_file()
-            case HydraExecutableType.REMOTE_POPEN:
-                pass
-            case _:
-                raise ValueError(f"Unknown spell type: {self.executable_type}")
+        if self.spell.talos_executable_id != TalosExecutable.INTERNAL_FUNCTION:
+            self._debug_log(f'Blocking for Log {self.spell.talos_executable.log}')
+            self._block_for_log_file()
+            self._debug_log(f'Streaming Log {self.spell.talos_executable.log}')
+            self._stream_log_file()
+        else:
+            self._debug_log('Internal function does not stream logs?')
 
     def _execute_local_python(self):
-        handlers = dict(
-            distribute_fleet=distribute_build_native,
-            version_stamper=version_stamp_native,
-        )
-
         # Safety check for missing handlers
-        if self.spell.executable.slug not in handlers:
+        if self.spell.talos_executable.executable not in HANDLERS:
             raise NotImplementedError(f"No handler found for slug: {self.spell.executable.slug}")
 
-        handler = handlers[self.spell.executable.slug]
+        handler = HANDLERS[self.spell.talos_executable.executable]
 
         # TODO: consider an async option here (no return).
         output_log = 'attempting'
@@ -214,9 +189,6 @@ class GenericSpellCaster(object):
                                if return_code == 0 else HydraHeadStatus.FAILED)
         self.head.save()
 
-    def _execute_remote_python(self):
-        pass
-
     def _execute_local_popen(self):
         """The default method for executing spells."""
         execution_command = self._get_command()
@@ -225,46 +197,29 @@ class GenericSpellCaster(object):
                 execution_command, creationflags=subprocess.CREATE_NEW_CONSOLE)
         except Exception as e:
             # TODO: narrow exception type
-            raise RuntimeError(f"Failed to launch spell execution: {e}")
-
-    def _execute_remote_popen(self):
-        pass
+            raise RuntimeError(f'Failed to launch spell execution: {e}')
 
     def _executable_router(self):
-        match self.executable_type:
-            case HydraExecutableType.LOCAL_PYTHON:
-                self._execute_local_python()
-            case HydraExecutableType.REMOTE_PYTHON:
-                self._execute_remote_python()
-            case HydraExecutableType.LOCAL_POPEN:
-                self._execute_local_popen()
-            case HydraExecutableType.REMOTE_POPEN:
-                self._execute_remote_popen()
-            case _:
-                raise ValueError(f"Unknown spell type: {self.executable_type}")
+        if self.spell.talos_executable_id == TalosExecutable.INTERNAL_FUNCTION:
+            self._execute_local_python()
+        else:
+            self._execute_local_popen()
 
     def _post_processor(self):
         """Run post processing steps after streaming logs."""
         self.status = self.STATUS_POST_PROCESSING
-        if self.callback:
-            try:
-                self.callback(self)
-            except Exception as e:
-                logger.error(f'Error running post processing callback: {e}')
-            self.callback(self)
-        self.status = self.STATUS_COMPLETE
 
     def _cast_spell(self):
-        self._debug_log(f"Launching {self.spell.name}")
+        self._debug_log(f'Launching {self.spell.name}')
         self._update_head_status(HydraHeadStatus.RUNNING)
         self._executable_router()
-        self._debug_log(f"Logging {self.spell.name}")
+        self._debug_log(f'Logging {self.spell.name}')
         self._log_router()
-        self._debug_log(f"Post Processing {self.spell.name}")
+        self._debug_log(f'Post Processing {self.spell.name}')
         self._post_processor()
-        self._debug_log(f"Clean Up {self.spell.name}")
+        self._debug_log(f'Clean Up {self.spell.name}')
         if self.running_subprocess:
             self.running_subprocess.kill()
         if self.status not in self.STATUSES_WHICH_HALT:
             self.status = self.STATUS_COMPLETE
-        self._debug_log(f"{self.spell.name} END OF LINE")
+        self._debug_log(f'{self.spell.name} END OF LINE')

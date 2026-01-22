@@ -1,5 +1,6 @@
 """Hydra Data Models."""
 from django.db import models
+
 from common.models import (
     BigIdMixin,
     CreatedMixin,
@@ -9,7 +10,7 @@ from common.models import (
     NameMixin,
     UUIDIdMixin,
 )
-from environments.models import ProjectEnvironment, TalosExecutable, TalosExecutableSwitch
+from environments.models import ProjectEnvironment, TalosExecutable, TalosExecutableArgument, TalosExecutableSwitch
 from .constants import (
     CREATED_LABEL,
     FAILED_LABEL,
@@ -17,6 +18,7 @@ from .constants import (
     RUNNING_LABEL,
     SUCCESS_LABEL,
 )
+
 
 # --- DEFINITIONS (The Library) ---
 
@@ -43,7 +45,7 @@ class HydraOutcomeActionID(object):
     ANALYZE = 5
 
 
-class HydraExecutableType(DefaultFieldsMixin):
+class HydraExecutableType(DefaultFieldsMixin):  # depreciated
     """
     Centralized Integer IDs for Executable Types.
     """
@@ -53,7 +55,7 @@ class HydraExecutableType(DefaultFieldsMixin):
     REMOTE_POPEN = 4
 
 
-class HydraExecutable(DefaultFieldsMixin, DescriptionMixin):
+class HydraExecutable(DefaultFieldsMixin, DescriptionMixin):  # depreciated
     """
     A base tool (e.g. Unreal Editor, Python).
     """
@@ -78,7 +80,7 @@ class HydraSwitch(DefaultFieldsMixin):    # DEPRECIATED
     value = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
-        return f"{self.executable.slug} :: {self.flag}"
+        return f"{self.id} || {self.executable.slug} :: {self.flag}"
 
 
 class HydraSpell(DefaultFieldsMixin):
@@ -87,17 +89,26 @@ class HydraSpell(DefaultFieldsMixin):
     """
     talos_executable = models.ForeignKey(TalosExecutable, on_delete=models.PROTECT,
                                          default=1)
-    executable = models.ForeignKey(HydraExecutable, on_delete=models.PROTECT)
-    active_switches = models.ManyToManyField(HydraSwitch, blank=True)  # DEPRECIATED
     switches = models.ManyToManyField(TalosExecutableSwitch, blank=True)
+
+    executable = models.ForeignKey(HydraExecutable, on_delete=models.PROTECT, blank=True, null=True)  # DEPRECIATED
+    active_switches = models.ManyToManyField(HydraSwitch, blank=True)  # DEPRECIATED
     order = models.PositiveIntegerField(
-        default=0, help_text="Execution sequence (1, 2, 3...)")
+        default=0, help_text="Execution sequence (1, 2, 3...)")  # TODO: DEPRECIATED
 
     class Meta:
         ordering = ['order']
 
     def __str__(self):
         return f"[{self.order}] {self.name}"
+
+
+class HydraSpellArgumentAssignment(models.Model):
+    spell = models.ForeignKey(HydraSpell, on_delete=models.CASCADE)
+    order = models.IntegerField(default=10)
+    argument = models.ForeignKey(TalosExecutableArgument, on_delete=models.CASCADE)
+    class Meta(object):
+        ordering = ['order']
 
 
 class HydraOutcomeAction(BigIdMixin, NameMixin):

@@ -5,7 +5,9 @@ from .models import (
     HydraSpawn,
     HydraHead,
     HydraHeadStatus,
-    HydraSpawnStatus
+    HydraSpawnStatus,
+    HydraSwitch,
+    HydraSpellArgumentAssignment  # New Model
 )
 
 
@@ -14,20 +16,36 @@ class HydraSpellbookAdmin(admin.ModelAdmin):
     list_display = ('name', 'id', 'created')
 
 
+class HydraSpellArgumentInline(admin.TabularInline):
+    """
+    Allows adding ordered arguments (e.g. Map Names, Target Platforms)
+    directly to the Spell.
+    """
+    model = HydraSpellArgumentAssignment
+    extra = 1
+    ordering = ('order',)
+    # autocomplete_fields = ['argument'] # Uncomment if you register TalosExecutableArgument with search_fields
+
+
 @admin.register(HydraSpell)
 class HydraSpellAdmin(admin.ModelAdmin):
-    # Show both Old and New executables in the list for easy auditing
+    # 1. List Display: Shows the migration status (New vs Old)
     list_display = ('name', 'order', 'talos_executable', 'deprecated_executable_display')
     list_editable = ('order',)
+
+    # Filter by the NEW executable to see what's left to migrate
     list_filter = ('talos_executable',)
 
-    # Use filter_horizontal for the new switches M2M
-    filter_horizontal = ('switches',)
+    # 2. Filter Horizontal: Maintains the UI for BOTH the new switches and the old ones
+    filter_horizontal = ('switches', 'active_switches')
 
-    # Organize fields to make the migration obvious
+    # 3. Inlines: Add the new Argument system
+    inlines = [HydraSpellArgumentInline]
+
+    # 4. Fieldsets: Distinct separation between the Future and the Past
     fieldsets = (
         ('Identity', {
-            'fields': ('name', 'description', 'spellbook', 'order')
+            'fields': ('name', 'order')
         }),
         ('New Configuration (Talos)', {
             'fields': ('talos_executable', 'switches'),
@@ -63,6 +81,7 @@ class HydraHeadAdmin(admin.ModelAdmin):
         return obj.spell.name
 
 
-# Simple registrations for Statuses
+# Simple registrations for Statuses and the deprecated Switch model
 admin.site.register(HydraHeadStatus)
 admin.site.register(HydraSpawnStatus)
+admin.site.register(HydraSwitch)

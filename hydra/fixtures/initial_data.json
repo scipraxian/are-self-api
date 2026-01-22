@@ -3,36 +3,36 @@
     "model": "hydra.hydraexecutabletype",
     "pk": 1,
     "fields": {
-      "name": "Local Python",
       "created": "2026-01-01T00:00:00Z",
-      "modified": "2026-01-01T00:00:00Z"
+      "modified": "2026-01-01T00:00:00Z",
+      "name": "Local Python"
     }
   },
   {
     "model": "hydra.hydraexecutabletype",
     "pk": 2,
     "fields": {
-      "name": "Remote Python",
       "created": "2026-01-01T00:00:00Z",
-      "modified": "2026-01-01T00:00:00Z"
+      "modified": "2026-01-01T00:00:00Z",
+      "name": "Remote Python"
     }
   },
   {
     "model": "hydra.hydraexecutabletype",
     "pk": 3,
     "fields": {
-      "name": "Local Popen",
       "created": "2026-01-01T00:00:00Z",
-      "modified": "2026-01-01T00:00:00Z"
+      "modified": "2026-01-01T00:00:00Z",
+      "name": "Local Popen"
     }
   },
   {
     "model": "hydra.hydraexecutabletype",
     "pk": 4,
     "fields": {
-      "name": "Remote Popen",
       "created": "2026-01-01T00:00:00Z",
-      "modified": "2026-01-01T00:00:00Z"
+      "modified": "2026-01-01T00:00:00Z",
+      "name": "Remote Popen"
     }
   },
   {
@@ -44,6 +44,7 @@
       "modified": "2026-01-01T00:00:00Z",
       "name": "Unreal Editor (Cmd)",
       "slug": "ue_cmd",
+      "type": 3,
       "path_template": "{engine_root}/Engine/Binaries/Win64/UnrealEditor-Cmd.exe"
     }
   },
@@ -56,6 +57,7 @@
       "modified": "2026-01-01T00:00:00Z",
       "name": "Unreal Automation Tool",
       "slug": "uat",
+      "type": 3,
       "path_template": "{engine_root}/Engine/Build/BatchFiles/RunUAT.bat"
     }
   },
@@ -68,6 +70,7 @@
       "modified": "2026-01-20T15:59:42.627Z",
       "name": "Staging Executable",
       "slug": "staging",
+      "type": 3,
       "path_template": "{staging_dir}/Windows/{project_name}.exe"
     }
   },
@@ -80,6 +83,7 @@
       "modified": "2026-01-20T16:22:40.470Z",
       "name": "Release Test Executable (legacy)",
       "slug": "release_test",
+      "type": 3,
       "path_template": "{build_root}/ReleaseTest/{project_name}.exe"
     }
   },
@@ -92,6 +96,7 @@
       "modified": "2026-01-09T08:00:00Z",
       "name": "Native Parallel Distributor",
       "slug": "distribute_fleet",
+      "type": 3,
       "path_template": ""
     }
   },
@@ -104,6 +109,7 @@
       "modified": "2026-01-09T12:00:00Z",
       "name": "Version Stamper",
       "slug": "version_stamper",
+      "type": 3,
       "path_template": ""
     }
   },
@@ -116,6 +122,7 @@
       "modified": "2026-01-20T15:56:39.237Z",
       "name": "Native Local Client",
       "slug": "native_local_client",
+      "type": 3,
       "path_template": ""
     }
   },
@@ -128,6 +135,7 @@
       "modified": "2026-01-07T22:58:23.404Z",
       "name": "ShaderPipelineCacheTools",
       "slug": "shader_cache_tool",
+      "type": 3,
       "path_template": "{engine_root}/Engine/Binaries/Win64/ShaderPipelineCacheTools.exe"
     }
   },
@@ -140,6 +148,7 @@
       "modified": "2026-01-09T12:00:00Z",
       "name": "Native Remote Launcher",
       "slug": "remote_launch",
+      "type": 3,
       "path_template": ""
     }
   },
@@ -640,10 +649,19 @@
     "pk": 1,
     "fields": {
       "created": "2026-01-01T00:00:00Z",
-      "modified": "2026-01-09T15:19:13.183Z",
+      "modified": "2026-01-21T20:21:41.649Z",
       "name": "Test",
+      "talos_executable": 4,
       "executable": 1,
       "order": 1,
+      "switches": [
+        2,
+        4,
+        17,
+        40,
+        41,
+        43
+      ],
       "active_switches": [
         1,
         2,
@@ -659,10 +677,20 @@
     "pk": 2,
     "fields": {
       "created": "2026-01-01T00:00:00Z",
-      "modified": "2026-01-01T00:00:00Z",
+      "modified": "2026-01-21T22:07:32.891Z",
       "name": "Staging: Build Game",
+      "talos_executable": 5,
       "executable": 2,
       "order": 2,
+      "switches": [
+        9,
+        10,
+        11,
+        35,
+        36,
+        37,
+        38
+      ],
       "active_switches": [
         10,
         11,
@@ -677,10 +705,19 @@
     "pk": 3,
     "fields": {
       "created": "2026-01-01T00:00:00Z",
-      "modified": "2026-01-07T23:24:41.055Z",
+      "modified": "2026-01-21T20:08:34.442Z",
       "name": "Staging: Record PSOs",
+      "talos_executable": 6,
       "executable": 3,
       "order": 3,
+      "switches": [
+        23,
+        24,
+        25,
+        29,
+        30,
+        31
+      ],
       "active_switches": [
         20,
         21,
@@ -694,10 +731,17 @@
     "pk": 4,
     "fields": {
       "created": "2026-01-01T00:00:00Z",
-      "modified": "2026-01-20T16:07:44.573Z",
+      "modified": "2026-01-21T20:05:57.495Z",
       "name": "Staging",
+      "talos_executable": 1,
       "executable": 3,
       "order": 1,
+      "switches": [
+        16,
+        23,
+        24,
+        25
+      ],
       "active_switches": [
         21,
         26
@@ -709,10 +753,23 @@
     "pk": 100,
     "fields": {
       "created": "2026-01-07T22:58:23.399Z",
-      "modified": "2026-01-09T15:17:58.456Z",
+      "modified": "2026-01-21T20:35:40.704Z",
       "name": "Compile PSO Cache",
+      "talos_executable": 4,
       "executable": 1,
       "order": 10,
+      "switches": [
+        2,
+        3,
+        21,
+        22,
+        26,
+        27,
+        42,
+        43,
+        45,
+        46
+      ],
       "active_switches": [
         1,
         3,
@@ -732,10 +789,30 @@
     "pk": 110,
     "fields": {
       "created": "2026-01-08T15:50:00Z",
-      "modified": "2026-01-09T15:17:37.850Z",
+      "modified": "2026-01-21T20:26:33.347Z",
       "name": "UAT Build",
+      "talos_executable": 5,
       "executable": 2,
       "order": 20,
+      "switches": [
+        3,
+        5,
+        9,
+        10,
+        11,
+        13,
+        15,
+        19,
+        20,
+        32,
+        33,
+        34,
+        35,
+        37,
+        38,
+        39,
+        44
+      ],
       "active_switches": [
         10,
         11,
@@ -761,8 +838,10 @@
       "created": "2026-01-08T12:00:00Z",
       "modified": "2026-01-20T16:24:06.085Z",
       "name": "UAT Run (Legacy)",
+      "talos_executable": 1,
       "executable": 4,
       "order": 30,
+      "switches": [],
       "active_switches": [
         40,
         41,
@@ -777,8 +856,10 @@
       "created": "2026-01-08T18:00:00Z",
       "modified": "2026-01-09T15:15:24.078Z",
       "name": "Distribute",
+      "talos_executable": 1,
       "executable": 5,
       "order": 40,
+      "switches": [],
       "active_switches": []
     }
   },
@@ -789,8 +870,10 @@
       "created": "2026-01-09T12:00:00Z",
       "modified": "2026-01-09T12:00:00Z",
       "name": "Stamp Build Version",
+      "talos_executable": 1,
       "executable": 6,
       "order": 5,
+      "switches": [],
       "active_switches": [
         140
       ]
@@ -803,8 +886,10 @@
       "created": "2026-01-17T02:00:50.152Z",
       "modified": "2026-01-20T16:14:01.054Z",
       "name": "MP Remotes",
+      "talos_executable": 1,
       "executable": 106,
       "order": 1,
+      "switches": [],
       "active_switches": []
     }
   },
@@ -813,11 +898,22 @@
     "pk": 143,
     "fields": {
       "created": "2026-01-17T02:00:50.156Z",
-      "modified": "2026-01-20T16:13:25.985Z",
+      "modified": "2026-01-21T20:02:24.166Z",
       "name": "MP Local UAT",
+      "talos_executable": 7,
       "executable": 7,
       "order": 1,
+      "switches": [],
       "active_switches": []
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 1,
+    "fields": {
+      "spell": 2,
+      "order": 10,
+      "argument": 6
     }
   },
   {

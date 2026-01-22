@@ -28,220 +28,637 @@
     }
   },
   {
+    "model": "environments.projectenvironment",
+    "pk": "c142aa46-9b5a-41af-b4c2-79cc11be5f65",
+    "fields": {
+      "name": "Test Env",
+      "project_root": "C:/Test",
+      "engine_root": "",
+      "build_root": "",
+      "project_name": "",
+      "staging_dir": null,
+      "agent_port": 5005,
+      "is_active": false
+    }
+  },
+  {
     "model": "environments.talosexecutableswitch",
     "pk": 1,
     "fields": {
+      "created": "2026-01-21T00:00:00Z",
+      "modified": "2026-01-21T00:00:00Z",
       "name": "Python Unbuffered",
       "flag": "-u",
-      "value": "",
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "value": ""
     }
   },
   {
     "model": "environments.talosexecutableswitch",
     "pk": 2,
     "fields": {
+      "created": "2026-01-21T00:00:00Z",
+      "modified": "2026-01-21T00:00:00Z",
       "name": "Unreal Unattended",
       "flag": "-unattended",
-      "value": "",
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "value": ""
     }
   },
   {
     "model": "environments.talosexecutableswitch",
     "pk": 3,
     "fields": {
-      "name": "Unreal No Pause",
-      "flag": "-nopause",
-      "value": "",
       "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "modified": "2026-01-21T19:48:43.200Z",
+      "name": "No Pause",
+      "flag": "-nopause",
+      "value": ""
     }
   },
   {
     "model": "environments.talosexecutableswitch",
     "pk": 4,
     "fields": {
+      "created": "2026-01-21T00:00:00Z",
+      "modified": "2026-01-21T00:00:00Z",
       "name": "Unreal Null RHI",
       "flag": "-nullrhi",
-      "value": "",
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "value": ""
     }
   },
   {
     "model": "environments.talosexecutableswitch",
     "pk": 5,
     "fields": {
+      "created": "2026-01-21T00:00:00Z",
+      "modified": "2026-01-21T00:00:00Z",
       "name": "Unreal UTF8 Output",
       "flag": "-utf8output",
-      "value": "",
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "value": ""
     }
   },
   {
     "model": "environments.talosexecutableswitch",
     "pk": 6,
     "fields": {
+      "created": "2026-01-21T00:00:00Z",
+      "modified": "2026-01-21T00:00:00Z",
       "name": "Unreal StdOut",
       "flag": "-stdout",
-      "value": "",
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "value": ""
     }
   },
   {
     "model": "environments.talosexecutableswitch",
     "pk": 7,
     "fields": {
+      "created": "2026-01-21T00:00:00Z",
+      "modified": "2026-01-21T00:00:00Z",
       "name": "Unreal Full Standard Log",
       "flag": "-fullstdlog",
-      "value": "",
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "value": ""
     }
   },
   {
     "model": "environments.talosexecutableswitch",
     "pk": 8,
     "fields": {
+      "created": "2026-01-21T00:00:00Z",
+      "modified": "2026-01-21T00:00:00Z",
       "name": "Unreal Warnings as Errors",
       "flag": "-warningsaserrors",
-      "value": "",
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "value": ""
     }
   },
   {
     "model": "environments.talosexecutableswitch",
     "pk": 9,
     "fields": {
-      "name": "UAT Build",
-      "flag": "-build",
-      "value": "",
       "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "modified": "2026-01-21T19:42:37.923Z",
+      "name": "Build",
+      "flag": "-build",
+      "value": ""
     }
   },
   {
     "model": "environments.talosexecutableswitch",
     "pk": 10,
     "fields": {
-      "name": "UAT Cook",
-      "flag": "-cook",
-      "value": "",
       "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "modified": "2026-01-21T19:42:54.880Z",
+      "name": "Cook",
+      "flag": "-cook",
+      "value": ""
     }
   },
   {
     "model": "environments.talosexecutableswitch",
     "pk": 11,
     "fields": {
+      "created": "2026-01-21T00:00:00Z",
+      "modified": "2026-01-21T00:00:00Z",
       "name": "UAT Stage",
       "flag": "-stage",
-      "value": "",
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "value": ""
     }
   },
   {
     "model": "environments.talosexecutableswitch",
     "pk": 12,
     "fields": {
+      "created": "2026-01-21T00:00:00Z",
+      "modified": "2026-01-21T00:00:00Z",
       "name": "UAT Package",
       "flag": "-package",
-      "value": "",
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "value": ""
     }
   },
   {
     "model": "environments.talosexecutableswitch",
     "pk": 13,
     "fields": {
-      "name": "UAT Archive",
-      "flag": "-archive",
-      "value": "",
       "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "modified": "2026-01-21T19:42:31.346Z",
+      "name": "Archive",
+      "flag": "-archive",
+      "value": ""
     }
   },
   {
     "model": "environments.talosexecutableswitch",
     "pk": 14,
     "fields": {
-      "name": "UAT Clean",
-      "flag": "-clean",
-      "value": "",
       "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "modified": "2026-01-21T19:42:44.635Z",
+      "name": "Clean",
+      "flag": "-clean",
+      "value": ""
     }
   },
   {
     "model": "environments.talosexecutableswitch",
     "pk": 15,
     "fields": {
-      "name": "UAT Compressed",
-      "flag": "-compressed",
-      "value": "",
       "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "modified": "2026-01-21T19:42:49.426Z",
+      "name": "Compressed",
+      "flag": "-compressed",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 16,
+    "fields": {
+      "created": "2026-01-21T19:36:17.120Z",
+      "modified": "2026-01-21T20:04:48.757Z",
+      "name": "Auto Close",
+      "flag": "-AutoClose",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 17,
+    "fields": {
+      "created": "2026-01-21T19:36:27.244Z",
+      "modified": "2026-01-21T19:36:27.244Z",
+      "name": "Log",
+      "flag": "-log",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 18,
+    "fields": {
+      "created": "2026-01-21T19:36:40.196Z",
+      "modified": "2026-01-21T19:36:40.196Z",
+      "name": "Verbose",
+      "flag": "-verbose",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 19,
+    "fields": {
+      "created": "2026-01-21T19:39:34.201Z",
+      "modified": "2026-01-21T19:39:34.201Z",
+      "name": "Zen Store",
+      "flag": "-zenstore",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 20,
+    "fields": {
+      "created": "2026-01-21T19:40:12.434Z",
+      "modified": "2026-01-21T19:40:12.434Z",
+      "name": "Unversioned Content",
+      "flag": "-unversionedcookedcontent",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 21,
+    "fields": {
+      "created": "2026-01-21T19:44:05.124Z",
+      "modified": "2026-01-21T22:02:44.328Z",
+      "name": "xCMD Expand",
+      "flag": "expand",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 22,
+    "fields": {
+      "created": "2026-01-21T19:44:56.489Z",
+      "modified": "2026-01-21T19:44:56.489Z",
+      "name": "CMD Run Shaders",
+      "flag": "-run=",
+      "value": "ShaderPipelineCacheTools"
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 23,
+    "fields": {
+      "created": "2026-01-21T19:45:39.581Z",
+      "modified": "2026-01-21T19:45:39.581Z",
+      "name": "Windowed",
+      "flag": "-windowed",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 24,
+    "fields": {
+      "created": "2026-01-21T19:46:03.486Z",
+      "modified": "2026-01-21T19:46:03.486Z",
+      "name": "ResX 720p",
+      "flag": "-resX=",
+      "value": "1280"
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 25,
+    "fields": {
+      "created": "2026-01-21T19:46:21.449Z",
+      "modified": "2026-01-21T19:46:21.449Z",
+      "name": "Res Y 720p",
+      "flag": "-resY=",
+      "value": "720"
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 26,
+    "fields": {
+      "created": "2026-01-21T19:47:12.352Z",
+      "modified": "2026-01-21T19:47:45.846Z",
+      "name": "CMD Disable LC Var",
+      "flag": "-dpcvars=",
+      "value": "\"LiveCoding.Enable=0\""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 27,
+    "fields": {
+      "created": "2026-01-21T19:47:57.645Z",
+      "modified": "2026-01-21T19:47:57.645Z",
+      "name": "No Live Coding",
+      "flag": "-NoLiveCoding",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 28,
+    "fields": {
+      "created": "2026-01-21T19:48:21.323Z",
+      "modified": "2026-01-21T19:49:03.210Z",
+      "name": "Auto Start",
+      "flag": "-AutoStart",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 29,
+    "fields": {
+      "created": "2026-01-21T19:49:38.408Z",
+      "modified": "2026-01-21T19:49:38.408Z",
+      "name": "Compile Shaders",
+      "flag": "-CompileShaders",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 30,
+    "fields": {
+      "created": "2026-01-21T19:50:08.584Z",
+      "modified": "2026-01-21T19:50:08.584Z",
+      "name": "Clear PSO Cache",
+      "flag": "-clearPSODriverCache",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 31,
+    "fields": {
+      "created": "2026-01-21T19:50:58.267Z",
+      "modified": "2026-01-21T19:50:58.267Z",
+      "name": "Log PSO",
+      "flag": "-logPSO",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 32,
+    "fields": {
+      "created": "2026-01-21T19:51:38.664Z",
+      "modified": "2026-01-21T19:51:38.664Z",
+      "name": "No Compile Editor",
+      "flag": "-nocompileeditor",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 33,
+    "fields": {
+      "created": "2026-01-21T19:52:19.264Z",
+      "modified": "2026-01-21T19:52:49.344Z",
+      "name": "Server Config Development",
+      "flag": "-serverconfig=",
+      "value": "Development"
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 34,
+    "fields": {
+      "created": "2026-01-21T19:52:42.932Z",
+      "modified": "2026-01-21T19:52:42.932Z",
+      "name": "Client Config Dev",
+      "flag": "-clientconfig=",
+      "value": "Development"
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 35,
+    "fields": {
+      "created": "2026-01-21T19:53:43.914Z",
+      "modified": "2026-01-21T19:53:43.914Z",
+      "name": "Pak",
+      "flag": "-pak",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 36,
+    "fields": {
+      "created": "2026-01-21T19:54:58.926Z",
+      "modified": "2026-01-21T19:54:58.926Z",
+      "name": "Staging Directory is Windows",
+      "flag": "-stagingdirectory=",
+      "value": "C:\\steambuild\\Windows"
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 37,
+    "fields": {
+      "created": "2026-01-21T19:55:32.760Z",
+      "modified": "2026-01-21T19:55:32.760Z",
+      "name": "Platform Win64",
+      "flag": "-platform=Win64",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 38,
+    "fields": {
+      "created": "2026-01-21T19:56:42.630Z",
+      "modified": "2026-01-21T20:21:10.849Z",
+      "name": "Project Flag",
+      "flag": "-project=",
+      "value": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\HSHVacancy.uproject"
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 39,
+    "fields": {
+      "created": "2026-01-21T19:57:15.111Z",
+      "modified": "2026-01-21T22:03:15.890Z",
+      "name": "xBuildCookRun",
+      "flag": "BuildCookRun",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 40,
+    "fields": {
+      "created": "2026-01-21T19:57:37.584Z",
+      "modified": "2026-01-21T19:57:37.584Z",
+      "name": "No Splash",
+      "flag": "-nosplash",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 41,
+    "fields": {
+      "created": "2026-01-21T19:58:18.758Z",
+      "modified": "2026-01-21T19:58:18.758Z",
+      "name": "Exec Automation Tests",
+      "flag": "-ExecCmds=",
+      "value": "Automation RunTests HSH.Tests;Quit"
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 42,
+    "fields": {
+      "created": "2026-01-21T20:16:52.407Z",
+      "modified": "2026-01-21T22:03:02.332Z",
+      "name": "xOutput SPC File",
+      "flag": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Content\\PipelineCaches\\HSHVacancy_PCD3D_SM6.spc",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 43,
+    "fields": {
+      "created": "2026-01-21T20:21:03.357Z",
+      "modified": "2026-01-21T22:02:55.707Z",
+      "name": "xProject",
+      "flag": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\HSHVacancy.uproject",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 44,
+    "fields": {
+      "created": "2026-01-21T20:25:50.209Z",
+      "modified": "2026-01-21T20:25:50.209Z",
+      "name": "Archive Directory",
+      "flag": "-archivedirectory=",
+      "value": "C:\\steambuild"
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 45,
+    "fields": {
+      "created": "2026-01-21T20:29:25.360Z",
+      "modified": "2026-01-21T22:02:50.687Z",
+      "name": "xInput: Rec FIles",
+      "flag": "c:/steambuild/Windows/HSHVacancy/Saved/CollectedPSOs/*.rec*",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 46,
+    "fields": {
+      "created": "2026-01-21T20:34:13.575Z",
+      "modified": "2026-01-21T22:03:08.813Z",
+      "name": "xInput: SHK Files",
+      "flag": "C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Metadata/PipelineCaches/*.shk",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 1,
+    "fields": {
+      "created": "2026-01-21T21:58:49.251Z",
+      "modified": "2026-01-21T22:01:42.874Z",
+      "name": "Get PipelineCaches SHK Files",
+      "argument": "C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Metadata/PipelineCaches/*.shk"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 2,
+    "fields": {
+      "created": "2026-01-21T22:00:20.700Z",
+      "modified": "2026-01-21T22:00:20.700Z",
+      "name": "SPC File",
+      "argument": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Content\\PipelineCaches\\HSHVacancy_PCD3D_SM6.spc"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 3,
+    "fields": {
+      "created": "2026-01-21T22:00:46.742Z",
+      "modified": "2026-01-21T22:00:46.742Z",
+      "name": "Project",
+      "argument": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\HSHVacancy.uproject"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 4,
+    "fields": {
+      "created": "2026-01-21T22:01:08.540Z",
+      "modified": "2026-01-21T22:01:25.992Z",
+      "name": "Get Collected PSO Rec Files",
+      "argument": "c:/steambuild/Windows/HSHVacancy/Saved/CollectedPSOs/*.rec*"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 5,
+    "fields": {
+      "created": "2026-01-21T22:02:13.967Z",
+      "modified": "2026-01-21T22:02:13.967Z",
+      "name": "Expand",
+      "argument": "expand"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 6,
+    "fields": {
+      "created": "2026-01-21T22:02:21.823Z",
+      "modified": "2026-01-21T22:02:21.823Z",
+      "name": "BuildCookRun",
+      "argument": "BuildCookRun"
     }
   },
   {
     "model": "environments.talosexecutable",
     "pk": 1,
     "fields": {
-      "name": "INTERNAL_FUNCTION",
+      "created": "2026-01-21T00:00:00Z",
       "description": "Executes an internal python function mapped in the Caster.",
+      "modified": "2026-01-21T00:00:00Z",
+      "name": "INTERNAL_FUNCTION",
       "working_path": "",
       "executable": "",
       "log": "",
-      "switches": [],
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "switches": []
     }
   },
   {
     "model": "environments.talosexecutable",
     "pk": 2,
     "fields": {
-      "name": "PYTHON",
+      "created": "2026-01-21T00:00:00Z",
       "description": "Standard Python Interpreter.",
+      "modified": "2026-01-21T00:00:00Z",
+      "name": "PYTHON",
       "working_path": "C:\\talos",
       "executable": "C:\\talos\\venv\\Scripts\\python.exe",
       "log": "",
       "switches": [
         1
-      ],
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      ]
     }
   },
   {
     "model": "environments.talosexecutable",
     "pk": 3,
     "fields": {
-      "name": "DJANGO",
+      "created": "2026-01-21T00:00:00Z",
       "description": "Python Interpreter intended for manage.py commands.",
+      "modified": "2026-01-21T00:00:00Z",
+      "name": "DJANGO",
       "working_path": "C:\\talos",
       "executable": "C:\\talos\\venv\\Scripts\\python.exe manage.py",
       "log": "C:\\talos\\logs\\django.log",
-      "switches": [],
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "switches": []
     }
   },
   {
     "model": "environments.talosexecutable",
     "pk": 4,
     "fields": {
-      "name": "UNREAL_CMD",
+      "created": "2026-01-21T00:00:00Z",
       "description": "Unreal Editor Commandlet (Headless).",
+      "modified": "2026-01-21T22:08:09.713Z",
+      "name": "UNREAL_CMD",
       "working_path": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Binaries\\Win64",
       "executable": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Binaries\\Win64\\UnrealEditor-Cmd.exe",
       "log": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log",
@@ -251,17 +668,17 @@
         5,
         6,
         7
-      ],
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      ]
     }
   },
   {
     "model": "environments.talosexecutable",
     "pk": 5,
     "fields": {
-      "name": "UNREAL_AUTOMATION_TOOL",
+      "created": "2026-01-21T00:00:00Z",
       "description": "RunUAT Batch File.",
+      "modified": "2026-01-21T00:00:00Z",
+      "name": "UNREAL_AUTOMATION_TOOL",
       "working_path": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Build\\BatchFiles",
       "executable": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Build\\BatchFiles\\RunUAT.bat",
       "log": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log",
@@ -269,62 +686,60 @@
         2,
         3,
         5
-      ],
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      ]
     }
   },
   {
     "model": "environments.talosexecutable",
     "pk": 6,
     "fields": {
-      "name": "UNREAL_STAGING",
+      "created": "2026-01-21T00:00:00Z",
       "description": "The cooked executable in the Staging Buffer.",
+      "modified": "2026-01-21T00:00:00Z",
+      "name": "UNREAL_STAGING",
       "working_path": "C:\\steambuild\\Windows",
       "executable": "C:\\steambuild\\Windows\\HSHVacancy.exe",
       "log": "C:\\steambuild\\Windows\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log",
-      "switches": [],
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "switches": []
     }
   },
   {
     "model": "environments.talosexecutable",
     "pk": 7,
     "fields": {
-      "name": "UNREAL_RELEASE_TEST",
+      "created": "2026-01-21T00:00:00Z",
       "description": "The cooked executable in the Release Test folder.",
+      "modified": "2026-01-21T00:00:00Z",
+      "name": "UNREAL_RELEASE_TEST",
       "working_path": "C:\\steambuild\\ReleaseTest",
       "executable": "C:\\steambuild\\ReleaseTest\\HSHVacancy.exe",
       "log": "C:\\steambuild\\ReleaseTest\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log",
-      "switches": [],
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "switches": []
     }
   },
   {
     "model": "environments.talosexecutable",
     "pk": 8,
     "fields": {
-      "name": "UNREAL_SHADER_TOOL",
+      "created": "2026-01-21T00:00:00Z",
       "description": "Shader Pipeline Cache Tools.",
+      "modified": "2026-01-21T00:00:00Z",
+      "name": "UNREAL_SHADER_TOOL",
       "working_path": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Binaries\\Win64",
       "executable": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Binaries\\Win64\\ShaderPipelineCacheTools.exe",
       "log": "",
-      "switches": [],
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "switches": []
     }
   },
   {
     "model": "environments.talosexecutablesupplementaryfileorpath",
     "pk": 1,
     "fields": {
+      "created": "2026-01-21T00:00:00Z",
+      "modified": "2026-01-21T00:00:00Z",
       "name": "version_json",
       "executable": 4,
-      "path": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\CustomVersion.json",
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z"
+      "path": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\CustomVersion.json"
     }
   }
 ]
