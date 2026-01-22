@@ -13,11 +13,11 @@ from hydra.spells.version_stamper import version_stamp_native
 
 logger = logging.getLogger(__name__)
 
+
 HANDLERS = dict(
     distribute_fleet=distribute_build_native,
     version_stamper=version_stamp_native,
 )
-
 
 class GenericSpellCaster(object):
     LOG_START_MESSAGE = 'Starting spell execution.'

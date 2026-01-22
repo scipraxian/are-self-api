@@ -608,6 +608,16 @@
     }
   },
   {
+    "model": "environments.talosexecutableargument",
+    "pk": 7,
+    "fields": {
+      "created": "2026-01-22T14:21:52.388Z",
+      "modified": "2026-01-22T14:21:52.388Z",
+      "name": "AppVersion File",
+      "argument": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Content\\AppVersion.json"
+    }
+  },
+  {
     "model": "environments.talosexecutable",
     "pk": 1,
     "fields": {

@@ -5,101 +5,85 @@ import getpass
 import json
 import os
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Tuple
 
 from hydra.models import HydraHead
+from hydra.spells.spell_casters.spell_caster_codes import HANDLER_INTERNAL_ERROR_CODE, HANDLER_SUCCESS_CODE, \
+    HANDLER_WRITE_ERROR_CODE
+from hydra.spells.spell_casters.switches_and_arguments import spell_switches_and_arguments
 from hydra.utils import HydraContext, resolve_template, log_system
 
 _DEFAULT_INDENT = 4
 _ENCODING = 'utf-8'
+_DEFAULT_GAME_NAME = 'HSH: Vacancy'
 
-def version_stamp_native(head: HydraHead) -> Tuple[int, str]:
+def version_stamp_native(head_id: int) -> Tuple[int, str]:
     """Updates the application version JSON file with build metadata.
-    
+
     Args:
-        head: The HydraHead execution context.
-        
+        head_id: int: The HydraHead execution context.
+
     Returns:
         Tuple[int, str]: (exit_code, log_output)
+            exit_code = 0 for success, 1 for failure
     """
-    env = head.spawn.environment.project_environment
+    head = HydraHead.objects.get(id=head_id)
     spell = head.spell
-    
-    # 1. Prepare Context
-    context = HydraContext(
-        project_root=env.project_root,
-        engine_root=env.engine_root,
-        build_root=env.build_root,
-        staging_dir=env.staging_dir or "",
-        project_name=env.project_name,
-        dynamic_context={}
-    )
-    
-    # 2. Determine Target File Path (from Switches or Default)
-    # We look for a switch that might provide the path.
-    target_path_template = "{project_root}/Content/AppVersion.json"
-    for switch in spell.active_switches.all():
-        if switch.flag == "--path":
-            target_path_template = switch.value
-            break
-            
-    raw_target_path = resolve_template(target_path_template, context)
-    target_path = os.path.normpath(raw_target_path)
-    
+    app_version_file = spell_switches_and_arguments(spell.id)
+    target_path = os.path.normpath(app_version_file)
+
     log = [f"=== NATIVE VERSION STAMPER ===", f"Target: {target_path}"]
     log_system(head, f"Starting version stamp on {target_path}")
 
-    try:
-        # 3. Ensure Directory Exists
-        directory = os.path.dirname(os.path.abspath(target_path))
-        if not os.path.exists(directory):
+    directory = os.path.dirname(os.path.abspath(target_path))
+    if not os.path.exists(directory):
+        try:
             os.makedirs(directory, exist_ok=True)
             log.append(f"Created directory: {directory}")
+        except Exception as e:
+            log.append(f"[ERROR] Could not create directory {directory}: {e}")
+            return HANDLER_WRITE_ERROR_CODE, "\n".join(log)
 
-        # 4. Load Existing Data
-        data: Dict[str, Any] = {}
-        if os.path.exists(target_path):
+    data: Dict[str, Any] = dict()
+    if os.path.exists(target_path):
+        with open(target_path, 'r', encoding=_ENCODING) as f:
             try:
-                with open(target_path, 'r', encoding=_ENCODING) as f:
-                    data = json.load(f)
+                data = json.load(f)
             except json.JSONDecodeError:
                 log.append(f"[WARNING] {target_path} is corrupt. Re-initializing.")
 
-        # 5. Generate Build Metadata
-        timestamp = int(time.time())
-        hex_hash = hex(timestamp)[2:].upper()
-        now = datetime.datetime.now()
-        
-        build_meta = {
-            'Hash': hex_hash,
-            'Date': now.strftime('%Y-%m-%d %H:%M:%S'),
-            'DayOfYear': now.timetuple().tm_yday,
-            'Builder': getpass.getuser(),
+    timestamp = int(time.time())
+    hex_hash = hex(timestamp)[2:].upper()
+    now = datetime.datetime.now()
+
+    build_meta = {
+        'Hash': hex_hash,
+        'Date': now.strftime('%Y-%m-%d %H:%M:%S'),
+        'DayOfYear': now.timetuple().tm_yday,
+        'Builder': getpass.getuser(),
+    }
+    data['Build'] = build_meta
+
+    log.append(f"  > Hash:    {build_meta['Hash']}")
+    log.append(f"  > Date:    {build_meta['Date']}")
+    log.append(f"  > Builder: {build_meta['Builder']}")
+
+    if 'Game' not in data:
+        data['Game'] = {
+            'Name': _DEFAULT_GAME_NAME,
+            'Major': 0, 'Minor': 0, 'Patch': 0, 'Label': 'DEV'
         }
-        
-        log.append(f"  > Hash:    {build_meta['Hash']}")
-        log.append(f"  > Date:    {build_meta['Date']}")
-        log.append(f"  > Builder: {build_meta['Builder']}")
 
-        # 6. Update Structure
-        if 'Game' not in data:
-            data['Game'] = {
-                'Name': env.project_name or 'HSH: Vacancy',
-                'Major': 0, 'Minor': 0, 'Patch': 0, 'Label': 'DEV'
-            }
+    if 'Target' not in data:
+        data['Target'] = {'Environment': 'Production', 'Store': 'Steam'}
 
-        data['Build'] = build_meta
-
-        if 'Target' not in data:
-            data['Target'] = {'Environment': 'Production', 'Store': 'Steam'}
-
-        # 7. Save to Disk
+    try:
         with open(target_path, 'w', encoding=_ENCODING) as f:
             json.dump(data, f, indent=_DEFAULT_INDENT)
-            
-        log.append("[SUCCESS] Version Stamp Applied.")
-        return 0, "\n".join(log)
+
+        log.append('[SUCCESS] Version Stamp Applied.')
+        return HANDLER_SUCCESS_CODE, "\n".join(log)
 
     except Exception as e:
-        log.append(f"[ERROR] Version Stamp Failed: {str(e)}")
-        return 1, "\n".join(log)
+        log.append(f'[ERROR] Version Stamp Failed: {str(e)}')
+        return HANDLER_INTERNAL_ERROR_CODE, '\n'.join(log)
