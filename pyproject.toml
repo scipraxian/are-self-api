@@ -13,3 +13,5 @@ markers = [
 # Default to skipping tests marked as 'live'
 addopts = "-m \"not live\""
 
+[tool.ruff.format]
+quote-style = "single"
