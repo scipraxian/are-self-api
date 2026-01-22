@@ -4,7 +4,7 @@ from typing import NamedTuple
 from ue_tools.log_parser import LogConstants, LogParserFactory, merge_sessions
 
 
-class HydraContext(NamedTuple):
+class HydraContext(NamedTuple):  # depreciated.
     project_root: str
     engine_root: str
     build_root: str

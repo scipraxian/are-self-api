@@ -147,15 +147,16 @@ class GenericSpellcasterTest(TestCase):
         # Phase 3 Logic check: Uses talos_executable.log
         mock_exists.assert_called_with(self.python_exe.log)
 
-    def test_generic_spellcaster_get_command_returns_correct_command(self):
+    @patch(f'{MODULE_PATH}.spell_switches_and_arguments')
+    def test_generic_spellcaster_get_command_returns_correct_command(self, mock_switches):
         """Assert get command returns the correct command string."""
+        # Setup the mock to return what the helper WOULD return
+        # This mocks the integration with the new helper function
+        mock_switches.return_value = "arg1 arg2 -switch1"
+
         caster = GenericSpellCaster(self.head.id)
 
-        # Mock the helper methods to control the string assembly inputs
-        caster.ordered_arguments_string = "arg1 arg2"
-        caster.switch_string = "-switch1"
-
-        # Verify fix for 'AttributeError: context'
+        # Verify fix: _get_command calls the helper, which we mocked
         cmd = caster._get_command()
 
         # Fixture PYTHON path is "C:\talos\venv\Scripts\python.exe"
@@ -164,36 +165,8 @@ class GenericSpellcasterTest(TestCase):
         self.assertIn("arg1 arg2", cmd)
         self.assertIn("-switch1", cmd)
 
-    def test_generic_spellcaster_resolve_switches_returns_well_formed_stripped_result(self):
-        """Assert resolve switches returns a well formed list of switches."""
-        # Note: This method was refactored in Phase 3 to return a string, not a list.
-        # We assume the codebase now builds `self.switch_string`.
-
-        from environments.models import TalosExecutableSwitch
-
-        # Add a Global Switch (e.g. -u)
-        sw_global = TalosExecutableSwitch.objects.get(pk=1)  # -u
-        self.python_exe.switches.add(sw_global)
-
-        # Add a Local Switch
-        sw_local = TalosExecutableSwitch.objects.create(name="LocalTest", flag="-local")
-        self.spell.switches.add(sw_local)
-
-        caster = GenericSpellCaster(self.head.id)
-        caster._resolve_switches()
-
-        self.assertIn("-u", caster.switch_string)
-        self.assertIn("-local", caster.switch_string)
-
-    def test_generic_spellcaster_resolve_switches_returns_empty_string_for_no_switches(self):
-        """Assert resolve switches handles empty state."""
-        self.python_exe.switches.clear()
-        self.spell.switches.clear()
-
-        caster = GenericSpellCaster(self.head.id)
-        caster._resolve_switches()
-
-        self.assertEqual(caster.switch_string, "")
+        # Verify we actually called the helper
+        mock_switches.assert_called_with(self.spell.id)
 
     def test_generic_spellcaster_log_router_routes_to_correct_logging_type(self):
         """Assert log router routes to correct logging type based on ID."""

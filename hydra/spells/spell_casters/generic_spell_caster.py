@@ -8,6 +8,7 @@ from time import sleep
 from environments.models import TalosExecutable
 from hydra.models import HydraHead, HydraHeadStatus
 from hydra.spells.distributor import distribute_build_native
+from hydra.spells.spell_casters.switches_and_arguments import spell_switches_and_arguments
 from hydra.spells.version_stamper import version_stamp_native
 
 logger = logging.getLogger(__name__)
@@ -51,38 +52,6 @@ class GenericSpellCaster(object):
         """Create the log array."""
         self.running_log = [self.LOG_START_MESSAGE, ]
 
-    def _resolve_switches(self):
-        """Resolve the switches for the spell.
-
-        Note: We are expecting no composite flags, one flag/value per switch.
-        TODO: resolve switch templates.
-        """
-        switch_string = ''
-
-        for switch in self.spell.talos_executable.switches.all():
-            switch_string += ' ' + switch.flag
-            if switch.value:
-                switch_string += switch.value
-
-        for switch in self.spell.switches.all():
-            switch_string += ' ' + switch.flag
-            if switch.value:
-                switch_string += switch.value
-
-        self.switch_string = switch_string.strip()
-
-    def _resolve_arguments(self):
-        """Resolve the arguments for the spell."""
-        ordered_arguments_string = ''
-
-        for assignment in self.spell.talos_executable.talosexecutableargumentassignment_set.all():
-            ordered_arguments_string += ' ' + assignment.argument.argument
-
-        for assignment in self.spell.hydraspellargumentassignment_set.all():
-            ordered_arguments_string += ' ' + assignment.argument.argument
-
-        self.ordered_arguments_string = ordered_arguments_string.strip()
-
     def _update_head_status(self, status_id: int):
         self.head.status_id = status_id
         self.head.save(update_fields=['status'])
@@ -90,11 +59,12 @@ class GenericSpellCaster(object):
     def _preflight(self):
         self._debug_log(f"Preflight for {self.spell.name}")
         self._init_running_log()
-        self._resolve_switches()
-        self._resolve_arguments()
 
     def _get_command(self):
-        return f'{self.spell.talos_executable.executable} {self.ordered_arguments_string} {self.switch_string}'
+        additional = spell_switches_and_arguments(self.spell.id)
+        result = f'{self.spell.talos_executable.executable} {additional}'.strip()
+        self._debug_log(f"Command is {result}")
+        return result
 
     def _post_head_log(self):
         """Save the log to the DB. TODO: do this asynchronously, it may block."""
