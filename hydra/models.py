@@ -208,7 +208,7 @@ class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     spellbook = models.ForeignKey(HydraSpellbook, on_delete=models.PROTECT)
     environment = models.ForeignKey(HydraEnvironment,
                                     on_delete=models.PROTECT,
-                                    null=True)
+                                    null=True)  # depreciated
     status = models.ForeignKey(HydraSpawnStatus, on_delete=models.PROTECT)
 
     context_data = models.TextField(

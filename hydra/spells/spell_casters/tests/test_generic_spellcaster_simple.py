@@ -22,11 +22,11 @@ class GenericSpellcasterTest(TestCase):
     def setUp(self):
         # 1. Setup Data Hierarchy using Fixtures
         self.spellbook = HydraSpellbook.objects.first()
-        self.proj_env = ProjectEnvironment.objects.get(name="Talos Default Environment")
+        self.proj_env = ProjectEnvironment.objects.get(name="Talos Default Environment")  # depreciated
 
         # We need to ensure the Environment wrapper exists (it might not be in initial_data depending on version)
         # We check or create it to be safe for the test context
-        from hydra.models import HydraEnvironment
+        from hydra.models import HydraEnvironment  # depreciated
         self.hydra_env, _ = HydraEnvironment.objects.get_or_create(
             project_environment=self.proj_env
         )

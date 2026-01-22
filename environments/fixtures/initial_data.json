@@ -756,6 +756,20 @@
     }
   },
   {
+    "model": "environments.talosexecutable",
+    "pk": 10,
+    "fields": {
+      "created": "2026-01-22T16:20:19.871Z",
+      "description": "deploy_release_test",
+      "modified": "2026-01-22T16:20:19.871Z",
+      "name": "deploy_release_test",
+      "working_path": "",
+      "executable": "deploy_release_test",
+      "log": "",
+      "switches": []
+    }
+  },
+  {
     "model": "environments.talosexecutablesupplementaryfileorpath",
     "pk": 1,
     "fields": {

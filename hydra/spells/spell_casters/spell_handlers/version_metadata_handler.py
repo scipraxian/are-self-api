@@ -6,11 +6,19 @@ import json
 import os
 import time
 from typing import Any, Dict, Tuple
+from uuid import UUID
 
 from hydra.models import HydraHead
-from hydra.spells.spell_casters.spell_handlers.spell_handler_codes import HANDLER_INTERNAL_ERROR_CODE, HANDLER_SUCCESS_CODE, \
-    HANDLER_WRITE_ERROR_CODE
-from hydra.spells.spell_casters.switches_and_arguments import spell_switches_and_arguments
+from hydra.spells.spell_casters.spell_handlers.spell_handler_codes import (
+    HANDLER_FILE_NOT_FOUND_CODE,
+    HANDLER_INTERNAL_ERROR_CODE,
+    HANDLER_PERMISSIONS_ERROR_CODE,
+    HANDLER_SUCCESS_CODE,
+    HANDLER_WRITE_ERROR_CODE,
+)
+from hydra.spells.spell_casters.switches_and_arguments import (
+    spell_switches_and_arguments,
+)
 from hydra.utils import log_system
 
 _DEFAULT_INDENT = 4
@@ -18,7 +26,7 @@ _ENCODING = 'utf-8'
 _DEFAULT_GAME_NAME = 'HSH: Vacancy'
 
 
-def update_version_metadata(head_id: int) -> Tuple[int, str]:
+def update_version_metadata(head_id: UUID) -> Tuple[int, str]:
     """Updates the application version JSON file with build metadata.
 
     Args:
@@ -33,25 +41,35 @@ def update_version_metadata(head_id: int) -> Tuple[int, str]:
     app_version_file = spell_switches_and_arguments(spell.id)
     target_path = os.path.normpath(app_version_file)
 
-    log = [f"=== NATIVE VERSION STAMPER ===", f"Target: {target_path}"]
-    log_system(head, f"Starting version stamp on {target_path}")
+    log = ['=== NATIVE VERSION STAMPER ===', f'Target: {target_path}']
+    log_system(head, f'Starting version stamp on {target_path}')
 
     directory = os.path.dirname(os.path.abspath(target_path))
     if not os.path.exists(directory):
         try:
             os.makedirs(directory, exist_ok=True)
-            log.append(f"Created directory: {directory}")
-        except Exception as e:
-            log.append(f"[ERROR] Could not create directory {directory}: {e}")
-            return HANDLER_WRITE_ERROR_CODE, "\n".join(log)
+            log.append(f'Created directory: {directory}')
+        except PermissionError:
+            log.append(f'Error: No permission to create the directory {directory}')
+            return HANDLER_PERMISSIONS_ERROR_CODE, '\n'.join(log)
+        except OSError as e:
+            log.append(f'[ERROR] Could not create directory {directory}: {e}')
+            return HANDLER_WRITE_ERROR_CODE, '\n'.join(log)
 
     data: Dict[str, Any] = dict()
     if os.path.exists(target_path):
-        with open(target_path, 'r', encoding=_ENCODING) as f:
-            try:
-                data = json.load(f)
-            except json.JSONDecodeError:
-                log.append(f"[WARNING] {target_path} is corrupt. Re-initializing.")
+        try:
+            with open(target_path, 'r', encoding=_ENCODING) as f:
+                try:
+                    data = json.load(f)
+                except json.JSONDecodeError:
+                    log.append(f'[WARNING] {target_path} is corrupt. Re-initializing.')
+        except PermissionError:
+            log.append(f'Error: No permission to read {target_path}')
+            return HANDLER_PERMISSIONS_ERROR_CODE, '\n'.join(log)
+        except OSError as e:
+            log.append(f'[WARNING] Could not read {target_path}: {e}. Re-initializing.')
+            return HANDLER_INTERNAL_ERROR_CODE, '\n'.join(log)
 
     timestamp = int(time.time())
     hex_hash = hex(timestamp)[2:].upper()
@@ -65,14 +83,17 @@ def update_version_metadata(head_id: int) -> Tuple[int, str]:
     }
     data['Build'] = build_meta
 
-    log.append(f"  > Hash:    {build_meta['Hash']}")
-    log.append(f"  > Date:    {build_meta['Date']}")
-    log.append(f"  > Builder: {build_meta['Builder']}")
+    log.append(f'  > Hash:    {build_meta["Hash"]}')
+    log.append(f'  > Date:    {build_meta["Date"]}')
+    log.append(f'  > Builder: {build_meta["Builder"]}')
 
     if 'Game' not in data:
         data['Game'] = {
             'Name': _DEFAULT_GAME_NAME,
-            'Major': 0, 'Minor': 0, 'Patch': 0, 'Label': 'DEV'
+            'Major': 0,
+            'Minor': 0,
+            'Patch': 0,
+            'Label': 'DEV',
         }
 
     if 'Target' not in data:
@@ -80,11 +101,20 @@ def update_version_metadata(head_id: int) -> Tuple[int, str]:
 
     try:
         with open(target_path, 'w', encoding=_ENCODING) as f:
-            json.dump(data, f, indent=_DEFAULT_INDENT)
-
-        log.append('[SUCCESS] Version Stamp Applied.')
-        return HANDLER_SUCCESS_CODE, "\n".join(log)
-
-    except Exception as e:
+            try:
+                json.dump(data, f, indent=_DEFAULT_INDENT)
+            except (TypeError, ValueError) as e:
+                log.append(f'[ERROR] Failed to write to {target_path}: {e}')
+                return HANDLER_WRITE_ERROR_CODE, '\n'.join(log)
+    except FileNotFoundError:
+        log.append('The directory path does not exist.')
+        return HANDLER_FILE_NOT_FOUND_CODE, '\n'.join(log)
+    except PermissionError:
+        log.append('You do not have write permissions for this file.')
+        return HANDLER_PERMISSIONS_ERROR_CODE, '\n'.join(log)
+    except (IOError, OSError) as e:
         log.append(f'[ERROR] Version Stamp Failed: {str(e)}')
         return HANDLER_INTERNAL_ERROR_CODE, '\n'.join(log)
+
+    log.append('[SUCCESS] Version Stamp Applied.')
+    return HANDLER_SUCCESS_CODE, '\n'.join(log)
