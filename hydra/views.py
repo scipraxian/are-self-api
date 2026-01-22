@@ -9,8 +9,15 @@ from environments.models import ProjectEnvironment
 from talos_frontal.logic import process_stimulus
 from talos_thalamus.models import Stimulus
 from talos_thalamus.types import SignalTypeID
+
 from .hydra import Hydra
-from .models import HydraEnvironment, HydraHead, HydraSpawn, HydraSpawnStatus, HydraSpellbook
+from .models import (
+    HydraEnvironment,
+    HydraHead,
+    HydraSpawn,
+    HydraSpawnStatus,
+    HydraSpellbook,
+)
 from .utils import merge_logs
 
 logger = logging.getLogger(__name__)
@@ -187,16 +194,16 @@ def hydra_spawn_terminate(request, spawn_id):
     controller = Hydra(spawn_id=spawn.id)
     controller.terminate()
 
-    if action == 'analyze':
-        stimulus = Stimulus(
-            source='hydra',
-            description=f"Multiplayer Debug Session {spawn.id} Finalized",
-            context_data={
-                'spawn_id': str(spawn.id),
-                'event_type': SignalTypeID.MULTIPLAYER_DEBUG
-            })
-        process_stimulus(stimulus)
-        return HttpResponse("Session terminated. Analysis started.")
+    # if action == 'analyze':
+    #     stimulus = Stimulus(
+    #         source='hydra',
+    #         description=f"Multiplayer Debug Session {spawn.id} Finalized",
+    #         context_data={
+    #             'spawn_id': str(spawn.id),
+    #             'event_type': SignalTypeID.MULTIPLAYER_DEBUG
+    #         })
+    #     process_stimulus(stimulus)
+    #     return HttpResponse("Session terminated. Analysis started.")
 
     return HttpResponse("Session terminated. No analysis triggered.")
 
