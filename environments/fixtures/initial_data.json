@@ -612,9 +612,9 @@
     "pk": 7,
     "fields": {
       "created": "2026-01-22T14:21:52.388Z",
-      "modified": "2026-01-22T14:21:52.388Z",
+      "modified": "2026-01-22T20:12:52.946Z",
       "name": "AppVersion File",
-      "argument": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Content\\AppVersion.json"
+      "argument": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Content\\_Version\\AppVersion.json"
     }
   },
   {
@@ -625,6 +625,7 @@
       "description": "Executes an internal python function mapped in the Caster.",
       "modified": "2026-01-21T00:00:00Z",
       "name": "INTERNAL_FUNCTION",
+      "internal": false,
       "working_path": "",
       "executable": "",
       "log": "",
@@ -639,6 +640,7 @@
       "description": "Standard Python Interpreter.",
       "modified": "2026-01-21T00:00:00Z",
       "name": "PYTHON",
+      "internal": false,
       "working_path": "C:\\talos",
       "executable": "C:\\talos\\venv\\Scripts\\python.exe",
       "log": "",
@@ -655,6 +657,7 @@
       "description": "Python Interpreter intended for manage.py commands.",
       "modified": "2026-01-21T00:00:00Z",
       "name": "DJANGO",
+      "internal": false,
       "working_path": "C:\\talos",
       "executable": "C:\\talos\\venv\\Scripts\\python.exe manage.py",
       "log": "C:\\talos\\logs\\django.log",
@@ -667,8 +670,9 @@
     "fields": {
       "created": "2026-01-21T00:00:00Z",
       "description": "Unreal Editor Commandlet (Headless).",
-      "modified": "2026-01-21T22:08:09.713Z",
+      "modified": "2026-01-22T20:16:15.362Z",
       "name": "UNREAL_CMD",
+      "internal": false,
       "working_path": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Binaries\\Win64",
       "executable": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Binaries\\Win64\\UnrealEditor-Cmd.exe",
       "log": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log",
@@ -689,6 +693,7 @@
       "description": "RunUAT Batch File.",
       "modified": "2026-01-21T00:00:00Z",
       "name": "UNREAL_AUTOMATION_TOOL",
+      "internal": false,
       "working_path": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Build\\BatchFiles",
       "executable": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Build\\BatchFiles\\RunUAT.bat",
       "log": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log",
@@ -707,6 +712,7 @@
       "description": "The cooked executable in the Staging Buffer.",
       "modified": "2026-01-21T00:00:00Z",
       "name": "UNREAL_STAGING",
+      "internal": false,
       "working_path": "C:\\steambuild\\Windows",
       "executable": "C:\\steambuild\\Windows\\HSHVacancy.exe",
       "log": "C:\\steambuild\\Windows\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log",
@@ -721,6 +727,7 @@
       "description": "The cooked executable in the Release Test folder.",
       "modified": "2026-01-21T00:00:00Z",
       "name": "UNREAL_RELEASE_TEST",
+      "internal": false,
       "working_path": "C:\\steambuild\\ReleaseTest",
       "executable": "C:\\steambuild\\ReleaseTest\\HSHVacancy.exe",
       "log": "C:\\steambuild\\ReleaseTest\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log",
@@ -735,6 +742,7 @@
       "description": "Shader Pipeline Cache Tools.",
       "modified": "2026-01-21T00:00:00Z",
       "name": "UNREAL_SHADER_TOOL",
+      "internal": false,
       "working_path": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Binaries\\Win64",
       "executable": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Binaries\\Win64\\ShaderPipelineCacheTools.exe",
       "log": "",
@@ -747,8 +755,9 @@
     "fields": {
       "created": "2026-01-22T16:14:49.475Z",
       "description": "update_version_metadata",
-      "modified": "2026-01-22T16:14:49.475Z",
+      "modified": "2026-01-22T19:46:41.160Z",
       "name": "update_version_metadata",
+      "internal": true,
       "working_path": "",
       "executable": "update_version_metadata",
       "log": "",
@@ -761,8 +770,9 @@
     "fields": {
       "created": "2026-01-22T16:20:19.871Z",
       "description": "deploy_release_test",
-      "modified": "2026-01-22T16:20:19.871Z",
+      "modified": "2026-01-22T19:47:23.773Z",
       "name": "deploy_release_test",
+      "internal": true,
       "working_path": "",
       "executable": "deploy_release_test",
       "log": "",
@@ -770,14 +780,12 @@
     }
   },
   {
-    "model": "environments.talosexecutablesupplementaryfileorpath",
+    "model": "environments.talosexecutableargumentassignment",
     "pk": 1,
     "fields": {
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z",
-      "name": "version_json",
-      "executable": 4,
-      "path": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\CustomVersion.json"
+      "executable": 9,
+      "order": 10,
+      "argument": 7
     }
   }
 ]

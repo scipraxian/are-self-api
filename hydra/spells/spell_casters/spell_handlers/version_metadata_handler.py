@@ -3,6 +3,7 @@
 import datetime
 import getpass
 import json
+import logging
 import os
 import time
 from typing import Any, Dict, Tuple
@@ -21,6 +22,9 @@ from hydra.spells.spell_casters.switches_and_arguments import (
 )
 from hydra.utils import log_system
 
+logger = logging.getLogger(__name__)
+
+
 _DEFAULT_INDENT = 4
 _ENCODING = 'utf-8'
 _DEFAULT_GAME_NAME = 'HSH: Vacancy'
@@ -36,6 +40,7 @@ def update_version_metadata(head_id: UUID) -> Tuple[int, str]:
         Tuple[int, str]: (exit_code, log_output)
             exit_code = 0 for success, 1 for failure
     """
+    logging.info(f'Updating version metadata for head {head_id}...')
     head = HydraHead.objects.get(id=head_id)
     spell = head.spell
     app_version_file = spell_switches_and_arguments(spell.id)
@@ -117,4 +122,5 @@ def update_version_metadata(head_id: UUID) -> Tuple[int, str]:
         return HANDLER_INTERNAL_ERROR_CODE, '\n'.join(log)
 
     log.append('[SUCCESS] Version Stamp Applied.')
+    logging.info(f'[Success]: {"\n".join(log)}')
     return HANDLER_SUCCESS_CODE, '\n'.join(log)

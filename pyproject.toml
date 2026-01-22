@@ -15,3 +15,9 @@ addopts = "-m \"not live\""
 
 [tool.ruff.format]
 quote-style = "single"
+
+[tool.ruff.lint]
+# Enable Pyflakes (F) and isort (I) for sorting/removal
+select = ["F", "E", "W", "I"]
+# Ensure F401 (unused imports) is never marked as "unfixable"
+fixable = ["ALL"]

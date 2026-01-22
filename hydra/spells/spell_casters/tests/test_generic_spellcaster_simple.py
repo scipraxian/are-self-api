@@ -3,11 +3,16 @@ from unittest.mock import MagicMock, mock_open, patch
 
 from django.test import TestCase
 
+from environments.models import ProjectEnvironment, TalosExecutable
 from hydra.models import (
-    HydraHead, HydraHeadStatus, HydraSpawn,
-    HydraSpawnStatus, HydraSpellbook, HydraSpell, HydraSwitch
+    HydraHead,
+    HydraHeadStatus,
+    HydraSpawn,
+    HydraSpawnStatus,
+    HydraSpell,
+    HydraSpellbook,
+    HydraSwitch,
 )
-from environments.models import TalosExecutable, ProjectEnvironment
 from hydra.spells.spell_casters.generic_spell_caster import GenericSpellCaster
 
 MODULE_PATH = 'hydra.spells.spell_casters.generic_spell_caster'
@@ -16,17 +21,20 @@ MODULE_PATH = 'hydra.spells.spell_casters.generic_spell_caster'
 class GenericSpellcasterTest(TestCase):
     fixtures = [
         'environments/fixtures/initial_data.json',
-        'hydra/fixtures/initial_data.json'
+        'hydra/fixtures/initial_data.json',
     ]
 
     def setUp(self):
         # 1. Setup Data Hierarchy using Fixtures
         self.spellbook = HydraSpellbook.objects.first()
-        self.proj_env = ProjectEnvironment.objects.get(name="Talos Default Environment")  # depreciated
+        self.proj_env = ProjectEnvironment.objects.get(
+            name='Talos Default Environment'
+        )  # depreciated
 
         # We need to ensure the Environment wrapper exists (it might not be in initial_data depending on version)
         # We check or create it to be safe for the test context
         from hydra.models import HydraEnvironment  # depreciated
+
         self.hydra_env, _ = HydraEnvironment.objects.get_or_create(
             project_environment=self.proj_env
         )
@@ -34,7 +42,7 @@ class GenericSpellcasterTest(TestCase):
         self.spawn = HydraSpawn.objects.create(
             status_id=HydraSpawnStatus.CREATED,
             spellbook=self.spellbook,
-            environment=self.hydra_env
+            environment=self.hydra_env,
         )
 
         # 2. Use a standard executable (PYTHON) for default state
@@ -42,15 +50,11 @@ class GenericSpellcasterTest(TestCase):
         self.python_exe = TalosExecutable.objects.get(id=TalosExecutable.PYTHON)
 
         self.spell = HydraSpell.objects.create(
-            name="Unit Test Spell",
-            talos_executable=self.python_exe,
-            order=1
+            name='Unit Test Spell', talos_executable=self.python_exe, order=1
         )
 
         self.head = HydraHead.objects.create(
-            spell=self.spell,
-            spawn=self.spawn,
-            status_id=HydraHeadStatus.CREATED
+            spell=self.spell, spawn=self.spawn, status_id=HydraHeadStatus.CREATED
         )
 
         # 3. Patch out the auto-execution in __init__ for ALL tests
@@ -65,14 +69,16 @@ class GenericSpellcasterTest(TestCase):
         try:
             GenericSpellCaster(self.head.id)
         except Exception as e:
-            self.fail(f"Failed to instantiate GenericSpellCaster: {e}")
+            self.fail(f'Failed to instantiate GenericSpellCaster: {e}')
         self.mock_cast.assert_called_once()
 
     @patch(f'{MODULE_PATH}.subprocess.Popen')
-    @patch('builtins.open', new_callable=mock_open, read_data="Log Line 1")
+    @patch('builtins.open', new_callable=mock_open, read_data='Log Line 1')
     @patch(f'{MODULE_PATH}.exists', return_value=True)
     @patch(f'{MODULE_PATH}.getmtime')
-    def test_generic_spellcaster_cast_spell(self, mock_mtime, mock_exists, mock_file, mock_popen):
+    def test_generic_spellcaster_cast_spell(
+        self, mock_mtime, mock_exists, mock_file, mock_popen
+    ):
         """Assert popen is called with the correct arguments."""
         self.patcher.stop()
 
@@ -86,7 +92,10 @@ class GenericSpellcasterTest(TestCase):
         # We mock _stream_log_file to prevent file access and loops
         with patch(f'{MODULE_PATH}.GenericSpellCaster._stream_log_file'):
             # We mock _get_command to isolate flow testing
-            with patch(f'{MODULE_PATH}.GenericSpellCaster._get_command', return_value=['python', 'script.py']):
+            with patch(
+                f'{MODULE_PATH}.GenericSpellCaster._get_command',
+                return_value=['python', 'script.py'],
+            ):
                 GenericSpellCaster(self.head.id)
 
         mock_popen.assert_called_once()
@@ -113,9 +122,10 @@ class GenericSpellcasterTest(TestCase):
         caster._execute_local_popen.reset_mock()
         caster._execute_local_python.reset_mock()
 
-        # Case 2: Internal Function (ID 1) -> Python
-        # Setup: Switch head to INTERNAL_FUNCTION
-        internal_exe = TalosExecutable.objects.get(id=TalosExecutable.INTERNAL_FUNCTION)
+        # Case 2: Version Handler (ID 9) -> Python
+        # Setup: Switch head to VERSION_HANDLER
+        # FIX: Use the actual internal handler (ID 9) from fixtures
+        internal_exe = TalosExecutable.objects.get(id=TalosExecutable.VERSION_HANDLER)
         caster.spell.talos_executable = internal_exe
 
         caster._executable_router()
@@ -128,7 +138,7 @@ class GenericSpellcasterTest(TestCase):
     def test_generic_spellcaster_block_for_log_file(self, mock_mtime, mock_exists):
         """Assert block for log is called with the correct arguments."""
         # Ensure the executable has a log path set
-        self.python_exe.log = "C:/Logs/test.log"
+        self.python_exe.log = 'C:/Logs/test.log'
         self.python_exe.save()
 
         caster = GenericSpellCaster(self.head.id)
@@ -148,11 +158,13 @@ class GenericSpellcasterTest(TestCase):
         mock_exists.assert_called_with(self.python_exe.log)
 
     @patch(f'{MODULE_PATH}.spell_switches_and_arguments')
-    def test_generic_spellcaster_get_command_returns_correct_command(self, mock_switches):
+    def test_generic_spellcaster_get_command_returns_correct_command(
+        self, mock_switches
+    ):
         """Assert get command returns the correct command string."""
         # Setup the mock to return what the helper WOULD return
         # This mocks the integration with the new helper function
-        mock_switches.return_value = "arg1 arg2 -switch1"
+        mock_switches.return_value = 'arg1 arg2 -switch1'
 
         caster = GenericSpellCaster(self.head.id)
 
@@ -161,9 +173,9 @@ class GenericSpellcasterTest(TestCase):
 
         # Fixture PYTHON path is "C:\talos\venv\Scripts\python.exe"
         # We expect: "PATH arg1 arg2 -switch1"
-        self.assertIn("python.exe", cmd)
-        self.assertIn("arg1 arg2", cmd)
-        self.assertIn("-switch1", cmd)
+        self.assertIn('python.exe', cmd)
+        self.assertIn('arg1 arg2', cmd)
+        self.assertIn('-switch1', cmd)
 
         # Verify we actually called the helper
         mock_switches.assert_called_with(self.spell.id)
@@ -186,8 +198,9 @@ class GenericSpellcasterTest(TestCase):
         caster._stream_log_file.reset_mock()
         caster._block_for_log_file.reset_mock()
 
-        # Case 2: Internal Function (INTERNAL = 1) -> Should NOT Stream
-        internal_exe = TalosExecutable.objects.get(id=TalosExecutable.INTERNAL_FUNCTION)
+        # Case 2: Version Handler (ID 9) -> Should NOT Stream
+        # FIX: Use the actual internal handler (ID 9) from fixtures
+        internal_exe = TalosExecutable.objects.get(id=TalosExecutable.VERSION_HANDLER)
         caster.spell.talos_executable = internal_exe
         caster._log_router()
 
@@ -197,10 +210,12 @@ class GenericSpellcasterTest(TestCase):
     @patch(f'{MODULE_PATH}.exists', return_value=True)
     @patch(f'{MODULE_PATH}.getmtime')
     @patch(f'{MODULE_PATH}.sleep')
-    def test_block_for_log_waits_for_fresh_file(self, mock_sleep, mock_mtime, mock_exists):
+    def test_block_for_log_waits_for_fresh_file(
+        self, mock_sleep, mock_mtime, mock_exists
+    ):
         """Ensures the caster does NOT attach to a log file older than the launch time."""
         # Ensure we have a log path
-        self.python_exe.log = "C:/Logs/test.log"
+        self.python_exe.log = 'C:/Logs/test.log'
         self.python_exe.save()
 
         caster = GenericSpellCaster(self.head.id)
@@ -221,7 +236,7 @@ class GenericSpellcasterTest(TestCase):
     @patch(f'{MODULE_PATH}.sleep')
     def test_block_for_log_timeouts_if_no_file(self, mock_sleep, mock_exists):
         """Ensures we don't wait forever if the game fails to create a log."""
-        self.python_exe.log = "C:/Logs/test.log"
+        self.python_exe.log = 'C:/Logs/test.log'
         self.python_exe.save()
 
         caster = GenericSpellCaster(self.head.id)

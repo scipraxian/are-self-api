@@ -5,11 +5,19 @@ import uuid
 from os.path import exists, getmtime
 from time import sleep
 
-from environments.models import TalosExecutable
 from hydra.models import HydraHead, HydraHeadStatus
-from hydra.spells.spell_casters.spell_handlers.deployment_handler import deploy_release_test
-from hydra.spells.spell_casters.switches_and_arguments import spell_switches_and_arguments
-from hydra.spells.spell_casters.spell_handlers.version_metadata_handler import update_version_metadata
+from hydra.spells.spell_casters.spell_handlers.deployment_handler import (
+    deploy_release_test,
+)
+from hydra.spells.spell_casters.spell_handlers.spell_handler_codes import (
+    HANDLER_SUCCESS_CODE,
+)
+from hydra.spells.spell_casters.spell_handlers.version_metadata_handler import (
+    update_version_metadata,
+)
+from hydra.spells.spell_casters.switches_and_arguments import (
+    spell_switches_and_arguments,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +26,7 @@ HANDLERS = dict(
     deploy_release_test=deploy_release_test,
     update_version_metadata=update_version_metadata,
 )
+
 
 class GenericSpellCaster(object):
     LOG_START_MESSAGE = 'Starting spell execution.'
@@ -34,42 +43,50 @@ class GenericSpellCaster(object):
 
     HEAD_STATUS_FIELD_NAME = 'status'
 
-    def __init__(self, head_id: uuid):  # todo: callback
+    def __init__(self, head_id: uuid.UUID):
+        self.verbose_logging = True
+        self._debug_log('Created Generic Spell Caster')
         self.status = self.STATUS_CREATED
         self.head_id = head_id
-
-        self.head = HydraHead.objects.get(id=head_id)
-        self.spell = self.head.spell
+        self.running_subprocess = None
         self.running_log = []
+        self._start_head()
+
+    def _start_head(self):
+        self.head = HydraHead.objects.get(id=self.head_id)
+        self.spell = self.head.spell
         self._preflight()
         self._cast_spell()
 
     def _debug_log(self, message: str):
         # TODO: build nice message?
-        logger.debug(message)
+        if self.verbose_logging:
+            logger.info(message)
 
     def _init_running_log(self):
         """Create the log array."""
-        self.running_log = [self.LOG_START_MESSAGE, ]
+        self.running_log = [
+            self.LOG_START_MESSAGE,
+        ]
 
     def _update_head_status(self, status_id: int):
         self.head.status_id = status_id
         self.head.save(update_fields=['status'])
 
     def _preflight(self):
-        self._debug_log(f"Preflight for {self.spell.name}")
+        self._debug_log(f'Preflight for {self.spell.name}')
         self._init_running_log()
 
     def _get_command(self):
         additional = spell_switches_and_arguments(self.spell.id)
         result = f'{self.spell.talos_executable.executable} {additional}'.strip()
-        self._debug_log(f"Command is {result}")
+        self._debug_log(f'Command is {result}')
         return result
 
     def _post_head_log(self):
         """Save the log to the DB. TODO: do this asynchronously, it may block."""
-        self._debug_log(f"Post Log to DB {self.spell.talos_executable.log}")
-        self.head.spell_log = "".join(self.running_log)
+        self._debug_log(f'Post Log to DB {self.spell.talos_executable.log}')
+        self.head.spell_log = ''.join(self.running_log)
 
     def _block_for_log_file(self):
         """
@@ -89,7 +106,9 @@ class GenericSpellCaster(object):
         while retries < max_retries:
             # 1. Process Watchdog: Did it die instantly?
             if self.running_subprocess and self.running_subprocess.poll() is not None:
-                logger.error(f'Process died (Exit {self.running_subprocess.returncode}) before log appeared.')
+                logger.error(
+                    f'Process died (Exit {self.running_subprocess.returncode}) before log appeared.'
+                )
                 self._update_head_status(HydraHeadStatus.FAILED)
                 self.status = self.STATUS_FAILED
                 return
@@ -103,12 +122,16 @@ class GenericSpellCaster(object):
 
                     # Freshness Test: Is file newer than launch time? (with 1s buffer)
                     if file_mtime >= (launch_time - 1.0):
-                        self._debug_log(f'Locked onto fresh log file: {self.spell.talos_executable.log}')
+                        self._debug_log(
+                            f'Locked onto fresh log file: {self.spell.talos_executable.log}'
+                        )
                         return
                     else:
                         # Log exists, but it's old. Wait for UE to overwrite it.
                         if retries % 5 == 0:
-                            self._debug_log(f'Ignoring stale log (Mtime: {file_mtime} < Launch: {launch_time})')
+                            self._debug_log(
+                                f'Ignoring stale log (Mtime: {file_mtime} < Launch: {launch_time})'
+                            )
                 except OSError:
                     pass  # File locked by OS, retry next tick.
 
@@ -116,22 +139,30 @@ class GenericSpellCaster(object):
             retries += 1
 
         # 3. Timeout
-        logger.error(f'Timed out waiting for log file: {self.spell.talos_executable.log}')
+        logger.error(
+            f'Timed out waiting for log file: {self.spell.talos_executable.log}'
+        )
         self.status = self.STATUS_FAILED
 
     def _stream_log_file(self):
         """While running_subprocess, read the entire log each loop and post to the DB."""
-        if self.status in self.STATUSES_WHICH_HALT: return
+        if self.status in self.STATUSES_WHICH_HALT:
+            return
         self.status = self.STATUS_STREAMING_LOGS
-        with open(self.spell.talos_executable.log, 'r', encoding='utf-8', errors='replace') as local_log:
-            while self.running_subprocess.poll() is not None and self.status not in self.STATUSES_WHICH_HALT:
+        with open(
+            self.spell.talos_executable.log, 'r', encoding='utf-8', errors='replace'
+        ) as local_log:
+            while (
+                self.running_subprocess.poll() is not None
+                and self.status not in self.STATUSES_WHICH_HALT
+            ):
                 self.running_log = local_log.read()
                 self._post_head_log()
                 # TODO: strongly consider a hook here, the agent would know if it updated.
                 sleep(0.1)
 
     def _log_router(self):
-        if self.spell.talos_executable_id != TalosExecutable.INTERNAL_FUNCTION:
+        if not self.spell.talos_executable.internal:
             self._debug_log(f'Blocking for Log {self.spell.talos_executable.log}')
             self._block_for_log_file()
             self._debug_log(f'Streaming Log {self.spell.talos_executable.log}')
@@ -142,7 +173,9 @@ class GenericSpellCaster(object):
     def _execute_local_python(self):
         # Safety check for missing handlers
         if self.spell.talos_executable.executable not in HANDLERS:
-            raise NotImplementedError(f"No handler found for slug: {self.spell.executable.slug}")
+            raise NotImplementedError(
+                f'No handler found for slug: {self.spell.executable.slug}'
+            )
 
         handler = HANDLERS[self.spell.talos_executable.executable]
 
@@ -150,13 +183,19 @@ class GenericSpellCaster(object):
         output_log = 'attempting'
         return_code = 1
         try:
+            self._debug_log('Handler Start')
             return_code, output_log = handler(self.head_id)
+            self._debug_log(f'Handler return code is {return_code}')
         except Exception as e:
             self.head.spell_log = f'Native Handler Exception: {str(e)}'
             self._update_head_status(HydraHeadStatus.FAILED)
         self.head.spell_log = output_log
-        self.head.status_id = (HydraHeadStatus.SUCCESS
-                               if return_code == 0 else HydraHeadStatus.FAILED)
+        head_status_id = (
+            HydraHeadStatus.SUCCESS
+            if return_code == HANDLER_SUCCESS_CODE
+            else HydraHeadStatus.FAILED
+        )
+        self.head.status_id = head_status_id
         self.head.save()
 
     def _execute_local_popen(self):
@@ -164,15 +203,18 @@ class GenericSpellCaster(object):
         execution_command = self._get_command()
         try:
             self.running_subprocess = subprocess.Popen(
-                execution_command, creationflags=subprocess.CREATE_NEW_CONSOLE)
+                execution_command, creationflags=subprocess.CREATE_NEW_CONSOLE
+            )
         except Exception as e:
             # TODO: narrow exception type
             raise RuntimeError(f'Failed to launch spell execution: {e}')
 
     def _executable_router(self):
-        if self.spell.talos_executable_id == TalosExecutable.INTERNAL_FUNCTION:
+        if self.spell.talos_executable.internal:
+            self._debug_log(f'Internal Python Route {self.spell.name}')
             self._execute_local_python()
         else:
+            self._debug_log(f'POpen Route {self.spell.name}')
             self._execute_local_popen()
 
     def _post_processor(self):

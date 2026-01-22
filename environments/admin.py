@@ -1,7 +1,12 @@
 from django.contrib import admin
 
-from .models import (TalosExecutable, TalosExecutableArgument, TalosExecutableArgumentAssignment,
-                     TalosExecutableSupplementaryFileOrPath, TalosExecutableSwitch)
+from .models import (
+    TalosExecutable,
+    TalosExecutableArgument,
+    TalosExecutableArgumentAssignment,
+    TalosExecutableSupplementaryFileOrPath,
+    TalosExecutableSwitch,
+)
 
 
 @admin.register(TalosExecutableSwitch)
@@ -47,7 +52,7 @@ class TalosExecutableAdmin(admin.ModelAdmin):
             'fields': ('name', 'description')
         }),
         ('Execution', {
-            'fields': ('executable', 'working_path', 'log'),
+            'fields': ('internal', 'executable', 'working_path', 'log'),
             'description': "Absolute paths to the binary, CWD, and log output."
         }),
         ('Flags & Options', {
