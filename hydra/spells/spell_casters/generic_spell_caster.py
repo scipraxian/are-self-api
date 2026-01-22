@@ -7,16 +7,16 @@ from time import sleep
 
 from environments.models import TalosExecutable
 from hydra.models import HydraHead, HydraHeadStatus
-from hydra.spells.distributor import distribute_build_native
+from hydra.spells.spell_casters.spell_handlers.deployment_handler import deploy_release_test
 from hydra.spells.spell_casters.switches_and_arguments import spell_switches_and_arguments
-from hydra.spells.version_stamper import version_stamp_native
+from hydra.spells.spell_casters.spell_handlers.version_metadata_handler import update_version_metadata
 
 logger = logging.getLogger(__name__)
 
 
 HANDLERS = dict(
-    distribute_fleet=distribute_build_native,
-    version_stamper=version_stamp_native,
+    deploy_release_test=deploy_release_test,
+    update_version_metadata=update_version_metadata,
 )
 
 class GenericSpellCaster(object):

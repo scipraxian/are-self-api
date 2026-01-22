@@ -57,9 +57,9 @@ class TalosExecutable(DefaultFieldsMixin, DescriptionMixin):
     UNREAL_RELEASE_TEST = 7  # C:\steambuild\ReleaseTest\HSHVacancy.exe
     UNREAL_SHADER_TOOL = 8  # C:\\Program Files\\Epic Games\\UE_5.6/Engine/Binaries/Win64/ShaderPipelineCacheTools.exe
 
-    working_path = models.CharField(max_length=500, help_text="Where to run the executable.")
+    working_path = models.CharField(max_length=500, help_text="Where to run the executable.", blank=True)
     executable = models.CharField(max_length=500, help_text="Full path to the executable, including filename.")
-    log = models.CharField(max_length=500, help_text="Full path to the log, including filename.")
+    log = models.CharField(max_length=500, help_text="Full path to the log, including filename.", blank=True)
     switches = models.ManyToManyField(TalosExecutableSwitch, blank=True)
 
 

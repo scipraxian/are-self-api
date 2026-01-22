@@ -8,16 +8,17 @@ import time
 from typing import Any, Dict, Tuple
 
 from hydra.models import HydraHead
-from hydra.spells.spell_casters.spell_caster_codes import HANDLER_INTERNAL_ERROR_CODE, HANDLER_SUCCESS_CODE, \
+from hydra.spells.spell_casters.spell_handlers.spell_handler_codes import HANDLER_INTERNAL_ERROR_CODE, HANDLER_SUCCESS_CODE, \
     HANDLER_WRITE_ERROR_CODE
 from hydra.spells.spell_casters.switches_and_arguments import spell_switches_and_arguments
-from hydra.utils import HydraContext, resolve_template, log_system
+from hydra.utils import log_system
 
 _DEFAULT_INDENT = 4
 _ENCODING = 'utf-8'
 _DEFAULT_GAME_NAME = 'HSH: Vacancy'
 
-def version_stamp_native(head_id: int) -> Tuple[int, str]:
+
+def update_version_metadata(head_id: int) -> Tuple[int, str]:
     """Updates the application version JSON file with build metadata.
 
     Args:

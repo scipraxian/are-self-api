@@ -7,7 +7,7 @@ from core.models import RemoteTarget
 
 logger = logging.getLogger(__name__)
 
-def distribute_build_native(head):
+def deploy_release_test(head):
     """
     Native distribution logic.
     Mirrors the Project Environment's staging/build location to the fleet.

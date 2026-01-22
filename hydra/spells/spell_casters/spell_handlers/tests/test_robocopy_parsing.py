@@ -1,5 +1,5 @@
 import unittest
-from hydra.spells.distributor import _parse_robocopy_summary
+from hydra.spells.spell_casters.spell_handlers.deployment_handler import _parse_robocopy_summary
 
 class RobocopyParsingTest(unittest.TestCase):
     def test_parse_standard_bytes(self):

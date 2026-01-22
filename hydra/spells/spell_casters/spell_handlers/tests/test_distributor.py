@@ -10,7 +10,7 @@ sys.path.append(os.getcwd())
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
-from hydra.spells.distributor import _sync_target
+from hydra.spells.spell_casters.spell_handlers.deployment_handler import _sync_target
 from core.models import RemoteTarget
 from environments.models import ProjectEnvironment
 

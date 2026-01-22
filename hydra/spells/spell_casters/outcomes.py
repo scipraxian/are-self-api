@@ -5,11 +5,12 @@ import shutil
 from talos_frontal.logic import process_stimulus
 from talos_thalamus.models import Stimulus
 from talos_thalamus.types import SignalTypeID
-from .models import HydraHead, HydraHeadStatus, HydraOutcomeActionID
-from .utils import HydraContext, log_system, resolve_template
+from hydra.models import HydraHead, HydraHeadStatus, HydraOutcomeActionID
+from hydra.utils import HydraContext, log_system, resolve_template
 
 
 def process_outcomes(head_id):
+    raise NotImplementedError
     try:
         head = HydraHead.objects.select_related(
             'spawn__environment__project_environment', 'spell').get(id=head_id)

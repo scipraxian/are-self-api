@@ -742,6 +742,20 @@
     }
   },
   {
+    "model": "environments.talosexecutable",
+    "pk": 9,
+    "fields": {
+      "created": "2026-01-22T16:14:49.475Z",
+      "description": "update_version_metadata",
+      "modified": "2026-01-22T16:14:49.475Z",
+      "name": "update_version_metadata",
+      "working_path": "",
+      "executable": "update_version_metadata",
+      "log": "",
+      "switches": []
+    }
+  },
+  {
     "model": "environments.talosexecutablesupplementaryfileorpath",
     "pk": 1,
     "fields": {

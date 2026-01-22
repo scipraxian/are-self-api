@@ -7,16 +7,16 @@ import time
 
 from celery import shared_task
 
-from .models import HydraHead, HydraHeadStatus
+from .models import HydraHeadStatus
 from .spells.spell_casters.generic_spell_caster import GenericSpellCaster
 from .utils import HydraContext, get_timestamp, log_system, resolve_template
 
 logger = logging.getLogger(__name__)
 
+# depreciated
 
 
-
-def build_command(hydra_head):
+def build_command(hydra_head): # depreciated
     spawn = hydra_head.spawn
     env = spawn.environment.project_environment
     spell = hydra_head.spell

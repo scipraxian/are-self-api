@@ -107,7 +107,7 @@
       "created": "2026-01-09T12:00:00Z",
       "description": "Native Python Function: version_stamper.version_stamp_native",
       "modified": "2026-01-09T12:00:00Z",
-      "name": "Version Stamper",
+      "name": "Version Stamper depreciated",
       "slug": "version_stamper",
       "type": 3,
       "path_template": ""
@@ -854,9 +854,9 @@
     "pk": 130,
     "fields": {
       "created": "2026-01-08T18:00:00Z",
-      "modified": "2026-01-09T15:15:24.078Z",
-      "name": "Distribute",
-      "talos_executable": 1,
+      "modified": "2026-01-22T16:20:59.188Z",
+      "name": "Deploy",
+      "talos_executable": 10,
       "executable": 5,
       "order": 40,
       "switches": [],
@@ -868,9 +868,9 @@
     "pk": 140,
     "fields": {
       "created": "2026-01-09T12:00:00Z",
-      "modified": "2026-01-09T12:00:00Z",
-      "name": "Stamp Build Version",
-      "talos_executable": 1,
+      "modified": "2026-01-22T16:15:08.374Z",
+      "name": "Version Metadata",
+      "talos_executable": 9,
       "executable": 6,
       "order": 5,
       "switches": [],
@@ -990,9 +990,9 @@
     "pk": "0245b699-5b9a-43ec-9391-b788b578d25f",
     "fields": {
       "created": "2026-01-09T20:16:00.695Z",
-      "description": "Version Stamp",
+      "description": "Create and place Version Metadata.",
       "modified": "2026-01-20T16:15:44.857Z",
-      "name": "Stamp",
+      "name": "Version Meta",
       "spells": [
         140
       ]
