@@ -649,7 +649,7 @@
     "pk": 1,
     "fields": {
       "created": "2026-01-01T00:00:00Z",
-      "modified": "2026-01-21T20:21:41.649Z",
+      "modified": "2026-01-22T22:13:06.759Z",
       "name": "Test",
       "talos_executable": 4,
       "executable": 1,
@@ -660,7 +660,9 @@
         17,
         40,
         41,
-        43
+        47,
+        48,
+        49
       ],
       "active_switches": [
         1,
@@ -705,12 +707,13 @@
     "pk": 3,
     "fields": {
       "created": "2026-01-01T00:00:00Z",
-      "modified": "2026-01-21T20:08:34.442Z",
+      "modified": "2026-01-23T19:58:04.138Z",
       "name": "Staging: Record PSOs",
       "talos_executable": 6,
       "executable": 3,
       "order": 3,
       "switches": [
+        17,
         23,
         24,
         25,
@@ -731,16 +734,17 @@
     "pk": 4,
     "fields": {
       "created": "2026-01-01T00:00:00Z",
-      "modified": "2026-01-21T20:05:57.495Z",
-      "name": "Staging",
-      "talos_executable": 1,
+      "modified": "2026-01-23T20:29:01.872Z",
+      "name": "Staging Run Once",
+      "talos_executable": 6,
       "executable": 3,
       "order": 1,
       "switches": [
         16,
         23,
         24,
-        25
+        25,
+        40
       ],
       "active_switches": [
         21,
@@ -753,7 +757,7 @@
     "pk": 100,
     "fields": {
       "created": "2026-01-07T22:58:23.399Z",
-      "modified": "2026-01-21T20:35:40.704Z",
+      "modified": "2026-01-23T20:13:48.542Z",
       "name": "Compile PSO Cache",
       "talos_executable": 4,
       "executable": 1,
@@ -761,14 +765,9 @@
       "switches": [
         2,
         3,
-        21,
         22,
         26,
-        27,
-        42,
-        43,
-        45,
-        46
+        27
       ],
       "active_switches": [
         1,
@@ -789,7 +788,7 @@
     "pk": 110,
     "fields": {
       "created": "2026-01-08T15:50:00Z",
-      "modified": "2026-01-21T20:26:33.347Z",
+      "modified": "2026-01-23T20:19:02.901Z",
       "name": "UAT Build",
       "talos_executable": 5,
       "executable": 2,
@@ -810,7 +809,6 @@
         35,
         37,
         38,
-        39,
         44
       ],
       "active_switches": [
@@ -898,12 +896,17 @@
     "pk": 143,
     "fields": {
       "created": "2026-01-17T02:00:50.156Z",
-      "modified": "2026-01-21T20:02:24.166Z",
+      "modified": "2026-01-23T18:34:21.715Z",
       "name": "MP Local UAT",
       "talos_executable": 7,
       "executable": 7,
       "order": 1,
-      "switches": [],
+      "switches": [
+        23,
+        24,
+        25,
+        40
+      ],
       "active_switches": []
     }
   },
@@ -912,6 +915,69 @@
     "pk": 1,
     "fields": {
       "spell": 2,
+      "order": 10,
+      "argument": 6
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 2,
+    "fields": {
+      "spell": 1,
+      "order": 10,
+      "argument": 3
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 3,
+    "fields": {
+      "spell": 100,
+      "order": 1,
+      "argument": 3
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 4,
+    "fields": {
+      "spell": 100,
+      "order": 2,
+      "argument": 5
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 5,
+    "fields": {
+      "spell": 100,
+      "order": 3,
+      "argument": 4
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 6,
+    "fields": {
+      "spell": 100,
+      "order": 4,
+      "argument": 1
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 7,
+    "fields": {
+      "spell": 100,
+      "order": 5,
+      "argument": 2
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 8,
+    "fields": {
+      "spell": 110,
       "order": 10,
       "argument": 6
     }
@@ -1043,7 +1109,7 @@
     "fields": {
       "created": "2026-01-01T00:00:00Z",
       "description": null,
-      "modified": "2026-01-20T16:27:09.721Z",
+      "modified": "2026-01-23T20:00:48.967Z",
       "name": "Stage",
       "spells": [
         2,
