@@ -1,60 +1,42 @@
 from hydra.models import HydraSpell
 
 
-def spaces_have_quotes(string: str) -> str:
-    """Assert strings with spaces have quotes around them."""
-    if ' ' in string and '"' not in string:
-        return f'"{string}"'
-    return string
-
-
-def spell_switches_and_arguments(spell_id: int) -> tuple[str, list[str]]:
+def spell_switches_and_arguments(spell_id: int) -> list[str]:
     """Resolve the arguments and switches for the spell.
 
-    returns: (str([ordered arguments] [switches]),
-                  list[str]([ordered arguments] [switches]))
-
-    TODO: resolve templates.
+    returns: list[str]([ordered arguments] [switches])
     """
     spell = HydraSpell.objects.get(id=spell_id)
 
-    ordered_arguments_string = ''
     ordered_arguments_list = []
 
-    for (
-        assignment
-    ) in spell.talos_executable.talosexecutableargumentassignment_set.all():
-        item_string = spaces_have_quotes(assignment.argument.argument.strip())
-        ordered_arguments_string += ' ' + item_string
-        ordered_arguments_list.append(item_string)
+    # 1. Process Arguments
+    all_assignments = list(
+        spell.talos_executable.talosexecutableargumentassignment_set.all()
+    ) + list(spell.hydraspellargumentassignment_set.all())
 
-    for assignment in spell.hydraspellargumentassignment_set.all():
-        item_string = spaces_have_quotes(assignment.argument.argument.strip())
-        ordered_arguments_string += ' ' + item_string
-        ordered_arguments_list.append(item_string)
+    for assignment in all_assignments:
+        raw_arg = assignment.argument.argument.strip()
+        # Execution List: Raw string (subprocess handles quoting)
+        ordered_arguments_list.append(raw_arg)
 
-    ordered_arguments_string = ordered_arguments_string.strip()
-
-    switch_string = ''
     switch_list = []
 
-    for switch in spell.talos_executable.switches.all():
-        item_string = spaces_have_quotes(switch.flag.strip())
-        if switch.value:
-            item_string += spaces_have_quotes(switch.value.strip())
-        switch_string += ' ' + item_string
-        switch_list.append(item_string)
+    # 2. Process Switches
+    all_switches = list(spell.talos_executable.switches.all()) + list(
+        spell.switches.all()
+    )
 
-    for switch in spell.switches.all():
-        item_string = spaces_have_quotes(switch.flag.strip())
-        if switch.value:
-            item_string += spaces_have_quotes(switch.value.strip())
-        switch_string += ' ' + item_string
-        switch_list.append(item_string)
+    for switch in all_switches:
+        flag = switch.flag.strip()
+        value = switch.value.strip() if switch.value else ''
 
-    switch_string = switch_string.strip()
+        # Execution List Construction
+        # We append the flag+value as one item, RAW (no added quotes)
+        # Python's subprocess will handle wrapping this safely.
+        exec_item = flag + value
+        switch_list.append(exec_item)
 
-    final_string = (ordered_arguments_string + ' ' + switch_string).strip()
     final_list = ordered_arguments_list + switch_list
 
-    return final_string, final_list
+    return final_list

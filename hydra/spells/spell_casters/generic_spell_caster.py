@@ -1,7 +1,10 @@
 import asyncio
 import logging
+import sys
 import time
 import uuid
+
+from asgiref.sync import sync_to_async
 
 from hydra.models import HydraHead, HydraHeadStatus
 from hydra.process_runner.log_monitor import AsyncLogMonitor
@@ -16,7 +19,6 @@ from hydra.spells.spell_casters.spell_handlers.version_metadata_handler import (
     update_version_metadata,
 )
 from hydra.spells.spell_casters.switches_and_arguments import (
-    spaces_have_quotes,
     spell_switches_and_arguments,
 )
 
@@ -118,12 +120,16 @@ class GenericSpellCaster(object):
             buffer.append(line)
             if len(buffer) > 20 or (time.time() - last_save) > 1.0:
                 self.head.execution_log += ''.join(buffer)
-                self.head.save(update_fields=[self.EXECUTION_LOG_FIELD_NAME])
+                await sync_to_async(self.head.save)(
+                    update_fields=[self.EXECUTION_LOG_FIELD_NAME]
+                )
                 buffer = []
                 last_save = time.time()
         if buffer:
             self.head.execution_log += ''.join(buffer)
-            self.head.save(update_fields=[self.EXECUTION_LOG_FIELD_NAME])
+            await sync_to_async(self.head.save)(
+                update_fields=[self.EXECUTION_LOG_FIELD_NAME]
+            )
         return await runner.wait()
 
     async def _watch_monitor(
@@ -134,28 +140,29 @@ class GenericSpellCaster(object):
             lines = await monitor.check_for_lines()
             if lines:
                 self.head.spell_log += ''.join(lines)
-                self.head.save(update_fields=[self.SPELL_LOG_FIELD_NAME])
+                await sync_to_async(self.head.save)(
+                    update_fields=[self.SPELL_LOG_FIELD_NAME]
+                )
             if runner.process and runner.process.returncode is not None:
                 lines = await monitor.check_for_lines()
                 if lines:
                     self.head.spell_log += ''.join(lines)
-                    self.head.save(update_fields=[self.SPELL_LOG_FIELD_NAME])
+                    await sync_to_async(self.head.save)(
+                        update_fields=[self.SPELL_LOG_FIELD_NAME]
+                    )
                 break
             await asyncio.sleep(0.5)
 
-    async def _async_pipeline(self):
+    async def _async_pipeline(self, full_cmd_list, log_path):
         """Orchestrates the concurrent execution of process and logs."""
         self.launch_time = time.time()
-        cmd_string, cmd_list = spell_switches_and_arguments(self.spell.id)
-        full_cmd_list = [
-            spaces_have_quotes(self.spell.talos_executable.executable)
-        ] + cmd_list
         self.head.execution_log += (
-            f'[CMD] {cmd_string}\n[LIST] {full_cmd_list}\n'
+            f'[CMD] {" ".join(full_cmd_list)}\n[LIST] {full_cmd_list}\n'
         )
-        self.head.save(update_fields=[self.EXECUTION_LOG_FIELD_NAME])
+        await sync_to_async(self.head.save)(
+            update_fields=[self.EXECUTION_LOG_FIELD_NAME]
+        )
 
-        log_path = self.spell.talos_executable.log
         log_monitor = AsyncLogMonitor(log_path) if log_path else None
 
         runner = AsyncProcessRunner(command=full_cmd_list)
@@ -187,18 +194,24 @@ class GenericSpellCaster(object):
         Replaced strict blocking Popen with asyncio.run(pipeline).
         """
         try:
-            exit_code = asyncio.run(self._async_pipeline())
-
+            cmd_list = spell_switches_and_arguments(self.spell.id)
+            full_cmd_list = [self.spell.talos_executable.executable] + cmd_list
+            log_path = self.spell.talos_executable.log
+            if sys.platform == 'win32':
+                asyncio.set_event_loop_policy(
+                    asyncio.WindowsProactorEventLoopPolicy()
+                )
+            exit_code = asyncio.run(
+                self._async_pipeline(full_cmd_list, log_path)
+            )
             if exit_code != 0:
                 self.head.execution_log += (
                     f'\n[EXIT] Process failed with code {exit_code}\n'
                 )
-
                 self.status = self.STATUS_FAILED
                 self._update_head_status(HydraHeadStatus.FAILED)
             else:
                 self.head.execution_log += '\n[EXIT] Success.\n'
-
             self.head.save(update_fields=[self.EXECUTION_LOG_FIELD_NAME])
 
         except Exception as e:
@@ -207,11 +220,9 @@ class GenericSpellCaster(object):
             self.head.save(update_fields=[self.EXECUTION_LOG_FIELD_NAME])
             self.status = self.STATUS_FAILED
             self._update_head_status(HydraHeadStatus.FAILED)
-            # TODO: consider not raising and just passing the failure.
             raise RuntimeError(f'Failed to launch spell execution: {e}')
 
     def _executable_router(self):
-        """Route the execution to the appropriate method."""
         if self.spell.talos_executable.internal:
             self._debug_log(f'Internal Python Route {self.spell.name}')
             self._execute_local_python()
@@ -221,9 +232,7 @@ class GenericSpellCaster(object):
 
     def _post_processor(self):
         """Run post processing steps after streaming logs."""
-        if self.status not in self.STATUSES_WHICH_HALT:
-            self.status = self.STATUS_POST_PROCESSING
-        # TODO: If errors seen here, check if post processing is needed.
+        self.status = self.STATUS_POST_PROCESSING
 
     def _cast_spell(self):
         self._debug_log(f'Launching {self.spell.name}')

@@ -266,8 +266,8 @@
     "pk": 21,
     "fields": {
       "created": "2026-01-21T19:44:05.124Z",
-      "modified": "2026-01-21T22:02:44.328Z",
-      "name": "xCMD Expand",
+      "modified": "2026-01-22T21:55:52.364Z",
+      "name": "xDepreciatedCMD Expand",
       "flag": "expand",
       "value": ""
     }
@@ -321,10 +321,10 @@
     "pk": 26,
     "fields": {
       "created": "2026-01-21T19:47:12.352Z",
-      "modified": "2026-01-21T19:47:45.846Z",
+      "modified": "2026-01-23T18:07:04.395Z",
       "name": "CMD Disable LC Var",
       "flag": "-dpcvars=",
-      "value": "\"LiveCoding.Enable=0\""
+      "value": "LiveCoding.Enable=0"
     }
   },
   {
@@ -453,7 +453,7 @@
     "pk": 38,
     "fields": {
       "created": "2026-01-21T19:56:42.630Z",
-      "modified": "2026-01-21T20:21:10.849Z",
+      "modified": "2026-01-23T18:07:04.395Z",
       "name": "Project Flag",
       "flag": "-project=",
       "value": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\HSHVacancy.uproject"
@@ -464,8 +464,8 @@
     "pk": 39,
     "fields": {
       "created": "2026-01-21T19:57:15.111Z",
-      "modified": "2026-01-21T22:03:15.890Z",
-      "name": "xBuildCookRun",
+      "modified": "2026-01-22T21:56:50.442Z",
+      "name": "xDepreciatedBuildCookRun",
       "flag": "BuildCookRun",
       "value": ""
     }
@@ -486,7 +486,7 @@
     "pk": 41,
     "fields": {
       "created": "2026-01-21T19:58:18.758Z",
-      "modified": "2026-01-21T19:58:18.758Z",
+      "modified": "2026-01-23T18:07:04.393Z",
       "name": "Exec Automation Tests",
       "flag": "-ExecCmds=",
       "value": "Automation RunTests HSH.Tests;Quit"
@@ -497,8 +497,8 @@
     "pk": 42,
     "fields": {
       "created": "2026-01-21T20:16:52.407Z",
-      "modified": "2026-01-21T22:03:02.332Z",
-      "name": "xOutput SPC File",
+      "modified": "2026-01-22T21:56:38.322Z",
+      "name": "xDepreciatedOutput SPC File",
       "flag": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Content\\PipelineCaches\\HSHVacancy_PCD3D_SM6.spc",
       "value": ""
     }
@@ -508,8 +508,8 @@
     "pk": 43,
     "fields": {
       "created": "2026-01-21T20:21:03.357Z",
-      "modified": "2026-01-21T22:02:55.707Z",
-      "name": "xProject",
+      "modified": "2026-01-22T21:56:15.149Z",
+      "name": "xDepreciatedProject",
       "flag": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\HSHVacancy.uproject",
       "value": ""
     }
@@ -530,8 +530,8 @@
     "pk": 45,
     "fields": {
       "created": "2026-01-21T20:29:25.360Z",
-      "modified": "2026-01-21T22:02:50.687Z",
-      "name": "xInput: Rec FIles",
+      "modified": "2026-01-22T21:55:59.025Z",
+      "name": "xDepreciatedInput: Rec FIles",
       "flag": "c:/steambuild/Windows/HSHVacancy/Saved/CollectedPSOs/*.rec*",
       "value": ""
     }
@@ -541,10 +541,43 @@
     "pk": 46,
     "fields": {
       "created": "2026-01-21T20:34:13.575Z",
-      "modified": "2026-01-21T22:03:08.813Z",
-      "name": "xInput: SHK Files",
+      "modified": "2026-01-22T21:56:44.472Z",
+      "name": "xDepreciatedInput: SHK Files",
       "flag": "C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Metadata/PipelineCaches/*.shk",
       "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 47,
+    "fields": {
+      "created": "2026-01-22T21:55:32.999Z",
+      "modified": "2026-01-22T22:09:27.108Z",
+      "name": "Report Export Path",
+      "flag": "-ReportExportPath=",
+      "value": "c:\\talos\\live_reports"
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 48,
+    "fields": {
+      "created": "2026-01-22T21:57:46.046Z",
+      "modified": "2026-01-22T21:57:46.046Z",
+      "name": "Custom Config Staging",
+      "flag": "-CustomConfig=",
+      "value": "Staging"
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 49,
+    "fields": {
+      "created": "2026-01-22T21:59:09.174Z",
+      "modified": "2026-01-23T18:07:04.395Z",
+      "name": "TestExit Automation Test Queue Empty",
+      "flag": "-TestExit=",
+      "value": "Automation Test Queue Empty"
     }
   },
   {

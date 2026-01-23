@@ -30,8 +30,8 @@ def mock_switches():
     with patch(
         'hydra.spells.spell_casters.generic_spell_caster.spell_switches_and_arguments'
     ) as mock:
-        # Returns (debug_string, list)
-        mock.return_value = ('-debug', ['-debug'])
+        # FIXED: Returns just the list now
+        mock.return_value = ['-debug']
         yield mock
 
 
@@ -85,9 +85,8 @@ class TestGenericSpellCaster:
             # Verify status update was called multiple times
             assert mock_head.save.call_count >= 1
 
-            # Since the caster is synchronous blocking, it should finish as SUCCESS
-            # (mapped from STATUS_COMPLETE)
-            assert mock_head.status_id == HydraHeadStatus.SUCCESS
+            # Since the caster is synchronous blocking, it should finish as COMPLETE
+            assert mock_head.status_id == GenericSpellCaster.STATUS_COMPLETE
 
     def test_async_pipeline_success(
         self, mock_head, mock_switches, mock_runner, mock_monitor
@@ -99,6 +98,7 @@ class TestGenericSpellCaster:
             GenericSpellCaster(mock_head.id)
 
             # 1. Check Command Construction
+            # List is now composed of executable + mock return
             assert (
                 "[LIST] ['UnrealEditor-Cmd.exe', '-debug']"
                 in mock_head.execution_log
@@ -112,8 +112,7 @@ class TestGenericSpellCaster:
             assert 'Game Log Line 1' in mock_head.spell_log
 
             # 4. Check Exit Status
-            # We set STATUS_COMPLETE (5) at end of cast_spell, which maps to SUCCESS
-            assert mock_head.status_id == HydraHeadStatus.SUCCESS
+            assert mock_head.status_id == GenericSpellCaster.STATUS_COMPLETE
             assert '[EXIT] Success' in mock_head.execution_log
 
     def test_async_pipeline_failure(
@@ -126,7 +125,7 @@ class TestGenericSpellCaster:
         with patch(
             'hydra.models.HydraHead.objects.get', return_value=mock_head
         ):
-            # We expect NO exception, but a FAILED status
+            # We expect FAILED status, not an exception
             GenericSpellCaster(mock_head.id)
 
             assert (
@@ -137,16 +136,13 @@ class TestGenericSpellCaster:
     def test_command_quoting_logic(self, mock_head):
         """
         Verify that the caster correctly combines the executable and the
-        argument list, ensuring safe execution for paths with spaces.
+        argument list.
         """
         with patch(
             'hydra.spells.spell_casters.generic_spell_caster.spell_switches_and_arguments'
         ) as mock_sw:
-            # Simulate a switch with spaces that was returned as a list item
-            mock_sw.return_value = (
-                '-project="..."',
-                ['-project="C:\\My Files\\Proj.uproject"'],
-            )
+            # Simulate returning a list from the builder
+            mock_sw.return_value = ['-project="C:\\My Files\\Proj.uproject"']
 
             with patch(
                 'hydra.models.HydraHead.objects.get', return_value=mock_head
@@ -154,12 +150,11 @@ class TestGenericSpellCaster:
                 with patch(
                     'hydra.spells.spell_casters.generic_spell_caster.AsyncProcessRunner'
                 ) as MockRunner:
-                    # FIX: Make the return value awaitable!
+                    # Async mocks for runner
                     instance = MockRunner.return_value
                     instance.start = AsyncMock()
                     instance.wait = AsyncMock(return_value=0)
 
-                    # Mock an empty async iterator for stream_output
                     async def empty_gen():
                         yield ''
 
@@ -167,11 +162,8 @@ class TestGenericSpellCaster:
 
                     GenericSpellCaster(mock_head.id)
 
-                    # Verify the list passed to runner contains the specific list item
-                    # The second arg to constructor (after self)
-                    call_args = MockRunner.call_args[1][
-                        'command'
-                    ]  # kwargs['command']
+                    # Verify the list passed to runner
+                    call_args = MockRunner.call_args[1]['command']
                     assert call_args[0] == 'UnrealEditor-Cmd.exe'
                     assert (
                         call_args[1] == '-project="C:\\My Files\\Proj.uproject"'
