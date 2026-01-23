@@ -30,7 +30,7 @@ def mock_switches():
     with patch(
         'hydra.spells.spell_casters.generic_spell_caster.spell_switches_and_arguments'
     ) as mock:
-        # FIXED: Returns just the list now
+        # Returns just the list now
         mock.return_value = ['-debug']
         yield mock
 
@@ -66,6 +66,11 @@ def mock_monitor():
         'hydra.spells.spell_casters.generic_spell_caster.AsyncLogMonitor'
     ) as MockClass:
         monitor_instance = MockClass.return_value
+
+        # FIX: These MUST be AsyncMock because the Caster awaits them!
+        monitor_instance.start = AsyncMock()
+        monitor_instance.stop = AsyncMock()
+
         # Mock check_for_lines to return data once, then empty
         monitor_instance.check_for_lines = AsyncMock(
             side_effect=[['Game Log Line 1\n'], [], []]
@@ -75,7 +80,9 @@ def mock_monitor():
 
 @pytest.mark.django_db
 class TestGenericSpellCaster:
-    def test_init_starts_execution(self, mock_head, mock_switches, mock_runner):
+    def test_init_starts_execution(
+        self, mock_head, mock_switches, mock_runner, mock_monitor
+    ):
         """Test that __init__ kicks off the whole chain."""
         with patch(
             'hydra.models.HydraHead.objects.get', return_value=mock_head
@@ -85,8 +92,8 @@ class TestGenericSpellCaster:
             # Verify status update was called multiple times
             assert mock_head.save.call_count >= 1
 
-            # Since the caster is synchronous blocking, it should finish as COMPLETE
-            assert mock_head.status_id == GenericSpellCaster.STATUS_COMPLETE
+            # Since the caster is synchronous blocking, it should finish as SUCCESS
+            assert mock_head.status_id == HydraHeadStatus.SUCCESS
 
     def test_async_pipeline_success(
         self, mock_head, mock_switches, mock_runner, mock_monitor
@@ -98,7 +105,6 @@ class TestGenericSpellCaster:
             GenericSpellCaster(mock_head.id)
 
             # 1. Check Command Construction
-            # List is now composed of executable + mock return
             assert (
                 "[LIST] ['UnrealEditor-Cmd.exe', '-debug']"
                 in mock_head.execution_log
@@ -112,11 +118,11 @@ class TestGenericSpellCaster:
             assert 'Game Log Line 1' in mock_head.spell_log
 
             # 4. Check Exit Status
-            assert mock_head.status_id == GenericSpellCaster.STATUS_COMPLETE
+            assert mock_head.status_id == HydraHeadStatus.SUCCESS
             assert '[EXIT] Success' in mock_head.execution_log
 
     def test_async_pipeline_failure(
-        self, mock_head, mock_switches, mock_runner
+        self, mock_head, mock_switches, mock_runner, mock_monitor
     ):
         """Test the sad path: Process returns non-zero exit code."""
         # Setup failure
@@ -141,7 +147,6 @@ class TestGenericSpellCaster:
         with patch(
             'hydra.spells.spell_casters.generic_spell_caster.spell_switches_and_arguments'
         ) as mock_sw:
-            # Simulate returning a list from the builder
             mock_sw.return_value = ['-project="C:\\My Files\\Proj.uproject"']
 
             with patch(
@@ -150,22 +155,35 @@ class TestGenericSpellCaster:
                 with patch(
                     'hydra.spells.spell_casters.generic_spell_caster.AsyncProcessRunner'
                 ) as MockRunner:
-                    # Async mocks for runner
-                    instance = MockRunner.return_value
-                    instance.start = AsyncMock()
-                    instance.wait = AsyncMock(return_value=0)
+                    # FIX: We must also patch the Monitor here to avoid real file watching
+                    with patch(
+                        'hydra.spells.spell_casters.generic_spell_caster.AsyncLogMonitor'
+                    ) as MockMonitor:
+                        # Configure Runner Mocks
+                        instance = MockRunner.return_value
+                        instance.start = AsyncMock()
+                        instance.wait = AsyncMock(return_value=0)
 
-                    async def empty_gen():
-                        yield ''
+                        async def empty_gen():
+                            yield ''
 
-                    instance.stream_output = lambda: empty_gen()
+                        instance.stream_output = lambda: empty_gen()
 
-                    GenericSpellCaster(mock_head.id)
+                        # Configure Monitor Mocks (Silent)
+                        mon_instance = MockMonitor.return_value
+                        mon_instance.start = AsyncMock()
+                        mon_instance.stop = AsyncMock()
+                        mon_instance.check_for_lines = AsyncMock(
+                            return_value=[]
+                        )
 
-                    # Verify the list passed to runner
-                    call_args = MockRunner.call_args[1]['command']
-                    assert call_args[0] == 'UnrealEditor-Cmd.exe'
-                    assert (
-                        call_args[1] == '-project="C:\\My Files\\Proj.uproject"'
-                    )
-                    assert len(call_args) == 2
+                        GenericSpellCaster(mock_head.id)
+
+                        # Verify the list passed to runner
+                        call_args = MockRunner.call_args[1]['command']
+                        assert call_args[0] == 'UnrealEditor-Cmd.exe'
+                        assert (
+                            call_args[1]
+                            == '-project="C:\\My Files\\Proj.uproject"'
+                        )
+                        assert len(call_args) == 2

@@ -20,5 +20,6 @@ Markdown>=3.10
 
 pytest
 coverage
-pygtail
+pygtail  # depreciated
 aiofiles
+watchfiles>=1.1.1

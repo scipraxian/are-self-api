@@ -35,3 +35,4 @@ Logs/
 .DS_Store
 Thumbs.db
 _talos_concatenated_source.txt
+/live_reports/
