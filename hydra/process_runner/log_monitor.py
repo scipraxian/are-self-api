@@ -1,7 +1,11 @@
 import asyncio
+import logging
 import os
 
 from watchfiles import awatch
+
+# Suppress "1 change detected" log spam from the file watcher
+logging.getLogger('watchfiles').setLevel(logging.WARNING)
 
 
 class AsyncLogMonitor:
@@ -63,7 +67,6 @@ class AsyncLogMonitor:
             directory = '.'
 
         # 3. Watch Loop
-        # awatch is efficient and blocks here until the OS reports a change
         try:
             async for changes in awatch(directory, stop_event=self._stop_event):
                 for change_type, path in changes:
@@ -72,7 +75,7 @@ class AsyncLogMonitor:
                         self._read_file()
         except asyncio.CancelledError:
             pass
-        except Exception as e:
+        except Exception:
             # Fallback/Recovery could go here, but for now we exit
             pass
 
