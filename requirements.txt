@@ -20,3 +20,5 @@ Markdown>=3.10
 
 pytest
 coverage
+pygtail
+aiofiles
