@@ -168,7 +168,6 @@ class GenericSpellCaster(object):
 
         log_monitor = AsyncLogMonitor(log_path) if log_path else None
 
-        # Start the background watcher explicitly (optional, but good practice)
         if log_monitor:
             await log_monitor.start()
 
@@ -193,31 +192,23 @@ class GenericSpellCaster(object):
                 except asyncio.CancelledError:
                     pass
 
-        # NEW: Clean up the watchfiles background task
         if log_monitor:
             await log_monitor.stop()
 
         return exit_code
 
     def _execute_local_popen(self):
-        """
-        The default method for executing spells.
-        Replaced strict blocking Popen with asyncio.run(pipeline).
-        """
         try:
-            # 1. Prepare data SYNCHRONOUSLY
             cmd_list = spell_switches_and_arguments(self.spell.id)
             full_cmd_list = [self.spell.talos_executable.executable] + cmd_list
 
             log_path = self.spell.talos_executable.log
 
-            # 2. Fix Event Loop Policy for Windows
             if sys.platform == 'win32':
                 asyncio.set_event_loop_policy(
                     asyncio.WindowsProactorEventLoopPolicy()
                 )
 
-            # 3. Pass prepared data to the Async Pipeline
             exit_code = asyncio.run(
                 self._async_pipeline(full_cmd_list, log_path)
             )
@@ -257,7 +248,6 @@ class GenericSpellCaster(object):
         self._update_head_status(HydraHeadStatus.RUNNING)
         self._executable_router()
 
-        # FIX: Check status before post-processing
         if self.status not in self.STATUSES_WHICH_HALT:
             self._debug_log(f'Post Processing {self.spell.name}')
             self._post_processor()
@@ -266,7 +256,6 @@ class GenericSpellCaster(object):
         if self.running_subprocess and hasattr(self.running_subprocess, 'kill'):
             self.running_subprocess.kill()
 
-        # FIX: Only mark complete/success if not failed
         if self.status not in self.STATUSES_WHICH_HALT:
             self.status = self.STATUS_COMPLETE
             self._update_head_status(HydraHeadStatus.SUCCESS)
