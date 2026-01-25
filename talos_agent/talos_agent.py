@@ -167,6 +167,11 @@ class AsyncLogMonitor:
         if not self._watcher_task:
             await self.start()
 
+        # "anti-pattern" for asyncio
+        # would make it more instant and may miss a small file.
+        # removed 1/24/2025 may consider later.
+        # self._read_file()  ### AI ADDED THIS HERE?!?!?
+
         lines = []
         try:
             while True:
@@ -207,11 +212,10 @@ class AsyncLogMonitor:
         if not os.path.exists(self.file_path):
             return
 
+        # Avoid reading stale logs from previous runs
+        if os.path.getmtime(self.file_path) < self.launch_time:
+            return
         try:
-            # Avoid reading stale logs from previous runs
-            if os.path.getmtime(self.file_path) < self.launch_time:
-                return
-
             with open(
                 self.file_path,
                 'r',
@@ -287,7 +291,9 @@ async def run_hydra_pipeline(
     await runner.start()
     process_task = asyncio.create_task(_pipe_process_output())
 
-    exit_code = await runner.wait() or 1
+    exit_code = await runner.wait()
+    if exit_code is None:
+        exit_code = 1
 
     # Ensure process stream finishes
     await process_task
