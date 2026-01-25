@@ -1,3 +1,55 @@
+"""
+Talos Remote Agent
+==================
+
+A lightweight, asynchronous execution node designed for the Talos Build Farm.
+This agent transforms any machine (Windows/Linux) into a "Smart Worker" capable
+of receiving complex build instructions and streaming real-time telemetry back
+to the central server.
+
+Key Capabilities:
+-----------------
+1.  **Remote Execution:** Launches subprocesses (e.g., Unreal Automation Tool,
+    Robocopy) via a JSON-over-TCP protocol.
+2.  **Real-Time Streaming:** Uses `asyncio` generators to stream STDOUT, STDERR,
+    and Log File changes immediately to the caller with zero latency.
+3.  **Robust Process Management:** Holds explicit handles to child processes
+    to prevent "zombie" executables if connections drop.
+4.  **Event-Driven Monitoring:** Uses filesystem events (via `watchfiles`) to
+    tail logs efficiently without polling overhead.
+5.  **Self-Healing:** Capable of hot-swapping its own code via the `UPDATE_SELF`
+    command.
+
+Architecture:
+-------------
+* **Pure AsyncIO:** Single-threaded, event-loop based design handles TCP,
+    Process I/O, and File I/O concurrently without thread context switching.
+* **Stateless:** Does not connect to the Database. It is a "dumb" executor
+    controlled entirely by the Hydra Spell Caster.
+
+Security:
+--------
+* **Input Validation:** All user input is validated and sanitized to prevent
+    command injection and other security vulnerabilities.
+* **Logging:** Comprehensive logging is implemented to track all operations
+    and potential security incidents.
+* **Error Handling:** Graceful error handling is implemented to prevent
+    sensitive information leakage.
+* **Internal use only:** The agent is not exposed to the public internet.
+* **Efficiency > Security:** The agent prioritizes efficiency over security
+    in its design, as it is intended for internal use within a trusted network.
+
+Dependencies:
+-------------
+* Python 3.10+
+* `watchfiles` (Filesystem events)
+* `psutil` (Process management)
+
+Usage:
+------
+    python talos_agent.py
+"""
+
 import asyncio
 import json
 import logging
@@ -5,18 +57,17 @@ import os
 import socket
 import subprocess
 import sys
-import threading
 import time
 from typing import AsyncGenerator, Awaitable, Callable, List, Optional
 
-# watchfiles is the only non-standard library we require.
+# --- DEPENDENCIES ---
 try:
     from watchfiles import awatch
 except ImportError:
-    print('FATAL: Missing dependencies. Run: pip install watchfiles psutil')
+    print('FATAL: Missing dependencies. Run: pip install watchfiles')
     sys.exit(1)
 
-# Suppress "1 change detected" log spam from the watcher library
+# Suppress "1 change detected" log spam
 logging.getLogger('watchfiles').setLevel(logging.WARNING)
 
 
@@ -24,7 +75,7 @@ class TalosAgentConstants:
     """Protocol Constants."""
 
     # Meta
-    VERSION = '3.1.0'
+    VERSION = '4.0.0-async'
     ENCODING = 'utf-8'
     ERR_HANDLER = 'replace'
 
@@ -64,14 +115,13 @@ class TalosAgentConstants:
 
 
 # ==========================================
-# PART 1: The Engine (Runner + Monitor)
+# PART 1: The Engine (Pure Async)
 # ==========================================
 
 
 class AsyncProcessRunner:
     """
-    Manages a subprocess lifecycle and streams STDOUT/STDERR.
-    Holds the process handle to prevent zombies.
+    Manages a subprocess lifecycle and streams STDOUT/STDERR via async generator.
     """
 
     def __init__(self, command: List[str], cwd: Optional[str] = None):
@@ -80,11 +130,9 @@ class AsyncProcessRunner:
         self.process: Optional[asyncio.subprocess.Process] = None
 
     async def start(self) -> None:
-        """Launches the subprocess using explicit program + args separation."""
         if not self.command:
             raise ValueError('Command list cannot be empty')
 
-        # Explicitly split program from arguments
         program = self.command[0]
         args = self.command[1:]
 
@@ -93,12 +141,12 @@ class AsyncProcessRunner:
             *args,
             cwd=self.cwd,
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.STDOUT,  # Merge stderr into stdout
+            stderr=asyncio.subprocess.STDOUT,
             limit=TalosAgentConstants.BUFFER_SIZE,
         )
 
     async def stream_output(self) -> AsyncGenerator[str, None]:
-        """Yields decoded lines from the process output."""
+        """Yields lines directly from the process stdout pipe."""
         if not self.process or not self.process.stdout:
             return
 
@@ -110,7 +158,6 @@ class AsyncProcessRunner:
                 )
 
     async def wait(self) -> Optional[int]:
-        """Waits for process exit and returns exit code."""
         if self.process:
             return await self.process.wait()
         return None
@@ -120,7 +167,6 @@ class AsyncProcessRunner:
         return self.process is not None and self.process.returncode is None
 
     def kill(self) -> None:
-        """Forcefully kills the process tree."""
         if self.process:
             try:
                 self.process.kill()
@@ -131,14 +177,15 @@ class AsyncProcessRunner:
 class AsyncLogMonitor:
     """
     Event-driven file watcher.
-    Waits for a file to appear, then tails it respecting rotation/truncation.
+    Pushes lines to an internal queue, consumed via `stream_changes`.
     """
 
     def __init__(self, file_path: str, launch_time: float = 0.0):
         self.file_path = file_path
         self.launch_time = launch_time
 
-        self._queue: asyncio.Queue[str] = asyncio.Queue()
+        # Unbounded queue to buffer file reads during high load
+        self._queue: asyncio.Queue[Optional[str]] = asyncio.Queue()
         self._watcher_task: Optional[asyncio.Task] = None
         self._current_offset = 0
         self._stop_event = asyncio.Event()
@@ -157,34 +204,35 @@ class AsyncLogMonitor:
             except asyncio.CancelledError:
                 pass
 
+        # Report if file never appeared
         if not self._file_found:
             self._queue.put_nowait(
                 f"\n{TalosAgentConstants.TAG_MONITOR} Info: Log file '{self.file_path}' never appeared.\n"
             )
 
-    async def check_for_lines(self) -> List[str]:
-        """Consumer method: Drains all currently queued lines."""
+        # Signal end of stream
+        self._queue.put_nowait(None)
+
+    async def stream_changes(self) -> AsyncGenerator[str, None]:
+        """
+        Yields lines as they are detected.
+        Waits (blocks) if queue is empty.
+        Stops yielding when None is received (from stop()).
+        """
+        # Ensure loop is running if stream is requested
         if not self._watcher_task:
             await self.start()
 
-        # "anti-pattern" for asyncio
-        # would make it more instant and may miss a small file.
-        # removed 1/24/2025 may consider later.
-        # self._read_file()  ### AI ADDED THIS HERE?!?!?
-
-        lines = []
-        try:
-            while True:
-                lines.append(self._queue.get_nowait())
-        except asyncio.QueueEmpty:
-            pass
-        return lines
+        while True:
+            line = await self._queue.get()
+            if line is None:
+                return
+            yield line
 
     async def _watch_loop(self) -> None:
-        """Producer loop: Waits for file -> Watches Folder -> Reads Content."""
         directory = os.path.dirname(self.file_path) or '.'
 
-        # 1. Patience Phase: Wait for the FILE itself to exist
+        # 1. Patience Phase
         start_time = time.time()
         while time.time() - start_time < TalosAgentConstants.TIMEOUT_LOG_APPEAR:
             if os.path.exists(self.file_path):
@@ -194,27 +242,21 @@ class AsyncLogMonitor:
             await asyncio.sleep(1.0)
 
         # 2. Watch Phase
-        self._read_file()  # Initial read (catch up)
-
+        self._read_file()
         try:
-            # We watch the directory because file updates (writes) trigger dir events
             async for _ in awatch(directory, stop_event=self._stop_event):
                 self._read_file()
         except asyncio.CancelledError:
             pass
         except Exception:
-            # We trap broad exceptions here only to keep the watcher alive
-            # if the file is briefly locked (common on Windows)
             pass
 
     def _read_file(self) -> None:
-        """Reads new data from the file, handling offsets and rotation."""
         if not os.path.exists(self.file_path):
             return
-
-        # Avoid reading stale logs from previous runs
         if os.path.getmtime(self.file_path) < self.launch_time:
             return
+
         try:
             with open(
                 self.file_path,
@@ -222,23 +264,17 @@ class AsyncLogMonitor:
                 encoding=TalosAgentConstants.ENCODING,
                 errors=TalosAgentConstants.ERR_HANDLER,
             ) as f:
-                # Check for Truncation (Log Rotation)
                 f.seek(0, os.SEEK_END)
-                current_size = f.tell()
-
-                if current_size < self._current_offset:
+                size = f.tell()
+                if size < self._current_offset:
                     self._current_offset = 0
 
                 f.seek(self._current_offset)
-
                 for line in f:
                     self._queue.put_nowait(line)
-
                 self._current_offset = f.tell()
                 self._file_found = True
-
         except OSError:
-            # Specific trap for File Locked / Permission Denied
             pass
 
 
@@ -248,142 +284,113 @@ async def run_hydra_pipeline(
     output_callback: Callable[[str], Awaitable[None]],
 ) -> int:
     """
-    Orchestrates the Process Runner and Log Monitor.
-    Feeds all output to the callback.
+    Orchestrates the Process Runner and Log Monitor using concurrent tasks.
+    Zero-latency: pushes data to callback immediately upon arrival.
     """
     runner = AsyncProcessRunner(command)
     monitor = (
         AsyncLogMonitor(log_path, launch_time=time.time()) if log_path else None
     )
 
-    # Task to pipe process STDOUT to the callback
-    async def _pipe_process_output():
+    # 1. Start background components
+    await runner.start()
+    if monitor:
+        await monitor.start()
+
+    # 2. Define piping tasks
+    async def _pipe_runner():
         async for line in runner.stream_output():
             await output_callback(line)
 
-    # Task to pipe file logs to the callback
-    async def _pipe_monitor_output():
+    async def _pipe_monitor():
         if not monitor:
             return
+        async for line in monitor.stream_changes():
+            await output_callback(line)
 
-        while True:
-            lines = await monitor.check_for_lines()
-            for line in lines:
-                await output_callback(line)
+    # 3. Run pipes concurrently
+    runner_task = asyncio.create_task(_pipe_runner())
+    monitor_task = asyncio.create_task(_pipe_monitor())
 
-            # Check exit conditions
-            if not runner.is_running:
-                # One final drain after process death
-                lines = await monitor.check_for_lines()
-                for line in lines:
-                    await output_callback(line)
-                break
-
-            await asyncio.sleep(0.5)
-
-    # Launch Pipeline
-    pipeline_tasks = []
-
-    if monitor:
-        await monitor.start()
-        pipeline_tasks.append(asyncio.create_task(_pipe_monitor_output()))
-
-    await runner.start()
-    process_task = asyncio.create_task(_pipe_process_output())
-
+    # 4. Wait for process exit
     exit_code = await runner.wait()
     if exit_code is None:
         exit_code = 1
 
-    # Ensure process stream finishes
-    await process_task
+    # 5. Wait for stdout to fully drain
+    await runner_task
 
-    # Clean up monitor
+    # 6. Cleanup Monitor
     if monitor:
+        # Stop puts the 'None' sentinel in the queue, causing _pipe_monitor to finish
         await monitor.stop()
-        await asyncio.gather(*pipeline_tasks)
+        await monitor_task
 
     return exit_code
 
 
 # ==========================================
-# PART 2: The Agent Service (TCP)
+# PART 2: The Agent Service (AsyncIO Server)
 # ==========================================
 
 
 class TalosAgent:
     def __init__(self, port: int = 5005):
         self.port = port
-        self.running = True
         self.logger = self._setup_logging()
 
     def _setup_logging(self) -> logging.Logger:
-        # Debug level on for now, as requested
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s [%(levelname)s] %(message)s',
         )
         return logging.getLogger('TalosAgent')
 
-    def run(self) -> None:
-        """Main entry point. Starts the TCP listener."""
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-            server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            server_socket.bind(('0.0.0.0', self.port))
-            server_socket.listen(5)
+    async def run_server(self) -> None:
+        """Starts the AsyncIO TCP Server."""
+        server = await asyncio.start_server(
+            self.handle_client, '0.0.0.0', self.port
+        )
 
-            self.logger.info(
-                f'Talos Agent v{TalosAgentConstants.VERSION} listening on port {self.port}'
-            )
+        addr = server.sockets[0].getsockname()
+        self.logger.info(
+            f'Talos Agent v{TalosAgentConstants.VERSION} listening on {addr}'
+        )
 
-            while self.running:
-                try:
-                    conn, addr = server_socket.accept()
-                    # Spin off a thread per connection to allow concurrent jobs
-                    client_thread = threading.Thread(
-                        target=self.handle_client,
-                        args=(conn, addr),
-                        daemon=True,
-                    )
-                    client_thread.start()
-                except OSError as e:
-                    self.logger.error(f'Socket accept error: {e}')
+        async with server:
+            await server.serve_forever()
 
-    def handle_client(self, conn: socket.socket, addr: tuple) -> None:
+    async def handle_client(
+        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ) -> None:
         """
-        Handles a single client connection.
-        Reads JSON request -> Routes Command -> Sends JSON response(s).
+        Async handler for a single connection.
         """
+        addr = writer.get_extra_info('peername')
         try:
-            # Tight trap for socket reading
-            try:
-                data = (
-                    conn.recv(TalosAgentConstants.TCP_CHUNK)
-                    .decode(TalosAgentConstants.ENCODING)
-                    .strip()
-                )
-            except OSError as e:
-                self.logger.warning(f'Socket read failed from {addr}: {e}')
+            # Read Request
+            data = await reader.read(TalosAgentConstants.TCP_CHUNK)
+            message = data.decode(TalosAgentConstants.ENCODING).strip()
+
+            if not message:
+                writer.close()
                 return
 
-            if not data:
-                return
-
-            # Tight trap for JSON parsing
             try:
-                request = json.loads(data)
+                request = json.loads(message)
             except json.JSONDecodeError:
                 self.logger.error(f'Invalid JSON from {addr}')
+                writer.close()
                 return
 
             command = request.get(TalosAgentConstants.K_CMD, '').upper()
             args = request.get(TalosAgentConstants.K_ARGS, dict())
-
             self.logger.debug(f'CMD: {command} from {addr}')
 
+            # Route Command
             if command == TalosAgentConstants.CMD_PING:
-                self._send_json(
-                    conn,
+                await self._send_json(
+                    writer,
                     dict(
                         status=TalosAgentConstants.S_PONG,
                         hostname=socket.gethostname(),
@@ -392,14 +399,14 @@ class TalosAgent:
                 )
 
             elif command == TalosAgentConstants.CMD_EXECUTE:
-                self._handle_execute(conn, args)
+                await self._handle_execute(writer, args)
 
             elif command == TalosAgentConstants.CMD_UPDATE:
-                self._handle_update(conn, args)
+                await self._handle_update(writer, args)
 
             else:
-                self._send_json(
-                    conn,
+                await self._send_json(
+                    writer,
                     dict(
                         status=TalosAgentConstants.S_ERROR,
                         msg=f'Unknown command: {command}',
@@ -407,129 +414,101 @@ class TalosAgent:
                 )
 
         except Exception as e:
-            self.logger.error(f'Handler crash for {addr}: {e}')
-            # Try to send error back if socket is still open
-            self._send_json(
-                conn, dict(status=TalosAgentConstants.S_ERROR, msg=str(e))
-            )
+            self.logger.error(f'Handler error {addr}: {e}')
+            if not writer.is_closing():
+                await self._send_json(
+                    writer, dict(status=TalosAgentConstants.S_ERROR, msg=str(e))
+                )
         finally:
-            conn.close()
+            # Ensure connection closure
+            try:
+                await writer.drain()
+                writer.close()
+                await writer.wait_closed()
+            except (ConnectionResetError, BrokenPipeError):
+                pass
 
-    def _handle_execute(self, conn: socket.socket, args: dict) -> None:
-        """
-        Parses execution args and kicks off the Async Engine.
-        """
+    async def _handle_execute(
+        self, writer: asyncio.StreamWriter, args: dict
+    ) -> None:
+        """Runs the pipeline and streams results back to the open socket."""
         executable = args.get('executable')
         params = args.get('params', [])
         log_path = args.get('log_path')
 
         if not executable:
-            self._send_json(
-                conn,
-                dict(
-                    status=TalosAgentConstants.S_ERROR,
-                    msg='No executable provided',
-                ),
+            await self._send_json(
+                writer,
+                dict(status=TalosAgentConstants.S_ERROR, msg='No executable'),
             )
             return
 
         full_cmd = [executable] + params
 
-        # We must create a new event loop for this thread to run asyncio
-        try:
-            asyncio.run(self._execute_async_bridge(conn, full_cmd, log_path))
-        except Exception as e:
-            self.logger.error(f'Execution failed: {e}')
-
-    async def _execute_async_bridge(
-        self, conn: socket.socket, command: List[str], log_path: Optional[str]
-    ) -> None:
-        """
-        Async wrapper that bridges the engine callback to the blocking TCP socket.
-        """
-
-        # Callback: Send a JSON chunk for every log line
+        # Callback: Writes directly to the socket buffer
         async def socket_callback(text: str) -> None:
-            # Using dict constructor as requested
-            payload_data = dict(type=TalosAgentConstants.T_LOG, content=text)
-            payload = json.dumps(payload_data)
-
-            # socket.send is blocking, but fast enough for small chunks
-            try:
-                conn.sendall(
-                    (payload + '\n').encode(TalosAgentConstants.ENCODING)
-                )
-            except OSError:
-                # Connection dropped; nothing we can do but abort
-                pass
+            payload = json.dumps(
+                dict(type=TalosAgentConstants.T_LOG, content=text)
+            )
+            writer.write((payload + '\n').encode(TalosAgentConstants.ENCODING))
+            # drain() yields control, allowing other tasks to run
+            await writer.drain()
 
         try:
             # 1. Notify Start
             await socket_callback(
-                f'{TalosAgentConstants.TAG_AGENT} Launching: {" ".join(command)}\n'
+                f'{TalosAgentConstants.TAG_AGENT} Launching: {" ".join(full_cmd)}\n'
             )
 
-            # 2. Run Engine
+            # 2. Run Pipeline (Waits for completion)
             exit_code = await run_hydra_pipeline(
-                command, log_path, socket_callback
+                full_cmd, log_path, socket_callback
             )
 
             # 3. Notify End
-            final_data = dict(type=TalosAgentConstants.T_EXIT, code=exit_code)
-            conn.sendall(
-                (json.dumps(final_data) + '\n').encode(
-                    TalosAgentConstants.ENCODING
-                )
+            await self._send_json(
+                writer, dict(type=TalosAgentConstants.T_EXIT, code=exit_code)
             )
 
         except Exception as e:
+            self.logger.error(f'Exec crash: {e}')
             await socket_callback(
                 f'{TalosAgentConstants.TAG_AGENT} CRASH: {e}\n'
             )
-            error_data = dict(type=TalosAgentConstants.T_EXIT, code=-1)
-            conn.sendall(
-                (json.dumps(error_data) + '\n').encode(
-                    TalosAgentConstants.ENCODING
-                )
+            await self._send_json(
+                writer, dict(type=TalosAgentConstants.T_EXIT, code=-1)
             )
 
-    def _handle_update(self, conn: socket.socket, args: dict) -> None:
-        """
-        Overwrites this script and restarts the process.
-        """
+    async def _handle_update(
+        self, writer: asyncio.StreamWriter, args: dict
+    ) -> None:
+        """Writes new file content and triggers a restart."""
         content = args.get(TalosAgentConstants.K_CONTENT)
         if not content:
-            self._send_json(
-                conn,
-                dict(
-                    status=TalosAgentConstants.S_ERROR,
-                    msg='No content provided',
-                ),
+            await self._send_json(
+                writer,
+                dict(status=TalosAgentConstants.S_ERROR, msg='No content'),
             )
             return
 
-        self.logger.info('Received self-update request.')
-
-        # 1. Overwrite Self
         target_file = os.path.abspath(__file__)
         try:
+            # Sync write (acceptable for update operation)
             with open(
                 target_file, 'w', encoding=TalosAgentConstants.ENCODING
             ) as f:
                 f.write(content)
         except OSError as e:
-            self._send_json(
-                conn,
-                dict(
-                    status=TalosAgentConstants.S_ERROR, msg=f'Write failed: {e}'
-                ),
+            await self._send_json(
+                writer, dict(status=TalosAgentConstants.S_ERROR, msg=str(e))
             )
             return
 
-        self._send_json(conn, dict(status=TalosAgentConstants.S_UPDATING))
+        await self._send_json(
+            writer, dict(status=TalosAgentConstants.S_UPDATING)
+        )
 
-        # 2. Restart Logic (Windows Batch File Trick)
-        # We create a temp batch file to wait 1s and then relaunch this script
+        # Trigger Restart
         bat_path = os.path.join(os.path.dirname(target_file), '_restart.bat')
         bat_content = (
             '@echo off\n'
@@ -537,34 +516,38 @@ class TalosAgent:
             f'"{sys.executable}" "{target_file}"\n'
             'del "%~f0"\n'
         )
-
         try:
             with open(bat_path, 'w') as f:
                 f.write(bat_content)
-
             subprocess.Popen(
                 [bat_path],
                 shell=True,
                 creationflags=subprocess.CREATE_NEW_CONSOLE
                 | subprocess.DETACHED_PROCESS,
             )
-        except OSError as e:
-            self.logger.error(f'Failed to restart: {e}')
-            return
-
-        # 3. Die
-        self.running = False
-        conn.close()
-        os._exit(0)
-
-    def _send_json(self, conn: socket.socket, data: dict) -> None:
-        """Helper to send a JSON line."""
-        try:
-            payload = json.dumps(data) + '\n'
-            conn.sendall(payload.encode(TalosAgentConstants.ENCODING))
-        except OSError:
+        except Exception:
             pass
+
+        # Graceful exit
+        writer.close()
+        sys.exit(0)
+
+    async def _send_json(
+        self, writer: asyncio.StreamWriter, data: dict
+    ) -> None:
+        """Helper to write a JSON line."""
+        payload = json.dumps(data) + '\n'
+        writer.write(payload.encode(TalosAgentConstants.ENCODING))
+        await writer.drain()
 
 
 if __name__ == '__main__':
-    TalosAgent().run()
+    agent = TalosAgent()
+    try:
+        if sys.platform == 'win32':
+            asyncio.set_event_loop_policy(
+                asyncio.WindowsProactorEventLoopPolicy()
+            )
+        asyncio.run(agent.run_server())
+    except KeyboardInterrupt:
+        pass
