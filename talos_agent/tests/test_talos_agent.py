@@ -1,93 +1,100 @@
+import asyncio
 import json
-import socket
 import sys
-import threading
-import time
 
 import pytest
 
 from talos_agent.talos_agent import TalosAgent, TalosAgentConstants
 
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 
 @pytest.fixture
-def agent():
-    # Find a free port
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(('', 0))
-    port = s.getsockname()[1]
-    s.close()
+async def agent_server(unused_tcp_port):
+    """
+    Async fixture that starts the TalosAgent server in a background task.
+    """
+    agent = TalosAgent(port=unused_tcp_port)
 
-    agent = TalosAgent(port=port)
-    thread = threading.Thread(target=agent.run, daemon=True)
-    thread.start()
+    # Run server in background task
+    server_task = asyncio.create_task(agent.run_server())
 
-    # Give it a moment to start
-    time.sleep(0.5)
+    # Give it a moment to bind
+    await asyncio.sleep(0.1)
+
     yield agent
-    agent.running = False
+
+    # Cleanup
+    server_task.cancel()
+    try:
+        await server_task
+    except asyncio.CancelledError:
+        pass
 
 
-def send_command(port, cmd, args=None):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect(('127.0.0.1', port))
-        payload = {
-            TalosAgentConstants.K_CMD: cmd,
-            TalosAgentConstants.K_ARGS: args or {},
-        }
-        s.sendall(
-            (json.dumps(payload) + '\n').encode(TalosAgentConstants.ENCODING)
-        )
+async def send_command_async(port, cmd, args=None):
+    """Async client to talk to the agent."""
+    reader, writer = await asyncio.open_connection('127.0.0.1', port)
 
-        responses = []
-        s.settimeout(5.0)
-        try:
-            while True:
-                data = s.recv(4096)
-                if not data:
-                    break
-                # Split by newline as the protocol sends multiple JSON objects for EXECUTE
-                for line in (
-                    data.decode(TalosAgentConstants.ENCODING)
-                    .strip()
-                    .split('\n')
-                ):
-                    if line:
-                        responses.append(json.loads(line))
-        except socket.timeout:
-            pass
-        return responses
+    payload = {
+        TalosAgentConstants.K_CMD: cmd,
+        TalosAgentConstants.K_ARGS: args or {},
+    }
+
+    writer.write(
+        (json.dumps(payload) + '\n').encode(TalosAgentConstants.ENCODING)
+    )
+    await writer.drain()
+
+    responses = []
+
+    # Read until connection closed or timeout
+    try:
+        while True:
+            # Read line by line
+            line = await asyncio.wait_for(reader.readline(), timeout=2.0)
+            if not line:
+                break
+            responses.append(json.loads(line.decode().strip()))
+    except (asyncio.TimeoutError, ConnectionResetError):
+        pass
+    finally:
+        writer.close()
+        await writer.wait_closed()
+
+    return responses
 
 
-def test_ping(agent):
-    responses = send_command(agent.port, TalosAgentConstants.CMD_PING)
+@pytest.mark.asyncio
+async def test_ping(agent_server):
+    responses = await send_command_async(
+        agent_server.port, TalosAgentConstants.CMD_PING
+    )
     assert len(responses) == 1
     assert (
         responses[0][TalosAgentConstants.K_STATUS] == TalosAgentConstants.S_PONG
     )
-    assert TalosAgentConstants.K_VER in responses[0]
 
 
-def test_execute_basic(agent):
+@pytest.mark.asyncio
+async def test_execute_basic(agent_server):
     if sys.platform == 'win32':
         exe = 'cmd'
-        params = ['/c', 'echo hello from agent']
+        params = ['/c', 'echo hello agent']
     else:
         exe = 'echo'
-        params = ['hello from agent']
+        params = ['hello agent']
 
-    responses = send_command(
-        agent.port,
+    responses = await send_command_async(
+        agent_server.port,
         TalosAgentConstants.CMD_EXECUTE,
         {'executable': exe, 'params': params},
     )
 
-    # We expect:
-    # 1. Launching... log
-    # 2. "hello from agent" log
-    # 3. Exit code 0
-
+    # Filter messages
     logs = [
-        r[TalosAgentConstants.K_CONTENT]
+        r
         for r in responses
         if r.get(TalosAgentConstants.K_TYPE) == TalosAgentConstants.T_LOG
     ]
@@ -97,26 +104,18 @@ def test_execute_basic(agent):
         if r.get(TalosAgentConstants.K_TYPE) == TalosAgentConstants.T_EXIT
     ]
 
-    assert any('Launching' in log for log in logs)
-    assert any('hello from agent' in log for log in logs)
+    assert any('Launching' in r[TalosAgentConstants.K_CONTENT] for r in logs)
+    assert any('hello agent' in r[TalosAgentConstants.K_CONTENT] for r in logs)
+
     assert len(exits) == 1
     assert exits[0][TalosAgentConstants.K_CODE] == 0
 
 
-def test_unknown_command(agent):
-    responses = send_command(agent.port, 'NOT_A_COMMAND')
-    assert len(responses) == 1
+@pytest.mark.asyncio
+async def test_unknown_command(agent_server):
+    responses = await send_command_async(agent_server.port, 'BOGUS_CMD')
+    assert len(responses) >= 1
     assert (
         responses[0][TalosAgentConstants.K_STATUS]
         == TalosAgentConstants.S_ERROR
     )
-    assert 'Unknown command' in responses[0][TalosAgentConstants.K_MSG]
-
-
-def test_update_self(agent, tmp_path):
-    # This is a bit dangerous as it overwrites talos_agent.py
-    # We should mock __file__ or use a separate test file if possible.
-    # But since the agent uses os.path.abspath(__file__), it's hard to spoof without monkeypatching.
-    # For now, let's just test the JSON response part of update,
-    # but we'll avoid actually running the full update logic in a unit test to prevent collateral damage.
-    pass

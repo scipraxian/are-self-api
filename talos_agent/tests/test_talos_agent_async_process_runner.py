@@ -3,15 +3,16 @@ import sys
 
 import pytest
 
+from talos_agent.talos_agent import AsyncProcessRunner
+
+# Apply Windows Proactor loop policy for subprocess support
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-
-from talos_agent.talos_agent import AsyncProcessRunner
 
 
 @pytest.mark.asyncio
 async def test_process_runner_success():
-    # Use 'cmd /c' on Windows for a simple echo test
+    """Verify standard stdout streaming and exit codes."""
     if sys.platform == 'win32':
         cmd = ['cmd', '/c', 'echo hello world']
     else:
@@ -33,6 +34,7 @@ async def test_process_runner_success():
 
 @pytest.mark.asyncio
 async def test_process_runner_error():
+    """Verify non-zero exit codes are captured."""
     if sys.platform == 'win32':
         cmd = ['cmd', '/c', 'exit 1']
     else:
@@ -47,17 +49,23 @@ async def test_process_runner_error():
 
 @pytest.mark.asyncio
 async def test_process_runner_kill():
+    """Verify explicit kill functionality."""
+    # Run a command that lasts long enough to be killed
     if sys.platform == 'win32':
-        cmd = ['cmd', '/c', 'pause']
+        cmd = ['cmd', '/c', 'ping -n 5 127.0.0.1']
     else:
-        cmd = ['sleep', '10']
+        cmd = ['sleep', '5']
 
     runner = AsyncProcessRunner(cmd)
     await runner.start()
     assert runner.is_running is True
 
     runner.kill()
+
+    # Wait for it to die
     exit_code = await runner.wait()
-    # On Windows, kill() usually results in 1 or some other code,
-    # but we just want to ensure it's not running anymore.
+
+    # It should not be running anymore
     assert runner.is_running is False
+    # Exit code varies by platform on kill, but shouldn't be None
+    assert exit_code is not None
