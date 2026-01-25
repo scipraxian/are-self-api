@@ -43,7 +43,6 @@ Dependencies:
 -------------
 * Python 3.10+
 * `watchfiles` (Filesystem events)
-* `psutil` (Process management)
 
 Usage:
 ------
@@ -75,7 +74,7 @@ class TalosAgentConstants:
     """Protocol Constants."""
 
     # Meta
-    VERSION = '4.0.0-async'
+    VERSION = '4.2.0'
     ENCODING = 'utf-8'
     ERR_HANDLER = 'replace'
 
@@ -83,6 +82,8 @@ class TalosAgentConstants:
     BUFFER_SIZE = 1024 * 128  # 128KB Process Buffer
     TCP_CHUNK = 65536  # 64KB Network Chunk
     TIMEOUT_LOG_APPEAR = 10.0
+    BIND_ADDRESS = '0.0.0.0'
+    BIND_PORT = 5005
 
     # JSON Protocol Keys
     K_CMD = 'cmd'
@@ -115,7 +116,7 @@ class TalosAgentConstants:
 
 
 # ==========================================
-# PART 1: The Engine (Pure Async)
+# PART 1: The Engine (Pure Async + Leash)
 # ==========================================
 
 
@@ -219,7 +220,6 @@ class AsyncLogMonitor:
         Waits (blocks) if queue is empty.
         Stops yielding when None is received (from stop()).
         """
-        # Ensure loop is running if stream is requested
         if not self._watcher_task:
             await self.start()
 
@@ -285,46 +285,67 @@ async def run_hydra_pipeline(
 ) -> int:
     """
     Orchestrates the Process Runner and Log Monitor using concurrent tasks.
-    Zero-latency: pushes data to callback immediately upon arrival.
+
+    CRITICAL: Implements "The Leash".
+    If output_callback raises a network error, the subprocess is KILLED immediately.
     """
     runner = AsyncProcessRunner(command)
     monitor = (
         AsyncLogMonitor(log_path, launch_time=time.time()) if log_path else None
     )
 
-    # 1. Start background components
     await runner.start()
     if monitor:
         await monitor.start()
 
-    # 2. Define piping tasks
+    # --- Piping Tasks with Leash Logic ---
+
     async def _pipe_runner():
-        async for line in runner.stream_output():
-            await output_callback(line)
+        try:
+            async for line in runner.stream_output():
+                await output_callback(line)
+        except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
+            # Leash Broken: Kill process immediately
+            runner.kill()
+            raise
 
     async def _pipe_monitor():
         if not monitor:
             return
-        async for line in monitor.stream_changes():
-            await output_callback(line)
+        try:
+            async for line in monitor.stream_changes():
+                await output_callback(line)
+        except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
+            # Leash Broken: Kill process immediately
+            runner.kill()
+            raise
 
-    # 3. Run pipes concurrently
+    # Start piping
     runner_task = asyncio.create_task(_pipe_runner())
     monitor_task = asyncio.create_task(_pipe_monitor())
 
-    # 4. Wait for process exit
-    exit_code = await runner.wait()
-    if exit_code is None:
-        exit_code = 1
+    try:
+        # Wait for process to exit naturally
+        exit_code = await runner.wait()
+        if exit_code is None:
+            exit_code = 1
 
-    # 5. Wait for stdout to fully drain
-    await runner_task
+        # Ensure stdout pipe finishes cleanly
+        await runner_task
 
-    # 6. Cleanup Monitor
-    if monitor:
-        # Stop puts the 'None' sentinel in the queue, causing _pipe_monitor to finish
-        await monitor.stop()
-        await monitor_task
+    except (asyncio.CancelledError, ConnectionResetError, BrokenPipeError):
+        # External cancellation or Network Failure during wait
+        runner.kill()
+        raise
+
+    finally:
+        # Cleanup Monitor regardless of success/failure
+        if monitor:
+            await monitor.stop()
+            try:
+                await monitor_task
+            except Exception:
+                pass
 
     return exit_code
 
@@ -335,9 +356,10 @@ async def run_hydra_pipeline(
 
 
 class TalosAgent:
-    def __init__(self, port: int = 5005):
+    def __init__(self, port: int = TalosAgentConstants.BIND_PORT):
         self.port = port
         self.logger = self._setup_logging()
+        self.active_tasks = set()
 
     def _setup_logging(self) -> logging.Logger:
         logging.basicConfig(
@@ -349,7 +371,7 @@ class TalosAgent:
     async def run_server(self) -> None:
         """Starts the AsyncIO TCP Server."""
         server = await asyncio.start_server(
-            self.handle_client, '0.0.0.0', self.port
+            self.handle_client, TalosAgentConstants.BIND_ADDRESS, self.port
         )
 
         addr = server.sockets[0].getsockname()
@@ -363,24 +385,28 @@ class TalosAgent:
     async def handle_client(
         self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
     ) -> None:
-        """
-        Async handler for a single connection.
-        """
+        """Async handler for a single connection."""
+
+        # Track this task for graceful shutdown logic (future proofing)
+        current_task = asyncio.current_task()
+        self.active_tasks.add(current_task)
+
         addr = writer.get_extra_info('peername')
         try:
             # Read Request
-            data = await reader.read(TalosAgentConstants.TCP_CHUNK)
-            message = data.decode(TalosAgentConstants.ENCODING).strip()
+            try:
+                data = await reader.read(TalosAgentConstants.TCP_CHUNK)
+            except OSError:
+                return  # Connection dead
 
+            message = data.decode(TalosAgentConstants.ENCODING).strip()
             if not message:
-                writer.close()
                 return
 
             try:
                 request = json.loads(message)
             except json.JSONDecodeError:
                 self.logger.error(f'Invalid JSON from {addr}')
-                writer.close()
                 return
 
             command = request.get(TalosAgentConstants.K_CMD, '').upper()
@@ -416,16 +442,20 @@ class TalosAgent:
         except Exception as e:
             self.logger.error(f'Handler error {addr}: {e}')
             if not writer.is_closing():
-                await self._send_json(
-                    writer, dict(status=TalosAgentConstants.S_ERROR, msg=str(e))
-                )
+                try:
+                    await self._send_json(
+                        writer,
+                        dict(status=TalosAgentConstants.S_ERROR, msg=str(e)),
+                    )
+                except:
+                    pass
         finally:
-            # Ensure connection closure
+            self.active_tasks.discard(current_task)
             try:
                 await writer.drain()
                 writer.close()
                 await writer.wait_closed()
-            except (ConnectionResetError, BrokenPipeError):
+            except (ConnectionResetError, BrokenPipeError, OSError):
                 pass
 
     async def _handle_execute(
@@ -446,12 +476,13 @@ class TalosAgent:
         full_cmd = [executable] + params
 
         # Callback: Writes directly to the socket buffer
+        # IMPORTANT: This is the trigger for "The Leash"
         async def socket_callback(text: str) -> None:
             payload = json.dumps(
                 dict(type=TalosAgentConstants.T_LOG, content=text)
             )
             writer.write((payload + '\n').encode(TalosAgentConstants.ENCODING))
-            # drain() yields control, allowing other tasks to run
+            # await drain() ensures we actually detect disconnections here and now
             await writer.drain()
 
         try:
@@ -470,14 +501,23 @@ class TalosAgent:
                 writer, dict(type=TalosAgentConstants.T_EXIT, code=exit_code)
             )
 
+        except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
+            self.logger.warning(
+                f'Connection lost during execution of {executable}. Process Killed.'
+            )
+            # No need to send response, client is gone.
+
         except Exception as e:
             self.logger.error(f'Exec crash: {e}')
-            await socket_callback(
-                f'{TalosAgentConstants.TAG_AGENT} CRASH: {e}\n'
-            )
-            await self._send_json(
-                writer, dict(type=TalosAgentConstants.T_EXIT, code=-1)
-            )
+            try:
+                await socket_callback(
+                    f'{TalosAgentConstants.TAG_AGENT} CRASH: {e}\n'
+                )
+                await self._send_json(
+                    writer, dict(type=TalosAgentConstants.T_EXIT, code=-1)
+                )
+            except Exception:
+                pass  # Already handling an error, can't do more
 
     async def _handle_update(
         self, writer: asyncio.StreamWriter, args: dict
@@ -528,7 +568,6 @@ class TalosAgent:
         except Exception:
             pass
 
-        # Graceful exit
         writer.close()
         sys.exit(0)
 
@@ -550,4 +589,5 @@ if __name__ == '__main__':
             )
         asyncio.run(agent.run_server())
     except KeyboardInterrupt:
+        print(f'\nShutting down... ({len(agent.active_tasks)} active tasks)')
         pass
