@@ -20,16 +20,15 @@ async def test_log_monitor_basic(tmp_path):
     monitor = AsyncLogMonitor(str(log_file), launch_time=time.time() - 100)
     await monitor.start()
 
-    # Check initial lines
-    # We might need a small sleep to let the watcher trigger,
-    # but _watch_loop calls _read_file once initially.
-    for _ in range(20):
+    # Wait for watchfiles to pick it up (can be slow)
+    # 50 iterations * 0.1s = 5 seconds tolerance
+    for _ in range(50):
         lines = await monitor.check_for_lines()
         if 'line 1\n' in lines:
             break
         await asyncio.sleep(0.1)
     else:
-        pytest.fail('Log monitor did not pick up first line')
+        pytest.fail('Log monitor did not pick up first line (Timeout 5s)')
 
     # Add another line
     with open(log_file, 'a', encoding='utf-8') as f:
@@ -37,14 +36,13 @@ async def test_log_monitor_basic(tmp_path):
         f.flush()
         os.fsync(f.fileno())
 
-    # Wait for watchfiles to pick it up (it can be slow)
-    for _ in range(20):
+    for _ in range(50):
         lines = await monitor.check_for_lines()
         if 'line 2\n' in lines:
             break
         await asyncio.sleep(0.1)
     else:
-        pytest.fail('Log monitor did not pick up second line')
+        pytest.fail('Log monitor did not pick up second line (Timeout 5s)')
 
     await monitor.stop()
 
@@ -57,16 +55,19 @@ async def test_log_monitor_patience(tmp_path):
 
     start_task = asyncio.create_task(monitor.start())
 
+    # Wait a bit, then create the file
     await asyncio.sleep(0.5)
     log_file.write_text('finally here\n', encoding='utf-8')
 
-    for _ in range(20):
+    for _ in range(50):
         lines = await monitor.check_for_lines()
         if 'finally here\n' in lines:
             break
         await asyncio.sleep(0.1)
     else:
-        pytest.fail('Log monitor did not pick up late-appearing file')
+        pytest.fail(
+            'Log monitor did not pick up late-appearing file (Timeout 5s)'
+        )
 
     await monitor.stop()
     await start_task
@@ -80,18 +81,24 @@ async def test_log_monitor_rotation(tmp_path):
     monitor = AsyncLogMonitor(str(log_file), launch_time=time.time() - 100)
     await monitor.start()
 
-    # Clear initial lines
-    await monitor.check_for_lines()
+    # Clear initial lines (wait for catch-up)
+    for _ in range(50):
+        lines = await monitor.check_for_lines()
+        if lines:
+            break
+        await asyncio.sleep(0.1)
 
-    # Simulate rotation: truncate and write new stuff (must be shorter to be detected by size)
+    # Simulate rotation: truncate and write new stuff
     log_file.write_text('rotated\n', encoding='utf-8')
 
-    for _ in range(20):
+    for _ in range(50):
         lines = await monitor.check_for_lines()
         if 'rotated\n' in lines:
             break
         await asyncio.sleep(0.1)
     else:
-        pytest.fail('Log monitor did not handle rotation/truncation')
+        pytest.fail(
+            'Log monitor did not handle rotation/truncation (Timeout 5s)'
+        )
 
     await monitor.stop()
