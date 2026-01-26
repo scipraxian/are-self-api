@@ -788,8 +788,8 @@
     "pk": 110,
     "fields": {
       "created": "2026-01-08T15:50:00Z",
-      "modified": "2026-01-23T20:19:02.901Z",
-      "name": "UAT Build",
+      "modified": "2026-01-26T17:43:04.964Z",
+      "name": "Pre-Release Build",
       "talos_executable": 5,
       "executable": 2,
       "order": 20,
@@ -896,8 +896,8 @@
     "pk": 143,
     "fields": {
       "created": "2026-01-17T02:00:50.156Z",
-      "modified": "2026-01-23T18:34:21.715Z",
-      "name": "MP Local UAT",
+      "modified": "2026-01-26T17:53:32.250Z",
+      "name": "Pre-Release Run",
       "talos_executable": 7,
       "executable": 7,
       "order": 1,
@@ -1096,8 +1096,8 @@
     "fields": {
       "created": "2026-01-20T00:54:46.432Z",
       "description": "Local Game Launcher",
-      "modified": "2026-01-20T01:03:01.418Z",
-      "name": "**LocalGameLauncher**",
+      "modified": "2026-01-26T17:53:58.185Z",
+      "name": "Pre-Release Run",
       "spells": [
         143
       ]
@@ -1113,6 +1113,19 @@
       "name": "Stage",
       "spells": [
         2,
+        3
+      ]
+    }
+  },
+  {
+    "model": "hydra.hydraspellbook",
+    "pk": "b7b1017e-0e5f-4e3d-b91a-13270b41b4b3",
+    "fields": {
+      "created": "2026-01-23T22:01:37.231Z",
+      "description": "RecordPSOs",
+      "modified": "2026-01-23T22:01:37.231Z",
+      "name": "RecordPSOs",
+      "spells": [
         3
       ]
     }
@@ -1163,8 +1176,8 @@
     "fields": {
       "created": "2026-01-08T16:00:00Z",
       "description": "Step 4 Standalone: UAT BuildCookRun with Archive.",
-      "modified": "2026-01-09T15:13:33.410Z",
-      "name": "UAT Build",
+      "modified": "2026-01-26T17:45:20.979Z",
+      "name": "Pre-Release Build",
       "spells": [
         110
       ]
