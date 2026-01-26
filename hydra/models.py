@@ -332,6 +332,10 @@ class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     )
     spell = models.ForeignKey(HydraSpell, on_delete=models.PROTECT)
 
+    target = models.ForeignKey(
+        'core.RemoteTarget', null=True, blank=True, on_delete=models.PROTECT
+    )
+
     celery_task_id = models.UUIDField(null=True, blank=True)
     status = models.ForeignKey(HydraHeadStatus, on_delete=models.PROTECT)
 
