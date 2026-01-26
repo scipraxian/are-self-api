@@ -431,10 +431,10 @@
     "pk": 36,
     "fields": {
       "created": "2026-01-21T19:54:58.926Z",
-      "modified": "2026-01-21T19:54:58.926Z",
-      "name": "Staging Directory is Windows",
+      "modified": "2026-01-26T18:27:15.436Z",
+      "name": "stagingdirectory Windows Folder",
       "flag": "-stagingdirectory=",
-      "value": "C:\\steambuild\\Windows"
+      "value": "C:\\talos_bin\\1_staging"
     }
   },
   {
@@ -519,10 +519,10 @@
     "pk": 44,
     "fields": {
       "created": "2026-01-21T20:25:50.209Z",
-      "modified": "2026-01-21T20:25:50.209Z",
-      "name": "Archive Directory",
+      "modified": "2026-01-26T17:35:55.478Z",
+      "name": "Pre-Release: Archive Directory",
       "flag": "-archivedirectory=",
-      "value": "C:\\steambuild"
+      "value": "C:\\talos_bin\\4_prerelease"
     }
   },
   {
@@ -552,8 +552,8 @@
     "pk": 47,
     "fields": {
       "created": "2026-01-22T21:55:32.999Z",
-      "modified": "2026-01-22T22:09:27.108Z",
-      "name": "Report Export Path",
+      "modified": "2026-01-26T17:36:14.728Z",
+      "name": "Test Report Destination",
       "flag": "-ReportExportPath=",
       "value": "c:\\talos\\live_reports"
     }
@@ -615,9 +615,9 @@
     "pk": 4,
     "fields": {
       "created": "2026-01-21T22:01:08.540Z",
-      "modified": "2026-01-21T22:01:25.992Z",
+      "modified": "2026-01-26T17:39:01.845Z",
       "name": "Get Collected PSO Rec Files",
-      "argument": "c:/steambuild/Windows/HSHVacancy/Saved/CollectedPSOs/*.rec*"
+      "argument": "C:/talos_bin/1_staging/Windows/HSHVacancy/Saved/CollectedPSOs/*.rec*"
     }
   },
   {
@@ -724,12 +724,12 @@
     "fields": {
       "created": "2026-01-21T00:00:00Z",
       "description": "RunUAT Batch File.",
-      "modified": "2026-01-21T00:00:00Z",
+      "modified": "2026-01-26T17:44:52.698Z",
       "name": "UNREAL_AUTOMATION_TOOL",
       "internal": false,
       "working_path": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Build\\BatchFiles",
       "executable": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Build\\BatchFiles\\RunUAT.bat",
-      "log": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log",
+      "log": "",
       "switches": [
         2,
         3,
@@ -743,12 +743,12 @@
     "fields": {
       "created": "2026-01-21T00:00:00Z",
       "description": "The cooked executable in the Staging Buffer.",
-      "modified": "2026-01-21T00:00:00Z",
+      "modified": "2026-01-26T17:41:13.831Z",
       "name": "UNREAL_STAGING",
       "internal": false,
-      "working_path": "C:\\steambuild\\Windows",
-      "executable": "C:\\steambuild\\Windows\\HSHVacancy.exe",
-      "log": "C:\\steambuild\\Windows\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log",
+      "working_path": "C:\\talos_bin\\1_staging\\Windows",
+      "executable": "C:\\talos_bin\\1_staging\\Windows\\HSHVacancy.exe",
+      "log": "C:\\talos_bin\\1_staging\\Windows\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log",
       "switches": []
     }
   },
@@ -758,7 +758,7 @@
     "fields": {
       "created": "2026-01-21T00:00:00Z",
       "description": "The cooked executable in the pre-release folder.",
-      "modified": "2026-01-26T16:47:18.000Z",
+      "modified": "2026-01-26T16:47:18Z",
       "name": "UNREAL_RELEASE_TEST",
       "internal": false,
       "working_path": "C:\\talos_bin\\4_prerelease\\Windows",
