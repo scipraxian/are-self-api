@@ -68,6 +68,7 @@ except ImportError:
 
 # Suppress "1 change detected" log spam
 logging.getLogger('watchfiles').setLevel(logging.WARNING)
+logger = logging.getLogger(__name__)
 
 
 class TalosAgentConstants:
@@ -199,7 +200,6 @@ class AsyncProcessRunner:
                 )
 
                 # 3. Fallback: Kill by Image Name (Catch detached children/launchers)
-                # This replicates the legacy logic that successfully stopped the game
                 print(
                     f'[KILL] Fallback: Sweeping for Image Name: {exe_name}...'
                 )
@@ -237,6 +237,9 @@ class AsyncLogMonitor:
         self._stop_event = asyncio.Event()
         self._file_found = False
 
+        # DEBUG CHATTER
+        print(f'[MONITOR] Initialized for: {self.file_path}')
+
     async def start(self) -> None:
         if not self._watcher_task:
             self._watcher_task = asyncio.create_task(self._watch_loop())
@@ -252,9 +255,9 @@ class AsyncLogMonitor:
 
         # Report if file never appeared
         if not self._file_found:
-            self._queue.put_nowait(
-                f"\n{TalosAgentConstants.TAG_MONITOR} Info: Log file '{self.file_path}' never appeared.\n"
-            )
+            msg = f"\n{TalosAgentConstants.TAG_MONITOR} Warn: Log file '{self.file_path}' never appeared.\n"
+            print(msg.strip())
+            self._queue.put_nowait(msg)
 
         # Signal end of stream
         self._queue.put_nowait(None)
@@ -276,33 +279,43 @@ class AsyncLogMonitor:
 
     async def _watch_loop(self) -> None:
         directory = os.path.dirname(self.file_path) or '.'
+        print(f'[MONITOR] Watching directory: {directory}')
 
         # 1. Patience Phase
         start_time = time.time()
+        print(f'[MONITOR] Waiting for file to appear...')
         while time.time() - start_time < TalosAgentConstants.TIMEOUT_LOG_APPEAR:
             if os.path.exists(self.file_path):
+                print(f'[MONITOR] File found: {self.file_path}')
                 break
             if self._stop_event.is_set():
                 return
             await asyncio.sleep(1.0)
 
         # 2. Watch Phase
-        self._read_file()
+        # Force check on first read to establish offset
+        self._read_file(force_check=True)
         try:
             async for _ in awatch(directory, stop_event=self._stop_event):
-                self._read_file()
+                # Event triggered: Trust the event, ignore mtime lag
+                self._read_file(force_check=True)
         except asyncio.CancelledError:
             pass
-        except Exception:
-            pass
+        except Exception as e:
+            print(f'[MONITOR] Watch loop crashed: {e}')
 
-    def _read_file(self) -> None:
+    def _read_file(self, force_check: bool = False) -> None:
         if not os.path.exists(self.file_path):
             return
-        if os.path.getmtime(self.file_path) < self.launch_time:
-            return
+
+        # Windows Lag Fix: If forced (via event), skip mtime check
+        if not self._file_found and not force_check:
+            mtime = os.path.getmtime(self.file_path)
+            if mtime < self.launch_time:
+                return
 
         try:
+            # Try to open with shared access (default in Python, but OS can lock)
             with open(
                 self.file_path,
                 'r',
@@ -311,33 +324,55 @@ class AsyncLogMonitor:
             ) as f:
                 f.seek(0, os.SEEK_END)
                 size = f.tell()
+
+                # Detect Truncation (New Run)
                 if size < self._current_offset:
+                    print(
+                        '[MONITOR] File truncation detected. Resetting offset.'
+                    )
                     self._current_offset = 0
 
                 f.seek(self._current_offset)
                 for line in f:
                     self._queue.put_nowait(line)
+
                 self._current_offset = f.tell()
-                self._file_found = True
-        except OSError:
-            pass
+                if not self._file_found:
+                    print(
+                        f'[MONITOR] Started streaming from offset {self._current_offset}'
+                    )
+                    self._file_found = True
+
+        except OSError as e:
+            # THIS IS THE CRITICAL FIX: Don't swallow errors!
+            print(f'[MONITOR ERROR] Failed to read log: {e}')
 
 
 async def run_hydra_pipeline(
     command: List[str],
     log_path: Optional[str],
     output_callback: Callable[[str], Awaitable[None]],
+    file_callback: Optional[Callable[[str], Awaitable[None]]] = None,
 ) -> int:
     """
     Orchestrates the Process Runner and Log Monitor using concurrent tasks.
 
+    Args:
+        command: The executable and arguments.
+        log_path: Path to the external log file to watch.
+        output_callback: Async callback for STDOUT/STDERR.
+        file_callback: Async callback for FILE LOGS. Defaults to output_callback if None.
+
     CRITICAL: Implements "The Leash".
-    If output_callback raises a network error, the subprocess is KILLED immediately.
+    If callbacks raise a network error, the subprocess is KILLED immediately.
     """
     runner = AsyncProcessRunner(command)
     monitor = (
         AsyncLogMonitor(log_path, launch_time=time.time()) if log_path else None
     )
+
+    # Determine destination for file logs
+    actual_file_callback = file_callback if file_callback else output_callback
 
     await runner.start()
     if monitor:
@@ -359,9 +394,8 @@ async def run_hydra_pipeline(
             return
         try:
             async for line in monitor.stream_changes():
-                await output_callback(line)
+                await actual_file_callback(line)
         except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
-            # Leash Broken: Kill process immediately
             runner.kill()
             raise
 
@@ -556,6 +590,7 @@ class TalosAgent:
             )
 
             # 2. Run Pipeline (Waits for completion)
+            # NOTE: Protocol currently merges streams. Update GenericSpellCaster to separate.
             exit_code = await run_hydra_pipeline(
                 full_cmd, log_path, socket_callback
             )

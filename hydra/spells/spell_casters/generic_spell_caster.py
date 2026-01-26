@@ -25,6 +25,7 @@ from talos_agent.talos_agent import run_hydra_pipeline
 
 logger = logging.getLogger(__name__)
 
+# Native Python Handlers (Synchronous)
 NATIVE_HANDLERS = dict(
     deploy_release_test=deploy_release_test,
     update_version_metadata=update_version_metadata,
@@ -34,24 +35,34 @@ NATIVE_HANDLERS = dict(
 class AsyncLogManager:
     """
     Handles buffered log writes to the Database with async safety.
+    Separates System Output (Execution Log) from Game Output (Spell Log).
     """
 
     def __init__(self, head: HydraHead, flush_size=50, flush_interval=1.0):
         self.head = head
-        self.buffer: List[str] = []
+        self.exec_buffer: List[str] = []
+        self.spell_buffer: List[str] = []
         self._lock = asyncio.Lock()
         self._last_flush_time = time.time()
         self._flush_size = flush_size
         self._flush_interval = flush_interval
 
     async def append(self, text: str):
+        """Appends to Execution Log (Stdout/System)."""
         async with self._lock:
-            self.buffer.append(text)
+            self.exec_buffer.append(text)
+            if self._should_flush():
+                await self._flush_unsafe()
+
+    async def append_spell(self, text: str):
+        """Appends to Spell Log (Game Logs/File)."""
+        async with self._lock:
+            self.spell_buffer.append(text)
             if self._should_flush():
                 await self._flush_unsafe()
 
     async def write_immediate(self, text: str):
-        """Writes to DB immediately (bypassing buffer) and logs to system."""
+        """Writes to Execution Log immediately and logs to system."""
         logger.info(f'[HEAD {self.head.id}] {text.strip()}')
 
         async with self._lock:
@@ -64,24 +75,46 @@ class AsyncLogManager:
             await self._flush_unsafe()
 
     def _should_flush(self) -> bool:
+        total_size = len(self.exec_buffer) + len(self.spell_buffer)
         return (
-            len(self.buffer) > self._flush_size
+            total_size > self._flush_size
             or (time.time() - self._last_flush_time) > self._flush_interval
         )
 
     async def _flush_unsafe(self):
-        if not self.buffer:
+        if not self.exec_buffer and not self.spell_buffer:
             return
 
-        chunk = ''.join(self.buffer)
-        self.head.execution_log += chunk
+        # Merge buffers into the head object
+        if self.exec_buffer:
+            self.head.execution_log += ''.join(self.exec_buffer)
+            self.exec_buffer.clear()
+
+        if self.spell_buffer:
+            self.head.spell_log += ''.join(self.spell_buffer)
+            self.spell_buffer.clear()
+
         await self._save_to_db()
-        self.buffer.clear()
         self._last_flush_time = time.time()
 
     async def _save_to_db(self):
+        """
+        Saves logs AND checks for ABORT signals from the Manager.
+        """
         try:
-            await sync_to_async(self.head.save)(update_fields=['execution_log'])
+            await sync_to_async(self.head.save)(
+                update_fields=['execution_log', 'spell_log']
+            )
+
+            # --- THE SUICIDE PACT ---
+            # Refresh status to check for remote kill signal
+            await sync_to_async(self.head.refresh_from_db)(fields=['status'])
+            if self.head.status_id == HydraHeadStatus.ABORTED:
+                raise ConnectionAbortedError('Hydra Head Aborted by User')
+
+        except ConnectionAbortedError:
+            # Re-raise to stop the pipeline
+            raise
         except Exception as e:
             logger.error(
                 f'Failed to save execution log for Head {self.head.id}: {e}'
@@ -131,17 +164,20 @@ class GenericSpellCaster:
         """
         logger.info(f'Initializing execution for Head ID: {self.head_id}')
 
+        # 1. Load State Synchronously (Safety Net)
         try:
             self._load_head_sync()
         except Exception as e:
             logger.error(f'FATAL: Could not load HydraHead {self.head_id}: {e}')
             return
 
+        # 2. Configure Windows Event Loop
         if sys.platform == 'win32':
             asyncio.set_event_loop_policy(
                 asyncio.WindowsProactorEventLoopPolicy()
             )
 
+        # 3. Enter Async Mode
         try:
             asyncio.run(self._execute_async())
         except Exception as e:
@@ -153,40 +189,45 @@ class GenericSpellCaster:
             self.logger = AsyncLogManager(self.head)
             await self._preflight()
 
-            # Launch tasks concurrently
+            # Launch the Spell AND the Abort Monitor concurrently
             spell_task = asyncio.create_task(self._cast_spell())
             monitor_task = asyncio.create_task(self._monitor_abort_signal())
 
-            # Wait for either completion or abort
+            # Wait for the spell to finish OR the monitor to kill it
             done, pending = await asyncio.wait(
-                [spell_task, monitor_task], return_when=asyncio.FIRST_COMPLETED
+                [spell_task, monitor_task],
+                return_when=asyncio.FIRST_COMPLETED,
             )
 
-            # --- CLEANUP / CANCELLATION ---
+            # Cleanup
             for task in pending:
-                task.cancel()  # <--- Sends CancelledError to run_hydra_pipeline
+                task.cancel()
                 try:
-                    await task  # <--- Waits for talos_agent to finish killing the process
+                    await task
                 except asyncio.CancelledError:
                     pass
 
+            # Check if the monitor killed us
             if monitor_task in done:
                 try:
-                    monitor_task.result()  # Will raise ConnectionAbortedError if aborted
+                    # If monitor finished, it means it raised an Abort exception
+                    exc = monitor_task.exception()
+                    if exc:
+                        raise exc
                 except ConnectionAbortedError:
                     logger.warning(
                         f'Head {self.head_id} execution aborted by user.'
                     )
                     return  # Exit gracefully
 
+            # If spell finished first, check for its errors
             if spell_task in done:
-                # Check if the spell crashed on its own
                 exc = spell_task.exception()
                 if exc:
                     raise exc
 
         except ConnectionAbortedError:
-            pass
+            pass  # Graceful exit
         except Exception as e:
             await self._handle_fatal_error(e)
 
@@ -232,32 +273,32 @@ class GenericSpellCaster:
             await self._execute_local_popen()
 
     async def _execute_local_popen(self):
+        # 1. Prepare Arguments
         cmd_list = await sync_to_async(spell_switches_and_arguments)(
             self.spell.id
         )
         full_cmd = [self.spell.talos_executable.executable] + cmd_list
         log_path = self.spell.talos_executable.log
 
+        # 2. Log Start
         await self.logger.write_immediate(f'[CMD] {" ".join(full_cmd)}\n')
         self.status = self.STATUS_STREAMING_LOGS
 
+        # 3. Run Pipeline
         logger.info(f'Running Pipeline for: {full_cmd}')
 
-        # NOTE: run_hydra_pipeline is awaited here.
-        # If _monitor_abort_signal raises exception, this task gets Cancelled.
-        # asyncio.CancelledError will bubble through here.
-        # Python's asyncio subprocess usually leaves orphans on cancellation.
-        # However, since we can't touch talos_agent right now, we rely on
-        # the OS cleaning up or the fact that we stop tracking it.
-        # Ideally, run_hydra_pipeline handles cancellation by killing the proc.
-
+        # CRITICAL UPDATE: Pass two separate callbacks
+        # 1. self.logger.append -> Goes to execution_log (Stdout)
+        # 2. self.logger.append_spell -> Goes to spell_log (File)
         exit_code = await run_hydra_pipeline(
             full_cmd,
             log_path,
             self.logger.append,
+            self.logger.append_spell,
         )
         logger.info(f'Pipeline finished with code: {exit_code}')
 
+        # 4. Final Flush & Result
         if exit_code == 0:
             await self.logger.write_immediate('\n[EXIT] Success.\n')
         else:
@@ -311,6 +352,7 @@ class GenericSpellCaster:
             logger.info(message)
 
     async def _save_head(self, fields: List[str]):
+        """Async wrapper for saving specific fields."""
         try:
             await sync_to_async(self.head.save)(update_fields=fields)
         except Exception as e:
@@ -331,6 +373,7 @@ class GenericSpellCaster:
     # =========================================================================
 
     def _handle_fatal_error_sync(self, e: Exception):
+        """Synchronous fallback for loop crashes."""
         logger.error(f'Critical Caster Failure: {e}')
         trace = traceback.format_exc()
         if self.head:
@@ -346,6 +389,7 @@ class GenericSpellCaster:
                 )
 
     async def _handle_fatal_error(self, e: Exception):
+        """Async error handler for pipeline logic."""
         logger.error(f'Pipeline execution failed: {e}')
         error_msg = f'\n[FATAL] Pipeline Error: {e}\n'
 
