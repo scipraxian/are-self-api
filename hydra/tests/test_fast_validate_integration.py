@@ -5,8 +5,15 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from environments.models import ProjectEnvironment
-from hydra.models import (HydraExecutable, HydraHead, HydraHeadStatus, HydraSpawn, HydraSpawnStatus, HydraSpell,
-                          HydraSpellbook)
+from hydra.models import (
+    HydraExecutable,
+    HydraHead,
+    HydraHeadStatus,
+    HydraSpawn,
+    HydraSpawnStatus,
+    HydraSpell,
+    HydraSpellbook,
+)
 
 
 class FastValidateIntegrationTest(TestCase):
@@ -51,7 +58,9 @@ class FastValidateIntegrationTest(TestCase):
 
     @mock.patch('hydra.hydra.cast_hydra_spell.delay')
     def test_button_click_launches_process(self, mock_celery):
+        mock_celery.return_value.id = "550e8400-e29b-41d4-a716-446655440000"
         # 1. Trigger Request using UUID
+
         url = reverse('hydra_launch', args=[self.book.id])
 
         # Capture commit callbacks
