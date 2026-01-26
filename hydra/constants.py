@@ -1,3 +1,4 @@
+ABORTED_LABEL = 'Aborted'
 CREATED_LABEL = 'Created'
 PENDING_LABEL = 'Pending'
 RUNNING_LABEL = 'Running'

@@ -1206,6 +1206,13 @@
     }
   },
   {
+    "model": "hydra.hydraspawnstatus",
+    "pk": 6,
+    "fields": {
+      "name": "Aborted"
+    }
+  },
+  {
     "model": "hydra.hydraheadstatus",
     "pk": 1,
     "fields": {
@@ -1238,6 +1245,13 @@
     "pk": 5,
     "fields": {
       "name": "Failed"
+    }
+  },
+  {
+    "model": "hydra.hydraheadstatus",
+    "pk": 6,
+    "fields": {
+      "name": "Aborted"
     }
   },
   {
