@@ -111,6 +111,7 @@ class TalosAgentConstants:
     K_CODE = 'code'
     K_HOST = 'hostname'
     K_VER = 'version'
+    K_SOURCE = 'source'
 
     # Commands
     CMD_PING = 'PING'
@@ -139,6 +140,7 @@ class TalosEvent(NamedTuple):
     type: str
     text: str = ''  # Default empty for non-log events
     code: int = -1  # Default -1 for non-exit events
+    source: str = 'stdout'  # 'stdout' or 'file'
 
 
 # ==========================================
@@ -607,13 +609,15 @@ class TalosAgent:
         try:
             # SELF-CONSUMPTION: Iterate over the local generator
             async for event in self.execute_local(cmd_list, log_path):
-                # construct payload with explicit typing for strict linters
                 response_payload: dict = {
                     TalosAgentConstants.K_TYPE: event.type
                 }
 
                 if event.type == TalosAgentConstants.T_LOG:
                     response_payload[TalosAgentConstants.K_CONTENT] = event.text
+                    response_payload[TalosAgentConstants.K_SOURCE] = (
+                        event.source
+                    )
                 elif event.type == TalosAgentConstants.T_EXIT:
                     response_payload[TalosAgentConstants.K_CODE] = event.code
 
@@ -709,22 +713,32 @@ class TalosAgent:
         """
         Executes a command LOCALLY using run_hydra_pipeline.
         Adapts the callback-based pipeline to an AsyncGenerator.
-        Yields: TalosEvent(type, text, code)
+        Yields: TalosEvent(type, text, code, source)
         """
-        # Queue serves as the bridge between callback and generator
         event_queue: asyncio.Queue[Optional[TalosEvent]] = asyncio.Queue()
 
-        # Adapter Callback
-        async def callback(text: str) -> None:
+        # 1. Stdout Callback (Source = stdout)
+        async def stdout_callback(text: str) -> None:
             await event_queue.put(
-                TalosEvent(type=TalosAgentConstants.T_LOG, text=text)
+                TalosEvent(
+                    type=TalosAgentConstants.T_LOG, text=text, source='stdout'
+                )
+            )
+
+        # 2. File Callback (Source = file)
+        async def file_callback(text: str) -> None:
+            await event_queue.put(
+                TalosEvent(
+                    type=TalosAgentConstants.T_LOG, text=text, source='file'
+                )
             )
 
         # Background Worker
         async def worker():
             try:
+                # Pass BOTH callbacks to the engine
                 exit_code = await run_hydra_pipeline(
-                    command, log_path, callback
+                    command, log_path, stdout_callback, file_callback
                 )
                 await event_queue.put(
                     TalosEvent(type=TalosAgentConstants.T_EXIT, code=exit_code)
@@ -751,7 +765,6 @@ class TalosAgent:
             )
 
             while True:
-                # No timeout/polling needed here. Queue waits efficiently.
                 event = await event_queue.get()
                 if event is None:
                     break
@@ -835,6 +848,9 @@ class TalosAgent:
                                 type=msg_type,
                                 text=data.get(
                                     TalosAgentConstants.K_CONTENT, ''
+                                ),
+                                source=data.get(
+                                    TalosAgentConstants.K_SOURCE, 'stdout'
                                 ),
                             )
                         elif msg_type == TalosAgentConstants.T_EXIT:

@@ -21,7 +21,11 @@ from hydra.spells.spell_casters.spell_handlers.version_metadata_handler import (
 from hydra.spells.spell_casters.switches_and_arguments import (
     spell_switches_and_arguments,
 )
-from talos_agent.talos_agent import run_hydra_pipeline
+from talos_agent.talos_agent import (
+    TalosAgent,
+    TalosAgentConstants,
+    TalosEvent,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +67,7 @@ class AsyncLogManager:
 
     async def write_immediate(self, text: str):
         """Writes to Execution Log immediately and logs to system."""
+        # Double Log: Ensures we see it in the Server Console (Celery) AND the DB
         logger.info(f'[HEAD {self.head.id}] {text.strip()}')
 
         async with self._lock:
@@ -102,15 +107,16 @@ class AsyncLogManager:
         Saves logs AND checks for ABORT signals from the Manager.
         """
         try:
+            # OPTIMIZATION: Check status BEFORE saving.
+            # If aborted, don't waste I/O writing logs that won't be read.
+            await sync_to_async(self.head.refresh_from_db)(fields=['status'])
+
+            if self.head.status_id == HydraHeadStatus.ABORTED:
+                raise ConnectionAbortedError('Hydra Head Aborted by User')
+
             await sync_to_async(self.head.save)(
                 update_fields=['execution_log', 'spell_log']
             )
-
-            # --- THE SUICIDE PACT ---
-            # Refresh status to check for remote kill signal
-            await sync_to_async(self.head.refresh_from_db)(fields=['status'])
-            if self.head.status_id == HydraHeadStatus.ABORTED:
-                raise ConnectionAbortedError('Hydra Head Aborted by User')
 
         except ConnectionAbortedError:
             # Re-raise to stop the pipeline
@@ -128,16 +134,10 @@ class GenericSpellCaster:
 
     LOG_START_MESSAGE = 'Starting spell execution.\n'
 
-    # Status Constants
-    STATUS_CREATED = 1
-    STATUS_RUNNING = 2
-    STATUS_STREAMING_LOGS = 3
-    STATUS_POST_PROCESSING = 4
-    STATUS_COMPLETE = 5
-    STATUS_FAILED = 6
-    STATUS_ABORTED = 7
+    # Internal Status Constants (Extended Granularity)
+    STATUS_STREAMING_LOGS = 100
 
-    STATUSES_WHICH_HALT = [STATUS_FAILED, STATUS_ABORTED]
+    STATUSES_WHICH_HALT = [HydraHeadStatus.FAILED, HydraHeadStatus.ABORTED]
 
     # DB Field Names
     EXECUTION_LOG_FIELD = 'execution_log'
@@ -151,7 +151,7 @@ class GenericSpellCaster:
         # Runtime State
         self.head: Optional[HydraHead] = None
         self.spell = None
-        self.status = self.STATUS_CREATED
+        self.status = HydraHeadStatus.CREATED
         self.logger: Optional[AsyncLogManager] = None
 
     # =========================================================================
@@ -160,7 +160,7 @@ class GenericSpellCaster:
 
     def execute(self):
         """
-        Public Synchronous Entry Point.
+        Public Synchronous Entry Point (Called by Celery).
         """
         logger.info(f'Initializing execution for Head ID: {self.head_id}')
 
@@ -189,7 +189,8 @@ class GenericSpellCaster:
             self.logger = AsyncLogManager(self.head)
             await self._preflight()
 
-            # Launch the Spell AND the Abort Monitor concurrently
+            # Launch the Spell AND the Abort Monitor concurrently.
+            # This is the "Race-Free Dual Task Pattern".
             spell_task = asyncio.create_task(self._cast_spell())
             monitor_task = asyncio.create_task(self._monitor_abort_signal())
 
@@ -237,24 +238,28 @@ class GenericSpellCaster:
 
     async def _monitor_abort_signal(self):
         """
-        Background task that checks DB status every second.
-        Raises ConnectionAbortedError if user clicked 'Terminate'.
+        Background task that checks DB status.
+        Uses LINEAR BACKOFF to reduce DB pressure on long jobs.
         """
+        check_interval = 1.0
+        max_interval = 5.0
+
         while True:
-            await asyncio.sleep(1.0)
+            await asyncio.sleep(check_interval)
 
             # Use sync_to_async to safely hit DB
             await sync_to_async(self.head.refresh_from_db)(fields=['status'])
 
             if self.head.status_id == HydraHeadStatus.ABORTED:
-                # Log the kill
                 if self.logger:
                     await self.logger.write_immediate(
                         '\n[ABORT] Received Kill Signal from Hydra.\n'
                     )
-
-                # This exception will cancel the _cast_spell task
                 raise ConnectionAbortedError('Aborted by User')
+
+            # Backoff logic
+            if check_interval < max_interval:
+                check_interval = min(check_interval + 0.5, max_interval)
 
     async def _cast_spell(self):
         self._log_info(f'Launching {self.spell.name}')
@@ -263,52 +268,94 @@ class GenericSpellCaster:
         await self._executable_router()
 
         if self.status not in self.STATUSES_WHICH_HALT:
-            self.status = self.STATUS_COMPLETE
+            self.status = HydraHeadStatus.SUCCESS
             await self._update_status(HydraHeadStatus.SUCCESS)
 
     async def _executable_router(self):
+        """
+        Routes execution to internal python handlers or the unified pipeline.
+        """
         if self.spell.talos_executable.internal:
             await self._execute_local_python()
         else:
-            await self._execute_local_popen()
+            await self._execute_unified_pipeline()
 
-    async def _execute_local_popen(self):
+    async def _execute_unified_pipeline(self):
+        """
+        Uses TalosAgent to run the spell either locally or remotely.
+        Replaces the old _execute_local_popen.
+        """
         # 1. Prepare Arguments
         cmd_list = await sync_to_async(spell_switches_and_arguments)(
             self.spell.id
         )
-        full_cmd = [self.spell.talos_executable.executable] + cmd_list
+        executable = self.spell.talos_executable.executable
+        full_cmd = [executable] + cmd_list
         log_path = self.spell.talos_executable.log
 
-        # 2. Log Start
-        await self.logger.write_immediate(f'[CMD] {" ".join(full_cmd)}\n')
+        # 2. Determine Target (Local vs Remote)
+        is_remote = self.head.target is not None
+        target_name = self.head.target.hostname if is_remote else 'Local Server'
+
+        # 3. Log Start
+        await self.logger.write_immediate(
+            f'[ROUTER] Target: {target_name}\n[CMD] {" ".join(full_cmd)}\n'
+        )
         self.status = self.STATUS_STREAMING_LOGS
 
-        # 3. Run Pipeline
-        logger.info(f'Running Pipeline for: {full_cmd}')
+        # 4. Initialize Stream (Unified Interface)
+        if is_remote:
+            event_stream = TalosAgent.execute_remote(
+                target_hostname=self.head.target.hostname,
+                executable=executable,
+                params=cmd_list,
+                log_path=log_path,
+            )
+        else:
+            event_stream = TalosAgent.execute_local(
+                command=full_cmd,
+                log_path=log_path,
+            )
 
-        # CRITICAL UPDATE: Pass two separate callbacks
-        # 1. self.logger.append -> Goes to execution_log (Stdout)
-        # 2. self.logger.append_spell -> Goes to spell_log (File)
-        exit_code = await run_hydra_pipeline(
-            full_cmd,
-            log_path,
-            self.logger.append,
-            self.logger.append_spell,
-        )
-        logger.info(f'Pipeline finished with code: {exit_code}')
+        # 5. Consume Stream
+        exit_code = -1
+        try:
+            async for event in event_stream:
+                if event.type == TalosAgentConstants.T_LOG:
+                    # ROUTING LOGIC
+                    if event.source == 'file':
+                        await self.logger.append_spell(event.text)
+                    else:
+                        await self.logger.append(event.text)
 
-        # 4. Final Flush & Result
+                elif event.type == TalosAgentConstants.T_EXIT:
+                    exit_code = event.code
+        except Exception as e:
+            await self.logger.write_immediate(f'\n[STREAM ERROR] {e}\n')
+            self.status = HydraHeadStatus.FAILED
+            await self._update_status(HydraHeadStatus.FAILED)
+            return
+
+        # 6. Final Flush & Result
+        # Flush any remaining logs in buffer
+        await self.logger.flush()
+
         if exit_code == 0:
             await self.logger.write_immediate('\n[EXIT] Success.\n')
         else:
             await self.logger.write_immediate(
                 f'\n[EXIT] Process failed with code {exit_code}\n'
             )
-            self.status = self.STATUS_FAILED
+            self.status = HydraHeadStatus.FAILED
             await self._update_status(HydraHeadStatus.FAILED)
 
     async def _execute_local_python(self):
+        """
+        Runs a legacy synchronous Python handler.
+
+        WARNING: These handlers run in a thread pool and cannot be aborted
+        mid-execution. The abort signal will be processed only after completion.
+        """
         slug = self.spell.talos_executable.executable
         if slug not in NATIVE_HANDLERS:
             raise NotImplementedError(f'No handler found for slug: {slug}')
@@ -323,7 +370,7 @@ class GenericSpellCaster:
         except Exception as e:
             self.head.spell_log = f'Native Handler Exception: {str(e)}'
             await self._save_head(fields=[self.SPELL_LOG_FIELD])
-            self.status = self.STATUS_FAILED
+            self.status = HydraHeadStatus.FAILED
             await self._update_status(HydraHeadStatus.FAILED)
             return
 
@@ -343,7 +390,7 @@ class GenericSpellCaster:
 
     def _load_head_sync(self):
         self.head = HydraHead.objects.select_related(
-            'spell', 'spell__talos_executable'
+            'spell', 'spell__talos_executable', 'target'
         ).get(id=self.head_id)
         self.spell = self.head.spell
 
@@ -405,4 +452,4 @@ class GenericSpellCaster:
             except Exception:
                 pass
 
-        self.status = self.STATUS_FAILED
+        self.status = HydraHeadStatus.FAILED
