@@ -584,7 +584,13 @@ class TalosAgent:
     async def _handle_execute(
         self, writer: asyncio.StreamWriter, args: dict
     ) -> None:
-        """Runs the pipeline and streams results back to the open socket."""
+        """Runs the pipeline and streams results back to the open socket.
+
+        ARCHITECTURE NOTE: This method uses execute_local() internally,
+        ensuring remote clients get the exact same execution behavior as
+        local callers. This "eat your own dog food" pattern guarantees
+        consistency and reduces code duplication.
+        """
         executable = args.get('executable')
         params = args.get('params', [])
         log_path = args.get('log_path')
@@ -596,34 +602,25 @@ class TalosAgent:
             )
             return
 
-        full_cmd = [executable] + params
-
-        # Callback: Writes directly to the socket buffer
-        # IMPORTANT: This is the trigger for "The Leash"
-        async def socket_callback(text: str) -> None:
-            payload = json.dumps(
-                dict(type=TalosAgentConstants.T_LOG, content=text)
-            )
-            writer.write((payload + '\n').encode(TalosAgentConstants.ENCODING))
-            # await drain() ensures we actually detect disconnections here and now
-            await writer.drain()
+        cmd_list = [executable] + params
 
         try:
-            # 1. Notify Start
-            await socket_callback(
-                f'{TalosAgentConstants.TAG_AGENT} Launching: {" ".join(full_cmd)}\n'
-            )
+            # SELF-CONSUMPTION: Iterate over the local generator
+            async for event in self.execute_local(cmd_list, log_path):
+                # construct payload with explicit typing for strict linters
+                response_payload: dict = {
+                    TalosAgentConstants.K_TYPE: event.type
+                }
 
-            # 2. Run Pipeline (Waits for completion)
-            # NOTE: Protocol currently merges streams. Update GenericSpellCaster to separate.
-            exit_code = await run_hydra_pipeline(
-                full_cmd, log_path, socket_callback
-            )
+                if event.type == TalosAgentConstants.T_LOG:
+                    response_payload[TalosAgentConstants.K_CONTENT] = event.text
+                elif event.type == TalosAgentConstants.T_EXIT:
+                    response_payload[TalosAgentConstants.K_CODE] = event.code
 
-            # 3. Notify End
-            await self._send_json(
-                writer, dict(type=TalosAgentConstants.T_EXIT, code=exit_code)
-            )
+                # If the client has disconnected, this await will crash.
+                # That crash stops the generator iteration.
+                # The generator's 'finally' block triggers and kills the process.
+                await self._send_json(writer, response_payload)
 
         except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
             self.logger.warning(
@@ -632,16 +629,15 @@ class TalosAgent:
             # No need to send response, client is gone.
 
         except Exception as e:
-            self.logger.error(f'Exec crash: {e}')
-            try:
-                await socket_callback(
-                    f'{TalosAgentConstants.TAG_AGENT} CRASH: {e}\n'
-                )
-                await self._send_json(
-                    writer, dict(type=TalosAgentConstants.T_EXIT, code=-1)
-                )
-            except Exception:
-                pass  # Already handling an error, can't do more
+            self.logger.error(f'Handler critical error: {e}')
+            # Attempt to send error if connection is still alive
+            if not writer.is_closing():
+                try:
+                    await self._send_json(
+                        writer, dict(type=TalosAgentConstants.T_EXIT, code=-1)
+                    )
+                except Exception:
+                    pass
 
     async def _handle_update(
         self, writer: asyncio.StreamWriter, args: dict
@@ -711,94 +707,64 @@ class TalosAgent:
         log_path: Optional[str] = None,
     ) -> AsyncGenerator[TalosEvent, None]:
         """
-        Executes a command LOCALLY on this machine.
+        Executes a command LOCALLY using run_hydra_pipeline.
+        Adapts the callback-based pipeline to an AsyncGenerator.
         Yields: TalosEvent(type, text, code)
         """
-        runner = AsyncProcessRunner(command)
-        monitor = (
-            AsyncLogMonitor(log_path, launch_time=time.time())
-            if log_path
-            else None
-        )
+        # Queue serves as the bridge between callback and generator
+        event_queue: asyncio.Queue[Optional[TalosEvent]] = asyncio.Queue()
 
-        # Strictly Typed Queue
-        queue: asyncio.Queue[TalosEvent] = asyncio.Queue()
+        # Adapter Callback
+        async def callback(text: str) -> None:
+            await event_queue.put(
+                TalosEvent(type=TalosAgentConstants.T_LOG, text=text)
+            )
 
-        # Producer Tasks
-        async def _pipe_runner():
+        # Background Worker
+        async def worker():
             try:
-                async for line in runner.stream_output():
-                    await queue.put(
-                        TalosEvent(type=TalosAgentConstants.T_LOG, text=line)
+                exit_code = await run_hydra_pipeline(
+                    command, log_path, callback
+                )
+                await event_queue.put(
+                    TalosEvent(type=TalosAgentConstants.T_EXIT, code=exit_code)
+                )
+            except Exception as e:
+                await event_queue.put(
+                    TalosEvent(
+                        type=TalosAgentConstants.T_LOG,
+                        text=f'{TalosAgentConstants.TAG_AGENT} CRASH: {e}\n',
                     )
-            except Exception:
-                pass
+                )
+                await event_queue.put(
+                    TalosEvent(type=TalosAgentConstants.T_EXIT, code=-1)
+                )
+            finally:
+                await event_queue.put(None)  # Sentinel
 
-        async def _pipe_monitor():
-            if monitor:
-                try:
-                    async for line in monitor.stream_changes():
-                        await queue.put(
-                            TalosEvent(
-                                type=TalosAgentConstants.T_LOG, text=line
-                            )
-                        )
-                except Exception:
-                    pass
+        task = asyncio.create_task(worker())
 
         try:
-            await runner.start()
-            if monitor:
-                await monitor.start()
-
-            runner_task = asyncio.create_task(_pipe_runner())
-            monitor_task = asyncio.create_task(_pipe_monitor())
-
             yield TalosEvent(
                 type=TalosAgentConstants.T_LOG,
                 text=f'{TalosAgentConstants.TAG_AGENT} Launching Local: {" ".join(command)}\n',
             )
 
-            # Wait Loop
             while True:
-                while not queue.empty():
-                    yield await queue.get()
-
-                if not runner.is_running and queue.empty():
+                # No timeout/polling needed here. Queue waits efficiently.
+                event = await event_queue.get()
+                if event is None:
                     break
-
-                try:
-                    yield await asyncio.wait_for(queue.get(), timeout=0.1)
-                except asyncio.TimeoutError:
-                    continue
-
-            await runner_task
-
-            exit_code = await runner.wait()
-            yield TalosEvent(
-                type=TalosAgentConstants.T_EXIT,
-                code=exit_code if exit_code is not None else 1,
-            )
+                yield event
 
         except GeneratorExit:
-            logger.info('[AGENT] Leash Broken. Killing process...')
-            runner.kill()
+            logger.info('[AGENT] Generator Closed. Cancelling pipeline...')
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
             raise
-        except Exception as e:
-            logger.info(f'[AGENT] Execution Crash: {e}')
-            runner.kill()
-            yield TalosEvent(
-                type=TalosAgentConstants.T_LOG,
-                text=f'{TalosAgentConstants.TAG_AGENT} CRASH: {e}\n',
-            )
-            yield TalosEvent(type=TalosAgentConstants.T_EXIT, code=-1)
-        finally:
-            if monitor:
-                await monitor.stop()
-                try:
-                    await monitor_task
-                except Exception:
-                    pass
 
     @classmethod
     async def execute_remote(
