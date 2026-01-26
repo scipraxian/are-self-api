@@ -24,11 +24,16 @@ Architecture:
 -------------
 * **Pure AsyncIO:** Single-threaded, event-loop based design handles TCP,
     Process I/O, and File I/O concurrently without thread context switching.
+* **Unified Interface:** "Eat your own dog food" design—the Agent uses the
+    exact same execution logic (`execute_local`) for internal tasks as it
+    exposes to remote clients.
+* **Strict Typing:** All events are emitted as strictly typed NamedTuples
+    (`TalosEvent`) to eliminate ambiguity between Logs and Exit Codes.
 * **Stateless:** Does not connect to the Database. It is a "dumb" executor
     controlled entirely by the Hydra Spell Caster.
 
 Security:
---------
+---------
 * **Input Validation:** All user input is validated and sanitized to prevent
     command injection and other security vulnerabilities.
 * **Logging:** Comprehensive logging is implemented to track all operations
@@ -57,7 +62,16 @@ import socket
 import subprocess
 import sys
 import time
-from typing import AsyncGenerator, Awaitable, Callable, List, Optional
+from typing import (
+    AsyncGenerator,
+    Awaitable,
+    Callable,
+    List,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Union,
+)
 
 # --- DEPENDENCIES ---
 try:
@@ -114,6 +128,17 @@ class TalosAgentConstants:
     # Logging Tags
     TAG_MONITOR = '[MONITOR]'
     TAG_AGENT = '[AGENT]'
+
+
+class TalosEvent(NamedTuple):
+    """
+    Strictly typed event structure.
+    Removes ambiguity: 'text' is always for logs, 'code' is always for status.
+    """
+
+    type: str
+    text: str = ''  # Default empty for non-log events
+    code: int = -1  # Default -1 for non-exit events
 
 
 # ==========================================
@@ -677,6 +702,199 @@ class TalosAgent:
         payload = json.dumps(data) + '\n'
         writer.write(payload.encode(TalosAgentConstants.ENCODING))
         await writer.drain()
+
+    # Execution Modules
+    @classmethod
+    async def execute_local(
+        cls,
+        command: List[str],
+        log_path: Optional[str] = None,
+    ) -> AsyncGenerator[TalosEvent, None]:
+        """
+        Executes a command LOCALLY on this machine.
+        Yields: TalosEvent(type, text, code)
+        """
+        runner = AsyncProcessRunner(command)
+        monitor = (
+            AsyncLogMonitor(log_path, launch_time=time.time())
+            if log_path
+            else None
+        )
+
+        # Strictly Typed Queue
+        queue: asyncio.Queue[TalosEvent] = asyncio.Queue()
+
+        # Producer Tasks
+        async def _pipe_runner():
+            try:
+                async for line in runner.stream_output():
+                    await queue.put(
+                        TalosEvent(type=TalosAgentConstants.T_LOG, text=line)
+                    )
+            except Exception:
+                pass
+
+        async def _pipe_monitor():
+            if monitor:
+                try:
+                    async for line in monitor.stream_changes():
+                        await queue.put(
+                            TalosEvent(
+                                type=TalosAgentConstants.T_LOG, text=line
+                            )
+                        )
+                except Exception:
+                    pass
+
+        try:
+            await runner.start()
+            if monitor:
+                await monitor.start()
+
+            runner_task = asyncio.create_task(_pipe_runner())
+            monitor_task = asyncio.create_task(_pipe_monitor())
+
+            yield TalosEvent(
+                type=TalosAgentConstants.T_LOG,
+                text=f'{TalosAgentConstants.TAG_AGENT} Launching Local: {" ".join(command)}\n',
+            )
+
+            # Wait Loop
+            while True:
+                while not queue.empty():
+                    yield await queue.get()
+
+                if not runner.is_running and queue.empty():
+                    break
+
+                try:
+                    yield await asyncio.wait_for(queue.get(), timeout=0.1)
+                except asyncio.TimeoutError:
+                    continue
+
+            await runner_task
+
+            exit_code = await runner.wait()
+            yield TalosEvent(
+                type=TalosAgentConstants.T_EXIT,
+                code=exit_code if exit_code is not None else 1,
+            )
+
+        except GeneratorExit:
+            logger.info('[AGENT] Leash Broken. Killing process...')
+            runner.kill()
+            raise
+        except Exception as e:
+            logger.info(f'[AGENT] Execution Crash: {e}')
+            runner.kill()
+            yield TalosEvent(
+                type=TalosAgentConstants.T_LOG,
+                text=f'{TalosAgentConstants.TAG_AGENT} CRASH: {e}\n',
+            )
+            yield TalosEvent(type=TalosAgentConstants.T_EXIT, code=-1)
+        finally:
+            if monitor:
+                await monitor.stop()
+                try:
+                    await monitor_task
+                except Exception:
+                    pass
+
+    @classmethod
+    async def execute_remote(
+        cls,
+        target_hostname: str,
+        executable: str,
+        params: List[str],
+        log_path: str = '',
+    ) -> AsyncGenerator[TalosEvent, None]:
+        """
+        Executes a command REMOTELY via TCP.
+        Yields: TalosEvent(type, text, code)
+        """
+        payload = {
+            TalosAgentConstants.K_CMD: TalosAgentConstants.CMD_EXECUTE,
+            TalosAgentConstants.K_ARGS: {
+                'executable': executable,
+                'params': params,
+                'log_path': log_path,
+            },
+        }
+
+        writer = None
+        try:
+            reader, writer = await asyncio.open_connection(
+                target_hostname, TalosAgentConstants.BIND_PORT
+            )
+        except Exception as e:
+            logger.info(f'[AGENT] Remote Connection Failed: {e}')
+            yield TalosEvent(
+                type=TalosAgentConstants.T_LOG,
+                text=f'[FATAL] Connection Failed: {e}\n',
+            )
+            yield TalosEvent(type=TalosAgentConstants.T_EXIT, code=-1)
+            return
+
+        try:
+            msg = json.dumps(payload) + '\n'
+            writer.write(msg.encode(TalosAgentConstants.ENCODING))
+            await writer.drain()
+
+            buffer = ''
+            while True:
+                try:
+                    chunk = await reader.read(TalosAgentConstants.TCP_CHUNK)
+                except Exception:
+                    break
+
+                if not chunk:
+                    break
+
+                buffer += chunk.decode(
+                    TalosAgentConstants.ENCODING,
+                    errors=TalosAgentConstants.ERR_HANDLER,
+                )
+
+                while '\n' in buffer:
+                    line, buffer = buffer.split('\n', 1)
+                    if not line.strip():
+                        continue
+
+                    try:
+                        data = json.loads(line)
+                        msg_type = data.get(TalosAgentConstants.K_TYPE)
+
+                        if msg_type == TalosAgentConstants.T_LOG:
+                            yield TalosEvent(
+                                type=msg_type,
+                                text=data.get(
+                                    TalosAgentConstants.K_CONTENT, ''
+                                ),
+                            )
+                        elif msg_type == TalosAgentConstants.T_EXIT:
+                            raw_code = data.get(TalosAgentConstants.K_CODE)
+                            safe_code = (
+                                int(raw_code) if raw_code is not None else -1
+                            )
+                            yield TalosEvent(type=msg_type, code=safe_code)
+                            return
+                    except (json.JSONDecodeError, ValueError):
+                        logger.info(f'[AGENT] Decode Error: {line}')
+
+        except Exception as e:
+            logger.info(f'[AGENT] Remote Stream Error: {e}')
+            yield TalosEvent(
+                type=TalosAgentConstants.T_LOG,
+                text=f'\n[FATAL] Stream Error: {e}\n',
+            )
+            yield TalosEvent(type=TalosAgentConstants.T_EXIT, code=-1)
+        finally:
+            if writer:
+                writer.close()
+                try:
+                    await writer.wait_closed()
+                except Exception:
+                    pass
 
 
 if __name__ == '__main__':
