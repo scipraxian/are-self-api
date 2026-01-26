@@ -757,13 +757,13 @@
     "pk": 7,
     "fields": {
       "created": "2026-01-21T00:00:00Z",
-      "description": "The cooked executable in the Release Test folder.",
-      "modified": "2026-01-21T00:00:00Z",
+      "description": "The cooked executable in the pre-release folder.",
+      "modified": "2026-01-26T16:47:18.000Z",
       "name": "UNREAL_RELEASE_TEST",
       "internal": false,
-      "working_path": "C:\\steambuild\\ReleaseTest",
-      "executable": "C:\\steambuild\\ReleaseTest\\HSHVacancy.exe",
-      "log": "C:\\steambuild\\ReleaseTest\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log",
+      "working_path": "C:\\talos_bin\\4_prerelease\\Windows",
+      "executable": "C:\\talos_bin\\4_prerelease\\Windows\\HSHVacancy.exe",
+      "log": "C:\\talos_bin\\4_prerelease\\Windows\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log",
       "switches": []
     }
   },

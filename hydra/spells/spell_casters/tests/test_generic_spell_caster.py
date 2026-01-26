@@ -13,12 +13,10 @@ def mock_head():
     head = MagicMock()
     head.id = uuid.uuid4()
     head.spell.name = 'Test Spell'
-    # Default values matching the tests
     head.spell.talos_executable.executable = 'UnrealEditor-Cmd.exe'
     head.spell.talos_executable.log = 'C:/Logs/Test.log'
     head.spell.talos_executable.internal = False
 
-    # Initial log state
     head.execution_log = ''
     head.spell_log = ''
     return head
@@ -38,21 +36,20 @@ def mock_switches():
 class TestGenericSpellCaster:
     def test_init_starts_execution(self, mock_head, mock_switches):
         """Test that execute() kicks off the process."""
-        # 1. Setup State
         mock_head.spell.talos_executable.internal = False
 
-        # 2. Patch the Pipeline
         with patch(
             'hydra.spells.spell_casters.generic_spell_caster.run_hydra_pipeline'
         ) as mock_pipeline:
             mock_pipeline.return_value = 0
 
-            # 3. Bypass DB loading
-            with patch.object(GenericSpellCaster, '_load_head') as mock_load:
+            # FIX: Patch the SYNC method, not the async one
+            with patch.object(
+                GenericSpellCaster, '_load_head_sync'
+            ) as mock_load:
                 mock_load.return_value = None
 
                 caster = GenericSpellCaster(mock_head.id)
-                # Manually inject state
                 caster.head = mock_head
                 caster.spell = mock_head.spell
 
@@ -61,17 +58,16 @@ class TestGenericSpellCaster:
                 mock_pipeline.assert_called_once()
 
     def test_async_pipeline_success(self, mock_head, mock_switches):
-        """Test the happy path: Process runs and updates status."""
-        # Setup
         mock_head.spell.talos_executable.internal = False
 
         with patch(
             'hydra.spells.spell_casters.generic_spell_caster.run_hydra_pipeline'
         ) as mock_pipeline:
-            # Pipeline returns 0 (Success)
             mock_pipeline.return_value = 0
 
-            with patch.object(GenericSpellCaster, '_load_head') as mock_load:
+            with patch.object(
+                GenericSpellCaster, '_load_head_sync'
+            ) as mock_load:
                 mock_load.return_value = None
 
                 caster = GenericSpellCaster(mock_head.id)
@@ -80,30 +76,20 @@ class TestGenericSpellCaster:
 
                 caster.execute()
 
-                # Verify Exit Status Update
-                # Note: We check if _update_status was called or simply check the side effects
-                # Since we are mocking everything, we assume the Caster logic works if pipeline returns 0
-                # But wait, we need to verify the Caster actually WROTE the success status.
-                # Since 'head.save' is what triggers the write, we check the head object.
-
-                # The Caster writes directly to the head object in memory before saving
-                # However, since we bypassed _load_head, we are checking the mock_head instance.
-                # GenericSpellCaster calls: await self._update_status(HydraHeadStatus.SUCCESS)
-                # Which calls: await sync_to_async(self.head.save)(...)
-
+                # Verify calling save (success update)
                 assert mock_head.save.called
 
     def test_async_pipeline_failure(self, mock_head, mock_switches):
-        """Test the sad path: Process returns non-zero exit code."""
         mock_head.spell.talos_executable.internal = False
 
         with patch(
             'hydra.spells.spell_casters.generic_spell_caster.run_hydra_pipeline'
         ) as mock_pipeline:
-            # Pipeline returns 255 (Failure)
             mock_pipeline.return_value = 255
 
-            with patch.object(GenericSpellCaster, '_load_head') as mock_load:
+            with patch.object(
+                GenericSpellCaster, '_load_head_sync'
+            ) as mock_load:
                 mock_load.return_value = None
 
                 caster = GenericSpellCaster(mock_head.id)
@@ -112,20 +98,11 @@ class TestGenericSpellCaster:
 
                 caster.execute()
 
-                # Should trigger failure status
-                # It writes to the log then saves
-                assert mock_pipeline.called
-
-                # We can verify that the Caster TRIED to update the status to FAILED.
-                # Since 'head' is a mock, we check its attribute assignment isn't enough,
-                # we need to ensure the logic flow hit the failure block.
-                # The easiest way is to check the last call to 'save' or check 'status_id' if implemented.
-                assert caster.status == GenericSpellCaster.STATUS_FAILED
+                # Check that we set status to FAILED (6)
+                assert caster.status == 6
 
     def test_command_quoting_logic(self, mock_head):
-        """Verify caster correctly combines executable and argument list."""
         mock_head.spell.talos_executable.internal = False
-        # FIX: Align the fixture data with the test expectation
         mock_head.spell.talos_executable.executable = 'RunUAT.bat'
 
         with patch(
@@ -139,7 +116,7 @@ class TestGenericSpellCaster:
                 mock_pipeline.return_value = 0
 
                 with patch.object(
-                    GenericSpellCaster, '_load_head'
+                    GenericSpellCaster, '_load_head_sync'
                 ) as mock_load:
                     mock_load.return_value = None
 

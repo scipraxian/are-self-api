@@ -72,21 +72,17 @@ class Hydra:
                 self._create_heads()
 
         # Dispatch first wave (New Transaction)
-        self._dispatch_next_wave()
+        self.dispatch_next_wave()
 
     def terminate(self) -> None:
         """
         Aborts the spawn.
-
-        CRITICAL: Performs DB updates inside the lock, but pushes
-        Celery revocation (Network I/O) outside to prevent DB deadlocks.
         """
         task_ids_to_revoke = []
 
         with transaction.atomic():
             spawn = HydraSpawn.objects.select_for_update().get(id=self.spawn.id)
 
-            # Don't terminate if already done
             if spawn.status_id in [
                 HydraSpawnStatus.SUCCESS,
                 HydraSpawnStatus.FAILED,
@@ -96,7 +92,6 @@ class Hydra:
                 )
                 return
 
-            # Lock running heads
             running_heads = list(
                 spawn.heads.select_for_update().filter(
                     status_id__in=[
@@ -108,7 +103,7 @@ class Hydra:
 
             for head in running_heads:
                 if head.celery_task_id:
-                    task_ids_to_revoke.append(head.celery_task_id)
+                    task_ids_to_revoke.append(str(head.celery_task_id))
 
                 head.status_id = HydraHeadStatus.ABORTED
                 head.execution_log += (
@@ -119,10 +114,13 @@ class Hydra:
             spawn.status_id = HydraSpawnStatus.FAILED
             spawn.save(update_fields=['status'])
 
-        # --- Network Operations (Outside Lock) ---
+        # --- Network Operations ---
         for task_id in task_ids_to_revoke:
             try:
-                celery_app.control.revoke(str(task_id), terminate=True)
+                # Soft revoke only (stops it if it hasn't started yet)
+                # We do NOT use terminate=True anymore because it fails on Windows
+                # and we have a better Heartbeat system now.
+                celery_app.control.revoke(task_id, terminate=False)
             except Exception as e:
                 logger.warning(f'Failed to revoke task {task_id}: {e}')
 
@@ -169,7 +167,7 @@ class Hydra:
                 head.save(update_fields=['status', 'execution_log'])
 
         # 3. Try to move forward (New Transaction)
-        self._dispatch_next_wave()
+        self.dispatch_next_wave()
 
     def view(self) -> Dict[str, Any]:
         """Serializer for UI."""
@@ -217,7 +215,7 @@ class Hydra:
         ]
         HydraHead.objects.bulk_create(heads)
 
-    def _dispatch_next_wave(self) -> None:
+    def dispatch_next_wave(self) -> None:
         """
         Parallel Dispatch Engine.
         Uses Atomic Transactions to prevent race conditions.

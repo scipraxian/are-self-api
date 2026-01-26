@@ -168,11 +168,56 @@ class AsyncProcessRunner:
         return self.process is not None and self.process.returncode is None
 
     def kill(self) -> None:
-        if self.process:
-            try:
-                self.process.kill()
-            except ProcessLookupError:
-                pass
+        """
+        Forces the process to terminate.
+        CRITICAL FIX: Uses OS-specific 'Tree Kill' and 'Image Kill' to ensure no zombies remain.
+        """
+        if not self.process:
+            print('[KILL] No active process handle.')
+            return
+
+        pid = self.process.pid
+        exe_name = os.path.basename(self.command[0])
+        print(f'[KILL] Initiating termination for PID: {pid} ({exe_name})')
+
+        try:
+            # 1. Attempt standard kill first (works for simple processes)
+            self.process.kill()
+            print(f'[KILL] Sent standard .kill() signal to PID {pid}')
+
+            # 2. Windows Nuclear Option: taskkill /F /T
+            if sys.platform == 'win32' and pid:
+                print(f'[KILL] Attempting taskkill /F /T /PID {pid}...')
+                result = subprocess.run(
+                    ['taskkill', '/F', '/T', '/PID', str(pid)],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+                print(
+                    f'[KILL] PID Kill Result: {result.stdout.strip()} {result.stderr.strip()}'
+                )
+
+                # 3. Fallback: Kill by Image Name (Catch detached children/launchers)
+                # This replicates the legacy logic that successfully stopped the game
+                print(
+                    f'[KILL] Fallback: Sweeping for Image Name: {exe_name}...'
+                )
+                result_im = subprocess.run(
+                    f'taskkill /F /IM {exe_name}',
+                    shell=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+                print(
+                    f'[KILL] Image Kill Result: {result_im.stdout.strip()} {result_im.stderr.strip()}'
+                )
+
+        except ProcessLookupError:
+            print('[KILL] Process already dead (ProcessLookupError).')
+        except Exception as e:
+            print(f'[KILL] Exception during kill: {e}')
 
 
 class AsyncLogMonitor:
@@ -333,9 +378,28 @@ async def run_hydra_pipeline(
         # Ensure stdout pipe finishes cleanly
         await runner_task
 
-    except (asyncio.CancelledError, ConnectionResetError, BrokenPipeError):
-        # External cancellation or Network Failure during wait
+    except (
+        asyncio.CancelledError,
+        ConnectionResetError,
+        BrokenPipeError,
+        ConnectionAbortedError,
+    ) as e:
+        # --- THE KILL SWITCH ---
+        print(
+            f'\n[PIPELINE] Aborting (Reason: {type(e).__name__}). Killing process...'
+        )
         runner.kill()
+
+        # Robustness: Wait briefly for the process to actually die to avoid orphans
+        print('[PIPELINE] Waiting for process death...')
+        try:
+            await asyncio.wait_for(runner.wait(), timeout=3.0)
+            print('[PIPELINE] Process confirmed dead.')
+        except asyncio.TimeoutError:
+            print('[PIPELINE] Process wait timed out (Zombie?). Moving on.')
+        except Exception as kill_err:
+            print(f'[PIPELINE] Error waiting for death: {kill_err}')
+
         raise
 
     finally:

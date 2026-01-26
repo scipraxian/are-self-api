@@ -1,8 +1,9 @@
 import os
 import sys
-import django
 import unittest
 from unittest import mock
+
+import django
 
 # Add current directory to sys.path
 sys.path.append(os.getcwd())
@@ -10,11 +11,22 @@ sys.path.append(os.getcwd())
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
-from django.test import TestCase, TransactionTestCase
-from hydra.hydra import Hydra
-from hydra.models import HydraSpawn, HydraHead, HydraHeadStatus, HydraSpell, HydraExecutable, HydraSpellbook, HydraSpawnStatus, HydraEnvironment
-from environments.models import ProjectEnvironment
 from django.db import transaction
+from django.test import TestCase, TransactionTestCase
+
+from environments.models import ProjectEnvironment
+from hydra.hydra import Hydra
+from hydra.models import (
+    HydraEnvironment,
+    HydraExecutable,
+    HydraHead,
+    HydraHeadStatus,
+    HydraSpawn,
+    HydraSpawnStatus,
+    HydraSpell,
+    HydraSpellbook,
+)
+
 
 class ReproduceRunTwiceTest(TransactionTestCase):
     def setUp(self):
@@ -53,10 +65,10 @@ class ReproduceRunTwiceTest(TransactionTestCase):
         # In a real scenario, this could be start() and then a poll() before the first task starts.
         
         with transaction.atomic():
-            controller._dispatch_next_wave()
+            controller.dispatch_next_wave()
         
         with transaction.atomic():
-            controller._dispatch_next_wave()
+            controller.dispatch_next_wave()
         
         # Currently, this will likely be 2, because _dispatch_next_wave 
         # doesn't change the status of the head to something other than CREATED.
