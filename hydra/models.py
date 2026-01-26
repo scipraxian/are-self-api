@@ -104,6 +104,28 @@ class HydraSwitch(DefaultFieldsMixin):  # DEPRECIATED
         return f'{self.id} || {self.executable.slug} :: {self.flag}'
 
 
+class HydraDistributionModeID(object):
+    """
+    Centralized Integer IDs for Distribution Modes.
+    """
+
+    LOCAL_SERVER = 1
+    ALL_ONLINE_AGENTS = 2
+    ONE_AVAILABLE_AGENT = 3
+    SPECIFIC_TARGETS = 4
+
+
+class HydraDistributionMode(BigIdMixin, NameMixin, DescriptionMixin):
+    """
+    Lookup table for Distribution Modes.
+    """
+
+    IDs = HydraDistributionModeID
+
+    class Meta:
+        verbose_name = 'Hydra Distribution Mode'
+
+
 class HydraSpell(DefaultFieldsMixin):
     """
     A configured action (Tool + specific Switches).
@@ -113,7 +135,13 @@ class HydraSpell(DefaultFieldsMixin):
         TalosExecutable, on_delete=models.PROTECT, default=1
     )
     switches = models.ManyToManyField(TalosExecutableSwitch, blank=True)
+    distribution_mode = models.ForeignKey(
+        HydraDistributionMode,
+        on_delete=models.PROTECT,
+        default=HydraDistributionModeID.LOCAL_SERVER,
+    )
 
+    # LEGACY
     executable = models.ForeignKey(
         HydraExecutable, on_delete=models.PROTECT, blank=True, null=True
     )  # DEPRECIATED
@@ -129,6 +157,25 @@ class HydraSpell(DefaultFieldsMixin):
 
     def __str__(self):
         return f'[{self.order}] {self.name}'
+
+
+class HydraSpellTarget(models.Model):
+    """
+    Connecting table for Mode 4 (SPECIFIC_TARGETS).
+    Links a Spell to specific 'Pinned' Agents.
+    """
+
+    spell = models.ForeignKey(
+        HydraSpell, on_delete=models.CASCADE, related_name='specific_targets'
+    )
+    target = models.ForeignKey('core.RemoteTarget', on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('spell', 'target')
+        verbose_name = 'Hydra Spell Target'
+
+    def __str__(self):
+        return f'{self.spell.name} -> {self.target}'
 
 
 class HydraSpellArgumentAssignment(models.Model):

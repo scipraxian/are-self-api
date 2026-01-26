@@ -1277,5 +1277,37 @@
       "project_environment": "2a898e21-b7f2-4442-94e4-f0acb87d57b6",
       "executables": []
     }
+  },
+  {
+    "model": "hydra.hydradistributionmode",
+    "pk": 1,
+    "fields": {
+      "name": "Local Server (Default)",
+      "description": "Executes strictly on the local Talos Server (e.g. Compiling)."
+    }
+  },
+  {
+    "model": "hydra.hydradistributionmode",
+    "pk": 2,
+    "fields": {
+      "name": "All Online Agents",
+      "description": "Broadcasts execution to every ONLINE agent (e.g. Deployment)."
+    }
+  },
+  {
+    "model": "hydra.hydradistributionmode",
+    "pk": 3,
+    "fields": {
+      "name": "One Available Agent",
+      "description": "Executes on the first available ONLINE agent (e.g. Distributed Testing)."
+    }
+  },
+  {
+    "model": "hydra.hydradistributionmode",
+    "pk": 4,
+    "fields": {
+      "name": "Specific Targets",
+      "description": "Executes only on targets explicitly linked via HydraSpellTarget."
+    }
   }
 ]

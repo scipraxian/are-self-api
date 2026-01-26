@@ -6,15 +6,25 @@ from hydra.spells.spell_casters.switches_and_arguments import (
 )
 
 from .models import (
+    HydraDistributionMode,  # New
     HydraHead,
     HydraHeadStatus,
     HydraSpawn,
     HydraSpawnStatus,
     HydraSpell,
-    HydraSpellArgumentAssignment,  # New Model
+    HydraSpellArgumentAssignment,
     HydraSpellbook,
+    HydraSpellTarget,  # New
     HydraSwitch,
 )
+
+
+@admin.register(HydraDistributionMode)
+class HydraDistributionModeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    list_display_links = ('id', 'name')
+    ordering = ('id',)
+    search_fields = ('name',)
 
 
 @admin.register(HydraSpellbook)
@@ -39,32 +49,58 @@ class HydraSpellArgumentInline(admin.TabularInline):
     ordering = ('order',)
 
 
+class HydraSpellTargetInline(admin.TabularInline):
+    """
+    Mode 4: Allows pinning specific Agents to this spell.
+    """
+
+    model = HydraSpellTarget
+    extra = 0
+    verbose_name = 'Pinned Target'
+    verbose_name_plural = 'Specific Targets (Mode 4 Only)'
+    # Raw ID prevents loading a massive dropdown if you have thousands of agents
+    raw_id_fields = ['target']
+
+
 @admin.register(HydraSpell)
 class HydraSpellAdmin(admin.ModelAdmin):
-    # 1. List Display: Added resolved_command_preview
+    # 1. List Display
     list_display = (
         'name',
         'order',
         'talos_executable',
+        'distribution_mode',  # New
         'resolved_command_preview',
     )
     list_editable = ('order',)
 
-    # Filter by the NEW executable to see what's left to migrate
-    list_filter = ('talos_executable',)
+    # 2. Filters
+    list_filter = ('distribution_mode', 'talos_executable')
 
-    # 2. Filter Horizontal: Maintains the UI for BOTH the new switches and the old ones
+    # 3. Filter Horizontal
     filter_horizontal = ('switches', 'active_switches')
 
-    # 3. Inlines: Add the new Argument system
-    inlines = [HydraSpellArgumentInline]
+    # 4. Inlines: Arguments + Specific Targets
+    inlines = [HydraSpellArgumentInline, HydraSpellTargetInline]
 
     # Added readonly field so it appears in the form view too
     readonly_fields = ('resolved_command_preview',)
 
-    # 4. Fieldsets: Distinct separation between the Future and the Past
+    # 5. Fieldsets
     fieldsets = (
         ('Identity', {'fields': ('name', 'order', 'resolved_command_preview')}),
+        (
+            'Distribution Strategy',
+            {
+                'fields': ('distribution_mode',),
+                'description': (
+                    '<strong>Local Server:</strong> Runs on this machine.<br>'
+                    '<strong>All Online Agents:</strong> Broadcasts to entire fleet.<br>'
+                    '<strong>One Available:</strong> First responder only.<br>'
+                    '<strong>Specific Targets:</strong> Use the table below to pin agents.'
+                ),
+            },
+        ),
         (
             'New Configuration (Talos)',
             {
