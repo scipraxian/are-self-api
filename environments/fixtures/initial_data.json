@@ -806,6 +806,21 @@
     }
   },
   {
+    "model": "environments.talosexecutable",
+    "pk": 12,
+    "fields": {
+      "created": "2026-01-27T19:15:25.963Z",
+      "description": null,
+      "modified": "2026-01-27T19:15:25.963Z",
+      "name": "Scan for Talos Agents",
+      "internal": true,
+      "working_path": "",
+      "executable": "scan_and_register",
+      "log": "",
+      "switches": []
+    }
+  },
+  {
     "model": "environments.talosexecutableargumentassignment",
     "pk": 1,
     "fields": {

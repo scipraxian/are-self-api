@@ -1,41 +1,5 @@
 [
   {
-    "model": "hydra.hydraexecutabletype",
-    "pk": 1,
-    "fields": {
-      "created": "2026-01-01T00:00:00Z",
-      "modified": "2026-01-01T00:00:00Z",
-      "name": "Local Python"
-    }
-  },
-  {
-    "model": "hydra.hydraexecutabletype",
-    "pk": 2,
-    "fields": {
-      "created": "2026-01-01T00:00:00Z",
-      "modified": "2026-01-01T00:00:00Z",
-      "name": "Remote Python"
-    }
-  },
-  {
-    "model": "hydra.hydraexecutabletype",
-    "pk": 3,
-    "fields": {
-      "created": "2026-01-01T00:00:00Z",
-      "modified": "2026-01-01T00:00:00Z",
-      "name": "Local Popen"
-    }
-  },
-  {
-    "model": "hydra.hydraexecutabletype",
-    "pk": 4,
-    "fields": {
-      "created": "2026-01-01T00:00:00Z",
-      "modified": "2026-01-01T00:00:00Z",
-      "name": "Remote Popen"
-    }
-  },
-  {
     "model": "hydra.hydradistributionmode",
     "pk": 1,
     "fields": {
@@ -283,6 +247,19 @@
     }
   },
   {
+    "model": "hydra.hydraspell",
+    "pk": 145,
+    "fields": {
+      "created": "2026-01-27T19:19:00.155Z",
+      "modified": "2026-01-27T19:19:00.155Z",
+      "name": "Scan for Agents",
+      "talos_executable": 12,
+      "distribution_mode": 1,
+      "order": 0,
+      "switches": []
+    }
+  },
+  {
     "model": "hydra.hydraspellargumentassignment",
     "pk": 1,
     "fields": {
@@ -468,6 +445,19 @@
       "name": "Distribute",
       "spells": [
         130
+      ]
+    }
+  },
+  {
+    "model": "hydra.hydraspellbook",
+    "pk": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+    "fields": {
+      "created": "2026-01-27T19:19:26.787Z",
+      "description": null,
+      "modified": "2026-01-27T19:19:26.787Z",
+      "name": "Scan For Agents",
+      "spells": [
+        145
       ]
     }
   },

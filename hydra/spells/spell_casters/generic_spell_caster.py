@@ -22,12 +22,14 @@ from talos_agent.talos_agent import (
     TalosAgent,
     TalosAgentConstants,
 )
+from talos_agent.talos_agent_finder import scan_and_register
 
 logger = logging.getLogger(__name__)
 
-# Native Python Handlers (Synchronous)
+# Native Python Handlers (Synchronous and/or asynchronous wrapper.)
 NATIVE_HANDLERS = dict(
     update_version_metadata=update_version_metadata,
+    scan_and_register=scan_and_register,
 )
 
 
