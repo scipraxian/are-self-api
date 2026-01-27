@@ -1,7 +1,8 @@
 import json
 import logging
+import uuid
 from datetime import timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from celery.result import AsyncResult
 from django.db import transaction
@@ -42,7 +43,7 @@ class Hydra:
     def __init__(
         self,
         spellbook_id: Optional[int] = None,
-        spawn_id: Optional[int] = None,
+        spawn_id: Optional[uuid] = None,
     ):
         if spawn_id:
             self.spawn = HydraSpawn.objects.get(id=spawn_id)
@@ -193,7 +194,7 @@ class Hydra:
     # Internal Logic
     # =========================================================================
 
-    def _create_spawn(self, spellbook_id: int, env_id: int) -> HydraSpawn:
+    def _create_spawn(self, spellbook_id: int) -> HydraSpawn:
         book = HydraSpellbook.objects.get(id=spellbook_id)
         spawn = HydraSpawn.objects.create(
             spellbook=book,

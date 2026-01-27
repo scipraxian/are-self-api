@@ -1,25 +1,38 @@
+# C:\talos\hydra\urls.py refactored for consistency
 from django.urls import path
 
-from .views import (LaunchSpellbookView, spawn_monitor_view, head_log_view,
-                    HydraControlsView, hydra_head_analysis,
-                    hydra_spawn_terminate, battle_station_stream)
+from .views import (
+    BattleStationStreamView,
+    HeadLogDetailView,
+    HydraControlsView,
+    LaunchSpellbookView,
+    SpawnMonitorDetailView,
+    SpawnTerminateView,
+)
 
 urlpatterns = [
-    path('launch/<uuid:spellbook_id>/',
-         LaunchSpellbookView.as_view(),
-         name='hydra_launch'),
-    path('monitor/<uuid:spawn_id>/',
-         spawn_monitor_view,
-         name='hydra_spawn_monitor'),
-    path('logs/<uuid:head_id>/', head_log_view, name='hydra_head_logs'),
-    path('battle-stream/<uuid:spawn_id>/',
-         battle_station_stream,
-         name='hydra_battle_stream'),
-    path('analysis/<uuid:head_id>/',
-         hydra_head_analysis,
-         name='hydra_head_analysis'),
-    path('terminate/<uuid:spawn_id>/',
-         hydra_spawn_terminate,
-         name='hydra_spawn_terminate'),
+    path(
+        'launch/<uuid:spellbook_id>/',
+        LaunchSpellbookView.as_view(),
+        name='hydra_launch',
+    ),
+    path(
+        'monitor/<uuid:pk>/',
+        SpawnMonitorDetailView.as_view(),
+        name='hydra_spawn_monitor',
+    ),
+    path(
+        'logs/<uuid:pk>/', HeadLogDetailView.as_view(), name='hydra_head_logs'
+    ),
+    path(
+        'battle-stream/<uuid:pk>/',
+        BattleStationStreamView.as_view(),
+        name='hydra_battle_stream',
+    ),
+    path(
+        'terminate/<uuid:pk>/',
+        SpawnTerminateView.as_view(),
+        name='hydra_spawn_terminate',
+    ),
     path('controls/', HydraControlsView.as_view(), name='hydra_controls'),
 ]
