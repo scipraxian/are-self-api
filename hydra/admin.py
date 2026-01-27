@@ -6,7 +6,7 @@ from hydra.spells.spell_casters.switches_and_arguments import (
 )
 
 from .models import (
-    HydraDistributionMode,  # New
+    HydraDistributionMode,
     HydraHead,
     HydraHeadStatus,
     HydraSpawn,
@@ -14,8 +14,7 @@ from .models import (
     HydraSpell,
     HydraSpellArgumentAssignment,
     HydraSpellbook,
-    HydraSpellTarget,  # New
-    HydraSwitch,
+    HydraSpellTarget,
 )
 
 
@@ -58,7 +57,6 @@ class HydraSpellTargetInline(admin.TabularInline):
     extra = 0
     verbose_name = 'Pinned Target'
     verbose_name_plural = 'Specific Targets (Mode 4 Only)'
-    # Raw ID prevents loading a massive dropdown if you have thousands of agents
     raw_id_fields = ['target']
 
 
@@ -69,7 +67,7 @@ class HydraSpellAdmin(admin.ModelAdmin):
         'name',
         'order',
         'talos_executable',
-        'distribution_mode',  # New
+        'distribution_mode',
         'resolved_command_preview',
     )
     list_editable = ('order',)
@@ -78,7 +76,7 @@ class HydraSpellAdmin(admin.ModelAdmin):
     list_filter = ('distribution_mode', 'talos_executable')
 
     # 3. Filter Horizontal
-    filter_horizontal = ('switches', 'active_switches')
+    filter_horizontal = ('switches',)
 
     # 4. Inlines: Arguments + Specific Targets
     inlines = [HydraSpellArgumentInline, HydraSpellTargetInline]
@@ -102,25 +100,13 @@ class HydraSpellAdmin(admin.ModelAdmin):
             },
         ),
         (
-            'New Configuration (Talos)',
+            'Configuration (Talos)',
             {
                 'fields': ('talos_executable', 'switches'),
-                'description': 'Select the new Talos Executable and any specific override switches.',
-            },
-        ),
-        (
-            'Deprecated Configuration',
-            {
-                'fields': ('executable', 'active_switches'),
-                'classes': ('collapse',),
-                'description': 'Old configuration. Reference this to set the new one, then ignore.',
+                'description': 'Select the Talos Executable and any specific override switches.',
             },
         ),
     )
-
-    def deprecated_executable_display(self, obj):
-        """Helper to show the old executable name safely."""
-        return obj.executable.name if obj.executable else '-'
 
     def resolved_command_preview(self, obj):
         """
@@ -139,13 +125,13 @@ class HydraSpellAdmin(admin.ModelAdmin):
         except Exception as e:
             return f'Error calculating command: {str(e)}'
 
-    deprecated_executable_display.short_description = 'Old Executable'
     resolved_command_preview.short_description = 'Command Preview'
 
 
 @admin.register(HydraSpawn)
 class HydraSpawnAdmin(admin.ModelAdmin):
-    list_display = ('id', 'spellbook', 'environment', 'status', 'created')
+    # FIXED: Removed 'environment' which was deleted from the model
+    list_display = ('id', 'spellbook', 'status', 'created')
     list_filter = ('status', 'spellbook')
 
 
@@ -185,7 +171,6 @@ class HydraHeadAdmin(admin.ModelAdmin):
     resolved_command_preview.short_description = 'Command Executed'
 
 
-# Simple registrations for Statuses and the deprecated Switch model
+# Simple registrations for Statuses
 admin.site.register(HydraHeadStatus)
 admin.site.register(HydraSpawnStatus)
-admin.site.register(HydraSwitch)

@@ -1,9 +1,10 @@
 import concurrent.futures
-import subprocess
-import os
 import logging
+import os
 import re
-from core.models import RemoteTarget
+import subprocess
+
+# from core.models import RemoteTarget
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ def deploy_release_test(head):
     Defaults to standard 'steambuild' share if UNC path is not explicitly configured.
     """
     env = head.spawn.environment.project_environment
-    
+
     # 1. Resolve Source Path
     source_candidate = os.path.join(env.build_root, 'ReleaseTest')
     source_path = os.path.normpath(source_candidate)
@@ -32,7 +33,7 @@ def deploy_release_test(head):
     # 2. Get Targets (Include BUSY agents as they can still receive files)
     all_enabled = RemoteTarget.objects.filter(is_enabled=True)
     targets = all_enabled.filter(status__in=['ONLINE', 'BUSY'])
-    
+
     skipped = all_enabled.exclude(status__in=['ONLINE', 'BUSY'])
     if skipped.exists():
         log.append(f"[INFO] Skipping {skipped.count()} OFFLINE/ERROR targets: {[t.hostname for t in skipped]}")
@@ -43,15 +44,15 @@ def deploy_release_test(head):
     # 3. Define Exclusions
     excludes = ['Saved', 'Intermediate', '.git', 'FileOpenOrder', 'DerivedDataCache', 'PipelineCaches']
     log.append(f"Targets: {[t.hostname for t in targets]}")
-    
+
     # 4. Parallel Execution
     results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
         future_to_target = {
-            executor.submit(_sync_target, t, source_path, env, excludes): t 
+            executor.submit(_sync_target, t, source_path, env, excludes): t
             for t in targets
         }
-        
+
         for future in concurrent.futures.as_completed(future_to_target):
             target = future_to_target[future]
             try:
@@ -82,7 +83,7 @@ def _parse_robocopy_summary(output):
             # Matches: "3.54 g", "100", "150.2 m"
             # Pattern: Digits + (Optional Dot + Digits) + (Optional Space + Unit)
             matches = re.findall(r"(\d+(?:\.\d+)?\s*[tgmk]?)", line, re.IGNORECASE)
-            
+
             # The matches list will contain all numbers found.
             # Index 0: Total
             # Index 1: Copied (This is the one we want)
@@ -91,7 +92,7 @@ def _parse_robocopy_summary(output):
             if len(matches) >= 2:
                 # Clean up multiple spaces if regex captured them
                 return f"Transfer Size: {matches[1].strip()}"
-                
+
     return "Transfer Size: 0 (No Summary)"
 
 def _sync_target(target, source_path, env, excludes):
@@ -123,8 +124,8 @@ def _sync_target(target, source_path, env, excludes):
         rel_path = os.path.normpath(rel_path)
         dest_path = f"\\\\{target.hostname}\\steambuild\\{rel_path}"
 
-    # CRITICAL: Robocopy /subprocess quirk. 
-    # If a path ends in a backslash and is then quoted by subprocess, 
+    # CRITICAL: Robocopy /subprocess quirk.
+    # If a path ends in a backslash and is then quoted by subprocess,
     # Robocopy sees \" and thinks it's an escaped quote.
     # We must ensure no trailing backslashes.
     source_path = source_path.rstrip('\\')
@@ -136,9 +137,9 @@ def _sync_target(target, source_path, env, excludes):
         source_path,
         dest_path,
         '/MIR', '/MT:8', '/R:2', '/W:2',
-        '/NFL', '/NDL', '/NJH', 
+        '/NFL', '/NDL', '/NJH',
     ]
-    
+
     if excludes:
         cmd.append('/XD')
         cmd.extend(excludes)
@@ -150,7 +151,7 @@ def _sync_target(target, source_path, env, excludes):
             stats = _parse_robocopy_summary(proc.stdout)
             status_tag = "(Files Copied)" if proc.returncode >= 1 else "(Up to Date)"
             return True, f"Synced to {dest_path} {status_tag} | {stats}"
-            
+
         # If it failed, let's at least see the first line of error or the return code
         err_hint = proc.stderr.splitlines()[0] if proc.stderr else "See Robocopy logs"
         return False, f"Robocopy Error {proc.returncode} ({dest_path}): {err_hint}"

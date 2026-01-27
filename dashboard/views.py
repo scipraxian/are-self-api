@@ -1,39 +1,46 @@
-'''Views for the dashboard application.'''
+"""Views for the dashboard application."""
 
-from hydra.models import HydraSpellbook, HydraSpawn, HydraSpawnStatus
-from hydra.hydra import Hydra
 import os
 
 from celery.result import AsyncResult
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.views import View
 from django.views.generic import TemplateView
 
 from config.celery import app as celery_app
-from core.models import RemoteTarget
 from core.tasks import scan_network_task
 from dashboard.tasks import debug_task
+from hydra.hydra import Hydra
+from hydra.models import HydraSpawn, HydraSpawnStatus, HydraSpellbook
 from talos_agent.version import VERSION as SERVER_VERSION
 
 
 class DashboardHomeView(TemplateView):
-    '''Renders the main dashboard page.'''
+    """Renders the main dashboard page."""
+
     template_name = 'dashboard/home.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['targets'] = RemoteTarget.objects.all()
+        context['targets'] = []
         context['server_version'] = SERVER_VERSION
         context['hydra_spellbooks'] = HydraSpellbook.objects.all().order_by(
-            'name')
+            'name'
+        )
 
         # Check for any active Hydra Spawn
-        active_spawn = HydraSpawn.objects.filter(status_id__in=[
-            HydraSpawnStatus.CREATED, HydraSpawnStatus.PENDING,
-            HydraSpawnStatus.RUNNING
-        ]).order_by('-created').first()
+        active_spawn = (
+            HydraSpawn.objects.filter(
+                status_id__in=[
+                    HydraSpawnStatus.CREATED,
+                    HydraSpawnStatus.PENDING,
+                    HydraSpawnStatus.RUNNING,
+                ]
+            )
+            .order_by('-created')
+            .first()
+        )
 
         if active_spawn:
             # Nudge state machine to catch any finished runs or zombies
@@ -56,25 +63,36 @@ class DashboardHomeView(TemplateView):
             context['active_spawn'] = None
 
         context['spawn_history'] = HydraSpawn.objects.all().order_by(
-            '-created')[:5]
+            '-created'
+        )[:5]
 
         # Version Tracking
-        context['latest_stage'] = HydraSpawn.objects.filter(
-            spellbook__name__icontains="Stage",
-            status_id=HydraSpawnStatus.SUCCESS).order_by('-created').first()
+        context['latest_stage'] = (
+            HydraSpawn.objects.filter(
+                spellbook__name__icontains='Stage',
+                status_id=HydraSpawnStatus.SUCCESS,
+            )
+            .order_by('-created')
+            .first()
+        )
 
-        context['latest_uat'] = HydraSpawn.objects.filter(
-            spellbook__name__icontains="UAT",
-            status_id=HydraSpawnStatus.SUCCESS).order_by('-created').first()
+        context['latest_uat'] = (
+            HydraSpawn.objects.filter(
+                spellbook__name__icontains='UAT',
+                status_id=HydraSpawnStatus.SUCCESS,
+            )
+            .order_by('-created')
+            .first()
+        )
 
         return context
 
 
 class TriggerBuildView(View):
-    '''Triggers a Celery task and returns an HTML fragment.'''
+    """Triggers a Celery task and returns an HTML fragment."""
 
     def post(self, request, *args, **kwargs):
-        '''Handles POST requests to trigger a build.'''
+        """Handles POST requests to trigger a build."""
         task = debug_task.delay()
         return render(
             request,
@@ -84,10 +102,10 @@ class TriggerBuildView(View):
 
 
 class BuildStatusView(View):
-    '''Checks the status of a Celery task and returns appropriate HTML.'''
+    """Checks the status of a Celery task and returns appropriate HTML."""
 
     def get(self, request, task_id, *args, **kwargs):
-        '''Returns idle button if task is ready, else continues polling.'''
+        """Returns idle button if task is ready, else continues polling."""
         result = AsyncResult(task_id)
         if result.ready():
             return render(request, 'dashboard/partials/build_button_idle.html')
@@ -100,46 +118,47 @@ class BuildStatusView(View):
 
 
 class ScanNetworkView(View):
-    '''Triggers the network scan task.'''
+    """Triggers the network scan task."""
 
     def post(self, request, *args, **kwargs):
-        '''Initiates the async scan.'''
+        """Initiates the async scan."""
         scan_network_task.delay()
-        return HttpResponse('''
+        return HttpResponse("""
         <div class="scanning-toast">
             Scanner Active...
         </div>
-    ''')
+    """)
 
 
 class DeleteAgentView(View):
-    '''Removes a build agent from the registry.'''
+    """Removes a build agent from the registry."""
 
     def delete(self, request, pk, *args, **kwargs):
-        '''Deletes an offline agent.'''
-        target = get_object_or_404(RemoteTarget, pk=pk)
-        if target.status == 'OFFLINE':
-            target.delete()
-            return HttpResponse('')  # Remove element from UI
+        """Deletes an offline agent."""
+        # target = get_object_or_404(RemoteTarget, pk=pk)
+        # if target.status == 'OFFLINE':
+        #     target.delete()
+        #     return HttpResponse('')  # Remove element from UI
         return HttpResponse('Only offline agents can be deleted.', status=403)
 
 
 class AgentListView(View):
-    '''Returns the partial agent list for polling.'''
+    """Returns the partial agent list for polling."""
 
     def get(self, request, *args, **kwargs):
-        targets = RemoteTarget.objects.all()
-        return render(request, 'dashboard/partials/agent_list.html', {
-            'targets': targets,
-            'server_version': SERVER_VERSION
-        })
+        targets = []
+        return render(
+            request,
+            'dashboard/partials/agent_list.html',
+            {'targets': targets, 'server_version': SERVER_VERSION},
+        )
 
 
 class ShutdownView(View):
-    '''System-wide shutdown for all Talos processes.'''
+    """System-wide shutdown for all Talos processes."""
 
     def post(self, request, *args, **kwargs):
-        '''Triggers system-wide shutdown.'''
+        """Triggers system-wide shutdown."""
         print('System-wide shutdown initiated from dashboard...')
         try:
             celery_app.control.shutdown()
@@ -156,8 +175,14 @@ class NeuralStatusView(View):
         from talos_frontal.models import ConsciousStream
 
         # Get the absolute latest thought from the system
-        latest = ConsciousStream.objects.select_related('status').order_by('-created').first()
+        latest = (
+            ConsciousStream.objects.select_related('status')
+            .order_by('-created')
+            .first()
+        )
 
-        return render(request, 'dashboard/partials/neural_monitor.html', {
-            'thought': latest
-        })
+        return render(
+            request,
+            'dashboard/partials/neural_monitor.html',
+            {'thought': latest},
+        )

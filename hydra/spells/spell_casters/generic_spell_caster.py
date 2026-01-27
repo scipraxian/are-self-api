@@ -9,9 +9,6 @@ from typing import List, Optional
 from asgiref.sync import sync_to_async
 
 from hydra.models import HydraHead, HydraHeadStatus
-from hydra.spells.spell_casters.spell_handlers.deployment_handler import (
-    deploy_release_test,
-)
 from hydra.spells.spell_casters.spell_handlers.spell_handler_codes import (
     HANDLER_SUCCESS_CODE,
 )
@@ -24,14 +21,12 @@ from hydra.spells.spell_casters.switches_and_arguments import (
 from talos_agent.talos_agent import (
     TalosAgent,
     TalosAgentConstants,
-    TalosEvent,
 )
 
 logger = logging.getLogger(__name__)
 
 # Native Python Handlers (Synchronous)
 NATIVE_HANDLERS = dict(
-    deploy_release_test=deploy_release_test,
     update_version_metadata=update_version_metadata,
 )
 

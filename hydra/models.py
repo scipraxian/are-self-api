@@ -12,7 +12,6 @@ from common.models import (
     UUIDIdMixin,
 )
 from environments.models import (
-    ProjectEnvironment,
     TalosExecutable,
     TalosExecutableArgument,
     TalosExecutableSwitch,
@@ -66,44 +65,6 @@ class HydraExecutableType(DefaultFieldsMixin):  # depreciated
     REMOTE_POPEN = 4
 
 
-class HydraExecutable(DefaultFieldsMixin, DescriptionMixin):  # depreciated
-    """
-    A base tool (e.g. Unreal Editor, Python).
-    """
-
-    slug = models.SlugField(
-        unique=True, help_text='Internal ID for bridge mapping'
-    )
-    type = models.ForeignKey(
-        HydraExecutableType,
-        on_delete=models.PROTECT,
-        default=HydraExecutableType.LOCAL_POPEN,
-    )
-    path_template = models.CharField(max_length=500, blank=True)
-
-    class Meta:
-        verbose_name = 'Hydra Executable'
-
-
-class HydraSwitch(DefaultFieldsMixin):  # DEPRECIATED
-    """
-    An option or flag for a tool.
-    """
-
-    executable = models.ForeignKey(
-        HydraExecutable,
-        related_name='available_switches',
-        on_delete=models.CASCADE,
-    )
-    flag = models.CharField(
-        max_length=100, help_text="The actual flag e.g. '-clean'"
-    )
-    value = models.CharField(max_length=255, blank=True)
-
-    def __str__(self):
-        return f'{self.id} || {self.executable.slug} :: {self.flag}'
-
-
 class HydraDistributionModeID(object):
     """
     Centralized Integer IDs for Distribution Modes.
@@ -142,12 +103,6 @@ class HydraSpell(DefaultFieldsMixin):
     )
 
     # LEGACY
-    executable = models.ForeignKey(
-        HydraExecutable, on_delete=models.PROTECT, blank=True, null=True
-    )  # DEPRECIATED
-    active_switches = models.ManyToManyField(
-        HydraSwitch, blank=True
-    )  # DEPRECIATED
     order = models.PositiveIntegerField(
         default=0, help_text='Execution sequence (1, 2, 3...)'
     )  # TODO: DEPRECIATED
@@ -168,7 +123,9 @@ class HydraSpellTarget(models.Model):
     spell = models.ForeignKey(
         HydraSpell, on_delete=models.CASCADE, related_name='specific_targets'
     )
-    target = models.ForeignKey('core.RemoteTarget', on_delete=models.CASCADE)
+    target = models.ForeignKey(
+        'talos_agent.TalosAgentRegistry', on_delete=models.CASCADE
+    )
 
     class Meta:
         unique_together = ('spell', 'target')
@@ -249,7 +206,6 @@ class HydraSpellbook(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
 class HydraStatusMixin(models.Model):
     """Mixin to attach ID constants and Map to the Model Class."""
 
-    # Expose the Class Object for easy access (HydraHeadStatus.IDs.CREATED)
     IDs = HydraStatusID
     CREATED = HydraStatusID.CREATED
     PENDING = HydraStatusID.PENDING
@@ -283,26 +239,12 @@ class HydraHeadStatus(BigIdMixin, NameMixin, HydraStatusMixin):
     pass
 
 
-class HydraEnvironment(DefaultFieldsMixin):
-    """
-    Execution context mapping.
-    """
-
-    project_environment = models.ForeignKey(
-        ProjectEnvironment, on_delete=models.PROTECT
-    )
-    executables = models.ManyToManyField(HydraExecutable, blank=True)
-
-
 class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     """
     An instance of a Spellbook executing in an Environment.
     """
 
     spellbook = models.ForeignKey(HydraSpellbook, on_delete=models.PROTECT)
-    environment = models.ForeignKey(
-        HydraEnvironment, on_delete=models.PROTECT, null=True
-    )  # depreciated
     status = models.ForeignKey(HydraSpawnStatus, on_delete=models.PROTECT)
 
     context_data = models.TextField(
@@ -333,7 +275,10 @@ class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     spell = models.ForeignKey(HydraSpell, on_delete=models.PROTECT)
 
     target = models.ForeignKey(
-        'core.RemoteTarget', null=True, blank=True, on_delete=models.PROTECT
+        'talos_agent.TalosAgentRegistry',
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
     )
 
     celery_task_id = models.UUIDField(null=True, blank=True)
