@@ -347,28 +347,29 @@ class GenericSpellCaster:
             await self._update_status(HydraHeadStatus.FAILED)
 
     async def _execute_local_python(self):
-        """
-        Runs a legacy synchronous Python handler.
-
-        WARNING: These handlers run in a thread pool and cannot be aborted
-        mid-execution. The abort signal will be processed only after completion.
-        """
+        """Executes internal python handlers, supporting both sync and async."""
         slug = self.spell.talos_executable.executable
-        if slug not in NATIVE_HANDLERS:
+        handler_func = NATIVE_HANDLERS.get(slug)
+
+        if not handler_func:
             raise NotImplementedError(f'No handler found for slug: {slug}')
 
-        handler_func = NATIVE_HANDLERS[slug]
         await self.logger.flush()
 
         try:
-            return_code, output_log = await sync_to_async(handler_func)(
-                self.head_id
-            )
+            # Check if the handler is a coroutine (async) or a regular function
+            if asyncio.iscoroutinefunction(handler_func):
+                # Await directly to stay in the same event loop
+                return_code, output_log = await handler_func(self.head_id)
+            else:
+                # Fallback for legacy sync handlers
+                return_code, output_log = await sync_to_async(handler_func)(
+                    self.head_id
+                )
         except Exception as e:
             self.head.spell_log = f'Native Handler Exception: {str(e)}'
             await self._save_head(fields=[self.SPELL_LOG_FIELD])
             self.status = HydraHeadStatus.FAILED
-            await self._update_status(HydraHeadStatus.FAILED)
             return
 
         self.head.spell_log = output_log
@@ -376,7 +377,7 @@ class GenericSpellCaster:
 
         new_status = (
             HydraHeadStatus.SUCCESS
-            if return_code == HANDLER_SUCCESS_CODE
+            if return_code == 200
             else HydraHeadStatus.FAILED
         )
         await self._update_status(new_status)

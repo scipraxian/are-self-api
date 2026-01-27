@@ -56,7 +56,7 @@ class TalosAgentTelemetry(models.Model):
 
 
 # TODO: not sure we are using this, and not sure we want to.
-class TalosAgentEvent(models.Model):
+class TalosAgentEvent(models.Model):  # NOT CURRENTLY USED
     """Records significant lifecycle events for an agent."""
 
     EVENT_TYPES = [

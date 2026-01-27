@@ -1,7 +1,7 @@
 import asyncio
 import json
 import logging
-from typing import List, NamedTuple, Optional
+from typing import List, NamedTuple, Optional, Tuple
 
 from asgiref.sync import sync_to_async
 from django.conf import settings
@@ -47,16 +47,22 @@ class AgentIdentity(NamedTuple):
 
 
 # --- 2. CORE FUNCTIONS ---
-
-
-def scan_and_register(
+async def scan_and_register(
+    head_id: str,
     subnet_prefix: str = TalosDiscoveryConstants.DEFAULT_SUBNET_PREFIX,
     port: int = TalosDiscoveryConstants.DEFAULT_PORT,
-) -> List[str]:
-    """
-    Synchronous entry point for the discovery process.
-    """
-    return asyncio.run(_run_async_scan(subnet_prefix, port))
+) -> Tuple[int, str]:
+    """Asynchronous entry point for agent discovery."""
+
+    # _run_async_scan already probes and saves to DB, returning List[str]
+    registered_names = await _run_async_scan(subnet_prefix, port)
+
+    log_output = f'Scan complete. Found {len(registered_names)} agents.'
+    if registered_names:
+        log_output += f' Registered/Updated: {", ".join(registered_names)}'
+
+    # Return (Success Code 200, Log String) for GenericSpellCaster [cite: 391]
+    return 200, log_output
 
 
 async def _run_async_scan(subnet_prefix: str, port: int) -> List[str]:
@@ -175,22 +181,24 @@ async def _probe_agent(ip: str, port: int) -> Optional[AgentIdentity]:
 
 @sync_to_async
 def _register_agent_in_db(identity: AgentIdentity) -> str:
-    """
-    Database I/O: Upsert RemoteTarget based on Hardware UUID.
-    """
+    """Upsert RemoteTarget based on Hardware UUID and Status ID."""
+
+    # Validation: Ensure we have the NamedTuple before accessing unique_id
+    if not hasattr(identity, 'unique_id'):
+        logger.error(f'Invalid identity object: {identity}')
+        return 'Unknown'
+
     target, created = TalosAgentRegistry.objects.update_or_create(
         id=identity.unique_id,
+        defaults=dict(
+            hostname=identity.hostname.upper().split('.')[0],
+            ip_address=identity.ip_address,
+            version=identity.version,
+            last_seen=timezone.now(),
+            status_id=TalosAgentStatus.ONLINE,
+        ),
     )
-    target.hostname = identity.hostname.upper().split('.')[0]
-    target.ip_address = identity.ip_address
-    target.version = identity.version
-    target.last_seen = timezone.now()
-    # todo: consider port but really its superfluous.
-    target.status_id = TalosAgentStatus.ONLINE
-    target.save()
 
     action = 'Registered' if created else 'Updated'
-    logger.info(
-        f'[{action}] {target.hostname} '
-        f'({target.ip_address}) -> UUID: {target.id}'
-    )
+    logger.info(f'[{action}] {target.hostname} ({target.ip_address})')
+    return target.hostname

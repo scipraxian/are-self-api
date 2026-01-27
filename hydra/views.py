@@ -103,9 +103,14 @@ class SpawnMonitorDetailView(HydraResponseMixin, DetailView):
     context_object_name = 'spawn'
 
     def get_context_data(self, **kwargs):
-        spawn = self.get_object()
+        # DetailView expects self.object to be set
+        spawn = self.object or self.get_object()
+
         if spawn.is_active:
             try:
+                # Nudge state machine
+                from .hydra import Hydra
+
                 Hydra(spawn_id=spawn.id).poll()
                 spawn.refresh_from_db()
             except Exception:
@@ -122,6 +127,9 @@ class SpawnMonitorDetailView(HydraResponseMixin, DetailView):
         return context
 
     def get(self, request, *args, **kwargs):
+        # Set the object immediately to satisfy DetailView requirements
+        self.object = self.get_object()
+
         if not request.headers.get('HX-Request'):
             return render(
                 request,
