@@ -43,12 +43,11 @@ class Hydra:
         self,
         spellbook_id: Optional[int] = None,
         spawn_id: Optional[int] = None,
-        env_id: Optional[int] = None,
     ):
         if spawn_id:
             self.spawn = HydraSpawn.objects.get(id=spawn_id)
-        elif spellbook_id and env_id:
-            self.spawn = self._create_spawn(spellbook_id, env_id)
+        elif spellbook_id:
+            self.spawn = self._create_spawn(spellbook_id)
         else:
             raise ValueError(
                 'Must provide either spawn_id or (spellbook_id + env_id)'
@@ -198,7 +197,6 @@ class Hydra:
         book = HydraSpellbook.objects.get(id=spellbook_id)
         spawn = HydraSpawn.objects.create(
             spellbook=book,
-            environment_id=env_id,
             status_id=HydraSpawnStatus.CREATED,
             context_data=json.dumps({}),
         )
