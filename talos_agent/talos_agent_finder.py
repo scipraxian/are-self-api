@@ -1,7 +1,7 @@
 import asyncio
 import json
 import logging
-from typing import List, Optional
+from typing import List, NamedTuple, Optional
 
 from asgiref.sync import sync_to_async
 from django.conf import settings
@@ -12,16 +12,15 @@ from talos_agent.models import TalosAgentRegistry, TalosAgentStatus
 logger = logging.getLogger(__name__)
 
 
-# --- 1. CONSTANTS ---
+# --- 1. CONSTANTS & TYPES ---
 
 
 class TalosDiscoveryConstants:
-    """Centralized constants to eliminate string literals."""
+    """Centralized constants for the discovery protocol."""
 
-    # Config Defaults
     DEFAULT_SUBNET_PREFIX = getattr(settings, 'TALOS_SUBNET', '192.168.1.')
     DEFAULT_PORT = getattr(settings, 'TALOS_PORT', 5005)
-    SCAN_TIMEOUT = 1.0
+    SCAN_TIMEOUT = 1.5  # Fast timeout for ping-only
     ENCODING = 'utf-8'
 
     # Protocol Keys
@@ -29,12 +28,22 @@ class TalosDiscoveryConstants:
     K_STATUS = 'status'
     K_HOSTNAME = 'hostname'
     K_VERSION = 'version'
+    K_UUID = 'uuid'
 
-    # Protocol Values
+    # Values
     CMD_PING = 'PING'
     VAL_PONG = 'PONG'
     VAL_UNKNOWN = 'Unknown'
     VAL_VER_ZERO = '0.0.0'
+
+
+class AgentIdentity(NamedTuple):
+    """Immutable DTO for a discovered agent."""
+
+    unique_id: str
+    ip_address: str
+    hostname: str
+    version: str
 
 
 # --- 2. CORE FUNCTIONS ---
@@ -45,139 +54,143 @@ def scan_and_register(
     port: int = TalosDiscoveryConstants.DEFAULT_PORT,
 ) -> List[str]:
     """
-    Main Entry Point (Synchronous).
-    Orchestrates the async scan and synchronous DB registration.
+    Synchronous entry point for the discovery process.
     """
     return asyncio.run(_run_async_scan(subnet_prefix, port))
 
 
 async def _run_async_scan(subnet_prefix: str, port: int) -> List[str]:
     """
-    Orchestrator: Generates IPs, awaits probes, and triggers registration.
+    Orchestrator: Scans subnet asynchronously and registers found agents.
     """
+    # 1. Launch Probes (Parallel)
     tasks = []
-    # Generate IPs 1..254
+    # Scan 1-254
     for i in range(1, 255):
         ip = f'{subnet_prefix}{i}'
-        tasks.append(_probe_agent_address(ip, port))
+        tasks.append(_probe_agent(ip, port))
 
-    logger.info(f'Scanning {len(tasks)} IPs on {subnet_prefix}x:{port}...')
+    logger.info(f'Scanning subnet {subnet_prefix}x on port {port}...')
 
-    # Concurrent Execution
+    # 2. Gather Results
     results = await asyncio.gather(*tasks)
+    found_identities = [res for res in results if res is not None]
 
-    # Filter Failures (None) - We now have a list of unsaved TalosAgentRegistry objects
-    found_agents: List[TalosAgentRegistry] = [
-        res for res in results if res is not None
-    ]
+    logger.info(f'Scan complete. Found {len(found_identities)} agents.')
 
-    # Register Successes
+    # 3. Register (Serial DB Writes)
     registered_names = []
-    for agent_dto in found_agents:
-        # Pass the DTO (Data Transfer Object) to the DB handler
-        name = await _register_agent_in_db(agent_dto)
+    for identity in found_identities:
+        name = await _register_agent_in_db(identity)
         registered_names.append(name)
 
     return registered_names
 
 
-async def _probe_agent_address(
-    ip: str, port: int
-) -> Optional[TalosAgentRegistry]:
-    """
-    Network I/O: Attempts a TCP handshake and PING/PONG.
-    Returns an UNSAVED TalosAgentRegistry instance as a DTO.
-    """
-    writer = None
+async def _probe_agent(ip: str, port: int) -> Optional[AgentIdentity]:
+    """Single-step handshake: Connect -> PING -> Read UUID from PONG."""
+    reader, writer = None, None
+
+    # --- BLOCK 1: ESTABLISH CONNECTION ---
+    # We expect timeouts and connection refusals here during a subnet scan.
+    # These should be handled silently or with debug logs only.
     try:
         reader, writer = await asyncio.wait_for(
             asyncio.open_connection(ip, port),
             timeout=TalosDiscoveryConstants.SCAN_TIMEOUT,
         )
+    except (asyncio.TimeoutError, OSError, ConnectionRefusedError):
+        # Host is likely offline or port is closed.
+        return None
 
+    # --- BLOCK 2: PROTOCOL EXECUTION ---
+    try:
         # 1. Send PING
-        request = {
+        ping_req = {
             TalosDiscoveryConstants.K_CMD: TalosDiscoveryConstants.CMD_PING
         }
-        payload = json.dumps(request) + '\n'
-
-        writer.write(payload.encode(TalosDiscoveryConstants.ENCODING))
+        writer.write(
+            (json.dumps(ping_req) + '\n').encode(
+                TalosDiscoveryConstants.ENCODING
+            )
+        )
         await writer.drain()
 
         # 2. Read Response
-        data = await asyncio.wait_for(
+        raw_data = await asyncio.wait_for(
             reader.read(4096), timeout=TalosDiscoveryConstants.SCAN_TIMEOUT
         )
 
-        if not data:
+        if not raw_data:
+            logger.debug(f'[{ip}] Socket closed remotely during handshake.')
             return None
 
-        response = json.loads(data.decode(TalosDiscoveryConstants.ENCODING))
+        # 3. Parse & Validate
+        decoded_data = raw_data.decode(TalosDiscoveryConstants.ENCODING)
+        data = json.loads(decoded_data)
 
-        # 3. Validate PONG and Populate DTO
         if (
-            response.get(TalosDiscoveryConstants.K_STATUS)
-            == TalosDiscoveryConstants.VAL_PONG
+            data.get(TalosDiscoveryConstants.K_STATUS)
+            != TalosDiscoveryConstants.VAL_PONG
         ):
-            # DRY: We instantiate the model directly.
-            # We explicitly set status_id to ONLINE (integer) to avoid DB lookup.
-            return TalosAgentRegistry(
-                ip_address=ip,
-                hostname=response.get(
-                    TalosDiscoveryConstants.K_HOSTNAME,
-                    TalosDiscoveryConstants.VAL_UNKNOWN,
-                ),
-                version=response.get(
-                    TalosDiscoveryConstants.K_VERSION,
-                    TalosDiscoveryConstants.VAL_VER_ZERO,
-                ),
-                status_id=TalosAgentStatus.ONLINE,
+            logger.warning(
+                f'[{ip}] Protocol Mismatch: Expected PONG, got {data.get(TalosDiscoveryConstants.K_STATUS)}'
             )
+            return None
 
-    except (OSError, asyncio.TimeoutError, json.JSONDecodeError):
-        pass
-    except Exception as e:
-        logger.debug(f'Probe error for {ip}: {e}')
+        agent_uuid = data.get(TalosDiscoveryConstants.K_UUID)
+        if not agent_uuid:
+            logger.error(f'[{ip}] Agent handshake failed: Missing UUID field.')
+            return None
+
+        # 4. Success DTO
+        return AgentIdentity(
+            unique_id=agent_uuid,
+            ip_address=ip,
+            hostname=data.get(
+                TalosDiscoveryConstants.K_HOSTNAME,
+                TalosDiscoveryConstants.VAL_UNKNOWN,
+            ),
+            version=data.get(
+                TalosDiscoveryConstants.K_VERSION,
+                TalosDiscoveryConstants.VAL_VER_ZERO,
+            ),
+        )
+
+    except json.JSONDecodeError as e:
+        logger.error(f'[{ip}] Handshake failed: Malformed JSON response. {e}')
+        return None
+    except (asyncio.TimeoutError, OSError) as e:
+        logger.warning(f'[{ip}] Handshake interrupted (I/O Error): {e}')
+        return None
     finally:
+        # Robust Cleanup
         if writer:
-            writer.close()
             try:
+                writer.close()
                 await writer.wait_closed()
             except Exception:
                 pass
 
-    return None
-
 
 @sync_to_async
-def _register_agent_in_db(dto: TalosAgentRegistry) -> str:
+def _register_agent_in_db(identity: AgentIdentity) -> str:
     """
-    Database I/O: Merges the DTO into the persistent database record.
+    Database I/O: Upsert RemoteTarget based on Hardware UUID.
     """
-    # Clean Hostname (remove domain)
-    raw_hostname = dto.hostname.upper()
-    if '.' in raw_hostname:
-        clean_hostname = raw_hostname.split('.')[0]
-    else:
-        clean_hostname = raw_hostname
-
-    # 1. Get or Create (Identifier Only)
-    # We use the clean hostname as the unique key
-    agent, created = TalosAgentRegistry.objects.get_or_create(
-        hostname=clean_hostname, defaults={'status_id': TalosAgentStatus.ONLINE}
+    target, created = TalosAgentRegistry.objects.update_or_create(
+        id=identity.unique_id,
     )
+    target.hostname = identity.hostname.upper().split('.')[0]
+    target.ip_address = identity.ip_address
+    target.version = identity.version
+    target.last_seen = timezone.now()
+    # todo: consider port but really its superfluous.
+    target.status_id = TalosAgentStatus.ONLINE
+    target.save()
 
-    # 2. Update Mutable Fields from DTO
-    agent.ip_address = dto.ip_address
-    agent.version = dto.version
-    agent.last_seen = timezone.now()
-
-    # Always mark online if we just heard from it
-    agent.status_id = TalosAgentStatus.ONLINE
-
-    agent.save()
-
-    log_action = 'Created' if created else 'Updated'
-    logger.info(f'[{log_action}] Agent {clean_hostname} at {agent.ip_address}')
-
-    return clean_hostname
+    action = 'Registered' if created else 'Updated'
+    logger.info(
+        f'[{action}] {target.hostname} '
+        f'({target.ip_address}) -> UUID: {target.id}'
+    )

@@ -19,6 +19,7 @@ Key Capabilities:
     tail logs efficiently without polling overhead.
 5.  **Self-Healing:** Capable of hot-swapping its own code via the `UPDATE_SELF`
     command.
+6. **Self-Identifying:** Reports its hardware UUID upon PING.
 
 Architecture:
 -------------
@@ -89,7 +90,7 @@ class TalosAgentConstants:
     """Protocol Constants."""
 
     # Meta
-    VERSION = '4.2.0'
+    VERSION = '4.3.0'
     ENCODING = 'utf-8'
     ERR_HANDLER = 'replace'
 
@@ -546,6 +547,7 @@ class TalosAgent:
                         status=TalosAgentConstants.S_PONG,
                         hostname=socket.gethostname(),
                         version=TalosAgentConstants.VERSION,
+                        uuid=_get_agent_id(),
                     ),
                 )
 
@@ -877,6 +879,22 @@ class TalosAgent:
                     await writer.wait_closed()
                 except Exception:
                     pass
+
+
+def _get_agent_id():
+    """Fetches the immutable Machine UUID via PowerShell."""
+    try:
+        return subprocess.check_output(
+            [
+                'powershell',
+                '-Command',
+                'Get-CimInstance Win32_ComputerSystemProduct | Select-Object -ExpandProperty UUID',
+            ],
+            encoding='utf-8',
+            creationflags=0x08000000,  # CREATE_NO_WINDOW
+        ).strip()
+    except Exception:
+        return 'UNKNOWN_UUID'
 
 
 if __name__ == '__main__':

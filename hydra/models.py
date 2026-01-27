@@ -54,17 +54,6 @@ class HydraOutcomeActionID(object):
     ANALYZE = 5
 
 
-class HydraExecutableType(DefaultFieldsMixin):  # depreciated
-    """
-    Centralized Integer IDs for Executable Types.
-    """
-
-    LOCAL_PYTHON = 1
-    REMOTE_PYTHON = 2
-    LOCAL_POPEN = 3
-    REMOTE_POPEN = 4
-
-
 class HydraDistributionModeID(object):
     """
     Centralized Integer IDs for Distribution Modes.

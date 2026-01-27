@@ -1,47 +1,5 @@
 [
   {
-    "model": "environments.projectenvironment",
-    "pk": "2a898e21-b7f2-4442-94e4-f0acb87d57b6",
-    "fields": {
-      "name": "Talos Default Environment",
-      "project_root": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy",
-      "engine_root": "C:\\Program Files\\Epic Games\\UE_5.6",
-      "build_root": "C:\\steambuild",
-      "project_name": "HSHVacancy",
-      "staging_dir": "C:\\steambuild\\StagingBuffer",
-      "agent_port": 5005,
-      "is_active": true
-    }
-  },
-  {
-    "model": "environments.projectenvironment",
-    "pk": "a9f04dbc-ea47-4426-9a61-60c71c62f810",
-    "fields": {
-      "name": "Default Auto-Generated Env",
-      "project_root": "",
-      "engine_root": "",
-      "build_root": "C:/steambuild",
-      "project_name": "HSHVacancy",
-      "staging_dir": null,
-      "agent_port": 5005,
-      "is_active": true
-    }
-  },
-  {
-    "model": "environments.projectenvironment",
-    "pk": "c142aa46-9b5a-41af-b4c2-79cc11be5f65",
-    "fields": {
-      "name": "Test Env",
-      "project_root": "C:/Test",
-      "engine_root": "",
-      "build_root": "",
-      "project_name": "",
-      "staging_dir": null,
-      "agent_port": 5005,
-      "is_active": false
-    }
-  },
-  {
     "model": "environments.talosexecutableswitch",
     "pk": 1,
     "fields": {
@@ -651,6 +609,26 @@
     }
   },
   {
+    "model": "environments.talosexecutableargument",
+    "pk": 8,
+    "fields": {
+      "created": "2026-01-27T17:21:17.212Z",
+      "modified": "2026-01-27T17:22:29.029Z",
+      "name": "Powershell Command Arg",
+      "argument": "-Command"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 9,
+    "fields": {
+      "created": "2026-01-27T17:23:00.022Z",
+      "modified": "2026-01-27T17:23:00.022Z",
+      "name": "Get UUID",
+      "argument": "Get-CimInstance Win32_ComputerSystemProduct | Select-Object -ExpandProperty UUID"
+    }
+  },
+  {
     "model": "environments.talosexecutable",
     "pk": 1,
     "fields": {
@@ -813,12 +791,36 @@
     }
   },
   {
+    "model": "environments.talosexecutable",
+    "pk": 11,
+    "fields": {
+      "created": "2026-01-27T17:17:28.671Z",
+      "description": null,
+      "modified": "2026-01-27T17:25:24.532Z",
+      "name": "Windows Powershell Command",
+      "internal": false,
+      "working_path": "",
+      "executable": "powershell",
+      "log": "",
+      "switches": []
+    }
+  },
+  {
     "model": "environments.talosexecutableargumentassignment",
     "pk": 1,
     "fields": {
       "executable": 9,
       "order": 10,
       "argument": 7
+    }
+  },
+  {
+    "model": "environments.talosexecutableargumentassignment",
+    "pk": 2,
+    "fields": {
+      "executable": 11,
+      "order": 10,
+      "argument": 8
     }
   }
 ]
