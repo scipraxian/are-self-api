@@ -33,6 +33,18 @@ NATIVE_HANDLERS = dict(
 )
 
 
+def evaluate_return_code(executable_name: str, return_code: int) -> bool:
+    """
+    Standardizes success evaluation based on the binary context.
+    """
+    if 'robocopy' in executable_name.lower():
+        # Robocopy codes 0-7 are technically variations of success
+        return 0 <= return_code < 8
+
+    # Standard binary success
+    return return_code == 0
+
+
 class AsyncLogManager:
     """
     Handles buffered log writes to the Database with async safety.
@@ -337,14 +349,23 @@ class GenericSpellCaster:
         # Flush any remaining logs in buffer
         await self.logger.flush()
 
-        if exit_code == 0:
-            await self.logger.write_immediate('\n[EXIT] Success.\n')
+        # Use the helper to determine "actual" success (e.g., Robocopy 1-7 is fine)
+        is_actually_successful = evaluate_return_code(executable, exit_code)
+
+        if is_actually_successful:
+            await self.logger.write_immediate(
+                f'\n[EXIT] Success (Code {exit_code}).\n'
+            )
+            # Ensure we don't overwrite if it was already marked success by a signal
+            new_status = HydraHeadStatus.SUCCESS
         else:
             await self.logger.write_immediate(
                 f'\n[EXIT] Process failed with code {exit_code}\n'
             )
-            self.status = HydraHeadStatus.FAILED
-            await self._update_status(HydraHeadStatus.FAILED)
+            new_status = HydraHeadStatus.FAILED
+
+        self.status = new_status
+        await self._update_status(new_status)
 
     async def _execute_local_python(self):
         """Executes internal python handlers, supporting both sync and async."""

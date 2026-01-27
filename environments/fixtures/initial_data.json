@@ -221,17 +221,6 @@
   },
   {
     "model": "environments.talosexecutableswitch",
-    "pk": 21,
-    "fields": {
-      "created": "2026-01-21T19:44:05.124Z",
-      "modified": "2026-01-22T21:55:52.364Z",
-      "name": "xDepreciatedCMD Expand",
-      "flag": "expand",
-      "value": ""
-    }
-  },
-  {
-    "model": "environments.talosexecutableswitch",
     "pk": 22,
     "fields": {
       "created": "2026-01-21T19:44:56.489Z",
@@ -419,17 +408,6 @@
   },
   {
     "model": "environments.talosexecutableswitch",
-    "pk": 39,
-    "fields": {
-      "created": "2026-01-21T19:57:15.111Z",
-      "modified": "2026-01-22T21:56:50.442Z",
-      "name": "xDepreciatedBuildCookRun",
-      "flag": "BuildCookRun",
-      "value": ""
-    }
-  },
-  {
-    "model": "environments.talosexecutableswitch",
     "pk": 40,
     "fields": {
       "created": "2026-01-21T19:57:37.584Z",
@@ -452,28 +430,6 @@
   },
   {
     "model": "environments.talosexecutableswitch",
-    "pk": 42,
-    "fields": {
-      "created": "2026-01-21T20:16:52.407Z",
-      "modified": "2026-01-22T21:56:38.322Z",
-      "name": "xDepreciatedOutput SPC File",
-      "flag": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Content\\PipelineCaches\\HSHVacancy_PCD3D_SM6.spc",
-      "value": ""
-    }
-  },
-  {
-    "model": "environments.talosexecutableswitch",
-    "pk": 43,
-    "fields": {
-      "created": "2026-01-21T20:21:03.357Z",
-      "modified": "2026-01-22T21:56:15.149Z",
-      "name": "xDepreciatedProject",
-      "flag": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\HSHVacancy.uproject",
-      "value": ""
-    }
-  },
-  {
-    "model": "environments.talosexecutableswitch",
     "pk": 44,
     "fields": {
       "created": "2026-01-21T20:25:50.209Z",
@@ -481,28 +437,6 @@
       "name": "Pre-Release: Archive Directory",
       "flag": "-archivedirectory=",
       "value": "C:\\talos_bin\\4_prerelease"
-    }
-  },
-  {
-    "model": "environments.talosexecutableswitch",
-    "pk": 45,
-    "fields": {
-      "created": "2026-01-21T20:29:25.360Z",
-      "modified": "2026-01-22T21:55:59.025Z",
-      "name": "xDepreciatedInput: Rec FIles",
-      "flag": "c:/steambuild/Windows/HSHVacancy/Saved/CollectedPSOs/*.rec*",
-      "value": ""
-    }
-  },
-  {
-    "model": "environments.talosexecutableswitch",
-    "pk": 46,
-    "fields": {
-      "created": "2026-01-21T20:34:13.575Z",
-      "modified": "2026-01-22T21:56:44.472Z",
-      "name": "xDepreciatedInput: SHK Files",
-      "flag": "C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Metadata/PipelineCaches/*.shk",
-      "value": ""
     }
   },
   {
@@ -536,6 +470,94 @@
       "name": "TestExit Automation Test Queue Empty",
       "flag": "-TestExit=",
       "value": "Automation Test Queue Empty"
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 50,
+    "fields": {
+      "created": "2026-01-27T22:36:32.050Z",
+      "modified": "2026-01-27T22:36:32.050Z",
+      "name": "RoboCopy Mirror",
+      "flag": "/MIR",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 51,
+    "fields": {
+      "created": "2026-01-27T22:37:05.486Z",
+      "modified": "2026-01-27T22:37:05.486Z",
+      "name": "RoboCopy Multi-thread",
+      "flag": "/MT:8",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 52,
+    "fields": {
+      "created": "2026-01-27T22:37:32.856Z",
+      "modified": "2026-01-27T22:37:32.856Z",
+      "name": "RoboCopy Retry R",
+      "flag": "/R:2",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 53,
+    "fields": {
+      "created": "2026-01-27T22:37:51.661Z",
+      "modified": "2026-01-27T22:37:51.662Z",
+      "name": "RoboCopy Retry W",
+      "flag": "/W:2",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 54,
+    "fields": {
+      "created": "2026-01-27T22:38:37.642Z",
+      "modified": "2026-01-27T22:38:37.642Z",
+      "name": "RoboCopy Silent Logging NFL",
+      "flag": "/NFL",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 55,
+    "fields": {
+      "created": "2026-01-27T22:38:57.955Z",
+      "modified": "2026-01-27T22:38:57.955Z",
+      "name": "RoboCopy Silent Logging NDL",
+      "flag": "/NDL",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 56,
+    "fields": {
+      "created": "2026-01-27T22:39:16.441Z",
+      "modified": "2026-01-27T22:39:16.441Z",
+      "name": "RoboCopy Silent Logging NJH",
+      "flag": "/NJH",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 57,
+    "fields": {
+      "created": "2026-01-27T22:39:38.481Z",
+      "modified": "2026-01-27T22:39:38.481Z",
+      "name": "RoboCopy Silent Logging NJS",
+      "flag": "/NJS",
+      "value": ""
     }
   },
   {
@@ -626,6 +648,26 @@
       "modified": "2026-01-27T17:23:00.022Z",
       "name": "Get UUID",
       "argument": "Get-CimInstance Win32_ComputerSystemProduct | Select-Object -ExpandProperty UUID"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 10,
+    "fields": {
+      "created": "2026-01-27T22:42:52.057Z",
+      "modified": "2026-01-27T22:55:43.025Z",
+      "name": "Network Server Pre-Release Folder",
+      "argument": "\\\\{{server}}\\talos_bin\\4_prerelease"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 11,
+    "fields": {
+      "created": "2026-01-27T22:43:48.676Z",
+      "modified": "2026-01-27T22:50:36.238Z",
+      "name": "Local Pre-Release Folder",
+      "argument": "c:\\talos_bin\\4_pre_release"
     }
   },
   {
@@ -816,6 +858,21 @@
       "internal": true,
       "working_path": "",
       "executable": "scan_and_register",
+      "log": "",
+      "switches": []
+    }
+  },
+  {
+    "model": "environments.talosexecutable",
+    "pk": 13,
+    "fields": {
+      "created": "2026-01-27T22:45:40.160Z",
+      "description": null,
+      "modified": "2026-01-27T22:45:40.160Z",
+      "name": "robocopy",
+      "internal": false,
+      "working_path": "",
+      "executable": "robocopy",
       "log": "",
       "switches": []
     }

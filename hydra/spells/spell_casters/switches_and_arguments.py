@@ -1,8 +1,11 @@
+import socket
 from typing import List
 
 from django.template import Context, Template
 
 from hydra.models import HydraSpell
+
+DEFAULT_CONTEXT = {'server': socket.gethostname()}
 
 
 def _render_text(text: str, render_ctx: Context) -> str:
@@ -46,7 +49,7 @@ def spell_switches_and_arguments(
     )
 
     # Prepare Context
-    render_ctx = Context(context or {})
+    render_ctx = Context(context or DEFAULT_CONTEXT)
 
     # 1. Process Arguments
     # Note: We rely on the order defined in the DB or default sorting

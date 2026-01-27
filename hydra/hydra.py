@@ -10,13 +10,16 @@ from django.db.models import Min
 from django.utils import timezone
 
 from config.celery import app as celery_app
+from talos_agent.models import TalosAgentRegistry, TalosAgentStatus
 
 from .models import (
+    HydraDistributionModeID,
     HydraHead,
     HydraHeadStatus,
     HydraSpawn,
     HydraSpawnStatus,
     HydraSpellbook,
+    HydraStatusID,
 )
 from .tasks import cast_hydra_spell
 
@@ -217,62 +220,94 @@ class Hydra:
     def dispatch_next_wave(self) -> None:
         """
         Parallel Dispatch Engine.
-        Uses Atomic Transactions to prevent race conditions.
+        Evaluates distribution modes to fan out tasks across the fleet.
         """
         with transaction.atomic():
             heads = self.spawn.heads.select_for_update().all()
 
             # Analyze State
-            active_min_order = heads.filter(
-                status_id__in=[HydraHeadStatus.RUNNING, HydraHeadStatus.PENDING]
-            ).aggregate(Min('spell__order'))['spell__order__min']
-
             pending_min_order = heads.filter(
-                status_id=HydraHeadStatus.CREATED
+                status_id=HydraStatusID.CREATED
             ).aggregate(Min('spell__order'))['spell__order__min']
 
-            # Completion Check
             if pending_min_order is None:
                 self._finalize_spawn_unsafe()
                 return
 
-            # Blocking Rule
-            if (
-                active_min_order is not None
-                and pending_min_order > active_min_order
-            ):
+            # Blocking Rule: Don't start next wave if previous wave is still running
+            active_min_order = heads.filter(
+                status_id__in=[HydraStatusID.RUNNING, HydraStatusID.PENDING]
+            ).aggregate(Min('spell__order'))['spell__order__min']
+
+            if active_min_order is not None and pending_min_order > active_min_order:
                 return
 
-            # Dispatch Wave
             wave = heads.filter(
-                status_id=HydraHeadStatus.CREATED,
+                status_id=HydraStatusID.CREATED,
                 spell__order=pending_min_order,
             )
 
-            if not wave.exists():
-                return
-
-            logger.info(
-                f'[HYDRA] Dispatching Wave {pending_min_order} ({wave.count()} heads)'
-            )
-
             for head in wave:
-                head.status_id = HydraHeadStatus.PENDING
-                head.save(update_fields=['status'])
+                mode = head.spell.distribution_mode_id
 
-                # Closure to capture ID by value and save Task ID on dispatch
-                def dispatch_and_record(h_id: int):
-                    result = cast_hydra_spell.delay(h_id)
-                    # We must run this update in a separate quick query to ensure visibility
-                    HydraHead.objects.filter(id=h_id).update(
-                        celery_task_id=result.id
-                    )
+                if mode == HydraDistributionModeID.ALL_ONLINE_AGENTS:
+                    self._dispatch_fleet_wave(head)
+                elif mode == HydraDistributionModeID.SPECIFIC_TARGETS:
+                    self._dispatch_pinned_wave(head)
+                else:
+                    # LOCAL_SERVER or ONE_AVAILABLE logic
+                    self._prepare_and_dispatch(head)
 
-                # on_commit ensures we don't dispatch until the DB lock is released
-                transaction.on_commit(
-                    lambda h_id=head.id: dispatch_and_record(h_id)
-                )
+    def _dispatch_fleet_wave(self, seed_head: HydraHead) -> None:
+        """Fans out a single spell to all online agents."""
+        agents = TalosAgentRegistry.objects.filter(
+            status_id=TalosAgentStatus.ONLINE)  # could be in use?
 
+        if not agents.exists():
+            logger.warning(
+                f'[HYDRA] No online agents for fleet '
+                f'spell: {seed_head.spell.name}')
+            seed_head.status_id = HydraStatusID.FAILED
+            seed_head.execution_log += ('\n[ERROR] No online agents available '
+                                        'for fleet distribution.\n')
+            seed_head.save(update_fields=['status', 'execution_log'])
+            return
+
+        for agent in agents:
+            self._clone_and_dispatch_head(seed_head, agent)
+
+        # Remove the 'Seed' head as it has been replaced by targeted clones
+        seed_head.delete()
+
+    def _dispatch_pinned_wave(self, seed_head: HydraHead) -> None:
+        """Dispatches to explicitly pinned targets."""
+        targets = seed_head.spell.specific_targets.all()
+        for t in targets:
+            self._clone_and_dispatch_head(seed_head, t.target)
+        seed_head.delete()
+
+    def _clone_and_dispatch_head(self, seed: HydraHead,
+                                 agent: TalosAgentRegistry) -> None:
+        """The Helper: Multiplies a head for a specific target and queues the task."""
+        new_head = HydraHead.objects.create(
+            spawn=seed.spawn,
+            spell=seed.spell,
+            target=agent,
+            status_id=HydraStatusID.PENDING
+        )
+
+        def queue_task(h_id):
+            res = cast_hydra_spell.delay(h_id)
+            HydraHead.objects.filter(id=h_id).update(celery_task_id=res.id)
+
+        transaction.on_commit(lambda: queue_task(new_head.id))
+
+    def _prepare_and_dispatch(self, head: HydraHead) -> None:
+        """Standard dispatch for single-target or local tasks."""
+        head.status_id = HydraStatusID.PENDING
+        head.save(update_fields=['status'])
+
+        transaction.on_commit(lambda: cast_hydra_spell.delay(head.id))
     def _finalize_spawn_unsafe(self) -> None:
         """Determines final status inside a transaction."""
         active = self.spawn.heads.exclude(
