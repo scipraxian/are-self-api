@@ -55,7 +55,6 @@ class HydraSpellbookAdmin(admin.ModelAdmin):
 class HydraSpellArgumentInline(admin.TabularInline):
     model = HydraSpellArgumentAssignment
     extra = 1
-    ordering = ('order',)
 
 
 class HydraSpellTargetInline(admin.TabularInline):
@@ -128,3 +127,4 @@ class HydraHeadAdmin(admin.ModelAdmin):
 
 admin.site.register(HydraHeadStatus)
 admin.site.register(HydraSpawnStatus)
+admin.site.register(HydraSpawn)

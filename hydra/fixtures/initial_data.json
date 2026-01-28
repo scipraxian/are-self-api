@@ -660,5 +660,26 @@
     "fields": {
       "name": "Aborted"
     }
+  },
+  {
+    "model": "hydra.hydrawiretype",
+    "pk": 1,
+    "fields": {
+      "name": "Flow"
+    }
+  },
+  {
+    "model": "hydra.hydrawiretype",
+    "pk": 2,
+    "fields": {
+      "name": "Success"
+    }
+  },
+  {
+    "model": "hydra.hydrawiretype",
+    "pk": 3,
+    "fields": {
+      "name": "Failure"
+    }
   }
 ]

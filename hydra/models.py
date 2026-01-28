@@ -117,9 +117,6 @@ class HydraSpell(DefaultFieldsMixin):
         default=HydraDistributionModeID.LOCAL_SERVER,
     )
 
-    def __str__(self):
-        return f'[{self.order}] {self.name}'
-
 
 class HydraSpellTarget(models.Model):
     """
@@ -226,12 +223,24 @@ class HydraSpellbookNode(models.Model):
         return f'Node {self.id}: {self.spell.name}'
 
 
-class HydraSpellbookConnectionWire(HydraStatusTypeMixin):
+class HydraWireType(HydraStatusTypeMixin):
+    """Status lookups for Wires."""
+
+    TYPE_FLOW = 1
+    TYPE_SUCCESS = 2
+    TYPE_FAILURE = 3
+    pass
+
+
+class HydraSpellbookConnectionWire(ModifiedMixin):
     """
     The Wire. Connects two NODES (not spells).
     Trigger Condition: Fires when 'source' finishes with 'status'.
     """
 
+    type = models.ForeignKey(
+        HydraWireType, on_delete=models.PROTECT, default=HydraWireType.TYPE_FLOW
+    )
     spellbook = models.ForeignKey(
         HydraSpellbook, on_delete=models.CASCADE, related_name='wires'
     )
@@ -260,7 +269,7 @@ class HydraSpellbookConnectionWire(HydraStatusTypeMixin):
 # --- EXECUTION STATE (The Runtime) ---
 
 
-class HydraSpawnStatus(BigIdMixin, HydraStatusTypeMixin):
+class HydraSpawnStatus(HydraStatusTypeMixin):
     """Status lookups for Spawns."""
 
     pass
@@ -289,7 +298,7 @@ class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
         return f'Spawn {self.id} ({self.spellbook.name})'
 
 
-class HydraHeadStatus(BigIdMixin, HydraStatusTypeMixin):
+class HydraHeadStatus(HydraStatusTypeMixin):
     """Status lookups for Heads."""
 
     pass
