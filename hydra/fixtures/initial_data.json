@@ -181,7 +181,7 @@
     "pk": 130,
     "fields": {
       "created": "2026-01-08T18:00:00Z",
-      "modified": "2026-01-27T23:00:52.149Z",
+      "modified": "2026-01-27T23:11:29.978Z",
       "name": "Deploy",
       "talos_executable": 13,
       "distribution_mode": 2,
@@ -191,7 +191,6 @@
         51,
         52,
         53,
-        54,
         55,
         56,
         57
@@ -266,6 +265,41 @@
       "distribution_mode": 1,
       "order": 0,
       "switches": []
+    }
+  },
+  {
+    "model": "hydra.hydraspell",
+    "pk": 146,
+    "fields": {
+      "created": "2026-01-27T23:22:10.133Z",
+      "modified": "2026-01-27T23:23:03.205Z",
+      "name": "Launch All",
+      "talos_executable": 7,
+      "distribution_mode": 2,
+      "order": 0,
+      "switches": [
+        23,
+        24,
+        25,
+        28,
+        40
+      ]
+    }
+  },
+  {
+    "model": "hydra.hydraspell",
+    "pk": 147,
+    "fields": {
+      "created": "2026-01-28T16:17:19.220Z",
+      "modified": "2026-01-28T16:17:19.220Z",
+      "name": "Retry w/ 1 Second Delay",
+      "talos_executable": 14,
+      "distribution_mode": 1,
+      "order": 0,
+      "switches": [
+        58,
+        59
+      ]
     }
   },
   {
@@ -468,8 +502,8 @@
     "fields": {
       "created": "2026-01-08T21:58:00.568Z",
       "description": "Distribute to Agents",
-      "modified": "2026-01-20T16:16:35.220Z",
-      "name": "Distribute",
+      "modified": "2026-01-27T23:05:17.105Z",
+      "name": "Deploy",
       "spells": [
         130
       ]
@@ -498,6 +532,19 @@
       "name": "Pre-Release Run",
       "spells": [
         143
+      ]
+    }
+  },
+  {
+    "model": "hydra.hydraspellbook",
+    "pk": "8686149a-8b56-4a47-b5df-7d8cf7635dbc",
+    "fields": {
+      "created": "2026-01-27T23:23:20.836Z",
+      "description": null,
+      "modified": "2026-01-27T23:23:20.836Z",
+      "name": "All Remotes",
+      "spells": [
+        146
       ]
     }
   },
@@ -663,438 +710,6 @@
     "pk": 6,
     "fields": {
       "name": "Aborted"
-    }
-  },
-  {
-    "model": "hydra.hydraspawn",
-    "pk": "015603f5-c49c-4c94-8e11-dd6157be19f7",
-    "fields": {
-      "created": "2026-01-27T21:39:47.702Z",
-      "modified": "2026-01-27T21:39:47.702Z",
-      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "status": 4,
-      "context_data": "{}"
-    }
-  },
-  {
-    "model": "hydra.hydraspawn",
-    "pk": "32a04e32-3229-4dca-836f-feed79f840b5",
-    "fields": {
-      "created": "2026-01-27T21:40:54.669Z",
-      "modified": "2026-01-27T21:40:54.669Z",
-      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "status": 4,
-      "context_data": "{}"
-    }
-  },
-  {
-    "model": "hydra.hydraspawn",
-    "pk": "52b24993-27c6-4285-89e7-64610f84ee3e",
-    "fields": {
-      "created": "2026-01-27T20:47:38.833Z",
-      "modified": "2026-01-27T20:47:38.833Z",
-      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "status": 5,
-      "context_data": "{}"
-    }
-  },
-  {
-    "model": "hydra.hydraspawn",
-    "pk": "716310b9-bef8-408a-8f20-95a06bdba554",
-    "fields": {
-      "created": "2026-01-27T21:09:42.826Z",
-      "modified": "2026-01-27T21:09:42.826Z",
-      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "status": 4,
-      "context_data": "{}"
-    }
-  },
-  {
-    "model": "hydra.hydraspawn",
-    "pk": "8e4028f4-35e7-439c-b284-fa5468ae06f8",
-    "fields": {
-      "created": "2026-01-27T20:43:39.307Z",
-      "modified": "2026-01-27T20:43:39.307Z",
-      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "status": 4,
-      "context_data": "{}"
-    }
-  },
-  {
-    "model": "hydra.hydraspawn",
-    "pk": "9f2a35c6-716d-42e4-af50-26f3c0a52f32",
-    "fields": {
-      "created": "2026-01-27T21:46:47.959Z",
-      "modified": "2026-01-27T21:46:47.959Z",
-      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "status": 4,
-      "context_data": "{}"
-    }
-  },
-  {
-    "model": "hydra.hydraspawn",
-    "pk": "a443a720-7dc0-4e90-88a5-e0c204be34da",
-    "fields": {
-      "created": "2026-01-27T21:12:34.640Z",
-      "modified": "2026-01-27T21:12:34.640Z",
-      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "status": 4,
-      "context_data": "{}"
-    }
-  },
-  {
-    "model": "hydra.hydraspawn",
-    "pk": "a525f2e7-4932-4047-9985-b050d3c07480",
-    "fields": {
-      "created": "2026-01-27T20:40:40.289Z",
-      "modified": "2026-01-27T20:40:40.289Z",
-      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "status": 4,
-      "context_data": "{}"
-    }
-  },
-  {
-    "model": "hydra.hydraspawn",
-    "pk": "a611da3e-5cbf-4c73-a8bb-22ecec85d9d8",
-    "fields": {
-      "created": "2026-01-27T20:56:04.879Z",
-      "modified": "2026-01-27T20:56:04.879Z",
-      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "status": 5,
-      "context_data": "{}"
-    }
-  },
-  {
-    "model": "hydra.hydraspawn",
-    "pk": "aec5d602-566a-49c7-ac6f-6175aa4d7804",
-    "fields": {
-      "created": "2026-01-27T21:16:36.945Z",
-      "modified": "2026-01-27T21:16:36.945Z",
-      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "status": 5,
-      "context_data": "{}"
-    }
-  },
-  {
-    "model": "hydra.hydraspawn",
-    "pk": "bd491c77-0856-45ca-b82d-f684366ae989",
-    "fields": {
-      "created": "2026-01-27T20:32:28.848Z",
-      "modified": "2026-01-27T20:32:28.848Z",
-      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "status": 5,
-      "context_data": "{}"
-    }
-  },
-  {
-    "model": "hydra.hydraspawn",
-    "pk": "c0595e60-4135-4d41-972e-274047215896",
-    "fields": {
-      "created": "2026-01-27T21:03:25.180Z",
-      "modified": "2026-01-27T21:03:25.180Z",
-      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "status": 5,
-      "context_data": "{}"
-    }
-  },
-  {
-    "model": "hydra.hydraspawn",
-    "pk": "c92fd289-083c-4609-a2a3-0cc1d55eb357",
-    "fields": {
-      "created": "2026-01-27T22:25:53.766Z",
-      "modified": "2026-01-27T22:25:53.766Z",
-      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "status": 4,
-      "context_data": "{}"
-    }
-  },
-  {
-    "model": "hydra.hydraspawn",
-    "pk": "e04835b0-6532-41e4-ac52-b9d530dd3039",
-    "fields": {
-      "created": "2026-01-27T21:02:25.023Z",
-      "modified": "2026-01-27T21:02:25.023Z",
-      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "status": 5,
-      "context_data": "{}"
-    }
-  },
-  {
-    "model": "hydra.hydraspawn",
-    "pk": "f1845e7c-7fe3-4cde-9c8f-923ec708d176",
-    "fields": {
-      "created": "2026-01-27T21:21:25.703Z",
-      "modified": "2026-01-27T21:21:25.703Z",
-      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "status": 5,
-      "context_data": "{}"
-    }
-  },
-  {
-    "model": "hydra.hydraspawn",
-    "pk": "f25def87-c9c1-40d7-8155-1c64e4b69143",
-    "fields": {
-      "created": "2026-01-27T21:07:56.889Z",
-      "modified": "2026-01-27T21:07:56.889Z",
-      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "status": 4,
-      "context_data": "{}"
-    }
-  },
-  {
-    "model": "hydra.hydrahead",
-    "pk": "1bb2847e-ce0f-4c54-a152-9ba559640e2f",
-    "fields": {
-      "created": "2026-01-27T20:47:38.836Z",
-      "modified": "2026-01-27T20:47:38.836Z",
-      "spawn": "52b24993-27c6-4285-89e7-64610f84ee3e",
-      "spell": 145,
-      "target": null,
-      "celery_task_id": "7db9243c-a45c-4c4f-977e-110e327df6ec",
-      "status": 5,
-      "spell_log": "Native Handler Exception: Single thread executor already being used, would deadlock",
-      "execution_log": "Starting spell execution.\n",
-      "result_code": null
-    }
-  },
-  {
-    "model": "hydra.hydrahead",
-    "pk": "3131e599-97b9-4a16-b2ef-d328113feb23",
-    "fields": {
-      "created": "2026-01-27T21:09:42.829Z",
-      "modified": "2026-01-27T21:09:42.829Z",
-      "spawn": "716310b9-bef8-408a-8f20-95a06bdba554",
-      "spell": 145,
-      "target": null,
-      "celery_task_id": "d259b287-430f-476f-8e77-0673d6170c20",
-      "status": 4,
-      "spell_log": "Scanner Crash: Single thread executor already being used, would deadlock",
-      "execution_log": "Starting spell execution.\n",
-      "result_code": null
-    }
-  },
-  {
-    "model": "hydra.hydrahead",
-    "pk": "407e35bd-56eb-4620-8464-e0aba23f802a",
-    "fields": {
-      "created": "2026-01-27T22:25:53.768Z",
-      "modified": "2026-01-27T22:25:53.768Z",
-      "spawn": "c92fd289-083c-4609-a2a3-0cc1d55eb357",
-      "spell": 145,
-      "target": null,
-      "celery_task_id": null,
-      "status": 4,
-      "spell_log": "Scan complete. Found 1 agents. Registered/Updated: MIKE-DESKTOP-1",
-      "execution_log": "Starting spell execution.\n",
-      "result_code": null
-    }
-  },
-  {
-    "model": "hydra.hydrahead",
-    "pk": "4afd8e13-0ead-4dc7-8a22-5c104fde7a4c",
-    "fields": {
-      "created": "2026-01-27T20:40:40.292Z",
-      "modified": "2026-01-27T20:40:40.292Z",
-      "spawn": "a525f2e7-4932-4047-9985-b050d3c07480",
-      "spell": 145,
-      "target": null,
-      "celery_task_id": "d68a9bd2-8bf7-4448-a69f-31f55d06ccfb",
-      "status": 4,
-      "spell_log": "Scan complete. Registered: None",
-      "execution_log": "Starting spell execution.\n",
-      "result_code": null
-    }
-  },
-  {
-    "model": "hydra.hydrahead",
-    "pk": "54f9096b-533f-4517-bb22-dbad639e4538",
-    "fields": {
-      "created": "2026-01-27T21:21:25.706Z",
-      "modified": "2026-01-27T21:21:25.706Z",
-      "spawn": "f1845e7c-7fe3-4cde-9c8f-923ec708d176",
-      "spell": 145,
-      "target": null,
-      "celery_task_id": "d8e3a264-f596-4f1c-9a94-64b85cbfaa34",
-      "status": 6,
-      "spell_log": "Native Handler Exception: 'str' object has no attribute 'unique_id'",
-      "execution_log": "Starting spell execution.\n\n[HYDRA] Terminated by User (Signal Sent).\n",
-      "result_code": null
-    }
-  },
-  {
-    "model": "hydra.hydrahead",
-    "pk": "5c2fe604-b450-463a-92ac-c0e3f99dc7c8",
-    "fields": {
-      "created": "2026-01-27T20:32:28.851Z",
-      "modified": "2026-01-27T20:32:28.851Z",
-      "spawn": "bd491c77-0856-45ca-b82d-f684366ae989",
-      "spell": 145,
-      "target": null,
-      "celery_task_id": "cf062f2c-e57f-4959-bd17-547d4e942bba",
-      "status": 5,
-      "spell_log": "Native Handler Exception: not enough values to unpack (expected 2, got 0)",
-      "execution_log": "Starting spell execution.\n",
-      "result_code": null
-    }
-  },
-  {
-    "model": "hydra.hydrahead",
-    "pk": "66b0dbd4-0652-4bda-aeb4-52fea4d7c3d5",
-    "fields": {
-      "created": "2026-01-27T21:16:36.948Z",
-      "modified": "2026-01-27T21:16:36.948Z",
-      "spawn": "aec5d602-566a-49c7-ac6f-6175aa4d7804",
-      "spell": 145,
-      "target": null,
-      "celery_task_id": "01092a11-f738-4348-bcc7-4038c3362159",
-      "status": 6,
-      "spell_log": "Native Handler Exception: NOT NULL constraint failed: talos_agent_talosagentregistry.status_id",
-      "execution_log": "Starting spell execution.\n\n[HYDRA] Terminated by User (Signal Sent).\n",
-      "result_code": null
-    }
-  },
-  {
-    "model": "hydra.hydrahead",
-    "pk": "73d8ee6c-1766-44a1-8eb9-d3a56452f873",
-    "fields": {
-      "created": "2026-01-27T21:02:25.025Z",
-      "modified": "2026-01-27T21:02:25.025Z",
-      "spawn": "e04835b0-6532-41e4-ac52-b9d530dd3039",
-      "spell": 145,
-      "target": null,
-      "celery_task_id": "15ba413d-d424-4146-b343-cf0c38402ff9",
-      "status": 5,
-      "spell_log": "Native Handler Exception: Single thread executor already being used, would deadlock",
-      "execution_log": "Starting spell execution.\n",
-      "result_code": null
-    }
-  },
-  {
-    "model": "hydra.hydrahead",
-    "pk": "7a83057e-c5ef-46fc-859e-4548c53af25b",
-    "fields": {
-      "created": "2026-01-27T21:12:34.643Z",
-      "modified": "2026-01-27T21:12:34.643Z",
-      "spawn": "a443a720-7dc0-4e90-88a5-e0c204be34da",
-      "spell": 145,
-      "target": null,
-      "celery_task_id": "daec0347-887e-496f-86be-b06f5f66bad3",
-      "status": 4,
-      "spell_log": "Scanner Crash: Single thread executor already being used, would deadlock",
-      "execution_log": "Starting spell execution.\n",
-      "result_code": null
-    }
-  },
-  {
-    "model": "hydra.hydrahead",
-    "pk": "9cbc354c-b1fc-4a7a-b0a2-890d9487b123",
-    "fields": {
-      "created": "2026-01-27T21:03:25.183Z",
-      "modified": "2026-01-27T21:03:25.183Z",
-      "spawn": "c0595e60-4135-4d41-972e-274047215896",
-      "spell": 145,
-      "target": null,
-      "celery_task_id": "0839a091-642f-4143-b6f4-16c110c84f9c",
-      "status": 5,
-      "spell_log": "Native Handler Exception: Single thread executor already being used, would deadlock",
-      "execution_log": "Starting spell execution.\n",
-      "result_code": null
-    }
-  },
-  {
-    "model": "hydra.hydrahead",
-    "pk": "a89a02b8-1ac4-46c9-afb4-3753258b9df4",
-    "fields": {
-      "created": "2026-01-27T20:56:04.882Z",
-      "modified": "2026-01-27T20:56:04.882Z",
-      "spawn": "a611da3e-5cbf-4c73-a8bb-22ecec85d9d8",
-      "spell": 145,
-      "target": null,
-      "celery_task_id": "2f7bb865-b3cb-4688-a005-15d1d9936b13",
-      "status": 5,
-      "spell_log": "Native Handler Exception: Single thread executor already being used, would deadlock",
-      "execution_log": "Starting spell execution.\n",
-      "result_code": null
-    }
-  },
-  {
-    "model": "hydra.hydrahead",
-    "pk": "a8ef5afd-2683-43a4-a833-6c9ca067c02f",
-    "fields": {
-      "created": "2026-01-27T21:40:54.671Z",
-      "modified": "2026-01-27T21:40:54.671Z",
-      "spawn": "32a04e32-3229-4dca-836f-feed79f840b5",
-      "spell": 145,
-      "target": null,
-      "celery_task_id": "dc56b963-c7d1-4b1b-9521-23445ac71542",
-      "status": 4,
-      "spell_log": "Scan complete. Found 1 agents. Registered/Updated: Unknown",
-      "execution_log": "Starting spell execution.\n",
-      "result_code": null
-    }
-  },
-  {
-    "model": "hydra.hydrahead",
-    "pk": "cc514b21-8a2f-46ee-8f3e-c59d464d3452",
-    "fields": {
-      "created": "2026-01-27T21:46:47.963Z",
-      "modified": "2026-01-27T21:46:47.963Z",
-      "spawn": "9f2a35c6-716d-42e4-af50-26f3c0a52f32",
-      "spell": 145,
-      "target": null,
-      "celery_task_id": "54c4aad3-8a6e-4a86-8ddf-35c1427f7451",
-      "status": 4,
-      "spell_log": "Scan complete. Found 1 agents. Registered/Updated: MIKE-DESKTOP-1",
-      "execution_log": "Starting spell execution.\n",
-      "result_code": null
-    }
-  },
-  {
-    "model": "hydra.hydrahead",
-    "pk": "e91b540a-b2ec-4602-ba82-924af6ab833b",
-    "fields": {
-      "created": "2026-01-27T21:07:56.892Z",
-      "modified": "2026-01-27T21:07:56.892Z",
-      "spawn": "f25def87-c9c1-40d7-8155-1c64e4b69143",
-      "spell": 145,
-      "target": null,
-      "celery_task_id": "d4423e14-f10c-46f1-9689-18d8ea495956",
-      "status": 4,
-      "spell_log": "Scanner Crash: Single thread executor already being used, would deadlock",
-      "execution_log": "Starting spell execution.\n",
-      "result_code": null
-    }
-  },
-  {
-    "model": "hydra.hydrahead",
-    "pk": "fe112c53-8cf3-480f-933e-7c3676d1dd85",
-    "fields": {
-      "created": "2026-01-27T20:43:39.310Z",
-      "modified": "2026-01-27T20:43:39.310Z",
-      "spawn": "8e4028f4-35e7-439c-b284-fa5468ae06f8",
-      "spell": 145,
-      "target": null,
-      "celery_task_id": "f60bfe99-2082-4c74-a0b4-6bb01d4ec202",
-      "status": 4,
-      "spell_log": "Scan complete. Registered: None",
-      "execution_log": "Starting spell execution.\n",
-      "result_code": null
-    }
-  },
-  {
-    "model": "hydra.hydrahead",
-    "pk": "ff177a6b-9e46-415f-b2a6-e4ad8d597d7f",
-    "fields": {
-      "created": "2026-01-27T21:39:47.707Z",
-      "modified": "2026-01-27T21:39:47.707Z",
-      "spawn": "015603f5-c49c-4c94-8e11-dd6157be19f7",
-      "spell": 145,
-      "target": null,
-      "celery_task_id": "524ab657-6836-449f-9371-cb10ac4b8f92",
-      "status": 4,
-      "spell_log": "Scan complete. Found 1 agents. Registered/Updated: Unknown",
-      "execution_log": "Starting spell execution.\n",
-      "result_code": null
     }
   }
 ]

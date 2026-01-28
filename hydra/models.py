@@ -42,6 +42,30 @@ class HydraStatusID(object):
     ABORTED = 6
 
 
+class HydraStatusTypeMixin(NameMixin):
+    """Mixin to attach ID constants and Map to the Model Class."""
+
+    IDs = HydraStatusID
+    CREATED = HydraStatusID.CREATED
+    PENDING = HydraStatusID.PENDING
+    RUNNING = HydraStatusID.RUNNING
+    SUCCESS = HydraStatusID.SUCCESS
+    FAILED = HydraStatusID.FAILED
+    ABORTED = HydraStatusID.ABORTED
+
+    STATUS_MAP = {
+        CREATED_LABEL: HydraStatusID.CREATED,
+        PENDING_LABEL: HydraStatusID.PENDING,
+        RUNNING_LABEL: HydraStatusID.RUNNING,
+        SUCCESS_LABEL: HydraStatusID.SUCCESS,
+        FAILED_LABEL: HydraStatusID.FAILED,
+        ABORTED_LABEL: HydraStatusID.ABORTED,
+    }
+
+    class Meta:
+        abstract = True
+
+
 class HydraOutcomeActionID(object):
     """
     Centralized Integer IDs for Outcome Actions.
@@ -90,14 +114,6 @@ class HydraSpell(DefaultFieldsMixin):
         on_delete=models.PROTECT,
         default=HydraDistributionModeID.LOCAL_SERVER,
     )
-
-    # LEGACY
-    order = models.PositiveIntegerField(
-        default=0, help_text='Execution sequence (1, 2, 3...)'
-    )  # TODO: DEPRECIATED
-
-    class Meta:
-        ordering = ['order']
 
     def __str__(self):
         return f'[{self.order}] {self.name}'
@@ -182,56 +198,74 @@ class HydraSpellOutcomeConfig(DefaultFieldsMixin):
 
 class HydraSpellbook(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     """
-    An ordered collection of Spells.
-    Uses UUIDIdMixin to ensure IDs are URL-safe and distinct.
+    The Container. Now supports a visual JSON layout.
     """
 
-    spells = models.ManyToManyField(HydraSpell, blank=True)
+    name = models.CharField(max_length=255)
+    ui_json = models.TextField(blank=True, default='{}')
+
+    def __str__(self):
+        return self.name
+
+
+class HydraSpellbookNode(models.Model):
+    """
+    A visual instance of a Spell on the Graph.
+    Allows the same Spell (e.g., 'Wait') to be used multiple times distinctively.
+    """
+
+    spellbook = models.ForeignKey(
+        HydraSpellbook, on_delete=models.CASCADE, related_name='nodes'
+    )
+    spell = models.ForeignKey('HydraSpell', on_delete=models.CASCADE)
+    ui_json = models.TextField(blank=True, default='{}')
+
+    def __str__(self):
+        return f'Node {self.id}: {self.spell.name}'
+
+
+class HydraSpellbookConnectionWire(HydraStatusTypeMixin):
+    """
+    The Wire. Connects two NODES (not spells).
+    Trigger Condition: Fires when 'source' finishes with 'status'.
+    """
+
+    spellbook = models.ForeignKey(
+        HydraSpellbook, on_delete=models.CASCADE, related_name='wires'
+    )
+    source = models.ForeignKey(
+        HydraSpellbookNode,
+        on_delete=models.CASCADE,
+        related_name='outgoing_connections',
+    )
+    target = models.ForeignKey(
+        HydraSpellbookNode,
+        on_delete=models.CASCADE,
+        related_name='incoming_connections',
+    )
+
+    class Meta:
+        unique_together = ('spellbook', 'source', 'target')
+        verbose_name = 'Wire / Connection'
+
+    def __str__(self):
+        return (
+            f'{self.source.spell.name} '
+            f'--[{self.status.name}]--> {self.target.spell.name}'
+        )
 
 
 # --- EXECUTION STATE (The Runtime) ---
 
 
-class HydraStatusMixin(models.Model):
-    """Mixin to attach ID constants and Map to the Model Class."""
-
-    IDs = HydraStatusID
-    CREATED = HydraStatusID.CREATED
-    PENDING = HydraStatusID.PENDING
-    RUNNING = HydraStatusID.RUNNING
-    SUCCESS = HydraStatusID.SUCCESS
-    FAILED = HydraStatusID.FAILED
-    ABORTED = HydraStatusID.ABORTED
-
-    STATUS_MAP = {
-        CREATED_LABEL: HydraStatusID.CREATED,
-        PENDING_LABEL: HydraStatusID.PENDING,
-        RUNNING_LABEL: HydraStatusID.RUNNING,
-        SUCCESS_LABEL: HydraStatusID.SUCCESS,
-        FAILED_LABEL: HydraStatusID.FAILED,
-        ABORTED_LABEL: HydraStatusID.ABORTED,
-    }
-
-    class Meta:
-        abstract = True
-
-
-class HydraSpawnStatus(BigIdMixin, NameMixin, HydraStatusMixin):
+class HydraSpawnStatus(BigIdMixin, HydraStatusTypeMixin):
     """Status lookups for Spawns."""
 
     pass
 
 
-class HydraHeadStatus(BigIdMixin, NameMixin, HydraStatusMixin):
-    """Status lookups for Heads."""
-
-    pass
-
-
 class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
-    """
-    An instance of a Spellbook executing in an Environment.
-    """
+    """Spellbook Instance."""
 
     spellbook = models.ForeignKey(HydraSpellbook, on_delete=models.PROTECT)
     status = models.ForeignKey(HydraSpawnStatus, on_delete=models.PROTECT)
@@ -253,15 +287,33 @@ class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
         return f'Spawn {self.id} ({self.spellbook.name})'
 
 
+class HydraHeadStatus(BigIdMixin, HydraStatusTypeMixin):
+    """Status lookups for Heads."""
+
+    pass
+
+
 class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     """
     A single execution head (Process).
     """
 
+    status = models.ForeignKey(HydraHeadStatus, on_delete=models.PROTECT)
     spawn = models.ForeignKey(
         HydraSpawn, related_name='heads', on_delete=models.CASCADE
     )
+    node = models.ForeignKey(
+        HydraSpellbookNode, on_delete=models.PROTECT, null=True, blank=True
+    )
     spell = models.ForeignKey(HydraSpell, on_delete=models.PROTECT)
+    provenance = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='successors',
+        help_text='The Head that triggered this execution.',
+    )
 
     target = models.ForeignKey(
         'talos_agent.TalosAgentRegistry',
@@ -271,18 +323,9 @@ class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     )
 
     celery_task_id = models.UUIDField(null=True, blank=True)
-    status = models.ForeignKey(HydraHeadStatus, on_delete=models.PROTECT)
-
     spell_log = models.TextField(blank=True)
     execution_log = models.TextField(blank=True)
     result_code = models.IntegerField(null=True, blank=True)
 
-
-class HydraResult(UUIDIdMixin, CreatedMixin, ModifiedMixin):
-    """
-    The output artifact or report of a Head execution.
-    """
-
-    head = models.ForeignKey(HydraHead, on_delete=models.CASCADE)
-    spell = models.ForeignKey(HydraSpell, on_delete=models.PROTECT)
-    report = models.CharField(max_length=500, blank=True)
+    class Meta:
+        ordering = ['created']

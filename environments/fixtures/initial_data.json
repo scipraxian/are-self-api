@@ -521,8 +521,8 @@
     "pk": 54,
     "fields": {
       "created": "2026-01-27T22:38:37.642Z",
-      "modified": "2026-01-27T22:38:37.642Z",
-      "name": "RoboCopy Silent Logging NFL",
+      "modified": "2026-01-27T23:11:17.813Z",
+      "name": "RoboCopy No File List",
       "flag": "/NFL",
       "value": ""
     }
@@ -558,6 +558,28 @@
       "name": "RoboCopy Silent Logging NJS",
       "flag": "/NJS",
       "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 58,
+    "fields": {
+      "created": "2026-01-28T16:16:56.915Z",
+      "modified": "2026-01-28T16:17:57.974Z",
+      "name": "SpellBook Retry 2",
+      "flag": "retry=",
+      "value": "2"
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 59,
+    "fields": {
+      "created": "2026-01-28T16:17:14.913Z",
+      "modified": "2026-01-28T16:17:57.973Z",
+      "name": "SpellBook Delay 1",
+      "flag": "delay=",
+      "value": "1"
     }
   },
   {
@@ -665,9 +687,9 @@
     "pk": 11,
     "fields": {
       "created": "2026-01-27T22:43:48.676Z",
-      "modified": "2026-01-27T22:50:36.238Z",
+      "modified": "2026-01-27T23:08:47.766Z",
       "name": "Local Pre-Release Folder",
-      "argument": "c:\\talos_bin\\4_pre_release"
+      "argument": "c:\\talos_bin\\4_prerelease"
     }
   },
   {
@@ -868,11 +890,26 @@
     "fields": {
       "created": "2026-01-27T22:45:40.160Z",
       "description": null,
-      "modified": "2026-01-27T22:45:40.160Z",
+      "modified": "2026-01-27T23:04:33.455Z",
       "name": "robocopy",
       "internal": false,
       "working_path": "",
       "executable": "robocopy",
+      "log": "",
+      "switches": []
+    }
+  },
+  {
+    "model": "environments.talosexecutable",
+    "pk": 14,
+    "fields": {
+      "created": "2026-01-28T16:14:59.681Z",
+      "description": "Retry, wait, etc.",
+      "modified": "2026-01-28T16:14:59.681Z",
+      "name": "SpellBook Logic Node",
+      "internal": true,
+      "working_path": "",
+      "executable": "spellbook_logic_node",
       "log": "",
       "switches": []
     }

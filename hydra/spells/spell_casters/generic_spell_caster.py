@@ -9,12 +9,10 @@ from typing import List, Optional
 from asgiref.sync import sync_to_async
 
 from hydra.models import HydraHead, HydraHeadStatus
-from hydra.spells.spell_casters.spell_handlers.spell_handler_codes import (
-    HANDLER_SUCCESS_CODE,
-)
 from hydra.spells.spell_casters.spell_handlers.version_metadata_handler import (
     update_version_metadata,
 )
+from hydra.spells.spell_casters.spellbook_logic_node import spellbook_logic_node
 from hydra.spells.spell_casters.switches_and_arguments import (
     spell_switches_and_arguments,
 )
@@ -30,6 +28,7 @@ logger = logging.getLogger(__name__)
 NATIVE_HANDLERS = dict(
     update_version_metadata=update_version_metadata,
     scan_and_register=scan_and_register,
+    spellbook_logic_node=spellbook_logic_node,
 )
 
 
