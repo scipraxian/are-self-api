@@ -697,12 +697,12 @@
     "pk": 1,
     "fields": {
       "created": "2026-01-21T00:00:00Z",
-      "description": "Executes an internal python function mapped in the Caster.",
+      "description": "Starts a Graph.",
       "modified": "2026-01-21T00:00:00Z",
-      "name": "INTERNAL_FUNCTION",
-      "internal": false,
+      "name": "BEGIN_PLAY",
+      "internal": true,
       "working_path": "",
-      "executable": "",
+      "executable": "begin_play",
       "log": "",
       "switches": []
     }

@@ -33,7 +33,7 @@ class TalosExecutableArgument(DefaultFieldsMixin):
 class TalosExecutable(DefaultFieldsMixin, DescriptionMixin):
     """Reference to an executable usable by Talos."""
 
-    INTERNAL_FUNCTION = 1  # NOT USED
+    BEGIN_PLAY = 1
     PYTHON = 2  # venv/Scripts/python.exe
     DJANGO = 3  # venv/Scripts/python.exe manage.py
     UNREAL_CMD = 4  # C:\\Program Files\\Epic Games\\UE_5.6/Engine/Binaries/Win64/UnrealEditor-Cmd.exe

@@ -105,6 +105,8 @@ class HydraSpell(DefaultFieldsMixin):
     A configured action (Tool + specific Switches).
     """
 
+    BEGIN_PLAY = 1
+
     talos_executable = models.ForeignKey(
         TalosExecutable, on_delete=models.PROTECT, default=1
     )

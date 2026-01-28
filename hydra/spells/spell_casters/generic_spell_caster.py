@@ -9,6 +9,7 @@ from typing import List, Optional
 from asgiref.sync import sync_to_async
 
 from hydra.models import HydraHead, HydraHeadStatus
+from hydra.spells.spell_casters.begin_play_node import begin_play
 from hydra.spells.spell_casters.spell_handlers.version_metadata_handler import (
     update_version_metadata,
 )
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 # Native Python Handlers (Synchronous and/or asynchronous wrapper.)
 NATIVE_HANDLERS = dict(
+    begin_play=begin_play,
     update_version_metadata=update_version_metadata,
     scan_and_register=scan_and_register,
     spellbook_logic_node=spellbook_logic_node,

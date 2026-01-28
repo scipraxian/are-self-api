@@ -37,10 +37,21 @@
     "fields": {
       "created": "2026-01-01T00:00:00Z",
       "modified": "2026-01-22T22:13:06.759Z",
+      "name": "Begin Play",
+      "talos_executable": 1,
+      "distribution_mode": 1,
+      "switches": []
+    }
+  },
+  {
+    "model": "hydra.hydraspell",
+    "pk": 148,
+    "fields": {
+      "created": "2026-01-01T00:00:00Z",
+      "modified": "2026-01-22T22:13:06.759Z",
       "name": "Test",
       "talos_executable": 4,
       "distribution_mode": 1,
-      "order": 1,
       "switches": [
         2,
         4,
@@ -62,7 +73,6 @@
       "name": "Staging: Build Game",
       "talos_executable": 5,
       "distribution_mode": 1,
-      "order": 2,
       "switches": [
         9,
         10,
@@ -83,7 +93,6 @@
       "name": "Staging: Record PSOs",
       "talos_executable": 6,
       "distribution_mode": 1,
-      "order": 3,
       "switches": [
         17,
         23,
@@ -104,7 +113,6 @@
       "name": "Staging Run Once",
       "talos_executable": 6,
       "distribution_mode": 1,
-      "order": 1,
       "switches": [
         16,
         23,
@@ -123,7 +131,6 @@
       "name": "Compile PSO Cache",
       "talos_executable": 4,
       "distribution_mode": 1,
-      "order": 10,
       "switches": [
         2,
         3,
@@ -142,7 +149,6 @@
       "name": "Pre-Release Build",
       "talos_executable": 5,
       "distribution_mode": 1,
-      "order": 20,
       "switches": [
         3,
         5,
@@ -172,7 +178,6 @@
       "name": "UAT Run (Legacy)",
       "talos_executable": 1,
       "distribution_mode": 1,
-      "order": 30,
       "switches": []
     }
   },
@@ -185,7 +190,6 @@
       "name": "Deploy",
       "talos_executable": 13,
       "distribution_mode": 2,
-      "order": 40,
       "switches": [
         50,
         51,
@@ -206,7 +210,6 @@
       "name": "Version Metadata",
       "talos_executable": 9,
       "distribution_mode": 1,
-      "order": 5,
       "switches": []
     }
   },
@@ -219,7 +222,6 @@
       "name": "MP Remotes",
       "talos_executable": 1,
       "distribution_mode": 1,
-      "order": 1,
       "switches": []
     }
   },
@@ -232,7 +234,6 @@
       "name": "Pre-Release Run",
       "talos_executable": 7,
       "distribution_mode": 1,
-      "order": 1,
       "switches": [
         23,
         24,
@@ -250,7 +251,6 @@
       "name": "Get Agent UUID",
       "talos_executable": 11,
       "distribution_mode": 4,
-      "order": 0,
       "switches": []
     }
   },
@@ -263,7 +263,6 @@
       "name": "Scan for Agents",
       "talos_executable": 12,
       "distribution_mode": 1,
-      "order": 0,
       "switches": []
     }
   },
@@ -276,7 +275,6 @@
       "name": "Launch All",
       "talos_executable": 7,
       "distribution_mode": 2,
-      "order": 0,
       "switches": [
         23,
         24,
@@ -295,7 +293,6 @@
       "name": "Retry w/ 1 Second Delay",
       "talos_executable": 14,
       "distribution_mode": 1,
-      "order": 0,
       "switches": [
         58,
         59
@@ -457,17 +454,7 @@
       "created": "2026-01-08T16:10:00Z",
       "description": "Full Chain: Test -> UAT",
       "modified": "2026-01-20T16:19:19.230Z",
-      "name": "Full",
-      "spells": [
-        1,
-        2,
-        3,
-        140,
-        100,
-        110,
-        120,
-        130
-      ]
+      "name": "Full"
     }
   },
   {
@@ -477,10 +464,7 @@
       "created": "2026-01-09T20:16:00.695Z",
       "description": "Create and place Version Metadata.",
       "modified": "2026-01-20T16:15:44.857Z",
-      "name": "Version Meta",
-      "spells": [
-        140
-      ]
+      "name": "Version Meta"
     }
   },
   {
@@ -490,10 +474,7 @@
       "created": "2026-01-08T16:40:00Z",
       "description": "Compile Shaders",
       "modified": "2026-01-20T16:16:24.355Z",
-      "name": "Compile Shaders",
-      "spells": [
-        100
-      ]
+      "name": "Compile Shaders"
     }
   },
   {
@@ -503,10 +484,7 @@
       "created": "2026-01-08T21:58:00.568Z",
       "description": "Distribute to Agents",
       "modified": "2026-01-27T23:05:17.105Z",
-      "name": "Deploy",
-      "spells": [
-        130
-      ]
+      "name": "Deploy"
     }
   },
   {
@@ -516,10 +494,7 @@
       "created": "2026-01-27T19:19:26.787Z",
       "description": null,
       "modified": "2026-01-27T19:19:26.787Z",
-      "name": "Scan For Agents",
-      "spells": [
-        145
-      ]
+      "name": "Scan For Agents"
     }
   },
   {
@@ -529,10 +504,7 @@
       "created": "2026-01-20T00:54:46.432Z",
       "description": "Local Game Launcher",
       "modified": "2026-01-26T17:53:58.185Z",
-      "name": "Pre-Release Run",
-      "spells": [
-        143
-      ]
+      "name": "Pre-Release Run"
     }
   },
   {
@@ -542,10 +514,7 @@
       "created": "2026-01-27T23:23:20.836Z",
       "description": null,
       "modified": "2026-01-27T23:23:20.836Z",
-      "name": "All Remotes",
-      "spells": [
-        146
-      ]
+      "name": "All Remotes"
     }
   },
   {
@@ -555,11 +524,7 @@
       "created": "2026-01-01T00:00:00Z",
       "description": null,
       "modified": "2026-01-23T20:00:48.967Z",
-      "name": "Stage",
-      "spells": [
-        2,
-        3
-      ]
+      "name": "Stage"
     }
   },
   {
@@ -569,10 +534,7 @@
       "created": "2026-01-23T22:01:37.231Z",
       "description": "RecordPSOs",
       "modified": "2026-01-23T22:01:37.231Z",
-      "name": "RecordPSOs",
-      "spells": [
-        3
-      ]
+      "name": "RecordPSOs"
     }
   },
   {
@@ -582,10 +544,7 @@
       "created": "2026-01-01T00:00:00Z",
       "description": "Headless Test Only",
       "modified": "2026-01-09T15:05:55.848Z",
-      "name": "Test",
-      "spells": [
-        1
-      ]
+      "name": "Test"
     }
   },
   {
@@ -595,10 +554,7 @@
       "created": "2026-01-01T00:00:00Z",
       "description": "Run Staging Game (Smoke Test)",
       "modified": "2026-01-01T00:00:00Z",
-      "name": "Staging Run Only",
-      "spells": [
-        4
-      ]
+      "name": "Staging Run Only"
     }
   },
   {
@@ -608,11 +564,7 @@
       "created": "2026-01-17T02:00:50.162Z",
       "description": "Side-by-side Live Debugging (Remote Server + Local Client)",
       "modified": "2026-01-20T16:26:43.143Z",
-      "name": "Multiplayer (C&S)",
-      "spells": [
-        142,
-        143
-      ]
+      "name": "Multiplayer (C&S)"
     }
   },
   {
@@ -622,10 +574,7 @@
       "created": "2026-01-08T16:00:00Z",
       "description": "Step 4 Standalone: UAT BuildCookRun with Archive.",
       "modified": "2026-01-26T17:45:20.979Z",
-      "name": "Pre-Release Build",
-      "spells": [
-        110
-      ]
+      "name": "Pre-Release Build"
     }
   },
   {

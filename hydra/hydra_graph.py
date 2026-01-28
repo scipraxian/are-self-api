@@ -45,6 +45,7 @@ KEY_LIBRARY = 'library'
 KEY_TITLE = 'title'
 KEY_X = 'x'
 KEY_Y = 'y'
+KEY_IS_ROOT = 'is_root'
 
 # Status Values
 STATUS_CREATED = 'created'
@@ -138,42 +139,61 @@ class HydraGraphAPI(View):
         handler = dispatch_map.get(action)
         if handler:
             return handler(spellbook, payload)
-
-        return HttpResponseBadRequest(f'Unknown graph action: {action}')
-
-
-# --- 3. Logic Handlers (Functional Controllers) ---
+        return HttpResponseBadRequest(f'Unknown action: {action}')
 
 
-def get_library(spellbook: HydraSpellbook) -> JsonResponse:
-    """Returns available Spells for the sidebar."""
-    spells = HydraSpell.objects.values('id', 'name', 'distribution_mode__name')
-    return JsonResponse({KEY_LIBRARY: list(spells)})
+# --- LOGIC ---
+
+DEFAULT_UI_JSON_DICT = {KEY_X: 100, KEY_Y: 100}
+
+
+def _ensure_begin_play_node(spellbook: HydraSpellbook) -> HydraSpellbookNode:
+    """
+    Guarantees the existence of the 'BeginPlay' anchor node.
+    """
+    node = spellbook.nodes.filter(spell_id=HydraSpell.BEGIN_PLAY).exists()
+    if not node:
+        node = HydraSpellbookNode.objects.create(
+            spellbook=spellbook,
+            spell_id=HydraSpell.BEGIN_PLAY,
+            ui_json=json.dumps(DEFAULT_UI_JSON_DICT),
+        )
+
+    return node
 
 
 def get_graph_layout(spellbook: HydraSpellbook) -> JsonResponse:
-    """Reconstructs the graph JSON from the Database."""
-    nodes = []
-    # Use select_related to avoid N+1 queries on the Spell table
+    """
+    Returns the graph. Automatically creates 'BeginPlay' if missing.
+    """
+    # 1. Guarantee Root Exists
+    _ensure_begin_play_node(spellbook)
+
+    # 2. Serialize All Nodes
+    nodes_data = []
     for n in spellbook.nodes.all().select_related('spell'):
         try:
             ui = json.loads(n.ui_json)
-        except (TypeError, json.JSONDecodeError):
-            ui = {KEY_X: 0, KEY_Y: 0}
+        except json.JSONDecodeError:
+            logger.warning('Invalid UI JSON for node %s', n.id)
+            ui = DEFAULT_UI_JSON_DICT
 
-        nodes.append(
+        nodes_data.append(
             {
                 KEY_ID: n.id,
                 KEY_TITLE: n.spell.name,
                 KEY_X: ui.get(KEY_X, 0),
                 KEY_Y: ui.get(KEY_Y, 0),
                 'spell_id': n.spell_id,
+                # Flag for UI styling (Red Header)
+                KEY_IS_ROOT: n.spell.name == 'BeginPlay',
             }
         )
 
-    wires = []
+    # 3. Serialize All Wires (Explicit Only)
+    wires_data = []
     for w in spellbook.wires.all():
-        wires.append(
+        wires_data.append(
             {
                 'from_node_id': w.source_id,
                 'to_node_id': w.target_id,
@@ -181,33 +201,15 @@ def get_graph_layout(spellbook: HydraSpellbook) -> JsonResponse:
             }
         )
 
-    return JsonResponse({KEY_NODES: nodes, KEY_CONNECTIONS: wires})
-
-
-def get_execution_status(spellbook: HydraSpellbook) -> JsonResponse:
-    """Returns live status of the latest spawn."""
-    # Placeholder for live monitoring integration
-    return JsonResponse({KEY_STATUS: STATUS_READY})
-
-
-def handle_add_node(book: HydraSpellbook, data: dict) -> JsonResponse:
-    p = NodePayload(**data)
-
-    node = HydraSpellbookNode.objects.create(
-        spellbook=book,
-        spell_id=p.spell_id,
-        ui_json=json.dumps({KEY_X: p.x, KEY_Y: p.y}),
-    )
-    return JsonResponse({KEY_ID: node.id, KEY_STATUS: STATUS_CREATED})
+    return JsonResponse({KEY_NODES: nodes_data, KEY_CONNECTIONS: wires_data})
 
 
 def handle_move_node(book: HydraSpellbook, data: dict) -> JsonResponse:
     p = MovePayload(**data)
-
+    # Standard logic for ALL nodes, including BeginPlay
     node = get_object_or_404(HydraSpellbookNode, id=p.node_id, spellbook=book)
     node.ui_json = json.dumps({KEY_X: p.x, KEY_Y: p.y})
     node.save(update_fields=['ui_json'])
-
     return JsonResponse({KEY_STATUS: STATUS_MOVED})
 
 
@@ -227,18 +229,11 @@ def handle_connect(book: HydraSpellbook, data: dict) -> JsonResponse:
         target_id=p.target_node_id,
         defaults={'status_id': status_id},
     )
-
     if not created and wire.status_id != status_id:
         wire.status_id = status_id
         wire.save()
 
     return JsonResponse({KEY_ID: wire.id, KEY_STATUS: STATUS_CONNECTED})
-
-
-def handle_delete_node(book: HydraSpellbook, data: dict) -> JsonResponse:
-    p = DeletePayload(**data)
-    HydraSpellbookNode.objects.filter(id=p.node_id, spellbook=book).delete()
-    return JsonResponse({KEY_STATUS: STATUS_DELETED})
 
 
 def handle_disconnect(book: HydraSpellbook, data: dict) -> JsonResponse:
@@ -248,6 +243,37 @@ def handle_disconnect(book: HydraSpellbook, data: dict) -> JsonResponse:
         spellbook=book, source_id=source_id, target_id=target_id
     ).delete()
     return JsonResponse({KEY_STATUS: STATUS_DISCONNECTED})
+
+
+def handle_delete_node(book: HydraSpellbook, data: dict) -> JsonResponse:
+    p = DeletePayload(**data)
+    node = get_object_or_404(HydraSpellbookNode, id=p.node_id, spellbook=book)
+
+    if node.spell_id == HydraSpell.BEGIN_PLAY:
+        return JsonResponse({KEY_STATUS: STATUS_ERROR})
+
+    node.delete()
+    return JsonResponse({KEY_STATUS: STATUS_DELETED})
+
+
+# --- Other Handlers ---
+def get_library(spellbook: HydraSpellbook) -> JsonResponse:
+    spells = HydraSpell.objects.values('id', 'name', 'distribution_mode__name')
+    return JsonResponse({KEY_LIBRARY: list(spells)})
+
+
+def get_execution_status(spellbook: HydraSpellbook) -> JsonResponse:
+    return JsonResponse({KEY_STATUS: STATUS_READY})
+
+
+def handle_add_node(book: HydraSpellbook, data: dict) -> JsonResponse:
+    p = NodePayload(**data)
+    node = HydraSpellbookNode.objects.create(
+        spellbook=book,
+        spell_id=p.spell_id,
+        ui_json=json.dumps({KEY_X: p.x, KEY_Y: p.y}),
+    )
+    return JsonResponse({KEY_ID: node.id, KEY_STATUS: STATUS_CREATED})
 
 
 class HydraGraphLaunchAPI(View):
