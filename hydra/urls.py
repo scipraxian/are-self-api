@@ -6,6 +6,7 @@ from .views import (
     BattleStationStreamView,
     HeadLogDetailView,
     HydraControlsView,
+    HydraGraphEditorView,
     LaunchSpellbookView,
     SpawnMonitorDetailView,
     SpawnTerminateView,
@@ -36,7 +37,11 @@ urlpatterns = [
         name='hydra_spawn_terminate',
     ),
     path('controls/', HydraControlsView.as_view(), name='hydra_controls'),
-    path('editor/<str:book_id>/', views.graph_editor_view, name='graph_editor'),
+    path(
+        'editor/<str:book_id>/',
+        HydraGraphEditorView.as_view(),
+        name='graph_editor',
+    ),
     path(
         'graph/<str:book_id>/<str:action>',
         HydraGraphAPI.as_view(),
