@@ -252,3 +252,19 @@ class HydraControlsView(HydraResponseMixin, View):
                 pass
 
         return self.render_hydra_controls(request, active_spawn)
+
+
+class HydraGraphEditorView(DetailView):
+    """
+    Renders the Visual Graph Editor page.
+    """
+
+    model = HydraSpellbook
+    template_name = 'hydra/graph_editor.html'
+    pk_url_kwarg = 'book_id'
+    context_object_name = 'spellbook'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['spellbook_id'] = self.object.id
+        return context

@@ -36,6 +36,7 @@ urlpatterns = [
         name='hydra_spawn_terminate',
     ),
     path('controls/', HydraControlsView.as_view(), name='hydra_controls'),
+    path('editor/<str:book_id>/', views.graph_editor_view, name='graph_editor'),
     path(
         'graph/<str:book_id>/<str:action>',
         HydraGraphAPI.as_view(),
