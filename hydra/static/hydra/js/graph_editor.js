@@ -1,12 +1,17 @@
 /**
  * Talos Graph Editor Logic
- * Built by Antigravity
+ * Built by Antigravity - Senior Frontend Engineer Refactor
  */
 
 class GraphEditor {
     constructor() {
         this.nodes = [];
         this.connections = [];
+
+        // Context from Django
+        this.bookId = window.djangoContext?.bookId;
+        this.csrfToken = window.djangoContext?.csrfToken || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        this.apiUrl = `/hydra/graph/${this.bookId}/`;
 
         // DOM Elements
         this.container = document.getElementById('editor-container');
@@ -15,6 +20,7 @@ class GraphEditor {
         this.connGroup = document.getElementById('connections-group');
         this.grid = document.getElementById('canvas-grid');
         this.tempLine = document.getElementById('temp-line');
+        this.libraryContainer = document.getElementById('node-library');
 
         // State
         this.panX = 0;
@@ -29,29 +35,138 @@ class GraphEditor {
 
         // Execution State
         this.executionState = 'ready'; // ready, running, error, finished
-        this.activeExecutionNodes = new Set();
         this.isViewOnly = false;
 
         this.init();
     }
 
-    init() {
+    async init() {
         this.setupEventListeners();
         this.render();
 
-        // Root Node (Permanent)
-        this.addNode("BeginPlay", 100, 250, {
-            canDelete: false,
-            inputs: 0,
-            outputs: 1,
-            isRoot: true
-        });
+        // Load Library first
+        await this.loadLibrary();
 
-        // Initial example nodes
-        this.addNode("Logic Branch", 450, 150);
-        this.addNode("Process Data", 450, 400);
+        // Load Graph State
+        await this.loadGraph();
 
         this.updateCounts();
+    }
+
+    // --- API Interactions ---
+
+    async apiFetch(endpoint, options = {}) {
+        const url = endpoint.startsWith('/') ? endpoint : `${this.apiUrl}${endpoint}`;
+        const defaultHeaders = {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': this.csrfToken
+        };
+
+        try {
+            const response = await fetch(url, {
+                ...options,
+                headers: { ...defaultHeaders, ...options.headers }
+            });
+
+            if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+            return await response.json();
+        } catch (error) {
+            console.error(`Fetch error for ${url}:`, error);
+            this.setExecutionStatus('error', `API Failure: ${error.message}`);
+            return null;
+        }
+    }
+
+    async loadLibrary() {
+        const data = await this.apiFetch('library');
+        if (!data || !data.library) return;
+
+        this.libraryContainer.innerHTML = '';
+
+        // Group by category if possible, or just list
+        const categories = {};
+        data.library.forEach(spell => {
+            const cat = spell.category || 'Spells';
+            if (!categories[cat]) categories[cat] = [];
+            categories[cat].push(spell);
+        });
+
+        for (const [name, spells] of Object.entries(categories)) {
+            const catDiv = document.createElement('div');
+            catDiv.className = 'category';
+            catDiv.innerHTML = `<span>${name}</span>`;
+
+            spells.forEach(spell => {
+                const item = document.createElement('div');
+                item.className = 'library-item';
+                item.draggable = true;
+                item.innerText = spell.name;
+                item.dataset.spellId = spell.id;
+
+                item.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('spell-id', spell.id);
+                    e.dataTransfer.setData('spell-name', spell.name);
+                });
+                catDiv.appendChild(item);
+            });
+            this.libraryContainer.appendChild(catDiv);
+        }
+    }
+
+    async loadGraph() {
+        const data = await this.apiFetch('');
+        if (!data) return;
+
+        // Clear existing
+        this.nodes = [];
+        this.connections = [];
+        this.nodesLayer.innerHTML = '';
+        this.connGroup.innerHTML = '';
+
+        // Add Nodes
+        if (data.nodes) {
+            data.nodes.forEach(n => {
+                this.addNode(n.title, n.x, n.y, {
+                    id: n.id,
+                    spell_id: n.spell_id,
+                    isRoot: n.title === 'BeginPlay', // Assuming this convention for now
+                    skipApi: true
+                });
+            });
+        }
+
+        // Add Connections
+        if (data.connections) {
+            data.connections.forEach(c => {
+                // Map status_id to color logic
+                let color = 'rgba(255, 255, 255, 0.8)';
+                if (c.status_id === 'success') color = 'rgba(76, 175, 80, 0.8)';
+                if (c.status_id === 'fail') color = 'rgba(244, 67, 54, 0.8)';
+
+                this.connections.push({
+                    fromNode: c.from_node_id,
+                    fromPort: this.getPortIndexFromStatus(c.status_id),
+                    toNode: c.to_node_id,
+                    toPort: 0,
+                    color: color
+                });
+            });
+        }
+
+        this.renderConnections();
+        this.updateCounts();
+    }
+
+    getPortIndexFromStatus(status) {
+        if (status === 'success') return 1;
+        if (status === 'fail') return 2;
+        return 0; // flow
+    }
+
+    getStatusFromColor(color) {
+        if (color.includes('76, 175, 80')) return 'success';
+        if (color.includes('244, 67, 54')) return 'fail';
+        return 'flow';
     }
 
     setupEventListeners() {
@@ -72,7 +187,6 @@ class GraphEditor {
 
             const newZoom = Math.min(Math.max(this.zoom * factor, 0.2), 3);
 
-            // Zoom relative to mouse position
             const mouseX = e.clientX - this.panX;
             const mouseY = e.clientY - this.panY;
 
@@ -95,7 +209,6 @@ class GraphEditor {
 
             if (this.isDraggingNode) {
                 const node = this.isDraggingNode;
-                // Use absolute positioning relative to container for robustness
                 const coords = this.toCanvasCoords(e.clientX, e.clientY);
                 node.x = coords.x - (this.dragOffset.x / this.zoom);
                 node.y = coords.y - (this.dragOffset.y / this.zoom);
@@ -111,7 +224,7 @@ class GraphEditor {
             this.lastMousePos = { x: e.clientX, y: e.clientY };
         });
 
-        window.addEventListener('mouseup', (e) => {
+        window.addEventListener('mouseup', async (e) => {
             if (this.isPanning) {
                 this.isPanning = false;
                 this.container.style.cursor = 'grab';
@@ -122,8 +235,21 @@ class GraphEditor {
             }
 
             if (this.isDraggingNode) {
-                const el = document.getElementById(this.isDraggingNode.id);
+                const node = this.isDraggingNode;
+                const el = document.getElementById(node.id);
                 if (el) el.style.zIndex = 'auto';
+
+                // Persist move - Debounced/Delayed until mouseup
+                if (!node.id.toString().startsWith('temp_')) {
+                    await this.apiFetch('move_node', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            node_id: node.id,
+                            x: Math.round(node.x),
+                            y: Math.round(node.y)
+                        })
+                    });
+                }
             }
 
             this.isDraggingNode = null;
@@ -154,23 +280,17 @@ class GraphEditor {
         });
 
         // Sidebar Drag & Drop
-        const libraryItems = document.querySelectorAll('.library-item');
-        libraryItems.forEach(item => {
-            item.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('node-type', item.dataset.type);
-            });
-        });
-
         this.container.addEventListener('dragover', (e) => {
             e.preventDefault();
         });
 
         this.container.addEventListener('drop', (e) => {
             e.preventDefault();
-            const type = e.dataTransfer.getData('node-type');
-            if (type) {
+            const spellId = e.dataTransfer.getData('spell-id');
+            const spellName = e.dataTransfer.getData('spell-name');
+            if (spellId) {
                 const coords = this.toCanvasCoords(e.clientX, e.clientY);
-                this.addNode(type, coords.x - 100, coords.y - 40);
+                this.addNode(spellName, coords.x - 100, coords.y - 40, { spell_id: spellId });
             }
         });
 
@@ -181,7 +301,6 @@ class GraphEditor {
                 const text = item.innerText.toLowerCase();
                 item.style.display = text.includes(query) ? 'block' : 'none';
             });
-            // Hide categories with no visible items
             document.querySelectorAll('.category').forEach(cat => {
                 const visible = Array.from(cat.querySelectorAll('.library-item')).some(i => i.style.display !== 'none');
                 cat.style.display = visible ? 'block' : 'none';
@@ -196,22 +315,56 @@ class GraphEditor {
         this.svgLayer.style.transform = transform;
     }
 
-    addNode(title, x, y, options = {}) {
-        const id = options.id || 'node_' + Math.random().toString(36).substr(2, 9);
+    async addNode(title, x, y, options = {}) {
+        // Temporary ID while we wait for DB
+        const tempId = options.id || 'temp_' + Math.random().toString(36).substr(2, 9);
         const node = {
-            id,
+            id: tempId,
             title,
             x,
             y,
+            spell_id: options.spell_id,
             inputs: options.inputs !== undefined ? options.inputs : 1,
             outputs: options.outputs !== undefined ? options.outputs : 3,
             canDelete: options.canDelete !== undefined ? options.canDelete : true,
             isRoot: options.isRoot || false
         };
-        this.nodes.push(node);
 
+        this.nodes.push(node);
         this.createNodeDOM(node);
         this.updateCounts();
+
+        // Immediate persistence
+        if (!options.skipApi && options.spell_id) {
+            const nodeEl = document.getElementById(tempId);
+            nodeEl.classList.add('pending'); // Visual feedback
+
+            const result = await this.apiFetch('add_node', {
+                method: 'POST',
+                body: JSON.stringify({
+                    spell_id: options.spell_id,
+                    x: Math.round(x),
+                    y: Math.round(y)
+                })
+            });
+
+            if (result && result.id) {
+                // SWAP ID
+                nodeEl.id = result.id;
+                node.id = result.id;
+
+                // Update pins in DOM
+                nodeEl.querySelectorAll('.pin').forEach(pin => {
+                    pin.dataset.nodeId = result.id;
+                });
+
+                nodeEl.classList.remove('pending');
+            } else {
+                // Rollback if failed
+                this.deleteNode(tempId, true);
+            }
+        }
+
         return node;
     }
 
@@ -261,7 +414,10 @@ class GraphEditor {
 
         // Selection
         nodeEl.addEventListener('mousedown', (e) => {
-            this.nodes.forEach(n => document.getElementById(n.id).classList.remove('selected'));
+            this.nodes.forEach(n => {
+                const el = document.getElementById(n.id);
+                if (el) el.classList.remove('selected');
+            });
             nodeEl.classList.add('selected');
         });
 
@@ -269,17 +425,15 @@ class GraphEditor {
         const header = nodeEl.querySelector('.node-header');
         header.addEventListener('mousedown', (e) => {
             if (e.target.classList.contains('delete-btn')) return;
+            if (nodeEl.classList.contains('pending')) return;
             e.stopPropagation();
 
-            // Bring to front
             nodeEl.style.zIndex = 1000;
             this.nodesLayer.appendChild(nodeEl);
 
             this.isDraggingNode = node;
             this.lastMousePos = { x: e.clientX, y: e.clientY };
 
-            // Calculate where we grabbed the node relative to its top-left, 
-            // but in "view" space so it scale correctly
             const rect = nodeEl.getBoundingClientRect();
             this.dragOffset = {
                 x: e.clientX - rect.left,
@@ -287,13 +441,11 @@ class GraphEditor {
             };
         });
 
-        // View Log Button
         nodeEl.querySelector('.mini-btn.view').addEventListener('click', (e) => {
             e.stopPropagation();
             this.showNodeLog(node.id, node.title);
         });
 
-        // Delete
         if (node.isRoot) {
             nodeEl.querySelector('.mini-btn.play').addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -308,9 +460,9 @@ class GraphEditor {
             });
         }
 
-        // Wire creation starts here
         nodeEl.querySelectorAll('.pin.output-white, .pin.output-success, .pin.output-error').forEach(pin => {
             pin.addEventListener('mousedown', (e) => {
+                if (nodeEl.classList.contains('pending')) return;
                 e.stopPropagation();
                 this.startWire(pin);
             });
@@ -321,11 +473,16 @@ class GraphEditor {
 
     updateNodeDOM(node) {
         const el = document.getElementById(node.id);
-        el.style.left = `${node.x}px`;
-        el.style.top = `${node.y}px`;
+        if (el) {
+            el.style.left = `${node.x}px`;
+            el.style.top = `${node.y}px`;
+        }
     }
 
-    deleteNode(nodeId) {
+    async deleteNode(nodeId, localOnly = false) {
+        const node = this.nodes.find(n => n.id === nodeId);
+        if (!node) return;
+
         this.nodes = this.nodes.filter(n => n.id !== nodeId);
         this.connections = this.connections.filter(c => c.fromNode !== nodeId && c.toNode !== nodeId);
 
@@ -334,6 +491,13 @@ class GraphEditor {
 
         this.renderConnections();
         this.updateCounts();
+
+        if (!localOnly && !nodeId.toString().startsWith('temp_')) {
+            await this.apiFetch('delete_node', {
+                method: 'POST',
+                body: JSON.stringify({ node_id: nodeId })
+            });
+        }
     }
 
     // --- Wire Logic ---
@@ -363,7 +527,6 @@ class GraphEditor {
 
     updateTempWire(mouseX, mouseY) {
         const coords = this.toCanvasCoords(mouseX, mouseY);
-
         const path = this.calculateBezierPath(
             this.activeWire.startX, this.activeWire.startY,
             coords.x, coords.y
@@ -371,14 +534,13 @@ class GraphEditor {
         this.tempLine.setAttribute('d', path);
     }
 
-    completeWire(target) {
+    async completeWire(target) {
         this.tempLine.style.display = 'none';
 
         if (target && target.classList.contains('pin') && target.dataset.portType === 'input') {
             const toNodeId = target.dataset.nodeId;
             const toPortIdx = parseInt(target.dataset.portIndex);
 
-            // Check if connection already exists
             const exists = this.connections.some(c =>
                 c.fromNode === this.activeWire.fromNode &&
                 c.fromPort === this.activeWire.fromPort &&
@@ -387,15 +549,29 @@ class GraphEditor {
             );
 
             if (!exists && toNodeId !== this.activeWire.fromNode) {
-                this.connections.push({
+                const type = this.getStatusFromColor(this.activeWire.color);
+
+                const connection = {
                     fromNode: this.activeWire.fromNode,
                     fromPort: this.activeWire.fromPort,
                     toNode: toNodeId,
                     toPort: toPortIdx,
                     color: this.activeWire.color
-                });
+                };
+
+                this.connections.push(connection);
                 this.renderConnections();
                 this.updateCounts();
+
+                // Persistence
+                await this.apiFetch('connect', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        source_node_id: connection.fromNode,
+                        target_node_id: connection.toNode,
+                        type: type
+                    })
+                });
             }
         }
         this.activeWire = null;
@@ -419,13 +595,6 @@ class GraphEditor {
                 path.setAttribute('stroke', conn.color);
                 path.setAttribute('class', 'wire');
 
-                // Context menu to delete
-                path.addEventListener('contextmenu', (e) => {
-                    e.preventDefault();
-                    this.removeConnection(index);
-                });
-
-                // Double click to delete
                 path.addEventListener('dblclick', (e) => {
                     this.removeConnection(index);
                 });
@@ -436,46 +605,50 @@ class GraphEditor {
     }
 
     updateWiresForNode(nodeId) {
-        // Optimization: only re-render if node is involved in a connection
         const involved = this.connections.some(c => c.fromNode === nodeId || c.toNode === nodeId);
         if (involved) {
             this.renderConnections();
         }
     }
 
-    removeConnection(index) {
+    async removeConnection(index) {
+        const conn = this.connections[index];
+        if (!conn) return;
+
         this.connections.splice(index, 1);
         this.renderConnections();
         this.updateCounts();
+
+        // Persistence
+        await this.apiFetch('disconnect', {
+            method: 'POST',
+            body: JSON.stringify({
+                source_node_id: conn.fromNode,
+                target_node_id: conn.toNode
+            })
+        });
     }
 
     getPinElement(nodeId, type, index) {
         const nodeEl = document.getElementById(nodeId);
         if (!nodeEl) return null;
-        return nodeEl.querySelector(`.pin[data-port-type="${type}"][data-port-index="${index}"]`);
+        // Adjust for "output" pins having different classes
+        let selector = `.pin[data-port-type="${type}"][data-port-index="${index}"]`;
+        return nodeEl.querySelector(selector);
     }
 
     calculateBezierPath(x1, y1, x2, y2) {
-        // Tension: how far the handles extend from the pins
         let dx = Math.abs(x1 - x2) * 0.5;
-
-        // Minimum handle length to ensure a nice curve even when close
         const minHandle = 50;
-
-        // If nodes are "backwards" (output to the right of input), 
-        // we create a larger 'U' loop to avoid the wire cutting through the node
         if (x1 > x2) {
             dx = Math.max(dx, minHandle) + (x1 - x2) * 0.2;
         } else {
             dx = Math.max(dx, minHandle);
         }
-
         const cp1x = x1 + dx;
         const cp1y = y1;
-
         const cp2x = x2 - dx;
         const cp2y = y2;
-
         return `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`;
     }
 
@@ -491,7 +664,7 @@ class GraphEditor {
             connections: this.connections.map(c => ({
                 from: { nodeId: c.fromNode, port: c.fromPort },
                 to: { nodeId: c.toNode, port: c.toPort },
-                type: c.color.includes('255, 255, 255') ? 'flow' : (c.color.includes('76, 175, 80') ? 'success' : 'error')
+                type: this.getStatusFromColor(c.color)
             }))
         };
     }
@@ -501,20 +674,14 @@ class GraphEditor {
         document.getElementById('conn-count').innerText = this.connections.length;
     }
 
-    showExportModal() {
-        const json = JSON.stringify(this.getGraphJSON(), null, 4);
-        document.getElementById('json-preview').innerText = json;
-        document.getElementById('modal-container').style.display = 'flex';
-    }
-
-    // --- Execution Engine (Mock) ---
+    // --- Execution Engine ---
 
     setExecutionStatus(status, message = null) {
         this.executionState = status;
         const textEl = document.getElementById('execution-status-text');
         const indicatorEl = document.getElementById('execution-status-indicator');
 
-        indicatorEl.className = status;
+        if (indicatorEl) indicatorEl.className = status;
 
         let statusText = status.toUpperCase();
         if (message) statusText = message;
@@ -523,70 +690,41 @@ class GraphEditor {
             statusText = `Finished at ${time}`;
         }
 
-        textEl.innerText = statusText;
+        if (textEl) textEl.innerText = statusText;
 
-        // Update global buttons
-        document.getElementById('start-btn').disabled = (status === 'running');
-        document.getElementById('stop-btn').disabled = (status !== 'running');
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        if (startBtn) startBtn.disabled = (status === 'running');
+        if (stopBtn) stopBtn.disabled = (status !== 'running');
     }
 
     async startExecution() {
         if (this.executionState === 'running') return;
 
-        this.setExecutionStatus('running', 'Running...');
-        this.resetNodeHighlights();
+        this.setExecutionStatus('running', 'Spawning Process...');
 
-        // Find BeginPlay
-        const rootNode = this.nodes.find(n => n.isRoot);
-        if (!rootNode) return this.stopExecution('Error: No Root');
+        const result = await this.apiFetch('/spawn/start/', {
+            method: 'POST',
+            body: JSON.stringify({ book_id: this.bookId })
+        });
 
-        try {
-            await this.executeNodeStep(rootNode.id);
-            this.setExecutionStatus('finished');
-        } catch (err) {
-            this.setExecutionStatus('error', 'Execution Halted');
-        }
-    }
-
-    async executeNodeStep(nodeId) {
-        if (this.executionState !== 'running') return;
-
-        const nodeEl = document.getElementById(nodeId);
-        nodeEl.classList.add('running');
-
-        // Mock processing time
-        await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 1000));
-
-        nodeEl.classList.remove('running');
-
-        // Find outgoing connections
-        const nextConns = this.connections.filter(c => c.fromNode === nodeId);
-
-        // For simplicity, follow all flow/success paths
-        for (const conn of nextConns) {
-            await this.executeNodeStep(conn.toNode);
+        if (result && result.status === 'started') {
+            this.setExecutionStatus('running', 'Process Active');
+        } else {
+            this.setExecutionStatus('error', 'Spawn Failed');
         }
     }
 
     stopExecution(errorMsg = null) {
         this.executionState = errorMsg ? 'error' : 'ready';
         this.setExecutionStatus(this.executionState, errorMsg);
-        this.resetNodeHighlights();
     }
 
-    resetNodeHighlights() {
-        this.nodes.forEach(n => {
-            const el = document.getElementById(n.id);
-            if (el) el.classList.remove('running');
-        });
-    }
-
-    // --- Auto Layout Algorithm ---
+    // --- Auto Layout ---
 
     autoLayout() {
         if (this.nodes.length === 0) return;
 
-        // Add transition class for smooth movement
         this.nodes.forEach(n => {
             const el = document.getElementById(n.id);
             if (el) el.classList.add('node-auto-layout');
@@ -597,31 +735,21 @@ class GraphEditor {
         const visited = new Set();
         const queue = [{ id: startNode.id, level: 0 }];
 
-        // 1. Assign BFS levels
         while (queue.length > 0) {
             const { id, level } = queue.shift();
             if (visited.has(id)) continue;
             visited.add(id);
-
             levels.set(id, Math.max(levels.get(id) || 0, level));
-
             const children = this.connections
                 .filter(c => c.fromNode === id)
                 .map(c => c.toNode);
-
-            children.forEach(childId => {
-                queue.push({ id: childId, level: level + 1 });
-            });
+            children.forEach(childId => queue.push({ id: childId, level: level + 1 }));
         }
 
-        // Handle nodes not reachable from root
         this.nodes.forEach(node => {
-            if (!levels.has(node.id)) {
-                levels.set(node.id, 0);
-            }
+            if (!levels.has(node.id)) levels.set(node.id, 0);
         });
 
-        // 2. Group by level and calculate positions
         const columnMap = new Map();
         levels.forEach((level, nodeId) => {
             if (!columnMap.has(level)) columnMap.set(level, []);
@@ -640,19 +768,20 @@ class GraphEditor {
                     node.x = OFFSET_X + level * COL_SPACING;
                     node.y = OFFSET_Y + index * ROW_SPACING;
                     this.updateNodeDOM(node);
+                    // Update DB for each node moved
+                    this.apiFetch('move_node', {
+                        method: 'POST',
+                        body: JSON.stringify({ node_id: node.id, x: node.x, y: node.y })
+                    });
                 }
             });
         });
 
-        // 3. Re-render wires after transition
         let frames = 0;
-        const totalFrames = 60;
         const animateWires = () => {
             this.renderConnections();
-            if (frames++ < totalFrames) {
-                requestAnimationFrame(animateWires);
-            } else {
-                // Remove transition class after movement finishes so dragging stays instant
+            if (frames++ < 60) requestAnimationFrame(animateWires);
+            else {
                 this.nodes.forEach(n => {
                     const el = document.getElementById(n.id);
                     if (el) el.classList.remove('node-auto-layout');
@@ -662,31 +791,27 @@ class GraphEditor {
         requestAnimationFrame(animateWires);
     }
 
-    showNodeLog(nodeId, title) {
+    async showNodeLog(nodeId, title) {
         const modal = document.getElementById('modal-container');
         const headerText = modal.querySelector('h3');
         const preview = document.getElementById('json-preview');
 
-        headerText.innerText = `Node Status: ${title}`;
-
-        const mockLogs = [
-            `[${new Date().toLocaleTimeString()}] Initializing ${title}...`,
-            `[${new Date().toLocaleTimeString()}] Fetching Talos parameters...`,
-            `[${new Date().toLocaleTimeString()}] Execution Lobe active.`,
-            `[${new Date().toLocaleTimeString()}] Status: ${this.activeExecutionNodes.has(nodeId) ? 'RUNNING' : 'READY'}`
-        ].join('\n');
-
-        preview.innerText = mockLogs;
+        headerText.innerText = `Node Log: ${title}`;
+        preview.innerText = 'Fetching logs...';
         modal.style.display = 'flex';
+
+        const data = await this.apiFetch(`log/${nodeId}`);
+        if (data && data.log) {
+            preview.innerText = data.log;
+        } else {
+            preview.innerText = 'No logs available for this node.';
+        }
     }
 
     render() {
         this.updateCanvasTransform();
     }
 }
-
-// Global accessor for graph state
-window.getGraphJSON = () => window.app.getGraphJSON();
 
 // Initialize app
 window.app = new GraphEditor();

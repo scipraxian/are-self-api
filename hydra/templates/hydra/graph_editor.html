@@ -21,7 +21,6 @@
         csrfToken: "{{ csrf_token }}"
     };
 </script>
-<script src="{% static 'hydra/js/graph_editor.js' %}"></script>
 <div id="app">
     <header class="top-bar">
         <div class="logo">
@@ -113,7 +112,8 @@
     </div>
 </div>
 
-<script src="graph_editor.js"></script>
+
+<script src="{% static 'hydra/js/graph_editor.js' %}"></script>
 </body>
 
 </html>
