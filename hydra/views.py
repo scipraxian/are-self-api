@@ -31,7 +31,7 @@ class HydraResponseMixin:
         if spawn:
             context.update(
                 dict(
-                    heads=spawn.heads.all().order_by('spell__order'),
+                    heads=spawn.heads.all(),
                     is_active=spawn.is_active,
                 )
             )
@@ -50,7 +50,7 @@ class HydraResponseMixin:
         """Routes HTMX fragments vs full-page redirects."""
         if request.headers.get('HX-Request'):
             return self.render_hydra_controls(request, spawn)
-        return redirect('hydra_spawn_monitor', pk=spawn.id)
+        return redirect('hydra:hydra_spawn_monitor', pk=spawn.id)
 
 
 class LaunchSpellbookView(HydraResponseMixin, DetailView):
@@ -119,7 +119,7 @@ class SpawnMonitorDetailView(HydraResponseMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context.update(
             dict(
-                heads=spawn.heads.all().order_by('spell__order'),
+                heads=spawn.heads.all(),
                 is_active=spawn.is_active,
                 is_full_page=self.request.GET.get('full') == 'True',
             )

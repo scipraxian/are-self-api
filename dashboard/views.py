@@ -57,7 +57,7 @@ class DashboardHomeView(TemplateView):
         if active_spawn:
             context['active_spawn'] = active_spawn
             context['spawn'] = active_spawn
-            context['heads'] = active_spawn.heads.all().order_by('spell__order')
+            context['heads'] = active_spawn.heads.all()
             context['is_active'] = active_spawn.is_active
         else:
             context['active_spawn'] = None

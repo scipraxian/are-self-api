@@ -30,8 +30,8 @@ class GraphEditor {
         this.isDraggingNode = null;
         this.activeWire = null;
 
-        this.dragOffset = { x: 0, y: 0 };
-        this.lastMousePos = { x: 0, y: 0 };
+        this.dragOffset = {x: 0, y: 0};
+        this.lastMousePos = {x: 0, y: 0};
 
         // Execution State
         this.executionState = 'ready'; // ready, running, error, finished
@@ -65,7 +65,7 @@ class GraphEditor {
         try {
             const response = await fetch(url, {
                 ...options,
-                headers: { ...defaultHeaders, ...options.headers }
+                headers: {...defaultHeaders, ...options.headers}
             });
 
             if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
@@ -195,7 +195,7 @@ class GraphEditor {
 
             this.zoom = newZoom;
             this.updateCanvasTransform();
-        }, { passive: false });
+        }, {passive: false});
 
         window.addEventListener('mousemove', (e) => {
             const dx = e.clientX - this.lastMousePos.x;
@@ -221,7 +221,7 @@ class GraphEditor {
                 this.updateTempWire(e.clientX, e.clientY);
             }
 
-            this.lastMousePos = { x: e.clientX, y: e.clientY };
+            this.lastMousePos = {x: e.clientX, y: e.clientY};
         });
 
         window.addEventListener('mouseup', async (e) => {
@@ -290,7 +290,7 @@ class GraphEditor {
             const spellName = e.dataTransfer.getData('spell-name');
             if (spellId) {
                 const coords = this.toCanvasCoords(e.clientX, e.clientY);
-                this.addNode(spellName, coords.x - 100, coords.y - 40, { spell_id: spellId });
+                this.addNode(spellName, coords.x - 100, coords.y - 40, {spell_id: spellId});
             }
         });
 
@@ -318,13 +318,16 @@ class GraphEditor {
     async addNode(title, x, y, options = {}) {
         // Temporary ID while we wait for DB
         const tempId = options.id || 'temp_' + Math.random().toString(36).substr(2, 9);
+
+        const isRoot = options.isRoot || false;
+
         const node = {
             id: tempId,
             title,
             x,
             y,
             spell_id: options.spell_id,
-            inputs: options.inputs !== undefined ? options.inputs : 1,
+            inputs: isRoot ? 0 : (options.inputs !== undefined ? options.inputs : 1),
             outputs: options.outputs !== undefined ? options.outputs : 3,
             canDelete: options.canDelete !== undefined ? options.canDelete : true,
             isRoot: options.isRoot || false
@@ -432,7 +435,7 @@ class GraphEditor {
             this.nodesLayer.appendChild(nodeEl);
 
             this.isDraggingNode = node;
-            this.lastMousePos = { x: e.clientX, y: e.clientY };
+            this.lastMousePos = {x: e.clientX, y: e.clientY};
 
             const rect = nodeEl.getBoundingClientRect();
             this.dragOffset = {
@@ -495,7 +498,7 @@ class GraphEditor {
         if (!localOnly && !nodeId.toString().startsWith('temp_')) {
             await this.apiFetch('delete_node', {
                 method: 'POST',
-                body: JSON.stringify({ node_id: nodeId })
+                body: JSON.stringify({node_id: nodeId})
             });
         }
     }
@@ -659,11 +662,11 @@ class GraphEditor {
             nodes: this.nodes.map(n => ({
                 id: n.id,
                 title: n.title,
-                position: { x: n.x, y: n.y }
+                position: {x: n.x, y: n.y}
             })),
             connections: this.connections.map(c => ({
-                from: { nodeId: c.fromNode, port: c.fromPort },
-                to: { nodeId: c.toNode, port: c.toPort },
+                from: {nodeId: c.fromNode, port: c.fromPort},
+                to: {nodeId: c.toNode, port: c.toPort},
                 type: this.getStatusFromColor(c.color)
             }))
         };
@@ -703,9 +706,9 @@ class GraphEditor {
 
         this.setExecutionStatus('running', 'Spawning Process...');
 
-        const result = await this.apiFetch('/spawn/start/', {
+        const result = await this.apiFetch('launch/', {
             method: 'POST',
-            body: JSON.stringify({ book_id: this.bookId })
+            body: JSON.stringify({book_id: this.bookId})
         });
 
         if (result && result.status === 'started') {
@@ -733,17 +736,17 @@ class GraphEditor {
         const startNode = this.nodes.find(n => n.isRoot) || this.nodes[0];
         const levels = new Map();
         const visited = new Set();
-        const queue = [{ id: startNode.id, level: 0 }];
+        const queue = [{id: startNode.id, level: 0}];
 
         while (queue.length > 0) {
-            const { id, level } = queue.shift();
+            const {id, level} = queue.shift();
             if (visited.has(id)) continue;
             visited.add(id);
             levels.set(id, Math.max(levels.get(id) || 0, level));
             const children = this.connections
                 .filter(c => c.fromNode === id)
                 .map(c => c.toNode);
-            children.forEach(childId => queue.push({ id: childId, level: level + 1 }));
+            children.forEach(childId => queue.push({id: childId, level: level + 1}));
         }
 
         this.nodes.forEach(node => {
@@ -771,7 +774,7 @@ class GraphEditor {
                     // Update DB for each node moved
                     this.apiFetch('move_node', {
                         method: 'POST',
-                        body: JSON.stringify({ node_id: node.id, x: node.x, y: node.y })
+                        body: JSON.stringify({node_id: node.id, x: node.x, y: node.y})
                     });
                 }
             });

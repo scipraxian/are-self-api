@@ -1,20 +1,21 @@
 <div id="spawn-monitor-{{ spawn.id }}" class="monitor-card" style="margin-top: 1rem;">
-    <div class="monitor-header" 
-         {% if is_active %}
-         hx-get="{% url 'hydra_spawn_monitor' spawn.id %}?full={{ is_full_page|default:'' }}" 
-         hx-select=".monitor-header" 
-         hx-trigger="every 2s" 
+    <div class="monitor-header"
+            {% if is_active %}
+         hx-get="{% url 'hydra:hydra_spawn_monitor' spawn.id %}?full={{ is_full_page|default:'' }}"
+         hx-select=".monitor-header"
+         hx-trigger="every 2s"
          hx-swap="outerHTML"
-         {% endif %}>
+            {% endif %}>
         <div class="status-info">
             <h3>OPERATION: {{ spawn.spellbook.name }}</h3>
             <div class="status-line">
                 <span class="run-id">Spawn {{ spawn.id|stringformat:"s"|slice:":8" }}</span>
                 <span class="separator">|</span>
-                
+
                 {% with thought=spawn.thoughts.last %}
                     {% if spawn.status.name == 'Success' and thought and thought.status.name == 'Thinking' %}
-                        <span class="status-text status-running" style="color: #eab308; animation: pulse 1.5s infinite;">
+                        <span class="status-text status-running"
+                              style="color: #eab308; animation: pulse 1.5s infinite;">
                             ANALYZING
                         </span>
                     {% else %}
@@ -26,15 +27,16 @@
         <div class="actions" style="display: flex; gap: 10px; align-items: center;">
             {% if not is_active %}
                 {% if is_full_page %}
-                <a href="/" class="btn-done" style="text-decoration: none;">DISMISS</a>
+                    <a href="/" class="btn-done" style="text-decoration: none;">DISMISS</a>
                 {% else %}
-                <button hx-get="{% url 'hydra_controls' %}"
-                        hx-target="#hydra-controls"
-                        hx-swap="outerHTML"
-                        class="btn-done">DISMISS</button>
+                    <button hx-get="{% url 'hydra:hydra_controls' %}"
+                            hx-target="#hydra-controls"
+                            hx-swap="outerHTML"
+                            class="btn-done">DISMISS
+                    </button>
                 {% endif %}
             {% else %}
-                <button hx-post="{% url 'hydra_spawn_terminate' spawn.id %}"
+                <button hx-post="{% url 'hydra:hydra_spawn_terminate' spawn.id %}"
                         class="btn-done"
                         style="border-color: #ef4444; color: #ef4444;">
                     STOP
@@ -45,93 +47,93 @@
     </div>
 
     {% if spawn.spellbook.name == "Multiplayer Debug" %}
-    <div class="multiplayer-battle-station">
-        <div class="battle-station-header">
-            <div class="header-col">LOCAL CLIENT</div>
-            <div class="header-col center">TIMESTAMP</div>
-            <div class="header-col">REMOTE SERVER</div>
-        </div>
+        <div class="multiplayer-battle-station">
+            <div class="battle-station-header">
+                <div class="header-col">LOCAL CLIENT</div>
+                <div class="header-col center">TIMESTAMP</div>
+                <div class="header-col">REMOTE SERVER</div>
+            </div>
 
-        <div id="battle-station-cursors" data-local="0" data-remote="0" style="display: none;"></div>
+            <div id="battle-station-cursors" data-local="0" data-remote="0" style="display: none;"></div>
 
-        <div id="battle-stream-container"
-             class="log-wrapper battle-stream"
-             hx-get="{% url 'hydra_battle_stream' spawn.id %}"
-             hx-trigger="every 1s"
-             hx-vals='js:{
+            <div id="battle-stream-container"
+                 class="log-wrapper battle-stream"
+                 hx-get="{% url 'hydra:hydra_battle_stream' spawn.id %}"
+                 hx-trigger="every 1s"
+                 hx-vals='js:{
                  local_cursor: document.getElementById("battle-station-cursors")?.dataset.local || 0,
                  remote_cursor: document.getElementById("battle-station-cursors")?.dataset.remote || 0
              }'
-             hx-swap="beforeend">
+                 hx-swap="beforeend">
 
-            <div style="padding: 2rem; text-align: center; color: #94a3b8;">
-                <div class="spinner-small" style="margin: 0 auto 10px;"></div>
-                Synchronizing Log Streams...
+                <div style="padding: 2rem; text-align: center; color: #94a3b8;">
+                    <div class="spinner-small" style="margin: 0 auto 10px;"></div>
+                    Synchronizing Log Streams...
+                </div>
             </div>
         </div>
-    </div>
     {% else %}
-    <div class="table-wrapper">
-        <table class="monitor-table">
-            <thead>
+        <div class="table-wrapper">
+            <table class="monitor-table">
+                <thead>
                 <tr>
                     <th class="col-ord">#</th>
                     <th class="col-step">Spell Protocol</th>
                     <th class="col-status">Status</th>
                     <th class="col-time">Result</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 {% for head in heads %}
-                <tr id="row-{{ head.id }}" class="step-row" onclick="toggleHydraLogs('{{ head.id }}');">
-                    <td class="col-ord">{{ head.spell.order }}</td>
-                    <td class="col-step">
-                        <span style="font-weight: 700; color: #e2e8f0;">{{ head.spell.name }}</span>
-                        <div style="font-size: 0.75rem; color: #64748b; font-family: monospace;">{{ head.spell.executable.slug }}</div>
-                    </td>
-                    <td class="col-status">
+                    <tr id="row-{{ head.id }}" class="step-row" onclick="toggleHydraLogs('{{ head.id }}');">
+                        <td class="col-ord"></td>
+                        <td class="col-step">
+                            <span style="font-weight: 700; color: #e2e8f0;">{{ head.spell.name }}</span>
+                            <div style="font-size: 0.75rem; color: #64748b; font-family: monospace;">{{ head.spell.executable.slug }}</div>
+                        </td>
+                        <td class="col-status">
                         <span id="status-badge-{{ head.id }}"
                               class="status-badge status-{{ head.status.name|lower }}"
-                              {% if is_active %}
-                              hx-get="{% url 'hydra_spawn_monitor' spawn.id %}"
+                                {% if is_active %}
+                              hx-get="{% url 'hydra:hydra_spawn_monitor' spawn.id %}"
                               hx-select="#status-badge-{{ head.id }}"
                               hx-trigger="every 2s"
                               hx-swap="outerHTML"
-                              {% endif %}>
+                                {% endif %}>
                             {{ head.status.name }}
                         </span>
-                    </td>
-                    <td class="col-time">
+                        </td>
+                        <td class="col-time">
                         <span id="result-code-{{ head.id }}"
                               style="font-family: monospace; color: {% if head.result_code == 0 %}#4ade80{% elif head.result_code %}#f87171{% else %}#64748b{% endif %};"
-                              {% if is_active %}
-                              hx-get="{% url 'hydra_spawn_monitor' spawn.id %}"
+                                {% if is_active %}
+                              hx-get="{% url 'hydra:hydra_spawn_monitor' spawn.id %}"
                               hx-select="#result-code-{{ head.id }}"
                               hx-trigger="every 2s"
                               hx-swap="outerHTML"
-                              {% endif %}>
+                                {% endif %}>
                             {% if head.result_code is not None %}RC: {{ head.result_code }}{% else %}--{% endif %}
                         </span>
-                    </td>
-                </tr>
-                <tr id="logs-{{ head.id }}" class="log-container" style="display: none;" hx-preserve>
-                    <td colspan="4" style="padding: 0; border: none;">
-                        <div id="log-wrapper-{{ head.id }}"
-                             class="log-wrapper"
-                             hx-get="{% url 'hydra_head_logs' head.id %}?type=tool"
-                             hx-trigger="load_now"
-                             hx-swap="innerHTML">
-                           <div style="padding: 2rem; text-align: center; color: #94a3b8;">
-                                <div class="spinner-small" style="margin: 0 auto 10px;"></div>
-                                Loading Protocol Stream...
-                           </div>
-                        </div>
-                    </td>
-                </tr>
+                        </td>
+                    </tr>
+                    <tr id="logs-{{ head.id }}" class="log-container" style="display: none;" hx-preserve>
+                        <td colspan="4" style="padding: 0; border: none;">
+                            <div id="log-wrapper-{{ head.id }}"
+                                 class="log-wrapper"
+                                 hx-get="{% url 'hydra:hydra_head_logs' head.id %}?type=tool"
+                                 hx-trigger="load_now"
+                                 hx-swap="innerHTML">
+                                <div style="padding: 2rem; text-align: center; color: #94a3b8;">
+                                    <div class="spinner-small" style="margin: 0 auto 10px;"></div>
+                                    Loading Protocol Stream...
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                </tbody>
+            </table>
+        </div>
     {% endif %}
 </div>
 
@@ -152,9 +154,9 @@
     }
 
     // Auto-scroll battle stream
-    document.addEventListener('htmx:afterSettle', function(evt) {
+    document.addEventListener('htmx:afterSettle', function (evt) {
         if (evt.detail.target.id === 'battle-stream-container') {
-             evt.detail.target.scrollTop = evt.detail.target.scrollHeight;
+            evt.detail.target.scrollTop = evt.detail.target.scrollHeight;
         }
     });
 </script>
