@@ -21,6 +21,7 @@ from .models import (
     HydraSpellbookConnectionWire,
     HydraSpellbookNode,
     HydraStatusID,
+    HydraWireType,  # <--- Added Import
 )
 from .tasks import cast_hydra_spell
 
@@ -241,15 +242,28 @@ class Hydra:
             self._create_head_from_node(node, provenance=None)
 
     def _process_graph_triggers(self, finished_head: HydraHead) -> None:
-        """Follows the wires from a finished head."""
+        """Follows the wires from a finished head based on Status Logic."""
         if not finished_head.node:
             return
 
-        # Find wires matching the status (Green for Success, Red for Fail)
+        # Determine valid wire types based on the Head's status
+        valid_wire_types = []
+
+        # Always trigger "Flow" (White) wires on completion
+        valid_wire_types.append(HydraWireType.TYPE_FLOW)
+
+        if finished_head.status_id == HydraHeadStatus.SUCCESS:
+            # Success (Green) wires
+            valid_wire_types.append(HydraWireType.TYPE_SUCCESS)
+        elif finished_head.status_id == HydraHeadStatus.FAILED:
+            # Failure (Red) wires
+            valid_wire_types.append(HydraWireType.TYPE_FAILURE)
+
+        # Find wires matching the logic
         wires = HydraSpellbookConnectionWire.objects.filter(
             spellbook=self.spawn.spellbook,
             source=finished_head.node,
-            status=finished_head.status,
+            type_id__in=valid_wire_types,  # <--- FIXED LOGIC
         )
 
         if not wires.exists():
