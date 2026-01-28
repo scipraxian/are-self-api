@@ -32,18 +32,3 @@
     <div class="empty-state" style="grid-column: 1 / -1; padding: 3rem; color: #64748b; font-style: italic; text-align: center;">No agents discovered. Click 'Scan Network' to start.</div>
     {% endfor %}
 </div>
-<style>
-    .agent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
-    .agent-card { background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; position: relative; backdrop-filter: blur(8px); transition: transform 0.2s, border-color 0.2s; }
-    .agent-card:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, 0.2); }
-    .status-indicator { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-    .status-online .status-indicator { background-color: #22c55e; box-shadow: 0 0 10px #22c55e; }
-    .status-online .status-text { color: #22c55e; }
-    .status-offline .status-indicator { background-color: #94a3b8; }
-    .status-offline .status-text { color: #94a3b8; }
-    .status-storage_error .status-indicator { background-color: #eab308; box-shadow: 0 0 10px #eab308; }
-    .status-storage_error .status-text { color: #eab308; }
-    .delete-btn { position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; opacity: 0; transition: opacity 0.2s; }
-    .agent-card:hover .delete-btn { opacity: 1; }
-    @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
-</style>
