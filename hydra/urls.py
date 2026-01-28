@@ -1,7 +1,6 @@
-# C:\talos\hydra\urls.py refactored for consistency
 from django.urls import path
 
-from .hydra_graph import HydraGraphAPI
+from .hydra_graph import HydraGraphAPI, HydraGraphLaunchAPI
 from .views import (
     BattleStationStreamView,
     HeadLogDetailView,
@@ -11,6 +10,8 @@ from .views import (
     SpawnMonitorDetailView,
     SpawnTerminateView,
 )
+
+app_name = 'hydra'
 
 urlpatterns = [
     path(
@@ -41,6 +42,11 @@ urlpatterns = [
         'editor/<str:book_id>/',
         HydraGraphEditorView.as_view(),
         name='graph_editor',
+    ),
+    path(
+        'graph/<str:book_id>/launch/',
+        HydraGraphLaunchAPI.as_view(),
+        name='graph_launch_api',
     ),
     path(
         'graph/<str:book_id>/<str:action>',

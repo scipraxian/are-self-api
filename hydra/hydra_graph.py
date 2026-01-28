@@ -1,6 +1,7 @@
 import json
+import logging
 from dataclasses import dataclass
-from typing import Any, Callable, Dict
+from typing import Callable, Dict
 
 from django.http import HttpRequest, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404
@@ -8,6 +9,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
+from .hydra import Hydra
 from .models import (
     HydraSpell,
     HydraSpellbook,
@@ -15,6 +17,8 @@ from .models import (
     HydraSpellbookNode,
     HydraStatusID,
 )
+
+logger = logging.getLogger(__name__)
 
 # --- CONSTANTS (The Registry) ---
 
@@ -49,6 +53,13 @@ STATUS_CONNECTED = 'connected'
 STATUS_DELETED = 'deleted'
 STATUS_DISCONNECTED = 'disconnected'
 STATUS_READY = 'ready'
+STATUS_STARTED = 'started'
+STATUS_ERROR = 'error'
+
+ERROR_STATUS_CODE = 500
+
+SPAWN_ID = 'spawn_id'
+MESSAGE = 'message'
 
 
 # --- 1. Strict Payload Definitions ---
@@ -237,3 +248,27 @@ def handle_disconnect(book: HydraSpellbook, data: dict) -> JsonResponse:
         spellbook=book, source_id=source_id, target_id=target_id
     ).delete()
     return JsonResponse({KEY_STATUS: STATUS_DISCONNECTED})
+
+
+class HydraGraphLaunchAPI(View):
+    """
+    API Endpoint to launch a Spellbook from the Graph Editor.
+    Uses the URL parameter for context, no JSON parsing required.
+    """
+
+    def post(self, request, book_id):
+        try:
+            controller = Hydra(spellbook_id=book_id)
+            controller.start()
+            return JsonResponse(
+                {
+                    ACTION_STATUS: STATUS_STARTED,
+                    SPAWN_ID: str(controller.spawn.id),
+                }
+            )
+        except Exception as e:
+            logger.exception('[HYDRA] Graph Launch Failed')
+            return JsonResponse(
+                {ACTION_STATUS: STATUS_ERROR, MESSAGE: str(e)},
+                status=ERROR_STATUS_CODE,
+            )
