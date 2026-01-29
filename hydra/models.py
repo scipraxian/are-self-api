@@ -210,7 +210,8 @@ class HydraSpellbook(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
 class HydraSpellbookNode(models.Model):
     """
     A visual instance of a Spell on the Graph.
-    Allows the same Spell (e.g., 'Wait') to be used multiple times distinctively.
+    Allows the same Spell (e.g., 'Wait') to be used
+    multiple times distinctively.
     """
 
     spellbook = models.ForeignKey(
@@ -262,7 +263,7 @@ class HydraSpellbookConnectionWire(ModifiedMixin):
     def __str__(self):
         return (
             f'{self.source.spell.name} '
-            f'--[{self.status.name}]--> {self.target.spell.name}'
+            f'--[{self.type.name}]--> {self.target.spell.name}'
         )
 
 
@@ -278,7 +279,9 @@ class HydraSpawnStatus(HydraStatusTypeMixin):
 class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     """Spellbook Instance."""
 
-    spellbook = models.ForeignKey(HydraSpellbook, on_delete=models.PROTECT)
+    spellbook = models.ForeignKey(
+        HydraSpellbook, on_delete=models.SET_NULL, null=True, blank=True
+    )
     status = models.ForeignKey(HydraSpawnStatus, on_delete=models.PROTECT)
 
     context_data = models.TextField(
@@ -295,7 +298,11 @@ class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
         ]
 
     def __str__(self):
-        return f'Spawn {self.id} ({self.spellbook.name})'
+        # Handle case where spellbook was deleted
+        book_name = (
+            self.spellbook.name if self.spellbook else 'Deleted Spellbook'
+        )
+        return f'Spawn {self.id} ({book_name})'
 
 
 class HydraHeadStatus(HydraStatusTypeMixin):
@@ -314,9 +321,11 @@ class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
         HydraSpawn, related_name='heads', on_delete=models.CASCADE
     )
     node = models.ForeignKey(
-        HydraSpellbookNode, on_delete=models.PROTECT, null=True, blank=True
+        HydraSpellbookNode, on_delete=models.SET_NULL, null=True, blank=True
     )
-    spell = models.ForeignKey(HydraSpell, on_delete=models.PROTECT)
+    spell = models.ForeignKey(
+        HydraSpell, on_delete=models.SET_NULL, null=True, blank=True
+    )
     provenance = models.ForeignKey(
         'self',
         on_delete=models.CASCADE,
@@ -330,7 +339,7 @@ class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
         'talos_agent.TalosAgentRegistry',
         null=True,
         blank=True,
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
     )
 
     celery_task_id = models.UUIDField(null=True, blank=True)
