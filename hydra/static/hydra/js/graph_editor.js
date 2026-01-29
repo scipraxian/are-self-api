@@ -743,7 +743,8 @@ class GraphEditor {
             body: JSON.stringify({book_id: this.bookId})
         });
         if (result && result.status === 'started') {
-            this.setExecutionStatus('running', 'Process Active');
+            // this.setExecutionStatus('running', 'Process Active');
+            window.location.href = `/hydra/monitor/${result.spawn_id}/?full=True`;
         } else {
             this.setExecutionStatus('error', 'Spawn Failed');
         }
