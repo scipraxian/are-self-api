@@ -5,7 +5,7 @@
 
 {% block main_content %}
     <style>
-        /* Override Main Container to fit the 'Battle Station' width */
+        /* FIX: Push the War Room down so Global Nav (Admin/Scan) is clickable */
         .container {
             max-width: 95vw !important;
             padding: 5rem 1rem 1rem 1rem !important;
@@ -15,8 +15,10 @@
             display: flex;
             flex-direction: column;
             height: 95vh;
+            overflow: hidden;
         }
 
+        /* FIX: Ensure Global Nav floats above the Glassmorphism card */
         .top-actions {
             z-index: 1000 !important;
         }
@@ -26,12 +28,13 @@
             display: flex;
             flex-direction: column;
             flex: 1;
-            background: rgba(15, 23, 42, 0.85); /* Dark Slate 900 + Opacity */
+            background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            min-height: 0;
         }
 
         /* HEADER SECTION */
@@ -42,6 +45,7 @@
             padding: 1rem 1.5rem;
             background: rgba(255, 255, 255, 0.03);
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
         }
 
         .war-title-group {
@@ -54,7 +58,7 @@
         .war-crumbs {
             font-family: 'Inter', sans-serif;
             font-size: 0.8rem;
-            color: #64748b; /* Slate 500 */
+            color: #64748b;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -83,7 +87,7 @@
         .war-grid {
             display: flex;
             flex: 1;
-            overflow: hidden; /* Contains the scroll bars */
+            overflow: hidden;
             position: relative;
         }
 
@@ -91,7 +95,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: #0b0f19; /* Very Dark, Almost Black */
+            background: #0b0f19;
             min-width: 0;
             position: relative;
         }
@@ -101,7 +105,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 0.5rem 1rem;
-            background: #1e293b; /* Slate 800 */
+            background: #1e293b;
             border-bottom: 1px solid #334155;
             font-size: 0.75rem;
             font-family: 'Inter', sans-serif;
@@ -109,6 +113,7 @@
             color: #cbd5e1;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            flex-shrink: 0;
         }
 
         .log-body {
@@ -119,14 +124,13 @@
             font-family: 'JetBrains Mono', 'Consolas', monospace;
             font-size: 0.85rem;
             line-height: 1.6;
-            color: #cbd5e1; /* Slate 300 */
+            color: #cbd5e1;
             white-space: pre-wrap;
             text-align: left;
             scrollbar-width: thin;
             scrollbar-color: #475569 #0f172a;
         }
 
-        /* Side by Side Logic */
         .side-by-side .log-pane {
             width: 50%;
         }
@@ -137,60 +141,10 @@
             position: relative;
         }
 
-        /* ACTIONS & BUTTONS */
         .war-actions {
             display: flex;
             align-items: center;
             gap: 12px;
-        }
-
-        /* Custom Tiny Buttons for Header */
-        .btn-xs {
-            padding: 4px 10px;
-            font-size: 0.7rem;
-            border-radius: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #94a3b8;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-xs:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        /* Copy Button (Inside Pane) */
-        .btn-copy {
-            background: transparent;
-            border: none;
-            color: #64748b;
-            cursor: pointer;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            transition: color 0.2s;
-        }
-
-        .btn-copy:hover {
-            color: #60a5fa;
-        }
-
-        /* Blue hover */
-
-        /* Scroll Toggle State */
-        .scroll-active {
-            background: rgba(34, 197, 94, 0.15) !important;
-            color: #4ade80 !important;
-            border-color: rgba(34, 197, 94, 0.3) !important;
         }
 
         /* Status Colors */
@@ -227,6 +181,50 @@
                 opacity: 0.5;
             }
         }
+
+        .btn-xs {
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-xs:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-copy {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            transition: color 0.2s;
+        }
+
+        .btn-copy:hover {
+            color: #60a5fa;
+        }
+
+        .scroll-active {
+            background: rgba(34, 197, 94, 0.15) !important;
+            color: #4ade80 !important;
+            border-color: rgba(34, 197, 94, 0.3) !important;
+        }
     </style>
 
     <div class="war-room-card">
@@ -243,7 +241,11 @@
             </div>
 
             <div class="war-actions">
-                <div class="status-pill status-{{ head.status.name|lower }}">
+                <div id="head-status-pill"
+                     class="status-pill status-{{ head.status.name|lower }}"
+                     hx-get="{% url 'hydra:head_detail' head.pk %}?partial=status_pill"
+                     hx-trigger="every 2s"
+                     hx-swap="outerHTML">
                     {{ head.status.name }}
                 </div>
 
@@ -262,18 +264,34 @@
         </div>
 
         <div class="war-grid {% if show_side_by_side %}side-by-side{% endif %}">
-
             <div class="log-pane">
                 <div class="log-pane-header">
-                    <span>Console Stream (Stdout)</span>
-                    <button class="btn-copy" onclick="copyToClipboard('log-stream')">Copy Log</button>
+                    <span>
+                        {% if log_type == 'tool' %}Console Stream (Stdout){% else %}System Context{% endif %}
+                    </span>
+                    <div style="display:flex; gap:10px;">
+                        {% if log_type == 'tool' %}
+                            <a href="?type=system" style="color: #64748b; font-weight: normal; text-decoration: none;">View
+                                System</a>
+                        {% else %}
+                            <a href="?type=tool" style="color: #64748b; font-weight: normal; text-decoration: none;">View
+                                Output</a>
+                        {% endif %}
+                        <button class="btn-copy" onclick="copyToClipboard('log-stream')">Copy</button>
+                    </div>
                 </div>
-                <pre id="log-stream" class="log-body">{{ head.spell_log|default:"Initializing Stream..." }}</pre>
+
+                <pre id="log-stream"
+                     class="log-body"
+                     hx-get="{% url 'hydra:head_detail' head.pk %}?partial=content&type={{ log_type }}"
+                     hx-trigger="every 1s"
+                     hx-swap="innerHTML"
+                     hx-on::after-swap="if(this.dataset.autoscroll === 'true') this.scrollTop = this.scrollHeight;"
+                     data-autoscroll="false">{{ initial_log_content|default:"Initializing Stream..." }}</pre>
             </div>
 
             {% if show_side_by_side %}
                 <div class="spine"></div>
-
                 <div class="log-pane">
                     <div class="log-pane-header">
                         <span title="{{ log_file_path }}">Log File: ...{{ log_file_path|slice:"-30:" }}</span>
@@ -283,44 +301,40 @@
                          class="log-body">{{ log_file_content|default:"Waiting for file content..." }}</pre>
                 </div>
             {% endif %}
-
         </div>
     </div>
 
     <script>
-        // UX Logic
         const streamBody = document.getElementById('log-stream');
-        const fileBody = document.getElementById('log-file');
         const toggleBtn = document.getElementById('toggle-scroll');
-        let autoScroll = false;
 
-        // Toggle Button Logic
+        // Auto-Scroll Logic
         toggleBtn.addEventListener('click', () => {
-            autoScroll = !autoScroll;
-            toggleBtn.innerHTML = autoScroll ? '<span>⬇️</span> Auto-Scroll: <strong>ON</strong>' : '<span>⬇️</span> Auto-Scroll: OFF';
-
-            if (autoScroll) {
-                toggleBtn.classList.add('scroll-active');
-                scrollToBottom();
-            } else {
+            const isAuto = streamBody.dataset.autoscroll === 'true';
+            if (isAuto) {
+                // Turn OFF
+                streamBody.dataset.autoscroll = 'false';
+                toggleBtn.innerHTML = '<span>⬇️</span> Auto-Scroll: OFF';
                 toggleBtn.classList.remove('scroll-active');
+            } else {
+                // Turn ON
+                streamBody.dataset.autoscroll = 'true';
+                toggleBtn.innerHTML = '<span>⬇️</span> Auto-Scroll: <strong>ON</strong>';
+                toggleBtn.classList.add('scroll-active');
+                streamBody.scrollTop = streamBody.scrollHeight;
             }
         });
-
-        function scrollToBottom() {
-            if (streamBody) streamBody.scrollTop = streamBody.scrollHeight;
-            if (fileBody) fileBody.scrollTop = fileBody.scrollHeight;
-        }
 
         function copyToClipboard(elementId) {
             const el = document.getElementById(elementId);
             if (el) {
                 navigator.clipboard.writeText(el.innerText);
-                // Visual Feedback could go here
             }
         }
 
-        // Initialize: Scroll to bottom if content exists
-        scrollToBottom();
+        // Default to auto-scroll on load if content is short
+        if (streamBody && streamBody.scrollHeight < 600) {
+            toggleBtn.click();
+        }
     </script>
 {% endblock %}

@@ -96,15 +96,54 @@ class HeadLogDetailView(DetailView):
     template_name = 'hydra/head_detail.html'
     context_object_name = 'head'
 
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        head = self.object
+
+        # 1. Handle Log Stream Polling (Raw Text)
+        if request.GET.get('partial') == 'content':
+            log_type = request.GET.get('type', 'tool')
+            content = ''
+
+            if log_type == 'tool':
+                content = head.spell_log or ''
+            elif log_type == 'system':
+                content = head.execution_log or ''
+
+            # Return raw text so HTMX can append/replace cleanly
+            return HttpResponse(content, content_type='text/plain')
+
+        # 2. Handle Status Pill Polling (HTML Fragment)
+        if request.GET.get('partial') == 'status_pill':
+            html = f'''
+            <div id="head-status-pill"
+                 class="status-pill status-{head.status.name.lower()}"
+                 hx-get="{request.path}?partial=status_pill"
+                 hx-trigger="every 2s"
+                 hx-swap="outerHTML">
+                {head.status.name}
+            </div>
+            '''
+            return HttpResponse(html)
+
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         head = self.object
         executable = head.spell.talos_executable
 
-        context['show_side_by_side'] = False
-        context['log_file_content'] = None
-        context['log_file_path'] = None
+        # Set default log type for the main page load
+        context['log_type'] = self.request.GET.get('type', 'tool')
 
+        # Determine initial content for the template render
+        if context['log_type'] == 'tool':
+            context['initial_log_content'] = head.spell_log
+        elif context['log_type'] == 'system':
+            context['initial_log_content'] = head.execution_log
+
+        # Logic for side-by-side file viewing (Legacy log file support)
+        context['show_side_by_side'] = False
         if executable.log:
             log_path = executable.log
             if os.path.exists(log_path):
@@ -117,8 +156,6 @@ class HeadLogDetailView(DetailView):
                         context['log_file_content'] = f.read()
                 except Exception as e:
                     context['log_file_content'] = f'Error reading log file: {e}'
-            else:
-                context['log_file_error'] = f'Log file not found at: {log_path}'
 
         return context
 
