@@ -4,14 +4,13 @@ import os
 
 from celery.result import AsyncResult
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import render
 from django.views import View
 from django.views.generic import TemplateView
 
 from config.celery import app as celery_app
 from core.tasks import scan_network_task
 from dashboard.tasks import debug_task
-from hydra.hydra import Hydra
 from hydra.models import HydraSpawn, HydraSpawnStatus, HydraSpellbook
 from talos_agent.version import VERSION as SERVER_VERSION
 
@@ -42,23 +41,16 @@ class DashboardHomeView(TemplateView):
             .first()
         )
 
-        if active_spawn:
-            # Nudge state machine to catch any finished runs or zombies
-            try:
-                controller = Hydra(spawn_id=active_spawn.id)
-                controller.poll()
-                active_spawn.refresh_from_db()
-                if not active_spawn.is_active:
-                    active_spawn = None
-            except Exception:
-                # If for some reason Hydra initialization fails, don't crash the dashboard
-                pass
+        # --- NEUTERED: No more polling or refreshing here ---
+        # The frontend is now strictly read-only.
+        # If the spawn is stuck, it's a backend/Celery problem.
 
         if active_spawn:
             context['active_spawn'] = active_spawn
             context['spawn'] = active_spawn
-            context['heads'] = active_spawn.heads.all()
             context['is_active'] = active_spawn.is_active
+            # --- REMOVED: context['heads'] ---
+            # This hides the "Head Viewer Rows" on the main dashboard
         else:
             context['active_spawn'] = None
 

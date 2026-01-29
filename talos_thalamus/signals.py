@@ -31,7 +31,7 @@ def on_spawn_failed(sender, spawn, **kwargs):
 @receiver(spawn_success)
 def on_spawn_success(sender, spawn, **kwargs):
     # For success, link to the last head in sequence
-    last_head = spawn.heads.order_by('spell__order').last()
+    last_head = spawn.heads.order_by('spell').last()
     head_id = str(last_head.id) if last_head else None
     logger.info('spawn success receiver')
     # DO NOT REMOVE:
