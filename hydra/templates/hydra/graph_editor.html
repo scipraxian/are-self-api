@@ -23,10 +23,10 @@
 </script>
 <div id="app">
     <header class="top-bar">
-        <div class="logo">
+        <a href="{% url 'home' %}" class="logo" style="text-decoration: none; color: inherit;">
             <span class="icon">⚡</span>
             <span class="title">TALOS_GRAPH</span>
-        </div>
+        </a>
         <div class="execution-controls">
             <button id="start-btn" class="btn play-btn">▶ Start</button>
             <button id="stop-btn" class="btn stop-btn" disabled>■ Stop</button>
@@ -36,6 +36,9 @@
             </div>
         </div>
         <div class="actions">
+            <a href="{% url 'home' %}" class="btn primary" style="text-decoration: none; display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 16px;">🏠</span> Dashboard
+            </a>
             <button id="auto-layout-btn" class="btn secondary">Auto Layout</button>
             <button id="export-json-btn" class="btn secondary">Export JSON</button>
         </div>
