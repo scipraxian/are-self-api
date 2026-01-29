@@ -1,7 +1,7 @@
 import logging
 
 from django.http import HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, reverse
 from django.utils.html import escape
 from django.views import View
 from django.views.generic import DetailView
@@ -50,7 +50,9 @@ class HydraResponseMixin:
         """Routes HTMX fragments vs full-page redirects."""
         if request.headers.get('HX-Request'):
             return self.render_hydra_controls(request, spawn)
-        return redirect('hydra:hydra_spawn_monitor', pk=spawn.id)
+        return redirect(
+            f'{reverse("hydra:graph_editor", kwargs={"book_id": spawn.spellbook_id})}?spawn_id={spawn.id}'
+        )
 
 
 class LaunchSpellbookView(HydraResponseMixin, DetailView):
@@ -267,4 +269,5 @@ class HydraGraphEditorView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['spellbook_id'] = self.object.id
+        context['spawn_id'] = self.request.GET.get('spawn_id', '')
         return context

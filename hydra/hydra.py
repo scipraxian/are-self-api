@@ -46,9 +46,7 @@ class Hydra:
 
     def __init__(
         self,
-        spellbook_id: Optional[
-            str
-        ] = None,  # Changed to str/uuid for UUIDIdMixin compatibility
+        spellbook_id: Optional[uuid.UUID] = None,
         spawn_id: Optional[uuid.UUID] = None,
     ):
         if spawn_id:
@@ -176,7 +174,7 @@ class Hydra:
     # Internal Logic
     # =========================================================================
 
-    def _create_spawn(self, spellbook_id: str) -> HydraSpawn:
+    def _create_spawn(self, spellbook_id: uuid.UUID) -> HydraSpawn:
         book = HydraSpellbook.objects.get(id=spellbook_id)
         # We NO LONGER create heads here. Heads are JIT (Just In Time).
         spawn = HydraSpawn.objects.create(

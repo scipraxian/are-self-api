@@ -18,6 +18,7 @@
     // Inject the Book ID so the JS knows which graph to load
     window.djangoContext = {
         bookId: "{{ spellbook_id }}",
+        spawnId: "{{ spawn_id }}",
         csrfToken: "{{ csrf_token }}"
     };
 </script>
@@ -36,7 +37,8 @@
             </div>
         </div>
         <div class="actions">
-            <a href="{% url 'home' %}" class="btn primary" style="text-decoration: none; display: flex; align-items: center; gap: 6px;">
+            <a href="{% url 'home' %}" class="btn primary"
+               style="text-decoration: none; display: flex; align-items: center; gap: 6px;">
                 <span style="font-size: 16px;">🏠</span> Dashboard
             </a>
             <button id="auto-layout-btn" class="btn secondary">Auto Layout</button>

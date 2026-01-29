@@ -10,8 +10,15 @@ class GraphEditor {
 
         // Context from Django
         this.bookId = window.djangoContext?.bookId;
-        this.csrfToken = window.djangoContext?.csrfToken || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        this.spawnId = window.djangoContext?.spawnId;
+        this.csrfToken =
+            window.djangoContext?.csrfToken ||
+            document.querySelector('[name=csrfmiddlewaretoken]')?.value;
         this.apiUrl = `/hydra/graph/${this.bookId}/`;
+
+        // Monitor Mode State
+        this.isMonitorMode = !!this.spawnId;
+        this.nodeHeadMap = {}; // node_id -> head_id
 
         // DOM Elements
         this.container = document.getElementById('editor-container');
@@ -51,6 +58,13 @@ class GraphEditor {
         await this.loadGraph();
 
         this.updateCounts();
+
+        if (this.isMonitorMode) {
+            this.startPollingStatus();
+            this.container.classList.add('monitor-mode');
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) sidebar.style.display = 'none'; // Hide sidebar in monitor mode
+        }
     }
 
     // --- API Interactions ---
@@ -471,6 +485,15 @@ class GraphEditor {
             });
         });
 
+        // Initial monitor mode state
+        if (this.isMonitorMode) {
+            const viewBtn = nodeEl.querySelector('.mini-btn.view');
+            if (viewBtn) {
+                viewBtn.disabled = true;
+                viewBtn.style.opacity = '0.3';
+            }
+        }
+
         this.nodesLayer.appendChild(nodeEl);
     }
 
@@ -794,7 +817,65 @@ class GraphEditor {
         requestAnimationFrame(animateWires);
     }
 
+    // --- Monitor Mode Polling ---
+
+    startPollingStatus() {
+        this.pollInterval = setInterval(() => this.updateNodeStatuses(), 2000);
+        this.updateNodeStatuses(); // initial call
+    }
+
+    async updateNodeStatuses() {
+        if (!this.spawnId) return;
+
+        const url = `/hydra/graph/${this.spawnId}/status/`;
+        const statusMap = await this.apiFetch(url);
+        if (!statusMap) return;
+
+        Object.entries(statusMap).forEach(([nodeId, data]) => {
+            const {status_id, head_id} = data;
+            this.nodeHeadMap[nodeId] = head_id;
+
+            const nodeEl = document.getElementById(nodeId);
+            if (!nodeEl) return;
+
+            const header = nodeEl.querySelector('.node-header');
+            if (header) {
+                // Remove old status classes
+                header.classList.remove(
+                    'status-running',
+                    'status-success',
+                    'status-failed'
+                );
+
+                // Add new status class (3=Running, 4=Success, 5=Failed, 6=Aborted)
+                if (status_id === 3) header.classList.add('status-running');
+                else if (status_id === 4) header.classList.add('status-success');
+                else if (status_id === 5 || status_id === 6)
+                    header.classList.add('status-failed');
+            }
+
+            // Enable Eyeball button if head_id exists
+            const viewBtn = nodeEl.querySelector('.mini-btn.view');
+            if (viewBtn) {
+                if (head_id) {
+                    viewBtn.disabled = false;
+                    viewBtn.style.opacity = '1';
+                } else {
+                    viewBtn.disabled = true;
+                    viewBtn.style.opacity = '0.3';
+                }
+            }
+        });
+    }
+
     async showNodeLog(nodeId, title) {
+        const headId = this.nodeHeadMap[nodeId];
+        if (this.isMonitorMode && headId) {
+            // Open in new tab as requested for "Deep Dive"
+            window.open(`/hydra/logs/${headId}/`, '_blank');
+            return;
+        }
+
         const modal = document.getElementById('modal-container');
         const headerText = modal.querySelector('h3');
         const preview = document.getElementById('json-preview');

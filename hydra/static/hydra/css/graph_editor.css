@@ -649,3 +649,27 @@ body {
     font-size: 24px;
     cursor: pointer;
 }
+
+/* Status Colors for Node Headers */
+.node-header.status-running {
+    background: #f7941d !important;
+    /* Orange */
+    border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+.node-header.status-success {
+    background: #4caf50 !important;
+    /* Green */
+    border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+.node-header.status-failed {
+    background: #f44336 !important;
+    /* Red */
+    border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+/* Visibility classes for monitor mode */
+#editor-container.monitor-mode .delete-btn {
+    display: none;
+}

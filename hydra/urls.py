@@ -1,6 +1,10 @@
 from django.urls import path
 
-from .hydra_graph import HydraGraphAPI, HydraGraphLaunchAPI
+from .hydra_graph import (
+    HydraGraphAPI,
+    HydraGraphLaunchAPI,
+    HydraGraphSpawnStatusAPI,
+)
 from .views import (
     BattleStationStreamView,
     HeadLogDetailView,
@@ -52,6 +56,11 @@ urlpatterns = [
         'graph/<str:book_id>/<str:action>',
         HydraGraphAPI.as_view(),
         name='graph_api_action',
+    ),
+    path(
+        'graph/<uuid:spawn_id>/status/',
+        HydraGraphSpawnStatusAPI.as_view(),
+        name='graph_status_api',
     ),
     path(
         'graph/<str:book_id>/', HydraGraphAPI.as_view(), name='graph_api_root'

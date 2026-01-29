@@ -1,5 +1,6 @@
 import json
 import logging
+import uuid
 from dataclasses import dataclass
 from typing import Callable, Dict
 
@@ -11,10 +12,12 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .hydra import Hydra
 from .models import (
+    HydraSpawn,
     HydraSpell,
     HydraSpellbook,
     HydraSpellbookConnectionWire,
     HydraSpellbookNode,
+    HydraStatusID,
     HydraWireType,
 )
 
@@ -99,15 +102,18 @@ class DeletePayload:
 class HydraGraphAPI(View):
     def get(self, request: HttpRequest, book_id: str, action: str = None):
         spellbook = get_object_or_404(HydraSpellbook, id=book_id)
+        if action == ACTION_STATUS:
+            spawn_id = request.GET.get('spawn_id')
+            return get_execution_status(spellbook, spawn_id)
+
         dispatch_map: Dict[str | None, Callable] = {
             ACTION_LIBRARY: get_library,
-            ACTION_STATUS: get_execution_status,
             None: get_graph_layout,
         }
         handler = dispatch_map.get(action)
         if handler:
             return handler(spellbook)
-        return HttpResponseBadRequest(f'Unknown graph action: {action}')
+        return HttpResponseBadRequest(f'Unknown action: {action}')
 
     def post(self, request: HttpRequest, book_id: str, action: str):
         spellbook = get_object_or_404(HydraSpellbook, id=book_id)
@@ -269,8 +275,32 @@ def get_library(spellbook: HydraSpellbook) -> JsonResponse:
     return JsonResponse({KEY_LIBRARY: list(spells)})
 
 
-def get_execution_status(spellbook: HydraSpellbook) -> JsonResponse:
-    return JsonResponse({KEY_STATUS: STATUS_READY})
+def get_execution_status(
+    spellbook: HydraSpellbook, spawn_id: uuid.UUID = None
+) -> JsonResponse:
+    """
+    Returns the dynamic status of the graph nodes.
+    """
+    if not spawn_id:
+        return JsonResponse({KEY_STATUS: STATUS_READY})
+
+    # No generic try/except. Let Django handle 500s or DB errors.
+    hydra = Hydra(spellbook_id=spellbook.id, spawn_id=spawn_id)
+    view_data = hydra.view()
+
+    node_status_map = {}
+
+    # Map heads to their nodes for the frontend
+    for head in view_data.get('heads', []):
+        node_id = head.get('node_id')
+        if node_id:
+            node_status_map[node_id] = {
+                'status_id': head.get('status_id'),
+                'status_name': head.get('status_name'),
+                'head_id': head.get('id'),
+            }
+
+    return JsonResponse({KEY_STATUS: 'running', 'nodes': node_status_map})
 
 
 class HydraGraphLaunchAPI(View):
@@ -290,3 +320,38 @@ class HydraGraphLaunchAPI(View):
                 {ACTION_STATUS: STATUS_ERROR, MESSAGE: str(e)},
                 status=ERROR_STATUS_CODE,
             )
+
+
+class HydraGraphSpawnStatusAPI(View):
+    def get(self, request, spawn_id):
+        spawn = get_object_or_404(HydraSpawn, id=spawn_id)
+
+        # Nudge state machine if active
+        if spawn.is_active:
+            try:
+                controller = Hydra(spawn_id=spawn.id)
+                controller.poll()
+            except Exception:
+                pass
+
+        heads = spawn.heads.all().order_by('created')
+        node_status_map = {}
+
+        # Special Case: Begin Play Node (always green once spawn exists)
+        begin_play_node = spawn.spellbook.nodes.filter(
+            spell_id=HydraSpell.BEGIN_PLAY
+        ).first()
+        if begin_play_node:
+            node_status_map[str(begin_play_node.id)] = {
+                'status_id': HydraStatusID.SUCCESS,
+                'head_id': None,
+            }
+
+        for head in heads:
+            if head.node_id:
+                node_status_map[str(head.node_id)] = {
+                    'status_id': head.status_id,
+                    'head_id': str(head.id),
+                }
+
+        return JsonResponse(node_status_map)
