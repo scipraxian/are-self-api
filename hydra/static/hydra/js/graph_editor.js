@@ -441,7 +441,8 @@ class GraphEditor {
         // Dragging
         const header = nodeEl.querySelector('.node-header');
         header.addEventListener('mousedown', (e) => {
-            if (e.target.classList.contains('delete-btn')) return;
+            // Ignore if clicking buttons or controls
+            if (e.target.closest('.node-controls') || e.target.closest('.mini-btn') || e.target.closest('.delete-btn')) return;
             if (nodeEl.classList.contains('pending')) return;
             e.stopPropagation();
 
@@ -458,20 +459,25 @@ class GraphEditor {
             };
         });
 
+        nodeEl.querySelector('.mini-btn.view').addEventListener('mousedown', (e) => e.stopPropagation());
         nodeEl.querySelector('.mini-btn.view').addEventListener('click', (e) => {
             e.stopPropagation();
             this.showNodeLog(node.id, node.title);
         });
 
         if (node.isRoot) {
-            nodeEl.querySelector('.mini-btn.play').addEventListener('click', (e) => {
+            const playBtn = nodeEl.querySelector('.mini-btn.play');
+            playBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+            playBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.startExecution();
             });
         }
 
         if (node.canDelete) {
-            nodeEl.querySelector('.delete-btn').addEventListener('click', (e) => {
+            const delBtn = nodeEl.querySelector('.delete-btn');
+            delBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+            delBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.deleteNode(node.id);
             });
@@ -828,11 +834,23 @@ class GraphEditor {
         if (!this.spawnId) return;
 
         const url = `/hydra/graph/${this.spawnId}/status/`;
-        const statusMap = await this.apiFetch(url);
-        if (!statusMap) return;
+        let data = await this.apiFetch(url);
+        if (!data) return;
 
-        Object.entries(statusMap).forEach(([nodeId, data]) => {
-            const {status_id, head_id} = data;
+        // Global Status Update (Dashboard Header)
+        if (data.status_label) {
+            const currentStatus = data.is_active ? 'running' : 'finished';
+            this.setExecutionStatus(currentStatus, data.status_label);
+        }
+
+        const statusMap = data.nodes || data;
+
+        Object.entries(statusMap).forEach(([nodeId, nodeData]) => {
+            if (nodeId === 'status' || nodeId === 'is_active' || nodeId === 'status_label') return;
+
+            const {status_id, head_id} = nodeData;
+            if (status_id === undefined) return;
+
             this.nodeHeadMap[nodeId] = head_id;
 
             const nodeEl = document.getElementById(nodeId);
@@ -840,29 +858,22 @@ class GraphEditor {
 
             const header = nodeEl.querySelector('.node-header');
             if (header) {
-                // Remove old status classes
-                header.classList.remove(
-                    'status-running',
-                    'status-success',
-                    'status-failed'
-                );
-
-                // Add new status class (3=Running, 4=Success, 5=Failed, 6=Aborted)
+                header.classList.remove('status-running', 'status-success', 'status-failed');
                 if (status_id === 3) header.classList.add('status-running');
                 else if (status_id === 4) header.classList.add('status-success');
-                else if (status_id === 5 || status_id === 6)
-                    header.classList.add('status-failed');
+                else if (status_id === 5 || status_id === 6) header.classList.add('status-failed');
             }
 
-            // Enable Eyeball button if head_id exists
             const viewBtn = nodeEl.querySelector('.mini-btn.view');
             if (viewBtn) {
                 if (head_id) {
                     viewBtn.disabled = false;
                     viewBtn.style.opacity = '1';
+                    viewBtn.style.cursor = 'pointer';
                 } else {
                     viewBtn.disabled = true;
                     viewBtn.style.opacity = '0.3';
+                    viewBtn.style.cursor = 'not-allowed';
                 }
             }
         });

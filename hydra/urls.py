@@ -28,9 +28,8 @@ urlpatterns = [
         SpawnMonitorDetailView.as_view(),
         name='hydra_spawn_monitor',
     ),
-    path(
-        'logs/<uuid:pk>/', HeadLogDetailView.as_view(), name='hydra_head_logs'
-    ),
+    path('logs/<uuid:pk>/', HeadLogDetailView.as_view(),
+         name='hydra_head_logs'),
     path(
         'battle-stream/<uuid:pk>/',
         BattleStationStreamView.as_view(),
@@ -53,16 +52,15 @@ urlpatterns = [
         name='graph_launch_api',
     ),
     path(
-        'graph/<str:book_id>/<str:action>',
-        HydraGraphAPI.as_view(),
-        name='graph_api_action',
-    ),
-    path(
         'graph/<uuid:spawn_id>/status/',
         HydraGraphSpawnStatusAPI.as_view(),
         name='graph_status_api',
     ),
     path(
-        'graph/<str:book_id>/', HydraGraphAPI.as_view(), name='graph_api_root'
+        'graph/<str:book_id>/<str:action>',
+        HydraGraphAPI.as_view(),
+        name='graph_api_action',
     ),
+    path('graph/<str:book_id>/', HydraGraphAPI.as_view(),
+         name='graph_api_root'),
 ]
