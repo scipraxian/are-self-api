@@ -129,7 +129,7 @@ class GraphEditor {
                 this.addNode(n.title, n.x, n.y, {
                     id: n.id,
                     spell_id: n.spell_id,
-                    isRoot: n.title === 'BeginPlay', // Assuming this convention for now
+                    isRoot: n.is_root, // Assuming this convention for now
                     skipApi: true
                 });
             });

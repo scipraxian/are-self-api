@@ -165,7 +165,7 @@ def get_graph_layout(spellbook: HydraSpellbook) -> JsonResponse:
                 KEY_X: ui.get(KEY_X, 0),
                 KEY_Y: ui.get(KEY_Y, 0),
                 'spell_id': n.spell_id,
-                KEY_IS_ROOT: n.spell.name == 'BeginPlay',
+                KEY_IS_ROOT: n.spell_id == HydraSpell.BEGIN_PLAY,
             }
         )
 
