@@ -49,28 +49,28 @@ class GraphEditor {
     }
 
     async init() {
+        // Safety Check
+        if (!this.bookId) {
+            console.error("GraphEditor: Missing Book ID.");
+            return;
+        }
+
         this.setupEventListeners();
         this.render();
 
-        // Load Library first
-        await this.loadLibrary();
+        if (this.mode === 'edit') {
+            await this.loadLibrary();
+        }
 
         // Load Graph State
         await this.loadGraph();
 
-        if (this.mode === 'monitor' && this.spawnId) {
+        if (this.isMonitorMode) {
+            this.container.classList.add('monitor-mode');
             this.startPolling();
-            if (this.container) this.container.classList.add('monitor-mode');
         }
 
         this.updateCounts();
-
-        if (this.isMonitorMode) {
-            this.startPollingStatus();
-            this.container.classList.add('monitor-mode');
-            const sidebar = document.querySelector('.sidebar');
-            if (sidebar) sidebar.style.display = 'none'; // Hide sidebar in monitor mode
-        }
     }
 
     // --- API Interactions ---
@@ -103,7 +103,6 @@ class GraphEditor {
 
         this.libraryContainer.innerHTML = '';
 
-        // Group by category if possible, or just list
         const categories = {};
         data.library.forEach(spell => {
             const cat = spell.category || 'Spells';
@@ -124,6 +123,10 @@ class GraphEditor {
                 item.dataset.spellId = spell.id;
 
                 item.addEventListener('dragstart', (e) => {
+                    if (this.isMonitorMode) {
+                        e.preventDefault();
+                        return;
+                    }
                     e.dataTransfer.setData('spell-id', spell.id);
                     e.dataTransfer.setData('spell-name', spell.name);
                 });
@@ -149,8 +152,8 @@ class GraphEditor {
                 this.addNode(n.title, n.x, n.y, {
                     id: n.id,
                     spell_id: n.spell_id,
-                    isRoot: n.is_root, // Assuming this convention for now
-                    skipApi: true
+                    isRoot: n.is_root,
+                    skipApi: true // IMPORTANT: This flag allows bypassing the monitor lock
                 });
             });
         }
@@ -158,7 +161,6 @@ class GraphEditor {
         // Add Connections
         if (data.connections) {
             data.connections.forEach(c => {
-                // Map status_id to color logic
                 let color = 'rgba(255, 255, 255, 0.8)';
                 if (c.status_id === 'success') color = 'rgba(76, 175, 80, 0.8)';
                 if (c.status_id === 'fail') color = 'rgba(244, 67, 54, 0.8)';
@@ -192,6 +194,7 @@ class GraphEditor {
     setupEventListeners() {
         // Panning logic
         this.container.addEventListener('mousedown', (e) => {
+            // Allow panning in monitor mode
             if (e.button === 1 || (e.button === 0 && e.target === this.container)) {
                 this.isPanning = true;
                 this.container.style.cursor = 'grabbing';
@@ -201,18 +204,13 @@ class GraphEditor {
         // Zoom logic
         this.container.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const zoomSpeed = 0.001;
             const delta = -e.deltaY;
             const factor = Math.pow(1.1, delta / 100);
-
             const newZoom = Math.min(Math.max(this.zoom * factor, 0.2), 3);
-
             const mouseX = e.clientX - this.panX;
             const mouseY = e.clientY - this.panY;
-
             this.panX -= mouseX * (newZoom / this.zoom - 1);
             this.panY -= mouseY * (newZoom / this.zoom - 1);
-
             this.zoom = newZoom;
             this.updateCanvasTransform();
         }, {passive: false});
@@ -227,12 +225,12 @@ class GraphEditor {
                 this.updateCanvasTransform();
             }
 
-            if (this.isDraggingNode) {
+            // [FIX] Disable Dragging in Monitor Mode
+            if (this.isDraggingNode && !this.isMonitorMode) {
                 const node = this.isDraggingNode;
                 const coords = this.toCanvasCoords(e.clientX, e.clientY);
                 node.x = coords.x - (this.dragOffset.x / this.zoom);
                 node.y = coords.y - (this.dragOffset.y / this.zoom);
-
                 this.updateNodeDOM(node);
                 this.updateWiresForNode(node.id);
             }
@@ -259,8 +257,7 @@ class GraphEditor {
                 const el = document.getElementById(node.id);
                 if (el) el.style.zIndex = 'auto';
 
-                // Persist move - Debounced/Delayed until mouseup
-                if (!node.id.toString().startsWith('temp_')) {
+                if (!this.isMonitorMode && !node.id.toString().startsWith('temp_')) {
                     await this.apiFetch('move_node', {
                         method: 'POST',
                         body: JSON.stringify({
@@ -271,11 +268,10 @@ class GraphEditor {
                     });
                 }
             }
-
             this.isDraggingNode = null;
         });
 
-        // Modal Controls
+        // Modal & Controls
         document.getElementById('close-modal').addEventListener('click', () => {
             document.getElementById('modal-container').style.display = 'none';
         });
@@ -283,28 +279,49 @@ class GraphEditor {
         document.getElementById('copy-json').addEventListener('click', () => {
             const json = JSON.stringify(this.getGraphJSON(), null, 4);
             navigator.clipboard.writeText(json);
-            const btn = document.getElementById('copy-json');
-            btn.innerText = "Copied!";
-            setTimeout(() => btn.innerText = "Copy to Clipboard", 2000);
         });
 
-        document.getElementById('auto-layout-btn').addEventListener('click', () => this.autoLayout());
+        const autoLayoutBtn = document.getElementById('auto-layout-btn');
+        if (autoLayoutBtn) {
+            autoLayoutBtn.addEventListener('click', () => this.autoLayout());
+        }
 
-        // Execution Events
-        document.getElementById('start-btn').addEventListener('click', () => this.startExecution());
-        document.getElementById('stop-btn').addEventListener('click', () => this.stopExecution());
+        const startBtn = document.getElementById('start-btn');
+        if (startBtn) {
+            startBtn.addEventListener('click', () => this.startExecution());
+        }
+
+        // Stop Button Logic
+        const stopBtn = document.getElementById('stop-btn');
+        if (stopBtn) {
+            stopBtn.addEventListener('click', () => {
+                if (this.isMonitorMode && window.djangoContext.terminateUrl) {
+                    if (confirm("WARNING: Force Stop this Operation?")) {
+                        fetch(window.djangoContext.terminateUrl, {
+                            method: 'POST',
+                            headers: {'X-CSRFToken': this.csrfToken}
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    }
+                } else {
+                    this.stopExecution();
+                }
+            });
+        }
+
         document.getElementById('view-toggle').addEventListener('click', () => {
             this.isViewOnly = !this.isViewOnly;
-            document.getElementById('view-toggle').style.color = this.isViewOnly ? '#2196f3' : '#666';
             this.container.classList.toggle('view-only', this.isViewOnly);
         });
 
-        // Sidebar Drag & Drop
         this.container.addEventListener('dragover', (e) => {
+            if (this.isMonitorMode) return;
             e.preventDefault();
         });
 
         this.container.addEventListener('drop', (e) => {
+            if (this.isMonitorMode) return;
             e.preventDefault();
             const spellId = e.dataTransfer.getData('spell-id');
             const spellName = e.dataTransfer.getData('spell-name');
@@ -312,19 +329,6 @@ class GraphEditor {
                 const coords = this.toCanvasCoords(e.clientX, e.clientY);
                 this.addNode(spellName, coords.x - 100, coords.y - 40, {spell_id: spellId});
             }
-        });
-
-        // Search Filtering
-        document.getElementById('node-search').addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase();
-            document.querySelectorAll('.library-item').forEach(item => {
-                const text = item.innerText.toLowerCase();
-                item.style.display = text.includes(query) ? 'block' : 'none';
-            });
-            document.querySelectorAll('.category').forEach(cat => {
-                const visible = Array.from(cat.querySelectorAll('.library-item')).some(i => i.style.display !== 'none');
-                cat.style.display = visible ? 'block' : 'none';
-            });
         });
     }
 
@@ -336,9 +340,10 @@ class GraphEditor {
     }
 
     async addNode(title, x, y, options = {}) {
-        // Temporary ID while we wait for DB
-        const tempId = options.id || 'temp_' + Math.random().toString(36).substr(2, 9);
+        // [FIX] Allow nodes if skipApi is true (loading from server), otherwise block user actions
+        if (this.isMonitorMode && !options.skipApi) return;
 
+        const tempId = options.id || 'temp_' + Math.random().toString(36).substr(2, 9);
         const isRoot = options.isRoot || false;
 
         const node = {
@@ -358,10 +363,9 @@ class GraphEditor {
         this.createNodeDOM(node);
         this.updateCounts();
 
-        // Immediate persistence
         if (!options.skipApi && options.spell_id) {
             const nodeEl = document.getElementById(tempId);
-            nodeEl.classList.add('pending'); // Visual feedback
+            nodeEl.classList.add('pending');
 
             const result = await this.apiFetch('add_node', {
                 method: 'POST',
@@ -373,22 +377,16 @@ class GraphEditor {
             });
 
             if (result && result.id) {
-                // SWAP ID
                 nodeEl.id = result.id;
                 node.id = result.id;
-
-                // Update pins in DOM
                 nodeEl.querySelectorAll('.pin').forEach(pin => {
                     pin.dataset.nodeId = result.id;
                 });
-
                 nodeEl.classList.remove('pending');
             } else {
-                // Rollback if failed
                 this.deleteNode(tempId, true);
             }
         }
-
         return node;
     }
 
@@ -405,10 +403,10 @@ class GraphEditor {
                 <h4>${node.title}</h4>
                 <div class="node-controls">
                     <button class="mini-btn view" title="${eyeTitle}">👁</button>
-                    ${node.isRoot ? `
+                    ${node.isRoot && !this.isMonitorMode ? `
                         <button class="mini-btn play" title="Start from here">▶</button>
                     ` : ''}
-                    ${node.canDelete ? '<button class="delete-btn">&times;</button>' : ''}
+                    ${node.canDelete && !this.isMonitorMode ? '<button class="delete-btn">&times;</button>' : ''}
                 </div>
             </div>
             <div class="node-body">
@@ -446,17 +444,16 @@ class GraphEditor {
             nodeEl.classList.add('selected');
         });
 
-        // Dragging
+        // Dragging (Disable in Monitor Mode)
         const header = nodeEl.querySelector('.node-header');
         header.addEventListener('mousedown', (e) => {
-            // Ignore if clicking buttons or controls
+            if (this.isMonitorMode) return;
             if (e.target.closest('.node-controls') || e.target.closest('.mini-btn') || e.target.closest('.delete-btn')) return;
             if (nodeEl.classList.contains('pending')) return;
             e.stopPropagation();
 
             nodeEl.style.zIndex = 1000;
             this.nodesLayer.appendChild(nodeEl);
-
             this.isDraggingNode = node;
             this.lastMousePos = {x: e.clientX, y: e.clientY};
 
@@ -467,6 +464,7 @@ class GraphEditor {
             };
         });
 
+        // Eye Button
         nodeEl.querySelector('.mini-btn.view').addEventListener('mousedown', (e) => e.stopPropagation());
         nodeEl.querySelector('.mini-btn.view').addEventListener('click', (e) => {
             e.stopPropagation();
@@ -474,19 +472,18 @@ class GraphEditor {
                 if (node.head_id) {
                     window.open(`/hydra/head/${node.head_id}/`, '_blank');
                 } else {
-                    // Feedback that it's not ready yet
                     alert('Has not run yet');
                 }
             } else {
-                // EDIT MODE: Open Django Admin
                 if (node.spell_id) {
                     window.open(`/admin/hydra/hydraspell/${node.spell_id}/change/`, '_blank');
                 }
             }
         });
 
-        if (node.isRoot) {
-            const playBtn = nodeEl.querySelector('.mini-btn.play');
+        // Play Button
+        const playBtn = nodeEl.querySelector('.mini-btn.play');
+        if (playBtn) {
             playBtn.addEventListener('mousedown', (e) => e.stopPropagation());
             playBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -494,8 +491,9 @@ class GraphEditor {
             });
         }
 
-        if (node.canDelete) {
-            const delBtn = nodeEl.querySelector('.delete-btn');
+        // Delete Button
+        const delBtn = nodeEl.querySelector('.delete-btn');
+        if (delBtn) {
             delBtn.addEventListener('mousedown', (e) => e.stopPropagation());
             delBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -503,20 +501,19 @@ class GraphEditor {
             });
         }
 
+        // Wire Creation (Disable in Monitor Mode)
         nodeEl.querySelectorAll('.pin.output-white, .pin.output-success, .pin.output-error').forEach(pin => {
             pin.addEventListener('mousedown', (e) => {
+                if (this.isMonitorMode) return;
                 if (nodeEl.classList.contains('pending')) return;
                 e.stopPropagation();
                 this.startWire(pin);
             });
         });
 
-        // Keep this check, but note that now we WANT the button enabled in monitor mode if head_id is present.
-        // We will handle the enabling/disabling via the Polling Loop later.
         if (this.isMonitorMode) {
             const viewBtn = nodeEl.querySelector('.mini-btn.view');
             if (viewBtn) {
-                // Default to disabled until polling enables it
                 viewBtn.disabled = true;
                 viewBtn.style.opacity = '0.3';
             }
@@ -534,6 +531,9 @@ class GraphEditor {
     }
 
     async deleteNode(nodeId, localOnly = false) {
+        // [FIX] Allow deleting if localOnly (used during redraw), otherwise block
+        if (this.isMonitorMode && !localOnly) return;
+
         const node = this.nodes.find(n => n.id === nodeId);
         if (!node) return;
 
@@ -555,7 +555,6 @@ class GraphEditor {
     }
 
     // --- Wire Logic ---
-
     toCanvasCoords(clientX, clientY) {
         const rect = this.container.getBoundingClientRect();
         return {
@@ -574,23 +573,18 @@ class GraphEditor {
             startX: coords.x,
             startY: coords.y
         };
-
         this.tempLine.style.display = 'block';
         this.tempLine.style.stroke = this.activeWire.color;
     }
 
     updateTempWire(mouseX, mouseY) {
         const coords = this.toCanvasCoords(mouseX, mouseY);
-        const path = this.calculateBezierPath(
-            this.activeWire.startX, this.activeWire.startY,
-            coords.x, coords.y
-        );
+        const path = this.calculateBezierPath(this.activeWire.startX, this.activeWire.startY, coords.x, coords.y);
         this.tempLine.setAttribute('d', path);
     }
 
     async completeWire(target) {
         this.tempLine.style.display = 'none';
-
         if (target && target.classList.contains('pin') && target.dataset.portType === 'input') {
             const toNodeId = target.dataset.nodeId;
             const toPortIdx = parseInt(target.dataset.portIndex);
@@ -604,7 +598,6 @@ class GraphEditor {
 
             if (!exists && toNodeId !== this.activeWire.fromNode) {
                 const type = this.getStatusFromColor(this.activeWire.color);
-
                 const connection = {
                     fromNode: this.activeWire.fromNode,
                     fromPort: this.activeWire.fromPort,
@@ -617,7 +610,6 @@ class GraphEditor {
                 this.renderConnections();
                 this.updateCounts();
 
-                // Persistence
                 await this.apiFetch('connect', {
                     method: 'POST',
                     body: JSON.stringify({
@@ -649,10 +641,14 @@ class GraphEditor {
                 path.setAttribute('stroke', conn.color);
                 path.setAttribute('class', 'wire');
 
-                path.addEventListener('dblclick', (e) => {
-                    this.removeConnection(index);
-                });
-
+                // Allow deleting wires only in edit mode
+                if (!this.isMonitorMode) {
+                    // [FIX] Listen for 'contextmenu' instead of 'dblclick'
+                    path.addEventListener('contextmenu', (e) => {
+                        e.preventDefault(); // Stop Browser Menu
+                        this.removeConnection(index);
+                    });
+                }
                 this.connGroup.appendChild(path);
             }
         });
@@ -660,12 +656,11 @@ class GraphEditor {
 
     updateWiresForNode(nodeId) {
         const involved = this.connections.some(c => c.fromNode === nodeId || c.toNode === nodeId);
-        if (involved) {
-            this.renderConnections();
-        }
+        if (involved) this.renderConnections();
     }
 
     async removeConnection(index) {
+        if (this.isMonitorMode) return;
         const conn = this.connections[index];
         if (!conn) return;
 
@@ -673,7 +668,6 @@ class GraphEditor {
         this.renderConnections();
         this.updateCounts();
 
-        // Persistence
         await this.apiFetch('disconnect', {
             method: 'POST',
             body: JSON.stringify({
@@ -686,7 +680,6 @@ class GraphEditor {
     getPinElement(nodeId, type, index) {
         const nodeEl = document.getElementById(nodeId);
         if (!nodeEl) return null;
-        // Adjust for "output" pins having different classes
         let selector = `.pin[data-port-type="${type}"][data-port-index="${index}"]`;
         return nodeEl.querySelector(selector);
     }
@@ -694,11 +687,7 @@ class GraphEditor {
     calculateBezierPath(x1, y1, x2, y2) {
         let dx = Math.abs(x1 - x2) * 0.5;
         const minHandle = 50;
-        if (x1 > x2) {
-            dx = Math.max(dx, minHandle) + (x1 - x2) * 0.2;
-        } else {
-            dx = Math.max(dx, minHandle);
-        }
+        dx = x1 > x2 ? Math.max(dx, minHandle) + (x1 - x2) * 0.2 : Math.max(dx, minHandle);
         const cp1x = x1 + dx;
         const cp1y = y1;
         const cp2x = x2 - dx;
@@ -707,7 +696,6 @@ class GraphEditor {
     }
 
     // --- Data Model ---
-
     getGraphJSON() {
         return {
             nodes: this.nodes.map(n => ({
@@ -729,7 +717,6 @@ class GraphEditor {
     }
 
     // --- Execution Engine ---
-
     setExecutionStatus(status, message = null) {
         this.executionState = status;
         const textEl = document.getElementById('execution-status-text');
@@ -743,25 +730,18 @@ class GraphEditor {
             const time = new Date().toLocaleTimeString();
             statusText = `Finished at ${time}`;
         }
-
         if (textEl) textEl.innerText = statusText;
-
         const startBtn = document.getElementById('start-btn');
-        const stopBtn = document.getElementById('stop-btn');
         if (startBtn) startBtn.disabled = (status === 'running');
-        if (stopBtn) stopBtn.disabled = (status !== 'running');
     }
 
     async startExecution() {
         if (this.executionState === 'running') return;
-
         this.setExecutionStatus('running', 'Spawning Process...');
-
         const result = await this.apiFetch('launch/', {
             method: 'POST',
             body: JSON.stringify({book_id: this.bookId})
         });
-
         if (result && result.status === 'started') {
             this.setExecutionStatus('running', 'Process Active');
         } else {
@@ -775,10 +755,8 @@ class GraphEditor {
     }
 
     // --- Auto Layout ---
-
     autoLayout() {
         if (this.nodes.length === 0) return;
-
         this.nodes.forEach(n => {
             const el = document.getElementById(n.id);
             if (el) el.classList.add('node-auto-layout');
@@ -794,9 +772,7 @@ class GraphEditor {
             if (visited.has(id)) continue;
             visited.add(id);
             levels.set(id, Math.max(levels.get(id) || 0, level));
-            const children = this.connections
-                .filter(c => c.fromNode === id)
-                .map(c => c.toNode);
+            const children = this.connections.filter(c => c.fromNode === id).map(c => c.toNode);
             children.forEach(childId => queue.push({id: childId, level: level + 1}));
         }
 
@@ -822,11 +798,12 @@ class GraphEditor {
                     node.x = OFFSET_X + level * COL_SPACING;
                     node.y = OFFSET_Y + index * ROW_SPACING;
                     this.updateNodeDOM(node);
-                    // Update DB for each node moved
-                    this.apiFetch('move_node', {
-                        method: 'POST',
-                        body: JSON.stringify({node_id: node.id, x: node.x, y: node.y})
-                    });
+                    if (!this.isMonitorMode) {
+                        this.apiFetch('move_node', {
+                            method: 'POST',
+                            body: JSON.stringify({node_id: node.id, x: node.x, y: node.y})
+                        });
+                    }
                 }
             });
         });
@@ -846,10 +823,8 @@ class GraphEditor {
     }
 
     // --- MONITORING LOGIC ---
-
     startPolling() {
         setInterval(async () => {
-            // Fetch status from the API
             const data = await this.apiFetch(`status?spawn_id=${this.spawnId}`);
             if (data && data.nodes) {
                 this.updateNodeStatuses(data.nodes);
@@ -858,27 +833,26 @@ class GraphEditor {
     }
 
     updateNodeStatuses(statusMap) {
+        let isAnyRunning = false;
         this.nodes.forEach(node => {
             const status = statusMap[node.id];
             const dom = document.getElementById(node.id);
             if (!dom || !status) return;
 
-            // 1. Store head_id (Enables the Eyeball Click)
             node.head_id = status.head_id;
-
-            // 2. Update Visuals (Header Color)
             const header = dom.querySelector('.node-header');
             if (header) {
                 header.classList.remove('running', 'success', 'failed');
-                // Map Backend IDs to CSS Classes
-                if (status.status_id === 3) header.classList.add('running');
+                if (status.status_id === 2 || status.status_id === 3) {
+                    header.classList.add('running');
+                    isAnyRunning = true;
+                }
                 if (status.status_id === 4) header.classList.add('success');
                 if (status.status_id === 5) header.classList.add('failed');
             }
 
-            // 3. Enable/Disable Eyeball Button
             const viewBtn = dom.querySelector('.mini-btn.view');
-            if (viewBtn && this.mode === 'monitor') {
+            if (viewBtn && this.isMonitorMode) {
                 if (node.head_id) {
                     viewBtn.disabled = false;
                     viewBtn.style.opacity = '1';
@@ -890,29 +864,19 @@ class GraphEditor {
                 }
             }
         });
-    }
 
-    async showNodeLog(nodeId, title) {
-        const headId = this.nodeHeadMap[nodeId];
-        if (this.isMonitorMode && headId) {
-            // Open in new tab as requested for "Deep Dive"
-            window.open(`/hydra/logs/${headId}/`, '_blank');
-            return;
-        }
-
-        const modal = document.getElementById('modal-container');
-        const headerText = modal.querySelector('h3');
-        const preview = document.getElementById('json-preview');
-
-        headerText.innerText = `Node Log: ${title}`;
-        preview.innerText = 'Fetching logs...';
-        modal.style.display = 'flex';
-
-        const data = await this.apiFetch(`log/${nodeId}`);
-        if (data && data.log) {
-            preview.innerText = data.log;
-        } else {
-            preview.innerText = 'No logs available for this node.';
+        const stopBtn = document.getElementById('stop-btn');
+        if (stopBtn && this.isMonitorMode) {
+            stopBtn.disabled = !isAnyRunning;
+            if (isAnyRunning) {
+                stopBtn.style.opacity = '1';
+                stopBtn.style.cursor = 'pointer';
+                stopBtn.style.backgroundColor = '#ef4444';
+            } else {
+                stopBtn.style.opacity = '0.3';
+                stopBtn.style.cursor = 'not-allowed';
+                stopBtn.style.backgroundColor = '#333';
+            }
         }
     }
 
@@ -921,5 +885,4 @@ class GraphEditor {
     }
 }
 
-// Initialize app
 window.app = new GraphEditor();

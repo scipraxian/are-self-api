@@ -209,6 +209,28 @@
             border-color: rgba(255, 255, 255, 0.2);
         }
 
+        .btn-terminate {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-terminate:hover {
+            background: rgba(239, 68, 68, 0.8);
+            color: white;
+            border-color: #f87171;
+        }
+
         .btn-copy {
             background: transparent;
             border: none;
@@ -252,6 +274,14 @@
                      hx-swap="outerHTML">
                     {{ head.status.name }}
                 </div>
+
+                {% if head.status.name == 'Running' or head.status.name == 'Pending' %}
+                    <button class="btn-terminate"
+                            hx-post="{% url 'hydra:hydra_spawn_terminate' head.spawn.id %}"
+                            hx-confirm="Confirm Kill?">
+                        ■ STOP
+                    </button>
+                {% endif %}
 
                 <div style="height: 20px; width: 1px; background: rgba(255,255,255,0.1); margin: 0 8px;"></div>
 

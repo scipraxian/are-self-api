@@ -11,26 +11,70 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap"
           rel="stylesheet">
+    <style>
+        /* MONITOR MODE OVERRIDES */
+        body.monitor-mode .sidebar {
+            display: none !important;
+        }
+
+        body.monitor-mode #start-btn,
+        body.monitor-mode #auto-layout-btn,
+        body.monitor-mode #export-json-btn,
+        body.monitor-mode .delete-btn {
+            display: none !important;
+        }
+
+        /* [FIX] Use Grid to maintain structure, but single column */
+        body.monitor-mode .main-layout {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+        }
+
+        body.monitor-mode #editor-container {
+            width: 100% !important;
+            height: 100% !important;
+            grid-column: 1 / -1;
+        }
+
+        /* Make Stop button obvious */
+        body.monitor-mode #stop-btn {
+            background-color: #ef4444 !important;
+            opacity: 1 !important;
+            cursor: pointer !important;
+            border: 1px solid #f87171;
+            color: white;
+            display: inline-block !important;
+        }
+
+        body.monitor-mode #stop-btn:disabled {
+            background-color: #333 !important;
+            border-color: #444;
+            opacity: 0.3 !important;
+            cursor: not-allowed !important;
+        }
+    </style>
 </head>
 
-<body>
+<body class="{% if mode == 'monitor' %}monitor-mode{% endif %}">
 <script>
+    // [FIX] Robust Context Variables to avoid "VariableDoesNotExist" 500 errors
     window.djangoContext = {
-        bookId: "{{ book.id }}",
-        spawnId: "{{ spawn_id|default:'' }}",
+        bookId: "{% if book %}{{ book.id }}{% elif spawn %}{{ spawn.spellbook.id }}{% endif %}",
+        spawnId: "{% if spawn %}{{ spawn.id }}{% elif spawn_id %}{{ spawn_id }}{% endif %}",
         mode: "{{ mode|default:'edit' }}",
-        csrfToken: "{{ csrf_token }}"
+        csrfToken: "{{ csrf_token }}",
+        terminateUrl: "{% if spawn %}{% url 'hydra:hydra_spawn_terminate' spawn.id %}{% elif spawn_id %}{% url 'hydra:hydra_spawn_terminate' spawn_id %}{% endif %}"
     };
 </script>
 <div id="app">
     <header class="top-bar">
         <a href="{% url 'home' %}" class="logo" style="text-decoration: none; color: inherit;">
             <span class="icon">⚡</span>
-            <span class="title">TALOS_GRAPH</span>
+            <span class="title">{% if mode == 'monitor' %}MISSION MONITOR{% else %}GRAPH EDITOR{% endif %}</span>
         </a>
         <div class="execution-controls">
             <button id="start-btn" class="btn play-btn">▶ Start</button>
-            <button id="stop-btn" class="btn stop-btn" disabled>■ Stop</button>
+            <button id="stop-btn" class="btn stop-btn" disabled>■ STOP OPERATION</button>
             <div id="execution-status-container">
                 <span id="execution-status-text">Ready</span>
                 <div id="execution-status-indicator" class="ready"></div>
@@ -52,17 +96,6 @@
                 <input type="text" id="node-search" placeholder="Search nodes...">
             </div>
             <div class="node-library" id="node-library">
-                <div class="category">
-                    <span>Logic</span>
-                    <div class="library-item" draggable="true" data-type="Branch">Branch</div>
-                    <div class="library-item" draggable="true" data-type="Delay">Delay</div>
-                </div>
-                <div class="category">
-                    <span>Talos</span>
-                    <div class="library-item" draggable="true" data-type="Execute">Execute Build</div>
-                    <div class="library-item" draggable="true" data-type="Log">Print Log</div>
-                    <div class="library-item" draggable="true" data-type="Notify">Send Notify</div>
-                </div>
             </div>
             <div class="sidebar-footer">
                 <button id="view-toggle" class="icon-btn" title="Toggle View Mode">👁</button>
@@ -70,10 +103,8 @@
         </aside>
 
         <main id="editor-container">
-            <!-- Grid Background -->
             <div id="canvas-grid" class="canvas-layer"></div>
 
-            <!-- Link Layer (SVG) -->
             <svg id="svg-layer" class="canvas-layer">
                 <defs>
                     <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6"
@@ -89,7 +120,6 @@
                 <path id="temp-line" class="temp-wire" d="" fill="none" style="display: none;"></path>
             </svg>
 
-            <!-- Node Layer -->
             <div id="nodes-layer" class="canvas-layer"></div>
         </main>
     </div>
@@ -97,11 +127,16 @@
     <footer class="status-bar">
         <div class="status-item">Nodes: <span id="node-count">0</span></div>
         <div class="status-item">Connections: <span id="conn-count">0</span></div>
-        <div class="status-item hint">Right-click wire to delete | Drag header to move</div>
+        <div class="status-item hint">
+            {% if mode == 'monitor' %}
+                Monitor Mode: Read Only
+            {% else %}
+                Right-click wire to delete | Drag header to move
+            {% endif %}
+        </div>
     </footer>
 </div>
 
-<!-- JSON Preview Modal -->
 <div id="modal-container" class="modal-overlay" style="display: none;">
     <div class="modal">
         <div class="modal-header">
@@ -117,8 +152,6 @@
     </div>
 </div>
 
-
 <script src="{% static 'hydra/js/graph_editor.js' %}"></script>
 </body>
-
 </html>
