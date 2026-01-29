@@ -11,6 +11,7 @@ class GraphEditor {
         // Context from Django
         this.bookId = window.djangoContext?.bookId;
         this.spawnId = window.djangoContext?.spawnId;
+        this.mode = window.djangoContext?.mode || 'edit';
         this.csrfToken =
             window.djangoContext?.csrfToken ||
             document.querySelector('[name=csrfmiddlewaretoken]')?.value;
@@ -56,6 +57,11 @@ class GraphEditor {
 
         // Load Graph State
         await this.loadGraph();
+
+        if (this.mode === 'monitor' && this.spawnId) {
+            this.startPolling();
+            if (this.container) this.container.classList.add('monitor-mode');
+        }
 
         this.updateCounts();
 
@@ -341,6 +347,7 @@ class GraphEditor {
             x,
             y,
             spell_id: options.spell_id,
+            head_id: null,
             inputs: isRoot ? 0 : (options.inputs !== undefined ? options.inputs : 1),
             outputs: options.outputs !== undefined ? options.outputs : 3,
             canDelete: options.canDelete !== undefined ? options.canDelete : true,
@@ -392,11 +399,12 @@ class GraphEditor {
         nodeEl.style.left = `${node.x}px`;
         nodeEl.style.top = `${node.y}px`;
 
+        const eyeTitle = this.mode === 'monitor' ? 'Flight Recorder' : 'Edit Spell';
         nodeEl.innerHTML = `
             <div class="node-header ${node.isRoot ? 'root-header' : ''}">
                 <h4>${node.title}</h4>
                 <div class="node-controls">
-                    <button class="mini-btn view" title="View Node Log">👁</button>
+                    <button class="mini-btn view" title="${eyeTitle}">👁</button>
                     ${node.isRoot ? `
                         <button class="mini-btn play" title="Start from here">▶</button>
                     ` : ''}
@@ -462,7 +470,19 @@ class GraphEditor {
         nodeEl.querySelector('.mini-btn.view').addEventListener('mousedown', (e) => e.stopPropagation());
         nodeEl.querySelector('.mini-btn.view').addEventListener('click', (e) => {
             e.stopPropagation();
-            this.showNodeLog(node.id, node.title);
+            if (this.mode === 'monitor') {
+                if (node.head_id) {
+                    window.open(`/hydra/head/${node.head_id}/`, '_blank');
+                } else {
+                    // Feedback that it's not ready yet
+                    alert('Has not run yet');
+                }
+            } else {
+                // EDIT MODE: Open Django Admin
+                if (node.spell_id) {
+                    window.open(`/admin/hydra/hydraspell/${node.spell_id}/change/`, '_blank');
+                }
+            }
         });
 
         if (node.isRoot) {
@@ -491,10 +511,12 @@ class GraphEditor {
             });
         });
 
-        // Initial monitor mode state
+        // Keep this check, but note that now we WANT the button enabled in monitor mode if head_id is present.
+        // We will handle the enabling/disabling via the Polling Loop later.
         if (this.isMonitorMode) {
             const viewBtn = nodeEl.querySelector('.mini-btn.view');
             if (viewBtn) {
+                // Default to disabled until polling enables it
                 viewBtn.disabled = true;
                 viewBtn.style.opacity = '0.3';
             }
@@ -823,50 +845,41 @@ class GraphEditor {
         requestAnimationFrame(animateWires);
     }
 
-    // --- Monitor Mode Polling ---
+    // --- MONITORING LOGIC ---
 
-    startPollingStatus() {
-        this.pollInterval = setInterval(() => this.updateNodeStatuses(), 2000);
-        this.updateNodeStatuses(); // initial call
+    startPolling() {
+        setInterval(async () => {
+            // Fetch status from the API
+            const data = await this.apiFetch(`status?spawn_id=${this.spawnId}`);
+            if (data && data.nodes) {
+                this.updateNodeStatuses(data.nodes);
+            }
+        }, 1000);
     }
 
-    async updateNodeStatuses() {
-        if (!this.spawnId) return;
+    updateNodeStatuses(statusMap) {
+        this.nodes.forEach(node => {
+            const status = statusMap[node.id];
+            const dom = document.getElementById(node.id);
+            if (!dom || !status) return;
 
-        const url = `/hydra/graph/${this.spawnId}/status/`;
-        let data = await this.apiFetch(url);
-        if (!data) return;
+            // 1. Store head_id (Enables the Eyeball Click)
+            node.head_id = status.head_id;
 
-        // Global Status Update (Dashboard Header)
-        if (data.status_label) {
-            const currentStatus = data.is_active ? 'running' : 'finished';
-            this.setExecutionStatus(currentStatus, data.status_label);
-        }
-
-        const statusMap = data.nodes || data;
-
-        Object.entries(statusMap).forEach(([nodeId, nodeData]) => {
-            if (nodeId === 'status' || nodeId === 'is_active' || nodeId === 'status_label') return;
-
-            const {status_id, head_id} = nodeData;
-            if (status_id === undefined) return;
-
-            this.nodeHeadMap[nodeId] = head_id;
-
-            const nodeEl = document.getElementById(nodeId);
-            if (!nodeEl) return;
-
-            const header = nodeEl.querySelector('.node-header');
+            // 2. Update Visuals (Header Color)
+            const header = dom.querySelector('.node-header');
             if (header) {
-                header.classList.remove('status-running', 'status-success', 'status-failed');
-                if (status_id === 3) header.classList.add('status-running');
-                else if (status_id === 4) header.classList.add('status-success');
-                else if (status_id === 5 || status_id === 6) header.classList.add('status-failed');
+                header.classList.remove('running', 'success', 'failed');
+                // Map Backend IDs to CSS Classes
+                if (status.status_id === 3) header.classList.add('running');
+                if (status.status_id === 4) header.classList.add('success');
+                if (status.status_id === 5) header.classList.add('failed');
             }
 
-            const viewBtn = nodeEl.querySelector('.mini-btn.view');
-            if (viewBtn) {
-                if (head_id) {
+            // 3. Enable/Disable Eyeball Button
+            const viewBtn = dom.querySelector('.mini-btn.view');
+            if (viewBtn && this.mode === 'monitor') {
+                if (node.head_id) {
                     viewBtn.disabled = false;
                     viewBtn.style.opacity = '1';
                     viewBtn.style.cursor = 'pointer';

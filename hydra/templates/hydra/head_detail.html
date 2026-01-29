@@ -1,0 +1,173 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="war-room-container">
+        <div class="war-header">
+            <div class="war-crumbs">
+                <a href="{% url 'home' %}">Home</a> &rsaquo;
+                <a href="{% url 'hydra:graph_monitor' head.spawn.id %}">Graph ({{ head.spawn.id|slice:":8" }})</a>
+                &rsaquo;
+                <span class="current">{{ head.spell.name }}</span>
+            </div>
+            <div class="war-controls">
+                <span class="status-badge status-{{ head.status.name|lower }}">{{ head.status.name }}</span>
+                <a href="/admin/hydra/hydraspell/{{ head.spell.id }}/change/" target="_blank"
+                   class="btn btn-sm btn-outline-secondary">Edit Spell</a>
+                <button id="toggle-scroll" class="btn btn-sm btn-primary">Auto-Scroll: OFF</button>
+            </div>
+        </div>
+
+        <div class="war-content {% if show_side_by_side %}side-by-side{% endif %}">
+
+            <div class="log-pane" id="pane-stream">
+                <div class="pane-header">
+                    <strong>Stream Output (STDOUT)</strong>
+                    <button class="btn-copy" onclick="copyToClipboard('log-stream')">Copy</button>
+                </div>
+                <pre id="log-stream" class="log-body">{{ head.spell_log|default:"Waiting for output..." }}</pre>
+            </div>
+
+            {% if show_side_by_side %}
+                <div class="spine-separator"></div>
+
+                <div class="log-pane" id="pane-file">
+                    <div class="pane-header">
+                        <strong>Log File: {{ log_file_path }}</strong>
+                        <button class="btn-copy" onclick="copyToClipboard('log-file')">Copy</button>
+                    </div>
+                    <pre id="log-file" class="log-body">{{ log_file_content|default:"Empty or loading..." }}</pre>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <style>
+        /* War Room Styles - Integrated here for standalone simplicity */
+        .war-room-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 60px); /* Adjust based on your main navbar height */
+            background: #1e1e1e;
+            color: #ddd;
+        }
+
+        .war-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: #252526;
+            border-bottom: 1px solid #333;
+        }
+
+        .war-crumbs a {
+            color: #4daafc;
+            text-decoration: none;
+        }
+
+        .war-crumbs .current {
+            color: #aaa;
+            font-weight: bold;
+        }
+
+        .war-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden; /* Panes scroll independently */
+            position: relative;
+        }
+
+        .log-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #000;
+            min-width: 0; /* Prevent flex overflow */
+        }
+
+        .pane-header {
+            padding: 5px 10px;
+            background: #333;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #444;
+        }
+
+        .log-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            margin: 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            color: #dcdcdc;
+        }
+
+        .side-by-side .log-pane {
+            width: 50%;
+        }
+
+        .spine-separator {
+            width: 4px;
+            background: #444;
+            cursor: col-resize;
+        }
+
+        /* Status Colors */
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .status-running {
+            background: #ff9800;
+            color: #000;
+        }
+
+        .status-success {
+            background: #4caf50;
+            color: #fff;
+        }
+
+        .status-failed {
+            background: #f44336;
+            color: #fff;
+        }
+    </style>
+
+    <script>
+        // Auto-Scroll Logic
+        const streamBody = document.getElementById('log-stream');
+        const fileBody = document.getElementById('log-file');
+        const toggleBtn = document.getElementById('toggle-scroll');
+        let autoScroll = false;
+
+        toggleBtn.addEventListener('click', () => {
+            autoScroll = !autoScroll;
+            toggleBtn.textContent = `Auto-Scroll: ${autoScroll ? 'ON' : 'OFF'}`;
+            toggleBtn.classList.toggle('btn-success', autoScroll);
+            toggleBtn.classList.toggle('btn-primary', !autoScroll);
+
+            if (autoScroll) scrollToBottom();
+        });
+
+        function scrollToBottom() {
+            if (streamBody) streamBody.scrollTop = streamBody.scrollHeight;
+            if (fileBody) fileBody.scrollTop = fileBody.scrollHeight;
+        }
+
+        // Simple Polling implementation for updates could be added here
+        // For now, it respects the "Auto Scroll" button if content were dynamic
+
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text);
+        }
+    </script>
+{% endblock %}

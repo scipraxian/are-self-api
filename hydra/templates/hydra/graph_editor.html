@@ -15,10 +15,10 @@
 
 <body>
 <script>
-    // Inject the Book ID so the JS knows which graph to load
     window.djangoContext = {
-        bookId: "{{ spellbook_id }}",
-        spawnId: "{{ spawn_id }}",
+        bookId: "{{ book.id }}",
+        spawnId: "{{ spawn_id|default:'' }}",
+        mode: "{{ mode|default:'edit' }}",
         csrfToken: "{{ csrf_token }}"
     };
 </script>
