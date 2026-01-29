@@ -5,36 +5,40 @@
 
 {% block main_content %}
     <style>
-        /* FIX: Push the War Room down so Global Nav (Admin/Scan) is clickable */
+        /* FIX: Reset container to default behavior but ensure height filling */
         .container {
-            max-width: 95vw !important;
-            padding: 5rem 1rem 1rem 1rem !important;
-            background: transparent !important;
-            box-shadow: none !important;
-            border: none !important;
             display: flex;
             flex-direction: column;
             height: 95vh;
-            overflow: hidden;
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+            max-width: 98vw !important;
         }
 
-        /* FIX: Ensure Global Nav floats above the Glassmorphism card */
+        /* FIX: Ensure Global Nav buttons are clickable */
         .top-actions {
-            z-index: 1000 !important;
+            z-index: 2000 !important;
+            position: absolute;
+            top: 20px;
+            right: 30px;
         }
 
         /* THE BATTLE STATION CONTAINER */
+        /* FIX: Use margin-top to clear the header buttons safely */
         .war-room-card {
+            margin-top: 60px;
             display: flex;
             flex-direction: column;
             flex: 1;
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(15, 23, 42, 0.9);
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            min-height: 0;
+            min-height: 0; /* Flexbox scrolling fix */
         }
 
         /* HEADER SECTION */
@@ -297,8 +301,14 @@
                         <span title="{{ log_file_path }}">Log File: ...{{ log_file_path|slice:"-30:" }}</span>
                         <button class="btn-copy" onclick="copyToClipboard('log-file')">Copy File</button>
                     </div>
+
                     <pre id="log-file"
-                         class="log-body">{{ log_file_content|default:"Waiting for file content..." }}</pre>
+                         class="log-body"
+                         hx-get="{% url 'hydra:head_detail' head.pk %}?partial=content&type=file"
+                         hx-trigger="every 2s"
+                         hx-swap="innerHTML"
+                         hx-on::after-swap="if(this.dataset.autoscroll === 'true') this.scrollTop = this.scrollHeight;"
+                         data-autoscroll="false">{{ log_file_content|default:"Waiting for file content..." }}</pre>
                 </div>
             {% endif %}
         </div>
@@ -306,24 +316,36 @@
 
     <script>
         const streamBody = document.getElementById('log-stream');
+        const fileBody = document.getElementById('log-file');
         const toggleBtn = document.getElementById('toggle-scroll');
 
-        // Auto-Scroll Logic
-        toggleBtn.addEventListener('click', () => {
-            const isAuto = streamBody.dataset.autoscroll === 'true';
-            if (isAuto) {
-                // Turn OFF
-                streamBody.dataset.autoscroll = 'false';
-                toggleBtn.innerHTML = '<span>⬇️</span> Auto-Scroll: OFF';
-                toggleBtn.classList.remove('scroll-active');
-            } else {
-                // Turn ON
-                streamBody.dataset.autoscroll = 'true';
-                toggleBtn.innerHTML = '<span>⬇️</span> Auto-Scroll: <strong>ON</strong>';
-                toggleBtn.classList.add('scroll-active');
-                streamBody.scrollTop = streamBody.scrollHeight;
-            }
-        });
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                const isAuto = streamBody && streamBody.dataset.autoscroll === 'true';
+
+                if (isAuto) {
+                    // Turn OFF
+                    if (streamBody) streamBody.dataset.autoscroll = 'false';
+                    if (fileBody) fileBody.dataset.autoscroll = 'false';
+
+                    toggleBtn.innerHTML = '<span>⬇️</span> Auto-Scroll: OFF';
+                    toggleBtn.classList.remove('scroll-active');
+                } else {
+                    // Turn ON
+                    if (streamBody) {
+                        streamBody.dataset.autoscroll = 'true';
+                        streamBody.scrollTop = streamBody.scrollHeight;
+                    }
+                    if (fileBody) {
+                        fileBody.dataset.autoscroll = 'true';
+                        fileBody.scrollTop = fileBody.scrollHeight;
+                    }
+
+                    toggleBtn.innerHTML = '<span>⬇️</span> Auto-Scroll: <strong>ON</strong>';
+                    toggleBtn.classList.add('scroll-active');
+                }
+            });
+        }
 
         function copyToClipboard(elementId) {
             const el = document.getElementById(elementId);
@@ -332,8 +354,8 @@
             }
         }
 
-        // Default to auto-scroll on load if content is short
-        if (streamBody && streamBody.scrollHeight < 600) {
+        // Auto-enable scroll on load if logs are short
+        if (streamBody && streamBody.scrollHeight < 600 && toggleBtn) {
             toggleBtn.click();
         }
     </script>

@@ -97,10 +97,11 @@ class HeadLogDetailView(DetailView):
     context_object_name = 'head'
 
     def get(self, request, *args, **kwargs):
+        # We must fetch the object first to handle permissions/404s
         self.object = self.get_object()
         head = self.object
 
-        # 1. Handle Log Stream Polling (Raw Text)
+        # --- HTMX Polling Logic ---
         if request.GET.get('partial') == 'content':
             log_type = request.GET.get('type', 'tool')
             content = ''
@@ -109,11 +110,36 @@ class HeadLogDetailView(DetailView):
                 content = head.spell_log or ''
             elif log_type == 'system':
                 content = head.execution_log or ''
+            elif log_type == 'file':
+                # Safe Access: Check if executable exists before accessing .log
+                if (
+                    head.spell.talos_executable
+                    and head.spell.talos_executable.log
+                ):
+                    log_path = head.spell.talos_executable.log
+                    if os.path.exists(log_path):
+                        try:
+                            # Read safely with error replacement
+                            with open(
+                                log_path,
+                                'r',
+                                encoding='utf-8',
+                                errors='replace',
+                            ) as f:
+                                content = f.read()
+                        except Exception as e:
+                            content = f'[System Error reading file]: {e}'
+                    else:
+                        content = (
+                            f'[Waiting for log file creation at: {log_path}...]'
+                        )
+                else:
+                    content = '[No Log File configured for this Spell]'
 
-            # Return raw text so HTMX can append/replace cleanly
+            # Return RAW TEXT for the <pre> tag
             return HttpResponse(content, content_type='text/plain')
 
-        # 2. Handle Status Pill Polling (HTML Fragment)
+        # --- Status Pill Polling ---
         if request.GET.get('partial') == 'status_pill':
             html = f'''
             <div id="head-status-pill"
@@ -126,29 +152,37 @@ class HeadLogDetailView(DetailView):
             '''
             return HttpResponse(html)
 
+        # Standard Page Load
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         head = self.object
-        executable = head.spell.talos_executable
 
-        # Set default log type for the main page load
-        context['log_type'] = self.request.GET.get('type', 'tool')
+        # Safe Executable Access
+        executable = (
+            head.spell.talos_executable if head.spell.talos_executable else None
+        )
 
-        # Determine initial content for the template render
-        if context['log_type'] == 'tool':
+        # Determine initial content for the main render
+        log_type = self.request.GET.get('type', 'tool')
+        context['log_type'] = log_type
+
+        if log_type == 'tool':
             context['initial_log_content'] = head.spell_log
-        elif context['log_type'] == 'system':
+        elif log_type == 'system':
             context['initial_log_content'] = head.execution_log
 
-        # Logic for side-by-side file viewing (Legacy log file support)
+        # Check for side-by-side file capability
         context['show_side_by_side'] = False
-        if executable.log:
+        if executable and executable.log:
             log_path = executable.log
+            context['log_file_path'] = log_path
+            # We assume if a path is configured, we want to show the pane,
+            # even if the file doesn't exist yet (it might be created during the run).
+            context['show_side_by_side'] = True
+
             if os.path.exists(log_path):
-                context['show_side_by_side'] = True
-                context['log_file_path'] = log_path
                 try:
                     with open(
                         log_path, 'r', encoding='utf-8', errors='replace'
@@ -156,6 +190,8 @@ class HeadLogDetailView(DetailView):
                         context['log_file_content'] = f.read()
                 except Exception as e:
                     context['log_file_content'] = f'Error reading log file: {e}'
+            else:
+                context['log_file_content'] = 'Waiting for log file...'
 
         return context
 
