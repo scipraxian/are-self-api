@@ -1,80 +1,89 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
 
-{% block content %}
-    <div class="war-room-container">
-        <div class="war-header">
-            <div class="war-crumbs">
-                <a href="{% url 'home' %}">Home</a> &rsaquo;
-                <a href="{% url 'hydra:graph_monitor' head.spawn.id %}">Graph ({{ head.spawn.id|slice:":8" }})</a>
-                &rsaquo;
-                <span class="current">{{ head.spell.name }}</span>
-            </div>
-            <div class="war-controls">
-                <span class="status-badge status-{{ head.status.name|lower }}">{{ head.status.name }}</span>
-                <a href="/admin/hydra/hydraspell/{{ head.spell.id }}/change/" target="_blank"
-                   class="btn btn-sm btn-outline-secondary">Edit Spell</a>
-                <button id="toggle-scroll" class="btn btn-sm btn-primary">Auto-Scroll: OFF</button>
-            </div>
-        </div>
+{% block title %}Flight Recorder: {{ head.spell.name }}{% endblock %}
 
-        <div class="war-content {% if show_side_by_side %}side-by-side{% endif %}">
-
-            <div class="log-pane" id="pane-stream">
-                <div class="pane-header">
-                    <strong>Stream Output (STDOUT)</strong>
-                    <button class="btn-copy" onclick="copyToClipboard('log-stream')">Copy</button>
-                </div>
-                <pre id="log-stream" class="log-body">{{ head.spell_log|default:"Waiting for output..." }}</pre>
-            </div>
-
-            {% if show_side_by_side %}
-                <div class="spine-separator"></div>
-
-                <div class="log-pane" id="pane-file">
-                    <div class="pane-header">
-                        <strong>Log File: {{ log_file_path }}</strong>
-                        <button class="btn-copy" onclick="copyToClipboard('log-file')">Copy</button>
-                    </div>
-                    <pre id="log-file" class="log-body">{{ log_file_content|default:"Empty or loading..." }}</pre>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-
+{% block main_content %}
     <style>
-        /* War Room Styles - Integrated here for standalone simplicity */
-        .war-room-container {
+        /* Override Main Container to fit the 'Battle Station' width */
+        .container {
+            max-width: 95vw !important;
+            padding: 5rem 1rem 1rem 1rem !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 60px); /* Adjust based on your main navbar height */
-            background: #1e1e1e;
-            color: #ddd;
+            height: 95vh;
         }
 
+        .top-actions {
+            z-index: 1000 !important;
+        }
+
+        /* THE BATTLE STATION CONTAINER */
+        .war-room-card {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            background: rgba(15, 23, 42, 0.85); /* Dark Slate 900 + Opacity */
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* HEADER SECTION */
         .war-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 20px;
-            background: #252526;
-            border-bottom: 1px solid #333;
+            padding: 1rem 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .war-title-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            text-align: left;
+        }
+
+        .war-crumbs {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            color: #64748b; /* Slate 500 */
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .war-crumbs a {
-            color: #4daafc;
+            color: #94a3b8;
             text-decoration: none;
+            transition: color 0.2s;
         }
 
-        .war-crumbs .current {
-            color: #aaa;
-            font-weight: bold;
+        .war-crumbs a:hover {
+            color: #f8fafc;
         }
 
-        .war-content {
+        .war-headline {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* LOG DISPLAY AREA */
+        .war-grid {
             display: flex;
             flex: 1;
-            overflow: hidden; /* Panes scroll independently */
+            overflow: hidden; /* Contains the scroll bars */
             position: relative;
         }
 
@@ -82,79 +91,220 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: #000;
-            min-width: 0; /* Prevent flex overflow */
+            background: #0b0f19; /* Very Dark, Almost Black */
+            min-width: 0;
+            position: relative;
         }
 
-        .pane-header {
-            padding: 5px 10px;
-            background: #333;
-            font-size: 0.85rem;
+        .log-pane-header {
             display: flex;
             justify-content: space-between;
-            border-bottom: 1px solid #444;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background: #1e293b; /* Slate 800 */
+            border-bottom: 1px solid #334155;
+            font-size: 0.75rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            color: #cbd5e1;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .log-body {
             flex: 1;
             overflow-y: auto;
-            padding: 10px;
+            padding: 1rem;
             margin: 0;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.9rem;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #cbd5e1; /* Slate 300 */
             white-space: pre-wrap;
-            color: #dcdcdc;
+            text-align: left;
+            scrollbar-width: thin;
+            scrollbar-color: #475569 #0f172a;
         }
 
+        /* Side by Side Logic */
         .side-by-side .log-pane {
             width: 50%;
         }
 
-        .spine-separator {
-            width: 4px;
-            background: #444;
-            cursor: col-resize;
+        .spine {
+            width: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        /* ACTIONS & BUTTONS */
+        .war-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Custom Tiny Buttons for Header */
+        .btn-xs {
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-xs:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Copy Button (Inside Pane) */
+        .btn-copy {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            transition: color 0.2s;
+        }
+
+        .btn-copy:hover {
+            color: #60a5fa;
+        }
+
+        /* Blue hover */
+
+        /* Scroll Toggle State */
+        .scroll-active {
+            background: rgba(34, 197, 94, 0.15) !important;
+            color: #4ade80 !important;
+            border-color: rgba(34, 197, 94, 0.3) !important;
         }
 
         /* Status Colors */
-        .status-badge {
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            margin-right: 10px;
+        .status-pill {
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .status-running {
-            background: #ff9800;
-            color: #000;
+            background: rgba(234, 179, 8, 0.1);
+            color: #facc15;
+            border: 1px solid rgba(234, 179, 8, 0.2);
+            animation: pulse 2s infinite;
         }
 
         .status-success {
-            background: #4caf50;
-            color: #fff;
+            background: rgba(34, 197, 94, 0.1);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.2);
         }
 
         .status-failed {
-            background: #f44336;
-            color: #fff;
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        @keyframes pulse {
+            50% {
+                opacity: 0.5;
+            }
         }
     </style>
 
+    <div class="war-room-card">
+        <div class="war-header">
+            <div class="war-title-group">
+                <div class="war-crumbs">
+                    <a href="{% url 'home' %}">DASHBOARD</a>
+                    <span>/</span>
+                    <a href="{% url 'hydra:graph_monitor' head.spawn.id %}">GRAPH {{ head.spawn.id|slice:":8" }}</a>
+                    <span>/</span>
+                    <span>HEAD {{ head.id|slice:":8" }}</span>
+                </div>
+                <div class="war-headline">{{ head.spell.name }}</div>
+            </div>
+
+            <div class="war-actions">
+                <div class="status-pill status-{{ head.status.name|lower }}">
+                    {{ head.status.name }}
+                </div>
+
+                <div style="height: 20px; width: 1px; background: rgba(255,255,255,0.1); margin: 0 8px;"></div>
+
+                {% if head.spell.id %}
+                    <a href="/admin/hydra/hydraspell/{{ head.spell.id }}/change/" target="_blank" class="btn-xs">
+                        <span>⚙️</span> Config
+                    </a>
+                {% endif %}
+
+                <button id="toggle-scroll" class="btn-xs">
+                    <span>⬇️</span> Auto-Scroll: OFF
+                </button>
+            </div>
+        </div>
+
+        <div class="war-grid {% if show_side_by_side %}side-by-side{% endif %}">
+
+            <div class="log-pane">
+                <div class="log-pane-header">
+                    <span>Console Stream (Stdout)</span>
+                    <button class="btn-copy" onclick="copyToClipboard('log-stream')">Copy Log</button>
+                </div>
+                <pre id="log-stream" class="log-body">{{ head.spell_log|default:"Initializing Stream..." }}</pre>
+            </div>
+
+            {% if show_side_by_side %}
+                <div class="spine"></div>
+
+                <div class="log-pane">
+                    <div class="log-pane-header">
+                        <span title="{{ log_file_path }}">Log File: ...{{ log_file_path|slice:"-30:" }}</span>
+                        <button class="btn-copy" onclick="copyToClipboard('log-file')">Copy File</button>
+                    </div>
+                    <pre id="log-file"
+                         class="log-body">{{ log_file_content|default:"Waiting for file content..." }}</pre>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+
     <script>
-        // Auto-Scroll Logic
+        // UX Logic
         const streamBody = document.getElementById('log-stream');
         const fileBody = document.getElementById('log-file');
         const toggleBtn = document.getElementById('toggle-scroll');
         let autoScroll = false;
 
+        // Toggle Button Logic
         toggleBtn.addEventListener('click', () => {
             autoScroll = !autoScroll;
-            toggleBtn.textContent = `Auto-Scroll: ${autoScroll ? 'ON' : 'OFF'}`;
-            toggleBtn.classList.toggle('btn-success', autoScroll);
-            toggleBtn.classList.toggle('btn-primary', !autoScroll);
+            toggleBtn.innerHTML = autoScroll ? '<span>⬇️</span> Auto-Scroll: <strong>ON</strong>' : '<span>⬇️</span> Auto-Scroll: OFF';
 
-            if (autoScroll) scrollToBottom();
+            if (autoScroll) {
+                toggleBtn.classList.add('scroll-active');
+                scrollToBottom();
+            } else {
+                toggleBtn.classList.remove('scroll-active');
+            }
         });
 
         function scrollToBottom() {
@@ -162,12 +312,15 @@
             if (fileBody) fileBody.scrollTop = fileBody.scrollHeight;
         }
 
-        // Simple Polling implementation for updates could be added here
-        // For now, it respects the "Auto Scroll" button if content were dynamic
-
         function copyToClipboard(elementId) {
-            const text = document.getElementById(elementId).innerText;
-            navigator.clipboard.writeText(text);
+            const el = document.getElementById(elementId);
+            if (el) {
+                navigator.clipboard.writeText(el.innerText);
+                // Visual Feedback could go here
+            }
         }
+
+        // Initialize: Scroll to bottom if content exists
+        scrollToBottom();
     </script>
 {% endblock %}
