@@ -470,13 +470,13 @@ class GraphEditor {
             e.stopPropagation();
             if (this.mode === 'monitor') {
                 if (node.head_id) {
-                    window.open(`/hydra/head/${node.head_id}/`, '_blank');
+                    window.open(`/hydra/head/${node.head_id}/`, '_self');
                 } else {
                     alert('Has not run yet');
                 }
             } else {
                 if (node.spell_id) {
-                    window.open(`/admin/hydra/hydraspell/${node.spell_id}/change/`, '_blank');
+                    window.open(`/admin/hydra/hydraspell/${node.spell_id}/change/`, '_self');
                 }
             }
         });
