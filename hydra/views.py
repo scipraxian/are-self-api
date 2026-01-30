@@ -97,21 +97,18 @@ class HeadLogDetailView(DetailView):
     context_object_name = 'head'
 
     def get(self, request, *args, **kwargs):
-        # We must fetch the object first to handle permissions/404s
         self.object = self.get_object()
         head = self.object
 
-        # --- HTMX Polling Logic ---
+        is_active = head.status.name.lower() in ['running', 'pending']
         if request.GET.get('partial') == 'content':
             log_type = request.GET.get('type', 'tool')
             content = ''
-
             if log_type == 'tool':
                 content = head.spell_log or ''
             elif log_type == 'system':
                 content = head.execution_log or ''
             elif log_type == 'file':
-                # Safe Access: Check if executable exists before accessing .log
                 if (
                     head.spell.talos_executable
                     and head.spell.talos_executable.log
@@ -119,7 +116,6 @@ class HeadLogDetailView(DetailView):
                     log_path = head.spell.talos_executable.log
                     if os.path.exists(log_path):
                         try:
-                            # Read safely with error replacement
                             with open(
                                 log_path,
                                 'r',
@@ -136,23 +132,24 @@ class HeadLogDetailView(DetailView):
                 else:
                     content = '[No Log File configured for this Spell]'
 
-            # Return RAW TEXT for the <pre> tag
-            return HttpResponse(content, content_type='text/plain')
+            response = HttpResponse(content, content_type='text/plain')
+            if is_active:
+                response['HX-Trigger'] = 'every 1s'
 
-        # --- Status Pill Polling ---
+            return response
         if request.GET.get('partial') == 'status_pill':
+            trigger_attr = 'hx-trigger="every 2s"' if is_active else ''
             html = f'''
             <div id="head-status-pill"
                  class="status-pill status-{head.status.name.lower()}"
                  hx-get="{request.path}?partial=status_pill"
-                 hx-trigger="every 2s"
+                 {trigger_attr}
                  hx-swap="outerHTML">
                 {head.status.name}
             </div>
             '''
             return HttpResponse(html)
 
-        # Standard Page Load
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):

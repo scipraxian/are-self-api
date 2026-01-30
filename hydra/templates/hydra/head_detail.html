@@ -317,8 +317,10 @@
 
                 <pre id="log-stream"
                      class="log-body"
+                        {% if head.status.name == 'Running' or head.status.name == 'Pending' %}
                      hx-get="{% url 'hydra:head_detail' head.pk %}?partial=content&type={{ log_type }}"
                      hx-trigger="every 1s"
+                        {% endif %}
                      hx-swap="innerHTML"
                      hx-on::after-swap="if(this.dataset.autoscroll === 'true') this.scrollTop = this.scrollHeight;"
                      data-autoscroll="false">{{ initial_log_content|default:"Initializing Stream..." }}</pre>
