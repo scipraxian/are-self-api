@@ -3,7 +3,6 @@
 from django.db import models
 
 from common.models import (
-    BigIdMixin,
     CreatedMixin,
     DefaultFieldsMixin,
     DescriptionMixin,
@@ -89,7 +88,7 @@ class HydraDistributionModeID(object):
     SPECIFIC_TARGETS = 4
 
 
-class HydraDistributionMode(BigIdMixin, NameMixin, DescriptionMixin):
+class HydraDistributionMode(NameMixin, DescriptionMixin):
     """
     Lookup table for Distribution Modes.
     """
@@ -150,7 +149,7 @@ class HydraSpellArgumentAssignment(models.Model):
         ordering = ['order']
 
 
-class HydraOutcomeAction(BigIdMixin, NameMixin):
+class HydraOutcomeAction(NameMixin):
     """
     Lookup table for Outcome Actions.
     """
