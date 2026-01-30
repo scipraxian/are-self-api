@@ -139,11 +139,12 @@ class HydraGraphAPI(View):
 
 def _ensure_begin_play_node(spellbook: HydraSpellbook) -> HydraSpellbookNode:
     """Guarantees the existence of the 'BeginPlay' anchor node."""
-    node = spellbook.nodes.filter(spell_id=HydraSpell.BEGIN_PLAY).first()
+    node = spellbook.nodes.filter(is_root=True).first()
     if not node:
         node = HydraSpellbookNode.objects.create(
             spellbook=spellbook,
             spell_id=HydraSpell.BEGIN_PLAY,
+            is_root=True,
             ui_json=json.dumps(DEFAULT_UI_JSON_DICT),
         )
     return node
@@ -259,14 +260,25 @@ def handle_delete_node(book: HydraSpellbook, data: dict) -> JsonResponse:
     return JsonResponse({KEY_STATUS: STATUS_DELETED})
 
 
-def handle_add_node(book: HydraSpellbook, data: dict) -> JsonResponse:
-    p = NodePayload(**data)
+def handle_add_node(spellbook: HydraSpellbook, payload: dict) -> JsonResponse:
+    spell_id = payload.get('spell_id')
+    if int(spell_id) == HydraSpell.BEGIN_PLAY:
+        if spellbook.nodes.filter(is_root=True).exists():
+            return JsonResponse(
+                {'error': 'Begin Play node already exists.'}, status=400
+            )
+        is_root = True
+    else:
+        is_root = False
+
+    ui_data = {'x': payload.get('x', 0), 'y': payload.get('y', 0)}
     node = HydraSpellbookNode.objects.create(
-        spellbook=book,
-        spell_id=p.spell_id,
-        ui_json=json.dumps({KEY_X: p.x, KEY_Y: p.y}),
+        spellbook=spellbook,
+        spell_id=spell_id,
+        is_root=is_root,
+        ui_json=json.dumps(ui_data),
     )
-    return JsonResponse({KEY_ID: node.id, KEY_STATUS: STATUS_CREATED})
+    return JsonResponse({'id': str(node.id)})
 
 
 def get_library(spellbook: HydraSpellbook) -> JsonResponse:

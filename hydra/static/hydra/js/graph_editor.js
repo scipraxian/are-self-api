@@ -152,7 +152,7 @@ class GraphEditor {
                 this.addNode(n.title, n.x, n.y, {
                     id: n.id,
                     spell_id: n.spell_id,
-                    isRoot: n.is_root,
+                    isRoot: n.isRoot || (n.spell_id === 1),
                     skipApi: true // IMPORTANT: This flag allows bypassing the monitor lock
                 });
             });
@@ -344,7 +344,7 @@ class GraphEditor {
         if (this.isMonitorMode && !options.skipApi) return;
 
         const tempId = options.id || 'temp_' + Math.random().toString(36).substr(2, 9);
-        const isRoot = options.isRoot || false;
+        const isRoot = options.isRoot || (options.spell_id === 1);
 
         const node = {
             id: tempId,

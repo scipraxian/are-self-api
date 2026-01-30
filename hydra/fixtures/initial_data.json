@@ -635,6 +635,7 @@
     "fields": {
       "spellbook": "b8e9f0a1-2c3d-4e5f-6a7b-8c9d0e1f2b3c",
       "spell": 1,
+      "is_root": true,
       "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },
@@ -644,6 +645,7 @@
     "fields": {
       "spellbook": "0245b699-5b9a-43ec-9391-b788b578d25f",
       "spell": 1,
+      "is_root": true,
       "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },
@@ -662,6 +664,7 @@
     "fields": {
       "spellbook": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
       "spell": 1,
+      "is_root": true,
       "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },
@@ -680,6 +683,7 @@
     "fields": {
       "spellbook": "559cecbd-2128-478a-be50-436ba30b7396",
       "spell": 1,
+      "is_root": true,
       "ui_json": "{\"x\": 188, \"y\": 118}"
     }
   },
@@ -698,6 +702,7 @@
     "fields": {
       "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
       "spell": 1,
+      "is_root": true,
       "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },
@@ -734,6 +739,7 @@
     "fields": {
       "spellbook": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
       "spell": 1,
+      "is_root": true,
       "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },
@@ -761,6 +767,7 @@
     "fields": {
       "spellbook": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
       "spell": 1,
+      "is_root": true,
       "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },
@@ -770,6 +777,7 @@
     "fields": {
       "spellbook": "8686149a-8b56-4a47-b5df-7d8cf7635dbc",
       "spell": 1,
+      "is_root": true,
       "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },
@@ -779,6 +787,7 @@
     "fields": {
       "spellbook": "22334455-6677-8899-0011-aabbccddeeff",
       "spell": 1,
+      "is_root": true,
       "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },

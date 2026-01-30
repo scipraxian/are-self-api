@@ -213,6 +213,7 @@ class HydraSpellbookNode(models.Model):
     multiple times distinctively.
     """
 
+    is_root = models.BooleanField(default=False, db_index=True)
     spellbook = models.ForeignKey(
         HydraSpellbook, on_delete=models.CASCADE, related_name='nodes'
     )

@@ -222,17 +222,17 @@ class Hydra:
             self._finalize_spawn_unsafe()
 
     def _dispatch_graph_roots(self) -> None:
-        """Dispatches all nodes that have NO incoming wires."""
+        """Execute all Begin Play nodes."""
         all_nodes = self.spawn.spellbook.nodes.all()
-        # Incoming wires targets
-        targets = self.spawn.spellbook.wires.values_list('target_id', flat=True)
 
-        # Roots = Nodes not in targets
-        root_nodes = all_nodes.exclude(id__in=targets)
+        # We filter strictly for the nodes marked is_root in the database/editor
+        root_nodes = all_nodes.filter(is_root=True)
 
         if not root_nodes.exists() and all_nodes.exists():
-            logger.error('[HYDRA] Circular dependency or no roots found.')
-            # Fallback logic could go here, or just let it fail/stall.
+            logger.error(
+                f'[HYDRA] No Begin Play node found '
+                f'for {self.spawn.spellbook.name}!'
+            )
             return
 
         for node in root_nodes:
