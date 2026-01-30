@@ -43,8 +43,15 @@ def update_version_metadata(head_id: UUID) -> Tuple[int, str]:
     logging.info(f'Updating version metadata for head {head_id}...')
     head = HydraHead.objects.get(id=head_id)
     spell = head.spell
-    app_version_file = spell_switches_and_arguments(spell.id)
-    target_path = os.path.normpath(app_version_file)
+
+    args_list = spell_switches_and_arguments(spell.id)
+    if not args_list:
+        return (
+            HANDLER_INTERNAL_ERROR_CODE,
+            'Error: No version file path provided in spell arguments.',
+        )
+
+    target_path = os.path.normpath(args_list[0])
 
     log = ['=== NATIVE VERSION STAMPER ===', f'Target: {target_path}']
     log_system(head, f'Starting version stamp on {target_path}')
@@ -55,7 +62,9 @@ def update_version_metadata(head_id: UUID) -> Tuple[int, str]:
             os.makedirs(directory, exist_ok=True)
             log.append(f'Created directory: {directory}')
         except PermissionError:
-            log.append(f'Error: No permission to create the directory {directory}')
+            log.append(
+                f'Error: No permission to create the directory {directory}'
+            )
             return HANDLER_PERMISSIONS_ERROR_CODE, '\n'.join(log)
         except OSError as e:
             log.append(f'[ERROR] Could not create directory {directory}: {e}')
@@ -68,12 +77,16 @@ def update_version_metadata(head_id: UUID) -> Tuple[int, str]:
                 try:
                     data = json.load(f)
                 except json.JSONDecodeError:
-                    log.append(f'[WARNING] {target_path} is corrupt. Re-initializing.')
+                    log.append(
+                        f'[WARNING] {target_path} is corrupt. Re-initializing.'
+                    )
         except PermissionError:
             log.append(f'Error: No permission to read {target_path}')
             return HANDLER_PERMISSIONS_ERROR_CODE, '\n'.join(log)
         except OSError as e:
-            log.append(f'[WARNING] Could not read {target_path}: {e}. Re-initializing.')
+            log.append(
+                f'[WARNING] Could not read {target_path}: {e}. Re-initializing.'
+            )
             return HANDLER_INTERNAL_ERROR_CODE, '\n'.join(log)
 
     timestamp = int(time.time())
