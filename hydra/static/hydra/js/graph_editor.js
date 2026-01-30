@@ -476,7 +476,7 @@ class GraphEditor {
                 }
             } else {
                 if (node.spell_id) {
-                    window.open(`/admin/hydra/hydraspell/${node.spell_id}/change/`, '_self');
+                    window.open(`/admin/hydra/hydraspell/${node.spell_id}/change/`);
                 }
             }
         });
