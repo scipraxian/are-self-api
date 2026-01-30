@@ -4,9 +4,8 @@ import pytest
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from environments.models import ProjectEnvironment
+from environments.models import TalosExecutable
 from hydra.models import (
-    HydraExecutable,
     HydraHead,
     HydraHeadStatus,
     HydraSpawn,
@@ -33,53 +32,31 @@ class FastValidateIntegrationTest(TestCase):
         # or rely on fixtures if you load hydra/fixtures/initial_data.json too.
         # Keeping your manual setup below to minimize changes:
         self.status_created = HydraHeadStatus.objects.get_or_create(
-            id=1, defaults={'name': 'Created'}
-        )[0]
+            id=1, defaults={'name': 'Created'})[0]
         self.status_pending = HydraHeadStatus.objects.get_or_create(
-            id=2, defaults={'name': 'Pending'}
-        )[0]
+            id=2, defaults={'name': 'Pending'})[0]
         self.status_running = HydraHeadStatus.objects.get_or_create(
-            id=3, defaults={'name': 'Running'}
-        )[0]
+            id=3, defaults={'name': 'Running'})[0]
         self.status_success = HydraHeadStatus.objects.get_or_create(
-            id=4, defaults={'name': 'Success'}
-        )[0]
+            id=4, defaults={'name': 'Success'})[0]
         self.status_failed = HydraHeadStatus.objects.get_or_create(
-            id=5, defaults={'name': 'Failed'}
-        )[0]
+            id=5, defaults={'name': 'Failed'})[0]
 
         self.spawn_created = HydraSpawnStatus.objects.get_or_create(
-            id=1, defaults={'name': 'Created'}
-        )[0]
+            id=1, defaults={'name': 'Created'})[0]
         self.spawn_running = HydraSpawnStatus.objects.get_or_create(
-            id=3, defaults={'name': 'Running'}
-        )[0]
+            id=3, defaults={'name': 'Running'})[0]
         self.spawn_success = HydraSpawnStatus.objects.get_or_create(
-            id=4, defaults={'name': 'Success'}
-        )[0]
+            id=4, defaults={'name': 'Success'})[0]
         self.spawn_failed = HydraSpawnStatus.objects.get_or_create(
-            id=5, defaults={'name': 'Failed'}
-        )[0]
+            id=5, defaults={'name': 'Failed'})[0]
 
-        self.env = ProjectEnvironment.objects.create(
-            name='Integration Env',
-            is_active=True,
-            project_root='C:/FakeProject',
-        )
-        from hydra.models import HydraEnvironment
-
-        self.hydra_env = HydraEnvironment.objects.create(
-            project_environment=self.env, name='TestEnv'
-        )
-
-        self.exe = HydraExecutable.objects.create(
-            name='TestRunner', slug='test_runner', path_template='Test.exe'
-        )
-        self.spell = HydraSpell.objects.create(
-            name='Run Headless', executable=self.exe
-        )
+        self.exe = TalosExecutable.objects.create(name='TestRunner',
+                                                  executable='Test.exe')
+        self.spell = HydraSpell.objects.create(name='Run Headless',
+                                               talos_executable=self.exe)
         self.book = HydraSpellbook.objects.create(name='Fast Validate')
-        self.book.spells.add(self.spell)
+        self.book.nodes.create(spell=self.spell)
 
     @mock.patch('hydra.hydra.cast_hydra_spell.delay')
     def test_button_click_launches_process(self, mock_celery):
@@ -120,17 +97,16 @@ class FastValidateIntegrationTest(TestCase):
         # 1. Setup a spawn with one head
         spawn = HydraSpawn.objects.create(
             spellbook=self.book,
-            environment=self.hydra_env,
             status_id=HydraSpawnStatus.RUNNING,
         )
-        head = HydraHead.objects.create(
-            spawn=spawn, spell=self.spell, status_id=HydraHeadStatus.PENDING
-        )
+        head = HydraHead.objects.create(spawn=spawn,
+                                        spell=self.spell,
+                                        status_id=HydraHeadStatus.PENDING)
 
         # 2. Run the task
         with (
-            mock.patch('hydra.tasks.build_command') as mock_build,
-            mock.patch('hydra.tasks.stream_command_to_db') as mock_stream,
+                mock.patch('hydra.tasks.build_command') as mock_build,
+                mock.patch('hydra.tasks.stream_command_to_db') as mock_stream,
         ):
             mock_stream.return_value = 0  # Success
 
@@ -155,12 +131,11 @@ class FastValidateIntegrationTest(TestCase):
         # 1. Setup an active spawn
         spawn = HydraSpawn.objects.create(
             spellbook=self.book,
-            environment=self.hydra_env,
             status_id=HydraSpawnStatus.RUNNING,
         )
-        HydraHead.objects.create(
-            spawn=spawn, spell=self.spell, status_id=HydraHeadStatus.RUNNING
-        )
+        HydraHead.objects.create(spawn=spawn,
+                                 spell=self.spell,
+                                 status_id=HydraHeadStatus.RUNNING)
 
         # 2. Try to launch again
         url = reverse('hydra_launch', args=[self.book.id])
@@ -168,7 +143,6 @@ class FastValidateIntegrationTest(TestCase):
 
         # 3. Should redirect to existing monitor
         self.assertEqual(response.status_code, 302)
-        self.assertIn(
-            reverse('hydra:hydra_spawn_monitor', args=[spawn.id]), response.url
-        )
+        self.assertIn(reverse('hydra:hydra_spawn_monitor', args=[spawn.id]),
+                      response.url)
         self.assertEqual(HydraSpawn.objects.count(), 1)

@@ -1,7 +1,6 @@
 from django.test import TestCase
 
 from environments.models import (
-    ProjectEnvironment,
     TalosExecutable,
     TalosExecutableArgument,
     TalosExecutableArgumentAssignment,
@@ -17,8 +16,7 @@ from hydra.models import (
     HydraSpellbook,
 )
 from hydra.spells.spell_casters.switches_and_arguments import (
-    spell_switches_and_arguments,
-)
+    spell_switches_and_arguments,)
 
 
 class SwitchesAndArgumentsTest(TestCase):
@@ -28,21 +26,12 @@ class SwitchesAndArgumentsTest(TestCase):
     ]
 
     def setUp(self):
-        # 1. Setup Infrastructure
-        self.proj_env = ProjectEnvironment.objects.create(
-            name='TestEnv',
-            project_root='C:/Project',
-            engine_root='C:/Engine',
-            build_root='C:/Builds',
-            is_active=True,
-        )
+        # 1. Define the Tool
+        self.exe = TalosExecutable.objects.create(name='Test Tool',
+                                                  executable='tool.exe',
+                                                  working_path='C:/Tools')
 
-        # 2. Define the Tool
-        self.exe = TalosExecutable.objects.create(
-            name='Test Tool', executable='tool.exe', working_path='C:/Tools'
-        )
-
-        # 3. Define the Spell
+        # 2. Define the Spell
         self.spell = HydraSpell.objects.create(
             name='Test Spell',
             talos_executable=self.exe,
@@ -70,19 +59,17 @@ class SwitchesAndArgumentsTest(TestCase):
         The Ultimate Test: Arguments MUST precede Switches.
         """
         # 1. Arguments
-        arg1 = TalosExecutableArgument.objects.create(
-            name='Arg1', argument='pos1'
-        )
-        TalosExecutableArgumentAssignment.objects.create(
-            executable=self.exe, argument=arg1, order=1
-        )
+        arg1 = TalosExecutableArgument.objects.create(name='Arg1',
+                                                      argument='pos1')
+        TalosExecutableArgumentAssignment.objects.create(executable=self.exe,
+                                                         argument=arg1,
+                                                         order=1)
 
-        arg2 = TalosExecutableArgument.objects.create(
-            name='Arg2', argument='pos2'
-        )
-        HydraSpellArgumentAssignment.objects.create(
-            spell=self.spell, argument=arg2, order=1
-        )
+        arg2 = TalosExecutableArgument.objects.create(name='Arg2',
+                                                      argument='pos2')
+        HydraSpellArgumentAssignment.objects.create(spell=self.spell,
+                                                    argument=arg2,
+                                                    order=1)
 
         # 2. Switches
         sw1 = TalosExecutableSwitch.objects.create(name='Sw1', flag='-flag1')

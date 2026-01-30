@@ -1,7 +1,6 @@
 from unittest.mock import patch
 from django.test import TestCase
-from environments.models import ProjectEnvironment
-from hydra.models import HydraSpawn, HydraSpellbook, HydraEnvironment, HydraSpawnStatus
+from hydra.models import HydraSpawn, HydraSpellbook, HydraSpawnStatus
 from talos_frontal.logic import process_stimulus
 from talos_reasoning.models import ReasoningSession, ReasoningStatusID
 from talos_thalamus.models import Stimulus
@@ -17,11 +16,9 @@ class NeuroLoopTest(TestCase):
     ]
 
     def setUp(self):
-        self.pe = ProjectEnvironment.objects.create(name="TestEnv", project_root="C:/Test")
-        self.he = HydraEnvironment.objects.create(project_environment=self.pe)
         self.book = HydraSpellbook.objects.create(name="TestBook")
         self.spawn = HydraSpawn.objects.create(
-            spellbook=self.book, environment=self.he, status_id=HydraSpawnStatus.CREATED)
+            spellbook=self.book, status_id=HydraSpawnStatus.CREATED)
 
     @patch('talos_frontal.logic.read_build_log')
     @patch('talos_reasoning.engine.OllamaClient')
@@ -30,10 +27,11 @@ class NeuroLoopTest(TestCase):
         mock_read_log.return_value = "ERROR SUMMARY: Broken."
 
         # Engine Mock: Finish immediately
-        mock_engine_client.return_value.chat.side_effect = [
-            {"content": "Analysis done."},
-            {"content": "Summary."}
-        ]
+        mock_engine_client.return_value.chat.side_effect = [{
+            "content": "Analysis done."
+        }, {
+            "content": "Summary."
+        }]
 
         stimulus = Stimulus('hydra', 'Fail', {
             'spawn_id': self.spawn.id,

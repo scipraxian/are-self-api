@@ -1,9 +1,9 @@
 from django.test import TestCase, Client
 from django.urls import reverse
-from hydra.models import HydraHead, HydraSpawn, HydraSpellbook, HydraEnvironment, HydraSpawnStatus, HydraHeadStatus, \
-    HydraExecutable, HydraSpell
+from hydra.models import HydraHead, HydraSpawn, HydraSpellbook, HydraSpawnStatus, HydraHeadStatus, \
+    HydraSpell
 from talos_frontal.models import ConsciousStream, ConsciousStatusID
-from environments.models import ProjectEnvironment
+from environments.models import TalosExecutable
 
 
 class AnalysisTabTest(TestCase):
@@ -17,24 +17,19 @@ class AnalysisTabTest(TestCase):
     def setUp(self):
         self.client = Client()
         # Setup infrastructure
-        self.env = ProjectEnvironment.objects.create(name="TabTestEnv", is_active=True)
-        self.hydra_env = HydraEnvironment.objects.create(project_environment=self.env, name="TabHEnv")
         self.book = HydraSpellbook.objects.create(name="TabBook")
 
         self.spawn = HydraSpawn.objects.create(
-            spellbook=self.book,
-            environment=self.hydra_env,
-            status_id=HydraSpawnStatus.SUCCESS
-        )
+            spellbook=self.book, status_id=HydraSpawnStatus.SUCCESS)
 
-        self.exe = HydraExecutable.objects.create(name="TabExe", slug="tab_exe")
-        self.spell = HydraSpell.objects.create(name="TabSpell", executable=self.exe)
+        self.exe = TalosExecutable.objects.create(name="TabExe",
+                                                  executable="tab.exe")
+        self.spell = HydraSpell.objects.create(name="TabSpell",
+                                               talos_executable=self.exe)
 
-        self.head = HydraHead.objects.create(
-            spawn=self.spawn,
-            spell=self.spell,
-            status_id=HydraHeadStatus.SUCCESS
-        )
+        self.head = HydraHead.objects.create(spawn=self.spawn,
+                                             spell=self.spell,
+                                             status_id=HydraHeadStatus.SUCCESS)
 
     def test_analysis_tab_empty(self):
         """Verify tab shows 'No analysis' message when no thought is linked."""
@@ -54,8 +49,7 @@ class AnalysisTabTest(TestCase):
             status_id=ConsciousStatusID.DONE,
             model_name="test-model-v1",
             tokens_input=50,
-            tokens_output=10
-        )
+            tokens_output=10)
 
         url = reverse('hydra_head_analysis', args=[self.head.id])
         response = self.client.get(url)

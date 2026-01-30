@@ -5,9 +5,7 @@ import sys
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from playwright.sync_api import expect, sync_playwright
 
-from environments.models import ProjectEnvironment
 from hydra.models import (
-    HydraEnvironment,
     HydraHead,
     HydraHeadStatus,
     HydraSpawn,
@@ -29,13 +27,6 @@ class LogClippingTests(StaticLiveServerTestCase):
     ]
 
     def setUp(self):
-        self.env = ProjectEnvironment.objects.create(
-            name='ClippingEnv', is_active=True
-        )
-        self.hydra_env = HydraEnvironment.objects.create(
-            project_environment=self.env, name='TestEnv'
-        )
-
         for i, name in [
             (1, 'Created'),
             (2, 'Pending'),
