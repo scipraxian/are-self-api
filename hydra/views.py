@@ -165,13 +165,18 @@ class HeadLogDetailView(DetailView):
         )
 
         # Determine initial content for the main render
-        log_type = self.request.GET.get('type', 'tool')
-        context['log_type'] = log_type
+        log_type = self.request.GET.get('type')
+        if not log_type:
+            log_type = (
+                'system'
+                if head.execution_log and not head.spell_log
+                else 'tool'
+            )
 
-        if log_type == 'tool':
-            context['initial_log_content'] = head.spell_log
-        elif log_type == 'system':
-            context['initial_log_content'] = head.execution_log
+        context['log_type'] = log_type
+        context['initial_log_content'] = (
+            head.execution_log if log_type == 'system' else head.spell_log
+        )
 
         # Check for side-by-side file capability
         context['show_side_by_side'] = False
