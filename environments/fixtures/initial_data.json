@@ -444,10 +444,10 @@
     "pk": 47,
     "fields": {
       "created": "2026-01-22T21:55:32.999Z",
-      "modified": "2026-01-26T17:36:14.728Z",
+      "modified": "2026-01-28T23:24:30.309Z",
       "name": "Test Report Destination",
       "flag": "-ReportExportPath=",
-      "value": "c:\\talos\\live_reports"
+      "value": "C:\\talos_bin\\0_test\\test_report"
     }
   },
   {
@@ -690,6 +690,66 @@
       "modified": "2026-01-27T23:08:47.766Z",
       "name": "Local Pre-Release Folder",
       "argument": "c:\\talos_bin\\4_prerelease"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 12,
+    "fields": {
+      "created": "2026-01-30T16:27:56.809Z",
+      "modified": "2026-01-30T16:27:56.809Z",
+      "name": "Local Shader Cache",
+      "argument": "C:\\talos_bin\\2_shader_cache"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 13,
+    "fields": {
+      "created": "2026-01-30T16:28:31.567Z",
+      "modified": "2026-01-30T16:28:31.567Z",
+      "name": "Poweshell Copy-Item",
+      "argument": "Copy-Item -Path"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 14,
+    "fields": {
+      "created": "2026-01-30T16:29:03.187Z",
+      "modified": "2026-01-30T16:29:03.187Z",
+      "name": "Powershell Copy Destination",
+      "argument": "-Destination"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 15,
+    "fields": {
+      "created": "2026-01-30T16:29:38.051Z",
+      "modified": "2026-01-30T16:29:38.051Z",
+      "name": "Copy-Item Force Create Folder",
+      "argument": "-Force"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 16,
+    "fields": {
+      "created": "2026-01-30T16:32:41.643Z",
+      "modified": "2026-01-30T16:32:41.643Z",
+      "name": "Compiled Shader Cache Folder",
+      "argument": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Content\\PipelineCaches"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 17,
+    "fields": {
+      "created": "2026-01-30T16:34:15.931Z",
+      "modified": "2026-01-30T16:34:15.931Z",
+      "name": "Compiled SPC File",
+      "argument": "HSHVacancy_PCD3D_SM6.spc"
     }
   },
   {
