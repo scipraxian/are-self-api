@@ -289,24 +289,32 @@ def get_library(spellbook: HydraSpellbook) -> JsonResponse:
 def get_execution_status(
     spellbook: HydraSpellbook, spawn_id: uuid.UUID = None
 ) -> JsonResponse:
-    """Returns the current state of the graph."""
+    """Returns the current state of the graph and the overall spawn status."""
     if not spawn_id:
         return JsonResponse({KEY_STATUS: STATUS_READY})
 
     try:
-        hydra = Hydra(spawn_id=spawn_id)
-        view_data = hydra.view()
+        # [FIX]: Fetch the actual spawn to get the real status (Success/Failed/Running)
+        spawn = HydraSpawn.objects.select_related('status').get(id=spawn_id)
 
         node_status_map = {}
-        for head in view_data.get('heads', []):
-            node_id = head.get('node_id')
-            if node_id:
-                node_status_map[node_id] = {
-                    'status_id': head.get('status_id'),
-                    'head_id': head.get('id'),
+        # Use the existing head relationship to populate node statuses
+        for head in spawn.heads.all():
+            if head.node_id:
+                node_status_map[str(head.node_id)] = {
+                    'status_id': head.status_id,
+                    'head_id': str(head.id),
                 }
 
-        return JsonResponse({KEY_STATUS: 'running', 'nodes': node_status_map})
+        # [FIX]: Return the real status name (e.g., "Success", "Failed")
+        # instead of the hardcoded "running" string.
+        return JsonResponse(
+            {KEY_STATUS: spawn.status.name, 'nodes': node_status_map}
+        )
+    except HydraSpawn.DoesNotExist:
+        return JsonResponse(
+            {KEY_STATUS: STATUS_ERROR, MESSAGE: 'Spawn not found'}
+        )
     except Exception as e:
         logger.exception('Status Check Failed')
         return JsonResponse({KEY_STATUS: STATUS_ERROR, MESSAGE: str(e)})

@@ -825,10 +825,18 @@ class GraphEditor {
 
     // --- MONITORING LOGIC ---
     startPolling() {
-        setInterval(async () => {
+        // Store the interval ID so we can kill it later
+        this.pollingInterval = setInterval(async () => {
             const data = await this.apiFetch(`status?spawn_id=${this.spawnId}`);
-            if (data && data.nodes) {
-                this.updateNodeStatuses(data.nodes);
+            if (data) {
+                this.updateNodeStatuses(data.nodes || {});
+
+                // [FIX]: Stop polling if the overall spawn is no longer active
+                if (data.status === 'Success' || data.status === 'Failed' || data.status === 'Aborted') {
+                    console.log(`[MONITOR] Spawn reached terminal state (${data.status}). Stopping poll.`);
+                    clearInterval(this.pollingInterval);
+                    this.setExecutionStatus(data.status.toLowerCase());
+                }
             }
         }, 1000);
     }
