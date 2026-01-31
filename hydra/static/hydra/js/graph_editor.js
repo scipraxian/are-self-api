@@ -191,6 +191,27 @@ class GraphEditor {
         return 'flow';
     }
 
+    getSelectedNodes() {
+        return this.nodes.filter(n => {
+            const el = document.getElementById(n.id);
+            return el && el.classList.contains('selected');
+        });
+    }
+
+    updateEyeballState() {
+        const btn = document.getElementById('view-toggle');
+        const selected = this.getSelectedNodes();
+        if (this.isMonitorMode && selected.length === 2) {
+            btn.style.color = '#a855f7'; // Purple for Battle Mode
+            btn.title = "Open Multihead Comparison";
+            btn.style.transform = "scale(1.2)";
+        } else {
+            btn.style.color = ''; // Default
+            btn.title = "Toggle View Mode";
+            btn.style.transform = "";
+        }
+    }
+
     setupEventListeners() {
         // Panning logic
         this.container.addEventListener('mousedown', (e) => {
@@ -198,6 +219,14 @@ class GraphEditor {
             if (e.button === 1 || (e.button === 0 && e.target === this.container)) {
                 this.isPanning = true;
                 this.container.style.cursor = 'grabbing';
+                // Clear selection if clicking on empty space
+                if (e.target === this.container) {
+                    this.nodes.forEach(n => {
+                        const el = document.getElementById(n.id);
+                        if (el) el.classList.remove('selected');
+                    });
+                    this.updateEyeballState();
+                }
             }
         });
 
@@ -311,8 +340,23 @@ class GraphEditor {
         }
 
         document.getElementById('view-toggle').addEventListener('click', () => {
-            this.isViewOnly = !this.isViewOnly;
-            this.container.classList.toggle('view-only', this.isViewOnly);
+            const selected = this.getSelectedNodes();
+
+            if (this.isMonitorMode && selected.length === 2) {
+                // BATTLE MODE
+                const h1 = selected[0].head_id;
+                const h2 = selected[1].head_id;
+
+                if (h1 && h2) {
+                    const url = `/hydra/battle/${this.spawnId}/?h1=${h1}&h2=${h2}`;
+                    window.location.href = url;
+                } else {
+                    alert("One or more selected nodes have not run yet (No Head ID).");
+                }
+            } else {
+                this.isViewOnly = !this.isViewOnly;
+                this.container.classList.toggle('view-only', this.isViewOnly);
+            }
         });
 
         this.container.addEventListener('dragover', (e) => {
@@ -437,11 +481,26 @@ class GraphEditor {
 
         // Selection
         nodeEl.addEventListener('mousedown', (e) => {
-            this.nodes.forEach(n => {
-                const el = document.getElementById(n.id);
-                if (el) el.classList.remove('selected');
-            });
-            nodeEl.classList.add('selected');
+            e.stopPropagation(); // Prevent container click
+
+            // Multi-Select Logic
+            if (e.shiftKey) {
+                if (nodeEl.classList.contains('selected')) {
+                    nodeEl.classList.remove('selected');
+                } else {
+                    nodeEl.classList.add('selected');
+                }
+            } else {
+                // Standard Single Select
+                this.nodes.forEach(n => {
+                    const el = document.getElementById(n.id);
+                    if (el) el.classList.remove('selected');
+                });
+                nodeEl.classList.add('selected');
+            }
+
+            // Update "Big Eyeball" State
+            this.updateEyeballState();
         });
 
         // Dragging (Disable in Monitor Mode)

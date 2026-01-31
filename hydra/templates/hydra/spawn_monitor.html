@@ -46,25 +46,27 @@
         </div>
     </div>
 
-    {% if spawn.spellbook.name == "Multiplayer Debug" %}
+    {% if spawn.spellbook.name == "Multiplayer Debug" or is_battle_mode %}
         <div class="multiplayer-battle-station">
             <div class="battle-station-header">
-                <div class="header-col">LOCAL CLIENT</div>
+                <div class="header-col"
+                     title="{{ head_1.spell.talos_executable.executable }} - {{ head_1.id }}">{{ head_1.spell.name|default:"HEAD 1" }}</div>
                 <div class="header-col center">TIMESTAMP</div>
-                <div class="header-col">REMOTE SERVER</div>
+                <div class="header-col"
+                     title="{{ head_2.spell.talos_executable.executable }} - {{ head_2.id }}">{{ head_2.spell.name|default:"HEAD 2" }}</div>
             </div>
 
             <div id="battle-station-cursors" data-local="0" data-remote="0" style="display: none;"></div>
 
             <div id="battle-stream-container"
                  class="log-wrapper battle-stream"
-                 hx-get="{% url 'hydra:hydra_battle_stream' spawn.id %}"
+                 hx-get="{% url 'hydra:hydra_battle_stream' spawn.id %}?h1={{ head_1.id }}&h2={{ head_2.id }}"
                  hx-trigger="every 1s"
                  hx-vals='js:{
                  local_cursor: document.getElementById("battle-station-cursors")?.dataset.local || 0,
                  remote_cursor: document.getElementById("battle-station-cursors")?.dataset.remote || 0
              }'
-                 hx-swap="beforeend">
+                 hx-swap="innerHTML">
 
                 <div style="padding: 2rem; text-align: center; color: #94a3b8;">
                     <div class="spinner-small" style="margin: 0 auto 10px;"></div>
@@ -160,4 +162,3 @@
         }
     });
 </script>
-

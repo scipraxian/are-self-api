@@ -1,14 +1,16 @@
+# START FILE: hydra/views.py
 import os
 
 from django.conf import settings
 from django.http import Http404, HttpResponse, HttpResponseNotAllowed
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, TemplateView
 
 from .hydra import Hydra
 from .models import HydraHead, HydraSpawn, HydraSpellbook
+from .utils import merge_logs
 
 # --- GRAPH VIEWS ---
 
@@ -37,6 +39,12 @@ class HydraGraphMonitorView(DetailView):
         context['book'] = self.object.spellbook
         context['mode'] = 'monitor'
         context['spawn_id'] = str(self.object.id)
+
+        # --- NEW: History for Sidebar ---
+        context['spawn_history'] = HydraSpawn.objects.filter(
+            spellbook=self.object.spellbook
+        ).order_by('-created')[:20]
+
         return context
 
 
@@ -198,6 +206,72 @@ class HeadLogDetailView(DetailView):
         return context
 
 
+# --- BATTLE STATION VIEWS ---
+
+
+class HydraBattleStationView(DetailView):
+    """
+    Renders the Side-by-Side 'Battle Station' view for two selected heads.
+    """
+
+    model = HydraSpawn
+    template_name = 'hydra/spawn_monitor_page.html'
+    context_object_name = 'spawn'
+    pk_url_kwarg = 'spawn_id'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_battle_mode'] = True
+        context['is_active'] = self.object.is_active
+
+        # Get Head IDs from query params
+        h1_id = self.request.GET.get('h1')
+        h2_id = self.request.GET.get('h2')
+
+        if h1_id and h2_id:
+            try:
+                context['head_1'] = HydraHead.objects.get(id=h1_id)
+                context['head_2'] = HydraHead.objects.get(id=h2_id)
+            except HydraHead.DoesNotExist:
+                pass
+
+        return context
+
+
+class HydraBattleStreamView(View):
+    """
+    HTMX Endpoint: Merges logs from two heads into a single time-indexed stream.
+    """
+
+    def get(self, request, spawn_id):
+        h1_id = request.GET.get('h1')
+        h2_id = request.GET.get('h2')
+
+        try:
+            h1 = HydraHead.objects.get(id=h1_id)
+            h2 = HydraHead.objects.get(id=h2_id)
+        except HydraHead.DoesNotExist:
+            return HttpResponse('Invalid Head IDs', status=404)
+
+        # Get Content (prefer spell_log, fallback to execution_log)
+        log1 = h1.spell_log or h1.execution_log or ''
+        log2 = h2.spell_log or h2.execution_log or ''
+
+        # Merge logs
+        events = merge_logs(log1, log2)
+
+        return render(
+            request,
+            'hydra/partials/battle_stream.html',
+            {
+                'events': events,
+                # Reset cursors for now, robust incremental sync requires client-side tracking logic update
+                'new_local_cursor': len(log1),
+                'new_remote_cursor': len(log2),
+            },
+        )
+
+
 # --- LEGACY / UTILS ---
 
 
@@ -209,3 +283,6 @@ class SpawnMonitorDetailView(DetailView):
     model = HydraSpawn
     template_name = 'hydra/spawn_monitor.html'
     context_object_name = 'spawn'
+
+
+# END FILE

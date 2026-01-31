@@ -65,4 +65,14 @@ urlpatterns = [
     ),
     # Misc
     path('controls/', views.HydraControlsView.as_view(), name='hydra_controls'),
+    path(
+        'battle/<uuid:spawn_id>/',
+        views.HydraBattleStationView.as_view(),
+        name='hydra_battle_station',
+    ),
+    path(
+        'battle/stream/<uuid:spawn_id>/',
+        views.HydraBattleStreamView.as_view(),
+        name='hydra_battle_stream',
+    ),
 ]

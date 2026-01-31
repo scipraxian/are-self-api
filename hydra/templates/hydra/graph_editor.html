@@ -13,9 +13,7 @@
           rel="stylesheet">
     <style>
         /* MONITOR MODE OVERRIDES */
-        body.monitor-mode .sidebar {
-            display: none !important;
-        }
+        /* Note: Sidebar is now VISIBLE in monitor mode (for history) */
 
         body.monitor-mode #start-btn,
         body.monitor-mode #auto-layout-btn,
@@ -24,16 +22,9 @@
             display: none !important;
         }
 
-        /* [FIX] Use Grid to maintain structure, but single column */
+        /* [FIX] Use Grid to maintain structure */
         body.monitor-mode .main-layout {
-            display: grid !important;
-            grid-template-columns: 1fr !important;
-        }
-
-        body.monitor-mode #editor-container {
-            width: 100% !important;
-            height: 100% !important;
-            grid-column: 1 / -1;
+            display: flex !important;
         }
 
         /* Make Stop button obvious */
@@ -85,6 +76,11 @@
                style="text-decoration: none; display: flex; align-items: center; gap: 6px;">
                 <span style="font-size: 16px;">🏠</span> Dashboard
             </a>
+
+            <button id="compare-btn" class="btn secondary" disabled title="Select 2 nodes to compare logs">
+                ⚔️ Battle
+            </button>
+
             <button id="auto-layout-btn" class="btn secondary">Auto Layout</button>
             <button id="export-json-btn" class="btn secondary">Export JSON</button>
         </div>
@@ -92,11 +88,51 @@
 
     <div class="main-layout">
         <aside class="sidebar">
-            <div class="sidebar-header">
-                <input type="text" id="node-search" placeholder="Search nodes...">
-            </div>
-            <div class="node-library" id="node-library">
-            </div>
+            {% if mode == 'monitor' %}
+                <div class="sidebar-header">
+                    <h3 style="color: #94a3b8; font-size: 0.8rem; letter-spacing: 0.1em; margin: 0;">PREVIOUS
+                        MISSIONS</h3>
+                </div>
+                <div class="node-library" style="padding: 0; overflow-y: auto; flex: 1;">
+                    {% for s in spawn_history %}
+                        <a href="{% url 'hydra:graph_monitor' s.id %}?full=True"
+                           style="display: flex; gap: 10px; padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; align-items: center; transition: background 0.2s; position: relative;"
+                           onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+                           onmouseout="this.style.background='transparent'">
+
+                            <div style="width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+                                    {% if s.status.name == 'Success' %}background: #4ade80; box-shadow: 0 0 5px #4ade80;
+                                    {% elif s.status.name == 'Failed' %}background: #ef4444; box-shadow: 0 0 5px #ef4444;
+                                    {% elif s.status.name == 'Running' %}background: #eab308; animation: pulse 1s infinite;
+                                    {% else %}background: #64748b;{% endif %}">
+                            </div>
+
+                            <div style="text-align: left; min-width: 0;">
+                                <div style="color: #f1f5f9; font-size: 0.8rem; font-weight: 600;">
+                                    {{ s.created|date:"M d, H:i" }}
+                                </div>
+                                <div style="color: #64748b; font-size: 0.7rem; font-family: monospace;">
+                                    {{ s.id|stringformat:"s"|slice:":8" }} • {{ s.status.name }}
+                                </div>
+                            </div>
+
+                            {% if s.id == spawn.id %}
+                                <div style="position: absolute; right: 10px; color: #a855f7; font-size: 1.2rem;">•</div>
+                            {% endif %}
+                        </a>
+                    {% empty %}
+                        <div style="padding: 20px; color: #64748b; font-size: 0.8rem; font-style: italic;">No history.
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="sidebar-header">
+                    <input type="text" id="node-search" placeholder="Search nodes...">
+                </div>
+                <div class="node-library" id="node-library">
+                </div>
+            {% endif %}
+
             <div class="sidebar-footer">
                 <button id="view-toggle" class="icon-btn" title="Toggle View Mode">👁</button>
             </div>
