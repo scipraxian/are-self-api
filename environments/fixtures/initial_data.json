@@ -1,17 +1,6 @@
 [
   {
     "model": "environments.talosexecutableswitch",
-    "pk": 1,
-    "fields": {
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z",
-      "name": "Python Unbuffered",
-      "flag": "-u",
-      "value": ""
-    }
-  },
-  {
-    "model": "environments.talosexecutableswitch",
     "pk": 2,
     "fields": {
       "created": "2026-01-21T00:00:00Z",
@@ -576,10 +565,43 @@
     "pk": 59,
     "fields": {
       "created": "2026-01-28T16:17:14.913Z",
-      "modified": "2026-01-28T16:17:57.973Z",
+      "modified": "2026-01-30T19:50:08.698Z",
       "name": "SpellBook Delay 1",
       "flag": "delay=",
       "value": "1"
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 60,
+    "fields": {
+      "created": "2026-01-30T19:50:27.302Z",
+      "modified": "2026-01-30T19:50:27.302Z",
+      "name": "SpellBook Delay 5",
+      "flag": "delay=",
+      "value": "5"
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 61,
+    "fields": {
+      "created": "2026-01-31T15:21:46.758Z",
+      "modified": "2026-01-31T15:21:46.758Z",
+      "name": "Subdirectory/Tree Removal",
+      "flag": "/s",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 62,
+    "fields": {
+      "created": "2026-01-31T15:22:07.489Z",
+      "modified": "2026-01-31T15:22:07.489Z",
+      "name": "Quiet Mode",
+      "flag": "/q",
+      "value": ""
     }
   },
   {
@@ -753,6 +775,106 @@
     }
   },
   {
+    "model": "environments.talosexecutableargument",
+    "pk": 18,
+    "fields": {
+      "created": "2026-01-30T18:35:43.800Z",
+      "modified": "2026-01-30T18:35:43.800Z",
+      "name": "Prerelease Pipeline Caches Folder",
+      "argument": "c:\\talos_bin\\4_prerelease\\Windows\\HSHVacancy\\Content\\PipelineCaches"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 19,
+    "fields": {
+      "created": "2026-01-31T14:28:11.107Z",
+      "modified": "2026-01-31T14:28:23.674Z",
+      "name": "Cached SaveGames Folder",
+      "argument": "C:\\talos_bin\\3_environment_cache\\Saved\\SaveGames"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 20,
+    "fields": {
+      "created": "2026-01-31T14:28:59.875Z",
+      "modified": "2026-01-31T14:28:59.875Z",
+      "name": "Prerelease SaveGames Folder",
+      "argument": "C:\\talos_bin\\4_prerelease\\Windows\\HSHVacancy\\Saved\\SaveGames"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 21,
+    "fields": {
+      "created": "2026-01-31T15:23:49.006Z",
+      "modified": "2026-01-31T16:12:08.563Z",
+      "name": "Talos Root",
+      "argument": "C:\\talos\\"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 22,
+    "fields": {
+      "created": "2026-01-31T15:47:25.252Z",
+      "modified": "2026-01-31T15:47:25.252Z",
+      "name": "CMD Carry out",
+      "argument": "/c"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 23,
+    "fields": {
+      "created": "2026-01-31T15:48:03.054Z",
+      "modified": "2026-01-31T15:48:03.054Z",
+      "name": "Remove Directory (cmd)",
+      "argument": "rmdir"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 24,
+    "fields": {
+      "created": "2026-01-31T15:51:48.415Z",
+      "modified": "2026-01-31T15:51:48.415Z",
+      "name": "Intermediate Folder",
+      "argument": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Intermediate"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 25,
+    "fields": {
+      "created": "2026-01-31T16:07:56.600Z",
+      "modified": "2026-01-31T16:07:56.600Z",
+      "name": "Django Manage.py",
+      "argument": "manage.py"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 26,
+    "fields": {
+      "created": "2026-01-31T16:08:51.014Z",
+      "modified": "2026-01-31T16:08:51.014Z",
+      "name": "dumpscripts",
+      "argument": "C:\\talos\\hydra\\spells\\dumpscripts.py"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 27,
+    "fields": {
+      "created": "2026-01-31T16:10:31.725Z",
+      "modified": "2026-01-31T16:10:31.725Z",
+      "name": "Python  Unbuffered",
+      "argument": "-u"
+    }
+  },
+  {
     "model": "environments.talosexecutable",
     "pk": 1,
     "fields": {
@@ -773,15 +895,13 @@
     "fields": {
       "created": "2026-01-21T00:00:00Z",
       "description": "Standard Python Interpreter.",
-      "modified": "2026-01-21T00:00:00Z",
+      "modified": "2026-01-31T16:10:55.098Z",
       "name": "PYTHON",
       "internal": false,
       "working_path": "C:\\talos",
       "executable": "C:\\talos\\venv\\Scripts\\python.exe",
       "log": "",
-      "switches": [
-        1
-      ]
+      "switches": []
     }
   },
   {
@@ -790,11 +910,11 @@
     "fields": {
       "created": "2026-01-21T00:00:00Z",
       "description": "Python Interpreter intended for manage.py commands.",
-      "modified": "2026-01-21T00:00:00Z",
+      "modified": "2026-01-31T16:08:00.670Z",
       "name": "DJANGO",
       "internal": false,
       "working_path": "C:\\talos",
-      "executable": "C:\\talos\\venv\\Scripts\\python.exe manage.py",
+      "executable": "C:\\talos\\venv\\Scripts\\python.exe",
       "log": "C:\\talos\\logs\\django.log",
       "switches": []
     }
@@ -975,6 +1095,21 @@
     }
   },
   {
+    "model": "environments.talosexecutable",
+    "pk": 15,
+    "fields": {
+      "created": "2026-01-31T15:17:06.378Z",
+      "description": null,
+      "modified": "2026-01-31T15:47:32.212Z",
+      "name": "Windows Command (CMD)",
+      "internal": false,
+      "working_path": "",
+      "executable": "cmd.exe",
+      "log": "",
+      "switches": []
+    }
+  },
+  {
     "model": "environments.talosexecutableargumentassignment",
     "pk": 1,
     "fields": {
@@ -990,6 +1125,33 @@
       "executable": 11,
       "order": 10,
       "argument": 8
+    }
+  },
+  {
+    "model": "environments.talosexecutableargumentassignment",
+    "pk": 3,
+    "fields": {
+      "executable": 15,
+      "order": 10,
+      "argument": 22
+    }
+  },
+  {
+    "model": "environments.talosexecutableargumentassignment",
+    "pk": 4,
+    "fields": {
+      "executable": 3,
+      "order": 10,
+      "argument": 25
+    }
+  },
+  {
+    "model": "environments.talosexecutableargumentassignment",
+    "pk": 5,
+    "fields": {
+      "executable": 2,
+      "order": 1,
+      "argument": 27
     }
   }
 ]

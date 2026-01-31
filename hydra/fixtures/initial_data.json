@@ -268,13 +268,13 @@
     "pk": 147,
     "fields": {
       "created": "2026-01-28T16:17:19.220Z",
-      "modified": "2026-01-28T16:17:19.220Z",
-      "name": "Retry w/ 1 Second Delay",
+      "modified": "2026-01-30T19:50:49.527Z",
+      "name": "Retry w/ 5 Second Delay",
       "talos_executable": 14,
       "distribution_mode": 1,
       "switches": [
         58,
-        59
+        60
       ]
     }
   },
@@ -293,8 +293,8 @@
         17,
         40,
         41,
-        47,
         48,
+        47,
         49
       ]
     }
@@ -307,6 +307,97 @@
       "modified": "2026-01-30T16:34:23.839Z",
       "name": "Cache Shader Cache",
       "talos_executable": 13,
+      "distribution_mode": 1,
+      "switches": []
+    }
+  },
+  {
+    "model": "hydra.hydraspell",
+    "pk": 150,
+    "fields": {
+      "created": "2026-01-30T18:37:12.059Z",
+      "modified": "2026-01-30T18:39:01.226Z",
+      "name": "Add Shaders to Prerelease",
+      "talos_executable": 13,
+      "distribution_mode": 1,
+      "switches": []
+    }
+  },
+  {
+    "model": "hydra.hydraspell",
+    "pk": 151,
+    "fields": {
+      "created": "2026-01-31T14:37:51.784Z",
+      "modified": "2026-01-31T14:38:55.058Z",
+      "name": "Backup SaveGames (Prerelease -> Cache)",
+      "talos_executable": 13,
+      "distribution_mode": 1,
+      "switches": [
+        50,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57
+      ]
+    }
+  },
+  {
+    "model": "hydra.hydraspell",
+    "pk": 152,
+    "fields": {
+      "created": "2026-01-31T14:39:35.355Z",
+      "modified": "2026-01-31T14:39:35.355Z",
+      "name": "Restore SaveGames (Cache -> Prerelease)",
+      "talos_executable": 13,
+      "distribution_mode": 1,
+      "switches": [
+        50,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57
+      ]
+    }
+  },
+  {
+    "model": "hydra.hydraspell",
+    "pk": 153,
+    "fields": {
+      "created": "2026-01-31T15:17:41.419Z",
+      "modified": "2026-01-31T15:48:26.045Z",
+      "name": "Remove Temp",
+      "talos_executable": 15,
+      "distribution_mode": 1,
+      "switches": [
+        61,
+        62
+      ]
+    }
+  },
+  {
+    "model": "hydra.hydraspell",
+    "pk": 154,
+    "fields": {
+      "created": "2026-01-31T15:51:56.896Z",
+      "modified": "2026-01-31T15:51:56.896Z",
+      "name": "Remove Intermediate",
+      "talos_executable": 15,
+      "distribution_mode": 1,
+      "switches": []
+    }
+  },
+  {
+    "model": "hydra.hydraspell",
+    "pk": 155,
+    "fields": {
+      "created": "2026-01-31T16:09:07.810Z",
+      "modified": "2026-01-31T16:12:12.219Z",
+      "name": "Dump Scripts",
+      "talos_executable": 2,
       "distribution_mode": 1,
       "switches": []
     }
@@ -438,6 +529,123 @@
     }
   },
   {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 15,
+    "fields": {
+      "spell": 150,
+      "order": 2,
+      "argument": 18
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 16,
+    "fields": {
+      "spell": 150,
+      "order": 10,
+      "argument": 17
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 17,
+    "fields": {
+      "spell": 150,
+      "order": 1,
+      "argument": 12
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 18,
+    "fields": {
+      "spell": 151,
+      "order": 10,
+      "argument": 20
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 19,
+    "fields": {
+      "spell": 151,
+      "order": 10,
+      "argument": 19
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 20,
+    "fields": {
+      "spell": 152,
+      "order": 10,
+      "argument": 19
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 21,
+    "fields": {
+      "spell": 152,
+      "order": 10,
+      "argument": 20
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 22,
+    "fields": {
+      "spell": 153,
+      "order": 2,
+      "argument": 21
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 23,
+    "fields": {
+      "spell": 153,
+      "order": 1,
+      "argument": 23
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 24,
+    "fields": {
+      "spell": 154,
+      "order": 10,
+      "argument": 23
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 25,
+    "fields": {
+      "spell": 154,
+      "order": 10,
+      "argument": 24
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 26,
+    "fields": {
+      "spell": 155,
+      "order": 10,
+      "argument": 26
+    }
+  },
+  {
+    "model": "hydra.hydraspellargumentassignment",
+    "pk": 27,
+    "fields": {
+      "spell": 155,
+      "order": 10,
+      "argument": 21
+    }
+  },
+  {
     "model": "hydra.hydraoutcomeaction",
     "pk": 1,
     "fields": {
@@ -543,12 +751,45 @@
   },
   {
     "model": "hydra.hydraspellbook",
+    "pk": "52b62ed2-7752-4d16-ba29-4810a54815d0",
+    "fields": {
+      "created": "2026-01-31T14:40:15.233Z",
+      "description": null,
+      "modified": "2026-01-31T14:40:15.233Z",
+      "name": "Restore Save",
+      "ui_json": "{}"
+    }
+  },
+  {
+    "model": "hydra.hydraspellbook",
     "pk": "559cecbd-2128-478a-be50-436ba30b7396",
     "fields": {
       "created": "2026-01-20T00:54:46.432Z",
       "description": "Local Game Launcher",
       "modified": "2026-01-26T17:53:58.185Z",
       "name": "Pre-Release Run",
+      "ui_json": "{}"
+    }
+  },
+  {
+    "model": "hydra.hydraspellbook",
+    "pk": "5aedec3f-df9d-4149-b62b-6bd17c8ca8a3",
+    "fields": {
+      "created": "2026-01-31T16:07:02.726Z",
+      "description": null,
+      "modified": "2026-01-31T16:13:18.776Z",
+      "name": "Dump Scripts",
+      "ui_json": "{}"
+    }
+  },
+  {
+    "model": "hydra.hydraspellbook",
+    "pk": "5b5bebe0-be34-4614-b40f-b78bd3a1c269",
+    "fields": {
+      "created": "2026-01-31T15:50:39.700Z",
+      "description": null,
+      "modified": "2026-01-31T15:50:39.700Z",
+      "name": "Remove Intermediate",
       "ui_json": "{}"
     }
   },
@@ -633,9 +874,9 @@
     "model": "hydra.hydraspellbooknode",
     "pk": 1,
     "fields": {
+      "is_root": true,
       "spellbook": "b8e9f0a1-2c3d-4e5f-6a7b-8c9d0e1f2b3c",
       "spell": 1,
-      "is_root": true,
       "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },
@@ -643,9 +884,9 @@
     "model": "hydra.hydraspellbooknode",
     "pk": 2,
     "fields": {
+      "is_root": true,
       "spellbook": "0245b699-5b9a-43ec-9391-b788b578d25f",
       "spell": 1,
-      "is_root": true,
       "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },
@@ -653,6 +894,7 @@
     "model": "hydra.hydraspellbooknode",
     "pk": 4,
     "fields": {
+      "is_root": false,
       "spellbook": "b8e9f0a1-2c3d-4e5f-6a7b-8c9d0e1f2b3c",
       "spell": 148,
       "ui_json": "{\"x\": 446, \"y\": 97}"
@@ -662,9 +904,9 @@
     "model": "hydra.hydraspellbooknode",
     "pk": 5,
     "fields": {
+      "is_root": true,
       "spellbook": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
       "spell": 1,
-      "is_root": true,
       "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },
@@ -672,6 +914,7 @@
     "model": "hydra.hydraspellbooknode",
     "pk": 6,
     "fields": {
+      "is_root": false,
       "spellbook": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
       "spell": 110,
       "ui_json": "{\"x\": 414, \"y\": 101}"
@@ -681,28 +924,29 @@
     "model": "hydra.hydraspellbooknode",
     "pk": 7,
     "fields": {
+      "is_root": true,
       "spellbook": "559cecbd-2128-478a-be50-436ba30b7396",
       "spell": 1,
-      "is_root": true,
-      "ui_json": "{\"x\": 188, \"y\": 118}"
+      "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },
   {
     "model": "hydra.hydraspellbooknode",
     "pk": 9,
     "fields": {
+      "is_root": false,
       "spellbook": "559cecbd-2128-478a-be50-436ba30b7396",
       "spell": 143,
-      "ui_json": "{\"x\": 538, \"y\": 120}"
+      "ui_json": "{\"x\": 800, \"y\": 100}"
     }
   },
   {
     "model": "hydra.hydraspellbooknode",
     "pk": 10,
     "fields": {
+      "is_root": true,
       "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
       "spell": 1,
-      "is_root": true,
       "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },
@@ -710,15 +954,17 @@
     "model": "hydra.hydraspellbooknode",
     "pk": 11,
     "fields": {
+      "is_root": false,
       "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
       "spell": 145,
-      "ui_json": "{\"x\": 450, \"y\": 100}"
+      "ui_json": "{\"x\": 468, \"y\": 115}"
     }
   },
   {
     "model": "hydra.hydraspellbooknode",
     "pk": 13,
     "fields": {
+      "is_root": false,
       "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
       "spell": 147,
       "ui_json": "{\"x\": 797, \"y\": 43}"
@@ -728,6 +974,7 @@
     "model": "hydra.hydraspellbooknode",
     "pk": 14,
     "fields": {
+      "is_root": false,
       "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
       "spell": 145,
       "ui_json": "{\"x\": 1150, \"y\": 100}"
@@ -737,9 +984,9 @@
     "model": "hydra.hydraspellbooknode",
     "pk": 15,
     "fields": {
+      "is_root": true,
       "spellbook": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
       "spell": 1,
-      "is_root": true,
       "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },
@@ -747,6 +994,7 @@
     "model": "hydra.hydraspellbooknode",
     "pk": 16,
     "fields": {
+      "is_root": false,
       "spellbook": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
       "spell": 2,
       "ui_json": "{\"x\": 450, \"y\": 100}"
@@ -756,6 +1004,7 @@
     "model": "hydra.hydraspellbooknode",
     "pk": 17,
     "fields": {
+      "is_root": false,
       "spellbook": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
       "spell": 3,
       "ui_json": "{\"x\": 800, \"y\": 100}"
@@ -765,9 +1014,9 @@
     "model": "hydra.hydraspellbooknode",
     "pk": 18,
     "fields": {
+      "is_root": true,
       "spellbook": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
       "spell": 1,
-      "is_root": true,
       "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },
@@ -775,9 +1024,9 @@
     "model": "hydra.hydraspellbooknode",
     "pk": 20,
     "fields": {
+      "is_root": true,
       "spellbook": "8686149a-8b56-4a47-b5df-7d8cf7635dbc",
       "spell": 1,
-      "is_root": true,
       "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },
@@ -785,9 +1034,9 @@
     "model": "hydra.hydraspellbooknode",
     "pk": 21,
     "fields": {
+      "is_root": true,
       "spellbook": "22334455-6677-8899-0011-aabbccddeeff",
       "spell": 1,
-      "is_root": true,
       "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },
@@ -795,6 +1044,7 @@
     "model": "hydra.hydraspellbooknode",
     "pk": 22,
     "fields": {
+      "is_root": false,
       "spellbook": "22334455-6677-8899-0011-aabbccddeeff",
       "spell": 100,
       "ui_json": "{\"x\": 350, \"y\": 103}"
@@ -804,6 +1054,7 @@
     "model": "hydra.hydraspellbooknode",
     "pk": 23,
     "fields": {
+      "is_root": false,
       "spellbook": "0245b699-5b9a-43ec-9391-b788b578d25f",
       "spell": 140,
       "ui_json": "{\"x\": 418, \"y\": 82}"
@@ -813,9 +1064,80 @@
     "model": "hydra.hydraspellbooknode",
     "pk": 24,
     "fields": {
+      "is_root": false,
       "spellbook": "22334455-6677-8899-0011-aabbccddeeff",
       "spell": 149,
       "ui_json": "{\"x\": 758, \"y\": 148}"
+    }
+  },
+  {
+    "model": "hydra.hydraspellbooknode",
+    "pk": 25,
+    "fields": {
+      "is_root": false,
+      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+      "spell": 145,
+      "ui_json": "{\"x\": 511, \"y\": 406}"
+    }
+  },
+  {
+    "model": "hydra.hydraspellbooknode",
+    "pk": 26,
+    "fields": {
+      "is_root": false,
+      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+      "spell": 145,
+      "ui_json": "{\"x\": 456, \"y\": 692}"
+    }
+  },
+  {
+    "model": "hydra.hydraspellbooknode",
+    "pk": 27,
+    "fields": {
+      "is_root": false,
+      "spellbook": "559cecbd-2128-478a-be50-436ba30b7396",
+      "spell": 150,
+      "ui_json": "{\"x\": 450, \"y\": 100}"
+    }
+  },
+  {
+    "model": "hydra.hydraspellbooknode",
+    "pk": 28,
+    "fields": {
+      "is_root": true,
+      "spellbook": "52b62ed2-7752-4d16-ba29-4810a54815d0",
+      "spell": 1,
+      "ui_json": "{\"x\": 100, \"y\": 100}"
+    }
+  },
+  {
+    "model": "hydra.hydraspellbooknode",
+    "pk": 29,
+    "fields": {
+      "is_root": false,
+      "spellbook": "52b62ed2-7752-4d16-ba29-4810a54815d0",
+      "spell": 152,
+      "ui_json": "{\"x\": 459, \"y\": 233}"
+    }
+  },
+  {
+    "model": "hydra.hydraspellbooknode",
+    "pk": 32,
+    "fields": {
+      "is_root": false,
+      "spellbook": "5aedec3f-df9d-4149-b62b-6bd17c8ca8a3",
+      "spell": 155,
+      "ui_json": "{\"x\": 589, \"y\": 234}"
+    }
+  },
+  {
+    "model": "hydra.hydraspellbooknode",
+    "pk": 33,
+    "fields": {
+      "is_root": true,
+      "spellbook": "5aedec3f-df9d-4149-b62b-6bd17c8ca8a3",
+      "spell": 1,
+      "ui_json": "{\"x\": 100, \"y\": 100}"
     }
   },
   {
@@ -859,17 +1181,6 @@
       "spellbook": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
       "source": 5,
       "target": 6
-    }
-  },
-  {
-    "model": "hydra.hydraspellbookconnectionwire",
-    "pk": 5,
-    "fields": {
-      "modified": "2026-01-29T01:40:45.411Z",
-      "type": 1,
-      "spellbook": "559cecbd-2128-478a-be50-436ba30b7396",
-      "source": 7,
-      "target": 9
     }
   },
   {
@@ -958,6 +1269,61 @@
       "spellbook": "22334455-6677-8899-0011-aabbccddeeff",
       "source": 22,
       "target": 24
+    }
+  },
+  {
+    "model": "hydra.hydraspellbookconnectionwire",
+    "pk": 21,
+    "fields": {
+      "modified": "2026-01-30T18:22:58.505Z",
+      "type": 1,
+      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+      "source": 10,
+      "target": 25
+    }
+  },
+  {
+    "model": "hydra.hydraspellbookconnectionwire",
+    "pk": 22,
+    "fields": {
+      "modified": "2026-01-30T18:39:33.251Z",
+      "type": 1,
+      "spellbook": "559cecbd-2128-478a-be50-436ba30b7396",
+      "source": 7,
+      "target": 27
+    }
+  },
+  {
+    "model": "hydra.hydraspellbookconnectionwire",
+    "pk": 23,
+    "fields": {
+      "modified": "2026-01-30T18:39:35.801Z",
+      "type": 1,
+      "spellbook": "559cecbd-2128-478a-be50-436ba30b7396",
+      "source": 27,
+      "target": 9
+    }
+  },
+  {
+    "model": "hydra.hydraspellbookconnectionwire",
+    "pk": 24,
+    "fields": {
+      "modified": "2026-01-31T14:40:38.352Z",
+      "type": 1,
+      "spellbook": "52b62ed2-7752-4d16-ba29-4810a54815d0",
+      "source": 28,
+      "target": 29
+    }
+  },
+  {
+    "model": "hydra.hydraspellbookconnectionwire",
+    "pk": 26,
+    "fields": {
+      "modified": "2026-01-31T16:13:32.294Z",
+      "type": 1,
+      "spellbook": "5aedec3f-df9d-4149-b62b-6bd17c8ca8a3",
+      "source": 33,
+      "target": 32
     }
   },
   {
