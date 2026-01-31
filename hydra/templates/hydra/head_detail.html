@@ -312,6 +312,9 @@
                                 Output</a>
                         {% endif %}
                         <button class="btn-copy" onclick="copyToClipboard('log-stream')">Copy</button>
+                        <button class="btn-copy" onclick="downloadLog('log-stream', '{{ head.spell.name|slugify }}')">
+                            Download
+                        </button>
                     </div>
                 </div>
 
@@ -331,7 +334,12 @@
                 <div class="log-pane">
                     <div class="log-pane-header">
                         <span title="{{ log_file_path }}">Log File: ...{{ log_file_path|slice:"-30:" }}</span>
-                        <button class="btn-copy" onclick="copyToClipboard('log-file')">Copy File</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn-copy" onclick="copyToClipboard('log-file')">Copy File</button>
+                            <button class="btn-copy"
+                                    onclick="downloadLog('log-file', '{{ head.spell.name|slugify }}_file')">Download
+                            </button>
+                        </div>
                     </div>
 
                     <pre id="log-file"
@@ -384,6 +392,28 @@
             if (el) {
                 navigator.clipboard.writeText(el.innerText);
             }
+        }
+
+        // ADDED: Logic to download log content as a file
+        function downloadLog(elementId, filenamePrefix) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+
+            const text = el.innerText;
+            const blob = new Blob([text], {type: 'text/plain'});
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+
+            // Human/AI understandable format: spellname_YYYY-MM-DD_HH-MM-SS.log
+            const now = new Date();
+            const timestamp = now.toISOString().replace('T', '_').replace(/:/g, '-').split('.')[0];
+
+            a.href = url;
+            a.download = `${filenamePrefix}_${timestamp}.log`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
         }
 
         // Auto-enable scroll on load if logs are short
