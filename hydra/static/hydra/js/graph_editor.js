@@ -127,7 +127,13 @@ class GraphEditor {
                         e.preventDefault();
                         return;
                     }
-                    e.dataTransfer.setData('spell-id', spell.id);
+                    if (spell.is_book) {
+                        e.dataTransfer.setData('invoked-book-id', spell.id);
+                        e.dataTransfer.setData('type', 'subgraph');
+                    } else {
+                        e.dataTransfer.setData('spell-id', spell.id);
+                        e.dataTransfer.setData('type', 'spell');
+                    }
                     e.dataTransfer.setData('spell-name', spell.name);
                 });
                 catDiv.appendChild(item);
@@ -152,7 +158,8 @@ class GraphEditor {
                 this.addNode(n.title, n.x, n.y, {
                     id: n.id,
                     spell_id: n.spell_id,
-                    isRoot: n.isRoot || (n.spell_id === 1),
+                    invoked_spellbook_id: n.invoked_spellbook_id,
+                    isRoot: n.is_root, // Trust Server Logic
                     skipApi: true // IMPORTANT: This flag allows bypassing the monitor lock
                 });
             });
@@ -368,10 +375,15 @@ class GraphEditor {
             if (this.isMonitorMode) return;
             e.preventDefault();
             const spellId = e.dataTransfer.getData('spell-id');
+            const invokedBookId = e.dataTransfer.getData('invoked-book-id');
             const spellName = e.dataTransfer.getData('spell-name');
-            if (spellId) {
+
+            if (spellId || invokedBookId) {
                 const coords = this.toCanvasCoords(e.clientX, e.clientY);
-                this.addNode(spellName, coords.x - 100, coords.y - 40, { spell_id: spellId });
+                this.addNode(spellName, coords.x - 100, coords.y - 40, {
+                    spell_id: spellId,
+                    invoked_spellbook_id: invokedBookId || null
+                });
             }
         });
     }
@@ -388,7 +400,8 @@ class GraphEditor {
         if (this.isMonitorMode && !options.skipApi) return;
 
         const tempId = options.id || 'temp_' + Math.random().toString(36).substr(2, 9);
-        const isRoot = options.isRoot || (options.spell_id === 1);
+        const isDelegated = !!options.invoked_spellbook_id;
+        const isRoot = options.isRoot || (options.spell_id === 1 && !isDelegated);
 
         const node = {
             id: tempId,
@@ -396,7 +409,9 @@ class GraphEditor {
             x,
             y,
             spell_id: options.spell_id,
+            invoked_spellbook_id: options.invoked_spellbook_id,
             head_id: null,
+            child_spawn_id: null,
             inputs: isRoot ? 0 : (options.inputs !== undefined ? options.inputs : 1),
             outputs: options.outputs !== undefined ? options.outputs : 3,
             canDelete: options.canDelete !== undefined ? options.canDelete : true,
@@ -407,7 +422,7 @@ class GraphEditor {
         this.createNodeDOM(node);
         this.updateCounts();
 
-        if (!options.skipApi && options.spell_id) {
+        if (!options.skipApi && (options.spell_id || options.invoked_spellbook_id)) {
             const nodeEl = document.getElementById(tempId);
             nodeEl.classList.add('pending');
 
@@ -415,6 +430,7 @@ class GraphEditor {
                 method: 'POST',
                 body: JSON.stringify({
                     spell_id: options.spell_id,
+                    invoked_spellbook_id: options.invoked_spellbook_id,
                     x: Math.round(x),
                     y: Math.round(y)
                 })
@@ -442,9 +458,10 @@ class GraphEditor {
         nodeEl.style.top = `${node.y}px`;
 
         const eyeTitle = this.mode === 'monitor' ? 'Flight Recorder' : 'Edit Spell';
+        const isDelegated = !!node.invoked_spellbook_id;
         nodeEl.innerHTML = `
-            <div class="node-header ${node.isRoot ? 'root-header' : ''}">
-                <h4>${node.title}</h4>
+            <div class="node-header ${node.isRoot ? 'root-header' : ''} ${isDelegated ? 'status-delegated' : ''}" style="${isDelegated ? 'background: linear-gradient(135deg, #b45309 0%, #78350f 100%);' : ''}">
+                <h4>${isDelegated ? '🌀 ' + node.title : node.title}</h4>
                 <div class="node-controls">
                     <button class="mini-btn view" title="${eyeTitle}">👁</button>
                     ${node.isRoot && !this.isMonitorMode ? `
@@ -537,7 +554,10 @@ class GraphEditor {
                     alert('Has not run yet');
                 }
             } else {
-                if (node.spell_id) {
+                if (node.invoked_spellbook_id) {
+                    // EDIT SUB-GRAPH
+                    window.open(`/hydra/graph/${node.invoked_spellbook_id}/`, '_blank');
+                } else if (node.spell_id) {
                     window.open(`/admin/hydra/hydraspell/${node.spell_id}/change/`);
                 }
             }

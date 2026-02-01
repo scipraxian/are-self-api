@@ -70,7 +70,8 @@ DEFAULT_UI_JSON_DICT = {KEY_X: 100, KEY_Y: 100}
 
 @dataclass
 class NodePayload:
-    spell_id: int
+    spell_id: int | None
+    invoked_spellbook_id: str | None  # UUID
     x: int
     y: int
 
@@ -165,14 +166,28 @@ def get_graph_layout(spellbook: HydraSpellbook) -> JsonResponse:
         except json.JSONDecodeError:
             ui = DEFAULT_UI_JSON_DICT
 
-        nodes_data.append({
+        is_delegated = bool(n.invoked_spellbook_id)
+
+        # [FIX] Visual Logic
+        # 1. Title: Use Spellbook Name if delegated
+        title = n.invoked_spellbook.name if is_delegated else n.spell.name
+
+        # 2. Root Status: Delegated nodes are never roots, even if they use the placeholder ID
+        is_root = (n.spell_id == HydraSpell.BEGIN_PLAY) and not is_delegated
+
+        node_data = {
             KEY_ID: n.id,
-            KEY_TITLE: n.spell.name,
+            KEY_TITLE: title,
             KEY_X: ui.get(KEY_X, 0),
             KEY_Y: ui.get(KEY_Y, 0),
             'spell_id': n.spell_id,
-            KEY_IS_ROOT: n.spell_id == HydraSpell.BEGIN_PLAY,
-        })
+            KEY_IS_ROOT: is_root,
+        }
+
+        if is_delegated:
+            node_data['invoked_spellbook_id'] = str(n.invoked_spellbook_id)
+
+        nodes_data.append(node_data)
 
     # Map DB IDs to Frontend Strings for color coding
     # 1=Flow, 2=Success, 3=Failure
@@ -248,7 +263,10 @@ def handle_disconnect(book: HydraSpellbook, data: dict) -> JsonResponse:
 def handle_delete_node(book: HydraSpellbook, data: dict) -> JsonResponse:
     p = DeletePayload(**data)
     node = get_object_or_404(HydraSpellbookNode, id=p.node_id, spellbook=book)
-    if node.spell_id == HydraSpell.BEGIN_PLAY:
+    # [FIX] Delegated nodes might use BEGIN_PLAY ID as placeholder, but they ARE deletable.
+    # So we only block deletion if it's NOT delegated AND is explicitly the root anchor.
+    is_delegated = bool(node.invoked_spellbook_id)
+    if not is_delegated and node.spell_id == HydraSpell.BEGIN_PLAY:
         return JsonResponse(
             {
                 KEY_STATUS: STATUS_ERROR,
@@ -262,18 +280,38 @@ def handle_delete_node(book: HydraSpellbook, data: dict) -> JsonResponse:
 
 def handle_add_node(spellbook: HydraSpellbook, payload: dict) -> JsonResponse:
     spell_id = payload.get('spell_id')
-    if int(spell_id) == HydraSpell.BEGIN_PLAY:
-        if spellbook.nodes.filter(is_root=True).exists():
-            return JsonResponse({'error': 'Begin Play node already exists.'},
-                                status=400)
-        is_root = True
+    invoked_book_id = payload.get('invoked_spellbook_id')
+
+    is_root = False
+
+    if invoked_book_id:
+        # It's a Sub-Graph Node
+        # We need a placeholder Spell to satisfy the DB constraint.
+        # Ideally, we have a specific 'SubGraph' spell.
+        # For now, we'll try to find one named 'SubGraph' or fallback to the first available non-root.
+        # This is a bit hacky but keeps schema simple.
+
+        # Try to find a spell that looks like a runner
+        dummy_spell = HydraSpell.objects.filter(
+            name__icontains='Sub-Graph').first()
+        if not dummy_spell:
+            dummy_spell = HydraSpell.objects.first()  # Emergency fallback
+
+        spell_id = dummy_spell.id
     else:
-        is_root = False
+        # Standard Spell
+        if int(spell_id) == HydraSpell.BEGIN_PLAY:
+            if spellbook.nodes.filter(is_root=True).exists():
+                return JsonResponse(
+                    {'error': 'Begin Play node already exists.'}, status=400)
+            is_root = True
 
     ui_data = {'x': payload.get('x', 0), 'y': payload.get('y', 0)}
+
     node = HydraSpellbookNode.objects.create(
         spellbook=spellbook,
         spell_id=spell_id,
+        invoked_spellbook_id=invoked_book_id,  # <--- NEW FIELD
         is_root=is_root,
         ui_json=json.dumps(ui_data),
     )
@@ -281,8 +319,25 @@ def handle_add_node(spellbook: HydraSpellbook, payload: dict) -> JsonResponse:
 
 
 def get_library(spellbook: HydraSpellbook) -> JsonResponse:
-    spells = HydraSpell.objects.values('id', 'name', 'distribution_mode__name')
-    return JsonResponse({KEY_LIBRARY: list(spells)})
+    # 1. Standard Spells
+    spells = list(
+        HydraSpell.objects.values('id', 'name', 'distribution_mode__name'))
+    # Tag them as 'Spells'
+    for s in spells:
+        s['category'] = 'Spells'
+
+    # 2. Sub-Graphs (Spellbooks)
+    # Exclude self to prevent recursion!
+    books = HydraSpellbook.objects.exclude(id=spellbook.id).values('id', 'name')
+    for b in books:
+        b['category'] = 'Sub-Graphs'
+        # We need to distinguish IDs. Let's send them as `invoked_spellbook_id` or similar
+        # But `add_node` needs to handle it.
+        # Ideally, we structure the payload so the frontend knows it's a book.
+        b['is_book'] = True
+
+    # Combine
+    return JsonResponse({KEY_LIBRARY: spells + list(books)})
 
 
 def get_execution_status(spellbook: HydraSpellbook,
