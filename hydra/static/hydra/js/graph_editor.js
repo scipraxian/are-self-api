@@ -38,8 +38,8 @@ class GraphEditor {
         this.isDraggingNode = null;
         this.activeWire = null;
 
-        this.dragOffset = {x: 0, y: 0};
-        this.lastMousePos = {x: 0, y: 0};
+        this.dragOffset = { x: 0, y: 0 };
+        this.lastMousePos = { x: 0, y: 0 };
 
         // Execution State
         this.executionState = 'ready'; // ready, running, error, finished
@@ -85,7 +85,7 @@ class GraphEditor {
         try {
             const response = await fetch(url, {
                 ...options,
-                headers: {...defaultHeaders, ...options.headers}
+                headers: { ...defaultHeaders, ...options.headers }
             });
 
             if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
@@ -242,7 +242,7 @@ class GraphEditor {
             this.panY -= mouseY * (newZoom / this.zoom - 1);
             this.zoom = newZoom;
             this.updateCanvasTransform();
-        }, {passive: false});
+        }, { passive: false });
 
         window.addEventListener('mousemove', (e) => {
             const dx = e.clientX - this.lastMousePos.x;
@@ -268,7 +268,7 @@ class GraphEditor {
                 this.updateTempWire(e.clientX, e.clientY);
             }
 
-            this.lastMousePos = {x: e.clientX, y: e.clientY};
+            this.lastMousePos = { x: e.clientX, y: e.clientY };
         });
 
         window.addEventListener('mouseup', async (e) => {
@@ -328,7 +328,7 @@ class GraphEditor {
                     if (confirm("WARNING: Force Stop this Operation?")) {
                         fetch(window.djangoContext.terminateUrl, {
                             method: 'POST',
-                            headers: {'X-CSRFToken': this.csrfToken}
+                            headers: { 'X-CSRFToken': this.csrfToken }
                         }).then(() => {
                             window.location.reload();
                         });
@@ -371,7 +371,7 @@ class GraphEditor {
             const spellName = e.dataTransfer.getData('spell-name');
             if (spellId) {
                 const coords = this.toCanvasCoords(e.clientX, e.clientY);
-                this.addNode(spellName, coords.x - 100, coords.y - 40, {spell_id: spellId});
+                this.addNode(spellName, coords.x - 100, coords.y - 40, { spell_id: spellId });
             }
         });
     }
@@ -514,7 +514,7 @@ class GraphEditor {
             nodeEl.style.zIndex = 1000;
             this.nodesLayer.appendChild(nodeEl);
             this.isDraggingNode = node;
-            this.lastMousePos = {x: e.clientX, y: e.clientY};
+            this.lastMousePos = { x: e.clientX, y: e.clientY };
 
             const rect = nodeEl.getBoundingClientRect();
             this.dragOffset = {
@@ -528,7 +528,10 @@ class GraphEditor {
         nodeEl.querySelector('.mini-btn.view').addEventListener('click', (e) => {
             e.stopPropagation();
             if (this.mode === 'monitor') {
-                if (node.head_id) {
+                if (node.child_spawn_id) {
+                    // DRILL DOWN to Child Graph
+                    window.location.href = `/hydra/monitor/${node.child_spawn_id}/?full=True`;
+                } else if (node.head_id) {
                     window.open(`/hydra/head/${node.head_id}/`, '_self');
                 } else {
                     alert('Has not run yet');
@@ -608,7 +611,7 @@ class GraphEditor {
         if (!localOnly && !nodeId.toString().startsWith('temp_')) {
             await this.apiFetch('delete_node', {
                 method: 'POST',
-                body: JSON.stringify({node_id: nodeId})
+                body: JSON.stringify({ node_id: nodeId })
             });
         }
     }
@@ -760,11 +763,11 @@ class GraphEditor {
             nodes: this.nodes.map(n => ({
                 id: n.id,
                 title: n.title,
-                position: {x: n.x, y: n.y}
+                position: { x: n.x, y: n.y }
             })),
             connections: this.connections.map(c => ({
-                from: {nodeId: c.fromNode, port: c.fromPort},
-                to: {nodeId: c.toNode, port: c.toPort},
+                from: { nodeId: c.fromNode, port: c.fromPort },
+                to: { nodeId: c.toNode, port: c.toPort },
                 type: this.getStatusFromColor(c.color)
             }))
         };
@@ -799,7 +802,7 @@ class GraphEditor {
         this.setExecutionStatus('running', 'Spawning Process...');
         const result = await this.apiFetch('launch/', {
             method: 'POST',
-            body: JSON.stringify({book_id: this.bookId})
+            body: JSON.stringify({ book_id: this.bookId })
         });
         if (result && result.status === 'started') {
             // this.setExecutionStatus('running', 'Process Active');
@@ -825,15 +828,15 @@ class GraphEditor {
         const startNode = this.nodes.find(n => n.isRoot) || this.nodes[0];
         const levels = new Map();
         const visited = new Set();
-        const queue = [{id: startNode.id, level: 0}];
+        const queue = [{ id: startNode.id, level: 0 }];
 
         while (queue.length > 0) {
-            const {id, level} = queue.shift();
+            const { id, level } = queue.shift();
             if (visited.has(id)) continue;
             visited.add(id);
             levels.set(id, Math.max(levels.get(id) || 0, level));
             const children = this.connections.filter(c => c.fromNode === id).map(c => c.toNode);
-            children.forEach(childId => queue.push({id: childId, level: level + 1}));
+            children.forEach(childId => queue.push({ id: childId, level: level + 1 }));
         }
 
         this.nodes.forEach(node => {
@@ -861,7 +864,7 @@ class GraphEditor {
                     if (!this.isMonitorMode) {
                         this.apiFetch('move_node', {
                             method: 'POST',
-                            body: JSON.stringify({node_id: node.id, x: node.x, y: node.y})
+                            body: JSON.stringify({ node_id: node.id, x: node.x, y: node.y })
                         });
                     }
                 }
@@ -908,15 +911,28 @@ class GraphEditor {
             if (!dom || !status) return;
 
             node.head_id = status.head_id;
+            node.child_spawn_id = status.child_spawn_id; // Capture Child Spawn ID
+
             const header = dom.querySelector('.node-header');
             if (header) {
                 header.classList.remove('running', 'success', 'failed');
+                dom.classList.remove('status-delegated'); // specific to node container
+
                 if (status.status_id === 2 || status.status_id === 3) {
                     header.classList.add('running');
                     isAnyRunning = true;
                 }
                 if (status.status_id === 4) header.classList.add('success');
                 if (status.status_id === 5) header.classList.add('failed');
+
+                // DELEGATED STATUS (7)
+                if (status.status_id === 7) {
+                    dom.classList.add('status-delegated');
+                    header.style.background = '#eab308'; // Optional override for header color
+                    // Ensure view button is active
+                    isAnyRunning = true; // Treat as running to keep Stop button active if needed? 
+                    // Or implies it is "paused" waiting for child.
+                }
             }
 
             const viewBtn = dom.querySelector('.mini-btn.view');

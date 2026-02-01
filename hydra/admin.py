@@ -31,6 +31,7 @@ class HydraSpellbookNodeInline(admin.TabularInline):
     extra = 0
     verbose_name = 'Graph Node'
     readonly_fields = ('ui_json', 'is_root')
+    fk_name = 'spellbook'
 
 
 class HydraSpellbookWireInline(admin.TabularInline):

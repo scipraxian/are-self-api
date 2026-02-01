@@ -1369,6 +1369,13 @@
     }
   },
   {
+    "model": "hydra.hydraspawnstatus",
+    "pk": 7,
+    "fields": {
+      "name": "Delegated"
+    }
+  },
+  {
     "model": "hydra.hydraheadstatus",
     "pk": 1,
     "fields": {
@@ -1408,6 +1415,13 @@
     "pk": 6,
     "fields": {
       "name": "Aborted"
+    }
+  },
+  {
+    "model": "hydra.hydraheadstatus",
+    "pk": 7,
+    "fields": {
+      "name": "Delegated"
     }
   }
 ]

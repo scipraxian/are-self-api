@@ -39,6 +39,7 @@ class HydraStatusID(object):
     SUCCESS = 4
     FAILED = 5
     ABORTED = 6
+    DELEGATED = 7
 
 
 class HydraStatusTypeMixin(NameMixin):
@@ -51,6 +52,7 @@ class HydraStatusTypeMixin(NameMixin):
     SUCCESS = HydraStatusID.SUCCESS
     FAILED = HydraStatusID.FAILED
     ABORTED = HydraStatusID.ABORTED
+    DELEGATED = HydraStatusID.DELEGATED
 
     STATUS_MAP = {
         CREATED_LABEL: HydraStatusID.CREATED,
@@ -59,6 +61,7 @@ class HydraStatusTypeMixin(NameMixin):
         SUCCESS_LABEL: HydraStatusID.SUCCESS,
         FAILED_LABEL: HydraStatusID.FAILED,
         ABORTED_LABEL: HydraStatusID.ABORTED,
+        'DELEGATED': HydraStatusID.DELEGATED,
     }
 
     class Meta:
@@ -217,14 +220,26 @@ class HydraSpellbookNode(models.Model):
     spellbook = models.ForeignKey(
         HydraSpellbook, on_delete=models.CASCADE, related_name='nodes'
     )
-    spell = models.ForeignKey('HydraSpell', on_delete=models.CASCADE)
+    spell = models.ForeignKey(HydraSpell, on_delete=models.CASCADE)
     ui_json = models.TextField(blank=True, default='{}')
+
+    invoked_spellbook = models.ForeignKey(
+        HydraSpellbook,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='invoking_nodes',
+        help_text=(
+            'If set, this Node acts as a container '
+            'that executes this Spellbook.'
+        ),
+    )
 
     def __str__(self):
         return f'Node {self.id}: {self.spell.name}'
 
 
-class HydraWireType(HydraStatusTypeMixin):
+class HydraWireType(NameMixin):
     """Status lookups for Wires."""
 
     TYPE_FLOW = 1
@@ -286,6 +301,16 @@ class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
 
     context_data = models.TextField(
         blank=True, help_text='Serialized JSON context variables'
+    )
+
+    # NEW: The "Umbilical Cord" back to the Parent
+    parent_head = models.ForeignKey(
+        'HydraHead',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='child_spawns',
+        help_text='The Head (Node execution) in the Parent Graph that spawned this Sub-Graph.',
     )
 
     @property
