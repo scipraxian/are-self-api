@@ -4,6 +4,8 @@
 {% block title %}Flight Recorder: {{ head.spell.name }}{% endblock %}
 
 {% block main_content %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css"/>
+
     <style>
         /* FIX: Reset container to default behavior but ensure height filling */
         .container {
@@ -26,19 +28,18 @@
         }
 
         /* THE BATTLE STATION CONTAINER */
-        /* FIX: Use margin-top to clear the header buttons safely */
         .war-room-card {
             margin-top: 60px;
             display: flex;
             flex-direction: column;
             flex: 1;
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            min-height: 0; /* Flexbox scrolling fix */
+            min-height: 0;
         }
 
         /* HEADER SECTION */
@@ -99,9 +100,11 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: #0b0f19;
+            background: #000000;
             min-width: 0;
             position: relative;
+            /* FIX: Ensure flex children align to start (left) not center */
+            align-items: stretch;
         }
 
         .log-pane-header {
@@ -120,19 +123,24 @@
             flex-shrink: 0;
         }
 
-        .log-body {
+        /* Container for XTerm */
+        #terminal-container {
             flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-            margin: 0;
-            font-family: 'JetBrains Mono', 'Consolas', monospace;
-            font-size: 0.85rem;
-            line-height: 1.6;
-            color: #cbd5e1;
-            white-space: pre-wrap;
-            text-align: left;
-            scrollbar-width: thin;
-            scrollbar-color: #475569 #0f172a;
+            padding: 10px;
+            overflow: hidden;
+            /* FIX: Force left alignment to override any body/container inheritance */
+            text-align: left !important;
+            direction: ltr !important;
+        }
+
+        /* XTerm Overrides to ensure left alignment */
+        .xterm-screen, .xterm-viewport {
+            text-align: left !important;
+        }
+
+        /* Hidden buffer for HTMX raw data */
+        #raw-log-buffer {
+            display: none;
         }
 
         .side-by-side .log-pane {
@@ -246,12 +254,22 @@
             color: #60a5fa;
         }
 
-        .scroll-active {
-            background: rgba(34, 197, 94, 0.15) !important;
-            color: #4ade80 !important;
-            border-color: rgba(34, 197, 94, 0.3) !important;
+        .xterm-viewport::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .xterm-viewport::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+
+        .xterm-viewport::-webkit-scrollbar-thumb {
+            background-color: #334155;
+            border-radius: 4px;
         }
     </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
 
     <div class="war-room-card">
         <div class="war-header">
@@ -290,10 +308,6 @@
                         <span>⚙️</span> Config
                     </a>
                 {% endif %}
-
-                <button id="toggle-scroll" class="btn-xs">
-                    <span>⬇️</span> Auto-Scroll: OFF
-                </button>
             </div>
         </div>
 
@@ -311,22 +325,22 @@
                             <a href="?type=tool" style="color: #64748b; font-weight: normal; text-decoration: none;">View
                                 Output</a>
                         {% endif %}
-                        <button class="btn-copy" onclick="copyToClipboard('log-stream')">Copy</button>
-                        <button class="btn-copy" onclick="downloadLog('log-stream', '{{ head.spell.name|slugify }}')">
-                            Download
+                        <button class="btn-copy" onclick="copyLog()">Copy</button>
+                        <button class="btn-copy"
+                                onclick="downloadLog('raw-log-buffer', '{{ head.spell.name|slugify }}')">Download
                         </button>
                     </div>
                 </div>
 
-                <pre id="log-stream"
-                     class="log-body"
+                <div id="terminal-container"></div>
+
+                <div id="raw-log-buffer"
                         {% if head.status.name == 'Running' or head.status.name == 'Pending' %}
                      hx-get="{% url 'hydra:head_detail' head.pk %}?partial=content&type={{ log_type }}"
                      hx-trigger="every 1s"
                         {% endif %}
-                     hx-swap="innerHTML"
-                     hx-on::after-swap="if(this.dataset.autoscroll === 'true') this.scrollTop = this.scrollHeight;"
-                     data-autoscroll="false">{{ initial_log_content|default:"Initializing Stream..." }}</pre>
+                     hx-swap="innerText"
+                     style="display: none;">{{ initial_log_content }}</div>
             </div>
 
             {% if show_side_by_side %}
@@ -347,54 +361,72 @@
                          hx-get="{% url 'hydra:head_detail' head.pk %}?partial=content&type=file"
                          hx-trigger="every 2s"
                          hx-swap="innerHTML"
-                         hx-on::after-swap="if(this.dataset.autoscroll === 'true') this.scrollTop = this.scrollHeight;"
-                         data-autoscroll="false">{{ log_file_content|default:"Waiting for file content..." }}</pre>
+                         data-autoscroll="true">{{ log_file_content|default:"Waiting for file content..." }}</pre>
                 </div>
             {% endif %}
         </div>
     </div>
 
     <script>
-        const streamBody = document.getElementById('log-stream');
-        const fileBody = document.getElementById('log-file');
-        const toggleBtn = document.getElementById('toggle-scroll');
+        // --- XTerm Initialization ---
+        var term = new Terminal({
+            theme: {
+                background: '#000000',
+                foreground: '#e2e8f0',
+                selection: '#264f78'
+            },
+            fontFamily: '"JetBrains Mono", Consolas, monospace',
+            fontSize: 13,
+            cursorBlink: false,
+            disableStdin: true, // Read-only
+            convertEol: true // Treat \n as new line
+        });
 
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', () => {
-                const isAuto = streamBody && streamBody.dataset.autoscroll === 'true';
+        const fitAddon = new FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
 
-                if (isAuto) {
-                    // Turn OFF
-                    if (streamBody) streamBody.dataset.autoscroll = 'false';
-                    if (fileBody) fileBody.dataset.autoscroll = 'false';
+        // Mount
+        term.open(document.getElementById('terminal-container'));
 
-                    toggleBtn.innerHTML = '<span>⬇️</span> Auto-Scroll: OFF';
-                    toggleBtn.classList.remove('scroll-active');
-                } else {
-                    // Turn ON
-                    if (streamBody) {
-                        streamBody.dataset.autoscroll = 'true';
-                        streamBody.scrollTop = streamBody.scrollHeight;
-                    }
-                    if (fileBody) {
-                        fileBody.dataset.autoscroll = 'true';
-                        fileBody.scrollTop = fileBody.scrollHeight;
-                    }
+        // FIX: Add delay to fit() to ensure container has sized correctly in DOM
+        // and force re-fit on window resize
+        setTimeout(() => {
+            fitAddon.fit();
+        }, 100);
 
-                    toggleBtn.innerHTML = '<span>⬇️</span> Auto-Scroll: <strong>ON</strong>';
-                    toggleBtn.classList.add('scroll-active');
-                }
-            });
+        // Initial Load
+        const initialContent = document.getElementById('raw-log-buffer').innerText;
+        if (initialContent) {
+            term.write(initialContent);
+        }
+
+        // Handle Resizing
+        window.addEventListener('resize', () => {
+            fitAddon.fit();
+        });
+
+        // --- HTMX Integration ---
+        document.body.addEventListener('htmx:afterSwap', function (evt) {
+            if (evt.target.id === "raw-log-buffer") {
+                const newContent = evt.target.innerText;
+
+                term.reset();
+                term.write(newContent);
+                term.scrollToBottom();
+            }
+        });
+
+        // --- Utilities ---
+        function copyLog() {
+            const text = document.getElementById('raw-log-buffer').innerText;
+            navigator.clipboard.writeText(text);
         }
 
         function copyToClipboard(elementId) {
             const el = document.getElementById(elementId);
-            if (el) {
-                navigator.clipboard.writeText(el.innerText);
-            }
+            if (el) navigator.clipboard.writeText(el.innerText);
         }
 
-        // ADDED: Logic to download log content as a file
         function downloadLog(elementId, filenamePrefix) {
             const el = document.getElementById(elementId);
             if (!el) return;
@@ -404,7 +436,6 @@
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
 
-            // Human/AI understandable format: spellname_YYYY-MM-DD_HH-MM-SS.log
             const now = new Date();
             const timestamp = now.toISOString().replace('T', '_').replace(/:/g, '-').split('.')[0];
 
@@ -414,11 +445,6 @@
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
-        }
-
-        // Auto-enable scroll on load if logs are short
-        if (streamBody && streamBody.scrollHeight < 600 && toggleBtn) {
-            toggleBtn.click();
         }
     </script>
 {% endblock %}
