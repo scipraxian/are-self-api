@@ -1,14 +1,14 @@
 {% for event in events %}
 <div class="log-row source-{{ event.source }}">
     <div class="col-msg col-local">
-        {% if event.source == 'local' %}
-            <span class="msg-content">{{ event.msg }}</span>
+        {% if event.local_msg %}
+            <span class="msg-content">{{ event.local_msg }}</span>
         {% endif %}
     </div>
     <div class="col-ts">{{ event.display_ts }}</div>
     <div class="col-msg col-remote">
-        {% if event.source == 'remote' %}
-            <span class="msg-content">{{ event.msg }}</span>
+        {% if event.remote_msg %}
+            <span class="msg-content">{{ event.remote_msg }}</span>
         {% endif %}
     </div>
 </div>
