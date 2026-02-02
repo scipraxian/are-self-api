@@ -11,12 +11,14 @@
         .container {
             display: flex;
             flex-direction: column;
-            height: 95vh;
+            /* Use calc to account for body padding (2rem top/bottom) defined in main.css */
+            height: calc(100vh - 4rem);
             background: transparent !important;
             box-shadow: none !important;
             border: none !important;
             padding: 0 !important;
             max-width: 98vw !important;
+            overflow: hidden; /* Prevent body scroll */
         }
 
         /* FIX: Ensure Global Nav buttons are clickable */
@@ -39,7 +41,7 @@
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            min-height: 0;
+            min-height: 0; /* CRITICAL: Allows flex child to shrink below content size */
         }
 
         /* HEADER SECTION */
@@ -50,7 +52,7 @@
             padding: 1rem 1.5rem;
             background: rgba(255, 255, 255, 0.03);
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            flex-shrink: 0;
+            flex-shrink: 0; /* Header never shrinks */
         }
 
         .war-title-group {
@@ -92,8 +94,9 @@
         .war-grid {
             display: flex;
             flex: 1;
-            overflow: hidden;
+            overflow: hidden; /* CRITICAL: Cuts off anything growing too large */
             position: relative;
+            min-height: 0; /* CRITICAL: Recursive min-height for nested flex */
         }
 
         .log-pane {
@@ -101,10 +104,11 @@
             display: flex;
             flex-direction: column;
             background: #000000;
-            min-width: 0;
+            min-width: 0; /* Standard flex fix */
+            min-height: 0; /* CRITICAL: Forces internal scroll */
             position: relative;
             align-items: stretch;
-            overflow: hidden; /* FIX: Prevent pane itself from expanding */
+            overflow: hidden;
         }
 
         .log-pane-header {
@@ -120,22 +124,25 @@
             color: #cbd5e1;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            flex-shrink: 0;
+            flex-shrink: 0; /* Header stays fixed */
         }
 
         /* LEFT PANE: XTerm */
         #terminal-container {
             flex: 1;
             padding: 10px;
-            overflow: hidden;
+            overflow: hidden; /* Xterm handles its own scroll */
             text-align: left !important;
             direction: ltr !important;
+            min-height: 0;
+            position: relative; /* Anchor for absolute children if needed */
+            height: 100%; /* Force height match */
         }
 
         /* RIGHT PANE: Log File Body - The Scrollable Area */
         .log-body {
             flex: 1;
-            overflow-y: auto; /* FIX: Enable vertical scrolling */
+            overflow-y: auto; /* Enable scroll here */
             padding: 1rem;
             margin: 0;
             font-family: 'JetBrains Mono', monospace;
@@ -143,7 +150,8 @@
             color: #cbd5e1;
             white-space: pre-wrap;
             word-break: break-all;
-            text-align: left !important; /* CRITICAL FIX: Force left justification */
+            text-align: left !important;
+            min-height: 0; /* Ensure this element is the one that shrinks */
         }
 
         /* XTerm Overrides */
@@ -467,24 +475,31 @@
         term.loadAddon(fitAddon);
 
         // Mount
-        term.open(document.getElementById('terminal-container'));
+        const container = document.getElementById('terminal-container');
+        term.open(container);
 
-        // FIX: Ensure fit happens BEFORE content is fully processed visually
-        fitAddon.fit();
+        // CRITICAL FIX: Delay Fit so Flexbox Reflow Completes
+        setTimeout(() => {
+            fitAddon.fit();
+            term.refresh(0, term.rows - 1);
+        }, 50);
 
         // Initial Load
         const initialContent = document.getElementById('raw-log-buffer').innerText;
         if (initialContent) {
             term.write(initialContent);
-            // CRITICAL FIX: Force scroll to top immediately after write to prevent "locked at bottom" feel
             setTimeout(() => {
                 term.scrollToTop();
-            }, 0);
+            }, 60);
         }
 
-        // Handle Resizing
+        // Handle Resizing (Debounced)
+        let resizeTimeout;
         window.addEventListener('resize', () => {
-            fitAddon.fit();
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                fitAddon.fit();
+            }, 100);
         });
 
         // --- Toggle Listener ---
