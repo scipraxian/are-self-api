@@ -2,6 +2,79 @@
 
 {% block title %}Hydra Monitor: {{ spawn.spellbook.name }}{% endblock %}
 
+{% block extra_style %}
+    <style>
+        /* Toggle Switch Styling - Matches head_detail.html */
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: absolute;
+            right: 20px;
+            top: 12px;
+            z-index: 20;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 32px;
+            height: 18px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #334155;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #60a5fa;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(14px);
+        }
+
+        .toggle-label {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Ensure header allows positioning */
+        .battle-station-header {
+            position: relative;
+        }
+    </style>
+{% endblock %}
+
 {% block main_content %}
     <div id="hydra-controls" style="max-width: 1000px; margin: 0 auto;">
         {% include "hydra/spawn_monitor.html" with is_full_page=True %}
