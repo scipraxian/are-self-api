@@ -108,7 +108,7 @@ class HeadLogDetailView(DetailView):
         self.object = self.get_object()
         head = self.object
 
-        is_active = head.status.name.lower() in ['running', 'pending']
+        is_active = head.is_active
         if request.GET.get('partial') == 'content':
             log_type = request.GET.get('type', 'tool')
             content = ''
@@ -163,6 +163,8 @@ class HeadLogDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         head = self.object
+
+        context['is_active'] = head.is_active
 
         # Safe Executable Access
         executable = (

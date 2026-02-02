@@ -372,5 +372,12 @@ class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     execution_log = models.TextField(blank=True)
     result_code = models.IntegerField(null=True, blank=True)
 
+    @property
+    def is_active(self):
+        return self.status_id in [
+            HydraStatusID.RUNNING,
+            HydraStatusID.PENDING,
+        ]
+
     class Meta:
         ordering = ['created']

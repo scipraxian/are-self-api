@@ -103,8 +103,8 @@
             background: #000000;
             min-width: 0;
             position: relative;
-            /* FIX: Ensure flex children align to start (left) not center */
             align-items: stretch;
+            overflow: hidden; /* FIX: Prevent pane itself from expanding */
         }
 
         .log-pane-header {
@@ -123,17 +123,30 @@
             flex-shrink: 0;
         }
 
-        /* Container for XTerm */
+        /* LEFT PANE: XTerm */
         #terminal-container {
             flex: 1;
             padding: 10px;
             overflow: hidden;
-            /* FIX: Force left alignment to override any body/container inheritance */
             text-align: left !important;
             direction: ltr !important;
         }
 
-        /* XTerm Overrides to ensure left alignment */
+        /* RIGHT PANE: Log File Body - The Scrollable Area */
+        .log-body {
+            flex: 1;
+            overflow-y: auto; /* FIX: Enable vertical scrolling */
+            padding: 1rem;
+            margin: 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #cbd5e1;
+            white-space: pre-wrap;
+            word-break: break-all;
+            text-align: left !important; /* CRITICAL FIX: Force left justification */
+        }
+
+        /* XTerm Overrides */
         .xterm-screen, .xterm-viewport {
             text-align: left !important;
         }
@@ -254,6 +267,67 @@
             color: #60a5fa;
         }
 
+        /* Toggle Switch Styling */
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 8px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 32px;
+            height: 18px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #334155;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #60a5fa;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(14px);
+        }
+
+        .toggle-label {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
         .xterm-viewport::-webkit-scrollbar {
             width: 8px;
         }
@@ -291,6 +365,14 @@
                      hx-trigger="every 2s"
                      hx-swap="outerHTML">
                     {{ head.status.name }}
+                </div>
+
+                <div class="toggle-wrapper">
+                    <span class="toggle-label">Autoscroll</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="autoscroll-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
                 </div>
 
                 {% if head.status.name == 'Running' or head.status.name == 'Pending' %}
@@ -360,8 +442,7 @@
                          class="log-body"
                          hx-get="{% url 'hydra:head_detail' head.pk %}?partial=content&type=file"
                          hx-trigger="every 2s"
-                         hx-swap="innerHTML"
-                         data-autoscroll="true">{{ log_file_content|default:"Waiting for file content..." }}</pre>
+                         hx-swap="innerHTML">{{ log_file_content|default:"Waiting for file content..." }}</pre>
                 </div>
             {% endif %}
         </div>
@@ -388,16 +469,17 @@
         // Mount
         term.open(document.getElementById('terminal-container'));
 
-        // FIX: Add delay to fit() to ensure container has sized correctly in DOM
-        // and force re-fit on window resize
-        setTimeout(() => {
-            fitAddon.fit();
-        }, 100);
+        // FIX: Ensure fit happens BEFORE content is fully processed visually
+        fitAddon.fit();
 
         // Initial Load
         const initialContent = document.getElementById('raw-log-buffer').innerText;
         if (initialContent) {
             term.write(initialContent);
+            // CRITICAL FIX: Force scroll to top immediately after write to prevent "locked at bottom" feel
+            setTimeout(() => {
+                term.scrollToTop();
+            }, 0);
         }
 
         // Handle Resizing
@@ -405,14 +487,38 @@
             fitAddon.fit();
         });
 
+        // --- Toggle Listener ---
+        const toggleSwitch = document.getElementById('autoscroll-toggle');
+        if (toggleSwitch) {
+            toggleSwitch.addEventListener('change', function () {
+                if (this.checked) {
+                    term.scrollToBottom();
+                    const logFile = document.getElementById('log-file');
+                    if (logFile) logFile.scrollTop = logFile.scrollHeight;
+                }
+            });
+        }
+
         // --- HTMX Integration ---
         document.body.addEventListener('htmx:afterSwap', function (evt) {
+            // LEFT PANE (Terminal) UPDATE
             if (evt.target.id === "raw-log-buffer") {
                 const newContent = evt.target.innerText;
-
                 term.reset();
                 term.write(newContent);
-                term.scrollToBottom();
+
+                const toggle = document.getElementById('autoscroll-toggle');
+                if (toggle && toggle.checked) {
+                    term.scrollToBottom();
+                }
+            }
+
+            // RIGHT PANE (Log File) UPDATE
+            if (evt.target.id === "log-file") {
+                const toggle = document.getElementById('autoscroll-toggle');
+                if (toggle && toggle.checked) {
+                    evt.target.scrollTop = evt.target.scrollHeight;
+                }
             }
         });
 
