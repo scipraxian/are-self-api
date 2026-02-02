@@ -20,6 +20,10 @@ EXTENSIONS_TO_PROCESS: Set[str] = {
     '.ini',
     '.uproject',
     '.log',
+    '.css',
+    '.html',
+    '.js',
+    '.md',
 }
 
 DIRECTORIES_TO_IGNORE: Set[str] = {
