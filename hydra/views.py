@@ -1,16 +1,15 @@
-# START FILE: hydra/views.py
 import os
 
-from django.conf import settings
-from django.http import Http404, HttpResponse, HttpResponseNotAllowed
-from django.shortcuts import get_object_or_404, redirect, render
+from django.http import HttpResponse
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, TemplateView
 
+from ue_tools.merge_logs import merge_logs
+
 from .hydra import Hydra
 from .models import HydraHead, HydraSpawn, HydraSpellbook
-from .utils import merge_logs
 
 # --- GRAPH VIEWS ---
 
