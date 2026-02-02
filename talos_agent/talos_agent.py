@@ -56,6 +56,7 @@ Usage:
 """
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
@@ -114,10 +115,16 @@ class TalosAgentConstants:
     K_VER = 'version'
     K_SOURCE = 'source'
 
+    # Payload Argument Keys
+    K_EXE = 'executable'
+    K_PARAMS = 'params'
+    K_LOG = 'log_path'
+
     # Commands
     CMD_PING = 'PING'
     CMD_EXECUTE = 'EXECUTE'
     CMD_UPDATE = 'UPDATE_SELF'
+    CMD_STOP = 'STOP'
 
     # Statuses / Types
     S_PONG = 'PONG'
@@ -195,6 +202,31 @@ class AsyncProcessRunner:
     @property
     def is_running(self) -> bool:
         return self.process is not None and self.process.returncode is None
+
+    def terminate(self) -> None:
+        """
+        Attempts a graceful termination of the process.
+        This is the "Gentle Tap" logic.
+        """
+        if not self.process:
+            return
+
+        pid = self.process.pid
+        print(f'[TERMINATE] Signaling PID: {pid} for graceful shutdown.')
+
+        try:
+            if sys.platform == 'win32' and pid:
+                # Using taskkill WITHOUT /F allows the app to handle WM_CLOSE/CTRL_C
+                subprocess.run(
+                    ['taskkill', '/PID', str(pid)],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+            else:
+                self.process.terminate()
+        except Exception as e:
+            print(f'[TERMINATE] Exception: {e}')
 
     def kill(self) -> None:
         """
@@ -276,10 +308,8 @@ class AsyncLogMonitor:
         self._stop_event.set()
         if self._watcher_task:
             self._watcher_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._watcher_task
-            except asyncio.CancelledError:
-                pass
 
         # Report if file never appeared
         if not self._file_found:
@@ -376,11 +406,37 @@ class AsyncLogMonitor:
             print(f'[MONITOR ERROR] Failed to read log: {e}')
 
 
+async def _watch_stop_event(
+    stop_event: asyncio.Event, runner: AsyncProcessRunner
+) -> None:
+    """Helper to monitor stop event and signal the runner."""
+    await stop_event.wait()
+    if runner.is_running:
+        print('[PIPELINE] Graceful Stop Requested.')
+        runner.terminate()
+
+
+async def _pipe_stream(
+    stream_generator: AsyncGenerator[str, None],
+    callback: Callable[[str], Awaitable[None]],
+    runner: AsyncProcessRunner,
+) -> None:
+    """Helper to pipe a stream to a callback, killing process on connection error."""
+    try:
+        async for line in stream_generator:
+            await callback(line)
+    except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
+        # Leash Broken: Kill process immediately
+        runner.kill()
+        raise
+
+
 async def run_hydra_pipeline(
     command: List[str],
     log_path: Optional[str],
     output_callback: Callable[[str], Awaitable[None]],
     file_callback: Optional[Callable[[str], Awaitable[None]]] = None,
+    stop_event: Optional[asyncio.Event] = None,
 ) -> int:
     """
     Orchestrates the Process Runner and Log Monitor using concurrent tasks.
@@ -390,9 +446,9 @@ async def run_hydra_pipeline(
         log_path: Path to the external log file to watch.
         output_callback: Async callback for STDOUT/STDERR.
         file_callback: Async callback for FILE LOGS. Defaults to output_callback if None.
+        stop_event: Event to trigger a graceful termination.
 
-    CRITICAL: Implements "The Leash".
-    If callbacks raise a network error, the subprocess is KILLED immediately.
+    CRITICAL: Implements "The Leash" and "Buffer Drain".
     """
     runner = AsyncProcessRunner(command)
     monitor = (
@@ -406,39 +462,41 @@ async def run_hydra_pipeline(
     if monitor:
         await monitor.start()
 
-    # --- Piping Tasks with Leash Logic ---
+    # Start piping using helper functions to avoid nesting
+    tasks = []
 
-    async def _pipe_runner():
-        try:
-            async for line in runner.stream_output():
-                await output_callback(line)
-        except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
-            # Leash Broken: Kill process immediately
-            runner.kill()
-            raise
+    runner_task = asyncio.create_task(
+        _pipe_stream(runner.stream_output(), output_callback, runner)
+    )
+    tasks.append(runner_task)
 
-    async def _pipe_monitor():
-        if not monitor:
-            return
-        try:
-            async for line in monitor.stream_changes():
-                await actual_file_callback(line)
-        except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
-            runner.kill()
-            raise
+    monitor_task = None
+    if monitor:
+        monitor_task = asyncio.create_task(
+            _pipe_stream(monitor.stream_changes(), actual_file_callback, runner)
+        )
+        tasks.append(monitor_task)
 
-    # Start piping
-    runner_task = asyncio.create_task(_pipe_runner())
-    monitor_task = asyncio.create_task(_pipe_monitor())
+    stop_task = None
+    if stop_event:
+        stop_task = asyncio.create_task(_watch_stop_event(stop_event, runner))
+        tasks.append(stop_task)
 
     try:
-        # Wait for process to exit naturally
+        # Wait for process to exit naturally (or via terminate)
         exit_code = await runner.wait()
         if exit_code is None:
             exit_code = 1
 
         # Ensure stdout pipe finishes cleanly
         await runner_task
+
+        # --- POST-MORTEM BUFFER DRAIN ---
+        # The process is dead, but logs might still be flushing to disk.
+        # We hold the line open for a few seconds to catch the final words.
+        if monitor:
+            print('[PIPELINE] Process exited. Draining log buffer (3s)...')
+            await asyncio.sleep(3.0)
 
     except (
         asyncio.CancelledError,
@@ -468,10 +526,14 @@ async def run_hydra_pipeline(
         # Cleanup Monitor regardless of success/failure
         if monitor:
             await monitor.stop()
-            try:
-                await monitor_task
-            except Exception:
-                pass
+            if monitor_task:
+                with contextlib.suppress(Exception):
+                    await monitor_task
+
+        if stop_task:
+            stop_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await stop_task
 
     return exit_code
 
@@ -552,7 +614,8 @@ class TalosAgent:
                 )
 
             elif command == TalosAgentConstants.CMD_EXECUTE:
-                await self._handle_execute(writer, args)
+                # Pass reader to allow listening for STOP signal during execution
+                await self._handle_execute(reader, writer, args)
 
             elif command == TalosAgentConstants.CMD_UPDATE:
                 await self._handle_update(writer, args)
@@ -569,24 +632,44 @@ class TalosAgent:
         except Exception as e:
             self.logger.error(f'Handler error {addr}: {e}')
             if not writer.is_closing():
-                try:
+                with contextlib.suppress(Exception):
                     await self._send_json(
                         writer,
                         dict(status=TalosAgentConstants.S_ERROR, msg=str(e)),
                     )
-                except:
-                    pass
         finally:
             self.active_tasks.discard(current_task)
-            try:
+            with contextlib.suppress(
+                ConnectionResetError, BrokenPipeError, OSError
+            ):
                 await writer.drain()
                 writer.close()
                 await writer.wait_closed()
-            except (ConnectionResetError, BrokenPipeError, OSError):
-                pass
+
+    @classmethod
+    async def _monitor_remote_stop(
+        cls, reader: asyncio.StreamReader, stop_event: asyncio.Event
+    ) -> None:
+        """Helper to listen for the STOP command on the open reader."""
+        try:
+            while True:
+                data = await reader.readline()
+                if not data:
+                    break
+                msg = data.decode(TalosAgentConstants.ENCODING).strip().upper()
+                if msg == TalosAgentConstants.CMD_STOP:
+                    # We can't easily access the logger from a classmethod without passing it,
+                    # but we can print which goes to stdout/system log.
+                    print('[AGENT] Graceful STOP signal received from client.')
+                    stop_event.set()
+        except Exception:
+            pass
 
     async def _handle_execute(
-        self, writer: asyncio.StreamWriter, args: dict
+        self,
+        reader: asyncio.StreamReader,
+        writer: asyncio.StreamWriter,
+        args: dict,
     ) -> None:
         """Runs the pipeline and streams results back to the open socket.
 
@@ -595,9 +678,9 @@ class TalosAgent:
         local callers. This "eat your own dog food" pattern guarantees
         consistency and reduces code duplication.
         """
-        executable = args.get('executable')
-        params = args.get('params', [])
-        log_path = args.get('log_path')
+        executable = args.get(TalosAgentConstants.K_EXE)
+        params = args.get(TalosAgentConstants.K_PARAMS, [])
+        log_path = args.get(TalosAgentConstants.K_LOG)
 
         if not executable:
             await self._send_json(
@@ -607,10 +690,17 @@ class TalosAgent:
             return
 
         cmd_list = [executable] + params
+        stop_event = asyncio.Event()
+
+        listener_task = asyncio.create_task(
+            self._monitor_remote_stop(reader, stop_event)
+        )
 
         try:
             # SELF-CONSUMPTION: Iterate over the local generator
-            async for event in self.execute_local(cmd_list, log_path):
+            async for event in self.execute_local(
+                cmd_list, log_path, stop_event=stop_event
+            ):
                 response_payload: dict = {
                     TalosAgentConstants.K_TYPE: event.type
                 }
@@ -638,12 +728,14 @@ class TalosAgent:
             self.logger.error(f'Handler critical error: {e}')
             # Attempt to send error if connection is still alive
             if not writer.is_closing():
-                try:
+                with contextlib.suppress(Exception):
                     await self._send_json(
                         writer, dict(type=TalosAgentConstants.T_EXIT, code=-1)
                     )
-                except Exception:
-                    pass
+        finally:
+            listener_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await listener_task
 
     async def _handle_update(
         self, writer: asyncio.StreamWriter, args: dict
@@ -711,6 +803,7 @@ class TalosAgent:
         cls,
         command: List[str],
         log_path: Optional[str] = None,
+        stop_event: Optional[asyncio.Event] = None,
     ) -> AsyncGenerator[TalosEvent, None]:
         """
         Executes a command LOCALLY using run_hydra_pipeline.
@@ -738,9 +831,13 @@ class TalosAgent:
         # Background Worker
         async def worker():
             try:
-                # Pass BOTH callbacks to the engine
+                # Pass BOTH callbacks AND stop_event to the engine
                 exit_code = await run_hydra_pipeline(
-                    command, log_path, stdout_callback, file_callback
+                    command,
+                    log_path,
+                    stdout_callback,
+                    file_callback,
+                    stop_event=stop_event,
                 )
                 await event_queue.put(
                     TalosEvent(type=TalosAgentConstants.T_EXIT, code=exit_code)
@@ -782,12 +879,32 @@ class TalosAgent:
             raise
 
     @classmethod
+    async def _monitor_stop_signal_task(
+        cls, writer: asyncio.StreamWriter, stop_event: asyncio.Event
+    ) -> None:
+        """Task payload to monitor for stop event and send signal."""
+        if not stop_event:
+            return
+        await stop_event.wait()
+        try:
+            # Send the out-of-band STOP message
+            payload = TalosAgentConstants.CMD_STOP + '\n'
+            writer.write(payload.encode(TalosAgentConstants.ENCODING))
+            await writer.drain()
+        except (ConnectionResetError, BrokenPipeError):
+            pass
+        except Exception as e:
+            # Specific logging for debug, but silence for broken pipes
+            logging.debug(f'Stop signal transmission failed: {e}')
+
+    @classmethod
     async def execute_remote(
         cls,
         target_hostname: str,
         executable: str,
         params: List[str],
         log_path: str = '',
+        stop_event: Optional[asyncio.Event] = None,
     ) -> AsyncGenerator[TalosEvent, None]:
         """
         Executes a command REMOTELY via TCP.
@@ -796,9 +913,9 @@ class TalosAgent:
         payload = {
             TalosAgentConstants.K_CMD: TalosAgentConstants.CMD_EXECUTE,
             TalosAgentConstants.K_ARGS: {
-                'executable': executable,
-                'params': params,
-                'log_path': log_path,
+                TalosAgentConstants.K_EXE: executable,
+                TalosAgentConstants.K_PARAMS: params,
+                TalosAgentConstants.K_LOG: log_path,
             },
         }
 
@@ -820,6 +937,10 @@ class TalosAgent:
             msg = json.dumps(payload) + '\n'
             writer.write(msg.encode(TalosAgentConstants.ENCODING))
             await writer.drain()
+
+            stopper_task = asyncio.create_task(
+                cls._monitor_stop_signal_task(writer, stop_event)
+            )
 
             buffer = ''
             while True:
@@ -873,6 +994,11 @@ class TalosAgent:
             )
             yield TalosEvent(type=TalosAgentConstants.T_EXIT, code=-1)
         finally:
+            if 'stopper_task' in locals():
+                stopper_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await stopper_task
+
             if writer:
                 writer.close()
                 try:
