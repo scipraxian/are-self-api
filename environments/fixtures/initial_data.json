@@ -875,6 +875,56 @@
     }
   },
   {
+    "model": "environments.talosexecutableargument",
+    "pk": 28,
+    "fields": {
+      "created": "2026-01-31T20:19:32.005Z",
+      "modified": "2026-01-31T20:19:32.005Z",
+      "name": "Ollama Run",
+      "argument": "run"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 29,
+    "fields": {
+      "created": "2026-01-31T20:19:54.140Z",
+      "modified": "2026-01-31T20:19:54.140Z",
+      "name": "Llama3 Model",
+      "argument": "llama3"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 30,
+    "fields": {
+      "created": "2026-01-31T20:24:58.474Z",
+      "modified": "2026-01-31T20:24:58.474Z",
+      "name": "LLM Prompt 1",
+      "argument": "{{ prompt }} Context: {{ provenance.spell_log }} {{ provenance.execution_log }}"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 31,
+    "fields": {
+      "created": "2026-01-31T20:33:16.600Z",
+      "modified": "2026-01-31T20:33:16.600Z",
+      "name": "llama3.2:3b",
+      "argument": "llama3.2:3b"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 32,
+    "fields": {
+      "created": "2026-01-31T20:33:39.809Z",
+      "modified": "2026-01-31T20:33:39.809Z",
+      "name": "gemma3:27b",
+      "argument": "gemma3:27b"
+    }
+  },
+  {
     "model": "environments.talosexecutable",
     "pk": 1,
     "fields": {
@@ -1110,6 +1160,21 @@
     }
   },
   {
+    "model": "environments.talosexecutable",
+    "pk": 16,
+    "fields": {
+      "created": "2026-01-31T20:20:21.722Z",
+      "description": null,
+      "modified": "2026-01-31T20:34:25.958Z",
+      "name": "Ollama Run",
+      "internal": false,
+      "working_path": "",
+      "executable": "ollama",
+      "log": "",
+      "switches": []
+    }
+  },
+  {
     "model": "environments.talosexecutableargumentassignment",
     "pk": 1,
     "fields": {
@@ -1152,6 +1217,24 @@
       "executable": 2,
       "order": 1,
       "argument": 27
+    }
+  },
+  {
+    "model": "environments.talosexecutableargumentassignment",
+    "pk": 6,
+    "fields": {
+      "executable": 16,
+      "order": 1,
+      "argument": 28
+    }
+  },
+  {
+    "model": "environments.talosexecutableargumentassignment",
+    "pk": 7,
+    "fields": {
+      "executable": 16,
+      "order": 2,
+      "argument": 31
     }
   }
 ]
