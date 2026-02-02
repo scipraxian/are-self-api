@@ -801,7 +801,24 @@ endblock
     color: #facc15;
 }
 
-/* Source: hydra\templates\hydra\partials\head_log.html */
+.status-stopping {
+    background: rgba(249, 115, 22, 0.15);
+    color: #fb923c;
+    border: 1px solid rgba(249, 115, 22, 0.3);
+    animation: pulse 1s infinite alternate;
+}
+
+.status-stopped {
+    background: rgba(148, 163, 184, 0.15);
+    color: #94a3b8;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.status-aborted {
+    background: rgba(244, 63, 94, 0.15);
+    color: #fda4af;
+    text-decoration: line-through;
+}
 
 .log-tab {
     background: transparent;

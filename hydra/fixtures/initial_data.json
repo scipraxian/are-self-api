@@ -1820,6 +1820,20 @@
     }
   },
   {
+    "model": "hydra.hydraspawnstatus",
+    "pk": 8,
+    "fields": {
+      "name": "Stopping"
+    }
+  },
+  {
+    "model": "hydra.hydraspawnstatus",
+    "pk": 9,
+    "fields": {
+      "name": "Stopped"
+    }
+  },
+  {
     "model": "hydra.hydraheadstatus",
     "pk": 1,
     "fields": {
@@ -1866,6 +1880,20 @@
     "pk": 7,
     "fields": {
       "name": "Delegated"
+    }
+  },
+  {
+    "model": "hydra.hydraheadstatus",
+    "pk": 8,
+    "fields": {
+      "name": "Stopping"
+    }
+  },
+  {
+    "model": "hydra.hydraheadstatus",
+    "pk": 9,
+    "fields": {
+      "name": "Stopped"
     }
   }
 ]

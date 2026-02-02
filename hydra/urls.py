@@ -6,14 +6,12 @@ from .hydra_graph import HydraGraphAPI, HydraGraphLaunchAPI
 app_name = 'hydra'
 
 urlpatterns = [
-    # --- The Graph App (New Core) ---
-    # Edit Mode
+    # --- The Graph App ---
     path(
         'graph/editor/<str:book_id>/',
         views.HydraGraphEditorView.as_view(),
         name='graph_editor',
     ),
-    # Monitor Mode
     path(
         'graph/spawn/<uuid:spawn_id>/',
         views.HydraGraphMonitorView.as_view(),
@@ -25,17 +23,18 @@ urlpatterns = [
         HydraGraphLaunchAPI.as_view(),
         name='graph_launch_api',
     ),
-    path('graph/<str:book_id>/', HydraGraphAPI.as_view(),
-         name='graph_api_root'),
+    path(
+        'graph/<str:book_id>/', HydraGraphAPI.as_view(), name='graph_api_root'
+    ),
     path(
         'graph/<str:book_id>/<str:action>',
         HydraGraphAPI.as_view(),
         name='graph_api_action',
     ),
-    # --- The War Room (Head Detail) ---
-    path('head/<uuid:pk>/',
-         views.HeadLogDetailView.as_view(),
-         name='head_detail'),
+    # --- The War Room ---
+    path(
+        'head/<uuid:pk>/', views.HeadLogDetailView.as_view(), name='head_detail'
+    ),
     # --- Actions ---
     path(
         'launch/<uuid:spellbook_id>/',
@@ -47,16 +46,17 @@ urlpatterns = [
         views.TerminateSpawnView.as_view(),
         name='hydra_spawn_terminate',
     ),
-    # --- LEGACY COMPATIBILITY (Fixes 500 Errors) ---
-    # These aliases map old Dashboard names to the new Views
-    # 1. Fix "hydra_head_logs" -> Maps to the new War Room
+    path(
+        'spawn/<uuid:pk>/stop/',
+        views.GracefulStopSpawnView.as_view(),
+        name='hydra_spawn_stop_graceful',
+    ),
+    # --- LEGACY COMPATIBILITY ---
     path(
         'head/<uuid:pk>/logs/',
         views.HeadLogDetailView.as_view(),
         name='hydra_head_logs',
     ),
-    # 2. Fix "hydra_spawn_monitor" -> Redirects to the new Graph Monitor
-    # Note: We use <spawn_id> to match the View's pk_url_kwarg
     path(
         'monitor/<uuid:spawn_id>/',
         views.HydraGraphMonitorView.as_view(),

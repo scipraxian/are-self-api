@@ -44,11 +44,33 @@
                     </button>
                 {% endif %}
             {% else %}
-                <button hx-post="{% url 'hydra:hydra_spawn_terminate' spawn.id %}"
-                        class="btn-done"
-                        style="border-color: #ef4444; color: #ef4444;">
-                    STOP
-                </button>
+                {% if spawn.status.name == 'Stopping' %}
+                    <button class="btn-done" disabled
+                            style="border-color: #f97316; color: #f97316; opacity: 0.8; cursor: wait;">
+                        <span class="spinner-small"
+                              style="display: inline-block; vertical-align: middle; margin-right: 5px;"></span>
+                        STOPPING...
+                    </button>
+                    <button hx-post="{% url 'hydra:hydra_spawn_terminate' spawn.id %}"
+                            hx-confirm="Force Kill? Logs will be cut."
+                            class="btn-done"
+                            style="border-color: #ef4444; color: #ef4444; font-size: 0.7rem; margin-left: 5px;">
+                        FORCE
+                    </button>
+                {% else %}
+                    <button hx-post="{% url 'hydra:hydra_spawn_stop_graceful' spawn.id %}"
+                            class="btn-done"
+                            style="border-color: #fb923c; color: #fb923c; font-weight: 800;">
+                        STOP
+                    </button>
+
+                    <button hx-post="{% url 'hydra:hydra_spawn_terminate' spawn.id %}"
+                            hx-confirm="KILL IMMEDIATELY? This may corrupt logs."
+                            class="btn-done"
+                            style="border-color: #ef4444; color: #ef4444; font-size: 0.7rem; margin-left: 10px;">
+                        KILL
+                    </button>
+                {% endif %}
             {% endif %}
         </div>
     </div>

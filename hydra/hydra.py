@@ -21,7 +21,7 @@ from .models import (
     HydraSpellbookConnectionWire,
     HydraSpellbookNode,
     HydraStatusID,
-    HydraWireType,  # <--- Added Import
+    HydraWireType,
 )
 from .tasks import cast_hydra_spell
 
@@ -68,11 +68,10 @@ class Hydra:
             spawn.status_id = HydraSpawnStatus.RUNNING
             spawn.save(update_fields=['status'])
 
-        # Dispatch Roots (New Transaction)
         self.dispatch_next_wave()
 
     def terminate(self) -> None:
-        """Aborts the spawn."""
+        """Aborts the spawn immediately (Hard Kill)."""
         task_ids_to_revoke = []
 
         with transaction.atomic():
@@ -114,6 +113,28 @@ class Hydra:
 
         logger.info(f'[HYDRA] Spawn {self.spawn.id} Terminated.')
 
+    def stop_gracefully(self) -> None:
+        """
+        Signals active heads to stop gracefully.
+        Sets status to STOPPING. The GenericSpellCaster will see this
+        and trigger the agent's graceful termination logic.
+        """
+        with transaction.atomic():
+            spawn = HydraSpawn.objects.select_for_update().get(id=self.spawn.id)
+
+            # Filter for active heads that aren't already stopping/done
+            active_heads = spawn.heads.select_for_update().filter(
+                status_id__in=[
+                    HydraHeadStatus.RUNNING,
+                    HydraHeadStatus.PENDING,
+                ]
+            )
+
+            count = active_heads.update(status_id=HydraHeadStatus.STOPPING)
+            logger.info(
+                f'[HYDRA] Spawn {self.spawn.id}: stop_gracefully signaled {count} heads.'
+            )
+
     def poll(self) -> None:
         """Maintenance Pulse."""
         with transaction.atomic():
@@ -149,11 +170,10 @@ class Hydra:
 
     def view(self) -> Dict[str, Any]:
         """Serializer for UI."""
-        # Note: Heads are now ordered by created time since 'order' field is gone
         return {
             'id': str(self.spawn.id),
             'status': self.spawn.status.name,
-            'progress': 0.0,  # Progress is hard in a non-linear graph
+            'progress': 0.0,
             'current_wave': 0,
             'heads': [
                 {
@@ -176,7 +196,6 @@ class Hydra:
 
     def _create_spawn(self, spellbook_id: uuid.UUID) -> HydraSpawn:
         book = HydraSpellbook.objects.get(id=spellbook_id)
-        # We NO LONGER create heads here. Heads are JIT (Just In Time).
         spawn = HydraSpawn.objects.create(
             spellbook=book,
             status_id=HydraSpawnStatus.CREATED,
@@ -192,31 +211,27 @@ class Hydra:
         2. If heads finished, follow Wires.
         """
         with transaction.atomic():
-            # Lock rows
             heads = self.spawn.heads.select_for_update().all()
 
-            # 1. Roots Check (First Run)
             if not heads.exists():
                 self._dispatch_graph_roots()
                 return
 
-            # 2. Trigger Check
-            # Find heads that are done (Success/Fail)
+            # Trigger Check: Include STOPPED as a terminal state that might allow flow (e.g. Failure paths)
+            # Depending on desired logic, STOPPED might trigger 'Failure' wires or just end the graph.
+            # For now, we treat STOPPED as a terminal state that halts flow.
             finished_heads = heads.filter(
                 status_id__in=[HydraHeadStatus.SUCCESS, HydraHeadStatus.FAILED]
             )
 
-            # Optimization: Filter out heads that have already successfully triggered their children.
-            # We look for heads that are listed as 'provenance' in existing heads.
             parents_with_children = HydraHead.objects.filter(
                 spawn=self.spawn, provenance__isnull=False
             ).values_list('provenance_id', flat=True)
 
             for head in finished_heads:
                 if head.id in parents_with_children:
-                    continue  # Already triggered downstream nodes
+                    continue
 
-                # Check for wires and dispatch
                 self._process_graph_triggers(head)
 
             self._finalize_spawn_unsafe()
@@ -224,8 +239,6 @@ class Hydra:
     def _dispatch_graph_roots(self) -> None:
         """Execute all Begin Play nodes."""
         all_nodes = self.spawn.spellbook.nodes.all()
-
-        # We filter strictly for the nodes marked is_root in the database/editor
         root_nodes = all_nodes.filter(is_root=True)
 
         if not root_nodes.exists() and all_nodes.exists():
@@ -236,7 +249,6 @@ class Hydra:
             return
 
         for node in root_nodes:
-            # Roots have no provenance
             self._create_head_from_node(node, provenance=None)
 
     def _process_graph_triggers(self, finished_head: HydraHead) -> None:
@@ -244,24 +256,18 @@ class Hydra:
         if not finished_head.node:
             return
 
-        # Determine valid wire types based on the Head's status
         valid_wire_types = []
-
-        # Always trigger "Flow" (White) wires on completion
         valid_wire_types.append(HydraWireType.TYPE_FLOW)
 
         if finished_head.status_id == HydraHeadStatus.SUCCESS:
-            # Success (Green) wires
             valid_wire_types.append(HydraWireType.TYPE_SUCCESS)
         elif finished_head.status_id == HydraHeadStatus.FAILED:
-            # Failure (Red) wires
             valid_wire_types.append(HydraWireType.TYPE_FAILURE)
 
-        # Find wires matching the logic
         wires = HydraSpellbookConnectionWire.objects.filter(
             spellbook=self.spawn.spellbook,
             source=finished_head.node,
-            type_id__in=valid_wire_types,  # <--- FIXED LOGIC
+            type_id__in=valid_wire_types,
         )
 
         if not wires.exists():
@@ -279,19 +285,15 @@ class Hydra:
     def _create_head_from_node(
         self, node: HydraSpellbookNode, provenance: Optional[HydraHead]
     ):
-        """Factory: Creates a head for a specific node."""
-
         seed_head = HydraHead.objects.create(
             spawn=self.spawn,
             node=node,
-            spell=node.spell,  # Denormalized for speed
+            spell=node.spell,
             provenance=provenance,
             target=None,
             status_id=HydraHeadStatus.CREATED,
         )
 
-        # [DELEGATION PROTOCOL]
-        # If this node invokes another Spellbook, we hand off to the GraphWalker
         if node.invoked_spellbook:
             from .engine.graph_walker import GraphWalker
 
@@ -299,7 +301,6 @@ class Hydra:
             walker.process_node(seed_head)
             return
 
-        # Hand off to specific dispatchers based on mode
         mode = node.spell.distribution_mode_id
 
         if mode == HydraDistributionModeID.ALL_ONLINE_AGENTS:
@@ -309,11 +310,9 @@ class Hydra:
         elif mode == HydraDistributionModeID.ONE_AVAILABLE_AGENT:
             self._dispatch_first_responder(seed_head)
         else:
-            # LOCAL_SERVER (Mode 1): target stays None, runs on local server
             self._prepare_and_dispatch(seed_head)
 
     def _dispatch_fleet_wave(self, seed_head: HydraHead) -> None:
-        """Fans out to all online agents."""
         agents = TalosAgentRegistry.objects.filter(
             status_id=TalosAgentStatus.ONLINE
         )
@@ -329,7 +328,6 @@ class Hydra:
         for agent in agents:
             self._clone_and_dispatch_head(seed_head, agent)
 
-        # Seed is just a template, delete it so it doesn't clutter
         seed_head.delete()
 
     def _dispatch_pinned_wave(self, seed_head: HydraHead) -> None:
@@ -374,23 +372,27 @@ class Hydra:
 
     def _finalize_spawn_unsafe(self) -> None:
         """Determines final status."""
-        # In a Graph, "Done" means no heads are running/pending
         active = self.spawn.heads.filter(
             status_id__in=[
                 HydraHeadStatus.CREATED,
                 HydraHeadStatus.PENDING,
                 HydraHeadStatus.RUNNING,
                 HydraHeadStatus.DELEGATED,
+                HydraHeadStatus.STOPPING,
             ]
         )
         if active.exists():
             return
 
-        # If we are here, everything is terminal.
         failed = self.spawn.heads.filter(
-            status_id__in=[HydraHeadStatus.FAILED, HydraHeadStatus.ABORTED]
+            status_id__in=[
+                HydraHeadStatus.FAILED,
+                HydraHeadStatus.ABORTED,
+            ]
         )
 
+        # STOPPED heads are technically 'success of intent', so they don't fail the spawn.
+        # However, if there are ACTUAL failures elsewhere, the spawn fails.
         new_status = (
             HydraSpawnStatus.FAILED
             if failed.exists()
@@ -413,6 +415,5 @@ class Hydra:
         elif status_id == HydraSpawnStatus.SUCCESS:
             spawn_success.send(sender=sender, spawn=self.spawn)
 
-    # Placeholder for progress
     def _calculate_progress(self) -> float:
         return 0.0
