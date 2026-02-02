@@ -53,7 +53,7 @@
         spawnId: "{% if spawn %}{{ spawn.id }}{% elif spawn_id %}{{ spawn_id }}{% endif %}",
         mode: "{{ mode|default:'edit' }}",
         csrfToken: "{{ csrf_token }}",
-        terminateUrl: "{% if spawn %}{% url 'hydra:hydra_spawn_terminate' spawn.id %}{% elif spawn_id %}{% url 'hydra:hydra_spawn_terminate' spawn_id %}{% endif %}"
+        terminateUrl: "{% if spawn %}{% url 'hydra:hydra_spawn_stop_graceful' spawn.id %}{% elif spawn_id %}{% url 'hydra:hydra_spawn_stop_graceful' spawn_id %}{% endif %}"
     };
 </script>
 <div id="app">

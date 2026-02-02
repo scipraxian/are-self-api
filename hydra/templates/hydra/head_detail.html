@@ -377,7 +377,7 @@
 
                 {% if head.status.name == 'Running' or head.status.name == 'Pending' %}
                     <button class="btn-terminate"
-                            hx-post="{% url 'hydra:hydra_spawn_terminate' head.spawn.id %}"
+                            hx-post="{% url 'hydra:hydra_spawn_stop_graceful' head.spawn.id %}"
                             hx-confirm="Confirm Kill?">
                         ■ STOP
                     </button>

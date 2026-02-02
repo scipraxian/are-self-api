@@ -131,6 +131,10 @@ class Hydra:
             )
 
             count = active_heads.update(status_id=HydraHeadStatus.STOPPING)
+            if count > 0:
+                spawn.status_id = HydraSpawnStatus.STOPPING
+                spawn.save(update_fields=['status'])
+
             logger.info(
                 f'[HYDRA] Spawn {self.spawn.id}: stop_gracefully signaled {count} heads.'
             )

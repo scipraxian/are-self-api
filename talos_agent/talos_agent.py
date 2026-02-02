@@ -49,6 +49,7 @@ Dependencies:
 -------------
 * Python 3.10+
 * `watchfiles` (Filesystem events)
+* `psutil` (Process Management)
 
 Usage:
 ------
@@ -75,6 +76,8 @@ from typing import (
     Union,
 )
 
+import psutil
+
 # --- DEPENDENCIES ---
 try:
     from watchfiles import awatch
@@ -91,7 +94,7 @@ class TalosAgentConstants:
     """Protocol Constants."""
 
     # Meta
-    VERSION = '4.3.0'
+    VERSION = '4.3.3'
     ENCODING = 'utf-8'
     ERR_HANDLER = 'replace'
 
@@ -203,35 +206,58 @@ class AsyncProcessRunner:
     def is_running(self) -> bool:
         return self.process is not None and self.process.returncode is None
 
-    def terminate(self) -> None:
+    def _is_pid_running(self, pid: int) -> bool:
+        """Checks if a PID is running using psutil."""
+        try:
+            return psutil.pid_exists(pid)
+        except Exception:
+            return False
+
+    async def terminate(self) -> None:
         """
-        Attempts a graceful termination of the process.
-        This is the "Gentle Tap" logic.
+        Attempts a graceful termination matching legacy '9_RemoteAgent.py'.
+        Strategy: Ask (Image Name) -> Wait (10s) -> Force (PID).
         """
-        if not self.process:
+        if not self.process or self.process.returncode is not None:
             return
 
         pid = self.process.pid
-        print(f'[TERMINATE] Signaling PID: {pid} for graceful shutdown.')
+        exe_name = os.path.basename(self.command[0])
+        print(
+            f'[TERMINATE] Requesting Graceful Exit for {exe_name} (PID: {pid})...'
+        )
 
+        # 1. Ask Nicely: taskkill /IM matches legacy behavior
         try:
-            if sys.platform == 'win32' and pid:
-                # Using taskkill WITHOUT /F allows the app to handle WM_CLOSE/CTRL_C
+            if sys.platform == 'win32':
                 subprocess.run(
-                    ['taskkill', '/PID', str(pid)],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
+                    f'taskkill /IM {exe_name}',
+                    shell=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    check=False,
                 )
             else:
                 self.process.terminate()
         except Exception as e:
-            print(f'[TERMINATE] Exception: {e}')
+            print(f'[TERMINATE] Signal failed: {e}')
+
+        # 2. Wait Loop: 10 seconds check using psutil [cite: 1086]
+        print('   > Waiting for shutdown...')
+        for _ in range(10):
+            if not self._is_pid_running(pid):
+                print('   > Application closed successfully.')
+                return
+            await asyncio.sleep(1.0)
+
+        # 3. Force Kill [cite: 1087]
+        print('   [!] Graceful exit timed out. FORCE KILLING.')
+        self.kill()
 
     def kill(self) -> None:
         """
         Forces the process to terminate.
-        CRITICAL FIX: Uses OS-specific 'Tree Kill' and 'Image Kill' to ensure no zombies remain.
+        Uses OS-specific 'Tree Kill' and 'Image Kill' to ensure no zombies remain.
         """
         if not self.process:
             print('[KILL] No active process handle.')
@@ -242,7 +268,7 @@ class AsyncProcessRunner:
         print(f'[KILL] Initiating termination for PID: {pid} ({exe_name})')
 
         try:
-            # 1. Attempt standard kill first (works for simple processes)
+            # 1. Attempt standard kill first
             self.process.kill()
             print(f'[KILL] Sent standard .kill() signal to PID {pid}')
 
@@ -259,7 +285,7 @@ class AsyncProcessRunner:
                     f'[KILL] PID Kill Result: {result.stdout.strip()} {result.stderr.strip()}'
                 )
 
-                # 3. Fallback: Kill by Image Name (Catch detached children/launchers)
+                # 3. Fallback: Kill by Image Name [cite: 1088]
                 print(
                     f'[KILL] Fallback: Sweeping for Image Name: {exe_name}...'
                 )
@@ -409,11 +435,14 @@ class AsyncLogMonitor:
 async def _watch_stop_event(
     stop_event: asyncio.Event, runner: AsyncProcessRunner
 ) -> None:
-    """Helper to monitor stop event and signal the runner."""
+    """
+    Helper to monitor stop event and signal the runner.
+    """
     await stop_event.wait()
     if runner.is_running:
         print('[PIPELINE] Graceful Stop Requested.')
-        runner.terminate()
+        # UPDATED: Use the new async terminate with escalation
+        await runner.terminate()
 
 
 async def _pipe_stream(

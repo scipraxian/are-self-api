@@ -51,7 +51,7 @@
                               style="display: inline-block; vertical-align: middle; margin-right: 5px;"></span>
                         STOPPING...
                     </button>
-                    <button hx-post="{% url 'hydra:hydra_spawn_terminate' spawn.id %}"
+                    <button hx-post="{% url 'hydra:hydra_spawn_stop_graceful' spawn.id %}"
                             hx-confirm="Force Kill? Logs will be cut."
                             class="btn-done"
                             style="border-color: #ef4444; color: #ef4444; font-size: 0.7rem; margin-left: 5px;">
@@ -64,7 +64,7 @@
                         STOP
                     </button>
 
-                    <button hx-post="{% url 'hydra:hydra_spawn_terminate' spawn.id %}"
+                    <button hx-post="{% url 'hydra:hydra_spawn_stop_graceful' spawn.id %}"
                             hx-confirm="KILL IMMEDIATELY? This may corrupt logs."
                             class="btn-done"
                             style="border-color: #ef4444; color: #ef4444; font-size: 0.7rem; margin-left: 10px;">
