@@ -72,8 +72,6 @@ from typing import (
     List,
     NamedTuple,
     Optional,
-    Tuple,
-    Union,
 )
 
 import psutil
@@ -161,7 +159,8 @@ class TalosEvent(NamedTuple):
 
 class AsyncProcessRunner:
     """
-    Manages a subprocess lifecycle and streams STDOUT/STDERR via async generator.
+    Manages a subprocess lifecycle and streams STDOUT/STDERR
+    via async generator.
     """
 
     def __init__(self, command: List[str], cwd: Optional[str] = None):
@@ -223,8 +222,9 @@ class AsyncProcessRunner:
 
         pid = self.process.pid
         exe_name = os.path.basename(self.command[0])
-        print(
-            f'[TERMINATE] Requesting Graceful Exit for {exe_name} (PID: {pid})...'
+        logger.info(
+            f'[TERMINATE] Requesting Graceful Exit '
+            f'for {exe_name} (PID: {pid})...'
         )
 
         # 1. Ask Nicely: taskkill /IM matches legacy behavior
@@ -240,53 +240,57 @@ class AsyncProcessRunner:
             else:
                 self.process.terminate()
         except Exception as e:
-            print(f'[TERMINATE] Signal failed: {e}')
+            logger.info(f'[TERMINATE] Signal failed: {e}')
 
         # 2. Wait Loop: 10 seconds check using psutil [cite: 1086]
-        print('   > Waiting for shutdown...')
+        logger.info('   > Waiting for shutdown...')
         for _ in range(10):
             if not self._is_pid_running(pid):
-                print('   > Application closed successfully.')
+                logger.info('   > Application closed successfully.')
                 return
             await asyncio.sleep(1.0)
 
         # 3. Force Kill [cite: 1087]
-        print('   [!] Graceful exit timed out. FORCE KILLING.')
+        logger.info('   [!] Graceful exit timed out. FORCE KILLING.')
         self.kill()
 
     def kill(self) -> None:
         """
         Forces the process to terminate.
-        Uses OS-specific 'Tree Kill' and 'Image Kill' to ensure no zombies remain.
+        Uses OS-specific 'Tree Kill' and 'Image Kill'
+        to ensure no zombies remain.
         """
         if not self.process:
-            print('[KILL] No active process handle.')
+            logger.info('[KILL] No active process handle.')
             return
 
         pid = self.process.pid
         exe_name = os.path.basename(self.command[0])
-        print(f'[KILL] Initiating termination for PID: {pid} ({exe_name})')
+        logger.info(
+            f'[KILL] Initiating termination for PID: {pid} ({exe_name})'
+        )
 
         try:
             # 1. Attempt standard kill first
             self.process.kill()
-            print(f'[KILL] Sent standard .kill() signal to PID {pid}')
+            logger.info(f'[KILL] Sent standard .kill() signal to PID {pid}')
 
             # 2. Windows Nuclear Option: taskkill /F /T
             if sys.platform == 'win32' and pid:
-                print(f'[KILL] Attempting taskkill /F /T /PID {pid}...')
+                logger.info(f'[KILL] Attempting taskkill /F /T /PID {pid}...')
                 result = subprocess.run(
                     ['taskkill', '/F', '/T', '/PID', str(pid)],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
                 )
-                print(
-                    f'[KILL] PID Kill Result: {result.stdout.strip()} {result.stderr.strip()}'
+                logger.info(
+                    f'[KILL] PID Kill Result: '
+                    f'{result.stdout.strip()} {result.stderr.strip()}'
                 )
 
                 # 3. Fallback: Kill by Image Name [cite: 1088]
-                print(
+                logger.info(
                     f'[KILL] Fallback: Sweeping for Image Name: {exe_name}...'
                 )
                 result_im = subprocess.run(
@@ -296,14 +300,15 @@ class AsyncProcessRunner:
                     stderr=subprocess.PIPE,
                     text=True,
                 )
-                print(
-                    f'[KILL] Image Kill Result: {result_im.stdout.strip()} {result_im.stderr.strip()}'
+                logger.info(
+                    f'[KILL] Image Kill Result: '
+                    f'{result_im.stdout.strip()} {result_im.stderr.strip()}'
                 )
 
         except ProcessLookupError:
-            print('[KILL] Process already dead (ProcessLookupError).')
+            logger.info('[KILL] Process already dead (ProcessLookupError).')
         except Exception as e:
-            print(f'[KILL] Exception during kill: {e}')
+            logger.info(f'[KILL] Exception during kill: {e}')
 
 
 class AsyncLogMonitor:
@@ -324,7 +329,7 @@ class AsyncLogMonitor:
         self._file_found = False
 
         # DEBUG CHATTER
-        print(f'[MONITOR] Initialized for: {self.file_path}')
+        logger.info(f'[MONITOR] Initialized for: {self.file_path}')
 
     async def start(self) -> None:
         if not self._watcher_task:
@@ -339,8 +344,11 @@ class AsyncLogMonitor:
 
         # Report if file never appeared
         if not self._file_found:
-            msg = f"\n{TalosAgentConstants.TAG_MONITOR} Warn: Log file '{self.file_path}' never appeared.\n"
-            print(msg.strip())
+            msg = (
+                f'\n{TalosAgentConstants.TAG_MONITOR} '
+                f"Warn: Log file '{self.file_path}' never appeared.\n"
+            )
+            logger.info(msg.strip())
             self._queue.put_nowait(msg)
 
         # Signal end of stream
@@ -363,14 +371,14 @@ class AsyncLogMonitor:
 
     async def _watch_loop(self) -> None:
         directory = os.path.dirname(self.file_path) or '.'
-        print(f'[MONITOR] Watching directory: {directory}')
+        logger.info(f'[MONITOR] Watching directory: {directory}')
 
         # 1. Patience Phase
         start_time = time.time()
-        print(f'[MONITOR] Waiting for file to appear...')
+        logger.info('[MONITOR] Waiting for file to appear...')
         while time.time() - start_time < TalosAgentConstants.TIMEOUT_LOG_APPEAR:
             if os.path.exists(self.file_path):
-                print(f'[MONITOR] File found: {self.file_path}')
+                logger.info(f'[MONITOR] File found: {self.file_path}')
                 break
             if self._stop_event.is_set():
                 return
@@ -386,7 +394,7 @@ class AsyncLogMonitor:
         except asyncio.CancelledError:
             pass
         except Exception as e:
-            print(f'[MONITOR] Watch loop crashed: {e}')
+            logger.info(f'[MONITOR] Watch loop crashed: {e}')
 
     def _read_file(self, force_check: bool = False) -> None:
         if not os.path.exists(self.file_path):
@@ -399,7 +407,6 @@ class AsyncLogMonitor:
                 return
 
         try:
-            # Try to open with shared access (default in Python, but OS can lock)
             with open(
                 self.file_path,
                 'r',
@@ -411,7 +418,7 @@ class AsyncLogMonitor:
 
                 # Detect Truncation (New Run)
                 if size < self._current_offset:
-                    print(
+                    logger.info(
                         '[MONITOR] File truncation detected. Resetting offset.'
                     )
                     self._current_offset = 0
@@ -422,14 +429,15 @@ class AsyncLogMonitor:
 
                 self._current_offset = f.tell()
                 if not self._file_found:
-                    print(
-                        f'[MONITOR] Started streaming from offset {self._current_offset}'
+                    logger.info(
+                        f'[MONITOR] Started streaming from offset '
+                        f'{self._current_offset}'
                     )
                     self._file_found = True
 
         except OSError as e:
             # THIS IS THE CRITICAL FIX: Don't swallow errors!
-            print(f'[MONITOR ERROR] Failed to read log: {e}')
+            logger.info(f'[MONITOR ERROR] Failed to read log: {e}')
 
 
 async def _watch_stop_event(
@@ -440,7 +448,7 @@ async def _watch_stop_event(
     """
     await stop_event.wait()
     if runner.is_running:
-        print('[PIPELINE] Graceful Stop Requested.')
+        logger.info('[PIPELINE] Graceful Stop Requested.')
         # UPDATED: Use the new async terminate with escalation
         await runner.terminate()
 
@@ -450,7 +458,8 @@ async def _pipe_stream(
     callback: Callable[[str], Awaitable[None]],
     runner: AsyncProcessRunner,
 ) -> None:
-    """Helper to pipe a stream to a callback, killing process on connection error."""
+    """Helper to pipe a stream to a callback,
+    killing process on connection error."""
     try:
         async for line in stream_generator:
             await callback(line)
@@ -474,7 +483,8 @@ async def run_hydra_pipeline(
         command: The executable and arguments.
         log_path: Path to the external log file to watch.
         output_callback: Async callback for STDOUT/STDERR.
-        file_callback: Async callback for FILE LOGS. Defaults to output_callback if None.
+        file_callback: Async callback for FILE LOGS.
+            Defaults to output_callback if None.
         stop_event: Event to trigger a graceful termination.
 
     CRITICAL: Implements "The Leash" and "Buffer Drain".
@@ -524,7 +534,9 @@ async def run_hydra_pipeline(
         # The process is dead, but logs might still be flushing to disk.
         # We hold the line open for a few seconds to catch the final words.
         if monitor:
-            print('[PIPELINE] Process exited. Draining log buffer (3s)...')
+            logger.info(
+                '[PIPELINE] Process exited. Draining log buffer (3s)...'
+            )
             await asyncio.sleep(3.0)
 
     except (
@@ -534,20 +546,20 @@ async def run_hydra_pipeline(
         ConnectionAbortedError,
     ) as e:
         # --- THE KILL SWITCH ---
-        print(
-            f'\n[PIPELINE] Aborting (Reason: {type(e).__name__}). Killing process...'
+        logger.info(
+            f'\n[PIPELINE] Aborting '
+            f'(Reason: {type(e).__name__}). Killing process...'
         )
         runner.kill()
 
-        # Robustness: Wait briefly for the process to actually die to avoid orphans
-        print('[PIPELINE] Waiting for process death...')
+        logger.info('[PIPELINE] Waiting for process death...')
         try:
             await asyncio.wait_for(runner.wait(), timeout=3.0)
-            print('[PIPELINE] Process confirmed dead.')
+            logger.info('[PIPELINE] Process confirmed dead.')
         except asyncio.TimeoutError:
-            print('[PIPELINE] Process wait timed out (Zombie?). Moving on.')
+            logger.info('[PIPELINE] Process wait timed out Zombie. Moving on.')
         except Exception as kill_err:
-            print(f'[PIPELINE] Error waiting for death: {kill_err}')
+            logger.info(f'[PIPELINE] Error waiting for death: {kill_err}')
 
         raise
 
@@ -643,7 +655,6 @@ class TalosAgent:
                 )
 
             elif command == TalosAgentConstants.CMD_EXECUTE:
-                # Pass reader to allow listening for STOP signal during execution
                 await self._handle_execute(reader, writer, args)
 
             elif command == TalosAgentConstants.CMD_UPDATE:
@@ -687,9 +698,9 @@ class TalosAgent:
                     break
                 msg = data.decode(TalosAgentConstants.ENCODING).strip().upper()
                 if msg == TalosAgentConstants.CMD_STOP:
-                    # We can't easily access the logger from a classmethod without passing it,
-                    # but we can print which goes to stdout/system log.
-                    print('[AGENT] Graceful STOP signal received from client.')
+                    logger.info(
+                        '[AGENT] Graceful STOP signal received from client.'
+                    )
                     stop_event.set()
         except Exception:
             pass
@@ -741,15 +752,12 @@ class TalosAgent:
                     )
                 elif event.type == TalosAgentConstants.T_EXIT:
                     response_payload[TalosAgentConstants.K_CODE] = event.code
-
-                # If the client has disconnected, this await will crash.
-                # That crash stops the generator iteration.
-                # The generator's 'finally' block triggers and kills the process.
                 await self._send_json(writer, response_payload)
 
         except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
             self.logger.warning(
-                f'Connection lost during execution of {executable}. Process Killed.'
+                f'Connection lost during execution of {executable}.'
+                f'Process Killed.'
             )
             # No need to send response, client is gone.
 
@@ -889,7 +897,8 @@ class TalosAgent:
         try:
             yield TalosEvent(
                 type=TalosAgentConstants.T_LOG,
-                text=f'{TalosAgentConstants.TAG_AGENT} Launching Local: {" ".join(command)}\n',
+                text=f'{TalosAgentConstants.TAG_AGENT} '
+                f'Launching Local: {" ".join(command)}\n',
             )
 
             while True:
@@ -1043,7 +1052,10 @@ def _get_agent_id():
             [
                 'powershell',
                 '-Command',
-                'Get-CimInstance Win32_ComputerSystemProduct | Select-Object -ExpandProperty UUID',
+                (
+                    'Get-CimInstance Win32_ComputerSystemProduct | '
+                    'Select-Object -ExpandProperty UUID'
+                ),
             ],
             encoding='utf-8',
             creationflags=0x08000000,  # CREATE_NO_WINDOW
@@ -1061,5 +1073,7 @@ if __name__ == '__main__':
             )
         asyncio.run(agent.run_server())
     except KeyboardInterrupt:
-        print(f'\nShutting down... ({len(agent.active_tasks)} active tasks)')
+        logger.info(
+            f'\nShutting down... ({len(agent.active_tasks)} active tasks)'
+        )
         pass
