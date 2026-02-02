@@ -1,7 +1,7 @@
 <div id="spawn-monitor-{{ spawn.id }}" class="monitor-card" style="margin-top: 1rem;">
     <div class="monitor-header"
             {% if is_active %}
-         hx-get="{% url 'hydra:hydra_spawn_monitor' spawn.id %}?full={{ is_full_page|default:'' }}"
+         hx-get="{% url 'hydra:hydra_spawn_monitor_partial' spawn.id %}?full={{ is_full_page|default:'False' }}"
          hx-select=".monitor-header"
          hx-trigger="every 2s"
          hx-swap="outerHTML"
@@ -25,6 +25,14 @@
             </div>
         </div>
         <div class="actions" style="display: flex; gap: 10px; align-items: center;">
+            {% if is_full_page %}
+                <a href="{% url 'hydra:graph_monitor' spawn.id %}"
+                   class="btn-done"
+                   style="text-decoration: none; border-color: #475569; color: #94a3b8;">
+                    GRAPH
+                </a>
+            {% endif %}
+
             {% if not is_active %}
                 {% if is_full_page %}
                     <a href="/" class="btn-done" style="text-decoration: none;">DISMISS</a>
