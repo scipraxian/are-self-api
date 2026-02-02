@@ -41,7 +41,8 @@ class HydraGraphMonitorView(DetailView):
 
         # --- NEW: History for Sidebar ---
         context['spawn_history'] = HydraSpawn.objects.filter(
-            spellbook=self.object.spellbook).order_by('-created')[:20]
+            spellbook=self.object.spellbook
+        ).order_by('-created')[:20]
 
         return context
 
@@ -55,13 +56,14 @@ class LaunchSpellbookView(View):
         controller = Hydra(spellbook_id=spellbook_id)
         controller.start()
 
-        target_url = reverse('hydra:graph_monitor',
-                             kwargs={'spawn_id': controller.spawn.id})
+        target_url = reverse(
+            'hydra:graph_monitor', kwargs={'spawn_id': controller.spawn.id}
+        )
 
-        # FAIL-SAFE: Return a script tag. HTMX will execute this and redirect the whole window.
         if self.request.headers.get('HX-Request'):
-            return HttpResponse(
-                f"<script>window.location.href = '{target_url}';</script>")
+            response = HttpResponse()
+            response['HX-Redirect'] = target_url
+            return response
 
         return redirect(target_url)
 
@@ -113,16 +115,18 @@ class HeadLogDetailView(DetailView):
             elif log_type == 'system':
                 content = head.execution_log or ''
             elif log_type == 'file':
-                if (head.spell.talos_executable and
-                        head.spell.talos_executable.log):
+                if (
+                    head.spell.talos_executable
+                    and head.spell.talos_executable.log
+                ):
                     log_path = head.spell.talos_executable.log
                     if os.path.exists(log_path):
                         try:
                             with open(
-                                    log_path,
-                                    'r',
-                                    encoding='utf-8',
-                                    errors='replace',
+                                log_path,
+                                'r',
+                                encoding='utf-8',
+                                errors='replace',
                             ) as f:
                                 content = f.read()
                         except Exception as e:
@@ -161,18 +165,23 @@ class HeadLogDetailView(DetailView):
         context['is_active'] = head.is_active
 
         # Safe Executable Access
-        executable = (head.spell.talos_executable
-                      if head.spell.talos_executable else None)
+        executable = (
+            head.spell.talos_executable if head.spell.talos_executable else None
+        )
 
         # Determine initial content for the main render
         log_type = self.request.GET.get('type')
         if not log_type:
-            log_type = ('system' if head.execution_log and not head.spell_log
-                        else 'tool')
+            log_type = (
+                'system'
+                if head.execution_log and not head.spell_log
+                else 'tool'
+            )
 
         context['log_type'] = log_type
-        context['initial_log_content'] = (head.execution_log if log_type
-                                          == 'system' else head.spell_log)
+        context['initial_log_content'] = (
+            head.execution_log if log_type == 'system' else head.spell_log
+        )
 
         # Check for side-by-side file capability
         context['show_side_by_side'] = False
@@ -185,8 +194,9 @@ class HeadLogDetailView(DetailView):
 
             if os.path.exists(log_path):
                 try:
-                    with open(log_path, 'r', encoding='utf-8',
-                              errors='replace') as f:
+                    with open(
+                        log_path, 'r', encoding='utf-8', errors='replace'
+                    ) as f:
                         context['log_file_content'] = f.read()
                 except Exception as e:
                     context['log_file_content'] = f'Error reading log file: {e}'
