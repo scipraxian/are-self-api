@@ -79,16 +79,19 @@ class Hydra:
             spawn = HydraSpawn.objects.select_for_update().get(id=self.spawn.id)
 
             if spawn.status_id in [
-                    HydraSpawnStatus.SUCCESS,
-                    HydraSpawnStatus.FAILED,
+                HydraSpawnStatus.SUCCESS,
+                HydraSpawnStatus.FAILED,
             ]:
                 return
 
             running_heads = list(
-                spawn.heads.select_for_update().filter(status_id__in=[
-                    HydraHeadStatus.RUNNING,
-                    HydraHeadStatus.PENDING,
-                ]))
+                spawn.heads.select_for_update().filter(
+                    status_id__in=[
+                        HydraHeadStatus.RUNNING,
+                        HydraHeadStatus.PENDING,
+                    ]
+                )
+            )
 
             for head in running_heads:
                 if head.celery_task_id:
@@ -96,7 +99,8 @@ class Hydra:
 
                 head.status_id = HydraHeadStatus.ABORTED
                 head.execution_log += (
-                    '\n[HYDRA] Terminated by User (Signal Sent).\n')
+                    '\n[HYDRA] Terminated by User (Signal Sent).\n'
+                )
                 head.save(update_fields=['status', 'execution_log'])
 
             spawn.status_id = HydraSpawnStatus.FAILED
@@ -115,7 +119,8 @@ class Hydra:
         with transaction.atomic():
             # 1. Ghost Detection
             active_heads = self.spawn.heads.select_for_update().filter(
-                status_id=HydraHeadStatus.RUNNING)
+                status_id=HydraHeadStatus.RUNNING
+            )
             for head in active_heads:
                 if not head.celery_task_id:
                     continue
@@ -124,7 +129,8 @@ class Hydra:
                     logger.warning(f'[HYDRA] Ghost Task {head.id}')
                     head.status_id = HydraHeadStatus.FAILED
                     head.execution_log += (
-                        f'\n[HYDRA POLL] Task Crash: {res.info}\n')
+                        f'\n[HYDRA POLL] Task Crash: {res.info}\n'
+                    )
                     head.save(update_fields=['status', 'execution_log'])
 
             # 2. Stale Pending Detection
@@ -145,23 +151,23 @@ class Hydra:
         """Serializer for UI."""
         # Note: Heads are now ordered by created time since 'order' field is gone
         return {
-            'id':
-                str(self.spawn.id),
-            'status':
-                self.spawn.status.name,
-            'progress':
-                0.0,  # Progress is hard in a non-linear graph
-            'current_wave':
-                0,
-            'heads': [{
-                'id': str(h.id),
-                'name': h.spell.talos_executable.name,
-                'node_id': h.node_id if h.node else None,
-                'status_id': h.status.id,
-                'status_name': h.status.name,
-                'log_preview': (h.spell_log or '')[:150],
-            } for h in self.spawn.heads.all().select_related(
-                'spell', 'status', 'node').order_by('created')],
+            'id': str(self.spawn.id),
+            'status': self.spawn.status.name,
+            'progress': 0.0,  # Progress is hard in a non-linear graph
+            'current_wave': 0,
+            'heads': [
+                {
+                    'id': str(h.id),
+                    'name': h.spell.talos_executable.name,
+                    'node_id': h.node_id if h.node else None,
+                    'status_id': h.status.id,
+                    'status_name': h.status.name,
+                    'log_preview': (h.spell_log or '')[:150],
+                }
+                for h in self.spawn.heads.all()
+                .select_related('spell', 'status', 'node')
+                .order_by('created')
+            ],
         }
 
     # =========================================================================
@@ -197,14 +203,14 @@ class Hydra:
             # 2. Trigger Check
             # Find heads that are done (Success/Fail)
             finished_heads = heads.filter(
-                status_id__in=[HydraHeadStatus.SUCCESS, HydraHeadStatus.FAILED])
+                status_id__in=[HydraHeadStatus.SUCCESS, HydraHeadStatus.FAILED]
+            )
 
             # Optimization: Filter out heads that have already successfully triggered their children.
             # We look for heads that are listed as 'provenance' in existing heads.
             parents_with_children = HydraHead.objects.filter(
-                spawn=self.spawn,
-                provenance__isnull=False).values_list('provenance_id',
-                                                      flat=True)
+                spawn=self.spawn, provenance__isnull=False
+            ).values_list('provenance_id', flat=True)
 
             for head in finished_heads:
                 if head.id in parents_with_children:
@@ -223,8 +229,10 @@ class Hydra:
         root_nodes = all_nodes.filter(is_root=True)
 
         if not root_nodes.exists() and all_nodes.exists():
-            logger.error(f'[HYDRA] No Begin Play node found '
-                         f'for {self.spawn.spellbook.name}!')
+            logger.error(
+                f'[HYDRA] No Begin Play node found '
+                f'for {self.spawn.spellbook.name}!'
+            )
             return
 
         for node in root_nodes:
@@ -264,24 +272,21 @@ class Hydra:
         )
 
         for wire in wires:
-            self._create_head_from_node(node=wire.target,
-                                        provenance=finished_head)
+            self._create_head_from_node(
+                node=wire.target, provenance=finished_head
+            )
 
-    def _create_head_from_node(self, node: HydraSpellbookNode,
-                               provenance: Optional[HydraHead]):
+    def _create_head_from_node(
+        self, node: HydraSpellbookNode, provenance: Optional[HydraHead]
+    ):
         """Factory: Creates a head for a specific node."""
-
-        # Sticky Targeting: Inherit target from parent unless overridden by specific mode logic later
-        target_agent = None
-        if provenance and provenance.target:
-            target_agent = provenance.target
 
         seed_head = HydraHead.objects.create(
             spawn=self.spawn,
             node=node,
             spell=node.spell,  # Denormalized for speed
             provenance=provenance,
-            target=target_agent,
+            target=None,
             status_id=HydraHeadStatus.CREATED,
         )
 
@@ -289,6 +294,7 @@ class Hydra:
         # If this node invokes another Spellbook, we hand off to the GraphWalker
         if node.invoked_spellbook:
             from .engine.graph_walker import GraphWalker
+
             walker = GraphWalker(spawn_id=self.spawn.id)
             walker.process_node(seed_head)
             return
@@ -301,23 +307,22 @@ class Hydra:
         elif mode == HydraDistributionModeID.SPECIFIC_TARGETS:
             self._dispatch_pinned_wave(seed_head)
         elif mode == HydraDistributionModeID.ONE_AVAILABLE_AGENT:
-            if not target_agent:
-                self._dispatch_first_responder(seed_head)
-            else:
-                self._prepare_and_dispatch(seed_head)
+            self._dispatch_first_responder(seed_head)
         else:
-            # LOCAL_SERVER or Default
+            # LOCAL_SERVER (Mode 1): target stays None, runs on local server
             self._prepare_and_dispatch(seed_head)
 
     def _dispatch_fleet_wave(self, seed_head: HydraHead) -> None:
         """Fans out to all online agents."""
         agents = TalosAgentRegistry.objects.filter(
-            status_id=TalosAgentStatus.ONLINE)
+            status_id=TalosAgentStatus.ONLINE
+        )
 
         if not agents.exists():
             seed_head.status_id = HydraStatusID.FAILED
             seed_head.execution_log = (
-                '[HYDRA] No agents online for fleet broadcast.')
+                '[HYDRA] No agents online for fleet broadcast.'
+            )
             seed_head.save()
             return
 
@@ -334,8 +339,11 @@ class Hydra:
         seed_head.delete()
 
     def _dispatch_first_responder(self, seed_head: HydraHead) -> None:
-        agent = (TalosAgentRegistry.objects.filter(
-            status_id=TalosAgentStatus.ONLINE).order_by('last_seen').first())
+        agent = (
+            TalosAgentRegistry.objects.filter(status_id=TalosAgentStatus.ONLINE)
+            .order_by('last_seen')
+            .first()
+        )
 
         if not agent:
             seed_head.status_id = HydraStatusID.FAILED
@@ -346,8 +354,9 @@ class Hydra:
         self._clone_and_dispatch_head(seed_head, agent)
         seed_head.delete()
 
-    def _clone_and_dispatch_head(self, seed: HydraHead,
-                                 agent: TalosAgentRegistry):
+    def _clone_and_dispatch_head(
+        self, seed: HydraHead, agent: TalosAgentRegistry
+    ):
         new_head = HydraHead.objects.create(
             spawn=seed.spawn,
             node=seed.node,
@@ -366,27 +375,34 @@ class Hydra:
     def _finalize_spawn_unsafe(self) -> None:
         """Determines final status."""
         # In a Graph, "Done" means no heads are running/pending
-        active = self.spawn.heads.filter(status_id__in=[
-            HydraHeadStatus.CREATED,
-            HydraHeadStatus.PENDING,
-            HydraHeadStatus.RUNNING,
-            HydraHeadStatus.DELEGATED,
-        ])
+        active = self.spawn.heads.filter(
+            status_id__in=[
+                HydraHeadStatus.CREATED,
+                HydraHeadStatus.PENDING,
+                HydraHeadStatus.RUNNING,
+                HydraHeadStatus.DELEGATED,
+            ]
+        )
         if active.exists():
             return
 
         # If we are here, everything is terminal.
         failed = self.spawn.heads.filter(
-            status_id__in=[HydraHeadStatus.FAILED, HydraHeadStatus.ABORTED])
+            status_id__in=[HydraHeadStatus.FAILED, HydraHeadStatus.ABORTED]
+        )
 
-        new_status = (HydraSpawnStatus.FAILED
-                      if failed.exists() else HydraSpawnStatus.SUCCESS)
+        new_status = (
+            HydraSpawnStatus.FAILED
+            if failed.exists()
+            else HydraSpawnStatus.SUCCESS
+        )
 
         if self.spawn.status_id != new_status:
             self.spawn.status_id = new_status
             self.spawn.save(update_fields=['status'])
             transaction.on_commit(
-                lambda: self._trigger_completion_signals(new_status))
+                lambda: self._trigger_completion_signals(new_status)
+            )
 
     def _trigger_completion_signals(self, status_id: int) -> None:
         from .signals import spawn_failed, spawn_success
