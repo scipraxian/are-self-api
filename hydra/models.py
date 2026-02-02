@@ -22,6 +22,8 @@ from .constants import (
     FAILED_LABEL,
     PENDING_LABEL,
     RUNNING_LABEL,
+    STOPPED_LABEL,
+    STOPPING_LABEL,
     SUCCESS_LABEL,
 )
 
@@ -40,6 +42,8 @@ class HydraStatusID(object):
     FAILED = 5
     ABORTED = 6
     DELEGATED = 7
+    STOPPING = 8
+    STOPPED = 9
 
 
 class HydraStatusTypeMixin(NameMixin):
@@ -53,6 +57,8 @@ class HydraStatusTypeMixin(NameMixin):
     FAILED = HydraStatusID.FAILED
     ABORTED = HydraStatusID.ABORTED
     DELEGATED = HydraStatusID.DELEGATED
+    STOPPING = HydraStatusID.STOPPING
+    STOPPED = HydraStatusID.STOPPED
 
     STATUS_MAP = {
         CREATED_LABEL: HydraStatusID.CREATED,
@@ -61,6 +67,8 @@ class HydraStatusTypeMixin(NameMixin):
         SUCCESS_LABEL: HydraStatusID.SUCCESS,
         FAILED_LABEL: HydraStatusID.FAILED,
         ABORTED_LABEL: HydraStatusID.ABORTED,
+        STOPPING_LABEL: HydraStatusID.STOPPING,
+        STOPPED_LABEL: HydraStatusID.STOPPED,
         'DELEGATED': HydraStatusID.DELEGATED,
     }
 
@@ -377,6 +385,7 @@ class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
         return self.status_id in [
             HydraStatusID.RUNNING,
             HydraStatusID.PENDING,
+            HydraStatusID.STOPPING,
         ]
 
     class Meta:
