@@ -49,7 +49,6 @@
                         style="border-color: #ef4444; color: #ef4444;">
                     STOP
                 </button>
-                <div class="spinner-small"></div>
             {% endif %}
         </div>
     </div>
@@ -113,7 +112,7 @@
                         <span id="status-badge-{{ head.id }}"
                               class="status-badge status-{{ head.status.name|lower }}"
                                 {% if is_active %}
-                              hx-get="{% url 'hydra:hydra_spawn_monitor' spawn.id %}"
+                              hx-get="{% url 'hydra:hydra_spawn_monitor_partial' spawn.id %}?full={{ is_full_page|default:'False' }}"
                               hx-select="#status-badge-{{ head.id }}"
                               hx-trigger="every 2s"
                               hx-swap="outerHTML"
@@ -125,7 +124,7 @@
                         <span id="result-code-{{ head.id }}"
                               style="font-family: monospace; color: {% if head.result_code == 0 %}#4ade80{% elif head.result_code %}#f87171{% else %}#64748b{% endif %};"
                                 {% if is_active %}
-                              hx-get="{% url 'hydra:hydra_spawn_monitor' spawn.id %}"
+                              hx-get="{% url 'hydra:hydra_spawn_monitor_partial' spawn.id %}?full={{ is_full_page|default:'False' }}"
                               hx-select="#result-code-{{ head.id }}"
                               hx-trigger="every 2s"
                               hx-swap="outerHTML"
