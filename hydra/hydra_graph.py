@@ -351,8 +351,8 @@ def get_execution_status(spellbook: HydraSpellbook,
         spawn = HydraSpawn.objects.select_related('status').get(id=spawn_id)
 
         node_status_map = {}
-        # Use the existing head relationship to populate node statuses
-        for head in spawn.heads.all():
+        # [FIX] Order by created so latest head overwrites previous ones for the same node
+        for head in spawn.heads.all().order_by('created'):
             if head.node_id:
                 head_data = {
                     'status_id': head.status_id,

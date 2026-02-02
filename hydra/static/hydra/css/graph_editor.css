@@ -678,7 +678,12 @@ body {
     border-color: #ffd700;
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
     animation: portal-pulse 2s infinite ease-in-out;
+    animation: portal-pulse 2s infinite ease-in-out;
     cursor: pointer;
+}
+
+.node-header.delegated-gradient {
+    background: linear-gradient(135deg, #b45309 0%, #78350f 100%) !important;
 }
 
 @keyframes portal-pulse {

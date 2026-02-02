@@ -370,6 +370,7 @@ class Hydra:
             HydraHeadStatus.CREATED,
             HydraHeadStatus.PENDING,
             HydraHeadStatus.RUNNING,
+            HydraHeadStatus.DELEGATED,
         ])
         if active.exists():
             return

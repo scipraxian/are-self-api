@@ -460,7 +460,7 @@ class GraphEditor {
         const eyeTitle = this.mode === 'monitor' ? 'Flight Recorder' : 'Edit Spell';
         const isDelegated = !!node.invoked_spellbook_id;
         nodeEl.innerHTML = `
-            <div class="node-header ${node.isRoot ? 'root-header' : ''} ${isDelegated ? 'status-delegated' : ''}" style="${isDelegated ? 'background: linear-gradient(135deg, #b45309 0%, #78350f 100%);' : ''}">
+            <div class="node-header ${node.isRoot ? 'root-header' : ''} ${isDelegated ? 'delegated-gradient' : ''}">
                 <h4>${isDelegated ? '🌀 ' + node.title : node.title}</h4>
                 <div class="node-controls">
                     <button class="mini-btn view" title="${eyeTitle}">👁</button>
@@ -721,6 +721,22 @@ class GraphEditor {
                 const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                 path.setAttribute('d', this.calculateBezierPath(start.x, start.y, end.x, end.y));
                 path.setAttribute('stroke', conn.color);
+
+                // [VISUAL] Highlight active wires
+                let strokeWidth = 2;
+                if (this.isMonitorMode) {
+                    const srcNode = this.nodes.find(n => n.id === conn.fromNode);
+                    if (srcNode && srcNode.status_id) {
+                        // Flow (0) or Success (1) -> Thick if Success (4)
+                        if ((conn.fromPort === 0 || conn.fromPort === 1) && srcNode.status_id === 4) strokeWidth = 5;
+                        // Failure (2) -> Thick if Failed (5)
+                        if (conn.fromPort === 2 && srcNode.status_id === 5) strokeWidth = 5;
+                        // Running (2/3) -> Medium thickness for Flow
+                        if (conn.fromPort === 0 && (srcNode.status_id === 2 || srcNode.status_id === 3)) strokeWidth = 3;
+                    }
+                }
+                path.setAttribute('stroke-width', strokeWidth);
+
                 path.setAttribute('class', 'wire');
 
                 // Allow deleting wires only in edit mode
@@ -909,7 +925,7 @@ class GraphEditor {
     startPolling() {
         // Store the interval ID so we can kill it later
         this.pollingInterval = setInterval(async () => {
-            const data = await this.apiFetch(`status?spawn_id=${this.spawnId}`);
+            const data = await this.apiFetch(`status?spawn_id=${this.spawnId}&t=${Date.now()}`);
             if (data) {
                 this.updateNodeStatuses(data.nodes || {});
 
@@ -933,10 +949,15 @@ class GraphEditor {
             node.head_id = status.head_id;
             node.child_spawn_id = status.child_spawn_id; // Capture Child Spawn ID
 
+            node.status_id = status.status_id; // Store for wire logic
+
             const header = dom.querySelector('.node-header');
             if (header) {
                 header.classList.remove('running', 'success', 'failed');
-                dom.classList.remove('status-delegated'); // specific to node container
+                // CLEANUP: Reset ALL visual states
+                dom.classList.remove('status-delegated');
+                header.classList.remove('delegated-gradient'); // Remove initial delegated look
+                header.style.background = ''; // Clear inline if any
 
                 if (status.status_id === 2 || status.status_id === 3) {
                     header.classList.add('running');
@@ -948,10 +969,9 @@ class GraphEditor {
                 // DELEGATED STATUS (7)
                 if (status.status_id === 7) {
                     dom.classList.add('status-delegated');
-                    header.style.background = '#eab308'; // Optional override for header color
+                    header.classList.add('delegated-gradient'); // Re-apply if still delegated
                     // Ensure view button is active
-                    isAnyRunning = true; // Treat as running to keep Stop button active if needed? 
-                    // Or implies it is "paused" waiting for child.
+                    isAnyRunning = true;
                 }
             }
 
@@ -968,6 +988,9 @@ class GraphEditor {
                 }
             }
         });
+
+        // [FIX] Ensure wires update color based on node status changes (e.g. Success -> Green Wire)
+        this.renderConnections();
 
         const stopBtn = document.getElementById('stop-btn');
         if (stopBtn && this.isMonitorMode) {
