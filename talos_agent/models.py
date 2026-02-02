@@ -28,6 +28,9 @@ class TalosAgentRegistry(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     )
     last_seen = models.DateTimeField(null=True, blank=True)
 
+    def __str__(self):
+        return self.hostname
+
 
 class TalosAgentTelemetry(models.Model):
     """Stores periodic snapshots of agent health and performance."""
