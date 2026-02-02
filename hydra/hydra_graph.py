@@ -33,6 +33,7 @@ ACTION_MOVE_NODE = 'move_node'
 ACTION_CONNECT = 'connect'
 ACTION_DELETE_NODE = 'delete_node'
 ACTION_DISCONNECT = 'disconnect'
+ACTION_UPDATE_BOOK = 'update_book'
 
 # Connection Types (Frontend Strings)
 TYPE_FLOW_STR = 'flow'
@@ -129,6 +130,7 @@ class HydraGraphAPI(View):
             ACTION_CONNECT: handle_connect,
             ACTION_DELETE_NODE: handle_delete_node,
             ACTION_DISCONNECT: handle_disconnect,
+            ACTION_UPDATE_BOOK: handle_update_book,
         }
         handler = dispatch_map.get(action)
         if handler:
@@ -258,6 +260,15 @@ def handle_disconnect(book: HydraSpellbook, data: dict) -> JsonResponse:
                                                 source_id=source_id,
                                                 target_id=target_id).delete()
     return JsonResponse({KEY_STATUS: STATUS_DISCONNECTED})
+
+
+def handle_update_book(book: HydraSpellbook, payload: dict) -> JsonResponse:
+    new_name = payload.get('name')
+    if new_name:
+        book.name = new_name
+        book.save(update_fields=['name'])
+        return JsonResponse({KEY_STATUS: 'updated', 'name': book.name})
+    return HttpResponseBadRequest('Name required')
 
 
 def handle_delete_node(book: HydraSpellbook, data: dict) -> JsonResponse:

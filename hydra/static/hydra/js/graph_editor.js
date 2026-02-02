@@ -75,6 +75,18 @@ class GraphEditor {
 
     // --- API Interactions ---
 
+    async updateBookName(name) {
+        const result = await this.apiFetch('update_book', {
+            method: 'POST',
+            body: JSON.stringify({ name: name })
+        });
+        if (result && result.status === 'updated') {
+            document.title = `${result.name} | Talos Graph Editor`;
+        } else {
+            console.error("Failed to update name");
+        }
+    }
+
     async apiFetch(endpoint, options = {}) {
         const url = endpoint.startsWith('/') ? endpoint : `${this.apiUrl}${endpoint}`;
         const defaultHeaders = {
@@ -307,19 +319,25 @@ class GraphEditor {
             this.isDraggingNode = null;
         });
 
-        // Modal & Controls
-        document.getElementById('close-modal').addEventListener('click', () => {
-            document.getElementById('modal-container').style.display = 'none';
-        });
-
-        document.getElementById('copy-json').addEventListener('click', () => {
-            const json = JSON.stringify(this.getGraphJSON(), null, 4);
-            navigator.clipboard.writeText(json);
-        });
 
         const autoLayoutBtn = document.getElementById('auto-layout-btn');
         if (autoLayoutBtn) {
             autoLayoutBtn.addEventListener('click', () => this.autoLayout());
+        }
+
+        // Title Edit Logic
+        const titleInput = document.getElementById('spellbook-name');
+        if (titleInput && !this.isMonitorMode) {
+            titleInput.addEventListener('change', (e) => {
+                const newName = e.target.value.trim();
+                if (newName) {
+                    this.updateBookName(newName);
+                    titleInput.blur();
+                }
+            });
+            titleInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') titleInput.blur();
+            });
         }
 
         const startBtn = document.getElementById('start-btn');
