@@ -120,14 +120,35 @@ function downloadLog(id, title) {
 }
 
 async function startPolling(term, url, id, active, wrapper) {
+    // Initial fetch to populate data immediately
     await fetchAndWrite(term, url, id, wrapper);
 
     if (active) {
         const pollInterval = setInterval(async () => {
+            // 1. Check if Element Removed
             if (!document.getElementById(`wrapper-${id}`)) {
                 clearInterval(pollInterval);
                 return;
             }
+
+            // 2. SMART STOP: Check the Status Pill
+            // This DOM element is updated by HTMX independently.
+            // We read its text to determine if we should kill the JS polling loop.
+            const statusPill = document.getElementById('head-status-pill');
+            if (statusPill) {
+                const statusText = statusPill.innerText.trim().toUpperCase();
+                const terminalStates = ['SUCCESS', 'FAILED', 'ABORTED', 'STOPPED'];
+
+                if (terminalStates.includes(statusText)) {
+                    // One final fetch to ensure we have the tail
+                    await fetchAndWrite(term, url, id, wrapper);
+
+                    term.writeln(`\n\x1b[1;30m[SYSTEM] Process finished (${statusText}). Stream closed.\x1b[0m`);
+                    clearInterval(pollInterval);
+                    return;
+                }
+            }
+
             await fetchAndWrite(term, url, id, wrapper);
         }, 1500);
     }
