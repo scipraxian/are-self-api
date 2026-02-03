@@ -1,467 +1,167 @@
-{% extends 'dashboard/base.html' %}
+{% extends "dashboard/base.html" %}
 {% load static %}
 
-{% block title %}Flight Recorder: {{ head.spell.name }}{% endblock %}
+{% block title %}Head {{ head.id|slice:":8" }}{% endblock %}
 
-{% block main_content %}
+{% block top_actions %}
+{% endblock %}
+
+{% block extra_style %}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css"/>
-
+    <link rel="stylesheet" href="{% static 'hydra/css/side_by_side.css' %}"/>
     <style>
-        /* --- JAILBREAK LAYOUT --- */
-        /* Force full screen overlay, ignoring base.html container constraints */
-        .war-room-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: #0f172a; /* Cover existing bg */
-            z-index: 100; /* Sit above standard nav */
+        /* CRITICAL OVERRIDES:
+           Break out of the standard dashboard .container to allow full-screen terminal layout.
+        */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent body scroll, terminals scroll internally */
+            background-color: #1e1e1e; /* Match terminal theme bg */
+        }
+
+        .container {
+            max-width: none !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
             display: flex;
             flex-direction: column;
-            padding: 20px;
-            padding-top: 60px; /* Space for global top-right actions */
-            box-sizing: border-box;
+            backdrop-filter: none !important;
         }
 
-        /* Adjust global nav z-index to sit on top of our overlay */
-        .top-actions {
-            z-index: 2000 !important;
+        /* Hide standard dashboard elements that interfere */
+        #neural-monitor, #scan-status, .top-actions {
+            display: none !important;
         }
 
-        .war-room-card {
-            display: flex;
-            flex-direction: column;
-            flex: 1; /* Fill remaining height */
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
-            min-height: 0; /* Crucial for flex shrinking */
-        }
-
-        /* --- HEADER --- */
-        .war-header {
-            flex-shrink: 0;
-            height: 60px;
-            padding: 0 1.5rem;
-            background: rgba(255, 255, 255, 0.03);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        /* Custom Header Bar */
+        .head-info-bar {
+            background: #252526;
+            border-bottom: 1px solid #333;
+            padding: 0 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            height: 50px;
+            flex-shrink: 0; /* Prevent shrinking */
+            z-index: 100;
         }
 
-        .war-title-group {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .war-headline {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #f1f5f9;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .war-crumbs {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.75rem;
-            color: #64748b;
+        .head-meta {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 15px;
         }
 
-        .war-crumbs a {
-            color: #94a3b8;
-            text-decoration: none;
-        }
-
-        .war-crumbs a:hover {
-            color: #f8fafc;
-        }
-
-        /* --- GRID --- */
-        .war-grid {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-            min-height: 0;
-        }
-
-        .log-pane {
-            width: 50%;
-            display: flex;
-            flex-direction: column;
-            background: #000000;
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative;
-        }
-
-        .log-pane:last-child {
-            border-right: none;
-        }
-
-        .log-pane-header {
-            flex-shrink: 0;
-            height: 40px;
-            padding: 0 12px;
-            background: #1e293b;
-            border-bottom: 1px solid #334155;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.75rem;
-            color: #cbd5e1;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        /* TERMINAL WRAPPER */
-        .terminal-wrapper {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-            background: #000;
-            height: 100%;
-            width: 100%;
-            padding-left: 8px;
-        }
-
-        /* FORCE SCROLLBARS */
-        .xterm-viewport {
-            overflow-y: scroll !important;
-        }
-
-        .xterm-viewport::-webkit-scrollbar {
-            width: 12px;
-        }
-
-        .xterm-viewport::-webkit-scrollbar-track {
-            background: #0b0f19;
-        }
-
-        .xterm-viewport::-webkit-scrollbar-thumb {
-            background: #334155;
-            border: 2px solid #000;
-            border-radius: 6px;
-        }
-
-        .xterm-viewport::-webkit-scrollbar-thumb:hover {
-            background: #475569;
-        }
-
-        /* CONTROLS */
-        .war-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-right: 80px;
-        }
-
-        .status-pill {
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.7rem;
-            font-weight: 800;
-            text-transform: uppercase;
-        }
-
-        .status-running {
-            color: #facc15;
-            background: rgba(234, 179, 8, 0.15);
-            border: 1px solid rgba(234, 179, 8, 0.3);
-        }
-
-        .status-success {
-            color: #4ade80;
-            background: rgba(34, 197, 94, 0.15);
-            border: 1px solid rgba(34, 197, 94, 0.3);
-        }
-
-        .status-failed {
-            color: #f87171;
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-        }
-
-        .btn-copy {
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            border-radius: 4px;
-            color: #94a3b8;
-            cursor: pointer;
-            padding: 2px 8px;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-        }
-
-        .btn-copy:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-        }
-
-        .btn-terminate {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            color: #fca5a5;
-            padding: 5px 12px;
-            border-radius: 6px;
-            font-weight: 800;
-            text-transform: uppercase;
-            cursor: pointer;
-            font-size: 0.7rem;
-            transition: all 0.2s;
-        }
-
-        .btn-terminate:hover {
-            background: rgba(239, 68, 68, 0.8);
-            color: white;
-        }
-
-        /* Toggle */
-        .toggle-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-        }
-
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 28px;
-            height: 16px;
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #334155;
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 12px;
-            width: 12px;
-            left: 2px;
-            bottom: 2px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .toggle-slider {
-            background-color: #60a5fa;
-        }
-
-        input:checked + .toggle-slider:before {
-            transform: translateX(12px);
-        }
-
-        .toggle-label {
-            font-size: 0.7rem;
-            color: #94a3b8;
+        .head-meta h1 {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 1rem;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            color: #cccccc;
+            text-transform: none; /* Reset default uppercase style */
+            background: none;
+            -webkit-text-fill-color: initial;
         }
 
-        /* Hidden Buffers (Use pre to preserve whitespace) */
-        .raw-buffer {
-            display: none;
-            white-space: pre-wrap;
+        .head-meta .uuid {
+            font-family: 'Consolas', monospace;
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Terminal container fills remaining vertical space */
+        #terminal-container {
+            flex: 1;
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            display: flex;
+            flex-direction: row;
+            background-color: #1e1e1e;
+            padding: 5px;
+            gap: 5px;
+        }
+
+        /* Ensure HTMX indicator doesn't block view */
+        #indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
         }
     </style>
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+{% block main_content %}
+    <div class="head-info-bar">
+        <div class="head-meta">
+            <h1>{{ head.spell.name }}</h1>
+            <span class="uuid">{{ head.id }}</span>
 
-    <div class="war-room-overlay">
-        <div class="war-room-card">
-            <div class="war-header">
-                <div class="war-title-group">
-                    <div class="war-crumbs">
-                        <a href="{% url 'home' %}">DASHBOARD</a> /
-                        HEAD {{ head.id|slice:":8" }}
-                    </div>
-                    <div class="war-headline">{{ head.spell.name }}</div>
-                </div>
-
-                <div id="actions-container" class="war-actions">
-                    <div class="status-pill status-{{ head.status.name|lower }}">
-                        {{ head.status.name }}
-                    </div>
-
-                    <label class="toggle-wrapper">
-                        <span class="toggle-label">AUTOSCROLL</span>
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="autoscroll-toggle">
-                            <span class="toggle-slider"></span>
-                        </div>
-                    </label>
-
-                    {% if head.status.name == 'Running' or head.status.name == 'Pending' %}
-                        <button class="btn-terminate"
-                                hx-post="{% url 'hydra:hydra_spawn_stop_graceful' head.spawn.id %}">
-                            ■ STOP
-                        </button>
-                    {% endif %}
-                </div>
+            <div id="head-status-pill"
+                 style="display:inline-block;"
+                 class="status-pill status-{{ head.status.name|lower }}"
+                    {% if is_active %}
+                 hx-get="{% url 'hydra:head_detail' head.id %}?partial=status_pill"
+                 hx-trigger="every 2s"
+                 hx-swap="outerHTML"
+                    {% endif %}>
+            <span style="padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+                    {% if head.status.name == 'Running' %}background: #007acc; color: white;
+                    {% elif head.status.name == 'Success' %}background: #4caf50; color: white;
+                    {% elif head.status.name == 'Failed' %}background: #f44336; color: white;
+                    {% else %}background: #444; color: #ccc;{% endif %}">
+                {{ head.status.name }}
+            </span>
             </div>
+        </div>
 
-            <div class="war-grid">
+        <div class="actions" id="actions-container">
+            {% if is_active %}
+                <button class="btn-secondary"
+                        hx-post="{% url 'hydra:hydra_spawn_stop_graceful' head.spawn.id %}"
+                        style="border-color: #ef4444; color: #ef4444;">
+                    Stop
+                </button>
+            {% endif %}
 
-                <div class="log-pane">
-                    <div class="log-pane-header">
-                        <span>TOOL OUTPUT (Spell Log)</span>
-                        <button class="btn-copy" onclick="copyLog('buffer-tool')">COPY</button>
-                    </div>
-                    <div id="term-tool" class="terminal-wrapper"></div>
-                    <pre id="buffer-tool" class="raw-buffer"
-                            {% if head.status.name == 'Running' or head.status.name == 'Pending' or head.status.name == 'Stopping' %}
-                         hx-get="{% url 'hydra:head_detail' head.pk %}?partial=content&type=tool"
-                         hx-swap="outerHTML"
-                         hx-trigger="every 1s"
-                            {% endif %}>{{ initial_tool_log }}</pre>
-                </div>
-
-                <div class="log-pane">
-                    <div class="log-pane-header">
-                        <span>SYSTEM CONTEXT (Execution Log)</span>
-                        <button class="btn-copy" onclick="copyLog('buffer-system')">COPY</button>
-                    </div>
-                    <div id="term-system" class="terminal-wrapper"></div>
-                    <pre id="buffer-system" class="raw-buffer"
-                            {% if head.status.name == 'Running' or head.status.name == 'Pending' or head.status.name == 'Stopping' %}
-                         hx-get="{% url 'hydra:head_detail' head.pk %}?partial=content&type=system"
-                         hx-swap="outerHTML"
-                         hx-trigger="every 1s"
-                            {% endif %}>{{ initial_system_log }}</pre>
-                </div>
-
-            </div>
+            <button class="btn-secondary" onclick="addTerminal('Custom Log', '')">+ Add View</button>
+            <a href="{% url 'hydra:hydra_spawn_monitor' head.spawn.id %}?full=True" class="btn-secondary">Exit</a>
         </div>
     </div>
 
+    <div id="terminal-container">
+    </div>
+{% endblock %}
+
+{% block extra_script %}
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+    <script src="{% static 'hydra/js/side_by_side.js' %}"></script>
+
     <script>
-        // --- TERMINAL FACTORY ---
-        const terms = {};
-        const addons = {};
-        const state = {'buffer-tool': '', 'buffer-system': ''};
+        document.addEventListener('DOMContentLoaded', function () {
+            const isActive = {{ is_active|yesno:"true,false" }};
 
-        function createTerminal(containerId, bufferId) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
+            // Use the raw format endpoint we added to views.py
+            const toolUrl = "{% url 'hydra:head_detail' head.id %}?type=tool&format=raw";
+            const systemUrl = "{% url 'hydra:head_detail' head.id %}?type=system&format=raw";
 
-            const term = new Terminal({
-                fontFamily: '"JetBrains Mono", Consolas, monospace',
-                fontSize: 12,
-                cursorBlink: false,
-                disableStdin: true,
-                scrollback: 50000,
-                theme: {background: '#000000', selection: '#264f78'}
-            });
-
-            const fitAddon = new FitAddon.FitAddon();
-            term.loadAddon(fitAddon);
-
-            term.open(container);
-            terms[bufferId] = term;
-            addons[bufferId] = fitAddon;
-
-            // Initial Content
-            const buffer = document.getElementById(bufferId);
-            if (buffer) {
-                // Use textContent to respect PRE formatting
-                const content = buffer.textContent;
-                state[bufferId] = content;
-                term.write(content);
-            }
-
-            // Fit after layout settles
-            setTimeout(() => fitAddon.fit(), 100);
-        }
-
-        // Initialize
-        createTerminal('term-tool', 'buffer-tool');
-        createTerminal('term-system', 'buffer-system');
-
-        // Global Resize Observer
-        window.addEventListener('resize', () => {
-            Object.values(addons).forEach(addon => addon.fit());
+            // Initialize the two main panes
+            addTerminal('Tool Output', toolUrl, isActive);
+            addTerminal('System Context', systemUrl, isActive);
         });
-
-        // --- UPDATE HANDLER ---
-        document.body.addEventListener('htmx:afterSwap', function (evt) {
-            const id = evt.target.id;
-            const term = terms[id];
-
-            if (term) {
-                // Use textContent to preserve newlines and whitespace
-                const newContent = evt.target.textContent;
-                const oldContent = state[id];
-                const toggle = document.getElementById('autoscroll-toggle');
-
-                // 1. Strict Append Check
-                if (newContent.length >= oldContent.length && newContent.startsWith(oldContent)) {
-                    // It is a clean append. Write ONLY the new part.
-                    const delta = newContent.substring(oldContent.length);
-                    if (delta) {
-                        term.write(delta);
-                        if (toggle && toggle.checked) {
-                            term.scrollToBottom();
-                        }
-                    }
-                } else {
-                    // Content divergence (reset or truncation).
-                    // Capture Y to restore view if not following.
-                    const currentY = term.buffer.active.viewportY;
-
-                    term.reset();
-                    term.write(newContent);
-
-                    if (toggle && toggle.checked) {
-                        term.scrollToBottom();
-                    } else {
-                        // Restore view position
-                        term.scrollToLine(currentY);
-                    }
-                }
-
-                // Update known state
-                state[id] = newContent;
-            }
-        });
-
-        // --- COPY UTIL ---
-        function copyLog(id) {
-            const el = document.getElementById(id);
-            if (el) {
-                navigator.clipboard.writeText(el.textContent);
-                const btn = document.querySelector(`button[onclick="copyLog('${id}')"]`);
-                const og = btn.innerText;
-                btn.innerText = "COPIED";
-                setTimeout(() => btn.innerText = og, 1000);
-            }
-        }
     </script>
 {% endblock %}

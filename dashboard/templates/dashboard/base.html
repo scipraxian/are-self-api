@@ -8,22 +8,22 @@
     <title>{% block title %}Talos Dashboard{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@700;800&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@700;800&display=swap"
+          rel="stylesheet">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    
+
     <link rel="stylesheet" href="{% static 'dashboard/css/main.css' %}">
+    {% block extra_style %}{% endblock %}
 </head>
 
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-    {% include "dashboard/partials/neural_monitor.html" %}
-    <div class="container">
-        <div class="top-actions">
-            {% block top_actions %}
+{% include "dashboard/partials/neural_monitor.html" %}
+<div class="container">
+    <div class="top-actions">
+        {% block top_actions %}
             <a href="{% url 'admin:index' %}" class="btn-secondary" target="_blank">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
+                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                 </svg>
                 Admin
@@ -38,23 +38,23 @@
                 </svg>
                 Scan Network
             </button>
-            {% endblock %}
-            <button class="btn-secondary shutdown-btn" hx-post="{% url 'shutdown' %}" onclick="window.close()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                    <line x1="12" y1="2" x2="12" y2="12"></line>
-                </svg>
-                Exit
-            </button>
-        </div>
-        <div id="scan-status" style="position: absolute; top: 70px; right: 20px;"></div>
-        {% block main_content %}{% endblock %}
-        <div id="indicator" class="htmx-indicator spinner">
-            <div class="loading-ring"></div>
-            <span style="font-size: 0.8rem; color: #94a3b8;">Working...</span>
-        </div>
+        {% endblock %}
+        <button class="btn-secondary shutdown-btn" hx-post="{% url 'shutdown' %}" onclick="window.close()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                <line x1="12" y1="2" x2="12" y2="12"></line>
+            </svg>
+            Exit
+        </button>
     </div>
-    {% block extra_script %}{% endblock %}
+    <div id="scan-status" style="position: absolute; top: 70px; right: 20px;"></div>
+    {% block main_content %}{% endblock %}
+    <div id="indicator" class="htmx-indicator spinner">
+        <div class="loading-ring"></div>
+        <span style="font-size: 0.8rem; color: #94a3b8;">Working...</span>
+    </div>
+</div>
+{% block extra_script %}{% endblock %}
 </body>
 
 </html>

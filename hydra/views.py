@@ -139,22 +139,26 @@ class HeadLogDetailView(DetailView):
         head = self.object
         is_active = head.is_active
 
-        # HTMX Content Endpoint
+        # Determine Content Source
+        log_type = request.GET.get('type')
+        content = ''
+        if log_type == 'tool':
+            content = head.spell_log or ''
+        elif log_type == 'system':
+            content = head.execution_log or ''
+
+        # NEW: Raw Text Mode for Xterm.js
+        if request.GET.get('format') == 'raw':
+            return HttpResponse(content, content_type='text/plain')
+
+        # Legacy HTMX Content Endpoint
         if request.GET.get('partial') == 'content':
-            log_type = request.GET.get('type')
-            content = ''
-
-            if log_type == 'tool':
-                content = head.spell_log or ''
-            elif log_type == 'system':
-                content = head.execution_log or ''
-
             # Simple Text Response. The Template JS will handle the terminal write.
             # We wrap it in a hidden div so HTMX can swap it into the DOM for JS to read.
             trigger = 'hx-trigger="every 1s"' if is_active else ''
 
             html = f'''
-            <div id="buffer-{log_type}" 
+            <div id="buffer-{log_type}"
                  class="raw-buffer"
                  hx-get="{request.path}?partial=content&type={log_type}"
                  hx-swap="outerHTML"
