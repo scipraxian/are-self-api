@@ -104,6 +104,12 @@ def dump_directory_tree(root_dir: str) -> None:
 
 def main() -> None:
     """Main entry point for the dumpscripts spell."""
+    # Ensure stdout and stderr handle UTF-8 even on Windows terminals
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    if hasattr(sys.stderr, 'reconfigure'):
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
     if len(sys.argv) < 2:
         logger.error('Usage: python dumpscripts.py <root_directory>')
         sys.exit(1)
