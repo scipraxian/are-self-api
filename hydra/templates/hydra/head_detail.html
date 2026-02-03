@@ -7,287 +7,236 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css"/>
 
     <style>
-        /* FIX: Reset container to default behavior but ensure height filling */
-        .container {
+        /* --- JAILBREAK LAYOUT --- */
+        /* Force full screen overlay, ignoring base.html container constraints */
+        .war-room-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #0f172a; /* Cover existing bg */
+            z-index: 100; /* Sit above standard nav */
             display: flex;
             flex-direction: column;
-            /* Use calc to account for body padding (2rem top/bottom) defined in main.css */
-            height: calc(100vh - 4rem);
-            background: transparent !important;
-            box-shadow: none !important;
-            border: none !important;
-            padding: 0 !important;
-            max-width: 98vw !important;
-            overflow: hidden; /* Prevent body scroll */
+            padding: 20px;
+            padding-top: 60px; /* Space for global top-right actions */
+            box-sizing: border-box;
         }
 
-        /* FIX: Ensure Global Nav buttons are clickable */
+        /* Adjust global nav z-index to sit on top of our overlay */
         .top-actions {
             z-index: 2000 !important;
-            position: absolute;
-            top: 20px;
-            right: 30px;
         }
 
-        /* THE BATTLE STATION CONTAINER */
         .war-room-card {
-            margin-top: 60px;
             display: flex;
             flex-direction: column;
-            flex: 1;
+            flex: 1; /* Fill remaining height */
             background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            min-height: 0; /* CRITICAL: Allows flex child to shrink below content size */
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            min-height: 0; /* Crucial for flex shrinking */
         }
 
-        /* HEADER SECTION */
+        /* --- HEADER --- */
         .war-header {
+            flex-shrink: 0;
+            height: 60px;
+            padding: 0 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 1.5rem;
-            background: rgba(255, 255, 255, 0.03);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            flex-shrink: 0; /* Header never shrinks */
         }
 
         .war-title-group {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            text-align: left;
-        }
-
-        .war-crumbs {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.8rem;
-            color: #64748b;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .war-crumbs a {
-            color: #94a3b8;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .war-crumbs a:hover {
-            color: #f8fafc;
+            justify-content: center;
         }
 
         .war-headline {
             font-family: 'Outfit', sans-serif;
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 700;
             color: #f1f5f9;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
 
-        /* LOG DISPLAY AREA */
-        .war-grid {
-            display: flex;
-            flex: 1;
-            overflow: hidden; /* CRITICAL: Cuts off anything growing too large */
-            position: relative;
-            min-height: 0; /* CRITICAL: Recursive min-height for nested flex */
-        }
-
-        .log-pane {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #000000;
-            min-width: 0; /* Standard flex fix */
-            min-height: 0; /* CRITICAL: Forces internal scroll */
-            position: relative;
-            align-items: stretch;
-            overflow: hidden;
-        }
-
-        .log-pane-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 1rem;
-            background: #1e293b;
-            border-bottom: 1px solid #334155;
-            font-size: 0.75rem;
+        .war-crumbs {
             font-family: 'Inter', sans-serif;
-            font-weight: 700;
-            color: #cbd5e1;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            flex-shrink: 0; /* Header stays fixed */
-        }
-
-        /* LEFT PANE: XTerm */
-        #terminal-container {
-            flex: 1;
-            padding: 10px;
-            overflow: hidden; /* Xterm handles its own scroll */
-            text-align: left !important;
-            direction: ltr !important;
-            min-height: 0;
-            position: relative; /* Anchor for absolute children if needed */
-            height: 100%; /* Force height match */
-        }
-
-        /* RIGHT PANE: Log File Body - The Scrollable Area */
-        .log-body {
-            flex: 1;
-            overflow-y: auto; /* Enable scroll here */
-            padding: 1rem;
-            margin: 0;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            color: #cbd5e1;
-            white-space: pre-wrap;
-            word-break: break-all;
-            text-align: left !important;
-            min-height: 0; /* Ensure this element is the one that shrinks */
-        }
-
-        /* XTerm Overrides */
-        .xterm-screen, .xterm-viewport {
-            text-align: left !important;
-        }
-
-        /* Hidden buffer for HTMX raw data */
-        #raw-log-buffer {
-            display: none;
-        }
-
-        .side-by-side .log-pane {
-            width: 50%;
-        }
-
-        .spine {
-            width: 1px;
-            background: rgba(255, 255, 255, 0.1);
-            position: relative;
-        }
-
-        .war-actions {
+            font-size: 0.75rem;
+            color: #64748b;
             display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        /* Status Colors */
-        .status-pill {
-            padding: 4px 12px;
-            border-radius: 99px;
-            font-size: 0.7rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .status-running {
-            background: rgba(234, 179, 8, 0.1);
-            color: #facc15;
-            border: 1px solid rgba(234, 179, 8, 0.2);
-            animation: pulse 2s infinite;
-        }
-
-        .status-success {
-            background: rgba(34, 197, 94, 0.1);
-            color: #4ade80;
-            border: 1px solid rgba(34, 197, 94, 0.2);
-        }
-
-        .status-failed {
-            background: rgba(239, 68, 68, 0.1);
-            color: #f87171;
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-
-        @keyframes pulse {
-            50% {
-                opacity: 0.5;
-            }
-        }
-
-        .btn-xs {
-            padding: 4px 10px;
-            font-size: 0.7rem;
-            border-radius: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #94a3b8;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-flex;
             align-items: center;
             gap: 6px;
         }
 
-        .btn-xs:hover {
+        .war-crumbs a {
+            color: #94a3b8;
+            text-decoration: none;
+        }
+
+        .war-crumbs a:hover {
+            color: #f8fafc;
+        }
+
+        /* --- GRID --- */
+        .war-grid {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .log-pane {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            background: #000000;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .log-pane:last-child {
+            border-right: none;
+        }
+
+        .log-pane-header {
+            flex-shrink: 0;
+            height: 40px;
+            padding: 0 12px;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* TERMINAL WRAPPER */
+        .terminal-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #000;
+            height: 100%;
+            width: 100%;
+            padding-left: 8px;
+        }
+
+        /* FORCE SCROLLBARS */
+        .xterm-viewport {
+            overflow-y: scroll !important;
+        }
+
+        .xterm-viewport::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .xterm-viewport::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+
+        .xterm-viewport::-webkit-scrollbar-thumb {
+            background: #334155;
+            border: 2px solid #000;
+            border-radius: 6px;
+        }
+
+        .xterm-viewport::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* CONTROLS */
+        .war-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-right: 80px;
+        }
+
+        .status-pill {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .status-running {
+            color: #facc15;
+            background: rgba(234, 179, 8, 0.15);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        .status-success {
+            color: #4ade80;
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .status-failed {
+            color: #f87171;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-copy {
             background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 4px;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        .btn-copy:hover {
+            background: rgba(255, 255, 255, 0.2);
             color: white;
-            border-color: rgba(255, 255, 255, 0.2);
         }
 
         .btn-terminate {
             background: rgba(239, 68, 68, 0.15);
             border: 1px solid rgba(239, 68, 68, 0.4);
             color: #fca5a5;
-            padding: 4px 12px;
+            padding: 5px 12px;
             border-radius: 6px;
-            font-size: 0.7rem;
             font-weight: 800;
             text-transform: uppercase;
             cursor: pointer;
+            font-size: 0.7rem;
             transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
         }
 
         .btn-terminate:hover {
             background: rgba(239, 68, 68, 0.8);
             color: white;
-            border-color: #f87171;
         }
 
-        .btn-copy {
-            background: transparent;
-            border: none;
-            color: #64748b;
-            cursor: pointer;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            transition: color 0.2s;
-        }
-
-        .btn-copy:hover {
-            color: #60a5fa;
-        }
-
-        /* Toggle Switch Styling */
+        /* Toggle */
         .toggle-wrapper {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-right: 8px;
+            gap: 6px;
+            cursor: pointer;
         }
 
         .toggle-switch {
             position: relative;
             display: inline-block;
-            width: 32px;
-            height: 18px;
+            width: 28px;
+            height: 16px;
         }
 
         .toggle-switch input {
@@ -311,8 +260,8 @@
         .toggle-slider:before {
             position: absolute;
             content: "";
-            height: 14px;
-            width: 14px;
+            height: 12px;
+            width: 12px;
             left: 2px;
             bottom: 2px;
             background-color: white;
@@ -325,7 +274,7 @@
         }
 
         input:checked + .toggle-slider:before {
-            transform: translateX(14px);
+            transform: translateX(12px);
         }
 
         .toggle-label {
@@ -336,236 +285,183 @@
             letter-spacing: 0.05em;
         }
 
-        .xterm-viewport::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .xterm-viewport::-webkit-scrollbar-track {
-            background: #0b0f19;
-        }
-
-        .xterm-viewport::-webkit-scrollbar-thumb {
-            background-color: #334155;
-            border-radius: 4px;
+        /* Hidden Buffers (Use pre to preserve whitespace) */
+        .raw-buffer {
+            display: none;
+            white-space: pre-wrap;
         }
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
 
-    <div class="war-room-card">
-        <div class="war-header">
-            <div class="war-title-group">
-                <div class="war-crumbs">
-                    <a href="{% url 'home' %}">DASHBOARD</a>
-                    <span>/</span>
-                    <a href="{% url 'hydra:graph_monitor' head.spawn.id %}">GRAPH {{ head.spawn.id|slice:":8" }}</a>
-                    <span>/</span>
-                    <span>HEAD {{ head.id|slice:":8" }}</span>
-                </div>
-                <div class="war-headline">{{ head.spell.name }}</div>
-            </div>
-
-            <div class="war-actions">
-                <div id="head-status-pill"
-                     class="status-pill status-{{ head.status.name|lower }}"
-                     hx-get="{% url 'hydra:head_detail' head.pk %}?partial=status_pill"
-                     hx-trigger="every 2s"
-                     hx-swap="outerHTML">
-                    {{ head.status.name }}
-                </div>
-
-                <div class="toggle-wrapper">
-                    <span class="toggle-label">Autoscroll</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="autoscroll-toggle">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                {% if head.status.name == 'Running' or head.status.name == 'Pending' %}
-                    <button class="btn-terminate"
-                            hx-post="{% url 'hydra:hydra_spawn_stop_graceful' head.spawn.id %}"
-                            hx-confirm="Confirm Kill?">
-                        ■ STOP
-                    </button>
-                {% endif %}
-
-                <div style="height: 20px; width: 1px; background: rgba(255,255,255,0.1); margin: 0 8px;"></div>
-
-                {% if head.spell.id %}
-                    <a href="/admin/hydra/hydraspell/{{ head.spell.id }}/change/" target="_blank" class="btn-xs">
-                        <span>⚙️</span> Config
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-
-        <div class="war-grid {% if show_side_by_side %}side-by-side{% endif %}">
-            <div class="log-pane">
-                <div class="log-pane-header">
-                    <span>
-                        {% if log_type == 'tool' %}Console Stream (Stdout){% else %}System Context{% endif %}
-                    </span>
-                    <div style="display:flex; gap:10px;">
-                        {% if log_type == 'tool' %}
-                            <a href="?type=system" style="color: #64748b; font-weight: normal; text-decoration: none;">View
-                                System</a>
-                        {% else %}
-                            <a href="?type=tool" style="color: #64748b; font-weight: normal; text-decoration: none;">View
-                                Output</a>
-                        {% endif %}
-                        <button class="btn-copy" onclick="copyLog()">Copy</button>
-                        <button class="btn-copy"
-                                onclick="downloadLog('raw-log-buffer', '{{ head.spell.name|slugify }}')">Download
-                        </button>
+    <div class="war-room-overlay">
+        <div class="war-room-card">
+            <div class="war-header">
+                <div class="war-title-group">
+                    <div class="war-crumbs">
+                        <a href="{% url 'home' %}">DASHBOARD</a> /
+                        HEAD {{ head.id|slice:":8" }}
                     </div>
+                    <div class="war-headline">{{ head.spell.name }}</div>
                 </div>
 
-                <div id="terminal-container"></div>
+                <div id="actions-container" class="war-actions">
+                    <div class="status-pill status-{{ head.status.name|lower }}">
+                        {{ head.status.name }}
+                    </div>
 
-                <div id="raw-log-buffer"
-                        {% if head.status.name == 'Running' or head.status.name == 'Pending' %}
-                     hx-get="{% url 'hydra:head_detail' head.pk %}?partial=content&type={{ log_type }}"
-                     hx-trigger="every 1s"
-                        {% endif %}
-                     hx-swap="innerText"
-                     style="display: none;">{{ initial_log_content }}</div>
+                    <label class="toggle-wrapper">
+                        <span class="toggle-label">AUTOSCROLL</span>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="autoscroll-toggle">
+                            <span class="toggle-slider"></span>
+                        </div>
+                    </label>
+
+                    {% if head.status.name == 'Running' or head.status.name == 'Pending' %}
+                        <button class="btn-terminate"
+                                hx-post="{% url 'hydra:hydra_spawn_stop_graceful' head.spawn.id %}">
+                            ■ STOP
+                        </button>
+                    {% endif %}
+                </div>
             </div>
 
-            {% if show_side_by_side %}
-                <div class="spine"></div>
+            <div class="war-grid">
+
                 <div class="log-pane">
                     <div class="log-pane-header">
-                        <span title="{{ log_file_path }}">Log File: ...{{ log_file_path|slice:"-30:" }}</span>
-                        <div style="display:flex; gap:10px;">
-                            <button class="btn-copy" onclick="copyToClipboard('log-file')">Copy File</button>
-                            <button class="btn-copy"
-                                    onclick="downloadLog('log-file', '{{ head.spell.name|slugify }}_file')">Download
-                            </button>
-                        </div>
+                        <span>TOOL OUTPUT (Spell Log)</span>
+                        <button class="btn-copy" onclick="copyLog('buffer-tool')">COPY</button>
                     </div>
-
-                    <pre id="log-file"
-                         class="log-body"
-                         hx-get="{% url 'hydra:head_detail' head.pk %}?partial=content&type=file"
-                         hx-trigger="every 2s"
-                         hx-swap="innerHTML">{{ log_file_content|default:"Waiting for file content..." }}</pre>
+                    <div id="term-tool" class="terminal-wrapper"></div>
+                    <pre id="buffer-tool" class="raw-buffer"
+                            {% if head.status.name == 'Running' or head.status.name == 'Pending' or head.status.name == 'Stopping' %}
+                         hx-get="{% url 'hydra:head_detail' head.pk %}?partial=content&type=tool"
+                         hx-swap="outerHTML"
+                         hx-trigger="every 1s"
+                            {% endif %}>{{ initial_tool_log }}</pre>
                 </div>
-            {% endif %}
+
+                <div class="log-pane">
+                    <div class="log-pane-header">
+                        <span>SYSTEM CONTEXT (Execution Log)</span>
+                        <button class="btn-copy" onclick="copyLog('buffer-system')">COPY</button>
+                    </div>
+                    <div id="term-system" class="terminal-wrapper"></div>
+                    <pre id="buffer-system" class="raw-buffer"
+                            {% if head.status.name == 'Running' or head.status.name == 'Pending' or head.status.name == 'Stopping' %}
+                         hx-get="{% url 'hydra:head_detail' head.pk %}?partial=content&type=system"
+                         hx-swap="outerHTML"
+                         hx-trigger="every 1s"
+                            {% endif %}>{{ initial_system_log }}</pre>
+                </div>
+
+            </div>
         </div>
     </div>
 
     <script>
-        // --- XTerm Initialization ---
-        var term = new Terminal({
-            theme: {
-                background: '#000000',
-                foreground: '#e2e8f0',
-                selection: '#264f78'
-            },
-            fontFamily: '"JetBrains Mono", Consolas, monospace',
-            fontSize: 13,
-            cursorBlink: false,
-            disableStdin: true, // Read-only
-            convertEol: true // Treat \n as new line
-        });
+        // --- TERMINAL FACTORY ---
+        const terms = {};
+        const addons = {};
+        const state = {'buffer-tool': '', 'buffer-system': ''};
 
-        const fitAddon = new FitAddon.FitAddon();
-        term.loadAddon(fitAddon);
+        function createTerminal(containerId, bufferId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
 
-        // Mount
-        const container = document.getElementById('terminal-container');
-        term.open(container);
-
-        // CRITICAL FIX: Delay Fit so Flexbox Reflow Completes
-        setTimeout(() => {
-            fitAddon.fit();
-            term.refresh(0, term.rows - 1);
-        }, 50);
-
-        // Initial Load
-        const initialContent = document.getElementById('raw-log-buffer').innerText;
-        if (initialContent) {
-            term.write(initialContent);
-            setTimeout(() => {
-                term.scrollToTop();
-            }, 60);
-        }
-
-        // Handle Resizing (Debounced)
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                fitAddon.fit();
-            }, 100);
-        });
-
-        // --- Toggle Listener ---
-        const toggleSwitch = document.getElementById('autoscroll-toggle');
-        if (toggleSwitch) {
-            toggleSwitch.addEventListener('change', function () {
-                if (this.checked) {
-                    term.scrollToBottom();
-                    const logFile = document.getElementById('log-file');
-                    if (logFile) logFile.scrollTop = logFile.scrollHeight;
-                }
+            const term = new Terminal({
+                fontFamily: '"JetBrains Mono", Consolas, monospace',
+                fontSize: 12,
+                cursorBlink: false,
+                disableStdin: true,
+                scrollback: 50000,
+                theme: {background: '#000000', selection: '#264f78'}
             });
-        }
 
-        // --- HTMX Integration ---
-        document.body.addEventListener('htmx:afterSwap', function (evt) {
-            // LEFT PANE (Terminal) UPDATE
-            if (evt.target.id === "raw-log-buffer") {
-                const newContent = evt.target.innerText;
-                term.reset();
-                term.write(newContent);
+            const fitAddon = new FitAddon.FitAddon();
+            term.loadAddon(fitAddon);
 
-                const toggle = document.getElementById('autoscroll-toggle');
-                if (toggle && toggle.checked) {
-                    term.scrollToBottom();
-                }
+            term.open(container);
+            terms[bufferId] = term;
+            addons[bufferId] = fitAddon;
+
+            // Initial Content
+            const buffer = document.getElementById(bufferId);
+            if (buffer) {
+                // Use textContent to respect PRE formatting
+                const content = buffer.textContent;
+                state[bufferId] = content;
+                term.write(content);
             }
 
-            // RIGHT PANE (Log File) UPDATE
-            if (evt.target.id === "log-file") {
+            // Fit after layout settles
+            setTimeout(() => fitAddon.fit(), 100);
+        }
+
+        // Initialize
+        createTerminal('term-tool', 'buffer-tool');
+        createTerminal('term-system', 'buffer-system');
+
+        // Global Resize Observer
+        window.addEventListener('resize', () => {
+            Object.values(addons).forEach(addon => addon.fit());
+        });
+
+        // --- UPDATE HANDLER ---
+        document.body.addEventListener('htmx:afterSwap', function (evt) {
+            const id = evt.target.id;
+            const term = terms[id];
+
+            if (term) {
+                // Use textContent to preserve newlines and whitespace
+                const newContent = evt.target.textContent;
+                const oldContent = state[id];
                 const toggle = document.getElementById('autoscroll-toggle');
-                if (toggle && toggle.checked) {
-                    evt.target.scrollTop = evt.target.scrollHeight;
+
+                // 1. Strict Append Check
+                if (newContent.length >= oldContent.length && newContent.startsWith(oldContent)) {
+                    // It is a clean append. Write ONLY the new part.
+                    const delta = newContent.substring(oldContent.length);
+                    if (delta) {
+                        term.write(delta);
+                        if (toggle && toggle.checked) {
+                            term.scrollToBottom();
+                        }
+                    }
+                } else {
+                    // Content divergence (reset or truncation).
+                    // Capture Y to restore view if not following.
+                    const currentY = term.buffer.active.viewportY;
+
+                    term.reset();
+                    term.write(newContent);
+
+                    if (toggle && toggle.checked) {
+                        term.scrollToBottom();
+                    } else {
+                        // Restore view position
+                        term.scrollToLine(currentY);
+                    }
                 }
+
+                // Update known state
+                state[id] = newContent;
             }
         });
 
-        // --- Utilities ---
-        function copyLog() {
-            const text = document.getElementById('raw-log-buffer').innerText;
-            navigator.clipboard.writeText(text);
-        }
-
-        function copyToClipboard(elementId) {
-            const el = document.getElementById(elementId);
-            if (el) navigator.clipboard.writeText(el.innerText);
-        }
-
-        function downloadLog(elementId, filenamePrefix) {
-            const el = document.getElementById(elementId);
-            if (!el) return;
-
-            const text = el.innerText;
-            const blob = new Blob([text], {type: 'text/plain'});
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-
-            const now = new Date();
-            const timestamp = now.toISOString().replace('T', '_').replace(/:/g, '-').split('.')[0];
-
-            a.href = url;
-            a.download = `${filenamePrefix}_${timestamp}.log`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
+        // --- COPY UTIL ---
+        function copyLog(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                navigator.clipboard.writeText(el.textContent);
+                const btn = document.querySelector(`button[onclick="copyLog('${id}')"]`);
+                const og = btn.innerText;
+                btn.innerText = "COPIED";
+                setTimeout(() => btn.innerText = og, 1000);
+            }
         }
     </script>
 {% endblock %}

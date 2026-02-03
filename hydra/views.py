@@ -95,14 +95,34 @@ class GracefulStopSpawnView(View):
         hydra = Hydra(spawn_id=pk)
         hydra.stop_gracefully()
 
-        # Just refresh the monitor, the status pills will update via HTMX
-        target_url = reverse('hydra:graph_monitor', kwargs={'spawn_id': pk})
-
+        # FIX: The button must POLL to see if the stop completed.
+        # We target the 'actions-container' which we will add to the templates.
         if request.headers.get('HX-Request'):
-            response = HttpResponse()
-            response['HX-Redirect'] = target_url
-            return response
+            referer = request.META.get('HTTP_REFERER', '')
 
+            # Context-Aware Styling with Self-Polling
+            # hx-select="#actions-container" pulls just the buttons from the current page
+            # hx-target="#actions-container" replaces the buttons on the current page
+
+            common_attrs = f'hx-get="{referer}" hx-select="#actions-container" hx-target="#actions-container" hx-swap="outerHTML" hx-trigger="every 1s"'
+
+            if '/head/' in referer:
+                # War Room Style
+                return HttpResponse(
+                    f'<div id="actions-container" class="war-actions" {common_attrs}>'
+                    '<button class="btn-terminate" disabled style="opacity: 0.5; cursor: wait;">Stopping...</button>'
+                    '</div>'
+                )
+            else:
+                # Spawn Monitor Style
+                return HttpResponse(
+                    f'<div class="actions" {common_attrs}>'
+                    '<button class="btn-done" disabled style="border-color: #fb923c; color: #fb923c; opacity: 0.8; cursor: wait;">Stopping...</button>'
+                    '</div>'
+                )
+
+        # Fallback for non-JS requests
+        target_url = reverse('hydra:graph_monitor', kwargs={'spawn_id': pk})
         return redirect(target_url)
 
 
@@ -117,51 +137,40 @@ class HeadLogDetailView(DetailView):
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         head = self.object
-
         is_active = head.is_active
+
+        # HTMX Content Endpoint
         if request.GET.get('partial') == 'content':
-            log_type = request.GET.get('type', 'tool')
+            log_type = request.GET.get('type')
             content = ''
+
             if log_type == 'tool':
                 content = head.spell_log or ''
             elif log_type == 'system':
                 content = head.execution_log or ''
-            elif log_type == 'file':
-                if (
-                    head.spell.talos_executable
-                    and head.spell.talos_executable.log
-                ):
-                    log_path = head.spell.talos_executable.log
-                    if os.path.exists(log_path):
-                        try:
-                            with open(
-                                log_path,
-                                'r',
-                                encoding='utf-8',
-                                errors='replace',
-                            ) as f:
-                                content = f.read()
-                        except Exception as e:
-                            content = f'[System Error reading file]: {e}'
-                    else:
-                        content = (
-                            f'[Waiting for log file creation at: {log_path}...]'
-                        )
-                else:
-                    content = '[No Log File configured for this Spell]'
 
-            response = HttpResponse(content, content_type='text/plain')
-            if is_active:
-                response['HX-Trigger'] = 'every 1s'
-            return response
+            # Simple Text Response. The Template JS will handle the terminal write.
+            # We wrap it in a hidden div so HTMX can swap it into the DOM for JS to read.
+            trigger = 'hx-trigger="every 1s"' if is_active else ''
 
+            html = f'''
+            <div id="buffer-{log_type}" 
+                 class="raw-buffer"
+                 hx-get="{request.path}?partial=content&type={log_type}"
+                 hx-swap="outerHTML"
+                 {trigger}
+                 style="display: none;">{content}</div>
+            '''
+            return HttpResponse(html)
+
+        # Status Pill Endpoint
         if request.GET.get('partial') == 'status_pill':
-            trigger_attr = 'hx-trigger="every 2s"' if is_active else ''
+            trigger = 'hx-trigger="every 2s"' if is_active else ''
             html = f'''
             <div id="head-status-pill"
                  class="status-pill status-{head.status.name.lower()}"
                  hx-get="{request.path}?partial=status_pill"
-                 {trigger_attr}
+                 {trigger}
                  hx-swap="outerHTML">
                 {head.status.name}
             </div>
@@ -174,38 +183,10 @@ class HeadLogDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         head = self.object
         context['is_active'] = head.is_active
-        executable = (
-            head.spell.talos_executable if head.spell.talos_executable else None
-        )
 
-        log_type = self.request.GET.get('type')
-        if not log_type:
-            log_type = (
-                'system'
-                if head.execution_log and not head.spell_log
-                else 'tool'
-            )
-
-        context['log_type'] = log_type
-        context['initial_log_content'] = (
-            head.execution_log if log_type == 'system' else head.spell_log
-        )
-
-        context['show_side_by_side'] = False
-        if executable and executable.log:
-            log_path = executable.log
-            context['log_file_path'] = log_path
-            context['show_side_by_side'] = True
-            if os.path.exists(log_path):
-                try:
-                    with open(
-                        log_path, 'r', encoding='utf-8', errors='replace'
-                    ) as f:
-                        context['log_file_content'] = f.read()
-                except Exception as e:
-                    context['log_file_content'] = f'Error reading log file: {e}'
-            else:
-                context['log_file_content'] = 'Waiting for log file...'
+        # Pre-load initial content for both panes
+        context['initial_tool_log'] = head.spell_log or ''
+        context['initial_system_log'] = head.execution_log or ''
 
         return context
 
