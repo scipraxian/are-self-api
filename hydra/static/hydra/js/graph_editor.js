@@ -3,7 +3,6 @@
  * Built by Antigravity - Senior Frontend Engineer Refactor
  */
 
-
 class GraphEditor {
     constructor() {
         this.nodes = [];
@@ -574,8 +573,7 @@ class GraphEditor {
                 }
             } else {
                 if (node.invoked_spellbook_id) {
-                    // EDIT SUB-GRAPH
-                    window.open(`/hydra/graph/${node.invoked_spellbook_id}/`, '_blank');
+                    window.open(`/hydra/graph/editor/${node.invoked_spellbook_id}/`, '_self');
                 } else if (node.spell_id) {
                     window.open(`/admin/hydra/hydraspell/${node.spell_id}/change/`);
                 }
