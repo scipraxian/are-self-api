@@ -3,6 +3,7 @@
  * Built by Antigravity - Senior Frontend Engineer Refactor
  */
 
+
 class GraphEditor {
     constructor() {
         this.nodes = [];
@@ -38,8 +39,8 @@ class GraphEditor {
         this.isDraggingNode = null;
         this.activeWire = null;
 
-        this.dragOffset = { x: 0, y: 0 };
-        this.lastMousePos = { x: 0, y: 0 };
+        this.dragOffset = {x: 0, y: 0};
+        this.lastMousePos = {x: 0, y: 0};
 
         // Execution State
         this.executionState = 'ready'; // ready, running, error, finished
@@ -78,7 +79,7 @@ class GraphEditor {
     async updateBookName(name) {
         const result = await this.apiFetch('update_book', {
             method: 'POST',
-            body: JSON.stringify({ name: name })
+            body: JSON.stringify({name: name})
         });
         if (result && result.status === 'updated') {
             document.title = `${result.name} | Talos Graph Editor`;
@@ -97,7 +98,7 @@ class GraphEditor {
         try {
             const response = await fetch(url, {
                 ...options,
-                headers: { ...defaultHeaders, ...options.headers }
+                headers: {...defaultHeaders, ...options.headers}
             });
 
             if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
@@ -261,7 +262,7 @@ class GraphEditor {
             this.panY -= mouseY * (newZoom / this.zoom - 1);
             this.zoom = newZoom;
             this.updateCanvasTransform();
-        }, { passive: false });
+        }, {passive: false});
 
         window.addEventListener('mousemove', (e) => {
             const dx = e.clientX - this.lastMousePos.x;
@@ -287,7 +288,7 @@ class GraphEditor {
                 this.updateTempWire(e.clientX, e.clientY);
             }
 
-            this.lastMousePos = { x: e.clientX, y: e.clientY };
+            this.lastMousePos = {x: e.clientX, y: e.clientY};
         });
 
         window.addEventListener('mouseup', async (e) => {
@@ -353,7 +354,7 @@ class GraphEditor {
                     if (confirm("WARNING: Force Stop this Operation?")) {
                         fetch(window.djangoContext.terminateUrl, {
                             method: 'POST',
-                            headers: { 'X-CSRFToken': this.csrfToken }
+                            headers: {'X-CSRFToken': this.csrfToken}
                         }).then(() => {
                             window.location.reload();
                         });
@@ -481,9 +482,9 @@ class GraphEditor {
             <div class="node-header ${node.isRoot ? 'root-header' : ''} ${isDelegated ? 'delegated-gradient' : ''}">
                 <h4>${isDelegated ? '🌀 ' + node.title : node.title}</h4>
                 <div class="node-controls">
-                    <button class="mini-btn view" title="${eyeTitle}">👁</button>
+                    <button class="mini-btn view" title="${eyeTitle}">👁️</button>
                     ${node.isRoot && !this.isMonitorMode ? `
-                        <button class="mini-btn play" title="Start from here">▶</button>
+                        <button class="mini-btn play" title="Start from here">▶️</button>
                     ` : ''}
                     ${node.canDelete && !this.isMonitorMode ? '<button class="delete-btn">&times;</button>' : ''}
                 </div>
@@ -549,7 +550,7 @@ class GraphEditor {
             nodeEl.style.zIndex = 1000;
             this.nodesLayer.appendChild(nodeEl);
             this.isDraggingNode = node;
-            this.lastMousePos = { x: e.clientX, y: e.clientY };
+            this.lastMousePos = {x: e.clientX, y: e.clientY};
 
             const rect = nodeEl.getBoundingClientRect();
             this.dragOffset = {
@@ -634,22 +635,24 @@ class GraphEditor {
         // [FIX] Allow deleting if localOnly (used during redraw), otherwise block
         if (this.isMonitorMode && !localOnly) return;
 
-        const node = this.nodes.find(n => n.id === nodeId);
+        // Ensure stricter string comparison just in case
+        const targetId = String(nodeId);
+        const node = this.nodes.find(n => String(n.id) === targetId);
         if (!node) return;
 
-        this.nodes = this.nodes.filter(n => n.id !== nodeId);
-        this.connections = this.connections.filter(c => c.fromNode !== nodeId && c.toNode !== nodeId);
+        this.nodes = this.nodes.filter(n => String(n.id) !== targetId);
+        this.connections = this.connections.filter(c => String(c.fromNode) !== targetId && String(c.toNode) !== targetId);
 
-        const el = document.getElementById(nodeId);
+        const el = document.getElementById(targetId);
         if (el) el.remove();
 
         this.renderConnections();
         this.updateCounts();
 
-        if (!localOnly && !nodeId.toString().startsWith('temp_')) {
+        if (!localOnly && !targetId.startsWith('temp_')) {
             await this.apiFetch('delete_node', {
                 method: 'POST',
-                body: JSON.stringify({ node_id: nodeId })
+                body: JSON.stringify({node_id: targetId})
             });
         }
     }
@@ -771,7 +774,9 @@ class GraphEditor {
     }
 
     updateWiresForNode(nodeId) {
-        const involved = this.connections.some(c => c.fromNode === nodeId || c.toNode === nodeId);
+        // [FIX] Coerce to string to ensure matching works even if data types differ (Int vs String)
+        const targetStr = String(nodeId);
+        const involved = this.connections.some(c => String(c.fromNode) === targetStr || String(c.toNode) === targetStr);
         if (involved) this.renderConnections();
     }
 
@@ -811,22 +816,6 @@ class GraphEditor {
         return `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`;
     }
 
-    // --- Data Model ---
-    getGraphJSON() {
-        return {
-            nodes: this.nodes.map(n => ({
-                id: n.id,
-                title: n.title,
-                position: { x: n.x, y: n.y }
-            })),
-            connections: this.connections.map(c => ({
-                from: { nodeId: c.fromNode, port: c.fromPort },
-                to: { nodeId: c.toNode, port: c.toPort },
-                type: this.getStatusFromColor(c.color)
-            }))
-        };
-    }
-
     updateCounts() {
         document.getElementById('node-count').innerText = this.nodes.length;
         document.getElementById('conn-count').innerText = this.connections.length;
@@ -856,7 +845,7 @@ class GraphEditor {
         this.setExecutionStatus('running', 'Spawning Process...');
         const result = await this.apiFetch('launch/', {
             method: 'POST',
-            body: JSON.stringify({ book_id: this.bookId })
+            body: JSON.stringify({book_id: this.bookId})
         });
         if (result && result.status === 'started') {
             // this.setExecutionStatus('running', 'Process Active');
@@ -882,15 +871,15 @@ class GraphEditor {
         const startNode = this.nodes.find(n => n.isRoot) || this.nodes[0];
         const levels = new Map();
         const visited = new Set();
-        const queue = [{ id: startNode.id, level: 0 }];
+        const queue = [{id: startNode.id, level: 0}];
 
         while (queue.length > 0) {
-            const { id, level } = queue.shift();
+            const {id, level} = queue.shift();
             if (visited.has(id)) continue;
             visited.add(id);
             levels.set(id, Math.max(levels.get(id) || 0, level));
             const children = this.connections.filter(c => c.fromNode === id).map(c => c.toNode);
-            children.forEach(childId => queue.push({ id: childId, level: level + 1 }));
+            children.forEach(childId => queue.push({id: childId, level: level + 1}));
         }
 
         this.nodes.forEach(node => {
@@ -918,7 +907,7 @@ class GraphEditor {
                     if (!this.isMonitorMode) {
                         this.apiFetch('move_node', {
                             method: 'POST',
-                            body: JSON.stringify({ node_id: node.id, x: node.x, y: node.y })
+                            body: JSON.stringify({node_id: node.id, x: node.x, y: node.y})
                         });
                     }
                 }
