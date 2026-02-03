@@ -61,7 +61,7 @@ function initTerminal(containerId, title, url, active = true) {
         cursorBlink: true,
         disableStdin: true,
         convertEol: true,
-        scrollback: 5000,
+        scrollback: 1000000,
         allowTransparency: true
     });
 
