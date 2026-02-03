@@ -918,22 +918,38 @@ class TalosAgent:
 
     @classmethod
     async def _monitor_stop_signal_task(
-        cls, writer: asyncio.StreamWriter, stop_event: asyncio.Event
+        cls,
+        writer: asyncio.StreamWriter,
+        stop_event: asyncio.Event,
+        timeout: float = 2.0,
     ) -> None:
-        """Task payload to monitor for stop event and send signal."""
+        """Task payload to monitor for stop event and send signal.
+
+        Args:
+            timeout: Seconds to wait for drain before giving up (default: 2.0)
+        """
         if not stop_event:
             return
         await stop_event.wait()
         try:
-            # Send the out-of-band STOP message
-            payload = TalosAgentConstants.CMD_STOP + '\n'
+            # Send the out-of-band STOP message with explicit NEWLINES
+            payload = '\n' + TalosAgentConstants.CMD_STOP + '\n'
             writer.write(payload.encode(TalosAgentConstants.ENCODING))
-            await writer.drain()
+
+            await asyncio.wait_for(writer.drain(), timeout=timeout)
+            logger.info('[AGENT] STOP signal flushed to remote.')
+
+        except asyncio.TimeoutError:
+            # Non-fatal: Signal may still arrive, just not guaranteed
+            logger.warning(
+                f'[AGENT] STOP signal drain timed out '
+                f'after {timeout}s (socket congested).'
+            )
         except (ConnectionResetError, BrokenPipeError):
-            pass
+            # Expected if remote already closed connection
+            logger.debug('[AGENT] STOP signal send failed: connection closed.')
         except Exception as e:
-            # Specific logging for debug, but silence for broken pipes
-            logging.debug(f'Stop signal transmission failed: {e}')
+            logger.debug(f'[AGENT] STOP signal transmission failed: {e}')
 
     @classmethod
     async def execute_remote(
