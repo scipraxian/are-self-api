@@ -8,137 +8,46 @@
 
 {% block extra_style %}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css"/>
-    <link rel="stylesheet" href="{% static 'hydra/css/side_by_side.css' %}"/>
-    <style>
-        /* CRITICAL OVERRIDES:
-           Break out of the standard dashboard .container to allow full-screen terminal layout.
-        */
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden; /* Prevent body scroll, terminals scroll internally */
-            background-color: #1e1e1e; /* Match terminal theme bg */
-        }
-
-        .container {
-            max-width: none !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            border-radius: 0 !important;
-            display: flex;
-            flex-direction: column;
-            backdrop-filter: none !important;
-        }
-
-        /* Hide standard dashboard elements that interfere */
-        #neural-monitor, #scan-status, .top-actions {
-            display: none !important;
-        }
-
-        /* Custom Header Bar */
-        .head-info-bar {
-            background: #252526;
-            border-bottom: 1px solid #333;
-            padding: 0 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 50px;
-            flex-shrink: 0; /* Prevent shrinking */
-            z-index: 100;
-        }
-
-        .head-meta {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .head-meta h1 {
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 1rem;
-            font-weight: 600;
-            color: #cccccc;
-            text-transform: none; /* Reset default uppercase style */
-            background: none;
-            -webkit-text-fill-color: initial;
-        }
-
-        .head-meta .uuid {
-            font-family: 'Consolas', monospace;
-            color: #666;
-            font-size: 0.8rem;
-        }
-
-        .actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        /* Terminal container fills remaining vertical space */
-        #terminal-container {
-            flex: 1;
-            width: 100%;
-            overflow-x: auto;
-            overflow-y: hidden;
-            display: flex;
-            flex-direction: row;
-            background-color: #1e1e1e;
-            padding: 5px;
-            gap: 5px;
-        }
-
-        /* Ensure HTMX indicator doesn't block view */
-        #indicator {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 9999;
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'hydra/css/head_detail.css' %}"/>
 {% endblock %}
 
 {% block main_content %}
     <div class="head-info-bar">
-        <div class="head-meta">
-            <h1>{{ head.spell.name }}</h1>
-            <span class="uuid">{{ head.id }}</span>
+        <div class="breadcrumbs">
+            <a href="{% url 'home' %}">Dashboard</a>
+            <span class="separator">/</span>
+            <a href="{% url 'hydra:hydra_spawn_monitor' head.spawn.id %}?full=True">Monitor</a>
+            <span class="separator">/</span>
+            <span class="current">{{ head.spell.name }}</span>
 
             <div id="head-status-pill"
-                 style="display:inline-block;"
                  class="status-pill status-{{ head.status.name|lower }}"
                     {% if is_active %}
                  hx-get="{% url 'hydra:head_detail' head.id %}?partial=status_pill"
                  hx-trigger="every 2s"
                  hx-swap="outerHTML"
                     {% endif %}>
-            <span style="padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
-                    {% if head.status.name == 'Running' %}background: #007acc; color: white;
-                    {% elif head.status.name == 'Success' %}background: #4caf50; color: white;
-                    {% elif head.status.name == 'Failed' %}background: #f44336; color: white;
-                    {% else %}background: #444; color: #ccc;{% endif %}">
                 {{ head.status.name }}
-            </span>
             </div>
         </div>
 
-        <div class="actions" id="actions-container">
-            {% if is_active %}
-                <button class="btn-secondary"
-                        hx-post="{% url 'hydra:hydra_spawn_stop_graceful' head.spawn.id %}"
-                        style="border-color: #ef4444; color: #ef4444;">
-                    Stop
-                </button>
-            {% endif %}
-
-            <button class="btn-secondary" onclick="addTerminal('Custom Log', '')">+ Add View</button>
-            <a href="{% url 'hydra:hydra_spawn_monitor' head.spawn.id %}?full=True" class="btn-secondary">Exit</a>
+        <div class="actions">
+            <div id="actions-container" style="display: inline-block;"
+                    {% if is_active %}
+                 hx-get="{% url 'hydra:head_detail' head.id %}"
+                 hx-vals='{"partial": "actions"}'
+                 hx-trigger="every 2s"
+                 hx-swap="outerHTML"
+                    {% endif %}>
+                {% if is_active %}
+                    <button class="btn-secondary"
+                            hx-post="{% url 'hydra:hydra_spawn_stop_graceful' head.spawn.id %}"
+                            hx-swap="outerHTML"
+                            style="border-color: #f85149; color: #f85149; background: rgba(248, 81, 73, 0.1);">
+                        Stop Process
+                    </button>
+                {% endif %}
+            </div>
         </div>
     </div>
 
@@ -149,19 +58,19 @@
 {% block extra_script %}
     <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
-    <script src="{% static 'hydra/js/side_by_side.js' %}"></script>
+    <script src="{% static 'hydra/js/head_detail.js' %}"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const isActive = {{ is_active|yesno:"true,false" }};
 
-            // Use the raw format endpoint we added to views.py
+            // URLs
             const toolUrl = "{% url 'hydra:head_detail' head.id %}?type=tool&format=raw";
             const systemUrl = "{% url 'hydra:head_detail' head.id %}?type=system&format=raw";
 
-            // Initialize the two main panes
-            addTerminal('Tool Output', toolUrl, isActive);
-            addTerminal('System Context', systemUrl, isActive);
+            // Initialize Split View with Correct Names
+            initTerminal('tool', 'Spell Log', toolUrl, isActive);
+            initTerminal('system', 'Execution Log', systemUrl, isActive);
         });
     </script>
 {% endblock %}

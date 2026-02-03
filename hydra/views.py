@@ -95,33 +95,40 @@ class GracefulStopSpawnView(View):
         hydra = Hydra(spawn_id=pk)
         hydra.stop_gracefully()
 
-        # FIX: The button must POLL to see if the stop completed.
-        # We target the 'actions-container' which we will add to the templates.
+        # Context-Aware Response
         if request.headers.get('HX-Request'):
             referer = request.META.get('HTTP_REFERER', '')
 
-            # Context-Aware Styling with Self-Polling
-            # hx-select="#actions-container" pulls just the buttons from the current page
-            # hx-target="#actions-container" replaces the buttons on the current page
+            # Common stopping state button
+            stopping_btn = (
+                '<button class="btn-secondary" disabled '
+                'style="opacity: 0.5; cursor: wait; border-color: #f85149; color: #f85149; background: rgba(248, 81, 73, 0.1);">'
+                'Stopping...'
+                '</button>'
+            )
 
-            common_attrs = f'hx-get="{referer}" hx-select="#actions-container" hx-target="#actions-container" hx-swap="outerHTML" hx-trigger="every 1s"'
-
+            # 1. WAR ROOM (Head Detail) logic
             if '/head/' in referer:
-                # War Room Style
+                # We use ?partial=actions to poll just the button, not the whole page
                 return HttpResponse(
-                    f'<div id="actions-container" class="war-actions" {common_attrs}>'
-                    '<button class="btn-terminate" disabled style="opacity: 0.5; cursor: wait;">Stopping...</button>'
+                    f'<div id="actions-container" style="display: inline-block;" '
+                    f'hx-get="{referer}" hx-vals=\'{{"partial": "actions"}}\' '
+                    f'hx-trigger="every 2s" hx-swap="outerHTML">'
+                    f'{stopping_btn}'
                     '</div>'
                 )
+
+            # 2. MONITOR (Spawn List) logic
             else:
-                # Spawn Monitor Style
+                # Legacy behavior for the main dashboard list
+                # It uses hx-select because that view doesn't have a partial for just buttons yet
+                common_attrs = f'hx-get="{referer}" hx-select=".actions" hx-target="closest .actions" hx-swap="outerHTML" hx-trigger="every 2s"'
                 return HttpResponse(
                     f'<div class="actions" {common_attrs}>'
                     '<button class="btn-done" disabled style="border-color: #fb923c; color: #fb923c; opacity: 0.8; cursor: wait;">Stopping...</button>'
                     '</div>'
                 )
 
-        # Fallback for non-JS requests
         target_url = reverse('hydra:graph_monitor', kwargs={'spawn_id': pk})
         return redirect(target_url)
 
@@ -138,36 +145,14 @@ class HeadLogDetailView(DetailView):
         self.object = self.get_object()
         head = self.object
         is_active = head.is_active
-
-        # Determine Content Source
         log_type = request.GET.get('type')
         content = ''
         if log_type == 'tool':
             content = head.spell_log or ''
         elif log_type == 'system':
             content = head.execution_log or ''
-
-        # NEW: Raw Text Mode for Xterm.js
         if request.GET.get('format') == 'raw':
             return HttpResponse(content, content_type='text/plain')
-
-        # Legacy HTMX Content Endpoint
-        if request.GET.get('partial') == 'content':
-            # Simple Text Response. The Template JS will handle the terminal write.
-            # We wrap it in a hidden div so HTMX can swap it into the DOM for JS to read.
-            trigger = 'hx-trigger="every 1s"' if is_active else ''
-
-            html = f'''
-            <div id="buffer-{log_type}"
-                 class="raw-buffer"
-                 hx-get="{request.path}?partial=content&type={log_type}"
-                 hx-swap="outerHTML"
-                 {trigger}
-                 style="display: none;">{content}</div>
-            '''
-            return HttpResponse(html)
-
-        # Status Pill Endpoint
         if request.GET.get('partial') == 'status_pill':
             trigger = 'hx-trigger="every 2s"' if is_active else ''
             html = f'''
@@ -181,17 +166,42 @@ class HeadLogDetailView(DetailView):
             '''
             return HttpResponse(html)
 
+        # 3. Actions Endpoint (HTMX Polling)
+        # This is what the GracefulStopSpawnView polls to see if it should remove the button
+        if request.GET.get('partial') == 'actions':
+            trigger = 'hx-trigger="every 2s"' if is_active else ''
+
+            button_html = ''
+            # ONLY render the button if active. If not active, this returns empty string, removing it.
+            if is_active:
+                stop_url = reverse(
+                    'hydra:hydra_spawn_stop_graceful', args=[head.spawn.id]
+                )
+                button_html = f'''
+                <button class="btn-secondary" 
+                        hx-post="{stop_url}"
+                        hx-swap="outerHTML"
+                        style="border-color: #f85149; color: #f85149; background: rgba(248, 81, 73, 0.1);">
+                    Stop Process
+                </button>
+                '''
+
+            html = f'''
+            <div id="actions-container" style="display: inline-block;"
+                 hx-get="{request.path}" hx-vals='{{"partial": "actions"}}'
+                 {trigger}
+                 hx-swap="outerHTML">
+                {button_html}
+            </div>
+            '''
+            return HttpResponse(html)
+
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         head = self.object
         context['is_active'] = head.is_active
-
-        # Pre-load initial content for both panes
-        context['initial_tool_log'] = head.spell_log or ''
-        context['initial_system_log'] = head.execution_log or ''
-
         return context
 
 
