@@ -39,8 +39,7 @@ class HydraGraphMonitorView(DetailView):
         context['mode'] = 'monitor'
         context['spawn_id'] = str(self.object.id)
         context['spawn_history'] = HydraSpawn.objects.filter(
-            spellbook=self.object.spellbook
-        ).order_by('-created')[:20]
+            spellbook=self.object.spellbook).order_by('-created')[:20]
         return context
 
 
@@ -53,9 +52,8 @@ class LaunchSpellbookView(View):
         controller = Hydra(spellbook_id=spellbook_id)
         controller.start()
 
-        target_url = reverse(
-            'hydra:graph_monitor', kwargs={'spawn_id': controller.spawn.id}
-        )
+        target_url = reverse('hydra:graph_monitor',
+                             kwargs={'spawn_id': controller.spawn.id})
 
         if self.request.headers.get('HX-Request'):
             response = HttpResponse()
@@ -104,8 +102,7 @@ class GracefulStopSpawnView(View):
                 '<button class="btn-secondary" disabled '
                 'style="opacity: 0.5; cursor: wait; border-color: #f85149; color: #f85149; background: rgba(248, 81, 73, 0.1);">'
                 'Stopping...'
-                '</button>'
-            )
+                '</button>')
 
             # 1. WAR ROOM (Head Detail) logic
             if '/head/' in referer:
@@ -115,8 +112,7 @@ class GracefulStopSpawnView(View):
                     f'hx-get="{referer}" hx-vals=\'{{"partial": "actions"}}\' '
                     f'hx-trigger="every 2s" hx-swap="outerHTML">'
                     f'{stopping_btn}'
-                    '</div>'
-                )
+                    '</div>')
 
             # 2. MONITOR (Spawn List) logic
             else:
@@ -126,8 +122,7 @@ class GracefulStopSpawnView(View):
                 return HttpResponse(
                     f'<div class="actions" {common_attrs}>'
                     '<button class="btn-done" disabled style="border-color: #fb923c; color: #fb923c; opacity: 0.8; cursor: wait;">Stopping...</button>'
-                    '</div>'
-                )
+                    '</div>')
 
         target_url = reverse('hydra:graph_monitor', kwargs={'spawn_id': pk})
         return redirect(target_url)
@@ -174,9 +169,8 @@ class HeadLogDetailView(DetailView):
             button_html = ''
             # ONLY render the button if active. If not active, this returns empty string, removing it.
             if is_active:
-                stop_url = reverse(
-                    'hydra:hydra_spawn_stop_graceful', args=[head.spawn.id]
-                )
+                stop_url = reverse('hydra:hydra_spawn_stop_graceful',
+                                   args=[head.spawn.id])
                 button_html = f'''
                 <button class="btn-secondary" 
                         hx-post="{stop_url}"
@@ -236,28 +230,55 @@ class HydraBattleStationView(DetailView):
 class HydraBattleStreamView(View):
     """
     HTMX Endpoint: Merges logs from two heads into a single time-indexed stream.
+    Supports incremental updates via cursors.
     """
 
     def get(self, request, spawn_id):
         h1_id = request.GET.get('h1')
         h2_id = request.GET.get('h2')
+
+        # Cursor Handling
+        try:
+            cursor_1 = int(request.GET.get('local_cursor', 0))
+            cursor_2 = int(request.GET.get('remote_cursor', 0))
+        except (ValueError, TypeError):
+            cursor_1 = 0
+            cursor_2 = 0
+
         try:
             h1 = HydraHead.objects.get(id=h1_id)
             h2 = HydraHead.objects.get(id=h2_id)
         except HydraHead.DoesNotExist:
             return HttpResponse('Invalid Head IDs', status=404)
 
-        log1 = h1.spell_log or h1.execution_log or ''
-        log2 = h2.spell_log or h2.execution_log or ''
-        events = merge_logs(log1, log2)
+        full_log1 = h1.spell_log or h1.execution_log or ''
+        full_log2 = h2.spell_log or h2.execution_log or ''
+
+        # Calculate Deltas
+        # We only process the NEW content.
+        # Note: merge_logs expects complete lines usually to parse timestamps properly.
+        # If we slice middle of a line, we might break parsing.
+        # But for now, we assume simple appending.
+
+        delta_log1 = full_log1[cursor_1:]
+        delta_log2 = full_log2[cursor_2:]
+
+        # Only merge if there is content to merge
+        if not delta_log1 and not delta_log2:
+            return HttpResponse('')  # No updates
+
+        events = merge_logs(delta_log1, delta_log2)
+
+        new_cursor_1 = len(full_log1)  # cursor_1 + len(delta_log1)
+        new_cursor_2 = len(full_log2)
 
         return render(
             request,
             'hydra/partials/battle_stream.html',
             {
                 'events': events,
-                'new_local_cursor': len(log1),
-                'new_remote_cursor': len(log2),
+                'new_local_cursor': new_cursor_1,
+                'new_remote_cursor': new_cursor_2,
             },
         )
 

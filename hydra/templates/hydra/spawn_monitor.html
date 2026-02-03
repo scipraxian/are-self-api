@@ -81,15 +81,20 @@
                 <div class="header-col"
                      title="{{ head_1.spell.talos_executable.executable }} - {{ head_1.id }}">{{ head_1.spell.name|default:"HEAD 1" }}</div>
                 <div class="header-col center">TIMESTAMP</div>
-                <div class="header-col"
-                     title="{{ head_2.spell.talos_executable.executable }} - {{ head_2.id }}">{{ head_2.spell.name|default:"HEAD 2" }}</div>
-
-                <div class="toggle-wrapper">
-                    <span class="toggle-label">Autoscroll</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="battle-autoscroll">
-                        <span class="toggle-slider"></span>
-                    </label>
+                <div class="header-col" style="display: flex; justify-content: space-between; align-items: center; padding-right: 20px;">
+                    <span title="{{ head_2.spell.talos_executable.executable }} - {{ head_2.id }}">{{ head_2.spell.name|default:"HEAD 2" }}</span>
+                    
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <input type="text" class="filter-input" placeholder="Filter logs..." style="width: 150px;">
+                        
+                        <div class="toggle-wrapper" style="position: static; transform: none; margin: 0;">
+                            <span class="toggle-label">Autoscroll</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="battle-autoscroll">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -103,12 +108,8 @@
                     local_cursor: document.getElementById("battle-station-cursors")?.dataset.local || 0,
                     remote_cursor: document.getElementById("battle-station-cursors")?.dataset.remote || 0
                  }'
-                 hx-swap="innerHTML">
-
-                <div style="padding: 2rem; text-align: center; color: #94a3b8;">
-                    <div class="spinner-small" style="margin: 0 auto 10px;"></div>
-                    Synchronizing Log Streams...
-                </div>
+                 hx-swap="beforeend">
+                <!-- Content loaded via HTMX -->
             </div>
         </div>
     {% else %}

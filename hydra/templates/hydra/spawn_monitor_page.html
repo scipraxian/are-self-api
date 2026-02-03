@@ -2,17 +2,76 @@
 
 {% block title %}Hydra Monitor: {{ spawn.spellbook.name }}{% endblock %}
 
+{% block container_class %}battle-station-container{% endblock %}
+
+{% block top_actions %}{% endblock %}
+
 {% block extra_style %}
     <style>
+        /* Full Screen Breakout */
+        body {
+            {% if is_full_page %}
+            overflow: hidden !important; /* Prevent double scrollbars */
+            padding: 0 !important;
+            {% endif %}
+        }
+        
+        .battle-station-container {
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #0f1117; /* Solid background */
+            display: flex;
+            flex-direction: column;
+            z-index: 1000; /* Above everything */
+        }
+        
+        /* Hide Base Template Elements that overlap */
+        .top-actions, 
+        .shutdown-btn,
+        .neural-monitor,
+        #neural-monitor { 
+            display: none !important; 
+        }
+
+        /* Battle Header & Filters */
+        .battle-station-header {
+            position: relative;
+            background: #1e293b !important;
+            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+            z-index: 1001; /* Above container */
+            flex-shrink: 0;
+            display: grid; /* Enforce Layout */
+        }
+
+        .filter-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            /* Width handled inline now, or fallback */
+            width: 150px; 
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .filter-input:focus {
+            border-color: #60a5fa;
+            background: rgba(0, 0, 0, 0.5);
+            width: 200px; /* Expand slightly */
+        }
+
         /* Toggle Switch Styling - Matches head_detail.html */
         .toggle-wrapper {
             display: flex;
             align-items: center;
             gap: 8px;
-            position: absolute;
-            right: 20px;
-            top: 12px;
-            z-index: 20;
+            /* Removed absolute positioning */
         }
 
         .toggle-switch {
@@ -67,16 +126,213 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
+        
+        /* Message Content Overrides */
+        .msg-content {
+            display: block !important;
+            word-break: break-all;
+            white-space: pre-wrap;
+            /* Border left handles the "indentation" look properly now */
+        }
 
-        /* Ensure header allows positioning */
-        .battle-station-header {
+        /* Visual Density & Typography */
+        .battle-stream {
+            font-family: 'JetBrains Mono', 'Consolas', monospace !important;
+            font-size: 0.75rem !important;
+            line-height: 1.4 !important;
+            background-color: #0b1120;
+            overflow-y: auto; /* Ensure it scrolls */
+            flex: 1; /* Grow to fill space */
+            min-height: 0; /* Crucial for flex scrolling */
+            width: 100%;
             position: relative;
         }
+        
+        .log-row {
+            border-bottom: 1px solid rgba(255,255,255,0.03) !important;
+            min-height: 1.4em;
+            text-align: left; /* Fix centering issue */
+            position: relative;
+            background-color: #0b1120; /* Solid background to prevent ghosting */
+            
+            /* FORCE GRID LAYOUT */
+            display: grid !important;
+            grid-template-columns: 1fr 100px 1fr !important;
+            align-items: start !important;
+            gap: 8px;
+            height: auto !important;
+        }
+
+        .col-ts {
+            text-align: center;
+            font-weight: 700;
+            color: #60a5fa;
+            padding: 0 4px;
+            white-space: nowrap;
+        }
+
+        .col-msg {
+            overflow-x: hidden;
+            padding: 0 8px;
+        }
+        
+        /* Subtle Tints for Divergence */
+        .log-row.source-local {
+            background-color: rgba(59, 130, 246, 0.03); /* Blue tint */
+        }
+        
+        .log-row.source-remote {
+            background-color: rgba(168, 85, 247, 0.03); /* Purple tint */
+        }
+        
+        .log-row.source-merged {
+            background-color: transparent; /* Merged are "clean" */
+        }
+
+        .log-row.source-merged .col-ts {
+            color: #e2e8f0; /* brighter timestamp for sync points */
+            font-weight: 800;
+            border-left: 1px solid rgba(255,255,255,0.1);
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Filter Hidden State */
+        .log-row.hidden {
+            display: none !important;
+        }
+        
+        /* Layout overrides */
+        .multiplayer-battle-station {
+            height: 100% !important; /* Fill container */
+            border-radius: 0 !important;
+            border: none !important;
+            display: flex;
+            flex-direction: column;
+            min-height: 0; /* Allow shrinking */
+        }
+        
+        #hydra-controls {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: none !important;
+            margin: 0 !important;
+            min-height: 0; /* Allow shrinking */
+            overflow: hidden;
+            text-align: left; /* Fix centering inheritance */
+        }
+
+        .monitor-card {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            border: none !important;
+            padding: 0 !important;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            min-height: 0; /* Allow shrinking */
+        }
+        
+        /* Hide regular header/actions in full battle mode if needed, 
+           or just style them to stay at top. 
+           We'll keep the top status bar but make it compact. */
+        .monitor-header {
+            padding: 10px 20px !important;
+            background: #0f172a !important;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 0 !important;
+            flex-shrink: 0; /* Don't shrink header */
+        }
+
     </style>
 {% endblock %}
 
 {% block main_content %}
-    <div id="hydra-controls" style="max-width: 1000px; margin: 0 auto;">
+    <div id="hydra-controls">
         {% include "hydra/spawn_monitor.html" with is_full_page=True %}
     </div>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+    // Real-Time Client Side Filtering (Optimized)
+
+    let filterDebounceTimeout;
+
+    // Use event delegation on document body
+    document.addEventListener('input', function(e) {
+        if (e.target && e.target.classList.contains('filter-input')) {
+            // Clear previous timeout
+            if (filterDebounceTimeout) clearTimeout(filterDebounceTimeout);
+            
+            // Set new timeout (300ms debounce)
+            filterDebounceTimeout = setTimeout(() => {
+                applyFilter(e.target.value);
+            }, 300);
+        }
+    });
+    
+    // Re-apply filter after HTMX content load without debounce (for consistency)
+    document.addEventListener('htmx:afterSettle', function(evt) {
+        if (evt.detail.target.id === 'battle-stream-container') {
+            const input = document.querySelector('.filter-input');
+            if (input && input.value) {
+                // Run immediately on new content, but maybe defer slightly to let browser paint
+                requestAnimationFrame(() => applyFilter(input.value));
+            }
+        }
+    });
+
+    function applyFilter(text) {
+        const rows = document.querySelectorAll('.log-row');
+        const filterText = text.toLowerCase().trim();
+        const isNegative = filterText.startsWith('-');
+        
+        const query = isNegative ? filterText.substring(1) : filterText;
+        
+        // If empty, show all (fast path)
+        if (!query) {
+             // Batch this if huge? no, removing class is fast enough usually, but let's be safe
+             requestAnimationFrame(() => {
+                 rows.forEach(row => row.classList.remove('hidden'));
+             });
+             return;
+        }
+
+        // Process in chunks to avoid blocking main thread
+        const chunkSize = 500;
+        let index = 0;
+
+        function processChunk() {
+            const limit = Math.min(index + chunkSize, rows.length);
+            
+            for (let i = index; i < limit; i++) {
+                const row = rows[i];
+                // Optimization: Use textContent instead of innerText (avoids reflow)
+                // Even better: Check if we cached it. For now, textContent is much faster.
+                const content = row.textContent.toLowerCase();
+                const match = content.includes(query);
+                
+                if (isNegative) {
+                    if (match) row.classList.add('hidden');
+                    else row.classList.remove('hidden');
+                } else {
+                    if (match) row.classList.remove('hidden');
+                    else row.classList.add('hidden');
+                }
+            }
+            
+            index += chunkSize;
+            
+            if (index < rows.length) {
+                requestAnimationFrame(processChunk);
+            }
+        }
+
+        requestAnimationFrame(processChunk);
+    }
+</script>
 {% endblock %}

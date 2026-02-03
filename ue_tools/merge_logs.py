@@ -18,8 +18,8 @@ def merge_logs(local_content, remote_content):
 
     # 3. Zipper Merge with Tolerance
     # Agent logs often lack milliseconds (HH:MM:SS), while UE logs are microsecond precise.
-    # We use a 1.1s tolerance to ensure we catch 'same second' events.
-    TOLERANCE_SECONDS = 1.1
+    # We use a 0.1s tolerance to ensure we catch 'same second' events.
+    TOLERANCE_SECONDS = 0.1
 
     ui_events = []
     idx_l = 0
@@ -40,44 +40,37 @@ def merge_logs(local_content, remote_content):
             delta = abs((entry_l.timestamp - entry_r.timestamp).total_seconds())
             if delta <= TOLERANCE_SECONDS:
                 # Merge these two
-                ui_events.append(
-                    {
-                        'source': 'merged',
-                        'display_ts': entry_l.timestamp.strftime('%H:%M:%S'),
-                        'full_ts': entry_l.timestamp,
-                        'local_msg': entry_l.message,
-                        'remote_msg': entry_r.message,
-                    }
-                )
+                ui_events.append({
+                    'source': 'merged',
+                    'display_ts': entry_l.timestamp.strftime('%H:%M:%S'),
+                    'full_ts': entry_l.timestamp,
+                    'local_msg': entry_l.message,
+                    'remote_msg': entry_r.message,
+                })
                 idx_l += 1
                 idx_r += 1
                 matched = True
 
         if not matched:
             # If not matched, process the earlier one
-            if entry_l and (
-                not entry_r or entry_l.timestamp < entry_r.timestamp
-            ):
-                ui_events.append(
-                    {
-                        'source': 'local',
-                        'display_ts': entry_l.timestamp.strftime('%H:%M:%S'),
-                        'full_ts': entry_l.timestamp,
-                        'local_msg': entry_l.message,
-                        'remote_msg': '',
-                    }
-                )
+            if entry_l and (not entry_r or
+                            entry_l.timestamp < entry_r.timestamp):
+                ui_events.append({
+                    'source': 'local',
+                    'display_ts': entry_l.timestamp.strftime('%H:%M:%S'),
+                    'full_ts': entry_l.timestamp,
+                    'local_msg': entry_l.message,
+                    'remote_msg': '',
+                })
                 idx_l += 1
             elif entry_r:
-                ui_events.append(
-                    {
-                        'source': 'remote',
-                        'display_ts': entry_r.timestamp.strftime('%H:%M:%S'),
-                        'full_ts': entry_r.timestamp,
-                        'local_msg': '',
-                        'remote_msg': entry_r.message,
-                    }
-                )
+                ui_events.append({
+                    'source': 'remote',
+                    'display_ts': entry_r.timestamp.strftime('%H:%M:%S'),
+                    'full_ts': entry_r.timestamp,
+                    'local_msg': '',
+                    'remote_msg': entry_r.message,
+                })
                 idx_r += 1
 
     return ui_events
