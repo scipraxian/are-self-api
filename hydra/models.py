@@ -19,6 +19,7 @@ from environments.models import (
 from .constants import (
     ABORTED_LABEL,
     CREATED_LABEL,
+    DELEGATED_LABEL,
     FAILED_LABEL,
     PENDING_LABEL,
     RUNNING_LABEL,
@@ -28,6 +29,25 @@ from .constants import (
 )
 
 # --- DEFINITIONS (The Library) ---
+
+
+class HydraTag(NameMixin):
+    """
+    Native tagging system to avoid external dependency conflicts.
+    """
+
+    class Meta:
+        verbose_name = 'Tag'
+        verbose_name_plural = 'Tags'
+        ordering = ['name']
+
+
+class TagsAndFavoriteMixin(models.Model):
+    is_favorite = models.BooleanField(default=False, db_index=True)
+    tags = models.ManyToManyField(HydraTag, blank=True)
+
+    class Meta:
+        abstract = True
 
 
 class HydraStatusID(object):
@@ -69,7 +89,7 @@ class HydraStatusTypeMixin(NameMixin):
         ABORTED_LABEL: HydraStatusID.ABORTED,
         STOPPING_LABEL: HydraStatusID.STOPPING,
         STOPPED_LABEL: HydraStatusID.STOPPED,
-        'DELEGATED': HydraStatusID.DELEGATED,
+        DELEGATED_LABEL: HydraStatusID.DELEGATED,
     }
 
     class Meta:
@@ -98,7 +118,7 @@ class HydraDistributionMode(NameMixin, DescriptionMixin):
         verbose_name = 'Hydra Distribution Mode'
 
 
-class HydraSpell(DefaultFieldsMixin):
+class HydraSpell(DefaultFieldsMixin, TagsAndFavoriteMixin):
     """
     A configured action (Tool + specific Switches).
     """
@@ -148,12 +168,13 @@ class HydraSpellArgumentAssignment(models.Model):
         ordering = ['order']
 
 
-class HydraSpellbook(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
+class HydraSpellbook(
+    UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin, TagsAndFavoriteMixin
+):
     """
-    The Container. Now supports a visual JSON layout.
+    The Container. Now supports a visual JSON layout, Tags, and Favorites.
     """
 
-    name = models.CharField(max_length=255)
     ui_json = models.TextField(blank=True, default='{}')
 
     def __str__(self):
@@ -254,7 +275,6 @@ class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
         blank=True, help_text='Serialized JSON context variables'
     )
 
-    # NEW: The "Umbilical Cord" back to the Parent
     parent_head = models.ForeignKey(
         'HydraHead',
         on_delete=models.SET_NULL,
