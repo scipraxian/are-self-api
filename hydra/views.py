@@ -1,7 +1,7 @@
 import os
 
 from django.http import HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, TemplateView
@@ -79,6 +79,23 @@ class LaunchSpellbookView(View):
 
     def post(self, request, spellbook_id):
         return self.dispatch_launch(spellbook_id)
+
+
+class ToggleFavoriteView(View):
+    """
+    Toggles the is_favorite status of a Spellbook.
+    Returns the new Star Icon state HTML.
+    """
+
+    def post(self, request, pk):
+        book = get_object_or_404(HydraSpellbook, pk=pk)
+        book.is_favorite = not book.is_favorite
+        book.save(update_fields=['is_favorite'])
+
+        # Return the updated SVG button
+        return render(
+            request, 'dashboard/partials/star_toggle.html', {'book': book}
+        )
 
 
 class TerminateSpawnView(View):

@@ -30,17 +30,47 @@
     </div>
 
     <div class="launch-pad">
-        <div style="padding:0 10px; color:#666; font-size:0.7rem; font-weight:900; margin-bottom:5px;">PROTOCOLS</div>
-        {% for book in spellbooks %}
-            <div class="launch-row">
-                <button class="launch-btn"
-                        hx-post="{% url 'hydra:hydra_launch' book.id %}?no_redirect=true"
-                        hx-swap="none">
-                    {{ book.name }}
-                </button>
-                <a href="{% url 'hydra:graph_editor' book.id %}" class="edit-btn" title="Edit">✎</a>
+        <div class="search-container">
+            <input type="text" id="protocol-search" class="lcars-search" placeholder="FILTER PROTOCOLS..."
+                   autocomplete="off">
+        </div>
+
+        {% if favorites %}
+            <div class="launch-group">
+                <div class="lcars-separator">
+                    <div class="line" style="background: var(--lcars-elbow);"></div>
+                    <div class="label" style="color: var(--lcars-elbow);">STARRED</div>
+                </div>
+                {% for book in favorites %}
+                    {% include "dashboard/partials/launch_row.html" with book=book %}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% for group in tagged_groups %}
+            <div class="launch-group">
+                <div class="lcars-separator">
+                    <div class="line"></div>
+                    <div class="label">{{ group.name }}</div>
+                </div>
+                {% for book in group.books %}
+                    {% include "dashboard/partials/launch_row.html" with book=book %}
+                {% endfor %}
             </div>
         {% endfor %}
+
+        {% if uncategorized %}
+            <div class="launch-group">
+                <div class="lcars-separator">
+                    <div class="line" style="opacity: 0.3;"></div>
+                    <div class="label" style="opacity: 0.5;">PROTOCOLS</div>
+                </div>
+                {% for book in uncategorized %}
+                    {% include "dashboard/partials/launch_row.html" with book=book extra_class="uncategorized" %}
+                {% endfor %}
+            </div>
+        {% endif %}
+
         <a href="{% url 'admin:hydra_hydraspellbook_add' %}" target="_blank" class="add-btn text-center"
            style="text-decoration:none; text-align:center;">+ Protocol</a>
     </div>
@@ -67,17 +97,7 @@
 
 {% include "dashboard/partials/chat_window.html" %}
 
-<script>
-    function toggleMenu() {
-        const menu = document.getElementById('system-menu');
-        menu.classList.toggle('open');
-    }
-
-    function toggleChat() {
-        const chat = document.getElementById('chat-sidebar');
-        if (chat) chat.classList.toggle('open');
-    }
-</script>
+<script src="{% static 'dashboard/js/mission_control.js' %}"></script>
 
 </body>
 </html>

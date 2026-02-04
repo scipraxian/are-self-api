@@ -25,8 +25,43 @@ class DashboardHomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['spellbooks'] = HydraSpellbook.objects.all().order_by('name')
 
+        # 1. Fetch all books with tags
+        all_books = HydraSpellbook.objects.prefetch_related('tags').order_by(
+            'name'
+        )
+
+        # 2. Partition
+        favorites = []
+        tagged_groups = {}  # { "TagName": [book1, book2] }
+        uncategorized = []
+
+        for book in all_books:
+            if book.is_favorite:
+                favorites.append(book)
+
+            # If tags exist, add to groups
+            tags = book.tags.all()
+            if tags:
+                for tag in tags:
+                    if tag.name not in tagged_groups:
+                        tagged_groups[tag.name] = []
+                    tagged_groups[tag.name].append(book)
+            else:
+                uncategorized.append(book)
+
+        # 3. Sort Groups Alphabetically
+        sorted_groups = []
+        for tag_name in sorted(tagged_groups.keys()):
+            sorted_groups.append(
+                {'name': tag_name, 'books': tagged_groups[tag_name]}
+            )
+
+        context['favorites'] = favorites
+        context['tagged_groups'] = sorted_groups
+        context['uncategorized'] = uncategorized
+
+        # --- SPAWN MONITOR LOGIC ---
         root_spawns = HydraSpawn.objects.filter(
             parent_head__isnull=True
         ).order_by('-created')[:20]

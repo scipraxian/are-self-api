@@ -1,0 +1,6 @@
+<button class="star-btn {% if book.is_favorite %}active{% endif %}"
+        hx-post="{% url 'hydra:toggle_favorite' book.id %}"
+        hx-swap="outerHTML"
+        title="Toggle Favorite">
+    {% if book.is_favorite %}★{% else %}☆{% endif %}
+</button>

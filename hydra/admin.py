@@ -16,6 +16,7 @@ from .models import (
     HydraSpellbookConnectionWire,
     HydraSpellbookNode,
     HydraSpellTarget,
+    HydraTag,
 )
 
 
@@ -43,9 +44,17 @@ class HydraSpellbookWireInline(admin.TabularInline):
     verbose_name = 'Wire'
 
 
+@admin.register(HydraTag)
+class HydraTagAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
+
+
 @admin.register(HydraSpellbook)
 class HydraSpellbookAdmin(admin.ModelAdmin):
-    list_display = ('name', 'id', 'created', 'node_count')
+    list_display = ('name', 'id', 'is_favorite', 'created', 'node_count')
+    list_filter = ('is_favorite', 'tags')
+    filter_horizontal = ('tags',)
     # Use the new Inlines to visualize graph data in Admin
     inlines = [HydraSpellbookNodeInline, HydraSpellbookWireInline]
 

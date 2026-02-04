@@ -42,6 +42,11 @@ urlpatterns = [
         name='hydra_launch',
     ),
     path(
+        'book/<uuid:pk>/favorite/',
+        views.ToggleFavoriteView.as_view(),
+        name='toggle_favorite',
+    ),
+    path(
         'spawn/<uuid:pk>/terminate/',
         views.TerminateSpawnView.as_view(),
         name='hydra_spawn_terminate',

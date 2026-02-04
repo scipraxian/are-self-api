@@ -117,11 +117,102 @@ body {
     overflow-y: auto;
 }
 
+/* Search Box */
+.search-container {
+    padding: 0 5px 10px 5px;
+}
+
+.lcars-search {
+    width: 100%;
+    background: #111;
+    border: 1px solid #333;
+    border-left: 4px solid var(--lcars-elbow);
+    color: var(--lcars-elbow);
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    outline: none;
+    border-radius: 0 4px 4px 0;
+    transition: border-color 0.2s;
+}
+
+.lcars-search:focus {
+    border-color: var(--lcars-blue);
+    border-left-color: var(--lcars-blue);
+    color: #fff;
+}
+
+.lcars-search::placeholder {
+    color: #444;
+}
+
+/* LCARS Group Separator */
+.launch-group {
+    margin-bottom: 15px;
+}
+
+.lcars-separator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+    opacity: 0.8;
+}
+
+.lcars-separator .line {
+    flex: 1;
+    height: 1px;
+    background: var(--lcars-panel);
+}
+
+.lcars-separator .label {
+    font-size: 0.65rem;
+    font-weight: 900;
+    color: var(--lcars-panel);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* Launch Row & Star */
 .launch-row {
     display: flex;
     gap: 2px;
     align-items: stretch;
     margin-bottom: 2px;
+    position: relative;
+    group: true; /* For hover detection context */
+}
+
+/* Star Toggle */
+.star-btn {
+    width: 25px;
+    background: #222;
+    border: none;
+    color: #444; /* Default inactive color */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.2s;
+
+    /* "Only show on hover" Logic */
+    opacity: 0;
+}
+
+.launch-row:hover .star-btn {
+    opacity: 1;
+}
+
+.star-btn.active {
+    color: var(--lcars-elbow);
+    opacity: 1;
+}
+
+.star-btn:hover {
+    background: #333;
+    color: #fff;
 }
 
 .launch-btn {
@@ -275,22 +366,15 @@ body {
     color: #fff;
 }
 
-/* COL 2: ACTIVE (Adaptive Width) */
+/* COL 2: ACTIVE (Reduced Width) */
 .lane-active {
-    /* flex-basis: auto -> Start at content width
-       flex-grow: 0 -> Do not grow greedily
-       flex-shrink: 0 -> Do not shrink below content (triggers scroll)
-       max-width: 45% -> Cap it so History always has space
-    */
-    flex: 0 0 auto;
-    max-width: 45%;
+    flex: 0 0 220px; /* Reduced width since buttons are icons now */
     border-right: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(0, 0, 0, 0.3);
     display: flex;
     align-items: center;
     position: relative;
     overflow: hidden;
-    min-width: 200px; /* Minimum width for buttons/empty state */
 }
 
 /* COL 3: HISTORY (Flexible) */
@@ -298,19 +382,19 @@ body {
     flex: 1 1 auto;
     display: flex;
     align-items: center;
-    position: relative;
+    position: relative; /* Context for absolute buttons */
     overflow: hidden;
     min-width: 0;
 }
 
-/* GENERIC SCROLL WRAPPER */
+/* GENERIC SCROLL WRAPPER (Used by Active and History) */
 .lane-scroll-wrapper {
     display: flex;
     align-items: center;
     gap: 8px;
     overflow-x: auto;
     scroll-behavior: smooth;
-    padding: 0 25px; /* Space reserved for buttons */
+    padding: 0 35px; /* Added padding to clear the buttons */
     width: 100%;
     height: 100%;
     scrollbar-width: none;
@@ -320,17 +404,17 @@ body {
     display: none;
 }
 
-/* SCROLL BUTTONS (Hidden by default, shown by JS) */
+/* SCROLL BUTTONS - HIGH VISIBILITY */
 .lane-scroll-btn {
     position: absolute;
     top: 0;
     bottom: 0;
-    background: rgba(17, 24, 39, 0.95);
+    background: rgba(17, 24, 39, 0.9); /* Darker, solid background */
     border: 1px solid #333;
     color: #fff;
-    width: 24px;
+    width: 28px;
     cursor: pointer;
-    z-index: 100;
+    z-index: 100; /* Ensure on top */
     display: none; /* Hidden by default */
     align-items: center;
     justify-content: center;
@@ -370,7 +454,7 @@ body {
     justify-content: center;
 }
 
-/* Icon Buttons */
+/* New Icon Buttons for View/Edit/Redo */
 .btn-icon-ctrl {
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -440,15 +524,6 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.head-log {
-    font-size: 0.55rem;
-    color: #38bdf8;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    opacity: 0.8;
 }
 
 /* Drill Button on Active Card */
