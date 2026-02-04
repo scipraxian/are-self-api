@@ -22,7 +22,7 @@ body {
 .lcars-grid {
     display: grid;
     grid-template-columns: 260px 1fr;
-    grid-template-rows: 35px 1fr; /* Strict 35px Header */
+    grid-template-rows: 35px 1fr;
     height: 100%;
     gap: 10px;
     padding: 10px;
@@ -187,7 +187,7 @@ body {
     grid-column: 2;
     grid-row: 2 / -1;
     overflow-y: auto;
-    overflow-x: hidden; /* Prevent global scrollbar */
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -195,7 +195,7 @@ body {
     padding-bottom: 20px;
 }
 
-/* --- THE SWIMLANE (FLEXBOX REFACTOR) --- */
+/* --- THE SWIMLANE --- */
 .swimlane {
     background: var(--lane-bg);
     border: 1px solid #333;
@@ -204,9 +204,7 @@ body {
     align-items: stretch;
     min-height: 90px;
     position: relative;
-    /* FIX: Allow shrinking/wrapping to fit container */
     width: 100%;
-    flex-wrap: nowrap;
 }
 
 .swimlane.subgraph {
@@ -227,7 +225,7 @@ body {
 
 /* COL 1: META (Fixed) */
 .lane-meta {
-    flex: 0 0 200px; /* Rigid Width */
+    flex: 0 0 200px;
     padding: 10px;
     border-right: 1px solid #333;
     display: flex;
@@ -277,32 +275,106 @@ body {
     color: #fff;
 }
 
-/* COL 2: ACTIVE (Flexible Wrap) */
+/* COL 2: ACTIVE (Reduced Width) */
 .lane-active {
-    /* FIX: Flexible width, wrap content, prioritize over history if active */
-    flex: 0 1 auto;
+    flex: 0 0 220px; /* Reduced width since buttons are icons now */
     border-right: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(0, 0, 0, 0.3);
     display: flex;
-    flex-wrap: wrap; /* WRAP items */
     align-items: center;
-    gap: 8px;
-    padding: 8px;
+    position: relative;
     overflow: hidden;
-    min-width: 0; /* Allow shrinking below content size if strictly needed */
 }
 
-/* COL 3: HISTORY (Flexible Wrap) */
+/* COL 3: HISTORY (Flexible) */
 .lane-history {
-    /* FIX: Flexible width, wrap content */
     flex: 1 1 auto;
     display: flex;
-    flex-wrap: wrap; /* WRAP items */
+    align-items: center;
+    position: relative;
+    overflow: hidden; /* Hide scrollbar */
+    min-width: 0;
+}
+
+/* GENERIC SCROLL WRAPPER (Used by Active and History) */
+.lane-scroll-wrapper {
+    display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px;
-    overflow: hidden;
-    min-width: 0;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 0 25px; /* Space for buttons */
+    width: 100%;
+    height: 100%;
+    scrollbar-width: none; /* Firefox */
+}
+
+.lane-scroll-wrapper::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+/* SCROLL BUTTONS */
+.lane-scroll-btn {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    color: #aaa;
+    width: 24px;
+    cursor: pointer;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    transition: all 0.2s;
+    font-size: 1.2rem;
+}
+
+.lane-scroll-btn:hover {
+    background: var(--lcars-elbow);
+    color: #000;
+}
+
+.lane-scroll-btn.left {
+    left: 0;
+}
+
+.lane-scroll-btn.right {
+    right: 0;
+}
+
+/* Control Group (Idle State - Icons) */
+.lane-controls-group {
+    display: flex;
+    gap: 12px; /* Tight spacing */
+    width: 100%;
+    padding: 0 10px;
+    justify-content: center;
+}
+
+/* New Icon Buttons for View/Edit/Redo */
+.btn-icon-ctrl {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #94a3b8;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.btn-icon-ctrl:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
 }
 
 /* CARDS */
@@ -312,12 +384,14 @@ body {
     border-radius: 4px;
     padding: 6px;
     width: 140px;
-    flex-shrink: 0; /* Prevent squashing */
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     height: 60px;
     overflow: hidden;
+    position: relative;
+    text-decoration: none;
 }
 
 .head-card.active {
@@ -352,13 +426,26 @@ body {
     text-overflow: ellipsis;
 }
 
-.head-log {
-    font-size: 0.55rem;
-    color: #38bdf8;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    opacity: 0.8;
+/* Drill Button on Active Card */
+.card-drill-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    text-decoration: none;
+}
+
+.head-card:hover .card-drill-btn {
+    background: var(--lcars-elbow);
+    color: #000;
 }
 
 /* THOUGHT BUBBLE */
