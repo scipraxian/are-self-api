@@ -378,15 +378,19 @@ class AsyncLogMonitor:
         logger.info('[MONITOR] Waiting for file to appear...')
         while time.time() - start_time < TalosAgentConstants.TIMEOUT_LOG_APPEAR:
             if os.path.exists(self.file_path):
-                logger.info(f'[MONITOR] File found: {self.file_path}')
-                break
+                # Attempt read, but strictly enforce mtime check
+                self._read_file(force_check=True)
+                if self._file_found:
+                    logger.info(
+                        f'[MONITOR] File found and accepted: {self.file_path}'
+                    )
+                    break
+
             if self._stop_event.is_set():
                 return
             await asyncio.sleep(1.0)
 
         # 2. Watch Phase
-        # Force check on first read to establish offset
-        self._read_file(force_check=True)
         try:
             async for _ in awatch(directory, stop_event=self._stop_event):
                 # Event triggered: Trust the event, ignore mtime lag
@@ -400,10 +404,14 @@ class AsyncLogMonitor:
         if not os.path.exists(self.file_path):
             return
 
-        # Windows Lag Fix: If forced (via event), skip mtime check
-        if not self._file_found and not force_check:
+        # STALENESS CHECK: Strict enforcement
+        # If we haven't "accepted" this file yet, verify it is fresh (newer than launch).
+        # We ignore force_check here because an 'exists' check in the loop
+        # might return True for an old file even if 'force_check' is passed.
+        if not self._file_found:
             mtime = os.path.getmtime(self.file_path)
             if mtime < self.launch_time:
+                # File exists but is from a previous run. Ignore it.
                 return
 
         try:
@@ -413,13 +421,20 @@ class AsyncLogMonitor:
                 encoding=TalosAgentConstants.ENCODING,
                 errors=TalosAgentConstants.ERR_HANDLER,
             ) as f:
+                # FIRST READ INITIALIZATION
+                if not self._file_found:
+                    # We just accepted this file. Start from 0 to capture headers.
+                    # This handles the case where Unreal wrote the header *before* we grabbed the handle.
+                    self._current_offset = 0
+                    self._file_found = True
+
                 f.seek(0, os.SEEK_END)
                 size = f.tell()
 
-                # Detect Truncation (New Run)
+                # Detect Truncation (New Run or Log Rotation)
                 if size < self._current_offset:
                     logger.info(
-                        '[MONITOR] File truncation detected. Resetting offset.'
+                        '[MONITOR] Truncation detected. Resetting offset.'
                     )
                     self._current_offset = 0
 
@@ -428,15 +443,8 @@ class AsyncLogMonitor:
                     self._queue.put_nowait(line)
 
                 self._current_offset = f.tell()
-                if not self._file_found:
-                    logger.info(
-                        f'[MONITOR] Started streaming from offset '
-                        f'{self._current_offset}'
-                    )
-                    self._file_found = True
 
         except OSError as e:
-            # THIS IS THE CRITICAL FIX: Don't swallow errors!
             logger.info(f'[MONITOR ERROR] Failed to read log: {e}')
 
 

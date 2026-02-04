@@ -126,15 +126,16 @@
             flex: 1;
             overflow-y: auto !important;
             background: #020617;
+            padding-bottom: 2rem;
         }
 
         .log-row {
             display: grid;
-            grid-template-columns: 1fr 140px 1fr;
+            grid-template-columns: 1fr 120px 1fr;
             border-bottom: 1px solid rgba(255, 255, 255, 0.03);
             font-family: 'JetBrains Mono', Consolas, monospace;
-            font-size: 0.85rem;
-            line-height: 1.5;
+            font-size: 11px;
+            line-height: 1.4;
             width: 100%;
         }
 
@@ -142,52 +143,57 @@
             display: none !important;
         }
 
-        /* --- 6. HANGING INDENT FIX --- */
-        .col-msg {
-            /* 1em padding left, -1em indent pulls first line back */
-            padding: 4px 12px 4px 2em;
-            text-indent: -1em;
+        .log-row:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
 
-            display: block;
+        /* --- 6. TEXT FORMATTING (Fixed) --- */
+        .col-msg {
+            padding: 4px 10px;
+            word-break: break-word;
             white-space: pre-wrap;
-            overflow-wrap: break-word;
             color: #cbd5e1;
+            align-self: start;
         }
 
         .col-ts {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            background: rgba(0, 0, 0, 0.2);
-            color: #64748b;
-            font-size: 0.75rem;
-            border-left: 1px solid rgba(255, 255, 255, 0.03);
-            border-right: 1px solid rgba(255, 255, 255, 0.03);
+            background: rgba(0, 0, 0, 0.3);
+            color: #58a6ff;
+            font-size: 10px;
+            padding: 4px 0;
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            opacity: 0.7;
         }
 
         /* --- COLORS --- */
         .source-local .col-local {
-            color: #f1f5f9;
+            color: #e6edf3;
         }
 
         .source-remote .col-remote {
-            color: #94a3b8;
+            color: #d2a8ff;
+        }
+
+        .source-merged {
+            background: rgba(255, 255, 255, 0.01);
         }
 
         .source-merged .col-local {
             border-left: 3px solid #3b82f6;
             background: rgba(59, 130, 246, 0.05);
-            padding-left: 2em; /* Increase padding to match hanging indent logic */
         }
 
         .source-merged .col-remote {
             border-left: 3px solid #a855f7;
             background: rgba(168, 85, 247, 0.05);
-            padding-left: 2em;
         }
 
         .source-merged .col-ts {
-            color: #fbbf24;
+            color: #f2cc60;
             font-weight: 700;
             background: rgba(251, 191, 36, 0.05);
         }
