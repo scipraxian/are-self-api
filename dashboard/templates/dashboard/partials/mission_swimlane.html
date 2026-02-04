@@ -34,7 +34,7 @@
                     onclick="this.nextElementSibling.scrollBy({left: -200, behavior: 'smooth'})">‹
             </button>
 
-            <div class="lane-scroll-wrapper">
+            <div class="lane-scroll-wrapper" id="active-scroll-{{ lane.object.id }}">
                 {% for head in lane.active %}
                     <a href="{% url 'hydra:head_detail' head.id %}" target="_blank" class="head-card active">
                         <div class="head-name" style="color:#fff;">{{ head.spell.name }}</div>
@@ -94,7 +94,7 @@
                 onclick="this.nextElementSibling.scrollBy({left: -200, behavior: 'smooth'})">‹
         </button>
 
-        <div class="lane-scroll-wrapper">
+        <div class="lane-scroll-wrapper" id="hist-scroll-{{ lane.object.id }}">
             {% for head in lane.history %}
                 <a href="{% url 'hydra:head_detail' head.id %}" target="_blank" style="text-decoration:none;">
                     <div class="head-card {% if head.status.name == 'Success' %}success{% else %}failed{% endif %}">
@@ -121,3 +121,31 @@
 {% for sub in lane.subgraphs %}
     {% include "dashboard/partials/mission_swimlane.html" with lane=sub %}
 {% endfor %}
+
+<script>
+    (function () {
+        function checkOverflow(wrapperId) {
+            const wrapper = document.getElementById(wrapperId);
+            if (!wrapper) return;
+
+            const hasOverflow = wrapper.scrollWidth > wrapper.clientWidth;
+            const parent = wrapper.parentElement;
+            const leftBtn = parent.querySelector('.lane-scroll-btn.left');
+            const rightBtn = parent.querySelector('.lane-scroll-btn.right');
+
+            if (leftBtn && rightBtn) {
+                if (hasOverflow) {
+                    leftBtn.classList.add('visible');
+                    rightBtn.classList.add('visible');
+                } else {
+                    leftBtn.classList.remove('visible');
+                    rightBtn.classList.remove('visible');
+                }
+            }
+        }
+
+        // Run immediately for this specific lane's elements
+        checkOverflow('active-scroll-{{ lane.object.id }}');
+        checkOverflow('hist-scroll-{{ lane.object.id }}');
+    })();
+</script>

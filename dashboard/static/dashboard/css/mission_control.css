@@ -275,15 +275,22 @@ body {
     color: #fff;
 }
 
-/* COL 2: ACTIVE (Reduced Width) */
+/* COL 2: ACTIVE (Adaptive Width) */
 .lane-active {
-    flex: 0 0 220px; /* Reduced width since buttons are icons now */
+    /* flex-basis: auto -> Start at content width
+       flex-grow: 0 -> Do not grow greedily
+       flex-shrink: 0 -> Do not shrink below content (triggers scroll)
+       max-width: 45% -> Cap it so History always has space
+    */
+    flex: 0 0 auto;
+    max-width: 45%;
     border-right: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(0, 0, 0, 0.3);
     display: flex;
     align-items: center;
     position: relative;
     overflow: hidden;
+    min-width: 200px; /* Minimum width for buttons/empty state */
 }
 
 /* COL 3: HISTORY (Flexible) */
@@ -292,39 +299,39 @@ body {
     display: flex;
     align-items: center;
     position: relative;
-    overflow: hidden; /* Hide scrollbar */
+    overflow: hidden;
     min-width: 0;
 }
 
-/* GENERIC SCROLL WRAPPER (Used by Active and History) */
+/* GENERIC SCROLL WRAPPER */
 .lane-scroll-wrapper {
     display: flex;
     align-items: center;
     gap: 8px;
     overflow-x: auto;
     scroll-behavior: smooth;
-    padding: 0 25px; /* Space for buttons */
+    padding: 0 25px; /* Space reserved for buttons */
     width: 100%;
     height: 100%;
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none;
 }
 
 .lane-scroll-wrapper::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    display: none;
 }
 
-/* SCROLL BUTTONS */
+/* SCROLL BUTTONS (Hidden by default, shown by JS) */
 .lane-scroll-btn {
     position: absolute;
     top: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    border: none;
-    color: #aaa;
+    background: rgba(17, 24, 39, 0.95);
+    border: 1px solid #333;
+    color: #fff;
     width: 24px;
     cursor: pointer;
-    z-index: 5;
-    display: flex;
+    z-index: 100;
+    display: none; /* Hidden by default */
     align-items: center;
     justify-content: center;
     font-weight: bold;
@@ -332,29 +339,38 @@ body {
     font-size: 1.2rem;
 }
 
+.lane-scroll-btn.visible {
+    display: flex; /* Toggled by JS */
+}
+
 .lane-scroll-btn:hover {
     background: var(--lcars-elbow);
     color: #000;
+    border-color: var(--lcars-elbow);
 }
 
 .lane-scroll-btn.left {
     left: 0;
+    border-right: 1px solid #444;
+    border-radius: 0 4px 4px 0;
 }
 
 .lane-scroll-btn.right {
     right: 0;
+    border-left: 1px solid #444;
+    border-radius: 4px 0 0 4px;
 }
 
 /* Control Group (Idle State - Icons) */
 .lane-controls-group {
     display: flex;
-    gap: 12px; /* Tight spacing */
+    gap: 12px;
     width: 100%;
     padding: 0 10px;
     justify-content: center;
 }
 
-/* New Icon Buttons for View/Edit/Redo */
+/* Icon Buttons */
 .btn-icon-ctrl {
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -424,6 +440,15 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.head-log {
+    font-size: 0.55rem;
+    color: #38bdf8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.8;
 }
 
 /* Drill Button on Active Card */

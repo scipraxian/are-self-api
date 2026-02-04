@@ -32,10 +32,16 @@ class DashboardHomeView(TemplateView):
         ).order_by('-created')[:20]
 
         lanes = []
+        is_system_active = False  # Track if we need to keep polling
+
         for spawn in root_spawns:
-            lanes.append(self._serialize_spawn(spawn))
+            serialized = self._serialize_spawn(spawn)
+            if serialized['is_active']:
+                is_system_active = True
+            lanes.append(serialized)
 
         context['lanes'] = lanes
+        context['is_system_active'] = is_system_active
         return context
 
     def _serialize_spawn(self, spawn):
@@ -52,12 +58,14 @@ class DashboardHomeView(TemplateView):
         is_active = spawn.status_id in [
             HydraSpawnStatus.RUNNING,
             HydraSpawnStatus.STOPPING,
+            HydraSpawnStatus.PENDING,
+            HydraSpawnStatus.CREATED,
         ]
 
         return {
             'object': spawn,
             'is_active': is_active,
-            'is_failed': is_failed,  # NEW: Flag for Red styling
+            'is_failed': is_failed,
             'subgraphs': [
                 self._serialize_spawn(child)
                 for child in HydraSpawn.objects.filter(parent_head__spawn=spawn)

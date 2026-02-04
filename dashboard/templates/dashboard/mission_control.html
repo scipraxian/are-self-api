@@ -45,8 +45,12 @@
            style="text-decoration:none; text-align:center;">+ Protocol</a>
     </div>
 
-    <div id="mission-monitor" class="mission-monitor" hx-get="{% url 'home' %}" hx-select="#mission-monitor"
-         hx-trigger="every 2s">
+    <div id="mission-monitor" class="mission-monitor"
+         hx-get="{% url 'home' %}"
+         hx-select="#mission-monitor"
+         hx-swap="outerHTML"
+         hx-trigger="monitor-update from:body{% if is_system_active %}, every 2s{% endif %}">
+
         {% for lane in lanes %}
             {% include "dashboard/partials/mission_swimlane.html" with lane=lane %}
         {% empty %}

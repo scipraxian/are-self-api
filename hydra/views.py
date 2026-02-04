@@ -46,8 +46,7 @@ class HydraGraphMonitorView(DetailView):
 
 class LaunchSpellbookView(View):
     """
-    Launches the graph.
-    Refactored to support stay-on-page behavior for the Dashboard.
+    Launches the graph and forces a hard browser redirect.
     """
 
     def dispatch_launch(self, spellbook_id):
@@ -64,7 +63,10 @@ class LaunchSpellbookView(View):
         if self.request.headers.get('HX-Request'):
             if no_redirect:
                 # Return 204 No Content so HTMX does nothing (Dashboard poll will pick it up)
-                return HttpResponse(status=204)
+                response = HttpResponse(status=204)
+                # CRITICAL: Trigger the monitor to wake up and refresh
+                response['HX-Trigger'] = 'monitor-update'
+                return response
 
             response = HttpResponse()
             response['HX-Redirect'] = target_url
