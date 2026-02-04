@@ -1,7 +1,9 @@
-from django.dispatch import Signal
+from django.db import transaction  # Added transaction import
 from django.db.models.signals import post_save
-from django.dispatch import receiver
+from django.dispatch import Signal, receiver
+
 from .models import HydraSpawn, HydraStatusID
+
 # Delayed import of GraphWalker to avoid circularity if any,
 # though signals.py is usually safe.
 
@@ -27,6 +29,7 @@ def on_spawn_update(sender, instance, created, **kwargs):
     # Check for Parent Link (Delegation)
     if instance.parent_head:
         from .engine.graph_walker import GraphWalker
+        from .tasks import check_next_wave  # Import the task
 
         parent_head = instance.parent_head
 
@@ -37,10 +40,17 @@ def on_spawn_update(sender, instance, created, **kwargs):
 
         # LOGGING (Crucial for debugging recursion)
         print(
-            f"[SIGNAL] Child Spawn {instance.id} woke up Parent Node {parent_head.id}. Resuming Parent Graph."
+            f'[SIGNAL] Child Spawn {instance.id} woke up '
+            f'Parent Node {parent_head.id}. Resuming Parent Graph.'
         )
 
         # RESUME PARENT GRAPH
         # We instantiate the walker on the PARENT's Spawn (the spawn that owns the parent node)
         walker = GraphWalker(spawn_id=parent_head.spawn.id)
         walker.process_node(parent_head)
+
+        # CRITICAL FIX: Force the Parent Spawn to check if it is now finished.
+        # Without this, if 'parent_head' is the last node, the spawn never finalizes.
+        transaction.on_commit(
+            lambda: check_next_wave.delay(parent_head.spawn.id)
+        )
