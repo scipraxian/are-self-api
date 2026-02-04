@@ -22,8 +22,7 @@ body {
 .lcars-grid {
     display: grid;
     grid-template-columns: 260px 1fr;
-    /* RECLAIM: Header shrunk to 35px */
-    grid-template-rows: 35px 1fr;
+    grid-template-rows: 35px 1fr; /* Strict 35px Header */
     height: 100%;
     gap: 10px;
     padding: 10px;
@@ -36,7 +35,7 @@ body {
     display: flex;
     align-items: center;
     background: #111;
-    border-bottom: 1px solid #333; /* Thinner border */
+    border-bottom: 1px solid #333;
     padding: 0 15px;
     justify-content: space-between;
 }
@@ -47,7 +46,6 @@ body {
     color: var(--lcars-elbow);
 }
 
-/* Smaller Icon */
 .hamburger:hover {
     color: #fff;
 }
@@ -60,7 +58,7 @@ body {
     font-size: 0.8rem;
 }
 
-/* MENU OVERLAY */
+/* SYSTEM MENU */
 .system-menu {
     position: absolute;
     top: 40px;
@@ -184,32 +182,31 @@ body {
     color: var(--lcars-elbow);
 }
 
-/* --- SWIMLANES --- */
+/* --- SWIMLANES CONTAINER --- */
 .mission-monitor {
     grid-column: 2;
     grid-row: 2 / -1;
-    /* GLOBAL SCROLL: This container handles X and Y scrolling for all lanes */
-    overflow: auto;
+    overflow: auto; /* Handles GLOBAL scrolling (X and Y) */
     display: flex;
     flex-direction: column;
     gap: 8px;
     padding-right: 5px;
-    padding-bottom: 20px;
+    padding-bottom: 20px; /* Space for horizontal scrollbar */
 }
 
+/* --- THE SWIMLANE (FLEXBOX REFACTOR) --- */
 .swimlane {
     background: var(--lane-bg);
     border: 1px solid #333;
     border-radius: 6px;
-    display: grid;
-    /* REVISED COLUMNS: Removed Pending. Active gets 220px. History takes rest. */
-    grid-template-columns: 200px 220px max-content;
-    min-height: 80px;
+    display: flex; /* Flexbox allows mixing fixed cols and infinite cols */
+    align-items: stretch;
+    min-height: 90px;
     position: relative;
 
-    /* FIX "REALLY UGLY": Force full width, but allow expansion */
-    width: max-content;
+    /* THE FIX: Fill screen width, but grow if content overflows */
     min-width: 100%;
+    width: max-content;
 }
 
 .swimlane.subgraph {
@@ -227,18 +224,19 @@ body {
     border-color: var(--lcars-red);
 }
 
-/* META COLUMN (Sticky Left) */
+/* COL 1: META (Fixed) */
 .lane-meta {
+    flex: 0 0 200px; /* Rigid Width */
     padding: 10px;
     border-right: 1px solid #333;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     overflow: hidden;
-    position: sticky;
+    position: sticky; /* Keep visible when scrolling X */
     left: 0;
     z-index: 10;
-    background: #090909; /* Hides content scrolling under */
+    background: #0c0c0c; /* Opaque background for sticky overlapping */
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
 }
 
@@ -280,15 +278,26 @@ body {
     color: #fff;
 }
 
-/* DATA COLUMNS */
-.lane-column {
-    padding: 5px 8px;
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
+/* COL 2: ACTIVE (Fixed) */
+.lane-active {
+    flex: 0 0 240px; /* Rigid Width for Active Zone */
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.3);
     display: flex;
     align-items: center;
     gap: 8px;
-    /* Remove internal scrollbars, let parent handle it */
-    overflow: visible;
+    padding: 0 8px;
+    overflow-x: auto; /* Internal scroll if MULTIPLE active items pile up */
+    overflow-y: hidden;
+}
+
+/* COL 3: HISTORY (Flexible / Infinite) */
+.lane-history {
+    flex: 1 0 auto; /* Grow to fill, shrink to fit, allow overflow */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
 }
 
 /* CARDS */
@@ -297,15 +306,13 @@ body {
     border: 1px solid #333;
     border-radius: 4px;
     padding: 6px;
-    width: 130px;
-    flex-shrink: 0;
+    width: 140px;
+    flex-shrink: 0; /* Never squash cards */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: 50px;
-    /* FIX "CARD BLEED": Strict overflow handling */
+    height: 60px;
     overflow: hidden;
-    position: relative;
 }
 
 .head-card.active {
@@ -352,8 +359,8 @@ body {
 /* THOUGHT BUBBLE */
 .thought-bubble {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: 30px;
+    right: 30px;
     width: 50px;
     height: 50px;
     background: #111;

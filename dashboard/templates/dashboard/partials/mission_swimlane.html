@@ -37,7 +37,7 @@
         </div>
     </div>
 
-    <div class="lane-column" style="background: rgba(0,0,0,0.3);">
+    <div class="lane-active">
         {% for head in lane.active %}
             <a href="{% url 'hydra:head_detail' head.id %}" target="_blank" style="text-decoration:none;">
                 <div class="head-card active">
@@ -50,17 +50,18 @@
                     </div>
                 </div>
             </a>
+        {% empty %}
         {% endfor %}
     </div>
 
-    <div class="lane-column">
+    <div class="lane-history">
         {% for head in lane.history %}
             <a href="{% url 'hydra:head_detail' head.id %}" target="_blank" style="text-decoration:none;">
                 <div class="head-card {% if head.status.name == 'Success' %}success{% else %}failed{% endif %}">
                     <div class="head-name">{{ head.spell.name }}</div>
 
                     <div class="head-target" style="{% if head.status.name == 'Failed' %}color:#ef4444;{% endif %}">
-                        {% if head.result_code is not None %}
+                        {% if head.result_code != None %}
                             RC: {{ head.result_code }}
                         {% endif %}
                     </div>

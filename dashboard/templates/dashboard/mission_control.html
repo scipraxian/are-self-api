@@ -33,9 +33,7 @@
         <div style="padding:0 10px; color:#666; font-size:0.7rem; font-weight:900; margin-bottom:5px;">PROTOCOLS</div>
         {% for book in spellbooks %}
             <div class="launch-row">
-                <button class="launch-btn"
-                        hx-post="{% url 'hydra:hydra_launch' book.id %}"
-                        hx-swap="none">
+                <button class="launch-btn" hx-post="{% url 'hydra:hydra_launch' book.id %}" hx-swap="none">
                     {{ book.name }}
                 </button>
                 <a href="{% url 'hydra:graph_editor' book.id %}" class="edit-btn" title="Edit">✎</a>
@@ -45,11 +43,8 @@
            style="text-decoration:none; text-align:center;">+ Protocol</a>
     </div>
 
-    <div id="mission-monitor" class="mission-monitor"
-         hx-get="{% url 'home' %}"
-         hx-select="#mission-monitor"
+    <div id="mission-monitor" class="mission-monitor" hx-get="{% url 'home' %}" hx-select="#mission-monitor"
          hx-trigger="every 2s">
-
         {% for lane in lanes %}
             {% include "dashboard/partials/mission_swimlane.html" with lane=lane %}
         {% empty %}
