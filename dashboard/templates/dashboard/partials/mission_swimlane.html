@@ -1,0 +1,75 @@
+<div class="swimlane {% if lane.object.parent_head %}subgraph{% endif %} {% if lane.is_active %}active-lane{% endif %} {% if lane.is_failed %}failed-lane{% endif %}">
+
+    <div class="lane-meta">
+        <div>
+            <div class="lane-title" title="{{ lane.object.spellbook.name }}">
+                {{ lane.object.spellbook.name|truncatechars:25 }}
+            </div>
+
+            <div style="font-family:monospace; font-size:0.65rem; color:{% if lane.is_active %}#f99f1b{% elif lane.is_failed %}#ef4444{% else %}#666{% endif %}; text-transform:uppercase; margin-top:2px;">
+                #{{ lane.object.id|slice:":8" }} • {{ lane.object.status.name }}
+            </div>
+            <div style="font-size:0.6rem; color:#888; margin-top:2px;">
+                {{ lane.object.modified|timesince }} ago
+            </div>
+        </div>
+
+        <div class="lane-actions">
+            <a href="{% url 'hydra:graph_monitor' lane.object.id %}?full=True" class="icon-action" title="View Graph">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+            </a>
+
+            {% if lane.is_active %}
+                <button class="icon-action stop"
+                        hx-post="{% url 'hydra:hydra_spawn_stop_graceful' lane.object.id %}"
+                        hx-confirm="Stop Mission?"
+                        title="Stop">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect>
+                    </svg>
+                </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="lane-column" style="background: rgba(0,0,0,0.3);">
+        {% for head in lane.active %}
+            <a href="{% url 'hydra:head_detail' head.id %}" target="_blank" style="text-decoration:none;">
+                <div class="head-card active">
+                    <div class="head-name" style="color:#fff;">{{ head.spell.name }}</div>
+                    <div class="head-target" style="color:var(--lcars-elbow);">
+                        {{ head.target.hostname|default:"LOCAL" }}
+                    </div>
+                    <div class="head-log">
+                        {{ head.spell_log|slice:"-40:"|default:"..." }}
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+
+    <div class="lane-column">
+        {% for head in lane.history %}
+            <a href="{% url 'hydra:head_detail' head.id %}" target="_blank" style="text-decoration:none;">
+                <div class="head-card {% if head.status.name == 'Success' %}success{% else %}failed{% endif %}">
+                    <div class="head-name">{{ head.spell.name }}</div>
+
+                    <div class="head-target" style="{% if head.status.name == 'Failed' %}color:#ef4444;{% endif %}">
+                        {% if head.result_code is not None %}
+                            RC: {{ head.result_code }}
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+</div>
+
+{% for sub in lane.subgraphs %}
+    {% include "dashboard/partials/mission_swimlane.html" with lane=sub %}
+{% endfor %}

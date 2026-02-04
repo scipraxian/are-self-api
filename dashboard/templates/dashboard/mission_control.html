@@ -1,0 +1,82 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TALOS // MISSION CONTROL</title>
+    <link rel="stylesheet" href="{% static 'dashboard/css/mission_control.css' %}">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=JetBrains+Mono&display=swap"
+          rel="stylesheet">
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+
+<div class="lcars-grid">
+    <div class="top-nav">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <div class="hamburger" onclick="toggleMenu()">☰</div>
+            <div class="sys-title">TALOS ORCHESTRATOR</div>
+        </div>
+        <div style="font-family:monospace; color:#444; font-size:0.8rem;">SYS.ONLINE</div>
+    </div>
+
+    <div id="system-menu" class="system-menu">
+        <a href="{% url 'agent_list' %}" class="menu-item">Sonar Registry</a>
+        <a href="{% url 'admin:index' %}" target="_blank" class="menu-item">System Admin</a>
+        <div style="height:1px; background:#444; margin:5px 0;"></div>
+        <button class="menu-item danger" hx-post="{% url 'shutdown' %}" onclick="window.close()">
+            ⚠ SYSTEM SHUTDOWN
+        </button>
+    </div>
+
+    <div class="launch-pad">
+        <div style="padding:0 10px; color:#666; font-size:0.7rem; font-weight:900; margin-bottom:5px;">PROTOCOLS</div>
+        {% for book in spellbooks %}
+            <div class="launch-row">
+                <button class="launch-btn"
+                        hx-post="{% url 'hydra:hydra_launch' book.id %}"
+                        hx-swap="none">
+                    {{ book.name }}
+                </button>
+                <a href="{% url 'hydra:graph_editor' book.id %}" class="edit-btn" title="Edit">✎</a>
+            </div>
+        {% endfor %}
+        <a href="{% url 'admin:hydra_hydraspellbook_add' %}" target="_blank" class="add-btn text-center"
+           style="text-decoration:none; text-align:center;">+ Protocol</a>
+    </div>
+
+    <div id="mission-monitor" class="mission-monitor"
+         hx-get="{% url 'home' %}"
+         hx-select="#mission-monitor"
+         hx-trigger="every 2s">
+
+        {% for lane in lanes %}
+            {% include "dashboard/partials/mission_swimlane.html" with lane=lane %}
+        {% empty %}
+            <div style="text-align:center; padding:50px; color:#444;">IDLE</div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="thought-bubble" onclick="toggleChat()" title="Frontal Lobe">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>
+</div>
+
+{% include "dashboard/partials/chat_window.html" %}
+
+<script>
+    function toggleMenu() {
+        const menu = document.getElementById('system-menu');
+        menu.classList.toggle('open');
+    }
+
+    function toggleChat() {
+        const chat = document.getElementById('chat-sidebar');
+        if (chat) chat.classList.toggle('open');
+    }
+</script>
+
+</body>
+</html>

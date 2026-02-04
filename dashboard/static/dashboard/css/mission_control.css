@@ -1,0 +1,373 @@
+:root {
+    --lcars-bg: #050505;
+    --lcars-elbow: #f99f1b;
+    --lcars-panel: #d6cdb6;
+    --lcars-red: #ef4444;
+    --lcars-blue: #38bdf8;
+    --lane-bg: rgba(255, 255, 255, 0.02);
+    --lane-active-bg: rgba(249, 159, 27, 0.05);
+    --lane-failed-bg: rgba(239, 68, 68, 0.1);
+}
+
+body {
+    background-color: var(--lcars-bg);
+    color: #ecf0f1;
+    font-family: 'Outfit', sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100vh;
+}
+
+.lcars-grid {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    /* RECLAIM: Header shrunk to 35px */
+    grid-template-rows: 35px 1fr;
+    height: 100%;
+    gap: 10px;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+/* --- HEADER --- */
+.top-nav {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    background: #111;
+    border-bottom: 1px solid #333; /* Thinner border */
+    padding: 0 15px;
+    justify-content: space-between;
+}
+
+.hamburger {
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--lcars-elbow);
+}
+
+/* Smaller Icon */
+.hamburger:hover {
+    color: #fff;
+}
+
+.sys-title {
+    margin-left: 15px;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    color: #666;
+    font-size: 0.8rem;
+}
+
+/* MENU OVERLAY */
+.system-menu {
+    position: absolute;
+    top: 40px;
+    left: 10px;
+    width: 250px;
+    background: rgba(10, 10, 10, 0.98);
+    border: 1px solid var(--lcars-elbow);
+    display: none;
+    flex-direction: column;
+    gap: 1px;
+    z-index: 5000;
+}
+
+.system-menu.open {
+    display: flex;
+}
+
+.menu-item {
+    background: #222;
+    color: #ccc;
+    padding: 12px;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-decoration: none;
+    font-size: 0.8rem;
+}
+
+.menu-item:hover {
+    background: #444;
+    color: #fff;
+}
+
+.menu-item.danger {
+    color: var(--lcars-red);
+    border-left: 4px solid var(--lcars-red);
+}
+
+.menu-item.danger:hover {
+    background: var(--lcars-red);
+    color: white;
+}
+
+/* --- LAUNCH PAD --- */
+.launch-pad {
+    grid-row: 2 / -1;
+    background: rgba(255, 255, 255, 0.02);
+    border-right: 4px solid var(--lcars-panel);
+    border-top-right-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 5px;
+    overflow-y: auto;
+}
+
+.launch-row {
+    display: flex;
+    gap: 2px;
+    align-items: stretch;
+    margin-bottom: 2px;
+}
+
+.launch-btn {
+    flex: 1;
+    background: #333;
+    color: var(--lcars-elbow);
+    border: none;
+    border-left: 6px solid var(--lcars-elbow);
+    padding: 10px;
+    text-align: left;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.launch-btn:hover {
+    background: #444;
+    color: #fff;
+}
+
+.edit-btn {
+    width: 25px;
+    background: #222;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 1rem;
+}
+
+.edit-btn:hover {
+    color: #fff;
+    background: #444;
+}
+
+.add-btn {
+    margin-top: 10px;
+    background: transparent;
+    border: 1px dashed #444;
+    color: #666;
+    padding: 8px;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 0.7rem;
+}
+
+.add-btn:hover {
+    border-color: var(--lcars-elbow);
+    color: var(--lcars-elbow);
+}
+
+/* --- SWIMLANES --- */
+.mission-monitor {
+    grid-column: 2;
+    grid-row: 2 / -1;
+    /* GLOBAL SCROLL: This container handles X and Y scrolling for all lanes */
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 5px;
+    padding-bottom: 20px;
+}
+
+.swimlane {
+    background: var(--lane-bg);
+    border: 1px solid #333;
+    border-radius: 6px;
+    display: grid;
+    /* REVISED COLUMNS: Removed Pending. Active gets 220px. History takes rest. */
+    grid-template-columns: 200px 220px max-content;
+    min-height: 80px;
+    position: relative;
+
+    /* FIX "REALLY UGLY": Force full width, but allow expansion */
+    width: max-content;
+    min-width: 100%;
+}
+
+.swimlane.subgraph {
+    margin-left: 40px;
+    border-left: 4px solid var(--lcars-blue);
+}
+
+.swimlane.active-lane {
+    background: var(--lane-active-bg);
+    border-color: var(--lcars-elbow);
+}
+
+.swimlane.failed-lane {
+    background: var(--lane-failed-bg);
+    border-color: var(--lcars-red);
+}
+
+/* META COLUMN (Sticky Left) */
+.lane-meta {
+    padding: 10px;
+    border-right: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background: #090909; /* Hides content scrolling under */
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.lane-title {
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: #e0e0e0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lane-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.icon-action {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #aaa;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.icon-action:hover {
+    background: #fff;
+    color: #000;
+}
+
+.icon-action.stop:hover {
+    background: var(--lcars-red);
+    color: #fff;
+}
+
+/* DATA COLUMNS */
+.lane-column {
+    padding: 5px 8px;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Remove internal scrollbars, let parent handle it */
+    overflow: visible;
+}
+
+/* CARDS */
+.head-card {
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 6px;
+    width: 130px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 50px;
+    /* FIX "CARD BLEED": Strict overflow handling */
+    overflow: hidden;
+    position: relative;
+}
+
+.head-card.active {
+    border-color: var(--lcars-elbow);
+    background: #1a1a1a;
+    box-shadow: 0 0 10px rgba(249, 159, 27, 0.1);
+}
+
+.head-card.success {
+    border-top: 3px solid var(--lcars-blue);
+}
+
+.head-card.failed {
+    border-top: 3px solid var(--lcars-red);
+}
+
+.head-name {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #ddd;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.head-target {
+    font-size: 0.6rem;
+    color: #888;
+    font-family: monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.head-log {
+    font-size: 0.55rem;
+    color: #38bdf8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.8;
+}
+
+/* THOUGHT BUBBLE */
+.thought-bubble {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background: #111;
+    border: 2px solid var(--lcars-blue);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+}
+
+.thought-bubble:hover {
+    background: var(--lcars-blue);
+    color: #000;
+}
