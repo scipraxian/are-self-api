@@ -18,6 +18,8 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 class LiveMonitorTests(StaticLiveServerTestCase):
     fixtures = [
         'environments/fixtures/initial_data.json',
+        'talos_agent/fixtures/initial_data.json',
+        'talos_agent/fixtures/test_agents.json',
         'hydra/fixtures/initial_data.json',
     ]
 

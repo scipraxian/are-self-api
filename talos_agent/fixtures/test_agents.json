@@ -1,0 +1,16 @@
+[
+    {
+        "model": "talos_agent.talosagentregistry",
+        "pk": "a7898945-d404-1fc4-ead1-04d4c41fead0",
+        "fields": {
+            "status": 2,
+            "hostname": "TestAgent-BrokenFixture-Fix",
+            "ip_address": "127.0.0.1",
+            "port": 5005,
+            "version": "1.0.0",
+            "last_seen": "2026-02-03T12:00:00Z",
+            "created": "2026-02-03T10:00:00Z",
+            "modified": "2026-02-03T10:00:00Z"
+        }
+    }
+]

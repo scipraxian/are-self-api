@@ -1,8 +1,14 @@
 from hydra.models import HydraHeadStatus
 from django.test import TestCase
 
+
 class HydraStatusConstantsTest(TestCase):
-    fixtures = ['initial_data.json']
+    fixtures = [
+        'environments/fixtures/initial_data.json',
+        'talos_agent/fixtures/initial_data.json',
+        'talos_agent/fixtures/test_agents.json',
+        'hydra/fixtures/initial_data.json',
+    ]
 
     def test_status_constants_alignment(self):
         """
@@ -25,5 +31,6 @@ class HydraStatusConstantsTest(TestCase):
         """
         Verifies the dictionary map aligns with the constants.
         """
-        self.assertEqual(HydraHeadStatus.STATUS_MAP['Failed'], HydraHeadStatus.FAILED)
+        self.assertEqual(HydraHeadStatus.STATUS_MAP['Failed'],
+                         HydraHeadStatus.FAILED)
         self.assertEqual(HydraHeadStatus.FAILED, 5)

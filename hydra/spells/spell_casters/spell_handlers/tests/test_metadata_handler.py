@@ -19,27 +19,25 @@ from hydra.spells.spell_casters.spell_handlers.spell_handler_codes import (
     HANDLER_WRITE_ERROR_CODE,
 )
 from hydra.spells.spell_casters.spell_handlers.version_metadata_handler import (
-    update_version_metadata,
-)
+    update_version_metadata,)
 
 MODULE_PATH = (
-    'hydra.spells.spell_casters.spell_handlers.version_metadata_handler'
-)
+    'hydra.spells.spell_casters.spell_handlers.version_metadata_handler')
 
 
 class VersionMetadataHandlerTest(TestCase):
     fixtures = [
         'environments/fixtures/initial_data.json',
+        'talos_agent/fixtures/initial_data.json',
+        'talos_agent/fixtures/test_agents.json',
         'hydra/fixtures/initial_data.json',
     ]
 
     def setUp(self):
         self.status_running = HydraHeadStatus.objects.get(
-            id=HydraHeadStatus.RUNNING
-        )
+            id=HydraHeadStatus.RUNNING)
         self.spawn_running = HydraSpawnStatus.objects.get(
-            id=HydraSpawnStatus.RUNNING
-        )
+            id=HydraSpawnStatus.RUNNING)
 
         self.spell = HydraSpell.objects.create(
             name='Version Spell',
@@ -48,8 +46,7 @@ class VersionMetadataHandlerTest(TestCase):
         self.book = HydraSpellbook.objects.create(name='Test Book')
 
         self.spawn = HydraSpawn.objects.create(
-            spellbook=self.book, status_id=HydraSpawnStatus.RUNNING
-        )
+            spellbook=self.book, status_id=HydraSpawnStatus.RUNNING)
 
         self.head = HydraHead.objects.create(
             spawn=self.spawn,
@@ -66,10 +63,11 @@ class VersionMetadataHandlerTest(TestCase):
 
         # Mock OS operations
         with (
-            patch('os.path.exists') as mock_exists,
-            patch('os.makedirs') as mock_mkdirs,
-            patch('builtins.open', new_callable=mock_open) as mock_file,
-            patch(f'{MODULE_PATH}.getpass.getuser', return_value='TestBuilder'),
+                patch('os.path.exists') as mock_exists,
+                patch('os.makedirs') as mock_mkdirs,
+                patch('builtins.open', new_callable=mock_open) as mock_file,
+                patch(f'{MODULE_PATH}.getpass.getuser',
+                      return_value='TestBuilder'),
         ):
             # 1. Directory exists, File does not
             def exists_side_effect(path):
@@ -92,8 +90,7 @@ class VersionMetadataHandlerTest(TestCase):
             handle = mock_file()
             # Aggregate all write calls to handle json.dump chunking
             written_content = ''.join(
-                call.args[0] for call in handle.write.call_args_list
-            )
+                call.args[0] for call in handle.write.call_args_list)
             written_data = json.loads(written_content)
 
             self.assertIn('Build', written_data)
@@ -102,32 +99,29 @@ class VersionMetadataHandlerTest(TestCase):
 
     @patch(f'{MODULE_PATH}.spell_switches_and_arguments')
     @patch(f'{MODULE_PATH}.log_system')
-    def test_updates_existing_file_preserving_data(
-        self, mock_log, mock_resolve
-    ):
+    def test_updates_existing_file_preserving_data(self, mock_log,
+                                                   mock_resolve):
         """Verify it updates 'Build' block but keeps existing 'Game' config."""
         target_path = 'C:/Fake/AppVersion.json'
         mock_resolve.return_value = [target_path]
 
-        existing_content = json.dumps(
-            {
-                'Game': {
-                    'Name': 'ExistingGame',
-                    'Major': 9,
-                    'Minor': 9,
-                    'Patch': 9,
-                },
-                'OldBuild': 'LegacyData',
-            }
-        )
+        existing_content = json.dumps({
+            'Game': {
+                'Name': 'ExistingGame',
+                'Major': 9,
+                'Minor': 9,
+                'Patch': 9,
+            },
+            'OldBuild': 'LegacyData',
+        })
 
         with (
-            patch('os.path.exists', return_value=True),
-            patch(
-                'builtins.open',
-                new_callable=mock_open,
-                read_data=existing_content,
-            ) as mock_file,
+                patch('os.path.exists', return_value=True),
+                patch(
+                    'builtins.open',
+                    new_callable=mock_open,
+                    read_data=existing_content,
+                ) as mock_file,
         ):
             code, log = update_version_metadata(self.head.id)
 
@@ -136,14 +130,12 @@ class VersionMetadataHandlerTest(TestCase):
             # Get the data written back to the file
             handle = mock_file()
             written_content = ''.join(
-                call.args[0] for call in handle.write.call_args_list
-            )
+                call.args[0] for call in handle.write.call_args_list)
             data = json.loads(written_content)
 
             # Assertions
-            self.assertEqual(
-                data['Game']['Major'], 9, 'Should preserve existing Game data'
-            )
+            self.assertEqual(data['Game']['Major'], 9,
+                             'Should preserve existing Game data')
             self.assertIn('Build', data, 'Should inject Build block')
             self.assertIn('OldBuild', data, 'Should preserve unrelated keys')
 
@@ -155,12 +147,12 @@ class VersionMetadataHandlerTest(TestCase):
         mock_resolve.return_value = [target_path]
 
         with (
-            patch('os.path.exists', return_value=True),
-            patch(
-                'builtins.open',
-                new_callable=mock_open,
-                read_data='{ bad_json: ',
-            ) as mock_file,
+                patch('os.path.exists', return_value=True),
+                patch(
+                    'builtins.open',
+                    new_callable=mock_open,
+                    read_data='{ bad_json: ',
+                ) as mock_file,
         ):
             code, log = update_version_metadata(self.head.id)
 
@@ -170,8 +162,7 @@ class VersionMetadataHandlerTest(TestCase):
             # Verify it wrote a fresh valid structure
             handle = mock_file()
             written_content = ''.join(
-                call.args[0] for call in handle.write.call_args_list
-            )
+                call.args[0] for call in handle.write.call_args_list)
             data = json.loads(written_content)
             self.assertEqual(data['Game']['Name'], 'HSH: Vacancy')
 
@@ -185,8 +176,8 @@ class VersionMetadataHandlerTest(TestCase):
         # FIX: Raise OSError instead of PermissionError to hit the generic catch block
         # which returns HANDLER_WRITE_ERROR_CODE and logs "Could not create directory"
         with (
-            patch('os.path.exists', return_value=False),
-            patch('os.makedirs', side_effect=OSError('Generic OS Failure')),
+                patch('os.path.exists', return_value=False),
+                patch('os.makedirs', side_effect=OSError('Generic OS Failure')),
         ):
             code, log = update_version_metadata(self.head.id)
 
@@ -203,8 +194,8 @@ class VersionMetadataHandlerTest(TestCase):
         # FIX: Set exists=False. This skips the 'read' block (which catches OSError)
         # and forces execution into the 'write' block, where the side_effect triggers.
         with (
-            patch('os.path.exists', return_value=False),
-            patch('builtins.open', side_effect=IOError('Disk Full')),
+                patch('os.path.exists', return_value=False),
+                patch('builtins.open', side_effect=IOError('Disk Full')),
         ):
             code, log = update_version_metadata(self.head.id)
 

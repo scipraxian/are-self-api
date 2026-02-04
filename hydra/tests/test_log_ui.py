@@ -9,9 +9,11 @@ from environments.models import TalosExecutable
 
 class LogUITest(TestCase):
     fixtures = [
-        'talos_frontal/fixtures/initial_data.json',
-        'hydra/fixtures/initial_data.json',
         'environments/fixtures/initial_data.json',
+        'talos_agent/fixtures/initial_data.json',
+        'talos_agent/fixtures/test_agents.json',
+        'hydra/fixtures/initial_data.json',
+        'talos_frontal/fixtures/initial_data.json',
         'talos_reasoning/fixtures/initial_data.json'
     ]
 
@@ -32,7 +34,7 @@ class LogUITest(TestCase):
 
     def test_log_view_tool_stream(self):
         """Verify tool log tab renders content."""
-        url = reverse('hydra_head_logs', args=[self.head.id])
+        url = reverse('hydra:hydra_head_logs', args=[self.head.id])
         # Default request (no partial arg) should return full UI
         response = self.client.get(url + "?type=tool")
 
@@ -46,7 +48,7 @@ class LogUITest(TestCase):
         self.assertContains(response, 'log-tab active')
 
     def test_log_view_system_stream(self):
-        url = reverse('hydra_head_logs', args=[self.head.id])
+        url = reverse('hydra:hydra_head_logs', args=[self.head.id])
         response = self.client.get(url + "?type=system")
 
         self.assertEqual(response.status_code, 200)

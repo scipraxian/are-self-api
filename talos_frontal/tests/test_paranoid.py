@@ -10,9 +10,11 @@ from talos_reasoning.models import ReasoningSession, ReasoningStatusID
 
 class ParanoidLogicTest(TestCase):
     fixtures = [
-        'talos_frontal/fixtures/initial_data.json',
-        'hydra/fixtures/initial_data.json',
         'environments/fixtures/initial_data.json',
+        'talos_agent/fixtures/initial_data.json',
+        'talos_agent/fixtures/test_agents.json',
+        'hydra/fixtures/initial_data.json',
+        'talos_frontal/fixtures/initial_data.json',
         'talos_reasoning/fixtures/initial_data.json'
     ]
 

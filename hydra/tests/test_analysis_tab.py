@@ -10,6 +10,8 @@ class AnalysisTabTest(TestCase):
     # Load all fixtures to ensure IDs exist
     fixtures = [
         'environments/fixtures/initial_data.json',
+        'talos_agent/fixtures/initial_data.json',
+        'talos_agent/fixtures/test_agents.json',
         'hydra/fixtures/initial_data.json',
         'talos_frontal/fixtures/initial_data.json'
     ]
@@ -33,7 +35,7 @@ class AnalysisTabTest(TestCase):
 
     def test_analysis_tab_empty(self):
         """Verify tab shows 'No analysis' message when no thought is linked."""
-        url = reverse('hydra_head_analysis', args=[self.head.id])
+        url = reverse('hydra:hydra_head_analysis', args=[self.head.id])
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
@@ -51,7 +53,7 @@ class AnalysisTabTest(TestCase):
             tokens_input=50,
             tokens_output=10)
 
-        url = reverse('hydra_head_analysis', args=[self.head.id])
+        url = reverse('hydra:hydra_head_analysis', args=[self.head.id])
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)

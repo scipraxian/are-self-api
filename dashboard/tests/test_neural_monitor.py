@@ -10,6 +10,8 @@ class NeuralMonitorTest(TestCase):
     # CRITICAL: Must load environments first, then hydra, then frontal
     fixtures = [
         'environments/fixtures/initial_data.json',
+        'talos_agent/fixtures/initial_data.json',
+        'talos_agent/fixtures/test_agents.json',
         'hydra/fixtures/initial_data.json',
         'talos_frontal/fixtures/initial_data.json',
     ]
@@ -22,8 +24,7 @@ class NeuralMonitorTest(TestCase):
 
         # We need a Spawn to attach thoughts to
         self.spawn = HydraSpawn.objects.create(
-            spellbook=self.book, status_id=HydraSpawnStatus.CREATED
-        )
+            spellbook=self.book, status_id=HydraSpawnStatus.CREATED)
 
     def test_monitor_empty_state(self):
         """Verify the monitor renders the 'Standing by' state when no thoughts exist."""

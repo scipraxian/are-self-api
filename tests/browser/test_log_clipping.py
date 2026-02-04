@@ -23,6 +23,8 @@ os.environ['DJANGO_ALLOW_ASYNC_UNSAFE'] = 'true'
 class LogClippingTests(StaticLiveServerTestCase):
     fixtures = [
         'environments/fixtures/initial_data.json',
+        'talos_agent/fixtures/initial_data.json',
+        'talos_agent/fixtures/test_agents.json',
         'hydra/fixtures/initial_data.json',
     ]
 
@@ -41,7 +43,6 @@ class LogClippingTests(StaticLiveServerTestCase):
         book = HydraSpellbook.objects.create(name='Book')
         self.spawn = HydraSpawn.objects.create(
             spellbook=book,
-            environment=self.hydra_env,
             status_id=HydraSpawnStatus.RUNNING,
         )
         self.head = HydraHead.objects.create(
@@ -56,9 +57,10 @@ class LogClippingTests(StaticLiveServerTestCase):
         with sync_playwright() as p:
             # Narrow viewport to force potential clipping
             browser = p.chromium.launch(headless=True)
-            context = browser.new_context(
-                viewport={'width': 400, 'height': 800}
-            )
+            context = browser.new_context(viewport={
+                'width': 400,
+                'height': 800
+            })
             page = context.new_page()
 
             # Load the monitor (which contains the log)
