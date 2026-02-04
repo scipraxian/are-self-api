@@ -186,12 +186,13 @@ body {
 .mission-monitor {
     grid-column: 2;
     grid-row: 2 / -1;
-    overflow: auto; /* Handles GLOBAL scrolling (X and Y) */
+    overflow-y: auto;
+    overflow-x: hidden; /* Prevent global scrollbar */
     display: flex;
     flex-direction: column;
     gap: 8px;
     padding-right: 5px;
-    padding-bottom: 20px; /* Space for horizontal scrollbar */
+    padding-bottom: 20px;
 }
 
 /* --- THE SWIMLANE (FLEXBOX REFACTOR) --- */
@@ -199,19 +200,19 @@ body {
     background: var(--lane-bg);
     border: 1px solid #333;
     border-radius: 6px;
-    display: flex; /* Flexbox allows mixing fixed cols and infinite cols */
+    display: flex;
     align-items: stretch;
     min-height: 90px;
     position: relative;
-
-    /* THE FIX: Fill screen width, but grow if content overflows */
-    min-width: 100%;
-    width: max-content;
+    /* FIX: Allow shrinking/wrapping to fit container */
+    width: 100%;
+    flex-wrap: nowrap;
 }
 
 .swimlane.subgraph {
     margin-left: 40px;
     border-left: 4px solid var(--lcars-blue);
+    width: calc(100% - 40px);
 }
 
 .swimlane.active-lane {
@@ -233,11 +234,9 @@ body {
     flex-direction: column;
     justify-content: space-between;
     overflow: hidden;
-    position: sticky; /* Keep visible when scrolling X */
-    left: 0;
+    position: relative;
     z-index: 10;
-    background: #0c0c0c; /* Opaque background for sticky overlapping */
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.2);
 }
 
 .lane-title {
@@ -278,26 +277,32 @@ body {
     color: #fff;
 }
 
-/* COL 2: ACTIVE (Fixed) */
+/* COL 2: ACTIVE (Flexible Wrap) */
 .lane-active {
-    flex: 0 0 240px; /* Rigid Width for Active Zone */
+    /* FIX: Flexible width, wrap content, prioritize over history if active */
+    flex: 0 1 auto;
     border-right: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(0, 0, 0, 0.3);
     display: flex;
+    flex-wrap: wrap; /* WRAP items */
     align-items: center;
     gap: 8px;
-    padding: 0 8px;
-    overflow-x: auto; /* Internal scroll if MULTIPLE active items pile up */
-    overflow-y: hidden;
+    padding: 8px;
+    overflow: hidden;
+    min-width: 0; /* Allow shrinking below content size if strictly needed */
 }
 
-/* COL 3: HISTORY (Flexible / Infinite) */
+/* COL 3: HISTORY (Flexible Wrap) */
 .lane-history {
-    flex: 1 0 auto; /* Grow to fill, shrink to fit, allow overflow */
+    /* FIX: Flexible width, wrap content */
+    flex: 1 1 auto;
     display: flex;
+    flex-wrap: wrap; /* WRAP items */
     align-items: center;
     gap: 8px;
-    padding: 0 8px;
+    padding: 8px;
+    overflow: hidden;
+    min-width: 0;
 }
 
 /* CARDS */
@@ -307,7 +312,7 @@ body {
     border-radius: 4px;
     padding: 6px;
     width: 140px;
-    flex-shrink: 0; /* Never squash cards */
+    flex-shrink: 0; /* Prevent squashing */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
