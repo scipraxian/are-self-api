@@ -689,55 +689,6 @@
     }
   },
   {
-    "model": "hydra.hydraoutcomeaction",
-    "pk": 1,
-    "fields": {
-      "name": "Copy"
-    }
-  },
-  {
-    "model": "hydra.hydraoutcomeaction",
-    "pk": 2,
-    "fields": {
-      "name": "Move"
-    }
-  },
-  {
-    "model": "hydra.hydraoutcomeaction",
-    "pk": 3,
-    "fields": {
-      "name": "Validate Exists"
-    }
-  },
-  {
-    "model": "hydra.hydraoutcomeaction",
-    "pk": 4,
-    "fields": {
-      "name": "Delete"
-    }
-  },
-  {
-    "model": "hydra.hydraoutcomeaction",
-    "pk": 5,
-    "fields": {
-      "name": "Analyze"
-    }
-  },
-  {
-    "model": "hydra.hydraspelloutcomeconfig",
-    "pk": 100,
-    "fields": {
-      "created": "2026-01-07T22:58:23.399Z",
-      "modified": "2026-01-08T12:00:00Z",
-      "name": "Copy Generated SPC",
-      "spell": 100,
-      "action": 1,
-      "source_path_template": "{staging_dir}/Windows/{project_name}/Content/PipelineCaches/{project_name}_PCD3D_SM6.spc",
-      "dest_path_template": "{project_root}/{project_name}/Build/Windows/PipelineCaches/",
-      "must_exist": true
-    }
-  },
-  {
     "model": "hydra.hydraspellbook",
     "pk": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
     "fields": {

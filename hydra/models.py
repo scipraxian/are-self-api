@@ -76,18 +76,6 @@ class HydraStatusTypeMixin(NameMixin):
         abstract = True
 
 
-class HydraOutcomeActionID(object):
-    """
-    Centralized Integer IDs for Outcome Actions.
-    """
-
-    COPY = 1
-    MOVE = 2
-    VALIDATE_EXISTS = 3
-    DELETE = 4
-    ANALYZE = 5
-
-
 class HydraDistributionModeID(object):
     """
     Centralized Integer IDs for Distribution Modes.
@@ -158,51 +146,6 @@ class HydraSpellArgumentAssignment(models.Model):
 
     class Meta(object):
         ordering = ['order']
-
-
-class HydraOutcomeAction(NameMixin):
-    """
-    Lookup table for Outcome Actions.
-    """
-
-    IDs = HydraOutcomeActionID
-
-    class Meta:
-        verbose_name = 'Hydra Outcome Action'
-
-
-class HydraSpellOutcomeConfig(DefaultFieldsMixin):
-    """Configuration for expected outcomes."""
-
-    spell = models.ForeignKey(
-        'HydraSpell',
-        on_delete=models.CASCADE,
-        related_name='outcome_configs',
-        null=True,
-        blank=True,
-    )
-    action = models.ForeignKey(
-        HydraOutcomeAction,
-        on_delete=models.PROTECT,
-        null=True,  # Allow null for migration compatibility if needed
-        default=HydraOutcomeActionID.COPY,
-    )
-
-    source_path_template = models.CharField(
-        max_length=500, help_text='Source path with {placeholders}', default=''
-    )
-    dest_path_template = models.CharField(
-        max_length=500,
-        blank=True,
-        help_text='Destination path (if Copy/Move)',
-        default='',
-    )
-    must_exist = models.BooleanField(
-        default=True, help_text='Fail if source missing?'
-    )
-
-    def __str__(self):
-        return f'{self.action} :: {self.source_path_template}'
 
 
 class HydraSpellbook(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
