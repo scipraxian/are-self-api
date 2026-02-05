@@ -104,9 +104,10 @@
                     local_cursor: document.getElementById("battle-station-cursors")?.dataset.local || 0,
                     remote_cursor: document.getElementById("battle-station-cursors")?.dataset.remote || 0
                  }'
-                 hx-swap="innerHTML">
+                 hx-swap="beforeend"
+                 hx-on:htmx:after-settle="document.getElementById('initial-loader')?.remove();">
 
-                <div style="padding: 2rem; text-align: center; color: #94a3b8;">
+                <div id="initial-loader" style="padding: 2rem; text-align: center; color: #94a3b8;">
                     <div class="spinner-small" style="margin: 0 auto 10px;"></div>
                     Synchronizing Log Streams...
                 </div>
