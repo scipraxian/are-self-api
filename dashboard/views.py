@@ -23,41 +23,30 @@ from talos_agent.version import VERSION as SERVER_VERSION
 
 def serialize_spawn_helper(spawn):
     """
-    Serializes a spawn using the Model's native properties.
-    Refactored to rely on 'live_heads' and 'finished_heads' exclusively.
+    Serializes a spawn using native Model Properties.
+    Direct mapping: No manual filtering or partitioning.
     """
-
-    # 1. Fetch via Model Properties
-    # Use select_related to prevent N+1 queries during template iteration
-    live = spawn.live_heads.select_related(
+    # 1. Fetch Data via Properties (Optimized)
+    live_heads = spawn.live_heads.select_related(
         'spell', 'target', 'status'
     ).order_by('created')
-    history = spawn.finished_heads.select_related(
+    finished_heads = spawn.finished_heads.select_related(
         'spell', 'target', 'status'
     ).order_by('created')
-
-    # 2. Resolve Children (Sub-graphs)
-    # Using the model properties here as well for consistency
     children = list(spawn.live_head_spawns) + list(spawn.finished_head_spawns)
     children.sort(key=lambda x: x.created)
 
     return {
         'object': spawn,
-        # Native Model Properties (Status Flags)
         'is_alive': spawn.is_alive,
         'is_dead': spawn.is_dead,
         'is_stopping': spawn.is_stopping,
         'ended_badly': spawn.ended_badly,
         'ended_successfully': spawn.ended_successfully,
-        # Recursion
         'subgraphs': [serialize_spawn_helper(child) for child in children],
-        # Data Streams
-        # 'live_children' now holds ALL active heads (Created, Pending, Running).
-        # The template can differentiate styles using head.is_queued if needed.
-        'live_children': list(live),
-        'history': list(history),
-        # Explicitly empty 'pending' to deprecate its usage in the template logic
-        'pending': [],
+        'live_children': list(live_heads),
+        'history': list(finished_heads),
+        'pending': [],  # Deprecated: The template should now iterate 'live_children' and check .is_queued
     }
 
 

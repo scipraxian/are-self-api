@@ -70,25 +70,26 @@
 
         <div class="lane-scroll-area">
 
-            {% for head in lane.pending %}
-                <div class="head-card pending">
-                    <div class="head-name" style="color:#888;">{{ head.spell.name }}</div>
-                    <div class="head-target" style="color:#666;">QUEUED</div>
-                    <div class="head-log" style="font-size:0.55rem; color:#444;">Waiting...</div>
-                </div>
-            {% endfor %}
-
+            {# UNIFIED LIVE LOOP: Handles both Queued and Running via .is_queued property #}
             {% for head in lane.live_children %}
-                <a href="{% url 'hydra:head_detail' head.id %}" class="head-card active">
-                    <div class="head-name" style="color:#fff;">{{ head.spell.name }}</div>
-                    <div class="head-target" style="color:var(--lcars-elbow);">
-                        {{ head.target.hostname|default:"LOCAL" }}
+                {% if head.is_queued %}
+                    <div class="head-card pending">
+                        <div class="head-name" style="color:#888;">{{ head.spell.name }}</div>
+                        <div class="head-target" style="color:#666;">QUEUED</div>
+                        <div class="head-log" style="font-size:0.55rem; color:#444;">Waiting...</div>
                     </div>
-                    <div class="head-log" style="font-size:0.55rem; color:#888;">
-                        {{ head.spell_log|slice:"-30:"|default:"..." }}
-                    </div>
-                    <div class="card-drill-btn" title="View Logs">☍</div>
-                </a>
+                {% else %}
+                    <a href="{% url 'hydra:head_detail' head.id %}" class="head-card active">
+                        <div class="head-name" style="color:#fff;">{{ head.spell.name }}</div>
+                        <div class="head-target" style="color:var(--lcars-elbow);">
+                            {{ head.target.hostname|default:"LOCAL" }}
+                        </div>
+                        <div class="head-log" style="font-size:0.55rem; color:#888;">
+                            {{ head.spell_log|slice:"-30:"|default:"..." }}
+                        </div>
+                        <div class="card-drill-btn" title="View Logs">☍</div>
+                    </a>
+                {% endif %}
             {% endfor %}
 
             {% for head in lane.history %}
