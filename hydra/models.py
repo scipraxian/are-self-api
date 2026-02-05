@@ -21,6 +21,8 @@ from .constants import (
     CREATED_LABEL,
     DELEGATED_LABEL,
     FAILED_LABEL,
+    IS_ALIVE_LABEL,
+    IS_TERMINAL_LABEL,
     PENDING_LABEL,
     RUNNING_LABEL,
     STOPPED_LABEL,
@@ -64,6 +66,14 @@ class HydraStatusID(object):
     DELEGATED = 7
     STOPPING = 8
     STOPPED = 9
+    IS_ALIVE_STATUS_LIST = [
+        CREATED,
+        DELEGATED,
+        PENDING,
+        RUNNING,
+        STOPPING,
+    ]
+    IS_TERMINAL_STATUS_LIST = [FAILED, SUCCESS, ABORTED, STOPPED]
 
 
 class HydraStatusTypeMixin(NameMixin):
@@ -79,17 +89,21 @@ class HydraStatusTypeMixin(NameMixin):
     DELEGATED = HydraStatusID.DELEGATED
     STOPPING = HydraStatusID.STOPPING
     STOPPED = HydraStatusID.STOPPED
+    IS_ALIVE_STATUS_LIST = HydraStatusID.IS_ALIVE_STATUS_LIST
+    IS_TERMINAL_STATUS_LIST = HydraStatusID.IS_TERMINAL_STATUS_LIST
 
     STATUS_MAP = {
-        CREATED_LABEL: HydraStatusID.CREATED,
-        PENDING_LABEL: HydraStatusID.PENDING,
-        RUNNING_LABEL: HydraStatusID.RUNNING,
-        SUCCESS_LABEL: HydraStatusID.SUCCESS,
-        FAILED_LABEL: HydraStatusID.FAILED,
-        ABORTED_LABEL: HydraStatusID.ABORTED,
-        STOPPING_LABEL: HydraStatusID.STOPPING,
-        STOPPED_LABEL: HydraStatusID.STOPPED,
-        DELEGATED_LABEL: HydraStatusID.DELEGATED,
+        CREATED_LABEL: CREATED,
+        PENDING_LABEL: PENDING,
+        RUNNING_LABEL: RUNNING,
+        SUCCESS_LABEL: SUCCESS,
+        FAILED_LABEL: FAILED,
+        ABORTED_LABEL: ABORTED,
+        STOPPING_LABEL: STOPPING,
+        STOPPED_LABEL: STOPPED,
+        DELEGATED_LABEL: DELEGATED,
+        IS_ALIVE_LABEL: IS_ALIVE_STATUS_LIST,
+        IS_TERMINAL_LABEL: IS_TERMINAL_STATUS_LIST,
     }
 
     class Meta:
@@ -285,7 +299,7 @@ class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     )
 
     @property
-    def is_active(self):
+    def is_active(self):  # legacy
         """Returns True if the spawn is in a non-terminal state."""
         return self.status_id in [
             HydraSpawnStatus.CREATED,
@@ -293,12 +307,71 @@ class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
             HydraSpawnStatus.RUNNING,
         ]
 
-    def __str__(self):
-        # Handle case where spellbook was deleted
-        book_name = (
-            self.spellbook.name if self.spellbook else 'Deleted Spellbook'
+    @property
+    def is_alive(self):
+        """Returns True if the spawn is in a non-terminal state."""
+        return self.status_id in HydraSpawnStatus.IS_ALIVE_STATUS_LIST
+
+    @property
+    def is_dead(self):
+        return self.status_id in HydraSpawnStatus.IS_TERMINAL_STATUS_LIST
+
+    @property
+    def is_queued(self):
+        return self.status_id in [
+            HydraSpawnStatus.PENDING,
+            HydraSpawnStatus.CREATED,
+        ]
+
+    @property
+    def is_stopping(self):
+        return self.status_id == HydraSpawnStatus.STOPPING
+
+    @property
+    def ended_badly(self):
+        return self.status_id in [
+            HydraSpawnStatus.ABORTED,
+            HydraSpawnStatus.FAILED,
+        ]
+
+    @property
+    def ended_successfully(self):
+        return self.status_id in [
+            HydraSpawnStatus.SUCCESS,
+            HydraHeadStatus.STOPPED,
+        ]
+
+    @property
+    def live_heads(self):
+        return self.heads.filter(
+            status__in=HydraHeadStatus.IS_ALIVE_STATUS_LIST
+        ).exclude(spell_id=HydraSpell.BEGIN_PLAY)
+
+    @property
+    def finished_heads(self):
+        return self.heads.filter(
+            status__in=HydraHeadStatus.IS_TERMINAL_STATUS_LIST
         )
-        return f'Spawn {self.id} ({book_name})'
+
+    @property
+    def live_head_spawns(self):
+        return HydraSpawn.objects.filter(
+            parent_head__spawn=self,
+            status__in=HydraSpawnStatus.IS_ALIVE_STATUS_LIST,
+        )
+
+    @property
+    def finished_head_spawns(self):
+        return HydraSpawn.objects.filter(
+            parent_head__spawn=self,
+            status__in=HydraSpawnStatus.IS_TERMINAL_STATUS_LIST,
+        )
+
+
+def __str__(self):
+    # Handle case where spellbook was deleted
+    book_name = self.spellbook.name if self.spellbook else 'Deleted Spellbook'
+    return f'Spawn {self.id} ({book_name})'
 
 
 class HydraHeadStatus(HydraStatusTypeMixin):
@@ -344,11 +417,45 @@ class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     result_code = models.IntegerField(null=True, blank=True)
 
     @property
-    def is_active(self):
+    def is_active(self):  # legacy?
         return self.status_id in [
             HydraStatusID.RUNNING,
             HydraStatusID.PENDING,
             HydraStatusID.STOPPING,
+        ]
+
+    @property
+    def is_alive(self):
+        """Returns True if the spawn is in a non-terminal state."""
+        return self.status_id in HydraHeadStatus.IS_ALIVE_STATUS_LIST
+
+    @property
+    def is_dead(self):
+        return self.status_id in HydraHeadStatus.IS_TERMINAL_STATUS_LIST
+
+    @property
+    def is_queued(self):
+        return self.status_id in [
+            HydraSpawnStatus.PENDING,
+            HydraSpawnStatus.CREATED,
+        ]
+
+    @property
+    def is_stopping(self):
+        return self.status_id == HydraHeadStatus.STOPPING
+
+    @property
+    def ended_badly(self):
+        return self.status_id in [
+            HydraHeadStatus.ABORTED,
+            HydraHeadStatus.FAILED,
+        ]
+
+    @property
+    def ended_successfully(self):
+        return self.status_id in [
+            HydraHeadStatus.SUCCESS,
+            HydraHeadStatus.STOPPED,
         ]
 
     class Meta:

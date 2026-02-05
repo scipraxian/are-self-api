@@ -79,12 +79,12 @@
          hx-get="{% url 'home' %}"
          hx-select="#mission-monitor"
          hx-swap="outerHTML"
-         hx-trigger="monitor-update from:body{% if is_system_active %}, every 2s{% endif %}">
+         hx-trigger="monitor-update from:body">
 
         {% for lane in lanes %}
             {% include "dashboard/partials/mission_swimlane.html" with lane=lane %}
         {% empty %}
-            <div style="text-align:center; padding:50px; color:#444;">IDLE</div>
+            <div style="text-align:center; padding:50px; color:#444;">NO ACTIVE MISSIONS</div>
         {% endfor %}
     </div>
 </div>

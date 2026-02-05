@@ -4,7 +4,7 @@ import os
 
 from celery.result import AsyncResult
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.views import View
 from django.views.generic import TemplateView
 
@@ -15,9 +15,50 @@ from hydra.models import (
     HydraHeadStatus,
     HydraSpawn,
     HydraSpawnStatus,
+    HydraSpell,
     HydraSpellbook,
 )
 from talos_agent.version import VERSION as SERVER_VERSION
+
+
+def serialize_spawn_helper(spawn):
+    """
+    Serializes a spawn using the Model's native properties.
+    Refactored to rely on 'live_heads' and 'finished_heads' exclusively.
+    """
+
+    # 1. Fetch via Model Properties
+    # Use select_related to prevent N+1 queries during template iteration
+    live = spawn.live_heads.select_related(
+        'spell', 'target', 'status'
+    ).order_by('created')
+    history = spawn.finished_heads.select_related(
+        'spell', 'target', 'status'
+    ).order_by('created')
+
+    # 2. Resolve Children (Sub-graphs)
+    # Using the model properties here as well for consistency
+    children = list(spawn.live_head_spawns) + list(spawn.finished_head_spawns)
+    children.sort(key=lambda x: x.created)
+
+    return {
+        'object': spawn,
+        # Native Model Properties (Status Flags)
+        'is_alive': spawn.is_alive,
+        'is_dead': spawn.is_dead,
+        'is_stopping': spawn.is_stopping,
+        'ended_badly': spawn.ended_badly,
+        'ended_successfully': spawn.ended_successfully,
+        # Recursion
+        'subgraphs': [serialize_spawn_helper(child) for child in children],
+        # Data Streams
+        # 'live_children' now holds ALL active heads (Created, Pending, Running).
+        # The template can differentiate styles using head.is_queued if needed.
+        'live_children': list(live),
+        'history': list(history),
+        # Explicitly empty 'pending' to deprecate its usage in the template logic
+        'pending': [],
+    }
 
 
 class DashboardHomeView(TemplateView):
@@ -71,7 +112,7 @@ class DashboardHomeView(TemplateView):
 
         for spawn in root_spawns:
             serialized = self._serialize_spawn(spawn)
-            if serialized['is_active']:
+            if serialized['is_alive']:
                 is_system_active = True
             lanes.append(serialized)
 
@@ -80,59 +121,20 @@ class DashboardHomeView(TemplateView):
         return context
 
     def _serialize_spawn(self, spawn):
-        heads = (
-            spawn.heads.all()
-            .select_related('spell', 'target', 'status')
-            .order_by('created')
+        return serialize_spawn_helper(spawn)
+
+
+class SwimlanePartialView(View):
+    """Renders a single swimlane for HTMX polling."""
+
+    def get(self, request, pk, *args, **kwargs):
+        spawn = get_object_or_404(HydraSpawn, pk=pk)
+        serialized_lane = serialize_spawn_helper(spawn)
+        return render(
+            request,
+            'dashboard/partials/mission_swimlane.html',
+            {'lane': serialized_lane},
         )
-        # Filter noise
-        filtered_heads = [h for h in heads if h.spell.name != 'Begin Play']
-
-        # Determine visual state
-        is_failed = spawn.status_id == HydraSpawnStatus.FAILED
-        is_active = spawn.status_id in [
-            HydraSpawnStatus.RUNNING,
-            HydraSpawnStatus.STOPPING,
-            HydraSpawnStatus.PENDING,
-            HydraSpawnStatus.CREATED,
-        ]
-
-        return {
-            'object': spawn,
-            'is_active': is_active,
-            'is_failed': is_failed,
-            'subgraphs': [
-                self._serialize_spawn(child)
-                for child in HydraSpawn.objects.filter(parent_head__spawn=spawn)
-            ],
-            'pending': [
-                h
-                for h in filtered_heads
-                if h.status_id
-                in [HydraHeadStatus.CREATED, HydraHeadStatus.PENDING]
-            ],
-            'active': [
-                h
-                for h in filtered_heads
-                if h.status_id
-                in [
-                    HydraHeadStatus.RUNNING,
-                    HydraHeadStatus.STOPPING,
-                    HydraHeadStatus.DELEGATED,
-                ]
-            ],
-            'history': [
-                h
-                for h in filtered_heads
-                if h.status_id
-                in [
-                    HydraHeadStatus.SUCCESS,
-                    HydraHeadStatus.FAILED,
-                    HydraHeadStatus.ABORTED,
-                    HydraHeadStatus.STOPPED,
-                ]
-            ],
-        }
 
 
 class TriggerBuildView(View):

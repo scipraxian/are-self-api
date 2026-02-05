@@ -1,17 +1,26 @@
-'''URL configuration for the dashboard application.'''
+"""URL configuration for the dashboard application."""
 
-from django.urls import path, include
+from django.urls import include, path
 
-from dashboard.views import AgentListView, NeuralStatusView
-from dashboard.views import BuildStatusView
-from dashboard.views import DashboardHomeView
-from dashboard.views import DeleteAgentView
-from dashboard.views import ScanNetworkView
-from dashboard.views import ShutdownView
-from dashboard.views import TriggerBuildView
+from dashboard.views import (
+    AgentListView,
+    BuildStatusView,
+    DashboardHomeView,
+    DeleteAgentView,
+    NeuralStatusView,
+    ScanNetworkView,
+    ShutdownView,
+    SwimlanePartialView,
+    TriggerBuildView,
+)
 
 urlpatterns = [
     path('', DashboardHomeView.as_view(), name='home'),
+    path(
+        'swimlane/<uuid:pk>/',
+        SwimlanePartialView.as_view(),
+        name='swimlane_partial',
+    ),
     path(
         'trigger-build/',
         TriggerBuildView.as_view(),
@@ -43,5 +52,5 @@ urlpatterns = [
         name='shutdown',
     ),
     path('agent-detail/', include('talos_agent.urls')),
-    path('neural-status/', NeuralStatusView.as_view(), name='neural_status')
+    path('neural-status/', NeuralStatusView.as_view(), name='neural_status'),
 ]
