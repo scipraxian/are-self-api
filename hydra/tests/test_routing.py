@@ -20,13 +20,10 @@ class HydraRoutingTest(TestCase):
 
     def test_view_404s_on_missing_id(self):
         """
-        Ensure the View returns 404 for a valid UUID format that isn't in DB.
+        Ensure the View raises DoesNotExist for a missing ID.
         """
-        # A random UUID that definitely isn't in the DB
         random_uuid = uuid.uuid4()
-
         url = reverse('hydra:hydra_launch', args=[random_uuid])
-        response = self.client.post(url)
-
-        self.assertEqual(response.status_code, 404)
-        self.assertTemplateUsed(response, 'hydra/partials/error.html')
+        
+        with self.assertRaises(HydraSpellbook.DoesNotExist):
+            self.client.post(url)

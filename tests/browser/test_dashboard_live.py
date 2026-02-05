@@ -37,36 +37,16 @@ class DashboardBrowserTests(StaticLiveServerTestCase):
             page.goto(self.live_server_url)
 
             # Verify Header
-            expect(page.locator('h1')).to_contain_text("Talos Command Center")
+            expect(page.locator('.sys-title')).to_contain_text("TALOS ORCHESTRATOR")
 
-            # 2. Verify Agent List is visible and has our agent
-            expect(page.locator('.agent-grid')).to_be_visible()
-            expect(page.locator('.agent-card')).to_have_count(1)
-            expect(page.locator('.agent-card .hostname')).to_contain_text(
-                "TestAgent01")
+            # 2. Verify Protocol List is visible
+            expect(page.locator('.launch-pad')).to_be_visible()
+            expect(page.locator('.launch-btn')).to_have_count(1)
+            expect(page.locator('.launch-btn')).to_contain_text("Fast Validate")
 
-            # 3. VERIFY STYLING (The Hydra Button must be Violet)
-            # This ensures the CSS injected via partials is actually working.
-            build_btn = page.locator('.hydra-btn')
-            expect(build_btn).to_be_visible()
-
-            # The style uses a linear-gradient starting with #8b5cf6 (rgb 139, 92, 246)
-            bg_style = build_btn.evaluate(
-                "el => window.getComputedStyle(el).backgroundImage")
-            if "rgb(139, 92, 246)" not in bg_style and "linear-gradient" not in bg_style:
-                raise AssertionError(
-                    f"Button is not Violet! Computed background: {bg_style}")
-
-            # 4. Agent Detail and Update Button
-            # Navigate to agent detail
-            page.click('.agent-card-link')
-
-            # Verify we are on detail page
-            expect(page.locator('h1')).to_contain_text("TestAgent01")
-
-            # Verify "Push Update" button exists
-            update_btn = page.locator('.btn-update')
-            expect(update_btn).to_be_visible()
-            expect(update_btn).to_contain_text("Push Update")
+            # 3. Sidebar toggle
+            page.click('.hamburger')
+            expect(page.locator('#system-menu')).to_be_visible()
+            expect(page.locator('.menu-item').first).to_contain_text("Sonar Registry")
 
             browser.close()

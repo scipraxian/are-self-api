@@ -20,10 +20,8 @@ class DashboardViewTests(TestCase):
     '''Test that the home page loads correctly.'''
     response = self.client.get(reverse('home'))
     self.assertEqual(response.status_code, 200)
-    self.assertTemplateUsed(response, 'dashboard/home.html')
-    self.assertContains(response, 'Talos Command Center')
-    # CHANGED: Look for the new "Sonar" header instead of the old button
-    self.assertContains(response, 'Sonar: Build Agents')
+    self.assertTemplateUsed(response, 'dashboard/mission_control.html')
+    self.assertContains(response, 'TALOS // MISSION CONTROL')
 
   @patch('dashboard.views.debug_task.delay')
   def test_trigger_build_post(self, mock_task_delay):
