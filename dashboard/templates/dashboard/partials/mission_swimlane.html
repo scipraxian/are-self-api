@@ -3,6 +3,8 @@
         {% if lane.is_alive %}
      hx-get="{% url 'swimlane_partial' lane.object.id %}"
      hx-trigger="every 2s"
+     hx-select="#lane-wrapper-{{ lane.object.id }}"
+     hx-target="this"
      hx-swap="outerHTML"
         {% endif %}>
 

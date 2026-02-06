@@ -32,24 +32,37 @@ def serialize_spawn_helper(spawn):
     """
     try:
         # 1. Fetch Data via Properties (Optimized)
-        live_heads = list(
-            spawn.live_heads.select_related(
-                'spell', 'target', 'status'
-            ).order_by('created')
-        )
+        live_heads = []
+        try:
+            live_heads = list(spawn.live_heads.all().order_by('created'))
+        except Exception as e:
+            logger.warning(f'Error fetching live_heads for {spawn.id}: {e}')
 
-        finished_heads = list(
-            spawn.finished_heads.select_related(
-                'spell', 'target', 'status'
-            ).order_by('created')
-        )
+        finished_heads = []
+        try:
+            finished_heads = list(
+                spawn.finished_heads.all().order_by('created')
+            )
+        except Exception as e:
+            logger.warning(f'Error fetching finished_heads for {spawn.id}: {e}')
 
         # 2. Handle Children (Sub-graphs)
         children = []
         try:
-            children = list(spawn.live_head_spawns) + list(
-                spawn.finished_head_spawns
-            )
+            # Safely fetch children
+            lhs = []
+            try:
+                lhs = list(spawn.live_head_spawns)
+            except Exception:
+                pass
+
+            fhs = []
+            try:
+                fhs = list(spawn.finished_head_spawns)
+            except Exception:
+                pass
+
+            children = lhs + fhs
             children.sort(key=lambda x: x.created if x.created else x.modified)
         except Exception as e:
             logger.warning(
