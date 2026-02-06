@@ -143,28 +143,55 @@ class DashboardHomeView(TemplateView):
 
 
 class SwimlanePartialView(View):
-    """Renders a single swimlane for HTMX polling."""
+    """
+    Renders a single swimlane for HTMX polling.
+    CRITICAL: Enforces that the returned HTML *always* contains the
+    lane-wrapper-{pk} ID. If missing, it injects it to prevent the
+    DOM node from vanishing during the outerHTML swap.
+    """
 
     def get(self, request, pk, *args, **kwargs):
+        # 1. Determine the exact ID that MUST be present to survive the swap
+        target_dom_id = f'lane-wrapper-{pk}'
+
         try:
             spawn = get_object_or_404(HydraSpawn, pk=pk)
             serialized_lane = serialize_spawn_helper(spawn)
 
-            # [FIX] Always render the template. Do NOT return raw HTML.
+            # 2. Render Template
             html = render_to_string(
                 'dashboard/partials/mission_swimlane.html',
                 {'lane': serialized_lane},
                 request=request,
             )
-            return HttpResponse(html)
+            html = html.strip()
+
+            if not html:
+                raise ValueError('Rendered HTML was empty')
+
+            # 3. ID INTEGRITY CHECK
+            # If the ID is missing (e.g. bad context), the node will lose its
+            # identity and "vanish" from future selectors/polls.
+            if target_dom_id not in html:
+                logger.critical(
+                    f'Swimlane partial missing ID {target_dom_id}. Injecting fallback wrapper.'
+                )
+                # Auto-Recovery: Wrap the content in the correct ID so the UI persists
+                html = f'<div class="lane-wrapper" id="{target_dom_id}">{html}</div>'
+
+            return HttpResponse(html, content_type='text/html')
 
         except Exception as e:
             logger.error(f'Swimlane View Fatal Error: {e}', exc_info=True)
-            # Last resort fallback: Return a valid wrapper ID to prevent HTMX swap failure,
-            # but with a visible error.
+            # 4. FAILSAFE RETURN
+            # Return a valid wrapper matching the ID so the UI updates to show error
+            # instead of deleting the node.
             return HttpResponse(
-                f'<div class="lane-wrapper" id="lane-wrapper-{pk}"><div class="swimlane failed-lane" style="padding: 20px; border: 1px solid red;"><strong>CRITICAL VIEW ERROR:</strong> {str(e)}</div></div>',
+                f'<div class="lane-wrapper" id="{target_dom_id}">'
+                f'<div class="swimlane failed-lane" style="padding: 20px; border: 1px solid red;">'
+                f'<strong>SYNC ERROR:</strong> {str(e)}</div></div>',
                 status=200,
+                content_type='text/html',
             )
 
 
