@@ -110,6 +110,18 @@ class HydraStatusTypeMixin(NameMixin):
         abstract = True
 
 
+class HydraSpawnStatus(HydraStatusTypeMixin):
+    """Status lookups for Spawns."""
+
+    pass
+
+
+class HydraHeadStatus(HydraStatusTypeMixin):
+    """Status lookups for Heads."""
+
+    pass
+
+
 class HydraDistributionModeID(object):
     """
     Centralized Integer IDs for Distribution Modes.
@@ -271,12 +283,6 @@ class HydraSpellbookConnectionWire(ModifiedMixin):
 # --- EXECUTION STATE (The Runtime) ---
 
 
-class HydraSpawnStatus(HydraStatusTypeMixin):
-    """Status lookups for Spawns."""
-
-    pass
-
-
 class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     """Spellbook Instance."""
 
@@ -374,12 +380,6 @@ def __str__(self):
     return f'Spawn {self.id} ({book_name})'
 
 
-class HydraHeadStatus(HydraStatusTypeMixin):
-    """Status lookups for Heads."""
-
-    pass
-
-
 class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     """
     A single execution head (Process).
@@ -426,7 +426,6 @@ class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
 
     @property
     def is_alive(self):
-        """Returns True if the spawn is in a non-terminal state."""
         return self.status_id in HydraHeadStatus.IS_ALIVE_STATUS_LIST
 
     @property
@@ -436,8 +435,8 @@ class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     @property
     def is_queued(self):
         return self.status_id in [
-            HydraSpawnStatus.PENDING,
-            HydraSpawnStatus.CREATED,
+            HydraHeadStatus.PENDING,
+            HydraHeadStatus.CREATED,
         ]
 
     @property
