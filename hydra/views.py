@@ -122,6 +122,9 @@ class GracefulStopSpawnView(View):
         hydra = Hydra(spawn_id=pk)
         hydra.stop_gracefully()
 
+        if request.GET.get('silent') == 'true':
+            return HttpResponse(status=204)
+
         # Context-Aware Response
         if request.headers.get('HX-Request'):
             referer = request.META.get('HTTP_REFERER', '')

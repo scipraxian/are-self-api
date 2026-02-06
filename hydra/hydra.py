@@ -215,6 +215,16 @@ class Hydra:
         2. If heads finished, follow Wires.
         """
         with transaction.atomic():
+            # Refresh to ensure we catch STOPPING state updates
+            self.spawn.refresh_from_db()
+
+            if self.spawn.status_id == HydraSpawnStatus.STOPPING:
+                logger.info(
+                    f'[HYDRA] Spawn {self.spawn.id} is STOPPING. Halting graph traversal.'
+                )
+                self._finalize_spawn_unsafe()
+                return
+
             heads = self.spawn.heads.select_for_update().all()
 
             if not heads.exists():
@@ -397,11 +407,11 @@ class Hydra:
 
         # STOPPED heads are technically 'success of intent', so they don't fail the spawn.
         # However, if there are ACTUAL failures elsewhere, the spawn fails.
-        new_status = (
-            HydraSpawnStatus.FAILED
-            if failed.exists()
-            else HydraSpawnStatus.SUCCESS
-        )
+        if self.spawn.status_id == HydraSpawnStatus.STOPPING:
+            new_status = HydraSpawnStatus.STOPPED
+        else:
+            new_status = (HydraSpawnStatus.FAILED
+                          if failed.exists() else HydraSpawnStatus.SUCCESS)
 
         if self.spawn.status_id != new_status:
             self.spawn.status_id = new_status
