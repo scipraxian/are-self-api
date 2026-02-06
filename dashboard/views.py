@@ -1,10 +1,11 @@
-"""Views for the dashboard application."""
-
+import logging
 import os
 
 from celery.result import AsyncResult
+from django.db.models import Prefetch
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.template.loader import render_to_string
 from django.views import View
 from django.views.generic import TemplateView
 
@@ -12,6 +13,7 @@ from config.celery import app as celery_app
 from core.tasks import scan_network_task
 from dashboard.tasks import debug_task
 from hydra.models import (
+    HydraHead,
     HydraHeadStatus,
     HydraSpawn,
     HydraSpawnStatus,
@@ -20,34 +22,64 @@ from hydra.models import (
 )
 from talos_agent.version import VERSION as SERVER_VERSION
 
+logger = logging.getLogger(__name__)
+
 
 def serialize_spawn_helper(spawn):
     """
     Serializes a spawn using native Model Properties.
-    Direct mapping: No manual filtering or partitioning.
+    Refactored for robustness against race conditions and missing relations.
     """
-    # 1. Fetch Data via Properties (Optimized)
-    live_heads = spawn.live_heads.select_related(
-        'spell', 'target', 'status'
-    ).order_by('created')
-    finished_heads = spawn.finished_heads.select_related(
-        'spell', 'target', 'status'
-    ).order_by('created')
-    children = list(spawn.live_head_spawns) + list(spawn.finished_head_spawns)
-    children.sort(key=lambda x: x.created)
+    try:
+        # 1. Fetch Data via Properties (Optimized)
+        live_heads = list(
+            spawn.live_heads.select_related(
+                'spell', 'target', 'status'
+            ).order_by('created')
+        )
 
-    return {
-        'object': spawn,
-        'is_alive': spawn.is_alive,
-        'is_dead': spawn.is_dead,
-        'is_stopping': spawn.is_stopping,
-        'ended_badly': spawn.ended_badly,
-        'ended_successfully': spawn.ended_successfully,
-        'subgraphs': [serialize_spawn_helper(child) for child in children],
-        'live_children': list(live_heads),
-        'history': list(finished_heads),
-        'pending': [],  # Deprecated: The template should now iterate 'live_children' and check .is_queued
-    }
+        finished_heads = list(
+            spawn.finished_heads.select_related(
+                'spell', 'target', 'status'
+            ).order_by('created')
+        )
+
+        # 2. Handle Children (Sub-graphs)
+        children = []
+        try:
+            children = list(spawn.live_head_spawns) + list(
+                spawn.finished_head_spawns
+            )
+            children.sort(key=lambda x: x.created if x.created else x.modified)
+        except Exception as e:
+            logger.warning(
+                f'Error resolving subgraphs for Spawn {spawn.id}: {e}'
+            )
+
+        return {
+            'object': spawn,
+            'is_alive': spawn.is_alive,
+            'is_dead': spawn.is_dead,
+            'is_stopping': spawn.is_stopping,
+            'ended_badly': spawn.ended_badly,
+            'ended_successfully': spawn.ended_successfully,
+            'subgraphs': [serialize_spawn_helper(child) for child in children],
+            'live_children': live_heads,
+            'history': finished_heads,
+            'pending': [],
+        }
+    except Exception as e:
+        logger.error(
+            f'Serialization Failed for Spawn {spawn.id}: {e}', exc_info=True
+        )
+        return {
+            'object': spawn,
+            'is_alive': False,
+            'live_children': [],
+            'history': [],
+            'subgraphs': [],
+            'error': str(e),
+        }
 
 
 class DashboardHomeView(TemplateView):
@@ -56,21 +88,17 @@ class DashboardHomeView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # 1. Fetch all books with tags
         all_books = HydraSpellbook.objects.prefetch_related('tags').order_by(
             'name'
         )
 
-        # 2. Partition
         favorites = []
-        tagged_groups = {}  # { "TagName": [book1, book2] }
+        tagged_groups = {}
         uncategorized = []
 
         for book in all_books:
             if book.is_favorite:
                 favorites.append(book)
-
-            # If tags exist, add to groups
             tags = book.tags.all()
             if tags:
                 for tag in tags:
@@ -80,7 +108,6 @@ class DashboardHomeView(TemplateView):
             else:
                 uncategorized.append(book)
 
-        # 3. Sort Groups Alphabetically
         sorted_groups = []
         for tag_name in sorted(tagged_groups.keys()):
             sorted_groups.append(
@@ -91,13 +118,15 @@ class DashboardHomeView(TemplateView):
         context['tagged_groups'] = sorted_groups
         context['uncategorized'] = uncategorized
 
-        # --- SPAWN MONITOR LOGIC ---
-        root_spawns = HydraSpawn.objects.filter(
-            parent_head__isnull=True
-        ).order_by('-created')[:20]
+        root_spawns = (
+            HydraSpawn.objects.filter(parent_head__isnull=True)
+            .select_related('status', 'spellbook')
+            .prefetch_related('heads', 'heads__status', 'heads__spell')
+            .order_by('-created')[:20]
+        )
 
         lanes = []
-        is_system_active = False  # Track if we need to keep polling
+        is_system_active = False
 
         for spawn in root_spawns:
             serialized = self._serialize_spawn(spawn)
@@ -117,20 +146,30 @@ class SwimlanePartialView(View):
     """Renders a single swimlane for HTMX polling."""
 
     def get(self, request, pk, *args, **kwargs):
-        spawn = get_object_or_404(HydraSpawn, pk=pk)
-        serialized_lane = serialize_spawn_helper(spawn)
-        return render(
-            request,
-            'dashboard/partials/mission_swimlane.html',
-            {'lane': serialized_lane},
-        )
+        try:
+            spawn = get_object_or_404(HydraSpawn, pk=pk)
+            serialized_lane = serialize_spawn_helper(spawn)
+
+            # [FIX] Always render the template. Do NOT return raw HTML.
+            html = render_to_string(
+                'dashboard/partials/mission_swimlane.html',
+                {'lane': serialized_lane},
+                request=request,
+            )
+            return HttpResponse(html)
+
+        except Exception as e:
+            logger.error(f'Swimlane View Fatal Error: {e}', exc_info=True)
+            # Last resort fallback: Return a valid wrapper ID to prevent HTMX swap failure,
+            # but with a visible error.
+            return HttpResponse(
+                f'<div class="lane-wrapper" id="lane-wrapper-{pk}"><div class="swimlane failed-lane" style="padding: 20px; border: 1px solid red;"><strong>CRITICAL VIEW ERROR:</strong> {str(e)}</div></div>',
+                status=200,
+            )
 
 
 class TriggerBuildView(View):
-    """Triggers a Celery task and returns an HTML fragment."""
-
     def post(self, request, *args, **kwargs):
-        """Handles POST requests to trigger a build."""
         task = debug_task.delay()
         return render(
             request,
@@ -140,14 +179,10 @@ class TriggerBuildView(View):
 
 
 class BuildStatusView(View):
-    """Checks the status of a Celery task and returns appropriate HTML."""
-
     def get(self, request, task_id, *args, **kwargs):
-        """Returns idle button if task is ready, else continues polling."""
         result = AsyncResult(task_id)
         if result.ready():
             return render(request, 'dashboard/partials/build_button_idle.html')
-
         return render(
             request,
             'dashboard/partials/build_button_queued.html',
@@ -156,10 +191,7 @@ class BuildStatusView(View):
 
 
 class ScanNetworkView(View):
-    """Triggers the network scan task."""
-
     def post(self, request, *args, **kwargs):
-        """Initiates the async scan."""
         scan_network_task.delay()
         return HttpResponse("""
         <div class="scanning-toast">
@@ -169,20 +201,11 @@ class ScanNetworkView(View):
 
 
 class DeleteAgentView(View):
-    """Removes a build agent from the registry."""
-
     def delete(self, request, pk, *args, **kwargs):
-        """Deletes an offline agent."""
-        # target = get_object_or_404(RemoteTarget, pk=pk)
-        # if target.status == 'OFFLINE':
-        #     target.delete()
-        #     return HttpResponse('')  # Remove element from UI
         return HttpResponse('Only offline agents can be deleted.', status=403)
 
 
 class AgentListView(View):
-    """Returns the partial agent list for polling."""
-
     def get(self, request, *args, **kwargs):
         targets = []
         return render(
@@ -193,10 +216,7 @@ class AgentListView(View):
 
 
 class ShutdownView(View):
-    """System-wide shutdown for all Talos processes."""
-
     def post(self, request, *args, **kwargs):
-        """Triggers system-wide shutdown."""
         print('System-wide shutdown initiated from dashboard...')
         try:
             celery_app.control.shutdown()
@@ -207,18 +227,14 @@ class ShutdownView(View):
 
 
 class NeuralStatusView(View):
-    """HTMX Partial for the global brain stream."""
-
     def get(self, request, *args, **kwargs):
         from talos_frontal.models import ConsciousStream
 
-        # Get the absolute latest thought from the system
         latest = (
             ConsciousStream.objects.select_related('status')
             .order_by('-created')
             .first()
         )
-
         return render(
             request,
             'dashboard/partials/neural_monitor.html',

@@ -69,6 +69,11 @@
         </button>
 
         <div class="lane-scroll-area">
+            {% if lane.error %}
+                <div style="color: #ef4444; font-family: monospace; font-size: 0.75rem; padding: 10px; background: rgba(239, 68, 68, 0.1); border-radius: 6px; white-space: pre-wrap; width: 100%;">
+                    <strong>SYNC ERROR:</strong> {{ lane.error }}
+                </div>
+            {% endif %}
 
             {# UNIFIED LIVE LOOP: Handles both Queued and Running via .is_queued property #}
             {% for head in lane.live_children %}
