@@ -344,7 +344,7 @@ class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     def ended_successfully(self):
         return self.status_id in [
             HydraSpawnStatus.SUCCESS,
-            HydraHeadStatus.STOPPED,
+            HydraSpawnStatus.STOPPED,
         ]
 
     @property
@@ -417,11 +417,11 @@ class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     result_code = models.IntegerField(null=True, blank=True)
 
     @property
-    def is_active(self):  # legacy?
+    def is_active(self):  # TODO: DEPRECIATED LEGACY REMOVE, use is_alive.
         return self.status_id in [
-            HydraStatusID.RUNNING,
-            HydraStatusID.PENDING,
-            HydraStatusID.STOPPING,
+            HydraHeadStatus.RUNNING,
+            HydraHeadStatus.PENDING,
+            HydraHeadStatus.STOPPING,
         ]
 
     @property
