@@ -2,7 +2,6 @@ import logging
 import os
 
 from celery.result import AsyncResult
-from django.db.models import Prefetch
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
@@ -13,11 +12,7 @@ from config.celery import app as celery_app
 from core.tasks import scan_network_task
 from dashboard.tasks import debug_task
 from hydra.models import (
-    HydraHead,
-    HydraHeadStatus,
     HydraSpawn,
-    HydraSpawnStatus,
-    HydraSpell,
     HydraSpellbook,
 )
 from talos_agent.version import VERSION as SERVER_VERSION
