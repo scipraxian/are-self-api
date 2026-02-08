@@ -398,20 +398,10 @@ class Hydra:
         if active.exists():
             return
 
-        failed = self.spawn.heads.filter(
-            status_id__in=[
-                HydraHeadStatus.FAILED,
-                HydraHeadStatus.ABORTED,
-            ]
-        )
-
-        # STOPPED heads are technically 'success of intent', so they don't fail the spawn.
-        # However, if there are ACTUAL failures elsewhere, the spawn fails.
         if self.spawn.status_id == HydraSpawnStatus.STOPPING:
             new_status = HydraSpawnStatus.STOPPED
         else:
-            new_status = (HydraSpawnStatus.FAILED
-                          if failed.exists() else HydraSpawnStatus.SUCCESS)
+            new_status = HydraSpawnStatus.SUCCESS
 
         if self.spawn.status_id != new_status:
             self.spawn.status_id = new_status
