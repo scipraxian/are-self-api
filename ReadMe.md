@@ -59,31 +59,79 @@ We don't trust—we verify. Talos maintains strict testing tiers:
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Quick Start: Zero to Transmission
 
-### 1. The Environment
-Ensure you have a Redis broker running:
+### 1. Infrastructure (The Grid)
+Talos requires a robust backend to handle asynchronous orchestration. Ensure you have the following services **online**:
+
+*   **PostgreSQL**: The persistent memory. Talos enables connection pooling by default.
+    *   *Default Config:* User: `postgres`, Password: `frith` (See `config/settings.py`).
+*   **Redis**: The nervous system. Handles Celery task queues and channel layers.
+    *   *Default Port:* `6379`.
+
+### 2. Environment Initialization
+Talos operates in a strict environment. Initialize your virtual environment and dependencies:
+
 ```powershell
-docker run --name redis -p 6379:6379 -d redis
+# 1. Forge the Virtual Environment
+python -m venv venv
+
+# 2. Activate (Windows)
+.\venv\Scripts\activate
+
+# 3. Equip Fleet Dependencies
+pip install -r requirements.txt
 ```
 
-### 2. Launching the Command Center
-Execute the main orchestrator:
+### 3. Database Genesis & The `talos_bin` Pattern
+Talos doesn't just migrate; it *seeds* complex execution graphs. We explicitly use the **`C:\talos_bin`** directory pattern for all build artifacts, staging areas, and shader caches.
+
+*   *See `initial_data.json` fixtures for the exact mapping of `talos_bin` paths to Hydra Executables.*
+
+```powershell
+# 1. Apply Schema
+python manage.py migrate
+
+# 2. Seed Hydra Protocols (Loads initial_data.json)
+python manage.py seed_talos
+```
+
+### 4. Create Poweruser (Fast Track)
+To quickly provision a superuser that matches the standard Talos environment variables (bypassing the interactive prompt):
+
+```powershell
+# Set Environment Variables for Auto-Creation
+$env:DJANGO_SUPERUSER_USERNAME="admin"
+$env:DJANGO_SUPERUSER_EMAIL="admin@talos.dev"
+$env:DJANGO_SUPERUSER_PASSWORD="admin"
+
+# Execute Creation
+python manage.py createsuperuser --noinput
+```
+
+### 5. Launch Mission Control
+Execute the primary startup script to spin up the **Daphne ASGI Server** and **Celery Worker**:
+
 ```powershell
 .\talos.bat
 ```
-This launches the **Daphne server**, starts the **Celery worker**, and opens the dashboard in your default browser.
 
-### 3. Deploying Agents
-Run the agent on any remote machine in the build fleet:
-```powershell
-python talos_agent/bin/agent_service.py
-```
+> **Pro Tip:** The dashboard will launch at `http://127.0.0.1:8000`. Use your Poweruser credentials to access the Admin panel if needed (`/admin`), though the main dashboard is open for monitoring.
 
-----
+---
+
+## 🖥️ The Dashboard: Visceral Control
+
+The Talos Dashboard is designed to be **visually stunning** and **highly responsive**. It is not just a list of tables; it is a living view of your fleet.
+
+*   **Real-Time Telemetry:** The interface uses HTMX to poll for state changes without full page reloads, ensuring a "glitch-free" experience.
+*   **Mission Control:** Initiate **Hydra Protocols** (Build, Cook, Deploy) directly from the command center.
+*   **Log Streaming:** Watch logs flow in real-time with our "Matrix-style" dark mode viewer, complete with auto-scroll and ANSI color parsing.
+
+---
+
 ## 🛠 Operation Guide
 
-1.  **Sonar Scan:** Click **Scan Network** in the top right to discover and probe new agents.
 2.  **Hydra Protocols:** Select a mission (e.g., **🚀 Fast Validate**) on the dashboard to begin.
 3.  **Monitoring:** Watch the live mission progress in the embedded dashboard monitor. Click any protocol row to expand real-time log streams.
 4.  **Audit History:** Scroll down to **Recent Missions** to review logs and result codes from past build sequences.
@@ -93,14 +141,15 @@ python talos_agent/bin/agent_service.py
 
 ## 🖋 Coding Standards: The Talos Way
 
-* **Google Style:** We strictly adhere to the [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html).
-* **No Placeholders:** If it's in the code, it's functional.
-* **Single-Line Tags:** Django template tags are kept elegant and single-line to prevent rendering artifacts.
-* **Async First:** No blocking `time.sleep` calls in the UI thread—everything flows through Celery.
-* **Test Driven:** If you change logic and no test fails, you have violated the mission.
-* **UI and Unit Tests:** Everything must be tested, including the UI. No implementations without matching tests.
+*   **Google Style:** We strictly adhere to the [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html).
+*   **No Placeholders:** If it's in the code, it's functional.
+*   **Single-Line Tags:** Django template tags are kept elegant and single-line to prevent rendering artifacts.
+*   **Async First:** No blocking `time.sleep` calls in the UI thread—everything flows through Celery.
+*   **Test Driven:** If you change logic and no test fails, you have violated the mission.
+*   **UI and Unit Tests:** Everything must be tested, including the UI. No implementations without matching tests.
 
 **NOTE:** The token `&&` is not a valid statement separator in this version. One command per line here.
 
 ---
+
 *Built for the future of game development by the Talos Engineering Team.*
