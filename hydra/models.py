@@ -357,7 +357,7 @@ class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     def finished_heads(self):
         return self.heads.filter(
             status__in=HydraHeadStatus.IS_TERMINAL_STATUS_LIST
-        )
+        ).exclude(spell_id=HydraSpell.BEGIN_PLAY)
 
     @property
     def live_head_spawns(self):
