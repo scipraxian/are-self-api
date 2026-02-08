@@ -170,3 +170,29 @@ body {
 .xterm-viewport {
     background-color: #0d1117 !important;
 }
+
+/* Search Bar */
+.term-search-bar {
+    display: none;
+    background: #161b22;
+    padding: 5px;
+    border-bottom: 1px solid #30363d;
+    align-items: center;
+    gap: 5px;
+}
+
+.term-search-input {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    color: #c9d1d9;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    flex-grow: 1;
+    font-family: inherit;
+}
+
+.term-search-input:focus {
+    outline: none;
+    border-color: #58a6ff;
+}

@@ -26,7 +26,17 @@ function initTerminal(containerId, title, url, active = true) {
                 <button class="icon-btn" onclick="downloadLog('${id}', '${title}')" title="Download">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 </button>
+                <button class="icon-btn" onclick="toggleSearch('${id}')" title="Search">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
             </div>
+        </div>
+        <div class="term-search-bar" id="search-bar-${id}" style="display: none;">
+            <input type="text" id="search-input-${id}" class="term-search-input" placeholder="Find..." 
+                   onkeyup="if(event.key === 'Enter') { if(event.shiftKey){ findPrevious('${id}') } else { findNext('${id}') } }">
+            <button class="icon-btn" onclick="findPrevious('${id}')" title="Previous Match" style="padding: 2px 6px;">↑</button>
+            <button class="icon-btn" onclick="findNext('${id}')" title="Next Match" style="padding: 2px 6px;">↓</button>
+            <button class="icon-btn" onclick="closeSearch('${id}')" title="Close" style="padding: 2px 6px;">✕</button>
         </div>
         <div class="term-body" id="term-mount-${id}"></div>
     `;
@@ -62,16 +72,20 @@ function initTerminal(containerId, title, url, active = true) {
         disableStdin: true,
         convertEol: true,
         scrollback: 1000000,
-        allowTransparency: true
+        allowTransparency: true,
+        allowProposedApi: true
     });
 
     const fitAddon = new FitAddon.FitAddon();
+    const searchAddon = new SearchAddon.SearchAddon();
     term.loadAddon(fitAddon);
+    term.loadAddon(searchAddon);
 
     term.open(document.getElementById(`term-mount-${id}`));
     fitAddon.fit();
 
     wrapper.termInstance = term;
+    wrapper.searchAddon = searchAddon;
     wrapper.fullContent = "";
 
     window.addEventListener('resize', () => fitAddon.fit());
@@ -105,7 +119,7 @@ function downloadLog(id, title) {
         return;
     }
 
-    const blob = new Blob([wrapper.fullContent], {type: "text/plain"});
+    const blob = new Blob([wrapper.fullContent], { type: "text/plain" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -175,4 +189,60 @@ async function fetchAndWrite(term, url, id, wrapper) {
     } catch (err) {
         term.write(`\n\x1b[31m[CONNECTION ERROR] ${err.message}\x1b[0m`);
     }
+}
+
+// --- SEARCH FUNCTIONS ---
+
+function toggleSearch(id) {
+    const bar = document.getElementById(`search-bar-${id}`);
+    const input = document.getElementById(`search-input-${id}`);
+    if (bar.style.display === 'none') {
+        bar.style.display = 'flex';
+        input.focus();
+    } else {
+        bar.style.display = 'none';
+        const wrapper = document.getElementById(`wrapper-${id}`);
+        if (wrapper && wrapper.searchAddon && wrapper.searchAddon.clearDecorations) wrapper.searchAddon.clearDecorations();
+    }
+}
+
+function closeSearch(id) {
+    const bar = document.getElementById(`search-bar-${id}`);
+    bar.style.display = 'none';
+    const wrapper = document.getElementById(`wrapper-${id}`);
+    if (wrapper && wrapper.searchAddon && wrapper.searchAddon.clearDecorations) wrapper.searchAddon.clearDecorations();
+}
+
+function findNext(id) {
+    const wrapper = document.getElementById(`wrapper-${id}`);
+    const input = document.getElementById(`search-input-${id}`);
+    if (!wrapper || !wrapper.searchAddon || !input.value) return;
+
+    wrapper.searchAddon.findNext(input.value, {
+        decorations: {
+            matchBackground: '#3fb950',
+            matchBorder: '#ffffff',
+            matchOverviewRuler: '#3fb950',
+            activeMatchBackground: '#ff7b72',
+            activeMatchBorder: '#ffffff',
+            activeMatchOverviewRuler: '#ff7b72'
+        }
+    });
+}
+
+function findPrevious(id) {
+    const wrapper = document.getElementById(`wrapper-${id}`);
+    const input = document.getElementById(`search-input-${id}`);
+    if (!wrapper || !wrapper.searchAddon || !input.value) return;
+
+    wrapper.searchAddon.findPrevious(input.value, {
+        decorations: {
+            matchBackground: '#3fb950',
+            matchBorder: '#ffffff',
+            matchOverviewRuler: '#3fb950',
+            activeMatchBackground: '#ff7b72',
+            activeMatchBorder: '#ffffff',
+            activeMatchOverviewRuler: '#ff7b72'
+        }
+    });
 }
