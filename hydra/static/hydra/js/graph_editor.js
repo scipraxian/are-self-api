@@ -564,7 +564,6 @@ class GraphEditor {
             e.stopPropagation();
             if (this.mode === 'monitor') {
                 if (node.child_spawn_id) {
-                    // DRILL DOWN to Child Graph
                     window.location.href = `/hydra/monitor/${node.child_spawn_id}/?full=True`;
                 } else if (node.head_id) {
                     window.open(`/hydra/head/${node.head_id}/`, '_self');
@@ -574,8 +573,8 @@ class GraphEditor {
             } else {
                 if (node.invoked_spellbook_id) {
                     window.open(`/hydra/graph/editor/${node.invoked_spellbook_id}/`, '_self');
-                } else if (node.spell_id) {
-                    window.open(`/admin/hydra/hydraspell/${node.spell_id}/change/`);
+                } else {
+                    window.open(`/admin/hydra/hydraspellbooknode/${node.id}/change/`);
                 }
             }
         });

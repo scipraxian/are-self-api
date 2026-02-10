@@ -135,6 +135,28 @@ class HydraHeadAdmin(admin.ModelAdmin):
             return f'Error: {str(e)}'
 
 
+@admin.register(HydraSpellbookNode)
+class HydraSpellbookNodeAdmin(admin.ModelAdmin):
+    """
+    Instance-level configuration for Spells on a Graph.
+    """
+
+    list_display = ('id', 'spellbook', 'spell', 'distribution_mode', 'is_root')
+    list_filter = ('spellbook', 'spell', 'distribution_mode')
+    raw_id_fields = ('spellbook', 'spell', 'invoked_spellbook')
+
+    fieldsets = (
+        ('Graph Placement', {'fields': ('spellbook', 'ui_json', 'is_root')}),
+        (
+            'Execution Logic',
+            {
+                'fields': ('spell', 'invoked_spellbook', 'distribution_mode'),
+                'description': "If Distribution Mode is empty, Talos will use the Spell's default strategy.",
+            },
+        ),
+    )
+
+
 admin.site.register(HydraHeadStatus)
 admin.site.register(HydraSpawnStatus)
 admin.site.register(HydraSpawn)

@@ -315,7 +315,10 @@ class Hydra:
             walker.process_node(seed_head)
             return
 
-        mode = node.spell.distribution_mode_id
+        if node.distribution_mode:
+            mode = node.distribution_mode_id
+        else:
+            mode = node.spell.distribution_mode_id
 
         if mode == HydraDistributionModeID.ALL_ONLINE_AGENTS:
             self._dispatch_fleet_wave(seed_head)

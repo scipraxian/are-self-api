@@ -101,7 +101,6 @@ class DeletePayload:
 
 @method_decorator(csrf_exempt, name='dispatch')
 class HydraGraphAPI(View):
-
     def get(self, request: HttpRequest, book_id: str, action: str = None):
         spellbook = get_object_or_404(HydraSpellbook, id=book_id)
         if action == ACTION_STATUS:
@@ -170,11 +169,8 @@ def get_graph_layout(spellbook: HydraSpellbook) -> JsonResponse:
 
         is_delegated = bool(n.invoked_spellbook_id)
 
-        # [FIX] Visual Logic
-        # 1. Title: Use Spellbook Name if delegated
         title = n.invoked_spellbook.name if is_delegated else n.spell.name
 
-        # 2. Root Status: Delegated nodes are never roots, even if they use the placeholder ID
         is_root = (n.spell_id == HydraSpell.BEGIN_PLAY) and not is_delegated
 
         node_data = {
@@ -184,6 +180,7 @@ def get_graph_layout(spellbook: HydraSpellbook) -> JsonResponse:
             KEY_Y: ui.get(KEY_Y, 0),
             'spell_id': n.spell_id,
             KEY_IS_ROOT: is_root,
+            'has_override': n.distribution_mode is not None,
         }
 
         if is_delegated:
@@ -201,12 +198,14 @@ def get_graph_layout(spellbook: HydraSpellbook) -> JsonResponse:
 
     wires_data = []
     for w in spellbook.wires.all():
-        wires_data.append({
-            'from_node_id': w.source_id,
-            'to_node_id': w.target_id,
-            # Frontend expects 'status_id' key with 'success'/'fail' strings
-            'status_id': type_to_string.get(w.type_id, TYPE_FLOW_STR),
-        })
+        wires_data.append(
+            {
+                'from_node_id': w.source_id,
+                'to_node_id': w.target_id,
+                # Frontend expects 'status_id' key with 'success'/'fail' strings
+                'status_id': type_to_string.get(w.type_id, TYPE_FLOW_STR),
+            }
+        )
 
     return JsonResponse({KEY_NODES: nodes_data, KEY_CONNECTIONS: wires_data})
 
@@ -256,9 +255,9 @@ def handle_move_node(book: HydraSpellbook, data: dict) -> JsonResponse:
 def handle_disconnect(book: HydraSpellbook, data: dict) -> JsonResponse:
     source_id = data.get('source_node_id')
     target_id = data.get('target_node_id')
-    HydraSpellbookConnectionWire.objects.filter(spellbook=book,
-                                                source_id=source_id,
-                                                target_id=target_id).delete()
+    HydraSpellbookConnectionWire.objects.filter(
+        spellbook=book, source_id=source_id, target_id=target_id
+    ).delete()
     return JsonResponse({KEY_STATUS: STATUS_DISCONNECTED})
 
 
@@ -279,10 +278,7 @@ def handle_delete_node(book: HydraSpellbook, data: dict) -> JsonResponse:
     is_delegated = bool(node.invoked_spellbook_id)
     if not is_delegated and node.spell_id == HydraSpell.BEGIN_PLAY:
         return JsonResponse(
-            {
-                KEY_STATUS: STATUS_ERROR,
-                MESSAGE: 'Cannot delete BeginPlay'
-            },
+            {KEY_STATUS: STATUS_ERROR, MESSAGE: 'Cannot delete BeginPlay'},
             status=400,
         )
     node.delete()
@@ -304,7 +300,8 @@ def handle_add_node(spellbook: HydraSpellbook, payload: dict) -> JsonResponse:
 
         # Try to find a spell that looks like a runner
         dummy_spell = HydraSpell.objects.filter(
-            name__icontains='Sub-Graph').first()
+            name__icontains='Sub-Graph'
+        ).first()
         if not dummy_spell:
             dummy_spell = HydraSpell.objects.first()  # Emergency fallback
 
@@ -314,7 +311,8 @@ def handle_add_node(spellbook: HydraSpellbook, payload: dict) -> JsonResponse:
         if int(spell_id) == HydraSpell.BEGIN_PLAY:
             if spellbook.nodes.filter(is_root=True).exists():
                 return JsonResponse(
-                    {'error': 'Begin Play node already exists.'}, status=400)
+                    {'error': 'Begin Play node already exists.'}, status=400
+                )
             is_root = True
 
     ui_data = {'x': payload.get('x', 0), 'y': payload.get('y', 0)}
@@ -332,7 +330,8 @@ def handle_add_node(spellbook: HydraSpellbook, payload: dict) -> JsonResponse:
 def get_library(spellbook: HydraSpellbook) -> JsonResponse:
     # 1. Standard Spells
     spells = list(
-        HydraSpell.objects.values('id', 'name', 'distribution_mode__name'))
+        HydraSpell.objects.values('id', 'name', 'distribution_mode__name')
+    )
     # Tag them as 'Spells'
     for s in spells:
         s['category'] = 'Spells'
@@ -351,8 +350,9 @@ def get_library(spellbook: HydraSpellbook) -> JsonResponse:
     return JsonResponse({KEY_LIBRARY: spells + list(books)})
 
 
-def get_execution_status(spellbook: HydraSpellbook,
-                         spawn_id: uuid.UUID = None) -> JsonResponse:
+def get_execution_status(
+    spellbook: HydraSpellbook, spawn_id: uuid.UUID = None
+) -> JsonResponse:
     """Returns the current state of the graph and the overall spawn status."""
     if not spawn_id:
         return JsonResponse({KEY_STATUS: STATUS_READY})
@@ -376,43 +376,38 @@ def get_execution_status(spellbook: HydraSpellbook,
 
         # [FIX]: Return the real status name (e.g., "Success", "Failed")
         # instead of the hardcoded "running" string.
-        return JsonResponse({
-            KEY_STATUS: spawn.status.name,
-            'nodes': node_status_map
-        })
+        return JsonResponse(
+            {KEY_STATUS: spawn.status.name, 'nodes': node_status_map}
+        )
     except HydraSpawn.DoesNotExist:
-        return JsonResponse({
-            KEY_STATUS: STATUS_ERROR,
-            MESSAGE: 'Spawn not found'
-        })
+        return JsonResponse(
+            {KEY_STATUS: STATUS_ERROR, MESSAGE: 'Spawn not found'}
+        )
     except Exception as e:
         logger.exception('Status Check Failed')
         return JsonResponse({KEY_STATUS: STATUS_ERROR, MESSAGE: str(e)})
 
 
 class HydraGraphLaunchAPI(View):
-
     def post(self, request, book_id):
         try:
             controller = Hydra(spellbook_id=book_id)
             controller.start()
-            return JsonResponse({
-                ACTION_STATUS: STATUS_STARTED,
-                SPAWN_ID: str(controller.spawn.id),
-            })
+            return JsonResponse(
+                {
+                    ACTION_STATUS: STATUS_STARTED,
+                    SPAWN_ID: str(controller.spawn.id),
+                }
+            )
         except Exception as e:
             logger.exception('[HYDRA] Graph Launch Failed')
             return JsonResponse(
-                {
-                    ACTION_STATUS: STATUS_ERROR,
-                    MESSAGE: str(e)
-                },
+                {ACTION_STATUS: STATUS_ERROR, MESSAGE: str(e)},
                 status=ERROR_STATUS_CODE,
             )
 
 
 class HydraGraphSpawnStatusAPI(View):
-
     def get(self, request, spawn_id):
         spawn = get_object_or_404(HydraSpawn, id=spawn_id)
 
@@ -421,7 +416,8 @@ class HydraGraphSpawnStatusAPI(View):
 
         # Special Case: Begin Play Node (always green once spawn exists)
         begin_play_node = spawn.spellbook.nodes.filter(
-            spell_id=HydraSpell.BEGIN_PLAY).first()
+            spell_id=HydraSpell.BEGIN_PLAY
+        ).first()
         if begin_play_node:
             node_status_map[str(begin_play_node.id)] = {
                 'status_id': HydraStatusID.SUCCESS,
@@ -435,8 +431,10 @@ class HydraGraphSpawnStatusAPI(View):
                     'head_id': str(head.id),
                 }
 
-        return JsonResponse({
-            'status_label': spawn.status.name,
-            'is_active': spawn.is_active,
-            'nodes': node_status_map,
-        })
+        return JsonResponse(
+            {
+                'status_label': spawn.status.name,
+                'is_active': spawn.is_active,
+                'nodes': node_status_map,
+            }
+        )
