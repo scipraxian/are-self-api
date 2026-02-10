@@ -233,6 +233,10 @@ class HydraSpellbookNode(models.Model):
         ),
     )
 
+    distribution_mode = models.ForeignKey(
+        HydraDistributionMode, on_delete=models.SET_NULL, null=True
+    )
+
     def __str__(self):
         return f'Node {self.id}: {self.spell.name}'
 
