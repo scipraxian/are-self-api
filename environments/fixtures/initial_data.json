@@ -976,6 +976,16 @@
     }
   },
   {
+    "model": "environments.talosexecutableargument",
+    "pk": 37,
+    "fields": {
+      "created": "2026-02-11T16:30:44.368Z",
+      "modified": "2026-02-11T16:30:44.368Z",
+      "name": "Spell Test Argument",
+      "argument": "This should be project_name {{project_name}}"
+    }
+  },
+  {
     "model": "environments.talosexecutable",
     "pk": 1,
     "fields": {
@@ -1385,12 +1395,26 @@
     "fields": {
       "created": "2026-02-11T15:33:50.687Z",
       "description": "Default UE Environment for Talos",
-      "modified": "2026-02-11T16:23:21.436Z",
+      "modified": "2026-02-11T22:32:04.484Z",
       "name": "Default Environment",
       "type": 1,
       "status": 1,
       "available": true,
       "selected": true
+    }
+  },
+  {
+    "model": "environments.projectenvironment",
+    "pk": "4d82fab0-c62d-4204-a316-476476c10a55",
+    "fields": {
+      "created": "2026-02-11T20:15:38.794Z",
+      "description": null,
+      "modified": "2026-02-11T22:32:03.132Z",
+      "name": "Game Two",
+      "type": 1,
+      "status": 1,
+      "available": true,
+      "selected": false
     }
   },
   {
