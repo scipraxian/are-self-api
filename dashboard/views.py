@@ -2,6 +2,7 @@ import logging
 import os
 
 from celery.result import AsyncResult
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
@@ -96,10 +97,22 @@ class DashboardHomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        all_books = HydraSpellbook.objects.prefetch_related('tags').order_by(
-            'name'
-        )
+        envs = list(ProjectEnvironment.objects.all().order_by('name'))
+        active_env = next((e for e in envs if e.selected), None)
+        context['environments'] = envs
+        context['active_environment'] = active_env
+        if active_env:
+            all_books = (
+                HydraSpellbook.objects.filter(
+                    Q(environment=active_env) | Q(environment__isnull=True)
+                )
+                .prefetch_related('tags')
+                .order_by('name')
+            )
+        else:
+            all_books = HydraSpellbook.objects.prefetch_related(
+                'tags'
+            ).order_by('name')
 
         favorites = []
         tagged_groups = {}
@@ -127,20 +140,14 @@ class DashboardHomeView(TemplateView):
         context['tagged_groups'] = sorted_groups
         context['uncategorized'] = uncategorized
 
+        # 4. Fetch Active Missions (Roots)
         root_spawns = (
-            HydraSpawn.objects.filter(parent_head__isnull=True)
-            .select_related('status', 'spellbook')
+            HydraSpawn.objects.filter(
+                parent_head__isnull=True, environment__selected=True
+            )
+            .select_related('status', 'spellbook', 'environment')
             .prefetch_related('heads', 'heads__status', 'heads__spell')
             .order_by('-created')[:20]
-        )
-
-        context['environments'] = ProjectEnvironment.objects.all().order_by(
-            'name'
-        )
-        envs = list(ProjectEnvironment.objects.all().order_by('name'))
-        context['environments'] = envs
-        context['active_environment'] = next(
-            (e for e in envs if e.selected), None
         )
 
         lanes = []
