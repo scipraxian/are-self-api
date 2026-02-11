@@ -15,6 +15,7 @@ async def mock_event_stream(events):
 
 @pytest.mark.django_db
 class TestGenericSpellCaster:
+
     @pytest.fixture
     def mock_head(self):
         """Creates a mock HydraHead with necessary attributes."""
@@ -33,20 +34,29 @@ class TestGenericSpellCaster:
         # Mock the manager get() to return this head
         with patch('hydra.models.HydraHead.objects.get', return_value=head):
             with patch(
-                'hydra.models.HydraHead.objects.select_related',
-                return_value=MagicMock(get=lambda id: head),
+                    'hydra.models.HydraHead.objects.select_related',
+                    return_value=MagicMock(get=lambda id: head),
             ):
+                # Setup default get_full_command return
+                head.spell.get_full_command.return_value = [
+                    'TestExe.exe',
+                    '-arg1',
+                    '-arg2',
+                ]
                 yield head
 
     @pytest.fixture
-    def mock_switches(self):
+    def mock_env_utils(self):
         with patch(
-            'hydra.spells.spell_casters.generic_spell_caster.spell_switches_and_arguments'
-        ) as mock:
-            mock.return_value = ['-arg1', '-arg2']
-            yield mock
+                'hydra.spells.spell_casters.generic_spell_caster.get_active_environment'
+        ) as mock_env, patch(
+                'hydra.spells.spell_casters.generic_spell_caster.resolve_environment_context'
+        ) as mock_ctx:
+            mock_env.return_value = None
+            mock_ctx.return_value = {}
+            yield mock_env, mock_ctx
 
-    def test_init_starts_execution(self, mock_head, mock_switches):
+    def test_init_starts_execution(self, mock_head, mock_env_utils):
         """Test that execute() kicks off the process."""
         caster = GenericSpellCaster(mock_head.id)
 
@@ -56,9 +66,8 @@ class TestGenericSpellCaster:
             TalosEvent(type=TalosAgentConstants.T_EXIT, code=0),
         ]
 
-        with patch(
-            'talos_agent.talos_agent.TalosAgent.execute_local'
-        ) as mock_exec:
+        with patch('talos_agent.talos_agent.TalosAgent.execute_local'
+                  ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
             caster.execute()
@@ -69,7 +78,7 @@ class TestGenericSpellCaster:
             assert kwargs['command'] == ['TestExe.exe', '-arg1', '-arg2']
             assert kwargs['log_path'] == 'test.log'
 
-    def test_async_pipeline_success(self, mock_head, mock_switches):
+    def test_async_pipeline_success(self, mock_head, mock_env_utils):
         """Test a successful run updates status to SUCCESS."""
         caster = GenericSpellCaster(mock_head.id)
 
@@ -79,15 +88,14 @@ class TestGenericSpellCaster:
                 text='Working...',
                 source='stdout',
             ),
-            TalosEvent(
-                type=TalosAgentConstants.T_LOG, text='File log', source='file'
-            ),
+            TalosEvent(type=TalosAgentConstants.T_LOG,
+                       text='File log',
+                       source='file'),
             TalosEvent(type=TalosAgentConstants.T_EXIT, code=0),
         ]
 
-        with patch(
-            'talos_agent.talos_agent.TalosAgent.execute_local'
-        ) as mock_exec:
+        with patch('talos_agent.talos_agent.TalosAgent.execute_local'
+                  ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
             caster.execute()
@@ -95,7 +103,7 @@ class TestGenericSpellCaster:
             # Check status update
             assert mock_head.status_id == HydraHeadStatus.SUCCESS
 
-    def test_async_pipeline_failure(self, mock_head, mock_switches):
+    def test_async_pipeline_failure(self, mock_head, mock_env_utils):
         """Test a non-zero exit code updates status to FAILED."""
         caster = GenericSpellCaster(mock_head.id)
 
@@ -104,16 +112,15 @@ class TestGenericSpellCaster:
             TalosEvent(type=TalosAgentConstants.T_EXIT, code=1),
         ]
 
-        with patch(
-            'talos_agent.talos_agent.TalosAgent.execute_local'
-        ) as mock_exec:
+        with patch('talos_agent.talos_agent.TalosAgent.execute_local'
+                  ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
             caster.execute()
 
             assert mock_head.status_id == HydraHeadStatus.FAILED
 
-    def test_remote_execution_routing(self, mock_head, mock_switches):
+    def test_remote_execution_routing(self, mock_head, mock_env_utils):
         """Test that if target is present, we call execute_remote instead."""
         # Setup Remote Target
         mock_head.target = MagicMock()
@@ -123,9 +130,8 @@ class TestGenericSpellCaster:
 
         events = [TalosEvent(type=TalosAgentConstants.T_EXIT, code=0)]
 
-        with patch(
-            'talos_agent.talos_agent.TalosAgent.execute_remote'
-        ) as mock_remote:
+        with patch('talos_agent.talos_agent.TalosAgent.execute_remote'
+                  ) as mock_remote:
             mock_remote.return_value = mock_event_stream(events)
 
             caster.execute()
@@ -134,30 +140,29 @@ class TestGenericSpellCaster:
             # Verify we passed the hostname
             assert mock_remote.call_args[1]['target_hostname'] == '192.168.1.50'
 
-    def test_command_quoting_logic(self, mock_head):
+    def test_command_quoting_logic(self, mock_head, mock_env_utils):
         """Test arguments are passed correctly (Agent handles quoting now, but list integrity matters)."""
         mock_head.spell.talos_executable.executable = 'RunUAT.bat'
+        mock_head.spell.get_full_command.return_value = [
+            'RunUAT.bat',
+            '-project="C:\\My Files\\Proj.uproject"',
+        ]
 
-        with patch(
-            'hydra.spells.spell_casters.generic_spell_caster.spell_switches_and_arguments'
-        ) as mock_sw:
-            mock_sw.return_value = ['-project="C:\\My Files\\Proj.uproject"']
+        caster = GenericSpellCaster(mock_head.id)
 
-            caster = GenericSpellCaster(mock_head.id)
+        events = [TalosEvent(type=TalosAgentConstants.T_EXIT, code=0)]
 
-            events = [TalosEvent(type=TalosAgentConstants.T_EXIT, code=0)]
+        with patch('talos_agent.talos_agent.TalosAgent.execute_local'
+                  ) as mock_exec:
+            mock_exec.return_value = mock_event_stream(events)
 
-            with patch(
-                'talos_agent.talos_agent.TalosAgent.execute_local'
-            ) as mock_exec:
-                mock_exec.return_value = mock_event_stream(events)
+            caster.execute()
 
-                caster.execute()
+            # Check the list passed to the agent
+            expected_cmd = [
+                'RunUAT.bat',
+                '-project="C:\\My Files\\Proj.uproject"',
+            ]
 
-                # Check the list passed to the agent
-                expected_cmd = [
-                    'RunUAT.bat',
-                    '-project="C:\\My Files\\Proj.uproject"',
-                ]
-                mock_exec.assert_called_once()
-                assert mock_exec.call_args[1]['command'] == expected_cmd
+            mock_exec.assert_called_once()
+            assert mock_exec.call_args[1]['command'] == expected_cmd

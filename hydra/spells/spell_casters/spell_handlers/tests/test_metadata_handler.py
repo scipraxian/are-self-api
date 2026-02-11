@@ -54,12 +54,12 @@ class VersionMetadataHandlerTest(TestCase):
             status_id=HydraHeadStatus.RUNNING,
         )
 
-    @patch(f'{MODULE_PATH}.spell_switches_and_arguments')
+    @patch('hydra.models.HydraSpell.get_full_command')
     @patch(f'{MODULE_PATH}.log_system')  # Mute DB logging for speed
-    def test_creates_new_file_if_missing(self, mock_log, mock_resolve):
+    def test_creates_new_file_if_missing(self, mock_log, mock_command):
         """Verify it creates a fresh JSON file if one doesn't exist."""
         target_path = 'C:/Fake/Content/AppVersion.json'
-        mock_resolve.return_value = target_path
+        mock_command.return_value = ['exe', target_path]
 
         # Mock OS operations
         with (
@@ -97,13 +97,13 @@ class VersionMetadataHandlerTest(TestCase):
             self.assertEqual(written_data['Build']['Builder'], 'TestBuilder')
             self.assertEqual(written_data['Game']['Name'], 'HSH: Vacancy')
 
-    @patch(f'{MODULE_PATH}.spell_switches_and_arguments')
+    @patch('hydra.models.HydraSpell.get_full_command')
     @patch(f'{MODULE_PATH}.log_system')
     def test_updates_existing_file_preserving_data(self, mock_log,
-                                                   mock_resolve):
+                                                   mock_command):
         """Verify it updates 'Build' block but keeps existing 'Game' config."""
         target_path = 'C:/Fake/AppVersion.json'
-        mock_resolve.return_value = [target_path]
+        mock_command.return_value = ['exe', target_path]
 
         existing_content = json.dumps({
             'Game': {
@@ -139,12 +139,12 @@ class VersionMetadataHandlerTest(TestCase):
             self.assertIn('Build', data, 'Should inject Build block')
             self.assertIn('OldBuild', data, 'Should preserve unrelated keys')
 
-    @patch(f'{MODULE_PATH}.spell_switches_and_arguments')
+    @patch('hydra.models.HydraSpell.get_full_command')
     @patch(f'{MODULE_PATH}.log_system')
-    def test_recovers_from_corrupt_json(self, mock_log, mock_resolve):
+    def test_recovers_from_corrupt_json(self, mock_log, mock_command):
         """Verify it handles broken JSON by re-initializing the file."""
         target_path = 'C:/Fake/Corrupt.json'
-        mock_resolve.return_value = [target_path]
+        mock_command.return_value = ['exe', target_path]
 
         with (
                 patch('os.path.exists', return_value=True),
@@ -166,12 +166,12 @@ class VersionMetadataHandlerTest(TestCase):
             data = json.loads(written_content)
             self.assertEqual(data['Game']['Name'], 'HSH: Vacancy')
 
-    @patch(f'{MODULE_PATH}.spell_switches_and_arguments')
+    @patch('hydra.models.HydraSpell.get_full_command')
     @patch(f'{MODULE_PATH}.log_system')
-    def test_handles_directory_creation_failure(self, mock_log, mock_resolve):
+    def test_handles_directory_creation_failure(self, mock_log, mock_command):
         """Verify it returns specific error code if directory creation fails."""
         target_path = 'Z:/Protected/AppVersion.json'
-        mock_resolve.return_value = target_path
+        mock_command.return_value = ['exe', target_path]
 
         # FIX: Raise OSError instead of PermissionError to hit the generic catch block
         # which returns HANDLER_WRITE_ERROR_CODE and logs "Could not create directory"
@@ -184,12 +184,12 @@ class VersionMetadataHandlerTest(TestCase):
             self.assertEqual(code, HANDLER_WRITE_ERROR_CODE)
             self.assertIn('Could not create directory', log)
 
-    @patch(f'{MODULE_PATH}.spell_switches_and_arguments')
+    @patch('hydra.models.HydraSpell.get_full_command')
     @patch(f'{MODULE_PATH}.log_system')
-    def test_handles_file_write_failure(self, mock_log, mock_resolve):
+    def test_handles_file_write_failure(self, mock_log, mock_command):
         """Verify it returns internal error code if file write fails."""
         target_path = 'C:/Locked/AppVersion.json'
-        mock_resolve.return_value = target_path
+        mock_command.return_value = ['exe', target_path]
 
         # FIX: Set exists=False. This skips the 'read' block (which catches OSError)
         # and forces execution into the 'write' block, where the side_effect triggers.

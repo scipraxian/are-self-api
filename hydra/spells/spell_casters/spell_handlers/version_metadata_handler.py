@@ -17,13 +17,13 @@ from hydra.spells.spell_casters.spell_handlers.spell_handler_codes import (
     HANDLER_SUCCESS_CODE,
     HANDLER_WRITE_ERROR_CODE,
 )
-from hydra.spells.spell_casters.switches_and_arguments import (
-    spell_switches_and_arguments,
+from hydra.utils import (
+    get_active_environment,
+    log_system,
+    resolve_environment_context,
 )
-from hydra.utils import log_system
 
 logger = logging.getLogger(__name__)
-
 
 _DEFAULT_INDENT = 4
 _ENCODING = 'utf-8'
@@ -44,7 +44,13 @@ def update_version_metadata(head_id: UUID) -> Tuple[int, str]:
     head = HydraHead.objects.get(id=head_id)
     spell = head.spell
 
-    args_list = spell_switches_and_arguments(spell.id)
+    env = get_active_environment(head)
+    full_context = resolve_environment_context(head_id=head.id)
+
+    full_cmd = spell.get_full_command(environment=env,
+                                      extra_context=full_context)
+
+    args_list = full_cmd[1:]
     if not args_list:
         return (
             HANDLER_INTERNAL_ERROR_CODE,
@@ -63,8 +69,7 @@ def update_version_metadata(head_id: UUID) -> Tuple[int, str]:
             log.append(f'Created directory: {directory}')
         except PermissionError:
             log.append(
-                f'Error: No permission to create the directory {directory}'
-            )
+                f'Error: No permission to create the directory {directory}')
             return HANDLER_PERMISSIONS_ERROR_CODE, '\n'.join(log)
         except OSError as e:
             log.append(f'[ERROR] Could not create directory {directory}: {e}')
@@ -78,8 +83,7 @@ def update_version_metadata(head_id: UUID) -> Tuple[int, str]:
                     data = json.load(f)
                 except json.JSONDecodeError:
                     log.append(
-                        f'[WARNING] {target_path} is corrupt. Re-initializing.'
-                    )
+                        f'[WARNING] {target_path} is corrupt. Re-initializing.')
         except PermissionError:
             log.append(f'Error: No permission to read {target_path}')
             return HANDLER_PERMISSIONS_ERROR_CODE, '\n'.join(log)

@@ -14,8 +14,11 @@ from environments.models import (
     ProjectEnvironmentMixin,
     TalosExecutable,
     TalosExecutableArgument,
+    TalosExecutable,
+    TalosExecutableArgument,
     TalosExecutableSwitch,
 )
+from environments.variable_renderer import VariableRenderer
 
 from .constants import (
     ABORTED_LABEL,
@@ -152,15 +155,70 @@ class HydraSpell(DefaultFieldsMixin, TagsAndFavoriteMixin):
 
     BEGIN_PLAY = 1
 
-    talos_executable = models.ForeignKey(
-        TalosExecutable, on_delete=models.PROTECT, default=1
-    )
+    talos_executable = models.ForeignKey(TalosExecutable,
+                                         on_delete=models.PROTECT,
+                                         default=1)
     switches = models.ManyToManyField(TalosExecutableSwitch, blank=True)
     distribution_mode = models.ForeignKey(
         HydraDistributionMode,
         on_delete=models.PROTECT,
         default=HydraDistributionModeID.LOCAL_SERVER,
     )
+
+    def get_full_command(self,
+                         environment=None,
+                         extra_context=None) -> list[str]:
+        """
+        Constructs the full command line [executable, arg1, arg2...]
+        Resolves proper environment context and interpolates variables.
+        """
+        # 1. Resolve Global Context
+        # Start with base wrapper context (e.g. hostname)
+        context = VariableRenderer.extract_variables(None)
+
+        # Update with Environment specific variables
+        if environment:
+            env_vars = VariableRenderer.extract_variables(environment)
+            context.update(env_vars)
+
+        # Apply runtime overrides (e.g. spawn_id, head_id)
+        if extra_context:
+            context.update(extra_context)
+
+        # 2. Render Executable
+        executable_path = self.talos_executable.get_rendered_executable(
+            environment)
+        command_list = [executable_path]
+
+        # 3. Gather and Render Arguments & Switches
+        # We need to render them using the FULL context
+        executable_args = (
+            self.talos_executable.talosexecutableargumentassignment_set.all())
+        spell_args = self.hydraspellargumentassignment_set.all()
+
+        # Combine arguments, preserving order is tricky because they are separate querysets
+        # But typically executable args come first in logic, though the model has 'order'
+        # The legacy implementation merged them. Let's strictly follow the 'order' field if possible?
+        # Actually legacy implementation did: list(executable_args) + list(spell_args)
+        # We will stick to that behavior to be safe, but we should probably sort them by order if they share the same space?
+        # Replicating legacy behavior:
+        for assignment in list(executable_args) + list(spell_args):
+            raw_arg = assignment.argument.argument.strip()
+            resolved_arg = VariableRenderer.render_string(raw_arg, context)
+            command_list.append(resolved_arg)
+
+        # Switches
+        executable_switches = self.talos_executable.switches.all()
+        spell_switches = self.switches.all()
+
+        for switch in list(executable_switches) + list(spell_switches):
+            flag = switch.flag.strip()
+            value = switch.value.strip() if switch.value else ''
+            # Legacy logic concatenated flag + value
+            item = VariableRenderer.render_string(flag + value, context)
+            command_list.append(item)
+
+        return command_list
 
 
 class HydraSpellTarget(models.Model):
@@ -169,12 +227,11 @@ class HydraSpellTarget(models.Model):
     Links a Spell to specific 'Pinned' Agents.
     """
 
-    spell = models.ForeignKey(
-        HydraSpell, on_delete=models.CASCADE, related_name='specific_targets'
-    )
-    target = models.ForeignKey(
-        'talos_agent.TalosAgentRegistry', on_delete=models.CASCADE
-    )
+    spell = models.ForeignKey(HydraSpell,
+                              on_delete=models.CASCADE,
+                              related_name='specific_targets')
+    target = models.ForeignKey('talos_agent.TalosAgentRegistry',
+                               on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('spell', 'target')
@@ -187,9 +244,8 @@ class HydraSpellTarget(models.Model):
 class HydraSpellArgumentAssignment(models.Model):
     spell = models.ForeignKey(HydraSpell, on_delete=models.CASCADE)
     order = models.IntegerField(default=10)
-    argument = models.ForeignKey(
-        TalosExecutableArgument, on_delete=models.CASCADE
-    )
+    argument = models.ForeignKey(TalosExecutableArgument,
+                                 on_delete=models.CASCADE)
 
     class Meta(object):
         ordering = ['order']
@@ -199,11 +255,11 @@ class HydraSpellArgumentAssignment(models.Model):
 
 
 class HydraSpellbook(
-    UUIDIdMixin,
-    DefaultFieldsMixin,
-    DescriptionMixin,
-    TagsAndFavoriteMixin,
-    ProjectEnvironmentMixin,
+        UUIDIdMixin,
+        DefaultFieldsMixin,
+        DescriptionMixin,
+        TagsAndFavoriteMixin,
+        ProjectEnvironmentMixin,
 ):
     """
     The Container. Now supports a visual JSON layout, Tags, and Favorites.
@@ -223,9 +279,9 @@ class HydraSpellbookNode(ProjectEnvironmentMixin):
     """
 
     is_root = models.BooleanField(default=False, db_index=True)
-    spellbook = models.ForeignKey(
-        HydraSpellbook, on_delete=models.CASCADE, related_name='nodes'
-    )
+    spellbook = models.ForeignKey(HydraSpellbook,
+                                  on_delete=models.CASCADE,
+                                  related_name='nodes')
     spell = models.ForeignKey(HydraSpell, on_delete=models.CASCADE)
     ui_json = models.TextField(blank=True, default='{}')
 
@@ -235,15 +291,13 @@ class HydraSpellbookNode(ProjectEnvironmentMixin):
         null=True,
         blank=True,
         related_name='invoking_nodes',
-        help_text=(
-            'If set, this Node acts as a container '
-            'that executes this Spellbook.'
-        ),
+        help_text=('If set, this Node acts as a container '
+                   'that executes this Spellbook.'),
     )
 
-    distribution_mode = models.ForeignKey(
-        HydraDistributionMode, on_delete=models.SET_NULL, null=True
-    )
+    distribution_mode = models.ForeignKey(HydraDistributionMode,
+                                          on_delete=models.SET_NULL,
+                                          null=True)
 
     def __str__(self):
         return f'Node {self.id}: {self.spell.name}'
@@ -264,12 +318,12 @@ class HydraSpellbookConnectionWire(ModifiedMixin):
     Trigger Condition: Fires when 'source' finishes with 'status'.
     """
 
-    type = models.ForeignKey(
-        HydraWireType, on_delete=models.PROTECT, default=HydraWireType.TYPE_FLOW
-    )
-    spellbook = models.ForeignKey(
-        HydraSpellbook, on_delete=models.CASCADE, related_name='wires'
-    )
+    type = models.ForeignKey(HydraWireType,
+                             on_delete=models.PROTECT,
+                             default=HydraWireType.TYPE_FLOW)
+    spellbook = models.ForeignKey(HydraSpellbook,
+                                  on_delete=models.CASCADE,
+                                  related_name='wires')
     source = models.ForeignKey(
         HydraSpellbookNode,
         on_delete=models.CASCADE,
@@ -286,28 +340,25 @@ class HydraSpellbookConnectionWire(ModifiedMixin):
         verbose_name = 'Wire / Connection'
 
     def __str__(self):
-        return (
-            f'{self.source.spell.name} '
-            f'--[{self.type.name}]--> {self.target.spell.name}'
-        )
+        return (f'{self.source.spell.name} '
+                f'--[{self.type.name}]--> {self.target.spell.name}')
 
 
 # --- EXECUTION STATE (The Runtime) ---
 
 
-class HydraSpawn(
-    UUIDIdMixin, CreatedMixin, ModifiedMixin, ProjectEnvironmentMixin
-):
+class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin,
+                 ProjectEnvironmentMixin):
     """Spellbook Instance."""
 
-    spellbook = models.ForeignKey(
-        HydraSpellbook, on_delete=models.SET_NULL, null=True, blank=True
-    )
+    spellbook = models.ForeignKey(HydraSpellbook,
+                                  on_delete=models.SET_NULL,
+                                  null=True,
+                                  blank=True)
     status = models.ForeignKey(HydraSpawnStatus, on_delete=models.PROTECT)
 
     context_data = models.TextField(
-        blank=True, help_text='Serialized JSON context variables'
-    )
+        blank=True, help_text='Serialized JSON context variables')
 
     parent_head = models.ForeignKey(
         'HydraHead',
@@ -315,7 +366,8 @@ class HydraSpawn(
         null=True,
         blank=True,
         related_name='child_spawns',
-        help_text='The Head (Node execution) in the Parent Graph that spawned this Sub-Graph.',
+        help_text=
+        'The Head (Node execution) in the Parent Graph that spawned this Sub-Graph.',
     )
 
     @property
@@ -364,14 +416,14 @@ class HydraSpawn(
     @property
     def live_heads(self):
         return self.heads.filter(
-            status__in=HydraHeadStatus.IS_ALIVE_STATUS_LIST
-        ).exclude(spell_id=HydraSpell.BEGIN_PLAY)
+            status__in=HydraHeadStatus.IS_ALIVE_STATUS_LIST).exclude(
+                spell_id=HydraSpell.BEGIN_PLAY)
 
     @property
     def finished_heads(self):
         return self.heads.filter(
-            status__in=HydraHeadStatus.IS_TERMINAL_STATUS_LIST
-        ).exclude(spell_id=HydraSpell.BEGIN_PLAY)
+            status__in=HydraHeadStatus.IS_TERMINAL_STATUS_LIST).exclude(
+                spell_id=HydraSpell.BEGIN_PLAY)
 
     @property
     def live_head_spawns(self):
@@ -400,15 +452,17 @@ class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     """
 
     status = models.ForeignKey(HydraHeadStatus, on_delete=models.PROTECT)
-    spawn = models.ForeignKey(
-        HydraSpawn, related_name='heads', on_delete=models.CASCADE
-    )
-    node = models.ForeignKey(
-        HydraSpellbookNode, on_delete=models.SET_NULL, null=True, blank=True
-    )
-    spell = models.ForeignKey(
-        HydraSpell, on_delete=models.SET_NULL, null=True, blank=True
-    )
+    spawn = models.ForeignKey(HydraSpawn,
+                              related_name='heads',
+                              on_delete=models.CASCADE)
+    node = models.ForeignKey(HydraSpellbookNode,
+                             on_delete=models.SET_NULL,
+                             null=True,
+                             blank=True)
+    spell = models.ForeignKey(HydraSpell,
+                              on_delete=models.SET_NULL,
+                              null=True,
+                              blank=True)
     provenance = models.ForeignKey(
         'self',
         on_delete=models.CASCADE,

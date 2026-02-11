@@ -14,8 +14,9 @@ from hydra.spells.spell_casters.spell_handlers.version_metadata_handler import (
     update_version_metadata,
 )
 from hydra.spells.spell_casters.spellbook_logic_node import spellbook_logic_node
-from hydra.spells.spell_casters.switches_and_arguments import (
-    spell_switches_and_arguments,
+from hydra.utils import (
+    get_active_environment,
+    resolve_environment_context,
 )
 from talos_agent.talos_agent import (
     TalosAgent,
@@ -26,10 +27,11 @@ from talos_agent.talos_agent_finder import scan_and_register
 logger = logging.getLogger(__name__)
 
 # Native Python Handlers
+# TODO: these should only be internal nodes like begin_play,logic_node,sequence.
 NATIVE_HANDLERS = dict(
     begin_play=begin_play,
-    update_version_metadata=update_version_metadata,
-    scan_and_register=scan_and_register,
+    update_version_metadata=update_version_metadata,  # TODO: move to management
+    scan_and_register=scan_and_register,  # TODO: move to management
     spellbook_logic_node=spellbook_logic_node,
 )
 
@@ -268,11 +270,18 @@ class GenericSpellCaster:
         Replaces the old _execute_local_popen.
         """
         # 1. Prepare Arguments
-        cmd_list = await sync_to_async(spell_switches_and_arguments)(
-            self.spell.id
+        env = await sync_to_async(get_active_environment)(self.head)
+        full_context = await sync_to_async(resolve_environment_context)(
+            head_id=self.head_id
         )
-        executable = self.spell.talos_executable.executable
-        full_cmd = [executable] + cmd_list
+
+        full_cmd = await sync_to_async(self.spell.get_full_command)(
+            environment=env, extra_context=full_context
+        )
+
+        executable = full_cmd[0]
+        params = full_cmd[1:]
+
         log_path = self.spell.talos_executable.log
 
         is_remote = self.head.target is not None
@@ -287,7 +296,7 @@ class GenericSpellCaster:
             event_stream = TalosAgent.execute_remote(
                 target_hostname=self.head.target.hostname,
                 executable=executable,
-                params=cmd_list,
+                params=params,
                 log_path=log_path,
                 stop_event=self.stop_event,
             )

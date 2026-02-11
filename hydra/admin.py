@@ -1,7 +1,8 @@
 from django.contrib import admin
 
-from hydra.spells.spell_casters.switches_and_arguments import (
-    spell_switches_and_arguments,
+from hydra.utils import (
+    get_active_environment,
+    resolve_environment_context,
 )
 
 from .models import (
@@ -88,15 +89,20 @@ class HydraSpellAdmin(admin.ModelAdmin):
     readonly_fields = ('resolved_command_preview',)
 
     fieldsets = (
-        ('Identity', {'fields': ('name', 'resolved_command_preview')}),
-        ('Distribution Strategy', {'fields': ('distribution_mode',)}),
-        ('Configuration (Talos)', {'fields': ('talos_executable', 'switches')}),
+        ('Identity', {
+            'fields': ('name', 'resolved_command_preview')
+        }),
+        ('Distribution Strategy', {
+            'fields': ('distribution_mode',)
+        }),
+        ('Configuration (Talos)', {
+            'fields': ('talos_executable', 'switches')
+        }),
     )
 
     def resolved_command_preview(self, obj):
         try:
-            cmd_list = spell_switches_and_arguments(obj.id)
-            full_cmd_list = [obj.talos_executable.executable] + cmd_list
+            full_cmd_list = obj.get_full_command()
             return ' '.join(full_cmd_list)
         except Exception as e:
             return f'Error: {str(e)}'
@@ -128,8 +134,12 @@ class HydraHeadAdmin(admin.ModelAdmin):
         try:
             if not obj.spell:
                 return '-'
-            cmd_list = spell_switches_and_arguments(obj.spell.id)
-            full_cmd_list = [obj.spell.talos_executable.executable] + cmd_list
+
+            env = get_active_environment(obj)
+            ctx = resolve_environment_context(head_id=obj.id)
+
+            full_cmd_list = obj.spell.get_full_command(environment=env,
+                                                       extra_context=ctx)
             return ' '.join(full_cmd_list)
         except Exception as e:
             return f'Error: {str(e)}'
@@ -146,12 +156,15 @@ class HydraSpellbookNodeAdmin(admin.ModelAdmin):
     raw_id_fields = ('spellbook', 'spell', 'invoked_spellbook')
 
     fieldsets = (
-        ('Graph Placement', {'fields': ('spellbook', 'ui_json', 'is_root')}),
+        ('Graph Placement', {
+            'fields': ('spellbook', 'ui_json', 'is_root')
+        }),
         (
             'Execution Logic',
             {
                 'fields': ('spell', 'invoked_spellbook', 'distribution_mode'),
-                'description': "If Distribution Mode is empty, Talos will use the Spell's default strategy.",
+                'description':
+                    "If Distribution Mode is empty, Talos will use the Spell's default strategy.",
             },
         ),
     )
