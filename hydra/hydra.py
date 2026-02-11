@@ -9,6 +9,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from config.celery import app as celery_app
+from environments.models import ProjectEnvironment
 from talos_agent.models import TalosAgentRegistry, TalosAgentStatus
 
 from .models import (
@@ -136,7 +137,8 @@ class Hydra:
                 spawn.save(update_fields=['status'])
 
             logger.info(
-                f'[HYDRA] Spawn {self.spawn.id}: stop_gracefully signaled {count} heads.'
+                f'[HYDRA] Spawn {self.spawn.id}: '
+                f'stop_gracefully signaled {count} heads.'
             )
 
     def poll(self) -> None:
@@ -200,10 +202,12 @@ class Hydra:
 
     def _create_spawn(self, spellbook_id: uuid.UUID) -> HydraSpawn:
         book = HydraSpellbook.objects.get(id=spellbook_id)
+        active_env = ProjectEnvironment.objects.filter(selected=True).first()
         spawn = HydraSpawn.objects.create(
             spellbook=book,
             status_id=HydraSpawnStatus.CREATED,
             context_data=json.dumps({}),
+            environment=active_env,
         )
         self.spawn = spawn
         return spawn
@@ -288,7 +292,8 @@ class Hydra:
             return
 
         logger.info(
-            f'[HYDRA] Triggering {wires.count()} wires from Head {finished_head.id}'
+            f'[HYDRA] Triggering {wires.count()} '
+            f'wires from Head {finished_head.id}'
         )
 
         for wire in wires:
