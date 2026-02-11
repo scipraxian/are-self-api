@@ -117,6 +117,11 @@ body {
     overflow-y: auto;
 }
 
+.launch-pad::-webkit-scrollbar {
+    display: none;
+}
+
+
 /* Search Box */
 .search-container {
     padding: 0 5px 10px 5px;

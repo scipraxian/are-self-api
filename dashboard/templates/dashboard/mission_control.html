@@ -30,16 +30,29 @@
     </div>
 
     <div class="launch-pad">
-        <div class="search-container">
-            <input type="text" id="protocol-search" class="lcars-search" placeholder="FILTER PROTOCOLS..."
-                   autocomplete="off">
-        </div>
 
-        <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 5px;">
+
+        <div class="launch-group">
+            <div class="lcars-separator">
+                <div class="line"></div>
+                <div class="label">Environmental Control</div>
+            </div>
             {% for env in environments %}
                 {% include "dashboard/partials/environment_row.html" with env=env %}
             {% endfor %}
         </div>
+
+        <div class="launch-group" hx-preserve id="search-section">
+            <div class="lcars-separator">
+                <div class="line"></div>
+                <div class="label">Search</div>
+            </div>
+            <div class="search-container">
+                <input type="text" id="protocol-search" class="lcars-search" placeholder="FILTER PROTOCOLS..."
+                       autocomplete="off">
+            </div>
+        </div>
+
         {% if favorites %}
             <div class="launch-group">
                 <div class="lcars-separator">
