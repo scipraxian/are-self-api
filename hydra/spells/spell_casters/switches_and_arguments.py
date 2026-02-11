@@ -71,13 +71,11 @@ def _resolve_environment_context(head_id: uuid.UUID) -> Dict[str, Any]:
     context_data = metadata.copy()
 
     env_vars = ContextVariable.objects.filter(environment=env).select_related(
-        'context_variable'
+        'key'
     )
-
-    for link in env_vars:
-        variable = link.context_variable
-        if variable.key:
-            context_data[variable.key] = variable.value
+    for variable in env_vars:
+        if variable.key and variable.key.name:
+            context_data[variable.key.name] = variable.value
 
     return context_data
 

@@ -3,6 +3,7 @@ from django.test import TestCase
 from environments.models import (
     ContextVariable,
     ProjectEnvironment,
+    ProjectEnvironmentContextKey,  # ADDED
     ProjectEnvironmentStatus,
     ProjectEnvironmentType,
     TalosExecutable,
@@ -61,16 +62,16 @@ class SwitchesAndArgumentsTest(TestCase):
         )
 
         # 3. Setup Variables
-        self.var_root = ContextVariable.objects.create(
-            environment_id=self.env_default.id,
-            key='project_root', value='C:/Default'
+        # FIX: Create Key Instance first
+        key_root, _ = ProjectEnvironmentContextKey.objects.get_or_create(
+            name='project_root'
         )
 
-        # Link variable to environments with different values
-        # We need distinct variable objects or we rely on the link?
-        # The schema uses ManyToMany via 'ProjectEnvironmentContext' which links Env <-> Var.
-        # To test overrides, we usually create different variables or different values.
-        # Since the key comes from the variable, let's create specific variables for the test.
+        self.var_root = ContextVariable.objects.create(
+            environment_id=self.env_default.id,
+            key=key_root,  # Pass Instance
+            value='C:/Default',
+        )
 
         self.var_root_default = self._create_var('project_root', 'C:/Default')
         self.var_root_spawn = self._create_var('project_root', 'C:/Spawn')
@@ -89,12 +90,20 @@ class SwitchesAndArgumentsTest(TestCase):
         )
 
     def _create_var(self, key, value):
-        return ContextVariable.objects.create(
-            name=f'{key}_{value}', key=key, value=value
+        # FIX: Helper now handles Key creation
+        key_instance, _ = ProjectEnvironmentContextKey.objects.get_or_create(
+            name=key
         )
+        # Return a dict to emulate the previous flow,
+        # or change how _link_env works.
+        # Since _link_env is creating the ContextVariable, we pass the key instance.
+        return {'key': key_instance, 'value': value}
 
-    def _link_env(self, env, var):
-        ContextVariable.objects.create(environment=env, context_variable=var)
+    def _link_env(self, env, var_data):
+        # FIX: Use ContextVariable directly
+        ContextVariable.objects.create(
+            environment=env, key=var_data['key'], value=var_data['value']
+        )
 
     def test_legacy_mode(self):
         """Verifies calling with just spell_id works (no context)."""
@@ -179,6 +188,3 @@ class SwitchesAndArgumentsTest(TestCase):
 
         expected_flag = f'-id={head.id}'
         self.assertIn(expected_flag, result)
-
-        # Verify Context Dictionary Keys from return (internal check logic)
-        # We can't see the dict, but the result proves injection worked.
