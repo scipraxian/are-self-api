@@ -77,7 +77,8 @@ class TalosExecutableArgumentAssignment(models.Model):
 
 
 class TalosExecutableSupplementaryFileOrPath(DefaultFieldsMixin):
-    """The name should be treated like a json field name. e.g. name=destination_file, path=c:/temp/temp.txt"""
+    """The name should be treated like a json field name.
+    e.g. name=destination_file, path=c:/temp/temp.txt"""
 
     executable = models.ForeignKey(TalosExecutable, on_delete=models.CASCADE)
     path = models.CharField(max_length=500, help_text='Full path to the file.')
@@ -133,3 +134,12 @@ class ProjectEnvironmentContext(models.Model):
 
     def __str__(self):
         return f'{self.environment.name} -> {self.context_variable.key}'
+
+
+class ProjectEnvironmentMixin(models.Model):
+    environment = models.ForeignKey(
+        ProjectEnvironment, on_delete=models.PROTECT, blank=True, null=True
+    )
+
+    class Meta:
+        abstract = True

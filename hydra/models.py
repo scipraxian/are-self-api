@@ -11,6 +11,7 @@ from common.models import (
     UUIDIdMixin,
 )
 from environments.models import (
+    ProjectEnvironmentMixin,
     TalosExecutable,
     TalosExecutableArgument,
     TalosExecutableSwitch,
@@ -195,7 +196,8 @@ class HydraSpellArgumentAssignment(models.Model):
 
 
 class HydraSpellbook(
-    UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin, TagsAndFavoriteMixin
+    UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin, TagsAndFavoriteMixin,
+    ProjectEnvironmentMixin
 ):
     """
     The Container. Now supports a visual JSON layout, Tags, and Favorites.
@@ -207,7 +209,7 @@ class HydraSpellbook(
         return self.name
 
 
-class HydraSpellbookNode(models.Model):
+class HydraSpellbookNode(ProjectEnvironmentMixin):
     """
     A visual instance of a Spell on the Graph.
     Allows the same Spell (e.g., 'Wait') to be used
@@ -287,7 +289,8 @@ class HydraSpellbookConnectionWire(ModifiedMixin):
 # --- EXECUTION STATE (The Runtime) ---
 
 
-class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
+class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin,
+                 ProjectEnvironmentMixin):
     """Spellbook Instance."""
 
     spellbook = models.ForeignKey(
