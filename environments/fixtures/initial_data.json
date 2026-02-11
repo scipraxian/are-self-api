@@ -411,10 +411,10 @@
     "pk": 41,
     "fields": {
       "created": "2026-01-21T19:58:18.758Z",
-      "modified": "2026-01-23T18:07:04.393Z",
+      "modified": "2026-02-10T16:10:20.402Z",
       "name": "Exec Automation Tests",
       "flag": "-ExecCmds=",
-      "value": "Automation RunTests HSH.Tests;Quit"
+      "value": "Automation RunTests HSH;Quit"
     }
   },
   {
@@ -601,6 +601,17 @@
       "modified": "2026-01-31T15:22:07.489Z",
       "name": "Quiet Mode",
       "flag": "/q",
+      "value": ""
+    }
+  },
+  {
+    "model": "environments.talosexecutableswitch",
+    "pk": 63,
+    "fields": {
+      "created": "2026-02-08T22:45:40.195Z",
+      "modified": "2026-02-08T22:45:40.195Z",
+      "name": "Robocopy Recurse",
+      "flag": "/E",
       "value": ""
     }
   },
@@ -955,6 +966,16 @@
     }
   },
   {
+    "model": "environments.talosexecutableargument",
+    "pk": 36,
+    "fields": {
+      "created": "2026-02-10T18:44:45.466Z",
+      "modified": "2026-02-10T18:44:45.467Z",
+      "name": "List Folder",
+      "argument": "ls"
+    }
+  },
+  {
     "model": "environments.talosexecutable",
     "pk": 1,
     "fields": {
@@ -1265,6 +1286,210 @@
       "executable": 16,
       "order": 2,
       "argument": 31
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 1,
+    "fields": {
+      "name": "project_name"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 2,
+    "fields": {
+      "name": "project_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 3,
+    "fields": {
+      "name": "engine_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 4,
+    "fields": {
+      "name": "test_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 5,
+    "fields": {
+      "name": "talos_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 6,
+    "fields": {
+      "name": "staging_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 7,
+    "fields": {
+      "name": "shader_cache_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 8,
+    "fields": {
+      "name": "environment_cache_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 9,
+    "fields": {
+      "name": "prerelease_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 10,
+    "fields": {
+      "name": "production_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 11,
+    "fields": {
+      "name": "uproject"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentstatus",
+    "pk": 1,
+    "fields": {
+      "name": "Online"
+    }
+  },
+  {
+    "model": "environments.projectenvironmenttype",
+    "pk": 1,
+    "fields": {
+      "name": "Unreal 5.6.1"
+    }
+  },
+  {
+    "model": "environments.projectenvironment",
+    "pk": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+    "fields": {
+      "created": "2026-02-11T15:33:50.687Z",
+      "description": "Default UE Environment for Talos",
+      "modified": "2026-02-11T16:23:21.436Z",
+      "name": "Default Environment",
+      "type": 1,
+      "status": 1,
+      "available": true,
+      "selected": true
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 1,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 1,
+      "value": "HSHVacancy"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 2,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 2,
+      "value": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 3,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 3,
+      "value": "C:\\Program Files\\Epic Games\\UE_5.6"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 4,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 5,
+      "value": "C:\\talos"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 5,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 4,
+      "value": "C:\\talos_bin\\0_test"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 6,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 6,
+      "value": "C:\\talos_bin\\1_staging"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 7,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 7,
+      "value": "C:\\talos_bin\\2_shader_cache"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 8,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 8,
+      "value": "C:\\talos_bin\\3_environment_cache"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 9,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 9,
+      "value": "C:\\talos_bin\\4_prerelease"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 10,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 10,
+      "value": "C:\\talos_bin\\5_main"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 11,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 11,
+      "value": "HSHVacancy.uproject"
     }
   }
 ]

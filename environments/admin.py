@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (
     ContextVariable,
     ProjectEnvironment,
+    ProjectEnvironmentContextKey,  # Added
     ProjectEnvironmentStatus,
     ProjectEnvironmentType,
     TalosExecutable,
@@ -102,9 +103,18 @@ class ProjectEnvironmentStatusAdmin(admin.ModelAdmin):
     list_display = ('name',)
 
 
+@admin.register(ProjectEnvironmentContextKey)
+class ProjectEnvironmentContextKeyAdmin(admin.ModelAdmin):
+    """Registered to allow inline autocomplete."""
+
+    list_display = ('name',)
+    search_fields = ('name',)
+
+
 class EnvironmentContextInline(admin.TabularInline):
     model = ContextVariable
     extra = 1
+    autocomplete_fields = ['key']  # Enables the search/add widget
 
 
 @admin.register(ProjectEnvironment)
