@@ -47,6 +47,7 @@
                     <button
                             hx-post="{% url 'environments:select_environment' env.id %}"
                             hx-target="body"
+                            class="{% if env.selected %}active-env{% endif %}"
                             style="
                                     width: 100%;
                                     text-align: left;
@@ -69,8 +70,8 @@
                                         border-left: 4px solid #333;
                                     {% endif %}
                                     "
-                            onmouseover="if(!this.style.backgroundColor.includes('rgb(249')) { this.style.backgroundColor='rgba(255,255,255,0.1)'; this.style.color='#fff'; }"
-                            onmouseout="if(!this.style.backgroundColor.includes('rgb(249')) { this.style.backgroundColor='rgba(255,255,255,0.05)'; this.style.color='#666'; }"
+                            onmouseover="if(!this.classList.contains('active-env')) { this.style.backgroundColor='rgba(255,255,255,0.1)'; this.style.color='#fff'; }"
+                            onmouseout="if(!this.classList.contains('active-env')) { this.style.backgroundColor='rgba(255,255,255,0.05)'; this.style.color='#666'; }"
                     >
                         {{ env.name }}
                     </button>
