@@ -1,6 +1,6 @@
 import uuid
 
-from django.db import models
+from django.db import models, transaction
 
 from common.constants import STANDARD_CHARFIELD_LENGTH
 from common.models import (
@@ -113,13 +113,29 @@ class ProjectEnvironmentType(NameMixin):
 class ProjectEnvironment(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     """Defines the context for a specific Application/Project."""
 
+    DEFAULT_ENVIRONMENT = 1
+
     type = models.ForeignKey(ProjectEnvironmentType, on_delete=models.PROTECT)
     status = models.ForeignKey(
         ProjectEnvironmentStatus, on_delete=models.PROTECT
     )
+    available = models.BooleanField(default=False)
+    selected = models.BooleanField(
+        default=False,
+        help_text='Only one environment can be selected at a time.',
+    )
 
     def __str__(self):
         return f'{self.name} [{self.type.name}]'
+
+    def save(self, *args, **kwargs):
+        """Enforce Single Selection Logic"""
+        if self.selected:
+            with transaction.atomic():
+                ProjectEnvironment.objects.filter(selected=True).exclude(
+                    id=self.id
+                ).update(selected=False)
+        super().save(*args, **kwargs)
 
 
 class ProjectEnvironmentContext(models.Model):

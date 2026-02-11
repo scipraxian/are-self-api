@@ -1,0 +1,221 @@
+[
+  {
+    "model": "environments.projectenvironmentstatus",
+    "pk": 1,
+    "fields": {
+      "name": "Active",
+      "created": "2026-02-11T12:00:00Z",
+      "modified": "2026-02-11T12:00:00Z"
+    }
+  },
+  {
+    "model": "environments.projectenvironmenttype",
+    "pk": 1,
+    "fields": {
+      "name": "Unreal Engine 5",
+      "created": "2026-02-11T12:00:00Z",
+      "modified": "2026-02-11T12:00:00Z"
+    }
+  },
+  {
+    "model": "environments.projectenvironment",
+    "pk": "00000000-0000-0000-0000-000000000001",
+    "fields": {
+      "name": "HSH Vacancy (Default)",
+      "description": "Legacy Default Environment",
+      "type": 1,
+      "status": 1,
+      "available": true,
+      "selected": true,
+      "created": "2026-02-11T12:00:00Z",
+      "modified": "2026-02-11T12:00:00Z"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextvariable",
+    "pk": 1,
+    "fields": {
+      "name": "Project Name",
+      "key": "project_name",
+      "value": "HSHVacancy"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextvariable",
+    "pk": 2,
+    "fields": {
+      "name": "Project Root",
+      "key": "project_root",
+      "value": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextvariable",
+    "pk": 3,
+    "fields": {
+      "name": "Engine Root",
+      "key": "engine_root",
+      "value": "C:\\Program Files\\Epic Games\\UE_5.6"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextvariable",
+    "pk": 4,
+    "fields": {
+      "name": "Artifact Root",
+      "key": "artifact_root",
+      "value": "C:\\talos_bin"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextvariable",
+    "pk": 5,
+    "fields": {
+      "name": "Talos Root",
+      "key": "talos_root",
+      "value": "C:\\talos"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextvariable",
+    "pk": 6,
+    "fields": {
+      "name": "Test Root (0)",
+      "key": "test_root",
+      "value": "C:\\talos_bin\\0_test"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextvariable",
+    "pk": 7,
+    "fields": {
+      "name": "Staging Directory (1)",
+      "key": "staging_dir",
+      "value": "C:\\talos_bin\\1_staging"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextvariable",
+    "pk": 8,
+    "fields": {
+      "name": "Shader Cache Directory (2)",
+      "key": "shader_cache_dir",
+      "value": "C:\\talos_bin\\2_shader_cache"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextvariable",
+    "pk": 9,
+    "fields": {
+      "name": "Environment Cache Directory (3)",
+      "key": "env_cache_dir",
+      "value": "C:\\talos_bin\\3_environment_cache"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextvariable",
+    "pk": 10,
+    "fields": {
+      "name": "Archive Directory (4)",
+      "key": "archive_dir",
+      "value": "C:\\talos_bin\\4_prerelease"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextvariable",
+    "pk": 11,
+    "fields": {
+      "name": "Main Directory (5)",
+      "key": "main_dir",
+      "value": "C:\\talos_bin\\5_main"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontext",
+    "pk": 1,
+    "fields": {
+      "environment": "00000000-0000-0000-0000-000000000001",
+      "context_variable": 1
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontext",
+    "pk": 2,
+    "fields": {
+      "environment": "00000000-0000-0000-0000-000000000001",
+      "context_variable": 2
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontext",
+    "pk": 3,
+    "fields": {
+      "environment": "00000000-0000-0000-0000-000000000001",
+      "context_variable": 3
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontext",
+    "pk": 4,
+    "fields": {
+      "environment": "00000000-0000-0000-0000-000000000001",
+      "context_variable": 4
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontext",
+    "pk": 5,
+    "fields": {
+      "environment": "00000000-0000-0000-0000-000000000001",
+      "context_variable": 5
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontext",
+    "pk": 6,
+    "fields": {
+      "environment": "00000000-0000-0000-0000-000000000001",
+      "context_variable": 6
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontext",
+    "pk": 7,
+    "fields": {
+      "environment": "00000000-0000-0000-0000-000000000001",
+      "context_variable": 7
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontext",
+    "pk": 8,
+    "fields": {
+      "environment": "00000000-0000-0000-0000-000000000001",
+      "context_variable": 8
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontext",
+    "pk": 9,
+    "fields": {
+      "environment": "00000000-0000-0000-0000-000000000001",
+      "context_variable": 9
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontext",
+    "pk": 10,
+    "fields": {
+      "environment": "00000000-0000-0000-0000-000000000001",
+      "context_variable": 10
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontext",
+    "pk": 11,
+    "fields": {
+      "environment": "00000000-0000-0000-0000-000000000001",
+      "context_variable": 11
+    }
+  }
+]

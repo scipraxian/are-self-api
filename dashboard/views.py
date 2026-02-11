@@ -11,6 +11,7 @@ from django.views.generic import TemplateView
 from config.celery import app as celery_app
 from core.tasks import scan_network_task
 from dashboard.tasks import debug_task
+from environments.models import ProjectEnvironment
 from hydra.models import (
     HydraSpawn,
     HydraSpellbook,
@@ -131,6 +132,15 @@ class DashboardHomeView(TemplateView):
             .select_related('status', 'spellbook')
             .prefetch_related('heads', 'heads__status', 'heads__spell')
             .order_by('-created')[:20]
+        )
+
+        context['environments'] = ProjectEnvironment.objects.all().order_by(
+            'name'
+        )
+        envs = list(ProjectEnvironment.objects.all().order_by('name'))
+        context['environments'] = envs
+        context['active_environment'] = next(
+            (e for e in envs if e.selected), None
         )
 
         lanes = []
