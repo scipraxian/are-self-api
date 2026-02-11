@@ -131,9 +131,10 @@ class GracefulStopSpawnView(View):
 
             # Common stopping state button
             stopping_btn = (
-                '<button class="btn-secondary" disabled '
-                'style="opacity: 0.5; cursor: wait; border-color: #f85149; color: #f85149; background: rgba(248, 81, 73, 0.1);">'
-                'Stopping...'
+                '<button class="btn-control stop" disabled '
+                'style="opacity: 0.5; cursor: wait; border-color: #f97316; color: #f97316;">'
+                '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'
+                '<rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect></svg>'
                 '</button>'
             )
 
@@ -144,20 +145,15 @@ class GracefulStopSpawnView(View):
                     f'<div id="actions-container" style="display: inline-block;" '
                     f'hx-get="{referer}" hx-vals=\'{{"partial": "actions"}}\' '
                     f'hx-trigger="every 2s" hx-swap="outerHTML">'
-                    f'{stopping_btn}'
+                    f'<button class="btn-secondary" disabled style="opacity:0.5;">Stopping...</button>'
                     '</div>'
                 )
 
-            # 2. MONITOR (Spawn List) logic
+            # 2. MONITOR / DASHBOARD logic
             else:
-                # Legacy behavior for the main dashboard list
-                # It uses hx-select because that view doesn't have a partial for just buttons yet
-                common_attrs = f'hx-get="{referer}" hx-select=".actions" hx-target="closest .actions" hx-swap="outerHTML" hx-trigger="every 2s"'
-                return HttpResponse(
-                    f'<div class="actions" {common_attrs}>'
-                    '<button class="btn-done" disabled style="border-color: #fb923c; color: #fb923c; opacity: 0.8; cursor: wait;">Stopping...</button>'
-                    '</div>'
-                )
+                # FIX: Do NOT try to poll .actions on dashboard as it doesn't exist in the partial.
+                # Just return the disabled button. The main swimlane poll will pick up the 'Stopping' state naturally.
+                return HttpResponse(stopping_btn)
 
         target_url = reverse('hydra:graph_monitor', kwargs={'spawn_id': pk})
         return redirect(target_url)

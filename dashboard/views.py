@@ -191,14 +191,10 @@ class SwimlanePartialView(View):
             )
             html = html.strip()
 
-            if not html:
-                raise ValueError('Rendered HTML was empty')
-
-            # 3. ID INTEGRITY CHECK
-            # If the ID is missing (e.g. bad context), the node will lose its
-            # identity and "vanish" from future selectors/polls.
-            if target_dom_id not in html:
-                logger.critical(
+            # 3. ID INTEGRITY CHECK & RECOVERY
+            # We strictly verify the ID exists in the string to prevent HTMX form nuking the DOM.
+            if f'id="{target_dom_id}"' not in html:
+                logger.warning(
                     f'Swimlane partial missing ID {target_dom_id}. Injecting fallback wrapper.'
                 )
                 # Auto-Recovery: Wrap the content in the correct ID so the UI persists
@@ -213,7 +209,7 @@ class SwimlanePartialView(View):
             # instead of deleting the node.
             return HttpResponse(
                 f'<div class="lane-wrapper" id="{target_dom_id}">'
-                f'<div class="swimlane failed-lane" style="padding: 20px; border: 1px solid red;">'
+                f'<div class="swimlane failed-lane" style="padding: 20px; border: 1px solid red; color: #ef4444;">'
                 f'<strong>SYNC ERROR:</strong> {str(e)}</div></div>',
                 status=200,
                 content_type='text/html',
