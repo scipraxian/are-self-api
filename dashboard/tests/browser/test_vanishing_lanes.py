@@ -6,7 +6,7 @@ import time
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from playwright.sync_api import expect, sync_playwright
 
-from environments.models import TalosExecutable
+from environments.models import ProjectEnvironment, TalosExecutable
 from hydra.models import (
     HydraHead,
     HydraSpawn,
@@ -58,12 +58,26 @@ class DashboardPersistenceTests(StaticLiveServerTestCase):
     ]
 
     def setUp(self):
+        # Fetch the default active environment from fixtures
+        self.active_env = ProjectEnvironment.objects.filter(
+            selected=True
+        ).first()
+        # If no fixture loaded, create one
+        if not self.active_env:
+            self.active_env = ProjectEnvironment.objects.create(
+                name='Test Env', selected=True
+            )
+
         self.status_running = HydraSpawnStatus.objects.get(id=3)
         self.status_success = HydraSpawnStatus.objects.get(id=4)
 
         self.book = HydraSpellbook.objects.create(name='Persistence Protocol')
+
+        # FIX: Assign environment so Dashboard query includes it
         self.spawn = HydraSpawn.objects.create(
-            spellbook=self.book, status=self.status_running
+            spellbook=self.book,
+            status=self.status_running,
+            environment=self.active_env,
         )
 
         exe = TalosExecutable.objects.first()
