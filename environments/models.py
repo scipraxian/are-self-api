@@ -103,7 +103,7 @@ class ProjectEnvironmentType(NameMixin):
 class ProjectEnvironment(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     """Defines the context for a specific Application/Project."""
 
-    DEFAULT_ENVIRONMENT = 1
+    DEFAULT_ENVIRONMENT = uuid.UUID('44b23b94-6aae-4205-ae67-2f8c021c67aa')
 
     type = models.ForeignKey(ProjectEnvironmentType, on_delete=models.PROTECT)
     status = models.ForeignKey(

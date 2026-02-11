@@ -194,10 +194,16 @@ class HydraSpellArgumentAssignment(models.Model):
     class Meta(object):
         ordering = ['order']
 
+    def __str__(self):
+        return f'{self.spell.name} -> {self.argument.argument}'
+
 
 class HydraSpellbook(
-    UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin, TagsAndFavoriteMixin,
-    ProjectEnvironmentMixin
+    UUIDIdMixin,
+    DefaultFieldsMixin,
+    DescriptionMixin,
+    TagsAndFavoriteMixin,
+    ProjectEnvironmentMixin,
 ):
     """
     The Container. Now supports a visual JSON layout, Tags, and Favorites.
@@ -289,8 +295,9 @@ class HydraSpellbookConnectionWire(ModifiedMixin):
 # --- EXECUTION STATE (The Runtime) ---
 
 
-class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin,
-                 ProjectEnvironmentMixin):
+class HydraSpawn(
+    UUIDIdMixin, CreatedMixin, ModifiedMixin, ProjectEnvironmentMixin
+):
     """Spellbook Instance."""
 
     spellbook = models.ForeignKey(

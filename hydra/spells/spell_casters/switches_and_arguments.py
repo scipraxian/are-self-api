@@ -4,9 +4,10 @@ from typing import Any, Dict, List, Optional
 
 from django.template import Context, Template
 
-from environments.models import ContextVariable
+from environments.models import ContextVariable, ProjectEnvironment
 from hydra.constants import (
     KEY_BOOK_ID,
+    KEY_ENVIRONMENT_ID,
     KEY_HEAD_ID,
     KEY_PROVENANCE_ID,
     KEY_SERVER,
@@ -18,7 +19,10 @@ from hydra.models import HydraHead, HydraSpell
 DEFAULT_CONTEXT = {KEY_SERVER: socket.gethostname()}
 
 
-def _resolve_environment_context(head_id: uuid.UUID) -> Dict[str, Any]:
+def _resolve_environment_context(
+    head_id: uuid.UUID = None,
+    spell_id: uuid.UUID = None,
+) -> Dict[str, Any]:
     """Resolves the active ProjectEnvironment and builds the context dictionary.
 
     Determines the environment based on the following priority hierarchy:
@@ -33,37 +37,46 @@ def _resolve_environment_context(head_id: uuid.UUID) -> Dict[str, Any]:
         A dictionary containing flattened environment variables and standard
         execution metadata (head_id, spawn_id, etc.).
     """
-    if not head_id:
-        return {}
-
-    try:
-        head = HydraHead.objects.select_related(
-            'spell',
-            'node__environment',
-            'spawn__environment',
-            'spawn__spellbook__environment',
-        ).get(id=head_id)
-    except HydraHead.DoesNotExist:
-        return {}
-
     env = None
+    if spell_id:
+        env = ProjectEnvironment.objects.get(
+            id=ProjectEnvironment.DEFAULT_ENVIRONMENT
+        )
+        metadata = {
+            KEY_SPELL_ID: spell_id if spell_id else None,
+            KEY_ENVIRONMENT_ID: str(env.id) if env else None,
+        }
+    elif head_id:
+        try:
+            head = HydraHead.objects.select_related(
+                'spell',
+                'node__environment',
+                'spawn__environment',
+                'spawn__spellbook__environment',
+            ).get(id=head_id)
+        except HydraHead.DoesNotExist:
+            return {}
+        if head.node and head.node.environment:
+            env = head.node.environment
+        elif head.spawn.environment:
+            env = head.spawn.environment
+        elif head.spawn.spellbook and head.spawn.spellbook.environment:
+            env = head.spawn.spellbook.environment
 
-    if head.node and head.node.environment:
-        env = head.node.environment
-    elif head.spawn.environment:
-        env = head.spawn.environment
-    elif head.spawn.spellbook and head.spawn.spellbook.environment:
-        env = head.spawn.spellbook.environment
-
-    metadata = {
-        KEY_HEAD_ID: str(head.id),
-        KEY_SPAWN_ID: str(head.spawn.id),
-        KEY_SPELL_ID: head.spell.id if head.spell else None,
-        KEY_BOOK_ID: str(head.spawn.spellbook.id)
-        if head.spawn.spellbook
-        else None,
-        KEY_PROVENANCE_ID: str(head.provenance.id) if head.provenance else None,
-    }
+        metadata = {
+            KEY_HEAD_ID: str(head.id),
+            KEY_SPAWN_ID: str(head.spawn.id),
+            KEY_SPELL_ID: head.spell.id if head.spell else None,
+            KEY_BOOK_ID: str(head.spawn.spellbook.id)
+            if head.spawn.spellbook
+            else None,
+            KEY_PROVENANCE_ID: str(head.provenance.id)
+            if head.provenance
+            else None,
+            KEY_ENVIRONMENT_ID: str(env.id) if env else None,
+        }
+    else:
+        raise ValueError('Must provide either head_id or (env_id and spell_id)')
 
     if not env:
         return metadata
@@ -90,9 +103,9 @@ def _render_text(text: str, render_ctx: Context) -> str:
 
 
 def spell_switches_and_arguments(
-    spell_id: int = None,
+    spell_id: Optional[uuid.UUID] = None,
     head_id: Optional[uuid.UUID] = None,
-    extra_context: dict = None,
+    extra_context: Optional[dict] = None,
 ) -> List[str]:
     """Resolves and renders the arguments and switches for a Spell.
 
@@ -112,17 +125,15 @@ def spell_switches_and_arguments(
         ValueError: If no valid spell ID can be resolved.
     """
     full_context = DEFAULT_CONTEXT.copy()
-    target_spell_id = spell_id
-
     if head_id:
-        env_context = _resolve_environment_context(head_id)
+        spell_id = HydraHead.objects.get(id=head_id).spell.id
+        env_context = _resolve_environment_context(head_id=head_id)
         full_context.update(env_context)
-
-        if env_context.get(KEY_SPELL_ID):
-            target_spell_id = env_context[KEY_SPELL_ID]
-
-    if target_spell_id is None:
-        raise ValueError('Cannot resolve switches: No Spell ID found.')
+    elif spell_id:
+        env_context = _resolve_environment_context(spell_id=spell_id)
+        full_context.update(env_context)
+    else:
+        raise ValueError('Must provide either spell_id or head_id')
 
     if extra_context:
         full_context.update(extra_context)
@@ -137,7 +148,7 @@ def spell_switches_and_arguments(
             'talos_executable__switches',
             'switches',
         )
-        .get(id=target_spell_id)
+        .get(id=spell_id)
     )
 
     ordered_arguments_list = []
