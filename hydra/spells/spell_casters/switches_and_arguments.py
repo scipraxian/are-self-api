@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 
 from django.template import Context, Template
 
-from environments.models import ProjectEnvironmentContext
+from environments.models import ContextVariable
 from hydra.constants import (
     KEY_BOOK_ID,
     KEY_HEAD_ID,
@@ -70,9 +70,9 @@ def _resolve_environment_context(head_id: uuid.UUID) -> Dict[str, Any]:
 
     context_data = metadata.copy()
 
-    env_vars = ProjectEnvironmentContext.objects.filter(
-        environment=env
-    ).select_related('context_variable')
+    env_vars = ContextVariable.objects.filter(environment=env).select_related(
+        'context_variable'
+    )
 
     for link in env_vars:
         variable = link.context_variable

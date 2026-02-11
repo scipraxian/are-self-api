@@ -1,9 +1,8 @@
 from django.contrib import admin
 
 from .models import (
+    ContextVariable,
     ProjectEnvironment,
-    ProjectEnvironmentContext,
-    ProjectEnvironmentContextVariable,
     ProjectEnvironmentStatus,
     ProjectEnvironmentType,
     TalosExecutable,
@@ -103,19 +102,9 @@ class ProjectEnvironmentStatusAdmin(admin.ModelAdmin):
     list_display = ('name',)
 
 
-@admin.register(ProjectEnvironmentContextVariable)
-class ProjectEnvironmentContextVariableAdmin(admin.ModelAdmin):
-    list_display = ('name', 'key', 'value_preview')
-    search_fields = ('name', 'key', 'value')
-
-    def value_preview(self, obj):
-        return (obj.value[:50] + '..') if len(obj.value) > 50 else obj.value
-
-
 class EnvironmentContextInline(admin.TabularInline):
-    model = ProjectEnvironmentContext
+    model = ContextVariable
     extra = 1
-    autocomplete_fields = ['context_variable']
 
 
 @admin.register(ProjectEnvironment)

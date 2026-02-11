@@ -1,19 +1,13 @@
-import uuid
-
 from django.test import TestCase
 
 from environments.models import (
+    ContextVariable,
     ProjectEnvironment,
-    ProjectEnvironmentContext,
-    ProjectEnvironmentContextVariable,
     ProjectEnvironmentStatus,
     ProjectEnvironmentType,
     TalosExecutable,
     TalosExecutableArgument,
-    TalosExecutableArgumentAssignment,
-    TalosExecutableSwitch,
 )
-from hydra.constants import KEY_HEAD_ID, KEY_SPAWN_ID
 from hydra.models import (
     HydraHead,
     HydraHeadStatus,
@@ -67,8 +61,9 @@ class SwitchesAndArgumentsTest(TestCase):
         )
 
         # 3. Setup Variables
-        self.var_root = ProjectEnvironmentContextVariable.objects.create(
-            name='Root', key='project_root', value='C:/Default'
+        self.var_root = ContextVariable.objects.create(
+            environment_id=self.env_default.id,
+            key='project_root', value='C:/Default'
         )
 
         # Link variable to environments with different values
@@ -94,14 +89,12 @@ class SwitchesAndArgumentsTest(TestCase):
         )
 
     def _create_var(self, key, value):
-        return ProjectEnvironmentContextVariable.objects.create(
+        return ContextVariable.objects.create(
             name=f'{key}_{value}', key=key, value=value
         )
 
     def _link_env(self, env, var):
-        ProjectEnvironmentContext.objects.create(
-            environment=env, context_variable=var
-        )
+        ContextVariable.objects.create(environment=env, context_variable=var)
 
     def test_legacy_mode(self):
         """Verifies calling with just spell_id works (no context)."""

@@ -84,18 +84,8 @@ class TalosExecutableSupplementaryFileOrPath(DefaultFieldsMixin):
     path = models.CharField(max_length=500, help_text='Full path to the file.')
 
 
-class ProjectEnvironmentContextVariable(NameMixin):
-    """
-    A reusable Key/Value pair for path resolution.
-    Name: Human readable label (e.g. "Production Engine Root")
-    Key: Template token (e.g. "engine_root")
-    """
-
-    key = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
-    value = models.TextField(blank=True)
-
-    def __str__(self):
-        return f'{self.name} ({self.key})'
+class ProjectEnvironmentContextKey(NameMixin):
+    pass
 
 
 class ProjectEnvironmentStatus(NameMixin):
@@ -138,18 +128,19 @@ class ProjectEnvironment(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
         super().save(*args, **kwargs)
 
 
-class ProjectEnvironmentContext(models.Model):
+class ContextVariable(models.Model):
     """Link table between Environment and Variables."""
 
     environment = models.ForeignKey(
         ProjectEnvironment, on_delete=models.CASCADE, related_name='contexts'
     )
-    context_variable = models.ForeignKey(
-        ProjectEnvironmentContextVariable, on_delete=models.CASCADE
+    key = models.ForeignKey(
+        ProjectEnvironmentContextKey, on_delete=models.CASCADE
     )
+    value = models.TextField(blank=True)
 
     def __str__(self):
-        return f'{self.environment.name} -> {self.context_variable.key}'
+        return f'{self.environment.name} -> {self.key}'
 
 
 class ProjectEnvironmentMixin(models.Model):
