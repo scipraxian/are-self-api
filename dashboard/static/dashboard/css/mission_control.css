@@ -289,6 +289,10 @@ body {
     padding-bottom: 20px;
 }
 
+.mission-monitor::-webkit-scrollbar {
+    display: none;
+}
+
 /* --- LANE WRAPPER --- */
 .lane-wrapper {
     display: flex;
@@ -450,7 +454,7 @@ body {
     color: #94a3b8;
     width: 24px;
     height: 70px; /* Match card height */
-    display: flex;
+    display: none; /* CHANGED: Default to hidden */
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -458,6 +462,11 @@ body {
     border-radius: 4px;
     flex-shrink: 0;
     z-index: 15;
+}
+
+/* [NEW] Show buttons only when container detects overflow */
+.swimlane.has-overflow .lane-scroll-btn {
+    display: flex;
 }
 
 .lane-scroll-btn:hover {
