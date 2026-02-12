@@ -36,6 +36,10 @@ class ProjectEnvironmentContextKeySerializer(serializers.ModelSerializer):
 
 
 class ContextVariableSerializer(serializers.ModelSerializer):
+    """
+    Writable. Used to update environment variables.
+    """
+
     key_name = serializers.CharField(source='key.name', read_only=True)
 
     class Meta:
@@ -44,6 +48,11 @@ class ContextVariableSerializer(serializers.ModelSerializer):
 
 
 class ProjectEnvironmentSerializer(serializers.ModelSerializer):
+    """
+    Main Environment serializer.
+    'contexts' is read-only nested for display.
+    """
+
     type_name = serializers.CharField(source='type.name', read_only=True)
     status_name = serializers.CharField(source='status.name', read_only=True)
     contexts = ContextVariableSerializer(many=True, read_only=True)
@@ -84,8 +93,15 @@ class TalosExecutableSupplementaryFileOrPathSerializer(
 
 
 class TalosExecutableSerializer(serializers.ModelSerializer):
-    switches = TalosExecutableSwitchSerializer(many=True, read_only=True)
-    rendered_executable = serializers.SerializerMethodField()
+    """
+    Executable definition.
+    Uses ALL_FIELDS for model data, plus computed fields for UI convenience.
+    """
+
+    # Computed / Nested Display Fields
+    switches_detail = TalosExecutableSwitchSerializer(
+        source='switches', many=True, read_only=True
+    )
     argument_assignments = TalosExecutableArgumentAssignmentSerializer(
         source='talosexecutableargumentassignment_set',
         many=True,
@@ -96,15 +112,15 @@ class TalosExecutableSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True,
     )
+    rendered_executable = serializers.SerializerMethodField()
 
     class Meta:
         model = TalosExecutable
-        fields = ALL_FIELDS
+        fields = ALL_FIELDS  # Includes standard model fields + the ones defined above
 
     def get_rendered_executable(self, obj) -> str:
         """
         Returns the executable path with variables interpolated.
-        Uses the default/None environment context unless passed in context.
         """
         env = self.context.get(ENVIRONMENT_KEY)
         return obj.get_rendered_executable(environment=env)
