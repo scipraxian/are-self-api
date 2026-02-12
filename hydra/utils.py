@@ -19,7 +19,7 @@ from hydra.constants import (
     RESULT_CODE_FIELD_NAME,
     SPELL_LOG_FIELD_NAME,
 )
-from hydra.models import HydraHead
+from hydra.models import HydraHead, HydraSpellBookNodeContext, HydraSpellContext
 
 logger = logging.getLogger(__name__)
 
@@ -67,19 +67,16 @@ def resolve_environment_context(
 ) -> Dict[str, Any]:
     """Resolves the active ProjectEnvironment and builds the context dictionary.
 
-    Args:
-        head_id: The UUID of the execution head.
-        spell_id: The UUID of the spell (legacy fallback).
-
-    Returns:
-        A dictionary containing flattened environment variables and standard
-        execution metadata (head_id, spawn_id, etc.).
+    Hierarchy of Variable Precedence (Lowest to Highest):
+    1. Global Environment (ProjectEnvironment context)
+    2. Spell Defaults (HydraSpellContext)
+    3. Node Overrides (HydraSpellBookNodeContext)
+    4. Runtime Injection (HydraSpawn.context_data)
     """
-    # Local imports to avoid circular dependency with models.py if it ever imports utils
-
-    env = None
     metadata: Dict[str, Any] = {}
+    head = None
 
+    # 1. Resolve Head and Base IDs
     if spell_id and not head_id:
         env = ProjectEnvironment.objects.get(
             id=ProjectEnvironment.DEFAULT_ENVIRONMENT
@@ -92,8 +89,11 @@ def resolve_environment_context(
         try:
             head = HydraHead.objects.select_related(
                 'spell',
+                'node',
                 'node__environment',
+                'spawn',
                 'spawn__environment',
+                'spawn__spellbook',
                 'spawn__spellbook__environment',
                 PROVENANCE_FIELD_NAME,
             ).get(id=head_id)
@@ -128,23 +128,37 @@ def resolve_environment_context(
                 EXECUTION_LOG_FIELD_NAME: '',
                 RESULT_CODE_FIELD_NAME: '',
             }
-
-        # [NEW] 2. Merge Spawn Context Data (User Input / Dynamic vars)
-        if head.spawn.context_data:
-            try:
-                dynamic_ctx = json.loads(head.spawn.context_data)
-                if isinstance(dynamic_ctx, dict):
-                    metadata.update(dynamic_ctx)
-            except json.JSONDecodeError:
-                logger.warning('Invalid JSON in Spawn Context Data.')
-
     else:
         raise ValueError('Must provide either head_id or (env_id and spell_id)')
 
-    if not env:
-        return metadata
-
     context_data = metadata.copy()
-    context_data.update(VariableRenderer.extract_variables(env))
+    if env:
+        context_data.update(VariableRenderer.extract_variables(env))
+
+    if not head:
+        if spell_id:
+            spell_vars = HydraSpellContext.objects.filter(spell_id=spell_id)
+            for var in spell_vars:
+                if var.key:
+                    context_data[var.key] = var.value
+        return context_data
+
+    if head.spell:
+        spell_vars = HydraSpellContext.objects.filter(spell=head.spell)
+        for var in spell_vars:
+            if var.key:
+                context_data[var.key] = var.value
+    if head.node:
+        node_vars = HydraSpellBookNodeContext.objects.filter(node=head.node)
+        for var in node_vars:
+            if var.key:
+                context_data[var.key] = var.value
+    if head.spawn.context_data:
+        try:
+            dynamic_ctx = json.loads(head.spawn.context_data)
+            if isinstance(dynamic_ctx, dict):
+                context_data.update(dynamic_ctx)
+        except json.JSONDecodeError:
+            logger.warning('Invalid JSON in Spawn Context Data.')
 
     return context_data

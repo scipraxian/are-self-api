@@ -1,6 +1,5 @@
 from django.contrib import admin
 
-# [NEW] Import ProjectEnvironment to resolve context for previews
 from environments.models import ProjectEnvironment
 from hydra.utils import (
     get_active_environment,
@@ -18,9 +17,29 @@ from .models import (
     HydraSpellbook,
     HydraSpellbookConnectionWire,
     HydraSpellbookNode,
+    HydraSpellBookNodeContext,
+    HydraSpellContext,
     HydraSpellTarget,
     HydraTag,
 )
+
+
+class HydraSpellContextInline(admin.TabularInline):
+    """Configuration: Default variables for this Spell."""
+
+    model = HydraSpellContext
+    extra = 1
+    verbose_name = 'Default Variable'
+    verbose_name_plural = 'Default Variables (Tier 1)'
+
+
+class HydraSpellBookNodeContextInline(admin.TabularInline):
+    """Configuration: Overrides for this specific Node instance."""
+
+    model = HydraSpellBookNodeContext
+    extra = 1
+    verbose_name = 'Override Variable'
+    verbose_name_plural = 'Override Variables (Tier 2)'
 
 
 @admin.register(HydraDistributionMode)
@@ -87,7 +106,11 @@ class HydraSpellAdmin(admin.ModelAdmin):
     )
     list_filter = ('distribution_mode', 'talos_executable')
     filter_horizontal = ('switches',)
-    inlines = [HydraSpellArgumentInline, HydraSpellTargetInline]
+    inlines = [
+        HydraSpellArgumentInline,
+        HydraSpellTargetInline,
+        HydraSpellContextInline,
+    ]
     readonly_fields = ('resolved_command_preview',)
 
     fieldsets = (
@@ -101,8 +124,14 @@ class HydraSpellAdmin(admin.ModelAdmin):
             # [FIX] Fetch the currently selected environment for context
             env = ProjectEnvironment.objects.filter(selected=True).first()
 
-            # Pass the environment to the renderer
-            full_cmd_list = obj.get_full_command(environment=env)
+            # [FIX] Resolve Tier 1 Defaults (Spell Context)
+            # This fetches the variables defined in HydraSpellContextInline
+            ctx = resolve_environment_context(spell_id=obj.id)
+
+            # Pass BOTH the environment and the context to the renderer
+            full_cmd_list = obj.get_full_command(
+                environment=env, extra_context=ctx
+            )
 
             return ' '.join(full_cmd_list)
         except Exception as e:
@@ -156,6 +185,10 @@ class HydraSpellbookNodeAdmin(admin.ModelAdmin):
     list_display = ('id', 'spellbook', 'spell', 'distribution_mode', 'is_root')
     list_filter = ('spellbook', 'spell', 'distribution_mode')
     raw_id_fields = ('spellbook', 'spell', 'invoked_spellbook')
+    inlines = [HydraSpellBookNodeContextInline]
+
+    # [NEW] Add readonly field
+    readonly_fields = ('resolved_command_preview',)
 
     fieldsets = (
         ('Graph Placement', {'fields': ('spellbook', 'ui_json', 'is_root')}),
@@ -166,7 +199,42 @@ class HydraSpellbookNodeAdmin(admin.ModelAdmin):
                 'description': "If Distribution Mode is empty, Talos will use the Spell's default strategy.",
             },
         ),
+        # [NEW] Preview Section
+        (
+            'Context Preview',
+            {
+                'fields': ('resolved_command_preview',),
+                'description': 'Shows the command as it would execute in the currently Selected Environment, applying Spell Defaults and Node Overrides.',
+            },
+        ),
     )
+
+    def resolved_command_preview(self, obj):
+        try:
+            if not obj.spell:
+                return 'No Spell Assigned'
+
+            # 1. Base Env
+            env = ProjectEnvironment.objects.filter(selected=True).first()
+
+            # 2. Spell Defaults (Tier 1)
+            # We use the utility to get Env + Spell vars first
+            ctx = resolve_environment_context(spell_id=obj.spell.id)
+
+            # 3. Node Overrides (Tier 2)
+            # Manually apply these since resolve_environment_context doesn't take node_id directly yet
+            node_vars = HydraSpellBookNodeContext.objects.filter(node=obj)
+            for var in node_vars:
+                if var.key:
+                    ctx[var.key] = var.value
+
+            # 4. Render
+            full_cmd_list = obj.spell.get_full_command(
+                environment=env, extra_context=ctx
+            )
+            return ' '.join(full_cmd_list)
+        except Exception as e:
+            return f'Error generating preview: {str(e)}'
 
 
 admin.site.register(HydraHeadStatus)
