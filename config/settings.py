@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     'talos_occipital',
     'talos_temporal',
     'talos_reasoning',
+    'djangorestframework_mcp',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -149,3 +151,9 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}

@@ -8,4 +8,5 @@ urlpatterns = [
     path('frontal/', include('talos_frontal.urls')),
     path('reasoning/', include('talos_reasoning.urls')),
     path('environments/', include('environments.urls')),
+    path('api-auth/', include('rest_framework.urls')),
 ]

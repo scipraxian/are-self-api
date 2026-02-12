@@ -26,3 +26,8 @@ watchfiles>=1.1.1
 pytest-asyncio
 
 psycopg2-binary>=2.9.9
+
+
+djangorestframework
+django-filter
+django-rest-framework-mcp
