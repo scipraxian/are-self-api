@@ -1,8 +1,28 @@
 import datetime
+import json
+import logging
 import uuid
 from typing import Any, Dict, NamedTuple
 
+from common.constants import ID
+from environments.models import ProjectEnvironment
 from environments.variable_renderer import VariableRenderer
+from hydra.constants import (
+    EXECUTION_LOG_FIELD_NAME,
+    KEY_BOOK_ID,
+    KEY_ENVIRONMENT_ID,
+    KEY_HEAD_ID,
+    KEY_PROVENANCE_ID,
+    KEY_SPAWN_ID,
+    KEY_SPELL_ID,
+    PROVENANCE_FIELD_NAME,
+    RESULT_CODE_FIELD_NAME,
+    SPELL_LOG_FIELD_NAME,
+)
+from hydra.models import HydraHead
+
+logger = logging.getLogger(__name__)
+
 
 # TODO: everything here should be moved to somewhere more descriptive.
 
@@ -24,18 +44,6 @@ def log_system(head, message):
     entry = f'[{get_timestamp()}] {message}\n'
     head.execution_log += entry
     head.save(update_fields=['execution_log'])
-
-
-def resolve_template(template_str, context: HydraContext):
-    if not template_str:
-        return ''
-    format_data = context._asdict()
-    if context.dynamic_context:
-        format_data.update(context.dynamic_context)
-    try:
-        return template_str.format(**format_data)
-    except KeyError:
-        return template_str
 
 
 def get_active_environment(head) -> Any:
@@ -68,19 +76,9 @@ def resolve_environment_context(
         execution metadata (head_id, spawn_id, etc.).
     """
     # Local imports to avoid circular dependency with models.py if it ever imports utils
-    from environments.models import ProjectEnvironment
-    from hydra.constants import (
-        KEY_BOOK_ID,
-        KEY_ENVIRONMENT_ID,
-        KEY_HEAD_ID,
-        KEY_PROVENANCE_ID,
-        KEY_SPAWN_ID,
-        KEY_SPELL_ID,
-    )
-    from hydra.models import HydraHead
 
     env = None
-    metadata = {}
+    metadata: Dict[str, Any] = {}
 
     if spell_id and not head_id:
         env = ProjectEnvironment.objects.get(
@@ -97,6 +95,7 @@ def resolve_environment_context(
                 'node__environment',
                 'spawn__environment',
                 'spawn__spellbook__environment',
+                PROVENANCE_FIELD_NAME,
             ).get(id=head_id)
         except HydraHead.DoesNotExist:
             return {}
@@ -115,6 +114,30 @@ def resolve_environment_context(
             else None,
             KEY_ENVIRONMENT_ID: str(env.id) if env else None,
         }
+        if head.provenance:
+            metadata[PROVENANCE_FIELD_NAME] = {
+                ID: str(head.provenance.id),
+                SPELL_LOG_FIELD_NAME: head.provenance.spell_log or '',
+                EXECUTION_LOG_FIELD_NAME: head.provenance.execution_log or '',
+                RESULT_CODE_FIELD_NAME: head.provenance.result_code,
+            }
+        else:
+            metadata[PROVENANCE_FIELD_NAME] = {
+                ID: '',
+                SPELL_LOG_FIELD_NAME: '',
+                EXECUTION_LOG_FIELD_NAME: '',
+                RESULT_CODE_FIELD_NAME: '',
+            }
+
+        # [NEW] 2. Merge Spawn Context Data (User Input / Dynamic vars)
+        if head.spawn.context_data:
+            try:
+                dynamic_ctx = json.loads(head.spawn.context_data)
+                if isinstance(dynamic_ctx, dict):
+                    metadata.update(dynamic_ctx)
+            except json.JSONDecodeError:
+                logger.warning('Invalid JSON in Spawn Context Data.')
+
     else:
         raise ValueError('Must provide either head_id or (env_id and spell_id)')
 

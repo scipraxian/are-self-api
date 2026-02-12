@@ -25,3 +25,9 @@ KEY_BOOK_ID = 'book_id'
 KEY_PROVENANCE_ID = 'provenance_id'
 KEY_SERVER = 'server'
 KEY_ENVIRONMENT_ID = 'environment_id'
+
+PROVENANCE_FIELD_NAME = 'provenance'
+
+SPELL_LOG_FIELD_NAME = 'spell_log'
+EXECUTION_LOG_FIELD_NAME = 'execution_log'
+RESULT_CODE_FIELD_NAME = 'result_code'

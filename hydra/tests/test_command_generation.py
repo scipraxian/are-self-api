@@ -1,3 +1,4 @@
+import pytest
 from django.test import TestCase
 
 from environments.models import (
@@ -22,6 +23,7 @@ from hydra.models import (
 from hydra.utils import get_active_environment, resolve_environment_context
 
 
+@pytest.mark.django_db
 class CommandGenerationTest(TestCase):
     fixtures = [
         'environments/fixtures/initial_data.json',
@@ -32,9 +34,9 @@ class CommandGenerationTest(TestCase):
 
     def setUp(self):
         # 1. Setup Base Objects
-        self.exe = TalosExecutable.objects.create(name='Test Tool',
-                                                  executable='tool.exe',
-                                                  working_path='C:/Tools')
+        self.exe = TalosExecutable.objects.create(
+            name='Test Tool', executable='tool.exe', working_path='C:/Tools'
+        )
         self.spell = HydraSpell.objects.create(
             name='Test Spell',
             talos_executable=self.exe,
@@ -46,18 +48,23 @@ class CommandGenerationTest(TestCase):
         # 2. Setup Environments
         self.type_ue = ProjectEnvironmentType.objects.create(name='UE5')
         self.status_active = ProjectEnvironmentStatus.objects.create(
-            name='Active')
+            name='Active'
+        )
 
         self.env_default = ProjectEnvironment.objects.create(
-            name='Default Env', type=self.type_ue, status=self.status_active)
+            name='Default Env', type=self.type_ue, status=self.status_active
+        )
         self.env_spawn = ProjectEnvironment.objects.create(
-            name='Spawn Env', type=self.type_ue, status=self.status_active)
+            name='Spawn Env', type=self.type_ue, status=self.status_active
+        )
         self.env_node = ProjectEnvironment.objects.create(
-            name='Node Env', type=self.type_ue, status=self.status_active)
+            name='Node Env', type=self.type_ue, status=self.status_active
+        )
 
         # 3. Setup Variables
         key_root, _ = ProjectEnvironmentContextKey.objects.get_or_create(
-            name='project_root')
+            name='project_root'
+        )
 
         # Fix: Create vars using correct keys
         ContextVariable.objects.create(
@@ -78,20 +85,23 @@ class CommandGenerationTest(TestCase):
 
         # 4. Create Argument
         self.arg = TalosExecutableArgument.objects.create(
-            name='Project Flag', argument='-project={{ project_root }}')
-        HydraSpellArgumentAssignment.objects.create(spell=self.spell,
-                                                    argument=self.arg,
-                                                    order=1)
+            name='Project Flag', argument='-project={{ project_root }}'
+        )
+        HydraSpellArgumentAssignment.objects.create(
+            spell=self.spell, argument=self.arg, order=1
+        )
 
     def _get_command(self, head=None, environment=None, extra_context=None):
         if head:
             env = get_active_environment(head)
             ctx = resolve_environment_context(head_id=head.id)
-            return self.spell.get_full_command(environment=env,
-                                               extra_context=ctx)
+            return self.spell.get_full_command(
+                environment=env, extra_context=ctx
+            )
 
-        return self.spell.get_full_command(environment=environment,
-                                           extra_context=extra_context)
+        return self.spell.get_full_command(
+            environment=environment, extra_context=extra_context
+        )
 
     def test_legacy_mode(self):
         """Verifies calling with just environment works."""
@@ -105,11 +115,12 @@ class CommandGenerationTest(TestCase):
         self.book.environment = self.env_default
         self.book.save()
 
-        spawn = HydraSpawn.objects.create(spellbook=self.book,
-                                          status=self.status_created)
-        head = HydraHead.objects.create(spawn=spawn,
-                                        spell=self.spell,
-                                        status=self.head_status)
+        spawn = HydraSpawn.objects.create(
+            spellbook=self.book, status=self.status_created
+        )
+        head = HydraHead.objects.create(
+            spawn=spawn, spell=self.spell, status=self.head_status
+        )
 
         result = self._get_command(head=head)
         self.assertIn('-project=C:/Default', result)
@@ -124,9 +135,9 @@ class CommandGenerationTest(TestCase):
             status=self.status_created,
             environment=self.env_spawn,  # <--- Selection
         )
-        head = HydraHead.objects.create(spawn=spawn,
-                                        spell=self.spell,
-                                        status=self.head_status)
+        head = HydraHead.objects.create(
+            spawn=spawn, spell=self.spell, status=self.head_status
+        )
 
         result = self._get_command(head=head)
         self.assertIn('-project=C:/Spawn', result)
@@ -148,10 +159,9 @@ class CommandGenerationTest(TestCase):
             environment=self.env_node,  # <--- Override
         )
 
-        head = HydraHead.objects.create(spawn=spawn,
-                                        spell=self.spell,
-                                        node=node,
-                                        status=self.head_status)
+        head = HydraHead.objects.create(
+            spawn=spawn, spell=self.spell, node=node, status=self.head_status
+        )
 
         result = self._get_command(head=head)
         self.assertIn('-project=C:/Node', result)
@@ -160,16 +170,18 @@ class CommandGenerationTest(TestCase):
         """Verify metadata keys (head_id, etc) are available."""
         # Create argument expecting metadata
         arg_meta = TalosExecutableArgument.objects.create(
-            name='Meta', argument='-id={{ head_id }}')
-        HydraSpellArgumentAssignment.objects.create(spell=self.spell,
-                                                    argument=arg_meta,
-                                                    order=2)
+            name='Meta', argument='-id={{ head_id }}'
+        )
+        HydraSpellArgumentAssignment.objects.create(
+            spell=self.spell, argument=arg_meta, order=2
+        )
 
-        spawn = HydraSpawn.objects.create(spellbook=self.book,
-                                          status=self.status_created)
-        head = HydraHead.objects.create(spawn=spawn,
-                                        spell=self.spell,
-                                        status=self.head_status)
+        spawn = HydraSpawn.objects.create(
+            spellbook=self.book, status=self.status_created
+        )
+        head = HydraHead.objects.create(
+            spawn=spawn, spell=self.spell, status=self.head_status
+        )
 
         result = self._get_command(head=head)
 
