@@ -3,6 +3,7 @@
  * Built by Antigravity - Senior Frontend Engineer Refactor
  */
 
+
 class GraphEditor {
     constructor() {
         this.nodes = [];
@@ -29,6 +30,13 @@ class GraphEditor {
         this.grid = document.getElementById('canvas-grid');
         this.tempLine = document.getElementById('temp-line');
         this.libraryContainer = document.getElementById('node-library');
+
+        // Inspector
+        this.inspector = document.getElementById('inspector');
+        this.inspectorHeaderSub = this.inspector ? this.inspector.querySelector('.sub-id') : null;
+        this.inspectorContent = this.inspector ? this.inspector.querySelector('.inspector-content') : null;
+        this.activeNodeId = null;
+        this.contextSaveTimer = null;
 
         // State
         this.panX = 0;
@@ -244,7 +252,12 @@ class GraphEditor {
                         const el = document.getElementById(n.id);
                         if (el) el.classList.remove('selected');
                     });
+                    this.nodes.forEach(n => {
+                        const el = document.getElementById(n.id);
+                        if (el) el.classList.remove('selected');
+                    });
                     this.updateEyeballState();
+                    this.closeInspector();
                 }
             }
         });
@@ -536,6 +549,11 @@ class GraphEditor {
 
             // Update "Big Eyeball" State
             this.updateEyeballState();
+
+            // Inspector Logic
+            if (!e.shiftKey) {
+                this.openInspector(node);
+            }
         });
 
         // Dragging (Disable in Monitor Mode)
@@ -1013,6 +1031,209 @@ class GraphEditor {
 
     render() {
         this.updateCanvasTransform();
+    }
+
+    // --- Inspector Logic ---
+
+    async openInspector(node) {
+        if (!this.inspector) return;
+
+        this.activeNodeId = node.id;
+        this.inspector.classList.remove('hidden');
+
+        // Set Header
+        const isDelegated = !!node.invoked_spellbook_id;
+        const inspectorTitle = this.inspector.querySelector('h2');
+        if (inspectorTitle) {
+            inspectorTitle.innerHTML = `
+                <span style="color: ${isDelegated ? '#a855f7' : '#f8fafc'}">
+                    ${isDelegated ? '🌀 ' : ''}${node.title}
+                </span>
+            `;
+        }
+
+        if (this.inspectorHeaderSub) {
+            this.inspectorHeaderSub.innerText = `ID: ${node.id}`;
+        }
+
+        if (this.inspectorContent) {
+            this.inspectorContent.innerHTML = '<div style="text-align: center; color: #64748b; margin-top: 20px;">Loading details...</div>';
+        }
+
+        if (this.isMonitorMode) {
+            await this.fetchNodeTelemetry(node.id);
+        } else {
+            await this.fetchNodeDetails(node.id);
+        }
+    }
+
+    closeInspector() {
+        if (!this.inspector) return;
+        this.inspector.classList.add('hidden');
+        this.activeNodeId = null;
+    }
+
+    async fetchNodeDetails(nodeId) {
+        const data = await this.apiFetch(`node_details?node_id=${nodeId}`);
+        if (data) {
+            this.renderInspectorEdit(data);
+        }
+    }
+
+    async fetchNodeTelemetry(nodeId) {
+        // Only fetch if this is still the active node (avoid race conditions)
+        if (this.activeNodeId !== nodeId) return;
+
+        const data = await this.apiFetch(`node_telemetry?node_id=${nodeId}&spawn_id=${this.spawnId}`);
+        if (data) {
+            this.renderInspectorMonitor(nodeId, data);
+        }
+    }
+
+    renderInspectorEdit(data) {
+        if (!this.inspectorContent) return;
+        let html = '';
+
+        // Distribution Mode
+        // We assume we have a simple dropdown or label for now. 
+        // Ideally we fetch modes loop, but let's keep it simple or read-only if not implemented fully.
+        // For this iteration, we focus on the Smart Matrix.
+
+        html += `<div class="section-title">Context Variables</div>`;
+
+        if (data.context_matrix && data.context_matrix.length > 0) {
+            html += `<table class="smart-table">`;
+            html += `<thead><tr><th>Variable</th><th>Value</th></tr></thead>`;
+            html += `<tbody>`;
+
+            data.context_matrix.forEach(item => {
+                const sourceClass = `source-${item.source}`;
+                const inputClass = item.source === 'override' ? 'input-override' : (item.source === 'global' ? 'input-global' : '');
+
+                html += `<tr class="var-row">
+                    <td>
+                        <span class="var-key">${item.key}</span>
+                        <div style="font-size: 0.7rem; color: #64748b;">${item.source}</div>
+                    </td>
+                    <td>
+                        <div class="var-input-wrapper">
+                            <div class="source-indicator ${sourceClass}"></div>
+                            <input type="text" 
+                                class="var-input ${inputClass}" 
+                                value="${item.display_value}" 
+                                placeholder="Default"
+                                ${item.is_readonly ? 'readonly' : ''}
+                                onchange="window.app.handleContextChange('${data.node_id}', '${item.key}', this.value)"
+                            >
+                        </div>
+                    </td>
+                </tr>`;
+            });
+
+            html += `</tbody></table>`;
+        } else {
+            html += `<div style="font-style: italic; color: #64748b;">No variables detected in Spell.</div>`;
+        }
+
+        // Add instructions
+        html += `
+        <div style="margin-top: 20px; font-size: 0.75rem; color: #475569; line-height: 1.4;">
+            <strong>Legend:</strong><br>
+            <span style="color: #4ade80">●</span> From Spell Defaults<br>
+            <span style="color: #facc15">●</span> Manual Override<br>
+            <span style="color: #3b82f6">●</span> Global Environment
+        </div>`;
+
+        this.inspectorContent.innerHTML = html;
+    }
+
+    renderInspectorMonitor(nodeId, data) {
+        if (!this.inspectorContent) return;
+        const getStatusClass = (s) => {
+            switch (s) {
+                case 4:
+                    return 'status-success'; // Success
+                case 5:
+                    return 'status-failed';  // Failed
+                case 3:
+                    return 'status-running'; // Running
+                default:
+                    return 'status-pending';
+            }
+        };
+
+        const statusClass = getStatusClass(data.status_id);
+        const isRunning = data.status_id === 3;
+
+        let html = `
+        <div class="telemetry-card">
+            <div class="monitor-header">
+                <div class="pulse-status ${statusClass}">
+                    <div class="pulse-dot"></div>
+                    ${data.status}
+                </div>
+            </div>
+            
+            <div class="vital-grid">
+                <div class="vital-item">
+                    <span class="vital-label">Duration</span>
+                    <span class="vital-value">${data.duration}</span>
+                </div>
+                <div class="vital-item">
+                    <span class="vital-label">Exit Code</span>
+                    <span class="vital-value">${data.exit_code !== null ? data.exit_code : '--'}</span>
+                </div>
+                <div class="vital-item" style="grid-column: span 2;">
+                    <span class="vital-label">Agent</span>
+                    <span class="vital-value">${data.agent}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section-title">Log Stream (Tail)</div>
+        <div class="peep-hole">
+            <div class="peep-hole-header">
+                <span>output.log</span>
+                <span>Last 20 lines</span>
+            </div>
+            ${data.logs ? data.logs.split('\n').map(l => `<span class="log-line">${l}</span>`).join('') : '<span style="opacity: 0.5">Waiting for logs...</span>'}
+        </div>
+        
+        <div class="action-bar">
+             <button class="action-btn" onclick="window.open('/hydra/head/${data.head_id}/', '_self')">
+                📄 View Logs
+            </button>
+            <button class="action-btn primary">
+                🧠 Analyze
+            </button>
+        </div>
+        `;
+
+        this.inspectorContent.innerHTML = html;
+
+        // Auto-refresh if running
+        if (isRunning && this.activeNodeId === nodeId && !document.hidden && this.isMonitorMode) {
+            setTimeout(() => this.fetchNodeTelemetry(nodeId), 2000);
+        }
+    }
+
+    async handleContextChange(nodeId, key, value) {
+        // Debounce or immediate? Immediate for now, usually user stops typing when clicking away.
+        // Actually, onchange fires on blur.
+
+        // Optimistic UI Update
+        // Re-render handled by full refresh? No, let's just send API request.
+
+        await this.apiFetch('save_node_context', {
+            method: 'POST',
+            body: JSON.stringify({
+                node_id: nodeId,
+                updates: [{key: key, value: value}]
+            })
+        });
+
+        // Refresh to get correct colors/states
+        this.fetchNodeDetails(nodeId);
     }
 }
 

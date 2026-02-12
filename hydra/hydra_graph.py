@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import uuid
 from dataclasses import dataclass
 from typing import Callable, Dict
@@ -9,6 +10,8 @@ from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
+
+from environments.variable_renderer import VariableRenderer
 
 from .hydra import Hydra
 from .models import (
@@ -34,6 +37,9 @@ ACTION_CONNECT = 'connect'
 ACTION_DELETE_NODE = 'delete_node'
 ACTION_DISCONNECT = 'disconnect'
 ACTION_UPDATE_BOOK = 'update_book'
+ACTION_NODE_DETAILS = 'node_details'
+ACTION_NODE_TELEMETRY = 'node_telemetry'
+ACTION_SAVE_NODE_CONTEXT = 'save_node_context'
 
 # Connection Types (Frontend Strings)
 TYPE_FLOW_STR = 'flow'
@@ -109,6 +115,10 @@ class HydraGraphAPI(View):
 
         dispatch_map: Dict[str | None, Callable] = {
             ACTION_LIBRARY: get_library,
+            ACTION_NODE_DETAILS: lambda book: get_node_details(book, request),
+            ACTION_NODE_TELEMETRY: lambda book: get_node_telemetry(
+                book, request
+            ),
             None: get_graph_layout,
         }
         handler = dispatch_map.get(action)
@@ -130,6 +140,7 @@ class HydraGraphAPI(View):
             ACTION_DELETE_NODE: handle_delete_node,
             ACTION_DISCONNECT: handle_disconnect,
             ACTION_UPDATE_BOOK: handle_update_book,
+            ACTION_SAVE_NODE_CONTEXT: handle_save_node_context,
         }
         handler = dispatch_map.get(action)
         if handler:
@@ -348,6 +359,174 @@ def get_library(spellbook: HydraSpellbook) -> JsonResponse:
 
     # Combine
     return JsonResponse({KEY_LIBRARY: spells + list(books)})
+
+
+def get_node_details(
+    spellbook: HydraSpellbook, request: HttpRequest
+) -> JsonResponse:
+    node_id = request.GET.get('node_id')
+    node = get_object_or_404(
+        HydraSpellbookNode, id=node_id, spellbook=spellbook
+    )
+
+    # 1. Inspect the Spell to find variables
+    # We look at all arguments and switches
+    variables = set()
+
+    if node.spell:
+        # Check Args
+        args = node.spell.hydraspellargumentassignment_set.all()
+        for a in args:
+            raw = a.argument.argument
+            found = re.findall(r'\{\{\s*(\w+)\s*\}\}', raw)
+            variables.update(found)
+
+        # Check Switches
+        switches = node.spell.switches.all()
+        for s in switches:
+            raw = s.flag + (s.value or '')
+            found = re.findall(r'\{\{\s*(\w+)\s*\}\}', raw)
+            variables.update(found)
+
+        # Check Executable Args (Base args)
+        exe_args = node.spell.talos_executable.talosexecutableargumentassignment_set.all()
+        for a in exe_args:
+            raw = a.argument.argument
+            found = re.findall(r'\{\{\s*(\w+)\s*\}\}', raw)
+            variables.update(found)
+
+    # 2. Get Global Context (Blue)
+    # We use the spellbook's environment
+    global_context = VariableRenderer.extract_variables(spellbook.environment)
+
+    # 3. Get Overrides (Yellow)
+    # HydraSpellBookNodeContext doesn't exist in imports, let's dynamic import or use related manager
+    # node.hydraspellbooknodecontext_set assuming generic relation or we need to import model
+    # The model name is HydraSpellBookNodeContext in models.py
+    from .models import HydraSpellBookNodeContext
+
+    overrides = {
+        c.key: c.value for c in node.hydraspellbooknodecontext_set.all()
+    }
+
+    # Build the Smart Matrix
+    matrix = []
+    for var in sorted(list(variables)):
+        item = {
+            'key': var,
+            'source': 'default',  # Green
+            'value': '',
+            'display_value': '',
+            'is_readonly': False,
+        }
+
+        # Check Override (Highest Priority)
+        if var in overrides:
+            item['source'] = 'override'  # Yellow
+            item['value'] = overrides[var]
+            item['display_value'] = overrides[var]
+
+        # Check Global
+        elif var in global_context:
+            item['source'] = 'global'  # Blue
+            item['value'] = global_context[var]
+            item['display_value'] = str(global_context[var])
+            item['is_readonly'] = (
+                True  # Globals are system managed usually? Or can we override them?
+            )
+            # User said "Input is read-only or shows 'System Managed'"
+
+        matrix.append(item)
+
+    return JsonResponse(
+        {
+            'node_id': node.id,
+            'name': node.spell.name if node.spell else 'Unknown',
+            'description': node.spell.description if node.spell else '',
+            'distribution_mode_id': node.distribution_mode_id,
+            'context_matrix': matrix,
+        }
+    )
+
+
+def handle_save_node_context(
+    spellbook: HydraSpellbook, payload: dict
+) -> JsonResponse:
+    node_id = payload.get('node_id')
+    updates = payload.get('updates', [])  # List of {key, value}
+
+    node = get_object_or_404(
+        HydraSpellbookNode, id=node_id, spellbook=spellbook
+    )
+
+    from .models import HydraSpellBookNodeContext
+
+    for update in updates:
+        key = update.get('key')
+        value = update.get('value')
+
+        if not key:
+            continue
+
+        if not value:
+            # Remove override if empty
+            HydraSpellBookNodeContext.objects.filter(
+                node=node, key=key
+            ).delete()
+        else:
+            HydraSpellBookNodeContext.objects.update_or_create(
+                node=node, key=key, defaults={'value': value}
+            )
+
+    # Also handle distribution mode update
+    dist_mode = payload.get('distribution_mode_id')
+    if dist_mode:
+        node.distribution_mode_id = dist_mode
+        node.save(update_fields=['distribution_mode'])
+
+    return JsonResponse({'status': 'saved'})
+
+
+def get_node_telemetry(
+    spellbook: HydraSpellbook, request: HttpRequest
+) -> JsonResponse:
+    node_id = request.GET.get('node_id')
+    spawn_id = request.GET.get('spawn_id')
+
+    if not spawn_id:
+        return JsonResponse({'error': 'No spawn_id'}, status=400)
+
+    # Get the latest Head for this node in this spawn
+    # We join HydraHead -> HydraSpawn
+    from .models import HydraHead, HydraSpawn
+
+    # We need the head belonging to the spawn.
+    # The spawn might have multiple heads if looped, but usually we want the latest.
+    head = (
+        HydraHead.objects.filter(spawn_id=spawn_id, node_id=node_id)
+        .order_by('-created')
+        .first()
+    )
+
+    if not head:
+        return JsonResponse({'status': 'pending', 'logs': ''})
+
+    # Get Logs (Peep Hole)
+    logs = head.spell_log or ''
+    lines = logs.split('\n')
+    tail = lines[-20:] if len(lines) > 20 else lines
+
+    return JsonResponse(
+        {
+            'status': head.status.name,
+            'status_id': head.status_id,
+            'agent': str(head.target) if head.target else 'Pending...',
+            'exit_code': head.result_code,
+            'logs': '\n'.join(tail),
+            'head_id': str(head.id),
+            'duration': '0s',  # Placeholder, implies calculation from created/modified
+        }
+    )
 
 
 def get_execution_status(
