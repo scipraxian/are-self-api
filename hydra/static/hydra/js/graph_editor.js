@@ -46,8 +46,8 @@ class GraphEditor {
         this.isDraggingNode = null;
         this.activeWire = null;
 
-        this.dragOffset = {x: 0, y: 0};
-        this.lastMousePos = {x: 0, y: 0};
+        this.dragOffset = { x: 0, y: 0 };
+        this.lastMousePos = { x: 0, y: 0 };
 
         // Execution State
         this.executionState = 'ready'; // ready, running, error, finished
@@ -86,7 +86,7 @@ class GraphEditor {
     async updateBookName(name) {
         const result = await this.apiFetch('update_book', {
             method: 'POST',
-            body: JSON.stringify({name: name})
+            body: JSON.stringify({ name: name })
         });
         if (result && result.status === 'updated') {
             document.title = `${result.name} | Talos Graph Editor`;
@@ -105,7 +105,7 @@ class GraphEditor {
         try {
             const response = await fetch(url, {
                 ...options,
-                headers: {...defaultHeaders, ...options.headers}
+                headers: { ...defaultHeaders, ...options.headers }
             });
 
             if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
@@ -274,7 +274,7 @@ class GraphEditor {
             this.panY -= mouseY * (newZoom / this.zoom - 1);
             this.zoom = newZoom;
             this.updateCanvasTransform();
-        }, {passive: false});
+        }, { passive: false });
 
         window.addEventListener('mousemove', (e) => {
             const dx = e.clientX - this.lastMousePos.x;
@@ -300,7 +300,7 @@ class GraphEditor {
                 this.updateTempWire(e.clientX, e.clientY);
             }
 
-            this.lastMousePos = {x: e.clientX, y: e.clientY};
+            this.lastMousePos = { x: e.clientX, y: e.clientY };
         });
 
         window.addEventListener('mouseup', async (e) => {
@@ -366,7 +366,7 @@ class GraphEditor {
                     if (confirm("WARNING: Force Stop this Operation?")) {
                         fetch(window.djangoContext.terminateUrl, {
                             method: 'POST',
-                            headers: {'X-CSRFToken': this.csrfToken}
+                            headers: { 'X-CSRFToken': this.csrfToken }
                         }).then(() => {
                             window.location.reload();
                         });
@@ -567,7 +567,7 @@ class GraphEditor {
             nodeEl.style.zIndex = 1000;
             this.nodesLayer.appendChild(nodeEl);
             this.isDraggingNode = node;
-            this.lastMousePos = {x: e.clientX, y: e.clientY};
+            this.lastMousePos = { x: e.clientX, y: e.clientY };
 
             const rect = nodeEl.getBoundingClientRect();
             this.dragOffset = {
@@ -667,7 +667,7 @@ class GraphEditor {
         if (!localOnly && !targetId.startsWith('temp_')) {
             await this.apiFetch('delete_node', {
                 method: 'POST',
-                body: JSON.stringify({node_id: targetId})
+                body: JSON.stringify({ node_id: targetId })
             });
         }
     }
@@ -860,7 +860,7 @@ class GraphEditor {
         this.setExecutionStatus('running', 'Spawning Process...');
         const result = await this.apiFetch('launch/', {
             method: 'POST',
-            body: JSON.stringify({book_id: this.bookId})
+            body: JSON.stringify({ book_id: this.bookId })
         });
         if (result && result.status === 'started') {
             // this.setExecutionStatus('running', 'Process Active');
@@ -886,15 +886,15 @@ class GraphEditor {
         const startNode = this.nodes.find(n => n.isRoot) || this.nodes[0];
         const levels = new Map();
         const visited = new Set();
-        const queue = [{id: startNode.id, level: 0}];
+        const queue = [{ id: startNode.id, level: 0 }];
 
         while (queue.length > 0) {
-            const {id, level} = queue.shift();
+            const { id, level } = queue.shift();
             if (visited.has(id)) continue;
             visited.add(id);
             levels.set(id, Math.max(levels.get(id) || 0, level));
             const children = this.connections.filter(c => c.fromNode === id).map(c => c.toNode);
-            children.forEach(childId => queue.push({id: childId, level: level + 1}));
+            children.forEach(childId => queue.push({ id: childId, level: level + 1 }));
         }
 
         this.nodes.forEach(node => {
@@ -922,7 +922,7 @@ class GraphEditor {
                     if (!this.isMonitorMode) {
                         this.apiFetch('move_node', {
                             method: 'POST',
-                            body: JSON.stringify({node_id: node.id, x: node.x, y: node.y})
+                            body: JSON.stringify({ node_id: node.id, x: node.x, y: node.y })
                         });
                     }
                 }
@@ -1110,21 +1110,41 @@ class GraphEditor {
                 const sourceClass = `source-${item.source}`;
                 const inputClass = item.source === 'override' ? 'input-override' : (item.source === 'global' ? 'input-global' : '');
 
+                // Determine if we need a textarea (heuristic: long content or 'prompt' key)
+                const isLong = item.display_value.length > 50 || item.key.toLowerCase().includes('prompt');
+                const uniqueId = `ctx-${item.key}-${data.node_id}`;
+
+                let inputHtml = '';
+                if (isLong) {
+                    inputHtml = `<textarea 
+                        id="${uniqueId}"
+                        class="var-input ${inputClass}" 
+                        placeholder="Default"
+                        ${item.is_readonly ? 'readonly' : ''}
+                        rows="4"
+                        style="resize: vertical; min-height: 80px;"
+                        onblur="window.app.handleContextChange('${data.node_id}', '${item.key}', this.value)"
+                    >${item.display_value}</textarea>`;
+                } else {
+                    inputHtml = `<input type="text" 
+                        id="${uniqueId}"
+                        class="var-input ${inputClass}" 
+                        value="${item.display_value}" 
+                        placeholder="Default"
+                        ${item.is_readonly ? 'readonly' : ''}
+                        onchange="window.app.handleContextChange('${data.node_id}', '${item.key}', this.value)"
+                    >`;
+                }
+
                 html += `<tr class="var-row">
                     <td>
-                        <span class="var-key">${item.key}</span>
+                        <label for="${uniqueId}" class="var-key" style="cursor: pointer;">${item.key}</label>
                         <div style="font-size: 0.7rem; color: #64748b;">${item.source}</div>
                     </td>
                     <td>
-                        <div class="var-input-wrapper">
-                            <div class="source-indicator ${sourceClass}"></div>
-                            <input type="text" 
-                                class="var-input ${inputClass}" 
-                                value="${item.display_value}" 
-                                placeholder="Default"
-                                ${item.is_readonly ? 'readonly' : ''}
-                                onchange="window.app.handleContextChange('${data.node_id}', '${item.key}', this.value)"
-                            >
+                        <div class="var-input-wrapper" style="${isLong ? 'align-items: flex-start;' : ''}">
+                            <div class="source-indicator ${sourceClass}" style="${isLong ? 'top: 12px;' : ''}"></div>
+                            ${inputHtml}
                         </div>
                     </td>
                 </tr>`;
@@ -1165,6 +1185,33 @@ class GraphEditor {
         const statusClass = getStatusClass(data.status_id);
         const isRunning = data.status_id === 3;
 
+        // --- CONTEXT MATRIX (READ ONLY) ---
+        let contextHtml = `<div style="font-style: italic; color: #64748b;">No variables.</div>`;
+        if (data.context_matrix && data.context_matrix.length > 0) {
+            contextHtml = `<table class="smart-table" style="opacity: 0.8;">`;
+            contextHtml += `<thead><tr><th>Variable</th><th>Value</th></tr></thead>`;
+            contextHtml += `<tbody>`;
+            data.context_matrix.forEach(item => {
+                const sourceClass = `source-${item.source}`;
+                contextHtml += `
+               <tr class="var-row">
+                    <td>
+                        <span class="var-key">${item.key}</span>
+                        <div style="font-size: 0.7rem; color: #64748b;">${item.source}</div>
+                    </td>
+                    <td>
+                        <div class="var-input-wrapper">
+                            <div class="source-indicator ${sourceClass}"></div>
+                            <span class="var-input" style="border: none; background: transparent; padding-left: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ${item.value}
+                            </span>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            contextHtml += `</tbody></table>`;
+        }
+
         let html = `
         <div class="telemetry-card">
             <div class="monitor-header">
@@ -1190,17 +1237,47 @@ class GraphEditor {
             </div>
         </div>
         
-        <div class="section-title">Log Stream (Tail)</div>
+        <div class="section-title">Context Parameters</div>
+        ${contextHtml}
+
+        <div class="section-title">Executed Command</div>
+        <div class="peep-hole" style="max-height: 100px; color: #a5b4fc; font-size: 0.65rem;">
+            ${data.command || 'Command not captured'}
+        </div>
+
+        <div class="section-title">Spell Log (Standard Output)</div>
         <div class="peep-hole">
             <div class="peep-hole-header">
                 <span>output.log</span>
                 <span>Last 20 lines</span>
             </div>
-            ${data.logs ? data.logs.split('\n').map(l => `<span class="log-line">${l}</span>`).join('') : '<span style="opacity: 0.5">Waiting for logs...</span>'}
+            ${data.logs
+                ? data.logs
+                    .split('\n')
+                    .map((l) => `<span class="log-line">${l}</span>`)
+                    .join('')
+                : '<span style="opacity: 0.5">Waiting for logs...</span>'
+            }
+        </div>
+        
+        <div class="section-title">Execution Log (System)</div>
+        <div class="peep-hole" style="max-height: 150px;">
+            <div class="peep-hole-header">
+                <span>wrapper.log</span>
+                <span>Last 20 lines</span>
+            </div>
+            ${data.exec_logs
+                ? data.exec_logs
+                    .split('\n')
+                    .map((l) => `<span class="log-line">${l}</span>`)
+                    .join('')
+                : '<span style="opacity: 0.5">No system logs.</span>'
+            }
         </div>
         
         <div class="action-bar">
-             <button class="action-btn" onclick="window.open('/hydra/head/${data.head_id}/', '_self')">
+             <button class="action-btn" onclick="window.open('/hydra/head/${data.head_id
+            }/', '_self')">
                 📄 View Logs
             </button>
             <button class="action-btn primary">
@@ -1212,7 +1289,12 @@ class GraphEditor {
         this.inspectorContent.innerHTML = html;
 
         // Auto-refresh if running
-        if (isRunning && this.activeNodeId === nodeId && !document.hidden && this.isMonitorMode) {
+        if (
+            isRunning &&
+            this.activeNodeId === nodeId &&
+            !document.hidden &&
+            this.isMonitorMode
+        ) {
             setTimeout(() => this.fetchNodeTelemetry(nodeId), 2000);
         }
     }
@@ -1228,7 +1310,7 @@ class GraphEditor {
             method: 'POST',
             body: JSON.stringify({
                 node_id: nodeId,
-                updates: [{key: key, value: value}]
+                updates: [{ key: key, value: value }]
             })
         });
 

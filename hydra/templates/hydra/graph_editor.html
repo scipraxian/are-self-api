@@ -45,12 +45,12 @@
 
         /* INSPECTOR MODIFICATIONS */
         .inspector-panel {
-            width: 320px;
+            width: 380px; /* Slight increase for better log viewing */
             background: #0f172a;
             border-left: 1px solid #1e293b;
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
+            overflow-y: hidden; /* Main panel doesn't scroll, content does */
             flex-shrink: 0;
             font-family: 'Inter', sans-serif;
             color: #f1f5f9;
@@ -60,40 +60,10 @@
             box-shadow: -4px 0 15px rgba(0,0,0,0.3);
         }
         
-        .inspector-panel.hidden {
-            width: 0;
-            overflow: hidden;
-            border: none;
-            padding: 0;
-            opacity: 0;
-        }
-        
-        .inspector-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid #1e293b;
-            background: #1e293b;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .inspector-header h2 {
-            margin: 0;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #f8fafc;
-        }
-
-        .inspector-header .sub-id {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            color: #94a3b8;
-            margin-top: 4px;
-        }
-        
         .inspector-content {
             padding: 20px;
             flex: 1;
+            overflow-y: auto; /* Content scrolls independently */
         }
         
         /* Context Matrix */

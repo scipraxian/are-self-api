@@ -147,7 +147,7 @@ class HydraDistributionMode(NameMixin, DescriptionMixin):
         verbose_name = 'Hydra Distribution Mode'
 
 
-class HydraSpell(DefaultFieldsMixin, TagsAndFavoriteMixin):
+class HydraSpell(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
     """
     A configured action (Tool + specific Switches).
     """
