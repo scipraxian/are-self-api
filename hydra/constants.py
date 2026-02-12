@@ -31,3 +31,21 @@ PROVENANCE_FIELD_NAME = 'provenance'
 SPELL_LOG_FIELD_NAME = 'spell_log'
 EXECUTION_LOG_FIELD_NAME = 'execution_log'
 RESULT_CODE_FIELD_NAME = 'result_code'
+
+ENVIRONMENT_KEY = 'environment'
+ENVIRONMENT_LABEL = 'Environment'
+
+# --- Graph Editor Constants (Added) ---
+KEY_ID = 'id'
+KEY_TITLE = 'title'
+KEY_X = 'x'
+KEY_Y = 'y'
+KEY_IS_ROOT = 'is_root'
+
+TYPE_FLOW_STR = 'flow'
+TYPE_SUCCESS_STR = 'success'
+TYPE_FAIL_STR = 'fail'
+
+VAL_UNKNOWN = 'Unknown'
+VAL_PENDING = 'Pending...'
+VAL_CMD_NOT_CAPTURED = 'Command not captured.'

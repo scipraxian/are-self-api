@@ -1,5 +1,8 @@
 from rest_framework import serializers
 
+from common.constants import ALL_FIELDS
+from hydra.constants import ENVIRONMENT_KEY
+
 from .models import (
     ContextVariable,
     ProjectEnvironment,
@@ -12,28 +15,24 @@ from .models import (
     TalosExecutableSupplementaryFileOrPath,
     TalosExecutableSwitch,
 )
-from .variable_renderer import VariableRenderer
 
 
 class ProjectEnvironmentTypeSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ProjectEnvironmentType
-        fields = '__all__'
+        fields = ALL_FIELDS
 
 
 class ProjectEnvironmentStatusSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ProjectEnvironmentStatus
-        fields = '__all__'
+        fields = ALL_FIELDS
 
 
 class ProjectEnvironmentContextKeySerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ProjectEnvironmentContextKey
-        fields = '__all__'
+        fields = ALL_FIELDS
 
 
 class ContextVariableSerializer(serializers.ModelSerializer):
@@ -41,7 +40,7 @@ class ContextVariableSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ContextVariable
-        fields = ['id', 'environment', 'key', 'key_name', 'value']
+        fields = ALL_FIELDS
 
 
 class ProjectEnvironmentSerializer(serializers.ModelSerializer):
@@ -51,70 +50,61 @@ class ProjectEnvironmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectEnvironment
-        fields = [
-            'id', 'name', 'description', 'type', 'type_name', 'status',
-            'status_name', 'available', 'selected', 'contexts', 'created',
-            'modified'
-        ]
+        fields = ALL_FIELDS
 
 
 class TalosExecutableSwitchSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = TalosExecutableSwitch
-        fields = '__all__'
+        fields = ALL_FIELDS
 
 
 class TalosExecutableArgumentSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = TalosExecutableArgument
-        fields = '__all__'
+        fields = ALL_FIELDS
 
 
 class TalosExecutableArgumentAssignmentSerializer(serializers.ModelSerializer):
-    argument_detail = TalosExecutableArgumentSerializer(source='argument',
-                                                        read_only=True)
+    argument_detail = TalosExecutableArgumentSerializer(
+        source='argument', read_only=True
+    )
 
     class Meta:
         model = TalosExecutableArgumentAssignment
-        fields = ['id', 'executable', 'order', 'argument', 'argument_detail']
+        fields = ALL_FIELDS
 
 
 class TalosExecutableSupplementaryFileOrPathSerializer(
-        serializers.ModelSerializer):
-
+    serializers.ModelSerializer
+):
     class Meta:
         model = TalosExecutableSupplementaryFileOrPath
-        fields = '__all__'
+        fields = ALL_FIELDS
 
 
 class TalosExecutableSerializer(serializers.ModelSerializer):
     switches = TalosExecutableSwitchSerializer(many=True, read_only=True)
-    # Using source with method from model
     rendered_executable = serializers.SerializerMethodField()
     argument_assignments = TalosExecutableArgumentAssignmentSerializer(
         source='talosexecutableargumentassignment_set',
         many=True,
-        read_only=True)
+        read_only=True,
+    )
     files = TalosExecutableSupplementaryFileOrPathSerializer(
         source='talosexecutablesupplementaryfileorpath_set',
         many=True,
-        read_only=True)
+        read_only=True,
+    )
 
     class Meta:
         model = TalosExecutable
-        fields = [
-            'id', 'name', 'description', 'internal', 'working_path',
-            'executable', 'log', 'switches', 'rendered_executable',
-            'argument_assignments', 'files'
-        ]
+        fields = ALL_FIELDS
 
     def get_rendered_executable(self, obj) -> str:
         """
         Returns the executable path with variables interpolated.
-        Uses the default/None environment context. 
-        To use a specific environment, context must be passed to serializer.
+        Uses the default/None environment context unless passed in context.
         """
-        env = self.context.get('environment')
+        env = self.context.get(ENVIRONMENT_KEY)
         return obj.get_rendered_executable(environment=env)
