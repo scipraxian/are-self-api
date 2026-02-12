@@ -1,11 +1,12 @@
 import os
 
-from django.http import HttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, TemplateView
 
+from hydra.utils import get_active_environment, resolve_environment_context
 from ue_tools.merge_logs import merge_logs
 
 from .hydra import Hydra
@@ -330,3 +331,75 @@ class SpawnMonitorDetailView(DetailView):
         context['is_full_page'] = self.request.GET.get('full') == 'True'
         context['is_active'] = self.object.is_active
         return context
+
+
+def generate_spawn_dump(spawn):
+    """Generator that streams the entire execution context of a Spawn."""
+    yield f'TALOS SPAWN EXPORT\n'
+    yield f'================================================================================\n'
+    yield f'Spawn ID:   {spawn.id}\n'
+    yield f'Spellbook:  {spawn.spellbook.name if spawn.spellbook else "Deleted"}\n'
+    yield f'Status:     {spawn.status.name}\n'
+    yield f'Created:    {spawn.created}\n'
+    yield f'Environment: {spawn.environment.name if spawn.environment else "None"}\n'
+    yield f'Context Data: {spawn.context_data}\n'
+    yield f'================================================================================\n\n'
+
+    # Fetch all heads in order
+    heads = (
+        spawn.heads.all()
+        .order_by('created')
+        .select_related(
+            'spell', 'status', 'target', 'node', 'spell__talos_executable'
+        )
+    )
+
+    for i, head in enumerate(heads):
+        yield f'--- HEAD #{i + 1} [{head.id}] ---\n'
+        yield f'Spell:      {head.spell.name if head.spell else "None"}\n'
+        yield f'Status:     {head.status.name}\n'
+        yield f'Target:     {head.target.hostname if head.target else "Local Server"}\n'
+
+        # Resolve the command string for context
+        cmd_str = 'Command resolution failed'
+        try:
+            env = get_active_environment(head)
+            ctx = resolve_environment_context(head_id=head.id)
+            if head.spell:
+                full_cmd = head.spell.get_full_command(
+                    environment=env, extra_context=ctx
+                )
+                cmd_str = ' '.join(full_cmd)
+            else:
+                cmd_str = '<No Spell Attached>'
+        except Exception as e:
+            cmd_str = f'<Error: {e}>'
+
+        yield f'Command:    {cmd_str}\n'
+        yield f'Result RC:  {head.result_code}\n'
+
+        yield f'\n[SPELL LOG (Tool Output)]\n'
+        yield f'-------------------------\n'
+        yield head.spell_log or '<No Output>'
+        yield f'\n'
+
+        yield f'\n[EXECUTION LOG (System)]\n'
+        yield f'------------------------\n'
+        yield head.execution_log or '<No System Logs>'
+        yield f'\n'
+        yield f'================================================================================\n\n'
+
+
+class HydraSpawnDownloadView(View):
+    """Streams all data from a spawn into a single .log file download."""
+
+    def get(self, request, pk):
+        spawn = get_object_or_404(HydraSpawn, pk=pk)
+
+        response = StreamingHttpResponse(
+            generate_spawn_dump(spawn), content_type='text/plain'
+        )
+
+        filename = f'Spawn_{str(spawn.id)[:8]}_{spawn.status.name}.log'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response

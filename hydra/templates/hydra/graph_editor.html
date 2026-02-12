@@ -135,13 +135,24 @@
             {% endif %}
 
             <div class="sidebar-footer">
-                <button id="view-toggle" class="icon-btn" title="Toggle View Mode">👁</button>
+                {% if mode == 'monitor' %}
+                    <div style="flex: 1;">
+                        <a href="{% url 'hydra:hydra_spawn_download' spawn.id %}"
+                           target="_blank"
+                           class="btn-done"
+                           style="text-decoration: none; border-color: #60a5fa; color: #60a5fa; font-weight: 700;">
+                            ↓
+                        </a>
+                    </div>
+                {% endif %}
+                <div>
+                    <button id="view-toggle" class="icon-btn" title="Toggle View Mode">👁</button>
+                </div>
             </div>
         </aside>
 
         <main id="editor-container">
             <div id="canvas-grid" class="canvas-layer"></div>
-
             <svg id="svg-layer" class="canvas-layer">
                 <defs>
                     <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6"

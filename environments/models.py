@@ -20,19 +20,22 @@ class TalosExecutableSwitch(DefaultFieldsMixin):
 
     flag = models.CharField(
         max_length=255,
-        help_text=
-        "The actual flag e.g. '-clean', include equals or space if value is present.",
+        help_text="The actual flag e.g. '-clean', include equals or space if value is present.",
     )
-    value = models.CharField(max_length=255,
-                             blank=True,
-                             help_text='The value of the flag, if any.')
+    value = models.CharField(
+        max_length=255, blank=True, help_text='The value of the flag, if any.'
+    )
 
 
 class TalosExecutableArgument(DefaultFieldsMixin):
     """An argument to be passed to the executable."""
 
-    argument = models.CharField(max_length=500,
-                                help_text='The argument itself.')
+    argument = models.CharField(
+        max_length=500, help_text='The argument itself.'
+    )
+
+    def __str__(self):
+        return f'{self.name} - {self.argument}'
 
 
 class TalosExecutable(DefaultFieldsMixin, DescriptionMixin):
@@ -49,8 +52,9 @@ class TalosExecutable(DefaultFieldsMixin, DescriptionMixin):
     VERSION_HANDLER = 9
     DEPLOY_RELEASE = 10  # depreciated.
 
-    internal = models.BooleanField(default=False,
-                                   help_text='Internal Talos Python Function')
+    internal = models.BooleanField(
+        default=False, help_text='Internal Talos Python Function'
+    )
     working_path = models.CharField(
         max_length=500,
         help_text='[DEPRECATED/UNUSED] Where to run the executable.',
@@ -85,11 +89,15 @@ class TalosExecutable(DefaultFieldsMixin, DescriptionMixin):
 class TalosExecutableArgumentAssignment(models.Model):
     executable = models.ForeignKey(TalosExecutable, on_delete=models.CASCADE)
     order = models.IntegerField(default=10)
-    argument = models.ForeignKey(TalosExecutableArgument,
-                                 on_delete=models.CASCADE)
+    argument = models.ForeignKey(
+        TalosExecutableArgument, on_delete=models.CASCADE
+    )
 
     class Meta(object):
         ordering = ['order']
+
+    def __str__(self):
+        return f'{self.executable} - {self.argument}'
 
 
 class TalosExecutableSupplementaryFileOrPath(DefaultFieldsMixin):
@@ -122,8 +130,9 @@ class ProjectEnvironment(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     DEFAULT_ENVIRONMENT = uuid.UUID('44b23b94-6aae-4205-ae67-2f8c021c67aa')
 
     type = models.ForeignKey(ProjectEnvironmentType, on_delete=models.PROTECT)
-    status = models.ForeignKey(ProjectEnvironmentStatus,
-                               on_delete=models.PROTECT)
+    status = models.ForeignKey(
+        ProjectEnvironmentStatus, on_delete=models.PROTECT
+    )
     available = models.BooleanField(default=False)
     selected = models.BooleanField(
         default=False,
@@ -138,18 +147,20 @@ class ProjectEnvironment(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
         if self.selected:
             with transaction.atomic():
                 ProjectEnvironment.objects.filter(selected=True).exclude(
-                    id=self.id).update(selected=False)
+                    id=self.id
+                ).update(selected=False)
         super().save(*args, **kwargs)
 
 
 class ContextVariable(models.Model):
     """Link table between Environment and Variables."""
 
-    environment = models.ForeignKey(ProjectEnvironment,
-                                    on_delete=models.CASCADE,
-                                    related_name='contexts')
-    key = models.ForeignKey(ProjectEnvironmentContextKey,
-                            on_delete=models.CASCADE)
+    environment = models.ForeignKey(
+        ProjectEnvironment, on_delete=models.CASCADE, related_name='contexts'
+    )
+    key = models.ForeignKey(
+        ProjectEnvironmentContextKey, on_delete=models.CASCADE
+    )
     value = models.TextField(blank=True)
 
     def __str__(self):
@@ -157,10 +168,9 @@ class ContextVariable(models.Model):
 
 
 class ProjectEnvironmentMixin(models.Model):
-    environment = models.ForeignKey(ProjectEnvironment,
-                                    on_delete=models.PROTECT,
-                                    blank=True,
-                                    null=True)
+    environment = models.ForeignKey(
+        ProjectEnvironment, on_delete=models.PROTECT, blank=True, null=True
+    )
 
     class Meta:
         abstract = True
