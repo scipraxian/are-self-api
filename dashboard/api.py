@@ -4,7 +4,7 @@ import time
 
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from config.celery import app as celery_app
@@ -12,32 +12,38 @@ from environments.models import ProjectEnvironment
 from environments.serializers import ProjectEnvironmentSerializer
 from hydra.models import HydraSpawn, HydraSpellbook
 from hydra.serializers import (
-    HydraSpawnSerializer,
     HydraSpellbookSerializer,
     HydraSwimlaneSerializer,
 )
 
 
 class DashboardViewSet(viewsets.ViewSet):
-    """
-    System-level operations and data aggregation for the Talos Command Center.
-    """
-
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=['get'])
     def summary(self, request):
         """Aggregates the data needed for the main mission control dashboard."""
-        envs = ProjectEnvironment.objects.all().order_by('name')
-        env_data = ProjectEnvironmentSerializer(envs, many=True).data
 
-        books = (
-            HydraSpellbook.objects.all()
-            .prefetch_related('tags')
-            .order_by('name')
-        )
-        book_data = HydraSpellbookSerializer(books, many=True).data
+        # [FIX] Only fetch the heavy static dictionaries on initial load
+        include_static = request.query_params.get('static', 'true') == 'true'
+        response_data = {}
 
+        if include_static:
+            envs = ProjectEnvironment.objects.all().order_by('name')
+            response_data['environments'] = ProjectEnvironmentSerializer(
+                envs, many=True
+            ).data
+
+            books = (
+                HydraSpellbook.objects.all()
+                .prefetch_related('tags')
+                .order_by('name')
+            )
+            response_data['spellbooks'] = HydraSpellbookSerializer(
+                books, many=True
+            ).data
+
+        # Always fetch the live telemetry
         root_spawns = (
             HydraSpawn.objects.filter(
                 parent_head__isnull=True, environment__selected=True
@@ -47,19 +53,15 @@ class DashboardViewSet(viewsets.ViewSet):
             .order_by('-created')[:20]
         )
 
-        spawn_data = HydraSwimlaneSerializer(root_spawns, many=True).data
+        response_data['recent_missions'] = HydraSwimlaneSerializer(
+            root_spawns, many=True
+        ).data
 
-        return Response(
-            {
-                'environments': env_data,
-                'spellbooks': book_data,
-                'recent_missions': spawn_data,
-            }
-        )
+        return Response(response_data)
 
     @action(detail=False, methods=['post'])
     def shutdown(self, request):
-        """Initiates a system-wide shutdown."""
+        # ... (keep your existing shutdown logic here) ...
         try:
             celery_app.control.shutdown()
         except Exception:
@@ -70,5 +72,4 @@ class DashboardViewSet(viewsets.ViewSet):
             os._exit(0)
 
         threading.Thread(target=kill_server, daemon=True).start()
-
         return Response({'status': 'System Offline Initiated'})

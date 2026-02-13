@@ -1,5 +1,7 @@
 const API_SUMMARY_URL = '/api/v1/dashboard/summary/';
 const POLL_INTERVAL_MS = 2000;
+let isFirstLoad = true;
+let pollTimer = null;
 
 function getCookie(name) {
     let cookieValue = null;
@@ -39,7 +41,8 @@ async function stopSpawn(spawnId) {
                 method: 'POST',
                 headers: {'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json'}
             });
-            pollMissionControl();
+            // Force an immediate UI update
+            triggerInstantSync();
         } catch (e) {
             console.error("Failed to stop spawn:", e);
         }
@@ -53,7 +56,7 @@ async function rerunSpawn(spellbookId) {
             headers: {'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json'},
             body: JSON.stringify({spellbook_id: spellbookId})
         });
-        pollMissionControl();
+        triggerInstantSync();
     } catch (e) {
         console.error("Failed to rerun:", e);
     }
@@ -71,9 +74,21 @@ function buildHeadDOM(head, isHistory) {
     const logEl = card.querySelector('.head-log');
 
     if (isHistory) {
-        card.classList.add(head.status_id === 4 ? 'success' : 'failed');
+        // [FIX] Correct LCARS color mapping for history blocks
+        let stateClass = 'stopped';
+        let targetColor = '#888';
+
+        if (head.status_id === 4) {
+            stateClass = 'success';
+            targetColor = '#4ade80';
+        } else if (head.status_id === 5 || head.status_id === 6) {
+            stateClass = 'failed';
+            targetColor = '#ef4444';
+        }
+
+        card.classList.add(stateClass);
         card.querySelector('.head-name').style.color = '#ddd';
-        targetEl.style.color = head.status_id === 5 ? '#ef4444' : '#888';
+        targetEl.style.color = targetColor;
         targetEl.textContent = (head.result_code !== null) ? `RC: ${head.result_code}` : head.status_name;
         logEl.style.display = 'none';
     } else {
@@ -89,7 +104,6 @@ function buildHeadDOM(head, isHistory) {
             card.querySelector('.head-name').style.color = '#fff';
             targetEl.style.color = 'var(--lcars-elbow)';
             targetEl.textContent = head.target_name || 'LOCAL';
-            // Show preview if available, otherwise fallback
             logEl.textContent = head.status_name;
         }
     }
@@ -108,7 +122,11 @@ function buildSwimlaneDOM(mission, isSubgraph = false) {
     if (mission.is_alive) swimlane.classList.add('active-lane');
     else if (mission.ended_badly) swimlane.classList.add('failed-lane');
 
-    const statusColor = mission.is_alive ? '#f99f1b' : (mission.ended_badly ? '#ef4444' : '#666');
+    // [FIX] Correct LCARS color mapping for the main lane headers
+    let statusColor = '#666';
+    if (mission.is_alive) statusColor = 'var(--lcars-elbow)';
+    else if (mission.ended_successfully) statusColor = '#4ade80';
+    else if (mission.ended_badly) statusColor = '#ef4444';
 
     // Header
     const titleEl = clone.querySelector('.lane-title');
@@ -166,13 +184,15 @@ function buildSwimlaneDOM(mission, isSubgraph = false) {
 
 async function pollMissionControl() {
     try {
-        const response = await fetch(API_SUMMARY_URL, {
+        // [FIX] Dynamic URL to drastically reduce payload size after first load
+        const fetchUrl = isFirstLoad ? API_SUMMARY_URL : `${API_SUMMARY_URL}?static=false`;
+
+        const response = await fetch(fetchUrl, {
             method: 'GET',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken'),
                 'Accept': 'application/json'
             },
-            // FIX: This forces the browser to send your authentication cookies with the GET request!
             credentials: 'same-origin'
         });
 
@@ -195,11 +215,23 @@ async function pollMissionControl() {
                 initSwimlaneObservers(container);
             }
         }
+
+        isFirstLoad = false;
+
     } catch (e) {
         console.error('Failed to sync missions:', e);
     } finally {
-        setTimeout(pollMissionControl, POLL_INTERVAL_MS);
+        pollTimer = setTimeout(pollMissionControl, POLL_INTERVAL_MS);
     }
 }
+
+function triggerInstantSync() {
+    console.log("[SYNC] Action detected. Bypassing timer.");
+    clearTimeout(pollTimer);
+    pollMissionControl();
+}
+
+// [FIX] Listen for the exact event your Launch buttons broadcast!
+document.body.addEventListener('monitor-update', triggerInstantSync);
 
 document.addEventListener('DOMContentLoaded', pollMissionControl);
