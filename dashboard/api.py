@@ -11,7 +11,11 @@ from config.celery import app as celery_app
 from environments.models import ProjectEnvironment
 from environments.serializers import ProjectEnvironmentSerializer
 from hydra.models import HydraSpawn, HydraSpellbook
-from hydra.serializers import HydraSpawnSerializer, HydraSpellbookSerializer
+from hydra.serializers import (
+    HydraSpawnSerializer,
+    HydraSpellbookSerializer,
+    HydraSwimlaneSerializer,
+)
 
 
 class DashboardViewSet(viewsets.ViewSet):
@@ -43,7 +47,7 @@ class DashboardViewSet(viewsets.ViewSet):
             .order_by('-created')[:20]
         )
 
-        spawn_data = HydraSpawnSerializer(root_spawns, many=True).data
+        spawn_data = HydraSwimlaneSerializer(root_spawns, many=True).data
 
         return Response(
             {

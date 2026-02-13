@@ -463,6 +463,7 @@ class HydraHeadSerializer(serializers.ModelSerializer):
     target_name = serializers.CharField(
         source='target.hostname', read_only=True
     )
+    spell_name = serializers.CharField(source='spell.name', read_only=True)
 
     class Meta:
         model = HydraHead
@@ -557,6 +558,9 @@ class HydraSwimlaneSerializer(serializers.ModelSerializer):
     is_stopping = serializers.BooleanField(read_only=True)
     ended_badly = serializers.BooleanField(read_only=True)
     ended_successfully = serializers.BooleanField(read_only=True)
+    spellbook_name = serializers.CharField(
+        source='spellbook.name', read_only=True
+    )
 
     class Meta:
         model = HydraSpawn
@@ -564,6 +568,7 @@ class HydraSwimlaneSerializer(serializers.ModelSerializer):
             'id',
             'status',
             'spellbook',
+            'spellbook_name',
             'created',
             'modified',
             'is_active',

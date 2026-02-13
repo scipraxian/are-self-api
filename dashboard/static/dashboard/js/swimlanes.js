@@ -1,5 +1,3 @@
-// dashboard/static/dashboard/js/swimlanes.js
-
 const API_SUMMARY_URL = '/api/v1/dashboard/summary/';
 const POLL_INTERVAL_MS = 2000;
 
@@ -18,17 +16,29 @@ function getCookie(name) {
     return cookieValue;
 }
 
+function timeSince(dateString) {
+    if (!dateString) return "0 minutes";
+    const seconds = Math.floor((new Date() - new Date(dateString)) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " years";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " months";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " days";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " hours";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " minutes";
+    return Math.floor(seconds) + " seconds";
+}
+
 async function stopSpawn(spawnId) {
     if (confirm("Signal Graceful Stop for this operation?")) {
         try {
             await fetch(`/api/v1/spawns/${spawnId}/stop/`, {
                 method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Content-Type': 'application/json'
-                }
+                headers: {'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json'}
             });
-            // Force an immediate UI update
             pollMissionControl();
         } catch (e) {
             console.error("Failed to stop spawn:", e);
@@ -36,80 +46,122 @@ async function stopSpawn(spawnId) {
     }
 }
 
-function buildHeadHTML(head, isHistory) {
-    let stateClass = '';
-    let logText = '';
-    let target = head.target_name || 'LOCAL';
-
-    if (isHistory) {
-        stateClass = head.status_id === 4 ? 'success' : 'failed';
-        logText = head.status_name;
-    } else {
-        const isPending = head.status_id === 1 || head.status_id === 2;
-        stateClass = isPending ? 'pending' : 'active';
-        logText = isPending ? 'Waiting...' : 'Processing...';
+async function rerunSpawn(spellbookId) {
+    try {
+        await fetch(`/api/v1/spawns/`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json'},
+            body: JSON.stringify({spellbook_id: spellbookId})
+        });
+        pollMissionControl();
+    } catch (e) {
+        console.error("Failed to rerun:", e);
     }
-
-    return `
-        <a href="/hydra/head/${head.id}/" class="head-card ${stateClass}" style="text-decoration: none;">
-            <div class="head-name" style="color: ${isHistory ? '#ddd' : '#fff'};">${head.spell_name || 'Node'}</div>
-            <div class="head-target" style="color: ${isHistory ? (head.status_id === 5 ? '#ef4444' : '#888') : 'var(--lcars-elbow)'};">
-                ${target}
-            </div>
-            ${!isHistory ? `<div class="head-log" style="font-size:0.55rem; color:#888;">${logText}</div>` : ''}
-            <div class="card-drill-btn" title="View Logs">☍</div>
-        </a>
-    `;
 }
 
-function buildSwimlaneHTML(mission) {
-    let stateClass = '';
-    if (mission.is_alive) stateClass = 'active-lane';
-    else if (mission.ended_badly) stateClass = 'failed-lane';
+function buildHeadDOM(head, isHistory) {
+    const template = document.getElementById('tpl-head-card');
+    const clone = template.content.cloneNode(true);
+    const card = clone.querySelector('.head-card');
+
+    card.href = `/hydra/head/${head.id}/`;
+    card.querySelector('.head-name').textContent = head.spell_name || 'Node';
+
+    const targetEl = card.querySelector('.head-target');
+    const logEl = card.querySelector('.head-log');
+
+    if (isHistory) {
+        card.classList.add(head.status_id === 4 ? 'success' : 'failed');
+        card.querySelector('.head-name').style.color = '#ddd';
+        targetEl.style.color = head.status_id === 5 ? '#ef4444' : '#888';
+        targetEl.textContent = (head.result_code !== null) ? `RC: ${head.result_code}` : head.status_name;
+        logEl.style.display = 'none';
+    } else {
+        const isPending = head.status_id === 1 || head.status_id === 2;
+        if (isPending) {
+            card.classList.add('pending');
+            card.querySelector('.head-name').style.color = '#888';
+            targetEl.style.color = '#666';
+            targetEl.textContent = 'QUEUED';
+            logEl.textContent = 'Waiting...';
+        } else {
+            card.classList.add('active');
+            card.querySelector('.head-name').style.color = '#fff';
+            targetEl.style.color = 'var(--lcars-elbow)';
+            targetEl.textContent = head.target_name || 'LOCAL';
+            // Show preview if available, otherwise fallback
+            logEl.textContent = head.status_name;
+        }
+    }
+    return clone;
+}
+
+function buildSwimlaneDOM(mission, isSubgraph = false) {
+    const template = document.getElementById('tpl-swimlane');
+    const clone = template.content.cloneNode(true);
+    const wrapper = clone.querySelector('.lane-wrapper');
+    const swimlane = clone.querySelector('.swimlane');
+
+    wrapper.id = `lane-wrapper-${mission.id}`;
+
+    if (isSubgraph) swimlane.classList.add('subgraph');
+    if (mission.is_alive) swimlane.classList.add('active-lane');
+    else if (mission.ended_badly) swimlane.classList.add('failed-lane');
 
     const statusColor = mission.is_alive ? '#f99f1b' : (mission.ended_badly ? '#ef4444' : '#666');
 
-    let headsHtml = '';
+    // Header
+    const titleEl = clone.querySelector('.lane-title');
+    titleEl.textContent = mission.spellbook_name || 'Unknown Protocol';
+    titleEl.title = mission.spellbook_name || '';
+
+    clone.querySelector('.spawn-id').textContent = `#${mission.id.substring(0, 8)}`;
+
+    const statusEl = clone.querySelector('.lane-status-text');
+    statusEl.textContent = mission.status_name;
+    statusEl.style.color = statusColor;
+
+    clone.querySelector('.lane-time').textContent = `${timeSince(mission.modified)} ago`;
+
+    // Controls
+    clone.querySelector('.btn-monitor').href = `/hydra/graph/spawn/${mission.id}/?full=True`;
+    clone.querySelector('.btn-edit').href = `/hydra/graph/editor/${mission.spellbook}/`;
+
+    if (mission.is_alive) {
+        clone.querySelector('.control-card').classList.add('active-state');
+        const stopBtn = clone.querySelector('.btn-stop');
+        stopBtn.style.display = 'flex';
+        stopBtn.onclick = () => stopSpawn(mission.id);
+    } else {
+        const rerunBtn = clone.querySelector('.btn-rerun');
+        rerunBtn.style.display = 'flex';
+        rerunBtn.onclick = () => rerunSpawn(mission.spellbook);
+    }
+
+    // Scroll Area (Heads)
+    const scrollArea = clone.querySelector('.lane-scroll-area');
     if (mission.live_children) {
-        mission.live_children.forEach(h => headsHtml += buildHeadHTML(h, false));
+        mission.live_children.forEach(h => scrollArea.appendChild(buildHeadDOM(h, false)));
     }
     if (mission.history) {
-        mission.history.forEach(h => headsHtml += buildHeadHTML(h, true));
+        mission.history.forEach(h => scrollArea.appendChild(buildHeadDOM(h, true)));
     }
 
-    return `
-        <div class="lane-wrapper" id="lane-wrapper-${mission.id}">
-            <div class="swimlane ${stateClass}">
-                <div class="lane-header">
-                    <div class="lane-title" title="${mission.spellbook_name}">${mission.spellbook_name}</div>
-                    <div class="lane-status">
-                        <span>#${mission.id.substring(0, 8)}</span>
-                        <span style="color: ${statusColor}; margin-left: 5px;">${mission.status_name}</span>
-                    </div>
-                </div>
-                
-                <div class="control-card ${mission.is_alive ? 'active-state' : ''}">
-                    <a href="/hydra/graph/spawn/${mission.id}/" class="btn-control" title="Monitor Graph">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                    </a>
-                    ${mission.is_alive ? `
-                        <button class="btn-control stop" onclick="stopSpawn('${mission.id}')" title="Stop">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect></svg>
-                        </button>
-                    ` : ''}
-                </div>
+    // Scroll Buttons
+    clone.querySelector('.left').onclick = function () {
+        this.nextElementSibling.scrollBy({left: -300, behavior: 'smooth'});
+    };
+    clone.querySelector('.right').onclick = function () {
+        this.previousElementSibling.scrollBy({left: 300, behavior: 'smooth'});
+    };
 
-                <button class="lane-scroll-btn left" onclick="this.nextElementSibling.scrollBy({left: -300, behavior: 'smooth'})">◄</button>
-                <div class="lane-scroll-area">
-                    ${headsHtml}
-                </div>
-                <button class="lane-scroll-btn right" onclick="this.previousElementSibling.scrollBy({left: 300, behavior: 'smooth'})">►</button>
-            </div>
-        </div>
-    `;
+    // Subgraphs
+    const subContainer = clone.querySelector('.subgraphs-container');
+    if (mission.subgraphs && mission.subgraphs.length > 0) {
+        mission.subgraphs.forEach(sub => subContainer.appendChild(buildSwimlaneDOM(sub, true)));
+    }
+
+    return clone;
 }
 
 async function pollMissionControl() {
@@ -120,28 +172,25 @@ async function pollMissionControl() {
                 'X-CSRFToken': getCookie('csrftoken'),
                 'Accept': 'application/json'
             },
-            credentials: 'same-origin' // CRITICAL: Ensures session cookies are sent
+            // FIX: This forces the browser to send your authentication cookies with the GET request!
+            credentials: 'same-origin'
         });
 
-        if (!response.ok) {
-            // If we still get a 403, we log it for debugging
-            if (response.status === 403) {
-                console.error('API Forbidden: Are you logged in? CSRF valid?');
-            }
-            throw new Error(`API Error: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`API Error: ${response.status}`);
 
         const data = await response.json();
-
         const container = document.getElementById('mission-monitor');
         if (!container) return;
 
         if (!data.recent_missions || data.recent_missions.length === 0) {
             container.innerHTML = '<div style="text-align:center; padding:50px; color:#444;">NO ACTIVE MISSIONS</div>';
         } else {
-            container.innerHTML = data.recent_missions.map(buildSwimlaneHTML).join('');
+            container.innerHTML = '';
+            data.recent_missions.forEach(mission => {
+                container.appendChild(buildSwimlaneDOM(mission, false));
+            });
 
-            // Re-trigger the overflow observer from your legacy mission_control.js
+            // Re-trigger the overflow observer to show/hide scroll arrows
             if (typeof initSwimlaneObservers === 'function') {
                 initSwimlaneObservers(container);
             }
