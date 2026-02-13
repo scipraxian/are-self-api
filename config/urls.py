@@ -9,7 +9,6 @@ v1_router = routers.DefaultRouter()
 v1_router.registry.extend(ENVIRONMENTS_ROUTER.registry)
 v1_router.registry.extend(HYDRA_ROUTER.registry)
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('', include('dashboard.urls')),
     path('hydra/', include('hydra.urls')),
     path('frontal/', include('talos_frontal.urls')),
