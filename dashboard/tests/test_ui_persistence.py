@@ -30,7 +30,9 @@ class TestUIPersistence:
         CRITICAL: Ensures the swimlane partial returns the outer wrapper with the correct ID.
         If this fails (returns inner content or empty), HTMX outerHTML swap destroys the node.
         """
-        url = reverse('swimlane_partial', kwargs={'pk': self.spawn.id})
+        url = reverse(
+            'dashboard:swimlane_partial', kwargs={'pk': self.spawn.id}
+        )
 
         # Simulate HTMX request
         response = self.client.get(url, HTTP_HX_REQUEST='true')

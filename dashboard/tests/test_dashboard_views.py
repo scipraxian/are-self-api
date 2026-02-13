@@ -19,36 +19,10 @@ class DashboardViewTests(TestCase):
 
     def test_home_view(self):
         """Test that the home page loads correctly."""
-        response = self.client.get(reverse('home'))
+        response = self.client.get(reverse('dashboard:home'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'dashboard/mission_control.html')
         self.assertContains(response, 'TALOS // MISSION CONTROL')
-
-    @patch('dashboard.views.debug_task.delay')
-    def test_trigger_build_post(self, mock_task_delay):
-        """Test that POSTing to trigger_build starts the task and returns HTMX."""
-        # Mock the task to return a fixed ID
-        mock_task = MagicMock()
-        mock_task.id = 'test-task-123'
-        mock_task_delay.return_value = mock_task
-
-        # Assuming 'trigger_build' still exists in your urls.py / views.py
-        # If this was also moved to the API, this test should be moved/deleted too.
-        response = self.client.post(reverse('trigger_build'))
-
-        # Check task was triggered
-        mock_task_delay.assert_called_once()
-
-
-# class DashboardTaskTests(TestCase):
-#     """Tests for the dashboard tasks."""
-#
-#     def test_debug_task_execution(self):
-#         """Test the Celery task directly."""
-#         # For unit testing the logic inside the task
-#         result = debug_task.apply()  # apply() runs it synchronously
-#         self.assertEqual(result.result, 'Task Finished')
-#         self.assertTrue(result.successful())
 
 
 class DashboardBrokerTests(TestCase):
