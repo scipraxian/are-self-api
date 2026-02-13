@@ -1,10 +1,12 @@
 import json
-from typing import Optional
+import re
+from typing import Any, Dict, List, Optional
 
 from django.utils import timezone
 from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
+from environments.variable_renderer import VariableRenderer
 from hydra import constants
 from hydra.utils import get_active_environment, resolve_environment_context
 
@@ -21,6 +23,7 @@ from .models import (
     HydraSpellBookNodeContext,
     HydraSpellContext,
     HydraSpellTarget,
+    HydraStatusID,
     HydraTag,
     HydraWireType,
 )
@@ -29,7 +32,6 @@ from .models import (
 
 
 def _get_wire_status_label(type_id: int) -> str:
-    """Maps wire IDs to frontend status strings."""
     mapping = {
         HydraWireType.TYPE_FLOW: constants.TYPE_FLOW_STR,
         HydraWireType.TYPE_SUCCESS: constants.TYPE_SUCCESS_STR,
@@ -39,7 +41,6 @@ def _get_wire_status_label(type_id: int) -> str:
 
 
 def _tail_log(text: Optional[str]) -> str:
-    """Returns the last 20 lines of a log string."""
     if not text:
         return ''
     lines = text.splitlines()
@@ -47,7 +48,74 @@ def _tail_log(text: Optional[str]) -> str:
     return '\n'.join(tail)
 
 
-# --- Serializers ---
+def _get_ui_data(json_str: str) -> Dict[str, int]:
+    try:
+        return json.loads(json_str)
+    except (ValueError, TypeError):
+        return {constants.KEY_X: 100, constants.KEY_Y: 100}
+
+
+def _extract_variables_from_spell(spell: Optional[HydraSpell]) -> set:
+    variables = set()
+    if not spell:
+        return variables
+    for a in spell.hydraspellargumentassignment_set.all():
+        found = re.findall(r'\{\{\s*(\w+)\s*\}\}', a.argument.argument)
+        variables.update(found)
+    for s in spell.switches.all():
+        raw = s.flag + (s.value or '')
+        found = re.findall(r'\{\{\s*(\w+)\s*\}\}', raw)
+        variables.update(found)
+    for a in spell.talos_executable.talosexecutableargumentassignment_set.all():
+        found = re.findall(r'\{\{\s*(\w+)\s*\}\}', a.argument.argument)
+        variables.update(found)
+    return variables
+
+
+def _build_context_matrix(
+    spell: Optional[HydraSpell],
+    global_context: Dict[str, Any],
+    node_overrides: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    variables = _extract_variables_from_spell(spell)
+    matrix = []
+    for var in sorted(list(variables)):
+        item = {
+            'key': var,
+            'source': 'default',
+            'value': '',
+            'display_value': '',
+            'is_readonly': False,
+        }
+        if var in node_overrides:
+            item.update(
+                {
+                    'source': 'override',
+                    'value': node_overrides[var],
+                    'display_value': node_overrides[var],
+                }
+            )
+        elif var in global_context:
+            val_str = str(global_context[var])
+            item.update(
+                {
+                    'source': 'global',
+                    'value': global_context[var],
+                    'display_value': val_str,
+                    'is_readonly': True,
+                }
+            )
+        matrix.append(item)
+    return matrix
+
+
+# --- Core Serializers ---
+
+
+class HydraSpellbookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HydraSpellbook
+        fields = ALL_FIELDS
 
 
 class HydraTagSerializer(serializers.ModelSerializer):
@@ -106,29 +174,20 @@ class HydraSpellSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
     def get_rendered_command(self, obj) -> str:
-        """Helper to show what the command WOULD look like with default env."""
         env = self.context.get(constants.ENVIRONMENT_KEY)
         cmd_list = obj.get_full_command(environment=env)
         return ' '.join(cmd_list)
 
 
 class HydraSpellBookNodeContextSerializer(serializers.ModelSerializer):
-    """
-    Writable serializer for node-specific variable overrides.
-    """
-
     class Meta:
         model = HydraSpellBookNodeContext
         fields = ALL_FIELDS
 
 
 class HydraSpellbookConnectionWireSerializer(serializers.ModelSerializer):
-    """
-    Graph Wires. Writable.
-    """
-
     type_name = serializers.CharField(source='type.name', read_only=True)
-    status_id = serializers.SerializerMethodField()  # Frontend compat
+    status_id = serializers.SerializerMethodField()
 
     class Meta:
         model = HydraSpellbookConnectionWire
@@ -138,11 +197,9 @@ class HydraSpellbookConnectionWireSerializer(serializers.ModelSerializer):
         return _get_wire_status_label(obj.type_id)
 
     def validate(self, data):
-        """Graph Integrity: Ensure Source and Target belong to the SAME Book."""
         spellbook = data.get('spellbook')
         source = data.get('source')
         target = data.get('target')
-
         if spellbook and source and source.spellbook != spellbook:
             raise serializers.ValidationError(
                 'Source node does not belong to this spellbook.'
@@ -151,23 +208,15 @@ class HydraSpellbookConnectionWireSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Target node does not belong to this spellbook.'
             )
-
         return data
 
 
 class HydraSpellbookNodeSerializer(serializers.ModelSerializer):
-    """
-    Graph Nodes. Writable.
-    """
-
     spell_name = serializers.CharField(source='spell.name', read_only=True)
     invoked_spellbook_name = serializers.CharField(
         source='invoked_spellbook.name', read_only=True
     )
-
-    # [FIX] Writable JSON Field for UI coordinates
     ui_json = serializers.JSONField(initial=dict)
-
     has_override = serializers.SerializerMethodField()
     context_overrides = HydraSpellBookNodeContextSerializer(
         source='hydraspellbooknodecontext_set', many=True, read_only=True
@@ -181,13 +230,11 @@ class HydraSpellbookNodeSerializer(serializers.ModelSerializer):
         return obj.distribution_mode_id is not None
 
     def validate_ui_json(self, value):
-        """Ensure UI data is serialized to string for the TextField model."""
         if isinstance(value, dict):
             return json.dumps(value)
         return value
 
     def to_representation(self, instance):
-        """Convert the TextField JSON back to a Dict for the frontend."""
         ret = super().to_representation(instance)
         try:
             ret['ui_json'] = json.loads(instance.ui_json)
@@ -196,23 +243,129 @@ class HydraSpellbookNodeSerializer(serializers.ModelSerializer):
         return ret
 
 
-class HydraSpellbookSerializer(serializers.ModelSerializer):
-    environment_name = serializers.CharField(
-        source='environment.name', read_only=True
-    )
-    node_count = serializers.IntegerField(source='nodes.count', read_only=True)
-    tags = HydraTagSerializer(many=True, read_only=True)
+# --- The Custom "Missing" Serializers for the Graph API ---
+
+
+class HydraGraphLayoutSerializer(serializers.ModelSerializer):
+    """Formats the Spellbook specifically for the Javascript Canvas."""
+
+    nodes = serializers.SerializerMethodField()
+    connections = serializers.SerializerMethodField()
 
     class Meta:
         model = HydraSpellbook
-        fields = ALL_FIELDS
+        fields = [constants.KEY_ID, 'nodes', 'connections']
+
+    def get_nodes(self, obj):
+        nodes_data = []
+        for n in obj.nodes.all().select_related('spell', 'invoked_spellbook'):
+            ui = _get_ui_data(n.ui_json)
+            is_delegated = bool(n.invoked_spellbook_id)
+            is_root = (n.spell_id == HydraSpell.BEGIN_PLAY) and not is_delegated
+            title = (
+                n.invoked_spellbook.name
+                if is_delegated
+                else (n.spell.name if n.spell else constants.VAL_UNKNOWN)
+            )
+
+            node_dict = {
+                constants.KEY_ID: n.id,
+                constants.KEY_TITLE: title,
+                constants.KEY_X: ui.get(constants.KEY_X, 0),
+                constants.KEY_Y: ui.get(constants.KEY_Y, 0),
+                constants.KEY_SPELL_ID: n.spell_id,
+                constants.KEY_IS_ROOT: is_root,
+                'has_override': n.distribution_mode_id is not None,
+            }
+            if is_delegated:
+                node_dict['invoked_spellbook_id'] = str(n.invoked_spellbook_id)
+            nodes_data.append(node_dict)
+        return nodes_data
+
+    def get_connections(self, obj):
+        wires_data = []
+        for w in obj.wires.all():
+            wires_data.append(
+                {
+                    'from_node_id': w.source_id,
+                    'to_node_id': w.target_id,
+                    'status_id': _get_wire_status_label(w.type_id),
+                }
+            )
+        return wires_data
+
+
+class HydraNodeDetailsSerializer(serializers.ModelSerializer):
+    """Provides deep context analysis for the Inspector panel (The Smart Matrix)."""
+
+    context_matrix = serializers.SerializerMethodField()
+    name = serializers.CharField(source='spell.name', read_only=True)
+    description = serializers.CharField(
+        source='spell.description', read_only=True
+    )
+    node_id = serializers.UUIDField(source='id', read_only=True)
+
+    class Meta:
+        model = HydraSpellbookNode
+        fields = [
+            'node_id',
+            'name',
+            'description',
+            'distribution_mode',
+            'context_matrix',
+        ]
+
+    def get_context_matrix(self, obj):
+        env = obj.spellbook.environment if obj.spellbook else None
+        global_context = VariableRenderer.extract_variables(env)
+        overrides = {
+            c.key: c.value for c in obj.hydraspellbooknodecontext_set.all()
+        }
+        return _build_context_matrix(obj.spell, global_context, overrides)
+
+
+class HydraSpawnStatusSerializer(serializers.ModelSerializer):
+    """Fast-polling serializer that returns ONLY node statuses."""
+
+    status_label = serializers.CharField(source='status.name', read_only=True)
+    nodes = serializers.SerializerMethodField()
+    is_active = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = HydraSpawn
+        fields = ['status', 'status_label', 'is_active', 'nodes']
+
+    def get_nodes(self, obj):
+        node_status_map = {}
+
+        # 1. Inject BeginPlay status manually
+        if obj.spellbook:
+            begin_play_node = obj.spellbook.nodes.filter(
+                spell_id=HydraSpell.BEGIN_PLAY
+            ).first()
+            if begin_play_node:
+                node_status_map[str(begin_play_node.id)] = {
+                    'status_id': HydraStatusID.SUCCESS,
+                    'head_id': None,
+                }
+
+        # 2. Map actual execution heads
+        for head in obj.heads.all().order_by('created'):
+            if head.node_id:
+                child = head.child_spawns.first()
+                child_id = str(child.id) if child else None
+                node_status_map[str(head.node_id)] = {
+                    'status_id': head.status_id,
+                    'head_id': str(head.id),
+                    'child_spawn_id': child_id,
+                }
+        return node_status_map
+
+
+# --- Spawn & Head Serializers ---
 
 
 class HydraSpawnCreateSerializer(serializers.Serializer):
-    """
-    Action Serializer. Validates Launch Request.
-    """
-
     spellbook_id = serializers.UUIDField()
     environment_id = serializers.UUIDField(required=False, allow_null=True)
 
@@ -222,11 +375,21 @@ class HydraSpawnCreateSerializer(serializers.Serializer):
         return value
 
 
-class HydraHeadSerializer(serializers.ModelSerializer):
-    """
-    Lightweight serializer for lists (NO LOGS).
-    """
+class HydraSpawnSerializer(serializers.ModelSerializer):
+    status_name = serializers.CharField(source='status.name', read_only=True)
+    spellbook_name = serializers.CharField(
+        source='spellbook.name', read_only=True
+    )
+    environment_name = serializers.CharField(
+        source='environment.name', read_only=True
+    )
 
+    class Meta:
+        model = HydraSpawn
+        fields = ALL_FIELDS
+
+
+class HydraHeadSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     target_name = serializers.CharField(
         source='target.hostname', read_only=True
@@ -234,16 +397,10 @@ class HydraHeadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HydraHead
-        # EXPLICITLY excluding spell_log and execution_log to prevent bloat
         exclude = ['spell_log', 'execution_log']
 
 
 class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
-    """
-    Rich, heavy telemetry for Inspector panels.
-    Includes logs, durations, and fully resolved commands.
-    """
-
     status_name = serializers.CharField(source='status.name', read_only=True)
     logs = serializers.SerializerMethodField()
     exec_logs = serializers.SerializerMethodField()
@@ -269,24 +426,15 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
         return str(obj.target) if obj.target else constants.VAL_PENDING
 
     def get_duration(self, obj) -> str:
-        """Calculates runtime duration."""
         if not obj.created:
             return '0s'
-
-        # If finished (Success/Failed/Aborted), use modified - created
-        # Note: This assumes 'modified' is updated upon completion, which Hydra logic does.
         is_terminal = obj.status_id in HydraHeadStatus.IS_TERMINAL_STATUS_LIST
         end_time = obj.modified if is_terminal else timezone.now()
-
         delta = end_time - obj.created
         total_seconds = int(delta.total_seconds())
-
         minutes = total_seconds // 60
         seconds = total_seconds % 60
-
-        if minutes > 0:
-            return f'{minutes}m {seconds}s'
-        return f'{seconds}s'
+        return f'{minutes}m {seconds}s' if minutes > 0 else f'{seconds}s'
 
     def get_logs(self, obj):
         return _tail_log(obj.spell_log)
@@ -295,39 +443,14 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
         return _tail_log(obj.execution_log)
 
     def get_command(self, obj) -> str:
-        """
-        Reconstructs the actual command string used/to-be-used.
-        """
         try:
             if not obj.spell:
                 return constants.VAL_CMD_NOT_CAPTURED
-
-            # 1. Resolve Environment
             env = get_active_environment(obj)
-
-            # 2. Resolve Full Context (Env vars + Spell Defaults + Node Overrides + Spawn Data)
-            # This logic mimics GenericSpellCaster exactly.
             full_context = resolve_environment_context(head_id=obj.id)
-
-            # 3. Generate Command List
             cmd_list = obj.spell.get_full_command(
                 environment=env, extra_context=full_context
             )
             return ' '.join(cmd_list)
-
         except Exception as e:
             return f'Error resolving command: {str(e)}'
-
-
-class HydraSpawnSerializer(serializers.ModelSerializer):
-    status_name = serializers.CharField(source='status.name', read_only=True)
-    spellbook_name = serializers.CharField(
-        source='spellbook.name', read_only=True
-    )
-    environment_name = serializers.CharField(
-        source='environment.name', read_only=True
-    )
-
-    class Meta:
-        model = HydraSpawn
-        fields = ALL_FIELDS
