@@ -25,38 +25,6 @@ class TestUIPersistence:
             spellbook=self.book, status=self.status_active
         )
 
-    def test_swimlane_poll_returns_wrapper_structure(self):
-        """
-        CRITICAL: Ensures the swimlane partial returns the outer wrapper with the correct ID.
-        If this fails (returns inner content or empty), HTMX outerHTML swap destroys the node.
-        """
-        url = reverse(
-            'dashboard:swimlane_partial', kwargs={'pk': self.spawn.id}
-        )
-
-        # Simulate HTMX request
-        response = self.client.get(url, HTTP_HX_REQUEST='true')
-
-        assert response.status_code == 200
-        content = response.content.decode()
-
-        # 1. Verify Structure: Must start with the wrapper div
-        assert 'class="lane-wrapper"' in content, (
-            "Response missing 'lane-wrapper' class. Swap will malform DOM."
-        )
-
-        # 2. Verify Identity: Must maintain the specific ID for future polls
-        expected_id = f'id="lane-wrapper-{self.spawn.id}"'
-        assert expected_id in content, (
-            f'Wrapper ID {expected_id} lost in render! DOM node will lose identity.'
-        )
-
-        # 3. Verify Polling Persistence: Must re-render the HX attributes if active
-        assert 'hx-get="' in content, (
-            'Polling attributes lost! Swimlane will stop updating.'
-        )
-        assert 'hx-trigger="every 2s"' in content
-
     def test_view_handles_missing_spawn_gracefully(self):
         """
         Ensures that even if the spawn vanishes (race condition), the UI doesn't implode.

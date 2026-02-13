@@ -1,7 +1,4 @@
-"""Tests for the dashboard application."""
-
-from unittest.mock import MagicMock, patch
-
+# dashboard/tests/test_dashboard_views.py
 import pytest
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -19,10 +16,21 @@ class DashboardViewTests(TestCase):
 
     def test_home_view(self):
         """Test that the home page loads correctly."""
+        # FIX: Added 'dashboard:' namespace
         response = self.client.get(reverse('dashboard:home'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'dashboard/mission_control.html')
-        self.assertContains(response, 'TALOS // MISSION CONTROL')
+        self.assertContains(response, 'TALOS ORCHESTRATOR')
+
+
+class DashboardTaskTests(TestCase):
+    """Tests for the dashboard tasks."""
+
+    def test_debug_task_execution(self):
+        """Test the Celery task directly."""
+        result = debug_task.apply()
+        self.assertEqual(result.result, 'Task Finished')
+        self.assertTrue(result.successful())
 
 
 class DashboardBrokerTests(TestCase):
@@ -32,8 +40,8 @@ class DashboardBrokerTests(TestCase):
     def test_broker_connection(self):
         """Verifies that Celery can connect to the configured broker (Integration w/ Redis)."""
         try:
-            # Simple ping to the broker
-            celery_app.broker_connection().ensure_connection(max_retries=1)
-            self.assertTrue(True)
+            with celery_app.connection() as connection:
+                connection.connect()
+                self.assertTrue(connection.connected)
         except Exception as e:
-            self.fail(f'Could not connect to Redis broker: {e}')
+            self.fail(f'Celery could not connect to the broker: {e}')

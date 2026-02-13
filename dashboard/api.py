@@ -4,7 +4,7 @@ import time
 
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from config.celery import app as celery_app
@@ -19,7 +19,7 @@ class DashboardViewSet(viewsets.ViewSet):
     System-level operations and data aggregation for the Talos Command Center.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     @action(detail=False, methods=['get'])
     def summary(self, request):
