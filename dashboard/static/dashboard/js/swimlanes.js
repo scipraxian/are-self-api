@@ -2,6 +2,7 @@ const API_SUMMARY_URL = '/api/v1/dashboard/summary/';
 const POLL_INTERVAL_MS = 2000;
 let isFirstLoad = true;
 let pollTimer = null;
+let lastSyncTime = null;
 
 function getCookie(name) {
     let cookieValue = null;
@@ -120,9 +121,10 @@ function buildSwimlaneDOM(mission, isSubgraph = false) {
 
     if (isSubgraph) swimlane.classList.add('subgraph');
     if (mission.is_alive) swimlane.classList.add('active-lane');
+    else if (mission.ended_successfully) swimlane.classList.add('success-lane');
     else if (mission.ended_badly) swimlane.classList.add('failed-lane');
 
-    // [FIX] Correct LCARS color mapping for the main lane headers
+
     let statusColor = '#666';
     if (mission.is_alive) statusColor = 'var(--lcars-elbow)';
     else if (mission.ended_successfully) statusColor = '#4ade80';
@@ -138,6 +140,7 @@ function buildSwimlaneDOM(mission, isSubgraph = false) {
     const statusEl = clone.querySelector('.lane-status-text');
     statusEl.textContent = mission.status_name;
     statusEl.style.color = statusColor;
+    // statusEl.classList.add(`status-${mission.status_name.toLowerCase()}`);
 
     clone.querySelector('.lane-time').textContent = `${timeSince(mission.modified)} ago`;
 
@@ -184,8 +187,11 @@ function buildSwimlaneDOM(mission, isSubgraph = false) {
 
 async function pollMissionControl() {
     try {
-        // [FIX] Dynamic URL to drastically reduce payload size after first load
-        const fetchUrl = isFirstLoad ? API_SUMMARY_URL : `${API_SUMMARY_URL}?static=false`;
+        let fetchUrl = isFirstLoad ? API_SUMMARY_URL : `${API_SUMMARY_URL}?static=false`;
+
+        if (lastSyncTime) {
+            fetchUrl += `&last_sync=${encodeURIComponent(lastSyncTime)}`;
+        }
 
         const response = await fetch(fetchUrl, {
             method: 'GET',
@@ -199,6 +205,11 @@ async function pollMissionControl() {
         if (!response.ok) throw new Error(`API Error: ${response.status}`);
 
         const data = await response.json();
+
+        if (data.server_time) {
+            lastSyncTime = data.server_time;
+        }
+
         const container = document.getElementById('mission-monitor');
         if (!container) return;
 
