@@ -1,16 +1,13 @@
-import os
-import threading
-import time
-
-from rest_framework import viewsets
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from config.celery import app as celery_app
 from environments.models import ProjectEnvironment
 from environments.serializers import ProjectEnvironmentSerializer
-from hydra.models import HydraSpawn, HydraSpellbook
+from hydra.models import HydraHead, HydraSpawn, HydraSpellbook
 from hydra.serializers import (
     HydraSpellbookSerializer,
     HydraSwimlaneSerializer,
@@ -22,11 +19,33 @@ class DashboardViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['get'])
     def summary(self, request):
-        """Aggregates the data needed for the main mission control dashboard."""
+        client_sync_str = request.query_params.get('last_sync')
 
-        # [FIX] Only fetch the heavy static dictionaries on initial load
+        # 1. Fast path: Check if anything changed
+        if client_sync_str:
+            client_sync_time = parse_datetime(client_sync_str)
+            if client_sync_time:
+                latest_spawn = (
+                    HydraSpawn.objects.order_by('-modified')
+                    .values_list('modified', flat=True)
+                    .first()
+                )
+                latest_head = (
+                    HydraHead.objects.order_by('-modified')
+                    .values_list('modified', flat=True)
+                    .first()
+                )
+
+                last_mod = max(
+                    filter(None, [latest_spawn, latest_head]), default=None
+                )
+
+                if last_mod and last_mod <= client_sync_time:
+                    return Response(status=status.HTTP_204_NO_CONTENT)
+
+        # 2. Heavy logic proceeds only if data is stale
         include_static = request.query_params.get('static', 'true') == 'true'
-        response_data = {}
+        response_data = {'server_time': timezone.now().isoformat()}
 
         if include_static:
             envs = ProjectEnvironment.objects.all().order_by('name')
@@ -43,7 +62,6 @@ class DashboardViewSet(viewsets.ViewSet):
                 books, many=True
             ).data
 
-        # Always fetch the live telemetry
         root_spawns = (
             HydraSpawn.objects.filter(
                 parent_head__isnull=True, environment__selected=True
@@ -56,20 +74,4 @@ class DashboardViewSet(viewsets.ViewSet):
         response_data['recent_missions'] = HydraSwimlaneSerializer(
             root_spawns, many=True
         ).data
-
         return Response(response_data)
-
-    @action(detail=False, methods=['post'])
-    def shutdown(self, request):
-        # ... (keep your existing shutdown logic here) ...
-        try:
-            celery_app.control.shutdown()
-        except Exception:
-            pass
-
-        def kill_server():
-            time.sleep(1)
-            os._exit(0)
-
-        threading.Thread(target=kill_server, daemon=True).start()
-        return Response({'status': 'System Offline Initiated'})
