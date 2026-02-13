@@ -1,5 +1,6 @@
 import json
 import re
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from django.utils import timezone
@@ -28,7 +29,43 @@ from .models import (
     HydraWireType,
 )
 
-# --- Top-Level Helpers ---
+# ==========================================
+# PART 1: DTOs (Data Transfer Objects)
+# Strict typing mimicking the talos_agent pattern
+# ==========================================
+
+
+@dataclass
+class ContextMatrixRow:
+    key: str
+    source: str
+    value: str
+    display_value: str
+    is_readonly: bool
+
+
+@dataclass
+class GraphNodeLayout:
+    id: int
+    title: str
+    x: float
+    y: float
+    spell_id: Optional[int]
+    is_root: bool
+    has_override: bool
+    invoked_spellbook_id: Optional[str] = None
+
+
+@dataclass
+class GraphWireLayout:
+    from_node_id: int
+    to_node_id: int
+    status_id: str
+
+
+# ==========================================
+# PART 2: Core Helpers
+# ==========================================
 
 
 def _get_wire_status_label(type_id: int) -> str:
@@ -72,50 +109,83 @@ def _extract_variables_from_spell(spell: Optional[HydraSpell]) -> set:
     return variables
 
 
-def _build_context_matrix(
+def _build_context_matrix_data(
     spell: Optional[HydraSpell],
     global_context: Dict[str, Any],
     node_overrides: Dict[str, Any],
-) -> List[Dict[str, Any]]:
+) -> List[ContextMatrixRow]:
     variables = _extract_variables_from_spell(spell)
     matrix = []
+
     for var in sorted(list(variables)):
-        item = {
-            'key': var,
-            'source': 'default',
-            'value': '',
-            'display_value': '',
-            'is_readonly': False,
-        }
+        source = 'default'
+        value = ''
+        display_value = ''
+        is_readonly = False
+
         if var in node_overrides:
-            item.update(
-                {
-                    'source': 'override',
-                    'value': node_overrides[var],
-                    'display_value': node_overrides[var],
-                }
-            )
+            source = 'override'
+            value = node_overrides[var]
+            display_value = node_overrides[var]
         elif var in global_context:
-            val_str = str(global_context[var])
-            item.update(
-                {
-                    'source': 'global',
-                    'value': global_context[var],
-                    'display_value': val_str,
-                    'is_readonly': True,
-                }
+            source = 'global'
+            value = global_context[var]
+            display_value = str(global_context[var])
+            is_readonly = True
+
+        matrix.append(
+            ContextMatrixRow(
+                key=var,
+                source=source,
+                value=value,
+                display_value=display_value,
+                is_readonly=is_readonly,
             )
-        matrix.append(item)
+        )
     return matrix
 
 
-# --- Core Serializers ---
+# ==========================================
+# PART 3: Non-Model Serializers (For DTOs)
+# ==========================================
 
 
-class HydraSpellbookSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = HydraSpellbook
-        fields = ALL_FIELDS
+class ContextMatrixRowSerializer(serializers.Serializer):
+    """Explicit schema for the Smart Context Matrix."""
+
+    key = serializers.CharField()
+    source = serializers.CharField()
+    value = serializers.CharField(allow_blank=True)
+    display_value = serializers.CharField(allow_blank=True)
+    is_readonly = serializers.BooleanField()
+
+
+class GraphNodeLayoutSerializer(serializers.Serializer):
+    """Explicit schema for a Node on the Canvas."""
+
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    x = serializers.FloatField()
+    y = serializers.FloatField()
+    spell_id = serializers.IntegerField(allow_null=True, required=False)
+    is_root = serializers.BooleanField()
+    has_override = serializers.BooleanField()
+    invoked_spellbook_id = serializers.UUIDField(
+        allow_null=True, required=False
+    )
+
+
+class GraphWireLayoutSerializer(serializers.Serializer):
+    """Explicit schema for a Wire on the Canvas."""
+
+    from_node_id = serializers.IntegerField()
+    to_node_id = serializers.IntegerField()
+    status_id = serializers.CharField()
+
+
+# ==========================================
+# PART 4: Model Serializers
+# ==========================================
 
 
 class HydraTagSerializer(serializers.ModelSerializer):
@@ -243,11 +313,20 @@ class HydraSpellbookNodeSerializer(serializers.ModelSerializer):
         return ret
 
 
-# --- The Custom "Missing" Serializers for the Graph API ---
+class HydraSpellbookSerializer(serializers.ModelSerializer):
+    environment_name = serializers.CharField(
+        source='environment.name', read_only=True
+    )
+    node_count = serializers.IntegerField(source='nodes.count', read_only=True)
+    tags = HydraTagSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = HydraSpellbook
+        fields = ALL_FIELDS
 
 
 class HydraGraphLayoutSerializer(serializers.ModelSerializer):
-    """Formats the Spellbook specifically for the Javascript Canvas."""
+    """Utilizes strict DTO serializers for generating the graph canvas."""
 
     nodes = serializers.SerializerMethodField()
     connections = serializers.SerializerMethodField()
@@ -257,7 +336,7 @@ class HydraGraphLayoutSerializer(serializers.ModelSerializer):
         fields = [constants.KEY_ID, 'nodes', 'connections']
 
     def get_nodes(self, obj):
-        nodes_data = []
+        dtos = []
         for n in obj.nodes.all().select_related('spell', 'invoked_spellbook'):
             ui = _get_ui_data(n.ui_json)
             is_delegated = bool(n.invoked_spellbook_id)
@@ -268,35 +347,37 @@ class HydraGraphLayoutSerializer(serializers.ModelSerializer):
                 else (n.spell.name if n.spell else constants.VAL_UNKNOWN)
             )
 
-            node_dict = {
-                constants.KEY_ID: n.id,
-                constants.KEY_TITLE: title,
-                constants.KEY_X: ui.get(constants.KEY_X, 0),
-                constants.KEY_Y: ui.get(constants.KEY_Y, 0),
-                constants.KEY_SPELL_ID: n.spell_id,
-                constants.KEY_IS_ROOT: is_root,
-                'has_override': n.distribution_mode_id is not None,
-            }
-            if is_delegated:
-                node_dict['invoked_spellbook_id'] = str(n.invoked_spellbook_id)
-            nodes_data.append(node_dict)
-        return nodes_data
+            dtos.append(
+                GraphNodeLayout(
+                    id=n.id,
+                    title=title,
+                    x=ui.get(constants.KEY_X, 0.0),
+                    y=ui.get(constants.KEY_Y, 0.0),
+                    spell_id=n.spell_id,
+                    is_root=is_root,
+                    has_override=n.distribution_mode_id is not None,
+                    invoked_spellbook_id=str(n.invoked_spellbook_id)
+                    if is_delegated
+                    else None,
+                )
+            )
+        return GraphNodeLayoutSerializer(dtos, many=True).data
 
     def get_connections(self, obj):
-        wires_data = []
+        dtos = []
         for w in obj.wires.all():
-            wires_data.append(
-                {
-                    'from_node_id': w.source_id,
-                    'to_node_id': w.target_id,
-                    'status_id': _get_wire_status_label(w.type_id),
-                }
+            dtos.append(
+                GraphWireLayout(
+                    from_node_id=w.source_id,
+                    to_node_id=w.target_id,
+                    status_id=_get_wire_status_label(w.type_id),
+                )
             )
-        return wires_data
+        return GraphWireLayoutSerializer(dtos, many=True).data
 
 
 class HydraNodeDetailsSerializer(serializers.ModelSerializer):
-    """Provides deep context analysis for the Inspector panel (The Smart Matrix)."""
+    """Provides deep context analysis utilizing the explicit Row Serializer."""
 
     context_matrix = serializers.SerializerMethodField()
     name = serializers.CharField(source='spell.name', read_only=True)
@@ -321,12 +402,12 @@ class HydraNodeDetailsSerializer(serializers.ModelSerializer):
         overrides = {
             c.key: c.value for c in obj.hydraspellbooknodecontext_set.all()
         }
-        return _build_context_matrix(obj.spell, global_context, overrides)
+
+        dtos = _build_context_matrix_data(obj.spell, global_context, overrides)
+        return ContextMatrixRowSerializer(dtos, many=True).data
 
 
 class HydraSpawnStatusSerializer(serializers.ModelSerializer):
-    """Fast-polling serializer that returns ONLY node statuses."""
-
     status_label = serializers.CharField(source='status.name', read_only=True)
     nodes = serializers.SerializerMethodField()
     is_active = serializers.BooleanField(read_only=True)
@@ -337,8 +418,6 @@ class HydraSpawnStatusSerializer(serializers.ModelSerializer):
 
     def get_nodes(self, obj):
         node_status_map = {}
-
-        # 1. Inject BeginPlay status manually
         if obj.spellbook:
             begin_play_node = obj.spellbook.nodes.filter(
                 spell_id=HydraSpell.BEGIN_PLAY
@@ -348,8 +427,6 @@ class HydraSpawnStatusSerializer(serializers.ModelSerializer):
                     'status_id': HydraStatusID.SUCCESS,
                     'head_id': None,
                 }
-
-        # 2. Map actual execution heads
         for head in obj.heads.all().order_by('created'):
             if head.node_id:
                 child = head.child_spawns.first()
@@ -362,9 +439,6 @@ class HydraSpawnStatusSerializer(serializers.ModelSerializer):
         return node_status_map
 
 
-# --- Spawn & Head Serializers ---
-
-
 class HydraSpawnCreateSerializer(serializers.Serializer):
     spellbook_id = serializers.UUIDField()
     environment_id = serializers.UUIDField(required=False, allow_null=True)
@@ -373,20 +447,6 @@ class HydraSpawnCreateSerializer(serializers.Serializer):
         if not HydraSpellbook.objects.filter(id=value).exists():
             raise serializers.ValidationError('Spellbook not found.')
         return value
-
-
-class HydraSpawnSerializer(serializers.ModelSerializer):
-    status_name = serializers.CharField(source='status.name', read_only=True)
-    spellbook_name = serializers.CharField(
-        source='spellbook.name', read_only=True
-    )
-    environment_name = serializers.CharField(
-        source='environment.name', read_only=True
-    )
-
-    class Meta:
-        model = HydraSpawn
-        fields = ALL_FIELDS
 
 
 class HydraHeadSerializer(serializers.ModelSerializer):
@@ -454,3 +514,17 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
             return ' '.join(cmd_list)
         except Exception as e:
             return f'Error resolving command: {str(e)}'
+
+
+class HydraSpawnSerializer(serializers.ModelSerializer):
+    status_name = serializers.CharField(source='status.name', read_only=True)
+    spellbook_name = serializers.CharField(
+        source='spellbook.name', read_only=True
+    )
+    environment_name = serializers.CharField(
+        source='environment.name', read_only=True
+    )
+
+    class Meta:
+        model = HydraSpawn
+        fields = ALL_FIELDS

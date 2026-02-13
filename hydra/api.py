@@ -1,5 +1,8 @@
+import json
+
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from .hydra import Hydra
@@ -27,11 +30,14 @@ from .serializers import (
     HydraSpellSerializer,
 )
 
+# API Constants
+CATEGORY_SPELLS = 'Spells'
+CATEGORY_SUBGRAPHS = 'Sub-Graphs'
+STATUS_OK = 'ok'
+
 
 class HydraSpellViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Registry of all available spells.
-    """
+    """Registry of all available spells."""
 
     queryset = (
         HydraSpell.objects.all()
@@ -42,9 +48,7 @@ class HydraSpellViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class HydraSpellbookViewSet(viewsets.ModelViewSet):
-    """
-    Library of available Protocols (Spellbooks).
-    """
+    """Library of available Protocols (Spellbooks)."""
 
     queryset = HydraSpellbook.objects.all().order_by('name')
     serializer_class = HydraSpellbookSerializer
@@ -52,44 +56,39 @@ class HydraSpellbookViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def layout(self, request, pk=None):
-        """
-        Returns the flattened graph data (nodes, wires) for the Canvas Editor.
-        Replaces `get_graph_layout` from hydra_graph.py.
-        """
+        """Returns the flattened graph data for the Canvas Editor."""
         book = self.get_object()
 
-        # Ensure BeginPlay anchor exists (legacy requirement)
-        if not book.nodes.filter(is_root=True).exists():
-            HydraSpellbookNode.objects.create(
-                spellbook=book,
-                spell_id=HydraSpell.BEGIN_PLAY,
-                is_root=True,
-                ui_json='{"x": 100, "y": 100}',
-            )
+        # Architectural Anchor: Enforce BeginPlay exists
+        HydraSpellbookNode.objects.get_or_create(
+            spellbook=book,
+            spell_id=HydraSpell.BEGIN_PLAY,
+            defaults={
+                'is_root': True,
+                'ui_json': json.dumps({'x': 100, 'y': 100}),
+            },
+        )
 
         serializer = HydraGraphLayoutSerializer(book)
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
     def library(self, request, pk=None):
-        """
-        Returns the combined palette of Spells and Sub-graphs for the editor sidebar.
-        Replaces `get_library` from hydra_graph.py.
-        """
+        """Returns the combined palette of Spells and Sub-graphs."""
         book = self.get_object()
 
         spells = list(
             HydraSpell.objects.values('id', 'name', 'distribution_mode__name')
         )
         for s in spells:
-            s['category'] = 'Spells'
+            s['category'] = CATEGORY_SPELLS
 
-        # Exclude self to prevent infinite recursion blackholes
+        # Exclude self to prevent infinite recursion
         subgraphs = list(
             HydraSpellbook.objects.exclude(id=book.id).values('id', 'name')
         )
         for b in subgraphs:
-            b['category'] = 'Sub-Graphs'
+            b['category'] = CATEGORY_SUBGRAPHS
             b['is_book'] = True
 
         return Response({'library': spells + subgraphs})
@@ -100,13 +99,11 @@ class HydraSpellbookViewSet(viewsets.ModelViewSet):
         book = self.get_object()
         book.is_favorite = not book.is_favorite
         book.save(update_fields=['is_favorite'])
-        return Response({'status': 'ok', 'is_favorite': book.is_favorite})
+        return Response({'status': STATUS_OK, 'is_favorite': book.is_favorite})
 
 
 class HydraSpellbookNodeViewSet(viewsets.ModelViewSet):
-    """
-    Graph Nodes CRUD.
-    """
+    """Graph Nodes CRUD."""
 
     queryset = HydraSpellbookNode.objects.all()
     serializer_class = HydraSpellbookNodeSerializer
@@ -126,8 +123,6 @@ class HydraSpellbookNodeViewSet(viewsets.ModelViewSet):
         """Graph Protection: Cannot delete the core anchor node."""
         is_delegated = bool(instance.invoked_spellbook_id)
         if not is_delegated and instance.spell_id == HydraSpell.BEGIN_PLAY:
-            from rest_framework.exceptions import ValidationError
-
             raise ValidationError(
                 'Cannot delete the core BeginPlay anchor node.'
             )
@@ -144,18 +139,14 @@ class HydraSpellbookNodeViewSet(viewsets.ModelViewSet):
 class HydraSpellbookConnectionWireViewSet(
     mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet
 ):
-    """
-    Graph Wires. Only Create (connect) and Destroy (disconnect) are needed.
-    """
+    """Graph Wires."""
 
     queryset = HydraSpellbookConnectionWire.objects.all()
     serializer_class = HydraSpellbookConnectionWireSerializer
 
 
 class HydraSpellBookNodeContextViewSet(viewsets.ModelViewSet):
-    """
-    Manages variable overrides on specific nodes.
-    """
+    """Manages variable overrides on specific nodes."""
 
     queryset = HydraSpellBookNodeContext.objects.all()
     serializer_class = HydraSpellBookNodeContextSerializer
@@ -168,9 +159,7 @@ class HydraSpawnViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
-    """
-    Mission Control and Spawns.
-    """
+    """Mission Control and Spawns."""
 
     queryset = (
         HydraSpawn.objects.all()
@@ -204,10 +193,7 @@ class HydraSpawnViewSet(
 
     @action(detail=True, methods=['get'])
     def live_status(self, request, pk=None):
-        """
-        Fast-polling endpoint for the UI. Returns graph node colors/states.
-        Replaces `get_execution_status` in hydra_graph.py.
-        """
+        """Fast-polling endpoint for the UI."""
         spawn = self.get_object()
         serializer = HydraSpawnStatusSerializer(spawn)
         return Response(serializer.data)
@@ -236,9 +222,7 @@ class HydraSpawnViewSet(
 
 
 class HydraHeadViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    """
-    Forensics Unit. Retrieves heavy telemetry/logs.
-    """
+    """Forensics Unit. Retrieves heavy telemetry/logs."""
 
     queryset = HydraHead.objects.all()
     serializer_class = HydraNodeTelemetrySerializer
