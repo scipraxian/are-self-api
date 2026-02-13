@@ -1,7 +1,10 @@
 """Hydra Data Models."""
 
+from typing import Any, Dict, List, Optional
+
 from django.db import models
 
+import environments
 from common.constants import STANDARD_CHARFIELD_LENGTH
 from common.models import (
     CreatedMixin,
@@ -165,8 +168,10 @@ class HydraSpell(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
     )
 
     def get_full_command(
-        self, environment=None, extra_context=None
-    ) -> list[str]:
+        self,
+        environment: Optional['environments.models.ProjectEnvironment'] = None,
+        extra_context: Optional[Dict[str, Any]] = None,
+    ) -> List[str]:
         """
         Constructs the full command line [executable, arg1, arg2...]
         Resolves proper environment context and interpolates variables.
@@ -458,11 +463,12 @@ class HydraSpawn(
             status__in=HydraSpawnStatus.IS_TERMINAL_STATUS_LIST,
         )
 
-
-def __str__(self):
-    # Handle case where spellbook was deleted
-    book_name = self.spellbook.name if self.spellbook else 'Deleted Spellbook'
-    return f'Spawn {self.id} ({book_name})'
+    def __str__(self):
+        # Handle case where spellbook was deleted
+        book_name = (
+            self.spellbook.name if self.spellbook else 'Deleted Spellbook'
+        )
+        return f'Spawn {self.id} ({book_name})'
 
 
 class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):

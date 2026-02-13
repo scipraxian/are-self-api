@@ -337,7 +337,10 @@ class HydraGraphLayoutSerializer(serializers.ModelSerializer):
 
     def get_nodes(self, obj):
         dtos = []
-        for n in obj.nodes.all().select_related('spell', 'invoked_spellbook'):
+        nodes = obj.nodes.select_related(
+            'spell', 'invoked_spellbook', 'distribution_mode'
+        ).all()
+        for n in nodes:
             ui = _get_ui_data(n.ui_json)
             is_delegated = bool(n.invoked_spellbook_id)
             is_root = (n.spell_id == HydraSpell.BEGIN_PLAY) and not is_delegated
@@ -427,7 +430,13 @@ class HydraSpawnStatusSerializer(serializers.ModelSerializer):
                     'status_id': HydraStatusID.SUCCESS,
                     'head_id': None,
                 }
-        for head in obj.heads.all().order_by('created'):
+        heads = (
+            obj.heads.select_related('status')
+            .prefetch_related('child_spawns')
+            .order_by('created')
+        )
+
+        for head in heads:
             if head.node_id:
                 child = head.child_spawns.first()
                 child_id = str(child.id) if child else None

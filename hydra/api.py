@@ -1,4 +1,5 @@
 import json
+import logging
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -29,6 +30,9 @@ from .serializers import (
     HydraSpellbookSerializer,
     HydraSpellSerializer,
 )
+
+logger = logging.getLogger(__name__)
+
 
 # API Constants
 CATEGORY_SPELLS = 'Spells'
@@ -186,6 +190,7 @@ class HydraSpawnViewSet(
                 read_serializer.data, status=status.HTTP_201_CREATED
             )
         except Exception as e:
+            logger.exception(f'Failed to launch spellbook {book_id}')
             return Response(
                 {'error': f'Launch Failed: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
