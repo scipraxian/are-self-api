@@ -2,12 +2,14 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework import routers
 
+from dashboard.api_urls import DASHBOARD_ROUTER
 from environments.api_urls import ENVIRONMENTS_ROUTER
 from hydra.api_urls import HYDRA_ROUTER
 
 v1_router = routers.DefaultRouter()
 v1_router.registry.extend(ENVIRONMENTS_ROUTER.registry)
 v1_router.registry.extend(HYDRA_ROUTER.registry)
+v1_router.registry.extend(DASHBOARD_ROUTER.registry)
 urlpatterns = [
     path('', include('dashboard.urls')),
     path('hydra/', include('hydra.urls')),

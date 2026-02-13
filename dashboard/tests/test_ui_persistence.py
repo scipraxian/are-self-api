@@ -74,17 +74,3 @@ class TestUIPersistence:
             assert 'lane-wrapper' in content, (
                 'Error response missing wrapper! DOM will vanish.'
             )
-
-    def test_serialize_helper_integration(self):
-        """
-        Verifies the serialization logic used by the view doesn't crash on empty relations.
-        """
-        from dashboard.views import serialize_spawn_helper
-
-        # Spawn with NO heads (fresh)
-        data = serialize_spawn_helper(self.spawn)
-
-        assert data['object'] == self.spawn
-        assert data['is_alive'] is True
-        assert data['live_children'] == []
-        assert 'error' not in data

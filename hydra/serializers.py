@@ -537,3 +537,61 @@ class HydraSpawnSerializer(serializers.ModelSerializer):
     class Meta:
         model = HydraSpawn
         fields = ALL_FIELDS
+
+
+class HydraSwimlaneSerializer(serializers.ModelSerializer):
+    """
+    Specifically shapes a Spawn and its sub-graphs for the Mission Control UI.
+    Completely replaces serialize_spawn_helper.
+    """
+
+    live_children = serializers.SerializerMethodField()
+    history = serializers.SerializerMethodField()
+    subgraphs = serializers.SerializerMethodField()
+
+    # Expose ALL properties defined on the HydraSpawn model
+    is_active = serializers.BooleanField(read_only=True)  # legacy
+    is_alive = serializers.BooleanField(read_only=True)
+    is_dead = serializers.BooleanField(read_only=True)
+    is_queued = serializers.BooleanField(read_only=True)
+    is_stopping = serializers.BooleanField(read_only=True)
+    ended_badly = serializers.BooleanField(read_only=True)
+    ended_successfully = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = HydraSpawn
+        fields = [
+            'id',
+            'status',
+            'spellbook',
+            'created',
+            'modified',
+            'is_active',
+            'is_alive',
+            'is_dead',
+            'is_queued',
+            'is_stopping',
+            'ended_badly',
+            'ended_successfully',
+            'live_children',
+            'history',
+            'subgraphs',
+        ]
+
+    def get_live_children(self, obj):
+        heads = obj.live_heads.all().order_by('created')
+        return HydraHeadSerializer(heads, many=True).data
+
+    def get_history(self, obj):
+        heads = obj.finished_heads.all().order_by('created')
+        return HydraHeadSerializer(heads, many=True).data
+
+    def get_subgraphs(self, obj):
+        # Fetch children spawns
+        live = list(obj.live_head_spawns)
+        finished = list(obj.finished_head_spawns)
+        children = live + finished
+        children.sort(key=lambda x: x.created if x.created else x.modified)
+
+        # Recursive serialization for nested swimlanes
+        return HydraSwimlaneSerializer(children, many=True).data

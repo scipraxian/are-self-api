@@ -21,10 +21,9 @@
     </div>
 
     <div id="system-menu" class="system-menu">
-        <a href="{% url 'agent_list' %}" class="menu-item">Sonar Registry</a>
         <a href="{% url 'admin:index' %}" target="_blank" class="menu-item">System Admin</a>
         <div style="height:1px; background:#444; margin:5px 0;"></div>
-        <button class="menu-item danger" hx-post="{% url 'shutdown' %}" onclick="window.close()">
+        <button class="menu-item danger" hx-post="{% url 'dashboard:shutdown' %}" onclick="window.close()">
             ⚠ SYSTEM SHUTDOWN
         </button>
     </div>
@@ -94,7 +93,7 @@
     </div>
 
     <div id="mission-monitor" class="mission-monitor"
-         hx-get="{% url 'home' %}"
+         hx-get="{% url 'dashboard:home' %}"
          hx-select="#mission-monitor"
          hx-swap="outerHTML"
          hx-trigger="monitor-update from:body">
