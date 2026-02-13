@@ -591,3 +591,48 @@ body {
     background: var(--lcars-blue);
     color: #000;
 }
+
+/* --- SWIMLANE STATE OVERRIDES --- */
+/* Base successful lane (green tint) */
+.swimlane.success-lane {
+    background: rgba(74, 222, 128, 0.05);
+    border-color: rgba(74, 222, 128, 0.3);
+}
+
+/* Head Card Base Stopped State */
+.head-card.stopped {
+    border-color: #444;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.head-card.stopped .head-name {
+    color: #ddd;
+}
+
+.head-card.stopped .head-target {
+    color: #888;
+}
+
+/* Text Status Colors (Matches LCARS/Tailwind definitions) */
+.status-success {
+    color: #4ade80 !important;
+}
+
+.status-failed,
+.status-aborted {
+    color: #ef4444 !important;
+}
+
+.status-running {
+    color: var(--lcars-elbow) !important;
+}
+
+.status-pending,
+.status-created {
+    color: #94a3b8 !important;
+}
+
+.status-stopping,
+.status-stopped {
+    color: #888 !important;
+}
