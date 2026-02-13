@@ -214,14 +214,25 @@ async function pollMissionControl() {
         if (!container) return;
 
         if (!data.recent_missions || data.recent_missions.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:50px; color:#444;">NO ACTIVE MISSIONS</div>';
+            if (isFirstLoad) {
+                container.innerHTML = '<div style="text-align:center; padding:50px; color:#444;">NO ACTIVE MISSIONS</div>';
+            }
         } else {
-            container.innerHTML = '';
+            // Remove the empty placeholder if a job arrives
+            const emptyMsg = container.querySelector('div[style*="NO ACTIVE MISSIONS"]');
+            if (emptyMsg) emptyMsg.remove();
+
             data.recent_missions.forEach(mission => {
-                container.appendChild(buildSwimlaneDOM(mission, false));
+                const existingLane = document.getElementById(`lane-wrapper-${mission.id}`);
+                const newLane = buildSwimlaneDOM(mission, false);
+
+                if (existingLane) {
+                    existingLane.replaceWith(newLane); // Delta DOM Patch
+                } else {
+                    container.prepend(newLane); // Insert newly started jobs at the top
+                }
             });
 
-            // Re-trigger the overflow observer to show/hide scroll arrows
             if (typeof initSwimlaneObservers === 'function') {
                 initSwimlaneObservers(container);
             }
