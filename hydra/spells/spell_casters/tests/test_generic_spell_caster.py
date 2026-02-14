@@ -15,7 +15,6 @@ async def mock_event_stream(events):
 
 @pytest.mark.django_db
 class TestGenericSpellCaster:
-
     @pytest.fixture
     def mock_head(self):
         """Creates a mock HydraHead with necessary attributes."""
@@ -34,8 +33,8 @@ class TestGenericSpellCaster:
         # Mock the manager get() to return this head
         with patch('hydra.models.HydraHead.objects.get', return_value=head):
             with patch(
-                    'hydra.models.HydraHead.objects.select_related',
-                    return_value=MagicMock(get=lambda id: head),
+                'hydra.models.HydraHead.objects.select_related',
+                return_value=MagicMock(get=lambda id: head),
             ):
                 # Setup default get_full_command return
                 head.spell.get_full_command.return_value = [
@@ -47,11 +46,14 @@ class TestGenericSpellCaster:
 
     @pytest.fixture
     def mock_env_utils(self):
-        with patch(
+        with (
+            patch(
                 'hydra.spells.spell_casters.generic_spell_caster.get_active_environment'
-        ) as mock_env, patch(
+            ) as mock_env,
+            patch(
                 'hydra.spells.spell_casters.generic_spell_caster.resolve_environment_context'
-        ) as mock_ctx:
+            ) as mock_ctx,
+        ):
             mock_env.return_value = None
             mock_ctx.return_value = {}
             yield mock_env, mock_ctx
@@ -66,8 +68,9 @@ class TestGenericSpellCaster:
             TalosEvent(type=TalosAgentConstants.T_EXIT, code=0),
         ]
 
-        with patch('talos_agent.talos_agent.TalosAgent.execute_local'
-                  ) as mock_exec:
+        with patch(
+            'talos_agent.talos_agent.TalosAgent.execute_local'
+        ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
             caster.execute()
@@ -88,14 +91,15 @@ class TestGenericSpellCaster:
                 text='Working...',
                 source='stdout',
             ),
-            TalosEvent(type=TalosAgentConstants.T_LOG,
-                       text='File log',
-                       source='file'),
+            TalosEvent(
+                type=TalosAgentConstants.T_LOG, text='File log', source='file'
+            ),
             TalosEvent(type=TalosAgentConstants.T_EXIT, code=0),
         ]
 
-        with patch('talos_agent.talos_agent.TalosAgent.execute_local'
-                  ) as mock_exec:
+        with patch(
+            'talos_agent.talos_agent.TalosAgent.execute_local'
+        ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
             caster.execute()
@@ -112,8 +116,9 @@ class TestGenericSpellCaster:
             TalosEvent(type=TalosAgentConstants.T_EXIT, code=1),
         ]
 
-        with patch('talos_agent.talos_agent.TalosAgent.execute_local'
-                  ) as mock_exec:
+        with patch(
+            'talos_agent.talos_agent.TalosAgent.execute_local'
+        ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
             caster.execute()
@@ -130,8 +135,9 @@ class TestGenericSpellCaster:
 
         events = [TalosEvent(type=TalosAgentConstants.T_EXIT, code=0)]
 
-        with patch('talos_agent.talos_agent.TalosAgent.execute_remote'
-                  ) as mock_remote:
+        with patch(
+            'talos_agent.talos_agent.TalosAgent.execute_remote'
+        ) as mock_remote:
             mock_remote.return_value = mock_event_stream(events)
 
             caster.execute()
@@ -152,8 +158,9 @@ class TestGenericSpellCaster:
 
         events = [TalosEvent(type=TalosAgentConstants.T_EXIT, code=0)]
 
-        with patch('talos_agent.talos_agent.TalosAgent.execute_local'
-                  ) as mock_exec:
+        with patch(
+            'talos_agent.talos_agent.TalosAgent.execute_local'
+        ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
             caster.execute()
@@ -166,3 +173,36 @@ class TestGenericSpellCaster:
 
             mock_exec.assert_called_once()
             assert mock_exec.call_args[1]['command'] == expected_cmd
+
+    def test_log_path_template_resolution(self, mock_head, mock_env_utils):
+        """Verify that templated log paths are resolved before pipeline execution."""
+        # 1. Setup a templated log path
+        mock_head.spell.talos_executable.log = (
+            'C:\\{{project_name}}\\Saved\\Logs\\{{project_name}}.log'
+        )
+
+        # 2. Inject context into mock_env_utils (mock_ctx is the 2nd item in fixture)
+        _, mock_ctx = mock_env_utils
+        mock_ctx.return_value = {'project_name': 'HSHVacancy'}
+
+        caster = GenericSpellCaster(mock_head.id)
+        events = [TalosEvent(type=TalosAgentConstants.T_EXIT, code=0)]
+
+        with patch(
+            'talos_agent.talos_agent.TalosAgent.execute_local'
+        ) as mock_exec:
+            mock_exec.return_value = mock_event_stream(events)
+
+            caster.execute()
+
+            # 3. Assertions
+            expected_resolved_log = (
+                'C:\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log'
+            )
+
+            mock_exec.assert_called_once()
+            _, kwargs = mock_exec.call_args
+
+            assert kwargs['log_path'] == expected_resolved_log, (
+                f'Log path was not resolved! Got: {kwargs["log_path"]}'
+            )

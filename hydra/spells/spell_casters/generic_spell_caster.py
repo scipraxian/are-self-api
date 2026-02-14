@@ -8,6 +8,7 @@ from typing import List, Optional
 
 from asgiref.sync import sync_to_async
 
+from environments.variable_renderer import VariableRenderer
 from hydra.models import HydraHead, HydraHeadStatus
 from hydra.spells.spell_casters.begin_play_node import begin_play
 from hydra.spells.spell_casters.spell_handlers.version_metadata_handler import (
@@ -282,7 +283,8 @@ class GenericSpellCaster:
         executable = full_cmd[0]
         params = full_cmd[1:]
 
-        log_path = self.spell.talos_executable.log
+        raw_log_path = self.spell.talos_executable.log
+        log_path = VariableRenderer.render_string(raw_log_path, full_context)
 
         is_remote = self.head.target is not None
         target_name = self.head.target.hostname if is_remote else 'Local Server'
