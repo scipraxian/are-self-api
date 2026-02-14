@@ -71,49 +71,58 @@ function buildHeadDOM(head) {
     card.href = `/hydra/head/${head.id}/`;
 
     const nameEl = card.querySelector('.head-name');
-    if (nameEl) nameEl.textContent = head.spell_name || 'Node';
-
     const targetEl = card.querySelector('.head-target');
     const logEl = card.querySelector('.head-log');
-
-    // DEFENSIVE ASSIGNMENT: Prevent null reference crashes
     const timeEl = card.querySelector('.head-time');
-    if (timeEl) timeEl.textContent = head.timestamp_str || '--:--:--';
-
     const durationEl = card.querySelector('.head-duration');
+
+    if (nameEl) nameEl.textContent = head.spell_name || 'Node';
+    if (timeEl) timeEl.textContent = head.timestamp_str || '--:--:--';
     if (durationEl) durationEl.textContent = `⏱ ${head.duration || '0s'}`;
 
-    // UNIFIED STATE MACHINE (Actually applies CSS classes!)
-    if (head.status_id === 1 || head.status_id === 2) {
-        card.classList.add('pending');
-        nameEl.style.color = '#888';
-        targetEl.style.color = '#666';
-        targetEl.textContent = 'QUEUED';
-        logEl.textContent = 'Waiting...';
-    } else if (head.status_id === 3 || head.status_id === 8) {
-        card.classList.add('active');
-        nameEl.style.color = '#fff';
-        targetEl.style.color = 'var(--lcars-elbow)';
-        targetEl.textContent = head.target_name || 'LOCAL';
-        logEl.textContent = head.status_name;
-    } else {
-        nameEl.style.color = '#ddd';
+    const statusId = head.status_id !== undefined ? head.status_id : head.status;
 
-        // APPLY PROPER COLOR CLASSES
-        if (head.status_id === 4) {
+    // State Machine
+    if (statusId === 1 || statusId === 2) {
+        card.classList.add('pending');
+        if (nameEl) nameEl.style.color = '#888';
+        if (targetEl) {
+            targetEl.style.color = '#666';
+            targetEl.textContent = 'QUEUED';
+        }
+        if (logEl) {
+            logEl.textContent = 'Waiting...';
+            logEl.style.color = '#444';
+            logEl.style.display = 'block';
+        }
+    } else if (statusId === 3 || statusId === 8) {
+        card.classList.add('active');
+        if (nameEl) nameEl.style.color = '#fff';
+        if (targetEl) {
+            targetEl.style.color = 'var(--lcars-elbow)';
+            targetEl.textContent = head.target_name || 'LOCAL';
+        }
+        if (logEl) {
+            logEl.textContent = head.status_name;
+            logEl.style.color = '#888';
+            logEl.style.display = 'block';
+        }
+    } else {
+        if (nameEl) nameEl.style.color = '#ddd';
+        if (logEl) logEl.style.display = 'none';
+
+        if (statusId === 4) {
             card.classList.add('success');
-            targetEl.style.color = '#4ade80';
-        } else if (head.status_id === 5 || head.status_id === 6) {
+            if (targetEl) targetEl.style.color = '#4ade80';
+        } else if (statusId === 5 || statusId === 6) {
             card.classList.add('failed');
-            targetEl.style.color = '#ef4444';
+            if (targetEl) targetEl.style.color = '#ef4444';
         } else {
             card.classList.add('stopped');
-            targetEl.style.color = '#888';
+            if (targetEl) targetEl.style.color = '#888';
         }
 
-        targetEl.textContent = (head.result_code !== null) ? `RC: ${head.result_code}` : head.status_name;
-        // For history, show the last 30 chars of log, or the status name
-        logEl.textContent = head.spell_log ? head.spell_log.substring(Math.max(0, head.spell_log.length - 30)) : head.status_name;
+        if (targetEl) targetEl.textContent = (head.result_code !== null) ? `RC: ${head.result_code}` : head.status_name;
     }
 
     return clone;

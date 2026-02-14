@@ -481,7 +481,7 @@ body {
     border: 1px solid #333;
     border-radius: 6px;
     padding: 8px 10px;
-    width: 170px; /* Slightly wider to fit timestamps */
+    width: 170px; /* Wider to fit metadata */
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
@@ -584,30 +584,7 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    text-decoration: none;
     transition: background 0.2s, color 0.2s;
-}
-
-.head-card:hover .card-drill-btn {
-    background: var(--lcars-elbow);
-    color: #000;
-}
-
-/* Drill Button */
-.card-drill-btn {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    color: #aaa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    text-decoration: none;
 }
 
 .head-card:hover .card-drill-btn {
@@ -645,19 +622,6 @@ body {
     border-color: rgba(74, 222, 128, 0.3);
 }
 
-/* Head Card Base Stopped State */
-.head-card.stopped {
-    border-color: #444;
-    background: rgba(255, 255, 255, 0.02);
-}
-
-.head-card.stopped .head-name {
-    color: #ddd;
-}
-
-.head-card.stopped .head-target {
-    color: #888;
-}
 
 /* Text Status Colors (Matches LCARS/Tailwind definitions) */
 .status-success {
