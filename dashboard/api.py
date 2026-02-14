@@ -67,7 +67,7 @@ class DashboardViewSet(viewsets.ViewSet):
         )
 
         # Force query evaluation
-        spawns_list = list(root_spawns)
+        spawns_list = reversed(list(root_spawns))
 
         # If nothing changed in the overlapping window, halt DOM patching
         if not is_first_load and client_sync_time and not spawns_list:
