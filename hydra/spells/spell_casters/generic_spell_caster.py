@@ -394,7 +394,13 @@ class GenericSpellCaster:
 
     def _load_head_sync(self):
         self.head = HydraHead.objects.select_related(
-            'spell', 'spell__talos_executable', 'target'
+            'spell',
+            'spell__talos_executable',
+            'target',
+            'spawn',
+            'spawn__environment',
+            'node',
+            'node__environment',
         ).get(id=self.head_id)
         self.spell = self.head.spell
 

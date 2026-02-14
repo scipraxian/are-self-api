@@ -1,8 +1,22 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
+from django.test import TestCase
 
-from hydra.models import HydraHeadStatus
+from environments.models import (
+    ProjectEnvironment,
+    ProjectEnvironmentStatus,
+    ProjectEnvironmentType,
+    TalosExecutable,
+)
+from hydra.models import (
+    HydraHead,
+    HydraHeadStatus,
+    HydraSpawn,
+    HydraSpell,
+    HydraSpellbook,
+    HydraSpellbookNode,
+)
 from hydra.spells.spell_casters.generic_spell_caster import GenericSpellCaster
 from talos_agent.talos_agent import TalosAgentConstants, TalosEvent
 
@@ -206,3 +220,64 @@ class TestGenericSpellCaster:
             assert kwargs['log_path'] == expected_resolved_log, (
                 f'Log path was not resolved! Got: {kwargs["log_path"]}'
             )
+
+
+@pytest.mark.django_db
+class GenericSpellCasterQueryTest(TestCase):
+    fixtures = [
+        'environments/fixtures/initial_data.json',
+        'talos_agent/fixtures/initial_data.json',
+        'talos_agent/fixtures/test_agents.json',
+        'hydra/fixtures/initial_data.json',
+    ]
+
+    def setUp(self):
+        # Environment
+        env_type = ProjectEnvironmentType.objects.get_or_create(name='UE5')[0]
+        env_status = ProjectEnvironmentStatus.objects.get_or_create(
+            name='Ready'
+        )[0]
+        self.env = ProjectEnvironment.objects.create(
+            name='Test Env', type=env_type, status=env_status
+        )
+
+        # Spell & Node
+        self.exe = TalosExecutable.objects.create(
+            name='TestExe', executable='cmd.exe'
+        )
+        self.spell = HydraSpell.objects.create(
+            name='TestSpell', talos_executable=self.exe
+        )
+        self.book = HydraSpellbook.objects.create(name='Test Book')
+        self.node = HydraSpellbookNode.objects.create(
+            spellbook=self.book, spell=self.spell, environment=self.env
+        )
+
+        # Execution
+        self.spawn = HydraSpawn.objects.create(
+            spellbook=self.book, environment=self.env, status_id=1
+        )
+        self.head = HydraHead.objects.create(
+            spawn=self.spawn, node=self.node, spell=self.spell, status_id=1
+        )
+
+    def test_load_head_sync_prefetches_environment(self):
+        """Verify _load_head_sync loads the environment in the initial query to prevent async ORM crashes."""
+        caster = GenericSpellCaster(head_id=self.head.id)
+
+        # 1. Load the head (Should take exactly 1 query due to select_related)
+        with self.assertNumQueries(1):
+            caster._load_head_sync()
+
+        # 2. Access the deeply nested relations (Should take 0 additional queries)
+        # If any of these throw an error or trigger a query, the async pipeline will crash.
+        with self.assertNumQueries(0):
+            spawn_env = caster.head.spawn.environment
+            node_env = caster.head.node.environment
+            target = caster.head.target
+            executable = caster.head.spell.talos_executable
+
+        # 3. Assert correct data was cached
+        self.assertEqual(spawn_env.id, self.env.id)
+        self.assertEqual(node_env.id, self.env.id)
+        self.assertEqual(executable.id, self.exe.id)
