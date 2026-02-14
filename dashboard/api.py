@@ -27,8 +27,9 @@ class DashboardViewSet(viewsets.ViewSet):
         include_static = request.query_params.get('static', 'true') == 'true'
         is_first_load = include_static
 
-        # Always send the current time down for the NEXT poll
-        response_data = {'server_time': timezone.now().isoformat()}
+        # Always stamp the exact moment the request started
+        now = timezone.now()
+        response_data = {'server_time': now.isoformat()}
 
         if is_first_load:
             envs = ProjectEnvironment.objects.all().order_by('name')
@@ -49,12 +50,11 @@ class DashboardViewSet(viewsets.ViewSet):
             parent_head__isnull=True, environment__selected=True
         )
 
-        # --- THE FIX: SAFETY BUFFER ---
         if not is_first_load and client_sync_time:
-            # Subtract 2 seconds to catch overlapping DB transactions
-            # where the Python clock was slightly ahead of the Celery commit.
-            safe_sync_time = client_sync_time - timedelta(seconds=2)
-
+            # MVCC Race Condition Protection: Roll back the clock 2.5 seconds.
+            # This ensures we catch any Celery transactions that were assigned
+            # a timestamp slightly in the past, but committed AFTER our last poll.
+            safe_sync_time = client_sync_time - timedelta(seconds=2.5)
             root_spawns = root_spawns.filter(
                 Q(modified__gt=safe_sync_time)
                 | Q(heads__modified__gt=safe_sync_time)
@@ -66,11 +66,14 @@ class DashboardViewSet(viewsets.ViewSet):
             .order_by('-created')[:20]
         )
 
-        missions_data = HydraSwimlaneSerializer(root_spawns, many=True).data
+        # Force query evaluation
+        spawns_list = list(root_spawns)
 
-        # If our safety window caught NO changes, THEN return 204 to halt the UI loop
-        if not is_first_load and client_sync_time and len(missions_data) == 0:
+        # If nothing changed in the overlapping window, halt DOM patching
+        if not is_first_load and client_sync_time and not spawns_list:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        response_data['recent_missions'] = missions_data
+        response_data['recent_missions'] = HydraSwimlaneSerializer(
+            spawns_list, many=True
+        ).data
         return Response(response_data)
