@@ -117,13 +117,12 @@ class Hydra:
     def stop_gracefully(self) -> None:
         """
         Signals active heads to stop gracefully.
-        Sets status to STOPPING. The GenericSpellCaster will see this
-        and trigger the agent's graceful termination logic.
+        Sets status to STOPPING.
         """
+
         with transaction.atomic():
             spawn = HydraSpawn.objects.select_for_update().get(id=self.spawn.id)
 
-            # Filter for active heads that aren't already stopping/done
             active_heads = spawn.heads.select_for_update().filter(
                 status_id__in=[
                     HydraHeadStatus.RUNNING,
@@ -131,7 +130,10 @@ class Hydra:
                 ]
             )
 
-            count = active_heads.update(status_id=HydraHeadStatus.STOPPING)
+            count = active_heads.update(
+                status_id=HydraHeadStatus.STOPPING, modified=timezone.now()
+            )
+
             if count > 0:
                 spawn.status_id = HydraSpawnStatus.STOPPING
                 spawn.save(update_fields=['status'])

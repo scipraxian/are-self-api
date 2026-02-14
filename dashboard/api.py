@@ -61,14 +61,17 @@ class DashboardViewSet(viewsets.ViewSet):
         )
 
         if not is_first_load and client_sync_time:
-            # MVCC Race Condition Protection: Roll back the clock 2.5 seconds.
-            # This ensures we catch any Celery transactions that were assigned
-            # a timestamp slightly in the past, but committed AFTER our last poll.
             safe_sync_time = client_sync_time - timedelta(seconds=2.5)
-            root_spawns = root_spawns.filter(
-                Q(modified__gt=safe_sync_time)
-                | Q(heads__modified__gt=safe_sync_time)
-            ).distinct()
+            has_changes = (
+                HydraSpawn.objects.filter(environment__selected=True)
+                .filter(
+                    Q(modified__gt=safe_sync_time)
+                    | Q(heads__modified__gt=safe_sync_time)
+                )
+                .exists()
+            )
+            if not has_changes:
+                return Response(status=status.HTTP_204_NO_CONTENT)
 
         root_spawns = (
             root_spawns.select_related('status', 'spellbook', 'environment')
