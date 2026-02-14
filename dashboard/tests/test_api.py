@@ -50,15 +50,15 @@ class DashboardAPITest(TestCase):
         self.assertTrue(len(response.data['environments']) > 0)
         self.assertTrue(len(response.data['spellbooks']) > 0)
 
-    # FIX: Mock the Thread.start method so the background task never actually launches
     @patch('dashboard.api.threading.Thread.start')
     @patch('dashboard.api.celery_app.control.shutdown')
-    def test_shutdown_endpoint(self, mock_celery, mock_thread_start):
+    def test_shutdown_endpoint(self, mock_celery_shutdown, mock_thread_start):
         """Verify shutdown triggers Celery control and schedules a shutdown thread."""
         url = '/api/v1/dashboard/shutdown/'
         response = self.client.post(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        mock_celery.assert_called_once()
-        # Verify that we attempted to start the thread
+
+        # Verify the backend actions were triggered
+        mock_celery_shutdown.assert_called_once()
         mock_thread_start.assert_called_once()

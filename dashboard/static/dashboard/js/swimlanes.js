@@ -63,51 +63,68 @@ async function rerunSpawn(spellbookId) {
     }
 }
 
-function buildHeadDOM(head, isHistory) {
+function buildHeadDOM(head) {
     const template = document.getElementById('tpl-head-card');
     const clone = template.content.cloneNode(true);
     const card = clone.querySelector('.head-card');
 
     card.href = `/hydra/head/${head.id}/`;
-    card.querySelector('.head-name').textContent = head.spell_name || 'Node';
 
+    const nameEl = card.querySelector('.head-name');
     const targetEl = card.querySelector('.head-target');
     const logEl = card.querySelector('.head-log');
+    const timeEl = card.querySelector('.head-time');
+    const durationEl = card.querySelector('.head-duration');
 
-    if (isHistory) {
-        // [FIX] Correct LCARS color mapping for history blocks
-        let stateClass = 'stopped';
-        let targetColor = '#888';
+    if (nameEl) nameEl.textContent = head.spell_name || 'Node';
+    if (timeEl) timeEl.textContent = head.timestamp_str || '--:--:--';
+    if (durationEl) durationEl.textContent = `⏱ ${head.duration || '0s'}`;
 
-        if (head.status_id === 4) {
-            stateClass = 'success';
-            targetColor = '#4ade80';
-        } else if (head.status_id === 5 || head.status_id === 6) {
-            stateClass = 'failed';
-            targetColor = '#ef4444';
-        }
+    const statusId = head.status_id !== undefined ? head.status_id : head.status;
 
-        card.classList.add(stateClass);
-        card.querySelector('.head-name').style.color = '#ddd';
-        targetEl.style.color = targetColor;
-        targetEl.textContent = (head.result_code !== null) ? `RC: ${head.result_code}` : head.status_name;
-        logEl.style.display = 'none';
-    } else {
-        const isPending = head.status_id === 1 || head.status_id === 2;
-        if (isPending) {
-            card.classList.add('pending');
-            card.querySelector('.head-name').style.color = '#888';
+    // State Machine
+    if (statusId === 1 || statusId === 2) {
+        card.classList.add('pending');
+        if (nameEl) nameEl.style.color = '#888';
+        if (targetEl) {
             targetEl.style.color = '#666';
             targetEl.textContent = 'QUEUED';
+        }
+        if (logEl) {
             logEl.textContent = 'Waiting...';
-        } else {
-            card.classList.add('active');
-            card.querySelector('.head-name').style.color = '#fff';
+            logEl.style.color = '#444';
+            logEl.style.display = 'block';
+        }
+    } else if (statusId === 3 || statusId === 8) {
+        card.classList.add('active');
+        if (nameEl) nameEl.style.color = '#fff';
+        if (targetEl) {
             targetEl.style.color = 'var(--lcars-elbow)';
             targetEl.textContent = head.target_name || 'LOCAL';
-            logEl.textContent = head.status_name;
         }
+        if (logEl) {
+            logEl.textContent = head.status_name;
+            logEl.style.color = '#888';
+            logEl.style.display = 'block';
+        }
+    } else {
+        if (nameEl) nameEl.style.color = '#ddd';
+        if (logEl) logEl.style.display = 'none';
+
+        if (statusId === 4) {
+            card.classList.add('success');
+            if (targetEl) targetEl.style.color = '#4ade80';
+        } else if (statusId === 5 || statusId === 6) {
+            card.classList.add('failed');
+            if (targetEl) targetEl.style.color = '#ef4444';
+        } else {
+            card.classList.add('stopped');
+            if (targetEl) targetEl.style.color = '#888';
+        }
+
+        if (targetEl) targetEl.textContent = (head.result_code !== null) ? `RC: ${head.result_code}` : head.status_name;
     }
+
     return clone;
 }
 
@@ -162,10 +179,10 @@ function buildSwimlaneDOM(mission, isSubgraph = false) {
     // Scroll Area (Heads)
     const scrollArea = clone.querySelector('.lane-scroll-area');
     if (mission.live_children) {
-        mission.live_children.forEach(h => scrollArea.appendChild(buildHeadDOM(h, false)));
+        mission.live_children.forEach(h => scrollArea.appendChild(buildHeadDOM(h)));
     }
     if (mission.history) {
-        mission.history.forEach(h => scrollArea.appendChild(buildHeadDOM(h, true)));
+        mission.history.forEach(h => scrollArea.appendChild(buildHeadDOM(h)));
     }
 
     // Scroll Buttons
@@ -190,7 +207,8 @@ async function pollMissionControl() {
         let fetchUrl = isFirstLoad ? API_SUMMARY_URL : `${API_SUMMARY_URL}?static=false`;
 
         if (lastSyncTime) {
-            fetchUrl += `&last_sync=${encodeURIComponent(lastSyncTime)}`;
+            const separator = fetchUrl.includes('?') ? '&' : '?';
+            fetchUrl += `${separator}last_sync=${encodeURIComponent(lastSyncTime)}`;
         }
 
         const response = await fetch(fetchUrl, {

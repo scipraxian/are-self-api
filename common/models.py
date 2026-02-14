@@ -57,18 +57,6 @@ class ModifiedByMixin(models.Model):
 
         abstract = True
 
-    def save(self, *args, **kwargs):
-        """Django Quirk: update_fields bypasses auto_now=True.
-        We intercept the save to guarantee the timestamp bumps.
-        Added 2026. Consider constants.
-        """
-        if 'update_fields' in kwargs and kwargs['update_fields'] is not None:
-            if 'modified' not in kwargs['update_fields']:
-                kwargs['update_fields'] = list(kwargs['update_fields']) + [
-                    'modified'
-                ]
-        super().save(*args, **kwargs)
-
 
 class DescriptionMixin(models.Model):
     """Adds a standard sized description field to a model."""
@@ -92,6 +80,18 @@ class ModifiedMixin(models.Model):
         """Standard Django Meta object, for model configuration."""
 
         abstract = True
+
+    def save(self, *args, **kwargs):
+        """Django Quirk: update_fields bypasses auto_now=True.
+        We intercept the save to guarantee the timestamp bumps.
+        Added 2026. Consider constants.
+        """
+        if 'update_fields' in kwargs and kwargs['update_fields'] is not None:
+            if 'modified' not in kwargs['update_fields']:
+                kwargs['update_fields'] = list(kwargs['update_fields']) + [
+                    'modified'
+                ]
+        super().save(*args, **kwargs)
 
 
 class CreatedAndModifiedBy(

@@ -1,8 +1,22 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
+from django.test import TestCase
 
-from hydra.models import HydraHeadStatus
+from environments.models import (
+    ProjectEnvironment,
+    ProjectEnvironmentStatus,
+    ProjectEnvironmentType,
+    TalosExecutable,
+)
+from hydra.models import (
+    HydraHead,
+    HydraHeadStatus,
+    HydraSpawn,
+    HydraSpell,
+    HydraSpellbook,
+    HydraSpellbookNode,
+)
 from hydra.spells.spell_casters.generic_spell_caster import GenericSpellCaster
 from talos_agent.talos_agent import TalosAgentConstants, TalosEvent
 
@@ -15,7 +29,6 @@ async def mock_event_stream(events):
 
 @pytest.mark.django_db
 class TestGenericSpellCaster:
-
     @pytest.fixture
     def mock_head(self):
         """Creates a mock HydraHead with necessary attributes."""
@@ -34,8 +47,8 @@ class TestGenericSpellCaster:
         # Mock the manager get() to return this head
         with patch('hydra.models.HydraHead.objects.get', return_value=head):
             with patch(
-                    'hydra.models.HydraHead.objects.select_related',
-                    return_value=MagicMock(get=lambda id: head),
+                'hydra.models.HydraHead.objects.select_related',
+                return_value=MagicMock(get=lambda id: head),
             ):
                 # Setup default get_full_command return
                 head.spell.get_full_command.return_value = [
@@ -47,11 +60,14 @@ class TestGenericSpellCaster:
 
     @pytest.fixture
     def mock_env_utils(self):
-        with patch(
+        with (
+            patch(
                 'hydra.spells.spell_casters.generic_spell_caster.get_active_environment'
-        ) as mock_env, patch(
+            ) as mock_env,
+            patch(
                 'hydra.spells.spell_casters.generic_spell_caster.resolve_environment_context'
-        ) as mock_ctx:
+            ) as mock_ctx,
+        ):
             mock_env.return_value = None
             mock_ctx.return_value = {}
             yield mock_env, mock_ctx
@@ -66,8 +82,9 @@ class TestGenericSpellCaster:
             TalosEvent(type=TalosAgentConstants.T_EXIT, code=0),
         ]
 
-        with patch('talos_agent.talos_agent.TalosAgent.execute_local'
-                  ) as mock_exec:
+        with patch(
+            'talos_agent.talos_agent.TalosAgent.execute_local'
+        ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
             caster.execute()
@@ -88,14 +105,15 @@ class TestGenericSpellCaster:
                 text='Working...',
                 source='stdout',
             ),
-            TalosEvent(type=TalosAgentConstants.T_LOG,
-                       text='File log',
-                       source='file'),
+            TalosEvent(
+                type=TalosAgentConstants.T_LOG, text='File log', source='file'
+            ),
             TalosEvent(type=TalosAgentConstants.T_EXIT, code=0),
         ]
 
-        with patch('talos_agent.talos_agent.TalosAgent.execute_local'
-                  ) as mock_exec:
+        with patch(
+            'talos_agent.talos_agent.TalosAgent.execute_local'
+        ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
             caster.execute()
@@ -112,8 +130,9 @@ class TestGenericSpellCaster:
             TalosEvent(type=TalosAgentConstants.T_EXIT, code=1),
         ]
 
-        with patch('talos_agent.talos_agent.TalosAgent.execute_local'
-                  ) as mock_exec:
+        with patch(
+            'talos_agent.talos_agent.TalosAgent.execute_local'
+        ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
             caster.execute()
@@ -130,8 +149,9 @@ class TestGenericSpellCaster:
 
         events = [TalosEvent(type=TalosAgentConstants.T_EXIT, code=0)]
 
-        with patch('talos_agent.talos_agent.TalosAgent.execute_remote'
-                  ) as mock_remote:
+        with patch(
+            'talos_agent.talos_agent.TalosAgent.execute_remote'
+        ) as mock_remote:
             mock_remote.return_value = mock_event_stream(events)
 
             caster.execute()
@@ -152,8 +172,9 @@ class TestGenericSpellCaster:
 
         events = [TalosEvent(type=TalosAgentConstants.T_EXIT, code=0)]
 
-        with patch('talos_agent.talos_agent.TalosAgent.execute_local'
-                  ) as mock_exec:
+        with patch(
+            'talos_agent.talos_agent.TalosAgent.execute_local'
+        ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
             caster.execute()
@@ -166,3 +187,97 @@ class TestGenericSpellCaster:
 
             mock_exec.assert_called_once()
             assert mock_exec.call_args[1]['command'] == expected_cmd
+
+    def test_log_path_template_resolution(self, mock_head, mock_env_utils):
+        """Verify that templated log paths are resolved before pipeline execution."""
+        # 1. Setup a templated log path
+        mock_head.spell.talos_executable.log = (
+            'C:\\{{project_name}}\\Saved\\Logs\\{{project_name}}.log'
+        )
+
+        # 2. Inject context into mock_env_utils (mock_ctx is the 2nd item in fixture)
+        _, mock_ctx = mock_env_utils
+        mock_ctx.return_value = {'project_name': 'HSHVacancy'}
+
+        caster = GenericSpellCaster(mock_head.id)
+        events = [TalosEvent(type=TalosAgentConstants.T_EXIT, code=0)]
+
+        with patch(
+            'talos_agent.talos_agent.TalosAgent.execute_local'
+        ) as mock_exec:
+            mock_exec.return_value = mock_event_stream(events)
+
+            caster.execute()
+
+            # 3. Assertions
+            expected_resolved_log = (
+                'C:\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log'
+            )
+
+            mock_exec.assert_called_once()
+            _, kwargs = mock_exec.call_args
+
+            assert kwargs['log_path'] == expected_resolved_log, (
+                f'Log path was not resolved! Got: {kwargs["log_path"]}'
+            )
+
+
+@pytest.mark.django_db
+class GenericSpellCasterQueryTest(TestCase):
+    fixtures = [
+        'environments/fixtures/initial_data.json',
+        'talos_agent/fixtures/initial_data.json',
+        'talos_agent/fixtures/test_agents.json',
+        'hydra/fixtures/initial_data.json',
+    ]
+
+    def setUp(self):
+        # Environment
+        env_type = ProjectEnvironmentType.objects.get_or_create(name='UE5')[0]
+        env_status = ProjectEnvironmentStatus.objects.get_or_create(
+            name='Ready'
+        )[0]
+        self.env = ProjectEnvironment.objects.create(
+            name='Test Env', type=env_type, status=env_status
+        )
+
+        # Spell & Node
+        self.exe = TalosExecutable.objects.create(
+            name='TestExe', executable='cmd.exe'
+        )
+        self.spell = HydraSpell.objects.create(
+            name='TestSpell', talos_executable=self.exe
+        )
+        self.book = HydraSpellbook.objects.create(name='Test Book')
+        self.node = HydraSpellbookNode.objects.create(
+            spellbook=self.book, spell=self.spell, environment=self.env
+        )
+
+        # Execution
+        self.spawn = HydraSpawn.objects.create(
+            spellbook=self.book, environment=self.env, status_id=1
+        )
+        self.head = HydraHead.objects.create(
+            spawn=self.spawn, node=self.node, spell=self.spell, status_id=1
+        )
+
+    def test_load_head_sync_prefetches_environment(self):
+        """Verify _load_head_sync loads the environment in the initial query to prevent async ORM crashes."""
+        caster = GenericSpellCaster(head_id=self.head.id)
+
+        # 1. Load the head (Should take exactly 1 query due to select_related)
+        with self.assertNumQueries(1):
+            caster._load_head_sync()
+
+        # 2. Access the deeply nested relations (Should take 0 additional queries)
+        # If any of these throw an error or trigger a query, the async pipeline will crash.
+        with self.assertNumQueries(0):
+            spawn_env = caster.head.spawn.environment
+            node_env = caster.head.node.environment
+            target = caster.head.target
+            executable = caster.head.spell.talos_executable
+
+        # 3. Assert correct data was cached
+        self.assertEqual(spawn_env.id, self.env.id)
+        self.assertEqual(node_env.id, self.env.id)
+        self.assertEqual(executable.id, self.exe.id)

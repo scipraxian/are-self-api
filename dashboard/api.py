@@ -1,3 +1,6 @@
+import os
+import threading
+import time
 from datetime import timedelta
 
 from django.db.models import Q
@@ -8,10 +11,17 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from config.celery import app as celery_app
 from environments.models import ProjectEnvironment
 from environments.serializers import ProjectEnvironmentSerializer
 from hydra.models import HydraSpawn, HydraSpellbook
 from hydra.serializers import HydraSpellbookSerializer, HydraSwimlaneSerializer
+
+
+def delayed_shutdown():
+    """Background thread to kill the Daphne/Django process after returning the HTTP response."""
+    time.sleep(1.0)
+    os._exit(0)
 
 
 class DashboardViewSet(viewsets.ViewSet):
@@ -51,14 +61,17 @@ class DashboardViewSet(viewsets.ViewSet):
         )
 
         if not is_first_load and client_sync_time:
-            # MVCC Race Condition Protection: Roll back the clock 2.5 seconds.
-            # This ensures we catch any Celery transactions that were assigned
-            # a timestamp slightly in the past, but committed AFTER our last poll.
             safe_sync_time = client_sync_time - timedelta(seconds=2.5)
-            root_spawns = root_spawns.filter(
-                Q(modified__gt=safe_sync_time)
-                | Q(heads__modified__gt=safe_sync_time)
-            ).distinct()
+            has_changes = (
+                HydraSpawn.objects.filter(environment__selected=True)
+                .filter(
+                    Q(modified__gt=safe_sync_time)
+                    | Q(heads__modified__gt=safe_sync_time)
+                )
+                .exists()
+            )
+            if not has_changes:
+                return Response(status=status.HTTP_204_NO_CONTENT)
 
         root_spawns = (
             root_spawns.select_related('status', 'spellbook', 'environment')
@@ -67,7 +80,7 @@ class DashboardViewSet(viewsets.ViewSet):
         )
 
         # Force query evaluation
-        spawns_list = list(root_spawns)
+        spawns_list = reversed(list(root_spawns))
 
         # If nothing changed in the overlapping window, halt DOM patching
         if not is_first_load and client_sync_time and not spawns_list:
@@ -77,3 +90,16 @@ class DashboardViewSet(viewsets.ViewSet):
             spawns_list, many=True
         ).data
         return Response(response_data)
+
+    @action(detail=False, methods=['post'])
+    def shutdown(self, request):
+        """Triggers a systemic shutdown of Celery workers and the ASGI server."""
+        # 1. Send shutdown broadcast to Celery workers
+        celery_app.control.shutdown()
+
+        # 2. Spawn a delayed thread to kill the Django process
+        threading.Thread(target=delayed_shutdown).start()
+
+        return Response(
+            {'status': 'System shutdown initiated'}, status=status.HTTP_200_OK
+        )

@@ -20,13 +20,16 @@
         <div style="font-family:monospace; color:#444; font-size:0.8rem;">SYS.ONLINE</div>
     </div>
 
-    {#    <div id="system-menu" class="system-menu">#}
-    {#        <a href="{% url 'admin:index' %}" target="_blank" class="menu-item">System Admin</a>#}
-    {#        <div style="height:1px; background:#444; margin:5px 0;"></div>#}
-    {#        <button class="menu-item danger" hx-post="{% url 'dashboard:shutdown' %}" onclick="window.close()">#}
-    {#            ⚠ SYSTEM SHUTDOWN#}
-    {#        </button>#}
-    {#    </div>#}
+    <div id="system-menu" class="system-menu">
+        <a href="{% url 'admin:index' %}" target="_blank" class="menu-item">System Admin</a>
+        <div style="height:1px; background:#444; margin:5px 0;"></div>
+        <button class="menu-item danger"
+                hx-post="/api/v1/dashboard/shutdown/"
+                hx-swap="none"
+                onclick="this.innerText='SHUTTING DOWN...'; setTimeout(() => window.close(), 500);">
+            ⚠ SYSTEM SHUTDOWN
+        </button>
+    </div>
 
     <div class="launch-pad">
 
@@ -153,10 +156,21 @@
 
 <template id="tpl-head-card">
     <a href="#" class="head-card" style="text-decoration: none;">
-        <div class="head-name"></div>
-        <div class="head-target"></div>
-        <div class="head-log" style="font-size:0.55rem; color:#888;"></div>
-        <div class="card-drill-btn" title="View Logs">☍</div>
+        <div class="head-header">
+            <div class="head-name"></div>
+            <div class="card-drill-btn" title="View Logs">☍</div>
+        </div>
+
+        <div class="head-meta">
+            <span class="head-target"></span>
+            <span class="head-time" style="color: #666;"></span>
+        </div>
+
+        <div class="head-footer">
+            <span class="head-log"
+                  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px;"></span>
+            <span class="head-duration" style="font-weight: 700; color: #aaa;"></span>
+        </div>
     </a>
 </template>
 
