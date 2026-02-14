@@ -464,6 +464,8 @@ class HydraHeadSerializer(serializers.ModelSerializer):
         source='target.hostname', read_only=True
     )
     spell_name = serializers.CharField(source='spell.name', read_only=True)
+    duration = serializers.CharField(read_only=True)
+    timestamp_str = serializers.CharField(read_only=True)
 
     class Meta:
         model = HydraHead

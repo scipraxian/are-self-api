@@ -71,33 +71,35 @@ function buildHeadDOM(head) {
     card.href = `/hydra/head/${head.id}/`;
 
     const nameEl = card.querySelector('.head-name');
-    nameEl.textContent = head.spell_name || 'Node';
+    if (nameEl) nameEl.textContent = head.spell_name || 'Node';
 
     const targetEl = card.querySelector('.head-target');
     const logEl = card.querySelector('.head-log');
 
-    // UNIFIED STATE MACHINE
+    // DEFENSIVE ASSIGNMENT: Prevent null reference crashes
+    const timeEl = card.querySelector('.head-time');
+    if (timeEl) timeEl.textContent = head.timestamp_str || '--:--:--';
+
+    const durationEl = card.querySelector('.head-duration');
+    if (durationEl) durationEl.textContent = `⏱ ${head.duration || '0s'}`;
+
+    // UNIFIED STATE MACHINE (Actually applies CSS classes!)
     if (head.status_id === 1 || head.status_id === 2) {
-        // PENDING / QUEUED
         card.classList.add('pending');
         nameEl.style.color = '#888';
         targetEl.style.color = '#666';
         targetEl.textContent = 'QUEUED';
         logEl.textContent = 'Waiting...';
-        logEl.style.display = 'block';
     } else if (head.status_id === 3 || head.status_id === 8) {
-        // RUNNING / STOPPING
         card.classList.add('active');
         nameEl.style.color = '#fff';
         targetEl.style.color = 'var(--lcars-elbow)';
         targetEl.textContent = head.target_name || 'LOCAL';
         logEl.textContent = head.status_name;
-        logEl.style.display = 'block';
     } else {
-        // TERMINAL STATES (Success, Failed, Aborted, Stopped)
-        logEl.style.display = 'none'; // Hide logs for history nodes
         nameEl.style.color = '#ddd';
 
+        // APPLY PROPER COLOR CLASSES
         if (head.status_id === 4) {
             card.classList.add('success');
             targetEl.style.color = '#4ade80';
@@ -110,6 +112,8 @@ function buildHeadDOM(head) {
         }
 
         targetEl.textContent = (head.result_code !== null) ? `RC: ${head.result_code}` : head.status_name;
+        // For history, show the last 30 chars of log, or the status name
+        logEl.textContent = head.spell_log ? head.spell_log.substring(Math.max(0, head.spell_log.length - 30)) : head.status_name;
     }
 
     return clone;
@@ -194,7 +198,8 @@ async function pollMissionControl() {
         let fetchUrl = isFirstLoad ? API_SUMMARY_URL : `${API_SUMMARY_URL}?static=false`;
 
         if (lastSyncTime) {
-            fetchUrl += `&last_sync=${encodeURIComponent(lastSyncTime)}`;
+            const separator = fetchUrl.includes('?') ? '&' : '?';
+            fetchUrl += `${separator}last_sync=${encodeURIComponent(lastSyncTime)}`;
         }
 
         const response = await fetch(fetchUrl, {
