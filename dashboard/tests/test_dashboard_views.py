@@ -22,6 +22,18 @@ class DashboardViewTests(TestCase):
         self.assertTemplateUsed(response, 'dashboard/mission_control.html')
         self.assertContains(response, 'TALOS ORCHESTRATOR')
 
+    def test_shutdown_button_exists_in_frontend(self):
+        """Verifies the shutdown button is wired to the correct API endpoint via HTMX."""
+        # Note: Using reverse('dashboard:home') to fetch the main dashboard view
+        response = self.client.get(reverse('dashboard:home'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'hx-post="/api/v1/dashboard/shutdown/"',
+            msg_prefix='Shutdown HTMX post target missing from the System Menu.',
+        )
+
 
 class DashboardTaskTests(TestCase):
     """Tests for the dashboard tasks."""

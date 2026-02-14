@@ -1,3 +1,6 @@
+import os
+import threading
+import time
 from datetime import timedelta
 
 from django.db.models import Q
@@ -8,10 +11,17 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from config.celery import app as celery_app
 from environments.models import ProjectEnvironment
 from environments.serializers import ProjectEnvironmentSerializer
 from hydra.models import HydraSpawn, HydraSpellbook
 from hydra.serializers import HydraSpellbookSerializer, HydraSwimlaneSerializer
+
+
+def delayed_shutdown():
+    """Background thread to kill the Daphne/Django process after returning the HTTP response."""
+    time.sleep(1.0)
+    os._exit(0)
 
 
 class DashboardViewSet(viewsets.ViewSet):
@@ -77,3 +87,16 @@ class DashboardViewSet(viewsets.ViewSet):
             spawns_list, many=True
         ).data
         return Response(response_data)
+
+    @action(detail=False, methods=['post'])
+    def shutdown(self, request):
+        """Triggers a systemic shutdown of Celery workers and the ASGI server."""
+        # 1. Send shutdown broadcast to Celery workers
+        celery_app.control.shutdown()
+
+        # 2. Spawn a delayed thread to kill the Django process
+        threading.Thread(target=delayed_shutdown).start()
+
+        return Response(
+            {'status': 'System shutdown initiated'}, status=status.HTTP_200_OK
+        )

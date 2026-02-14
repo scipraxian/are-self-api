@@ -20,13 +20,16 @@
         <div style="font-family:monospace; color:#444; font-size:0.8rem;">SYS.ONLINE</div>
     </div>
 
-    {#    <div id="system-menu" class="system-menu">#}
-    {#        <a href="{% url 'admin:index' %}" target="_blank" class="menu-item">System Admin</a>#}
-    {#        <div style="height:1px; background:#444; margin:5px 0;"></div>#}
-    {#        <button class="menu-item danger" hx-post="{% url 'dashboard:shutdown' %}" onclick="window.close()">#}
-    {#            ⚠ SYSTEM SHUTDOWN#}
-    {#        </button>#}
-    {#    </div>#}
+    <div id="system-menu" class="system-menu">
+        <a href="{% url 'admin:index' %}" target="_blank" class="menu-item">System Admin</a>
+        <div style="height:1px; background:#444; margin:5px 0;"></div>
+        <button class="menu-item danger"
+                hx-post="/api/v1/dashboard/shutdown/"
+                hx-swap="none"
+                onclick="this.innerText='SHUTTING DOWN...'; setTimeout(() => window.close(), 500);">
+            ⚠ SYSTEM SHUTDOWN
+        </button>
+    </div>
 
     <div class="launch-pad">
 
