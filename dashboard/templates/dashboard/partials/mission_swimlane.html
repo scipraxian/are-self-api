@@ -79,40 +79,13 @@
                 </div>
             {% endif %}
 
-            {# UNIFIED LIVE LOOP: Handles both Queued and Running via .is_queued property #}
+            {# UNIFIED LIVE & HISTORY LOOP #}
             {% for head in lane.live_children %}
-                {% if head.is_queued %}
-                    <div class="head-card pending">
-                        <div class="head-name" style="color:#888;">{{ head.spell.name }}</div>
-                        <div class="head-target" style="color:#666;">QUEUED</div>
-                        <div class="head-log" style="font-size:0.55rem; color:#444;">Waiting...</div>
-                    </div>
-                {% else %}
-                    <a href="{% url 'hydra:head_detail' head.id %}" class="head-card active">
-                        <div class="head-name" style="color:#fff;">{{ head.spell.name }}</div>
-                        <div class="head-target" style="color:var(--lcars-elbow);">
-                            {{ head.target.hostname|default:"LOCAL" }}
-                        </div>
-                        <div class="head-log" style="font-size:0.55rem; color:#888;">
-                            {{ head.spell_log|slice:"-30:"|default:"..." }}
-                        </div>
-                        <div class="card-drill-btn" title="View Logs">☍</div>
-                    </a>
-                {% endif %}
+                {% include "dashboard/partials/head_card.html" with head=head %}
             {% endfor %}
 
             {% for head in lane.history %}
-                <a href="{% url 'hydra:head_detail' head.id %}"
-                   class="head-card {% if head.status.name == 'Success' %}success{% else %}failed{% endif %}">
-                    <div class="head-name">{{ head.spell.name }}</div>
-                    <div class="head-target" style="{% if head.status.name == 'Failed' %}color:#ef4444;{% endif %}">
-                        {% if head.result_code != None %}
-                            RC: {{ head.result_code }}
-                        {% else %}
-                            {{ head.status.name }}
-                        {% endif %}
-                    </div>
-                </a>
+                {% include "dashboard/partials/head_card.html" with head=head %}
             {% endfor %}
         </div>
 

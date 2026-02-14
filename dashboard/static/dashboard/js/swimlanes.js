@@ -63,51 +63,55 @@ async function rerunSpawn(spellbookId) {
     }
 }
 
-function buildHeadDOM(head, isHistory) {
+function buildHeadDOM(head) {
     const template = document.getElementById('tpl-head-card');
     const clone = template.content.cloneNode(true);
     const card = clone.querySelector('.head-card');
 
     card.href = `/hydra/head/${head.id}/`;
-    card.querySelector('.head-name').textContent = head.spell_name || 'Node';
+
+    const nameEl = card.querySelector('.head-name');
+    nameEl.textContent = head.spell_name || 'Node';
 
     const targetEl = card.querySelector('.head-target');
     const logEl = card.querySelector('.head-log');
 
-    if (isHistory) {
-        // [FIX] Correct LCARS color mapping for history blocks
-        let stateClass = 'stopped';
-        let targetColor = '#888';
+    // UNIFIED STATE MACHINE
+    if (head.status_id === 1 || head.status_id === 2) {
+        // PENDING / QUEUED
+        card.classList.add('pending');
+        nameEl.style.color = '#888';
+        targetEl.style.color = '#666';
+        targetEl.textContent = 'QUEUED';
+        logEl.textContent = 'Waiting...';
+        logEl.style.display = 'block';
+    } else if (head.status_id === 3 || head.status_id === 8) {
+        // RUNNING / STOPPING
+        card.classList.add('active');
+        nameEl.style.color = '#fff';
+        targetEl.style.color = 'var(--lcars-elbow)';
+        targetEl.textContent = head.target_name || 'LOCAL';
+        logEl.textContent = head.status_name;
+        logEl.style.display = 'block';
+    } else {
+        // TERMINAL STATES (Success, Failed, Aborted, Stopped)
+        logEl.style.display = 'none'; // Hide logs for history nodes
+        nameEl.style.color = '#ddd';
 
         if (head.status_id === 4) {
-            stateClass = 'success';
-            targetColor = '#4ade80';
+            card.classList.add('success');
+            targetEl.style.color = '#4ade80';
         } else if (head.status_id === 5 || head.status_id === 6) {
-            stateClass = 'failed';
-            targetColor = '#ef4444';
+            card.classList.add('failed');
+            targetEl.style.color = '#ef4444';
+        } else {
+            card.classList.add('stopped');
+            targetEl.style.color = '#888';
         }
 
-        card.classList.add(stateClass);
-        card.querySelector('.head-name').style.color = '#ddd';
-        targetEl.style.color = targetColor;
         targetEl.textContent = (head.result_code !== null) ? `RC: ${head.result_code}` : head.status_name;
-        logEl.style.display = 'none';
-    } else {
-        const isPending = head.status_id === 1 || head.status_id === 2;
-        if (isPending) {
-            card.classList.add('pending');
-            card.querySelector('.head-name').style.color = '#888';
-            targetEl.style.color = '#666';
-            targetEl.textContent = 'QUEUED';
-            logEl.textContent = 'Waiting...';
-        } else {
-            card.classList.add('active');
-            card.querySelector('.head-name').style.color = '#fff';
-            targetEl.style.color = 'var(--lcars-elbow)';
-            targetEl.textContent = head.target_name || 'LOCAL';
-            logEl.textContent = head.status_name;
-        }
     }
+
     return clone;
 }
 
@@ -162,10 +166,10 @@ function buildSwimlaneDOM(mission, isSubgraph = false) {
     // Scroll Area (Heads)
     const scrollArea = clone.querySelector('.lane-scroll-area');
     if (mission.live_children) {
-        mission.live_children.forEach(h => scrollArea.appendChild(buildHeadDOM(h, false)));
+        mission.live_children.forEach(h => scrollArea.appendChild(buildHeadDOM(h)));
     }
     if (mission.history) {
-        mission.history.forEach(h => scrollArea.appendChild(buildHeadDOM(h, true)));
+        mission.history.forEach(h => scrollArea.appendChild(buildHeadDOM(h)));
     }
 
     // Scroll Buttons
