@@ -411,11 +411,3 @@ class StandaloneSpawnsView(TemplateView):
     """
 
     template_name = 'hydra/hydra_spawns.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Fetch the root spawns (ignoring sub-graphs, as the template handles nesting)
-        context['recent_spawns'] = HydraSpawn.objects.filter(
-            parent_head__isnull=True
-        ).order_by('-created')[:10]
-        return context
