@@ -38,7 +38,6 @@ class HydraSpawnControlCardController {
                 method: 'POST',
                 headers: {'X-CSRFToken': this.csrfToken}
             });
-            // The Root Dispatcher will natively discover the new spawn on its next poll
         } catch (error) {
             console.error(`Rerun failed:`, error);
         }

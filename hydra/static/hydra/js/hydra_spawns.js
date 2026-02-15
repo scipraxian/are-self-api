@@ -18,11 +18,10 @@ class DispatcherController {
     constructor(rootId) {
         this.root = document.getElementById(rootId);
         this.pollInterval = null;
-        this.lastDataSeen = null; // The Delta Cursor
     }
 
     init() {
-        console.log("[Dispatcher] Online. Fetching missions...");
+        console.log("[Dispatcher] Online. Fetching root missions...");
         this.fetchActiveSpawns();
         this.startPolling();
     }
@@ -33,29 +32,19 @@ class DispatcherController {
 
     async fetchActiveSpawns() {
         try {
-            // Ask DRF for Root Spawns, ordered newest first
-            let url = '/api/v1/spawns/?is_root=true&ordering=-created&fields=id,spellbook,spellbook_name,status_name,modified,is_active,parent_head,created';
-
-            // Apply Delta Cursor if we have one
-            if (this.lastDataSeen) {
-                url += `&created__gt=${encodeURIComponent(this.lastDataSeen)}`;
-            }
-
-            const response = await fetch(url, {headers: {'Accept': 'application/json'}});
+            const response = await fetch('/api/v1/spawns/?ordering=-created');
             if (!response.ok) return;
 
             const data = await response.json();
-            const rootSpawns = data.results ? data.results : data;
+            const spawns = data.results || data;
 
-            // ONLY UPDATE CURSOR IF WE GOT DATA
-            if (rootSpawns.length > 0) {
-                // Since DRF ordered by -created, index 0 is the absolute newest
-                this.lastDataSeen = rootSpawns[0].created;
+            // CIRCUIT BREAKER 1: Strictly isolate Root Spawns in JavaScript
+            const rootSpawns = spawns.filter(s => s.parent_head === null);
 
-                // Render (Iterate backwards so the oldest of the new batch mounts first, pushing the absolute newest to the very top)
-                for (let i = rootSpawns.length - 1; i >= 0; i--) {
-                    this.ensureSpawnExists(rootSpawns[i], this.root);
-                }
+            // Render top 15, backward for top-down insertion
+            const displaySpawns = rootSpawns.slice(0, 15);
+            for (let i = displaySpawns.length - 1; i >= 0; i--) {
+                this.ensureSpawnExists(displaySpawns[i], this.root);
             }
         } catch (error) {
             console.error("[Dispatcher] Fetch failed:", error);
