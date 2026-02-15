@@ -64,6 +64,10 @@ body {
     font-family: 'JetBrains Mono', monospace;
 }
 
+.nested-spawns .hydra-control-card {
+    display: none !important;
+}
+
 @keyframes pulse {
     0% {
         opacity: 1;
