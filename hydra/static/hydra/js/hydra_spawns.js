@@ -32,19 +32,32 @@ class DispatcherController {
 
     async fetchActiveSpawns() {
         try {
-            const response = await fetch('/api/v1/spawns/?ordering=-created');
+            // Base URL with DRF filters
+            let url = '/api/v1/spawns/?is_root=true&ordering=-created';
+
+            // Apply Delta Cursor if we have one
+            if (this.lastDataSeen) {
+                url += `&modified__gt=${encodeURIComponent(this.lastDataSeen)}`;
+            }
+
+            const response = await fetch(url, {headers: {'Accept': 'application/json'}});
             if (!response.ok) return;
 
             const data = await response.json();
             const spawns = data.results || data;
 
-            // CIRCUIT BREAKER 1: Strictly isolate Root Spawns in JavaScript
-            const rootSpawns = spawns.filter(s => s.parent_head === null);
+            // ONLY UPDATE CURSOR & DOM IF WE GOT DATA
+            if (spawns.length > 0) {
+                this.lastDataSeen = new Date().toISOString();
 
-            // Render top 15, backward for top-down insertion
-            const displaySpawns = rootSpawns.slice(0, 15);
-            for (let i = displaySpawns.length - 1; i >= 0; i--) {
-                this.ensureSpawnExists(displaySpawns[i], this.root);
+                // Double check root status locally just in case, then cap to 15
+                const rootSpawns = spawns.filter(s => s.parent_head === null);
+                const displaySpawns = rootSpawns.slice(0, 15);
+
+                // Render backwards for top-down insertion
+                for (let i = displaySpawns.length - 1; i >= 0; i--) {
+                    this.ensureSpawnExists(displaySpawns[i], this.root);
+                }
             }
         } catch (error) {
             console.error("[Dispatcher] Fetch failed:", error);
