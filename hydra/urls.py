@@ -89,4 +89,9 @@ urlpatterns = [
         views.HydraSpawnDownloadView.as_view(),
         name='hydra_spawn_download',
     ),
+    path(
+        'spawns/',
+        views.StandaloneSpawnsView.as_view(),
+        name='standalone_spawns',
+    ),
 ]

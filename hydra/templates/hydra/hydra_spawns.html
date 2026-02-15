@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talos Sandbox | Isolated Component Test</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@700;800&family=JetBrains+Mono&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'hydra/css/hydra_head.css' %}">
+    <link rel="stylesheet" href="{% static 'hydra/css/hydra_spawn_control_card.css' %}">
+    <link rel="stylesheet" href="{% static 'hydra/css/hydra_spawn.css' %}">
+    <link rel="stylesheet" href="{% static 'hydra/css/hydra_spawns.css' %}">
+</head>
+<body>
+<script>
+    // Provide CSRF token for the JS controllers
+    window.djangoContext = {
+        csrfToken: "{{ csrf_token }}"
+    };
+</script>
+
+{% csrf_token %}
+
+<div class="sandbox-container">
+    <header class="sandbox-header">
+        <h1>TALOS SPAWN SANDBOX</h1>
+        <div class="status-indicator">
+            <span class="pulse-dot"></span> System Online
+        </div>
+    </header>
+
+    <main id="spawns-dispatcher-root" class="spawns-list">
+        {% for spawn in recent_spawns %}
+            {% include "hydra/components/hydra_spawn.html" with spawn=spawn %}
+        {% empty %}
+            <div class="empty-state">No Spawns Active in Database.</div>
+        {% endfor %}
+    </main>
+</div>
+
+<script src="{% static 'hydra/js/hydra_head.js' %}"></script>
+<script src="{% static 'hydra/js/hydra_spawn_control_card.js' %}"></script>
+<script src="{% static 'hydra/js/hydra_spawn.js' %}"></script>
+<script src="{% static 'hydra/js/hydra_spawns.js' %}"></script>
+</body>
+</html>

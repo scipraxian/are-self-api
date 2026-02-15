@@ -403,3 +403,19 @@ class HydraSpawnDownloadView(View):
         filename = f'Spawn_{str(spawn.id)[:8]}_{spawn.status.name}.log'
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
+
+
+class StandaloneSpawnsView(TemplateView):
+    """
+    Isolated Sandbox View for testing React-lite Vanilla JS components.
+    """
+
+    template_name = 'hydra/hydra_spawns.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Fetch the root spawns (ignoring sub-graphs, as the template handles nesting)
+        context['recent_spawns'] = HydraSpawn.objects.filter(
+            parent_head__isnull=True
+        ).order_by('-created')[:10]
+        return context
