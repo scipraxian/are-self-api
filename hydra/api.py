@@ -2,7 +2,7 @@ import json
 import logging
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, status, viewsets
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -168,14 +168,19 @@ class HydraSpawnViewSet(
 ):
     """Mission Control and Spawns."""
 
-    queryset = (
-        HydraSpawn.objects.all()
-        .select_related('status', 'spellbook', 'environment')
-        .order_by('-created')
+    queryset = HydraSpawn.objects.all().select_related(
+        'status', 'spellbook', 'environment'
     )
 
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+        filters.SearchFilter,
+    ]
     filterset_class = HydraSpawnFilter
+    ordering_fields = '__all__'
+    ordering = ['-created']  # Default ordering
+    search_fields = ['spellbook__name', 'status__name']
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -239,14 +244,19 @@ class HydraHeadViewSet(
 ):
     """Forensics Unit. Retrieves heavy telemetry/logs."""
 
-    queryset = (
-        HydraHead.objects.all()
-        .select_related('status', 'spell', 'target')
-        .order_by('created')
+    queryset = HydraHead.objects.all().select_related(
+        'status', 'spell', 'target'
     )
 
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+        filters.SearchFilter,
+    ]
     filterset_class = HydraHeadFilter
+    ordering_fields = '__all__'
+    ordering = ['created']  # Default ordering for heads (chronological)
+    search_fields = ['spell__name', 'status__name', 'target__hostname']
 
     def get_serializer_class(self):
         if self.action == 'list':
