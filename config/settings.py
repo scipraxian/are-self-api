@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'talos_reasoning',
     'djangorestframework_mcp',
     'rest_framework',
+    'django_filters',
 ]
 
 MIDDLEWARE = [

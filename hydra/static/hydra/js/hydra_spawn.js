@@ -73,16 +73,33 @@ class HydraSpawnController {
 
     async loadAllHeads() {
         try {
-            const response = await fetch(`/api/v1/spawns/${this.spawnId}/heads/`);
+            // Use standard list endpoint with our new django-filter for spawn_id
+            const response = await fetch(`/api/v1/heads/?spawn_id=${this.spawnId}`);
             if (!response.ok) return;
-            const heads = await response.json();
+
+            const data = await response.json();
+            const heads = data.results ? data.results : data;
+
+            const headIds = [];
 
             for (const head of heads) {
+                headIds.push(head.id);
                 if (!this.trackEl.querySelector(`.js-hydra-head[data-head-id="${head.id}"]`)) {
                     this.injectHeadDOM(head);
                 }
             }
             this.checkOverflow();
+
+            // Check for subgraphs
+            if (window.talosGlobalSpawns && this.nestedSpawnsEl) {
+                const childSpawns = window.talosGlobalSpawns.filter(s => headIds.includes(s.parent_head));
+
+                childSpawns.sort((a, b) => new Date(a.created) - new Date(b.created));
+                for (const childSpawn of childSpawns) {
+                    this.injectChildSpawnDOM(childSpawn);
+                }
+            }
+
         } catch (error) {
             console.error(`[HydraSpawn] Failed to load heads for ${this.spawnId}:`, error);
         }

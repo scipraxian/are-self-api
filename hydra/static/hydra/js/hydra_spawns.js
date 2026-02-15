@@ -32,18 +32,19 @@ class DispatcherController {
 
     async fetchActiveSpawns() {
         try {
-            // Your exact endpoint, pulling the lightweight fields
-            const url = '/api/v1/spawns/?fields=id,spellbook,spellbook_name,status_name,modified,is_active,parent_head';
-            const response = await fetch(url, {headers: {'Accept': 'application/json'}});
+            const url = '/api/v1/spawns/?is_root=true&fields=id,spellbook,spellbook_name,status_name,modified,is_active,parent_head';
+
+            const response = await fetch(url, {
+                headers: {'Accept': 'application/json'}
+            });
             if (!response.ok) return;
 
             const data = await response.json();
-            const spawns = data.results ? data.results : data;
+            const rootSpawns = data.results ? data.results : data;
 
-            // Isolate Root Spawns
-            const rootSpawns = spawns.filter(s => s.parent_head === null);
+            window.talosGlobalSpawns = rootSpawns;
 
-            // Render top 15, backward for top-down insertion
+            // Render, iterating backwards for top-down insertion
             const displaySpawns = rootSpawns.slice(0, 15);
             for (let i = displaySpawns.length - 1; i >= 0; i--) {
                 this.ensureSpawnExists(displaySpawns[i], this.root);
