@@ -15,8 +15,6 @@ class HydraSpawnController {
         }
 
         this.initTrackObservers();
-
-        // Fetch heads and discover subgraphs immediately
         this.initializeState();
     }
 
@@ -25,22 +23,23 @@ class HydraSpawnController {
         spawnEl.dataset.spawnId = data.id;
         spawnEl.dataset.spellbookId = data.spellbook;
 
-        // Determine Alive State
-        const isAlive = ['Created', 'Pending', 'Running', 'Stopping'].includes(data.status_name);
+        // Bulletproof status matching
+        const statusStr = data.status_name || data.status_label || 'Pending';
+        const isAlive = ['Created', 'Pending', 'Running', 'Stopping'].includes(statusStr);
         spawnEl.dataset.isActive = isAlive ? 'true' : 'false';
 
         if (isAlive) spawnEl.classList.add('active-lane');
-        else if (data.status_name === 'Failed' || data.status_name === 'Aborted') spawnEl.classList.add('failed-lane');
+        else if (statusStr === 'Failed' || statusStr === 'Aborted') spawnEl.classList.add('failed-lane');
 
-        // MAP EXACT DRF FIELDS
         clone.querySelector('.js-spawn-title').textContent = data.spellbook_name || 'Unknown Protocol';
         clone.querySelector('.js-spawn-id').textContent = `#${data.id.substring(0, 8)}`;
 
         const statusText = clone.querySelector('.js-spawn-status-text');
-        statusText.textContent = data.status_name;
-        statusText.classList.add(`status-${data.status_name.toLowerCase()}`);
+        statusText.textContent = statusStr;
+        statusText.className = `status-text js-spawn-status-text status-${statusStr.toLowerCase()}`;
 
-        clone.querySelector('.js-spawn-time').textContent = `${timeSince(data.modified)} ago`;
+        const timeEl = clone.querySelector('.js-spawn-time');
+        if (timeEl && data.modified) timeEl.textContent = `${timeSince(data.modified)} ago`;
 
         clone.querySelector('.js-btn-monitor').href = `/hydra/graph/spawn/${data.id}/?full=True`;
         clone.querySelector('.js-btn-edit').href = `/hydra/graph/editor/${data.spellbook}/`;
@@ -65,38 +64,25 @@ class HydraSpawnController {
 
     async initializeState() {
         await this.loadAllHeads();
+
+        // CRITICAL NESTING FIX: Force a state fetch on mount to check for subgraphs
+        await this.fetchState();
+
         if (this.isActive) this.startPolling();
     }
 
     async loadAllHeads() {
         try {
-            // Fetch all heads for this specific spawn
             const response = await fetch(`/api/v1/spawns/${this.spawnId}/heads/`);
             if (!response.ok) return;
             const heads = await response.json();
 
-            const headIds = [];
-
             for (const head of heads) {
-                headIds.push(head.id);
                 if (!this.trackEl.querySelector(`.js-hydra-head[data-head-id="${head.id}"]`)) {
                     this.injectHeadDOM(head);
                 }
             }
             this.checkOverflow();
-
-            // SUB-GRAPH DISCOVERY:
-            // Look at the global spawn list. Do any spawns claim one of our Heads as a parent?
-            if (window.talosGlobalSpawns && this.nestedSpawnsEl) {
-                const childSpawns = window.talosGlobalSpawns.filter(s => headIds.includes(s.parent_head));
-
-                // Sort chronologically and inject
-                childSpawns.sort((a, b) => new Date(a.created) - new Date(b.created));
-                for (const childSpawn of childSpawns) {
-                    this.injectChildSpawnDOM(childSpawn);
-                }
-            }
-
         } catch (error) {
             console.error(`[HydraSpawn] Failed to load heads for ${this.spawnId}:`, error);
         }
@@ -109,19 +95,6 @@ class HydraSpawnController {
         this.trackEl.appendChild(clone);
         const newEl = this.trackEl.lastElementChild;
         new HydraHeadController(newEl);
-    }
-
-    injectChildSpawnDOM(spawnData) {
-        if (this.nestedSpawnsEl.querySelector(`.js-hydra-spawn-wrapper > .js-hydra-spawn[data-spawn-id="${spawnData.id}"]`)) return;
-
-        const tpl = document.getElementById('tpl-hydra-spawn');
-        const clone = tpl.content.cloneNode(true);
-
-        HydraSpawnController.populateTemplate(clone, spawnData);
-        this.nestedSpawnsEl.appendChild(clone.firstElementChild);
-
-        const newEl = this.nestedSpawnsEl.lastElementChild.querySelector('.js-hydra-spawn');
-        new HydraSpawnController(newEl); // Recursive magic starts here
     }
 
     startPolling() {
@@ -137,10 +110,7 @@ class HydraSpawnController {
 
     async fetchState() {
         try {
-            // live_status gives us updated status and child links for ACTIVE jobs
-            const response = await fetch(`/api/v1/spawns/${this.spawnId}/live_status/`, {
-                headers: {'Accept': 'application/json'}
-            });
+            const response = await fetch(`/api/v1/spawns/${this.spawnId}/live_status/`);
             if (!response.ok) return;
             const data = await response.json();
 
@@ -149,7 +119,6 @@ class HydraSpawnController {
             if (!data.is_active) {
                 this.stopPolling();
                 this.el.dataset.isActive = 'false';
-                // Trigger one final head refresh to catch exact final states
                 this.loadAllHeads();
             }
         } catch (error) {
@@ -158,27 +127,59 @@ class HydraSpawnController {
     }
 
     async updateDOM(data) {
+        const statusStr = data.status_label || data.status_name || 'Pending';
+
         if (this.statusEl) {
-            this.statusEl.textContent = data.status_label;
-            this.statusEl.className = `status-text js-spawn-status-text status-${data.status_label.toLowerCase()}`;
+            this.statusEl.textContent = statusStr;
+            this.statusEl.className = `status-text js-spawn-status-text status-${statusStr.toLowerCase()}`;
         }
 
         this.el.classList.remove('active-lane', 'failed-lane');
         if (data.is_active) this.el.classList.add('active-lane');
-        else if (data.status_label === 'Failed' || data.status_label === 'Aborted') this.el.classList.add('failed-lane');
+        else if (statusStr === 'Failed' || statusStr === 'Aborted') this.el.classList.add('failed-lane');
 
         if (this.controlCard) this.controlCard.setMode(data.is_active);
 
-        // Fetch newly born children dynamically
+        // DISCOVER AND INJECT HEADS & SUBGRAPHS
         if (data.nodes) {
             for (const node of Object.values(data.nodes)) {
-                if (node.head_id) {
-                    // Check if head exists, if not, trigger a full refresh to get its data
-                    if (!this.trackEl.querySelector(`.js-hydra-head[data-head-id="${node.head_id}"]`)) {
-                        this.loadAllHeads();
-                    }
-                }
+                if (node.head_id) await this.ensureHeadExists(node.head_id);
+                if (node.child_spawn_id) await this.ensureChildSpawnExists(node.child_spawn_id);
             }
+        }
+    }
+
+    async ensureHeadExists(headId) {
+        if (this.trackEl.querySelector(`.js-hydra-head[data-head-id="${headId}"]`)) return;
+        try {
+            const response = await fetch(`/api/v1/heads/${headId}/status/`);
+            if (!response.ok) return;
+            const headData = await response.json();
+            this.injectHeadDOM(headData);
+            this.checkOverflow();
+        } catch (error) {
+            console.error(`Failed to inject Head ${headId}:`, error);
+        }
+    }
+
+    async ensureChildSpawnExists(childSpawnId) {
+        if (this.nestedSpawnsEl.querySelector(`.js-hydra-spawn-wrapper > .js-hydra-spawn[data-spawn-id="${childSpawnId}"]`)) return;
+
+        try {
+            const response = await fetch(`/api/v1/spawns/${childSpawnId}/?fields=id,spellbook,spellbook_name,status_name,modified,is_active,parent_head`);
+            if (!response.ok) return;
+            const spawnData = await response.json();
+
+            const tpl = document.getElementById('tpl-hydra-spawn');
+            const clone = tpl.content.cloneNode(true);
+
+            HydraSpawnController.populateTemplate(clone, spawnData);
+            this.nestedSpawnsEl.appendChild(clone.firstElementChild);
+
+            const newEl = this.nestedSpawnsEl.lastElementChild.querySelector('.js-hydra-spawn');
+            new HydraSpawnController(newEl);
+        } catch (error) {
+            console.error(`Failed to inject SubGraph ${childSpawnId}:`, error);
         }
     }
 }

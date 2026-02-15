@@ -1,4 +1,3 @@
-// Quick helper for time formatting
 function timeSince(dateString) {
     if (!dateString) return "0s";
     const seconds = Math.floor((new Date() - new Date(dateString)) / 1000);
@@ -19,7 +18,6 @@ class DispatcherController {
     constructor(rootId) {
         this.root = document.getElementById(rootId);
         this.pollInterval = null;
-        window.talosGlobalSpawns = []; // Global cache for Sub-Graph lookups
     }
 
     init() {
@@ -34,22 +32,18 @@ class DispatcherController {
 
     async fetchActiveSpawns() {
         try {
-            // Hit the raw endpoint (No hallucinated limits)
-            const response = await fetch('/api/v1/spawns/', {
-                headers: {'Accept': 'application/json'}
-            });
+            // Your exact endpoint, pulling the lightweight fields
+            const url = '/api/v1/spawns/?fields=id,spellbook,spellbook_name,status_name,modified,is_active,parent_head';
+            const response = await fetch(url, {headers: {'Accept': 'application/json'}});
             if (!response.ok) return;
 
             const data = await response.json();
             const spawns = data.results ? data.results : data;
 
-            // Cache for recursive child lookups
-            window.talosGlobalSpawns = spawns;
-
-            // Isolate Root Spawns (parent_head === null)
+            // Isolate Root Spawns
             const rootSpawns = spawns.filter(s => s.parent_head === null);
 
-            // Slice to top 15 to prevent browser DOM overload, iterate backwards for top-down insertion
+            // Render top 15, backward for top-down insertion
             const displaySpawns = rootSpawns.slice(0, 15);
             for (let i = displaySpawns.length - 1; i >= 0; i--) {
                 this.ensureSpawnExists(displaySpawns[i], this.root);
@@ -62,7 +56,6 @@ class DispatcherController {
     ensureSpawnExists(spawnData, container) {
         if (container.querySelector(`.js-hydra-spawn-wrapper > .js-hydra-spawn[data-spawn-id="${spawnData.id}"]`)) return;
 
-        console.log(`[Dispatcher] Injecting Root Spawn: ${spawnData.id}`);
         const tpl = document.getElementById('tpl-hydra-spawn');
         const clone = tpl.content.cloneNode(true);
 

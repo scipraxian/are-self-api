@@ -18,26 +18,37 @@ class HydraHeadController {
         const headEl = clone.querySelector('.js-hydra-head');
         headEl.dataset.headId = data.id;
 
-        // Determine Alive State
-        const isAlive = ['Created', 'Pending', 'Running', 'Delegated', 'Stopping'].includes(data.status_name);
+        const statusStr = data.status_name || 'Pending';
+        const isAlive = ['Created', 'Pending', 'Running', 'Delegated', 'Stopping'].includes(statusStr);
         headEl.dataset.isAlive = isAlive ? 'true' : 'false';
 
         headEl.href = `/hydra/head/${data.id}/`;
-        headEl.classList.add(`status-${data.status_name.toLowerCase()}`);
+        headEl.className = `hydra-head-card js-hydra-head status-${statusStr.toLowerCase()}`;
 
-        // MAP EXACT DRF FIELDS
-        clone.querySelector('.js-head-name').textContent = data.spell_name || "Unknown Node";
-        clone.querySelector('.js-head-target').textContent = data.target_name || "LOCAL";
-        clone.querySelector('.js-head-time').textContent = data.timestamp_str || "--:--:--";
-        clone.querySelector('.js-head-duration').textContent = `⏱ ${data.duration || '0s'}`;
+        // Bulletproof DOM population
+        const nameEl = clone.querySelector('.js-head-name');
+        if (nameEl) nameEl.textContent = data.spell_name || "Unknown Node";
+
+        const targetEl = clone.querySelector('.js-head-target');
+        if (targetEl) targetEl.textContent = data.target_name || "LOCAL";
+
+        const timeEl = clone.querySelector('.js-head-time');
+        if (timeEl) timeEl.textContent = data.timestamp_str || "--:--:--";
+
+        const durEl = clone.querySelector('.js-head-duration');
+        if (durEl) durEl.textContent = `⏱ ${data.duration || '0s'}`;
 
         const logEl = clone.querySelector('.js-head-log');
-        if (data.status_name === 'Created' || data.status_name === 'Pending') {
-            logEl.textContent = 'Waiting...';
-        } else if (data.status_name === 'Success' || data.status_name === 'Failed') {
-            logEl.textContent = `RC: ${data.result_code !== null ? data.result_code : data.status_name}`;
-        } else {
-            logEl.textContent = data.status_name;
+        if (logEl) {
+            if (statusStr === 'Created' || statusStr === 'Pending') {
+                logEl.textContent = 'Waiting...';
+            } else if (statusStr === 'Success' || statusStr === 'Failed') {
+                // Strict check to prevent "RC: undefined"
+                const rc = (data.result_code !== null && data.result_code !== undefined) ? data.result_code : statusStr;
+                logEl.textContent = `RC: ${rc}`;
+            } else {
+                logEl.textContent = statusStr;
+            }
         }
     }
 
@@ -54,13 +65,14 @@ class HydraHeadController {
 
     async fetchState() {
         try {
-            const response = await fetch(`/api/v1/heads/${this.headId}/`);
+            const response = await fetch(`/api/v1/heads/${this.headId}/status/`);
             if (!response.ok) return;
             const data = await response.json();
 
             this.updateDOM(data);
 
-            if (this.terminalStates.includes(data.status_name)) {
+            const statusStr = data.status_name || 'Pending';
+            if (this.terminalStates.includes(statusStr)) {
                 this.stopPolling();
                 this.el.dataset.isAlive = 'false';
             }
@@ -70,18 +82,20 @@ class HydraHeadController {
     }
 
     updateDOM(data) {
-        this.el.className = `hydra-head-card js-hydra-head status-${data.status_name.toLowerCase()}`;
+        const statusStr = data.status_name || 'Pending';
+        this.el.className = `hydra-head-card js-hydra-head status-${statusStr.toLowerCase()}`;
 
         if (this.targetEl) this.targetEl.textContent = data.target_name || "LOCAL";
-        if (this.durationEl) this.durationEl.textContent = `⏱ ${data.duration}`;
+        if (this.durationEl) this.durationEl.textContent = `⏱ ${data.duration || '0s'}`;
 
         if (this.logEl) {
-            if (data.status_name === 'Created' || data.status_name === 'Pending') {
+            if (statusStr === 'Created' || statusStr === 'Pending') {
                 this.logEl.textContent = 'Waiting...';
-            } else if (data.status_name === 'Success' || data.status_name === 'Failed') {
-                this.logEl.textContent = `RC: ${data.result_code !== null ? data.result_code : data.status_name}`;
+            } else if (statusStr === 'Success' || statusStr === 'Failed') {
+                const rc = (data.result_code !== null && data.result_code !== undefined) ? data.result_code : statusStr;
+                this.logEl.textContent = `RC: ${rc}`;
             } else {
-                this.logEl.textContent = data.status_name;
+                this.logEl.textContent = statusStr;
             }
         }
     }

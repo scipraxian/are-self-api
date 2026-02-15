@@ -188,6 +188,66 @@ class GraphWireLayoutSerializer(serializers.Serializer):
 # ==========================================
 
 
+class DynamicFieldsModelSerializer(serializers.ModelSerializer):
+    """
+    A ModelSerializer that takes an additional `fields` query parameter that
+    controls which fields should be returned.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        request = self.context.get('request')
+        if request:
+            fields = request.query_params.get('fields')
+            if fields:
+                fields = fields.split(',')
+                allowed = set(fields)
+                existing = set(self.fields.keys())
+                for field_name in existing - allowed:
+                    self.fields.pop(field_name)
+
+
+class HydraSpawnLightSerializer(DynamicFieldsModelSerializer):
+    """
+    Ultra-lightweight serializer for list views.
+    Drops massive context_data blocks.
+    """
+
+    status_name = serializers.CharField(source='status.name', read_only=True)
+    spellbook_name = serializers.CharField(
+        source='spellbook.name', read_only=True
+    )
+    is_active = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = HydraSpawn
+        fields = [
+            'id',
+            'status_name',
+            'spellbook',
+            'spellbook_name',
+            'parent_head',
+            'created',
+            'modified',
+            'is_active',
+        ]
+
+
+class HydraSpawnSerializer(DynamicFieldsModelSerializer):
+    status_name = serializers.CharField(source='status.name', read_only=True)
+    spellbook_name = serializers.CharField(
+        source='spellbook.name', read_only=True
+    )
+    environment_name = serializers.CharField(
+        source='environment.name', read_only=True
+    )
+
+    class Meta:
+        model = HydraSpawn
+        fields = ALL_FIELDS
+
+
 class HydraTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = HydraTag
@@ -526,20 +586,6 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
             return ' '.join(cmd_list)
         except Exception as e:
             return f'Error resolving command: {str(e)}'
-
-
-class HydraSpawnSerializer(serializers.ModelSerializer):
-    status_name = serializers.CharField(source='status.name', read_only=True)
-    spellbook_name = serializers.CharField(
-        source='spellbook.name', read_only=True
-    )
-    environment_name = serializers.CharField(
-        source='environment.name', read_only=True
-    )
-
-    class Meta:
-        model = HydraSpawn
-        fields = ALL_FIELDS
 
 
 class HydraSwimlaneSerializer(serializers.ModelSerializer):

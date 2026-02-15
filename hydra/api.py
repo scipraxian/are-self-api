@@ -22,6 +22,7 @@ from .serializers import (
     HydraNodeDetailsSerializer,
     HydraNodeTelemetrySerializer,
     HydraSpawnCreateSerializer,
+    HydraSpawnLightSerializer,
     HydraSpawnSerializer,
     HydraSpawnStatusSerializer,
     HydraSpellbookConnectionWireSerializer,
@@ -165,15 +166,40 @@ class HydraSpawnViewSet(
 ):
     """Mission Control and Spawns."""
 
-    queryset = (
-        HydraSpawn.objects.all()
-        .select_related('status', 'spellbook', 'environment')
-        .order_by('-created')
-    )
+    def get_queryset(self):
+        qs = (
+            HydraSpawn.objects.all()
+            .select_related('status', 'spellbook', 'environment')
+            .order_by('-created')
+        )
+
+        # Temporal Diffing Support (e.g. ?modified__gt=2026-02-15T12:00:00Z)
+        modified_gt = self.request.query_params.get('modified__gt')
+        if modified_gt:
+            qs = qs.filter(modified__gt=modified_gt)
+
+        # Optional Status Filtering (e.g. ?is_active=true)
+        is_active = self.request.query_params.get('is_active')
+        if is_active is not None:
+            # [cite_start]We use the constants defined in HydraSpawnStatus [cite: 490]
+            from .models import HydraSpawnStatus
+
+            if is_active.lower() in ['true', '1', 't']:
+                qs = qs.filter(
+                    status_id__in=HydraSpawnStatus.IS_ALIVE_STATUS_LIST
+                )
+            else:
+                qs = qs.filter(
+                    status_id__in=HydraSpawnStatus.IS_TERMINAL_STATUS_LIST
+                )
+
+        return qs
 
     def get_serializer_class(self):
         if self.action == 'create':
             return HydraSpawnCreateSerializer
+        elif self.action == 'list':
+            return HydraSpawnLightSerializer
         return HydraSpawnSerializer
 
     def create(self, request, *args, **kwargs):
@@ -230,4 +256,16 @@ class HydraHeadViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """Forensics Unit. Retrieves heavy telemetry/logs."""
 
     queryset = HydraHead.objects.all()
+
+    # The default retrieve() uses the heavy telemetry
     serializer_class = HydraNodeTelemetrySerializer
+
+    @action(detail=True, methods=['get'])
+    def status(self, request, pk=None):
+        """
+        Lightweight polling endpoint for the UI Head Cards.
+        Bypasses log extraction and context resolution.
+        """
+        head = self.get_object()
+        serializer = HydraHeadSerializer(head)
+        return Response(serializer.data)
