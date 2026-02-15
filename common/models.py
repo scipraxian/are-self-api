@@ -1,11 +1,10 @@
 """A set of common mixins for models."""
 
 import uuid
-from decimal import Decimal
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.gis.measure import Distance
 from django.db import models
 from django.urls import reverse
 from django.utils.timezone import now
@@ -103,6 +102,28 @@ class CreatedAndModifiedBy(
         """Standard Django Meta object, for model configuration."""
 
         abstract = True
+
+
+class CreatedAndModifiedWithDelta(CreatedMixin, ModifiedMixin):
+    """Delta Mixin for Create and Modified timestamps."""
+
+    delta = models.DurationField(default=timedelta)
+
+    class Meta(object):
+        """Standard Django Meta object, for model configuration."""
+
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        """Save method with delta calculation."""
+        if self.created:
+            self.delta = now() - self.created
+        if (
+            kwargs.get('update_fields') is not None
+            and 'delta' not in kwargs['update_fields']
+        ):
+            kwargs['update_fields'] = list(kwargs['update_fields']) + ['delta']
+        super().save(*args, **kwargs)
 
 
 class NameMixin(models.Model):

@@ -7,6 +7,7 @@ from django.db import models
 import environments
 from common.constants import STANDARD_CHARFIELD_LENGTH
 from common.models import (
+    CreatedAndModifiedWithDelta,
     CreatedMixin,
     DefaultFieldsMixin,
     DescriptionMixin,
@@ -372,7 +373,7 @@ class HydraSpellbookConnectionWire(ModifiedMixin):
 
 
 class HydraSpawn(
-    UUIDIdMixin, CreatedMixin, ModifiedMixin, ProjectEnvironmentMixin
+    UUIDIdMixin, CreatedAndModifiedWithDelta, ProjectEnvironmentMixin
 ):
     """Spellbook Instance."""
 
@@ -471,10 +472,8 @@ class HydraSpawn(
         return f'Spawn {self.id} ({book_name})'
 
 
-class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
-    """
-    A single execution head (Process).
-    """
+class HydraHead(UUIDIdMixin, CreatedAndModifiedWithDelta):
+    """A single execution head (Process)."""
 
     status = models.ForeignKey(HydraHeadStatus, on_delete=models.PROTECT)
     spawn = models.ForeignKey(
