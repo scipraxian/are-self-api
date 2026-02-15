@@ -19,6 +19,16 @@
     transform: translateY(-2px);
 }
 
+.hydra-head-card.is-begin-play {
+    border-left: 3px solid #f99f1b;
+    background: linear-gradient(145deg, #1a1a1a 0%, #222 100%);
+}
+
+.hydra-head-card.is-begin-play {
+    display: none;
+}
+
+
 .head-header {
     display: flex;
     justify-content: space-between;
@@ -56,6 +66,7 @@
     text-overflow: ellipsis;
     max-width: 80px;
 }
+
 
 /* Status Colors */
 .status-running {

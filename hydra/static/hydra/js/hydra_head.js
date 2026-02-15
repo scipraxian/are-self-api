@@ -15,8 +15,16 @@ class HydraHeadController {
         headEl.dataset.isAlive = isAlive ? 'true' : 'false';
 
         headEl.href = `/hydra/head/${data.id}/`;
-        headEl.className = `hydra-head-card js-hydra-head status-${statusStr.toLowerCase()}`;
 
+        headEl.classList.forEach(cls => {
+            if (cls.startsWith('status-')) {
+                headEl.classList.remove(cls);
+            }
+        });
+        headEl.classList.add(`status-${statusStr.toLowerCase()}`);
+        if (data.spell === 1) {
+            headEl.classList.add('is-begin-play');
+        }
         const nameEl = clone.querySelector('.js-head-name');
         if (nameEl) nameEl.textContent = data.spell_name || "Unknown Node";
 
