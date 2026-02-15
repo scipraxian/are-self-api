@@ -1,11 +1,8 @@
 <a href="{% url 'hydra:head_detail' head.id %}"
    id="head-{{ head.id }}"
-   class="hydra-head-card status-{{ head.status.name|lower }}"
-        {% if head.is_alive %}
-   hx-get="{% url 'hydra:head_component' head.id %}"
-   hx-trigger="every 1.5s"
-   hx-swap="outerHTML"
-        {% endif %}>
+   class="hydra-head-card js-hydra-head status-{{ head.status.name|lower }}"
+   data-head-id="{{ head.id }}"
+   data-is-alive="{{ head.is_alive|yesno:'true,false' }}">
 
     <div class="head-header">
         <div class="head-name">{{ head.spell.name|default:"Unknown Node" }}</div>
@@ -13,18 +10,18 @@
     </div>
 
     <div class="head-meta">
-        <span class="head-target">{{ head.target.hostname|default:"LOCAL" }}</span>
+        <span class="head-target js-head-target">{{ head.target.hostname|default:"LOCAL" }}</span>
         <span class="head-time">{{ head.created|date:"H:i:s" }}</span>
     </div>
 
     <div class="head-footer">
-        <span class="head-log">
+        <span class="head-log js-head-log">
             {% if head.is_queued %}
                 Waiting...
             {% else %}
                 {{ head.spell_log|slice:"-30:"|default:head.status.name }}
             {% endif %}
         </span>
-        <span class="head-duration">⏱ {{ head.duration|default:"0s" }}</span>
+        <span class="head-duration js-head-duration">⏱ {{ head.duration|default:"0s" }}</span>
     </div>
 </a>

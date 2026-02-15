@@ -1,17 +1,13 @@
-<div class="hydra-spawn-wrapper" id="spawn-wrapper-{{ spawn.id }}">
+<div class="hydra-spawn-wrapper js-hydra-spawn-wrapper">
+    <div class="hydra-spawn js-hydra-spawn {% if spawn.is_alive %}active-lane{% endif %} {% if spawn.ended_badly %}failed-lane{% endif %}"
+         data-spawn-id="{{ spawn.id }}"
+         data-is-active="{{ spawn.is_alive|yesno:'true,false' }}">
 
-    <div class="hydra-spawn {% if spawn.is_alive %}active-lane{% endif %} {% if spawn.ended_badly %}failed-lane{% endif %}">
-
-        <div class="spawn-header" id="spawn-header-{{ spawn.id }}"
-                {% if spawn.is_alive %}
-             hx-get="{% url 'hydra:spawn_header_component' spawn.id %}"
-             hx-trigger="every 1.5s"
-             hx-swap="outerHTML"
-                {% endif %}>
+        <div class="spawn-header">
             <div class="spawn-title" title="{{ spawn.spellbook.name }}">{{ spawn.spellbook.name }}</div>
             <div class="spawn-status">
                 <span>#{{ spawn.id|stringformat:"s"|slice:":8" }}</span>
-                <span class="status-text status-{{ spawn.status.name|lower }}">{{ spawn.status.name }}</span>
+                <span class="status-text js-spawn-status status-{{ spawn.status.name|lower }}">{{ spawn.status.name }}</span>
             </div>
             <div class="spawn-time">{{ spawn.modified|timesince }} ago</div>
         </div>
@@ -21,16 +17,10 @@
         <button class="scroll-btn left" onclick="this.nextElementSibling.scrollBy({left: -300, behavior: 'smooth'})">◄
         </button>
 
-        <div class="spawn-track" id="spawn-track-{{ spawn.id }}">
+        <div class="spawn-track js-spawn-track">
             {% for head in spawn.heads.all %}
                 {% include "hydra/components/hydra_head.html" with head=head %}
             {% endfor %}
-
-            {% if spawn.is_alive %}
-                <div hx-get="{% url 'hydra:spawn_new_heads_component' spawn.id %}?last_head={{ spawn.heads.last.id|default:'' }}"
-                     hx-trigger="every 1.5s"
-                     hx-swap="beforebegin"></div>
-            {% endif %}
         </div>
 
         <button class="scroll-btn right"
@@ -38,10 +28,9 @@
         </button>
     </div>
 
-    <div class="nested-spawns">
+    <div class="nested-spawns js-nested-spawns">
         {% for child_spawn in spawn.child_spawns.all %}
             {% include "hydra/components/hydra_spawn.html" with spawn=child_spawn %}
         {% endfor %}
     </div>
-
 </div>
