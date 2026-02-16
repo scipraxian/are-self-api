@@ -1,4 +1,4 @@
-import os
+import json
 
 from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -333,16 +333,18 @@ class SpawnMonitorDetailView(DetailView):
         return context
 
 
-def generate_spawn_dump(spawn):
-    """Generator that streams the entire execution context of a Spawn."""
-    yield f'TALOS SPAWN EXPORT\n'
-    yield f'================================================================================\n'
-    yield f'Spawn ID:   {spawn.id}\n'
-    yield f'Spellbook:  {spawn.spellbook.name if spawn.spellbook else "Deleted"}\n'
-    yield f'Status:     {spawn.status.name}\n'
-    yield f'Created:    {spawn.created}\n'
-    yield f'Environment: {spawn.environment.name if spawn.environment else "None"}\n'
-    yield f'================================================================================\n\n'
+def generate_spawn_dump(spawn, depth=0):
+    """Generator that streams the entire execution context of a Spawn and its subgraphs."""
+    indent = '    ' * depth
+
+    yield f'{indent}TALOS SPAWN EXPORT {"(SUBGRAPH)" if depth > 0 else ""}\n'
+    yield f'{indent}================================================================================\n'
+    yield f'{indent}Spawn ID:   {spawn.id}\n'
+    yield f'{indent}Spellbook:  {spawn.spellbook.name if spawn.spellbook else "Deleted"}\n'
+    yield f'{indent}Status:     {spawn.status.name}\n'
+    yield f'{indent}Created:    {spawn.created}\n'
+    yield f'{indent}Environment: {spawn.environment.name if spawn.environment else "None"}\n'
+    yield f'{indent}================================================================================\n\n'
 
     # Fetch all heads in order
     heads = (
@@ -354,10 +356,10 @@ def generate_spawn_dump(spawn):
     )
 
     for i, head in enumerate(heads):
-        yield f'--- HEAD #{i + 1} [{head.id}] ---\n'
-        yield f'Spell:      {head.spell.name if head.spell else "None"}\n'
-        yield f'Status:     {head.status.name}\n'
-        yield f'Target:     {head.target.hostname if head.target else "Local Server"}\n'
+        yield f'{indent}--- HEAD #{i + 1} [{head.id}] ---\n'
+        yield f'{indent}Spell:      {head.spell.name if head.spell else "None"}\n'
+        yield f'{indent}Status:     {head.status.name}\n'
+        yield f'{indent}Target:     {head.target.hostname if head.target else "Local Server"}\n'
 
         # Resolve the command string for context
         cmd_str = 'Command resolution failed'
@@ -374,24 +376,33 @@ def generate_spawn_dump(spawn):
         except Exception as e:
             cmd_str = f'<Error: {e}>'
 
-        yield f'Command:    {cmd_str}\n'
-        yield f'Result RC:  {head.result_code}\n'
+        yield f'{indent}Command:    {cmd_str}\n'
+        yield f'{indent}Result RC:  {head.result_code}\n'
 
-        yield f'\n[SPELL LOG (Tool Output)]\n'
-        yield f'-------------------------\n'
-        yield head.spell_log or '<No Output>'
+        # Output the exact Blackboard state!
+        if head.blackboard:
+            yield f'{indent}Blackboard: {json.dumps(head.blackboard)}\n'
+
+        yield f'\n{indent}[SPELL LOG (Tool Output)]\n'
+        yield f'{indent}-------------------------\n'
+        if head.spell_log:
+            yield head.spell_log
+        else:
+            yield f'<No Output>'
         yield f'\n'
 
-        yield f'\n[EXECUTION LOG (System)]\n'
-        yield f'------------------------\n'
-        yield head.execution_log or '<No System Logs>'
+        yield f'\n{indent}[EXECUTION LOG (System)]\n'
+        yield f'{indent}------------------------\n'
+        if head.execution_log:
+            yield head.execution_log
+        else:
+            yield f'<No System Logs>'
         yield f'\n'
-
-        yield f'\n[Blackboard]\n'
-        yield f'------------------------\n'
-        yield str(head.blackboard) if head.blackboard else '<No Blackboard>'
         yield f'\n'
-        yield f'================================================================================\n\n'
+        yield f'{indent}================================================================================\n\n'
+        child_spawns = head.child_spawns.all().order_by('created')
+        for child in child_spawns:
+            yield from generate_spawn_dump(child, depth + 1)
 
 
 class HydraSpawnDownloadView(View):
