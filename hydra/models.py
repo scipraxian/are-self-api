@@ -506,6 +506,8 @@ class HydraHead(UUIDIdMixin, CreatedAndModifiedWithDelta):
     execution_log = models.TextField(blank=True)
     result_code = models.IntegerField(null=True, blank=True)
 
+    blackboard = models.JSONField(default=dict, blank=True)
+
     @property
     def is_active(self):  # TODO: DEPRECIATED LEGACY REMOVE, use is_alive.
         return self.status_id in [
