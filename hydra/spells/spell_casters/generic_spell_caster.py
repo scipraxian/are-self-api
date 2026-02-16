@@ -30,10 +30,10 @@ logger = logging.getLogger(__name__)
 
 BLACKBOARD_SET_KEY = '::blackboard_set '
 BLACKBOARD_SET_KEY_REGEX = re.compile(
-    r'^::blackboard_set\s+(.+?)::(.*)$', flags=re.MULTILINE
+    r'^.*?::blackboard_set\s+(.+?)::(.*)$', flags=re.MULTILINE
 )
 BLACKBOARD_SET_STRIPPER = re.compile(
-    r'^::blackboard_set\s+.*?::.*$\n?', flags=re.MULTILINE
+    r'^.*?::blackboard_set\s+.*?::.*$\n?', flags=re.MULTILINE
 )
 
 
@@ -326,6 +326,7 @@ class GenericSpellCaster:
                 if event.type == TalosAgentConstants.T_LOG:
                     text_to_log = event.text
                     if BLACKBOARD_SET_KEY in text_to_log:
+                        self._log_info('Blackboard update detected.')
                         matches = list(
                             BLACKBOARD_SET_KEY_REGEX.finditer(text_to_log)
                         )
@@ -335,14 +336,14 @@ class GenericSpellCaster:
                             if not isinstance(self.head.blackboard, dict):
                                 self.head.blackboard = {}
                             self.head.blackboard[key] = val
+                            self._log_info(
+                                f'Blackboard updated with {key}={val}.'
+                            )
                         text_to_log = BLACKBOARD_SET_STRIPPER.sub(
                             '', text_to_log
                         )
                     if text_to_log:
-                        if event.source == 'file':
-                            await self.logger.append_spell(text_to_log)
-                        else:
-                            await self.logger.append(text_to_log)
+                        await self.logger.append_spell(text_to_log)
                 elif event.type == TalosAgentConstants.T_EXIT:
                     exit_code = event.code
         except Exception as e:

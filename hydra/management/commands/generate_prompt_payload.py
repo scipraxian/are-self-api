@@ -48,16 +48,17 @@ class Command(BaseCommand):
         rendered_payload = VariableRenderer.render_string(
             raw_template, head_context
         )
+
+        logger.info(f'Payload generated [{len(rendered_payload)} chars]')
+
         fd, temp_path = tempfile.mkstemp(
             prefix=TEMP_FILE_PREFIX, suffix=TEMP_FILE_SUFFIX
         )
+
+        logger.info(f'Temp File Created {temp_path}')
+
         with os.fdopen(fd, 'w', encoding='utf-8', errors='replace') as f:
             f.write(rendered_payload)
-        if not isinstance(head.blackboard, dict):
-            head.blackboard = {}
-        head.blackboard[BLACKBOARD_RESULT_KEY] = temp_path
-        head.save(update_fields=[BLACKBOARD_FIELD_NAME])
 
-        logger.info(
-            f'Payload generated [{len(rendered_payload)} chars] -> {temp_path}'
-        )
+        logger.info(f'::blackboard_set {BLACKBOARD_RESULT_KEY}::{temp_path}')
+        logger.info('generate_prompt_payload Command Complete.')

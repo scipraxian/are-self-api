@@ -64,11 +64,10 @@ function initSearch() {
 }
 
 
-
 // Initialize on page load
 // Initialize search if function exists
 if (typeof initSearch === 'function') {
     initSearch();
 }
-});
+
 

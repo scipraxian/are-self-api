@@ -40,7 +40,8 @@ class HydraGraphMonitorView(DetailView):
         context['mode'] = 'monitor'
         context['spawn_id'] = str(self.object.id)
         context['spawn_history'] = HydraSpawn.objects.filter(
-            spellbook=self.object.spellbook).order_by('-created')[:20]
+            spellbook=self.object.spellbook
+        ).order_by('-created')[:20]
         return context
 
 
@@ -53,8 +54,9 @@ class LaunchSpellbookView(View):
         controller = Hydra(spellbook_id=spellbook_id)
         controller.start()
 
-        target_url = reverse('hydra:graph_monitor',
-                             kwargs={'spawn_id': controller.spawn.id})
+        target_url = reverse(
+            'hydra:graph_monitor', kwargs={'spawn_id': controller.spawn.id}
+        )
 
         # Check for suppression flag in query params
         no_redirect = self.request.GET.get('no_redirect') == 'true'
@@ -92,8 +94,9 @@ class ToggleFavoriteView(View):
         book.save(update_fields=['is_favorite'])
 
         # Return the updated SVG button
-        return render(request, 'dashboard/partials/star_toggle.html',
-                      {'book': book})
+        return render(
+            request, 'dashboard/partials/star_toggle.html', {'book': book}
+        )
 
 
 class TerminateSpawnView(View):
@@ -133,7 +136,8 @@ class GracefulStopSpawnView(View):
                 'style="opacity: 0.5; cursor: wait; border-color: #f97316; color: #f97316;">'
                 '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'
                 '<rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect></svg>'
-                '</button>')
+                '</button>'
+            )
 
             # 1. WAR ROOM (Head Detail) logic
             if '/head/' in referer:
@@ -143,7 +147,8 @@ class GracefulStopSpawnView(View):
                     f'hx-get="{referer}" hx-vals=\'{{"partial": "actions"}}\' '
                     f'hx-trigger="every 2s" hx-swap="outerHTML">'
                     f'<button class="btn-secondary" disabled style="opacity:0.5;">Stopping...</button>'
-                    '</div>')
+                    '</div>'
+                )
 
             # 2. MONITOR / DASHBOARD logic
             else:
@@ -196,8 +201,9 @@ class HeadLogDetailView(DetailView):
             button_html = ''
             # ONLY render the button if active. If not active, this returns empty string, removing it.
             if is_active:
-                stop_url = reverse('hydra:hydra_spawn_stop_graceful',
-                                   args=[head.spawn.id])
+                stop_url = reverse(
+                    'hydra:hydra_spawn_stop_graceful', args=[head.spawn.id]
+                )
                 button_html = f'''
                 <button class="btn-secondary" 
                         hx-post="{stop_url}"
@@ -336,12 +342,16 @@ def generate_spawn_dump(spawn):
     yield f'Status:     {spawn.status.name}\n'
     yield f'Created:    {spawn.created}\n'
     yield f'Environment: {spawn.environment.name if spawn.environment else "None"}\n'
-    yield f'Context Data: {spawn.context_data}\n'
     yield f'================================================================================\n\n'
 
     # Fetch all heads in order
-    heads = (spawn.heads.all().order_by('created').select_related(
-        'spell', 'status', 'target', 'node', 'spell__talos_executable'))
+    heads = (
+        spawn.heads.all()
+        .order_by('created')
+        .select_related(
+            'spell', 'status', 'target', 'node', 'spell__talos_executable'
+        )
+    )
 
     for i, head in enumerate(heads):
         yield f'--- HEAD #{i + 1} [{head.id}] ---\n'
@@ -355,8 +365,9 @@ def generate_spawn_dump(spawn):
             env = get_active_environment(head)
             ctx = resolve_environment_context(head_id=head.id)
             if head.spell:
-                full_cmd = head.spell.get_full_command(environment=env,
-                                                       extra_context=ctx)
+                full_cmd = head.spell.get_full_command(
+                    environment=env, extra_context=ctx
+                )
                 cmd_str = ' '.join(full_cmd)
             else:
                 cmd_str = '<No Spell Attached>'
@@ -375,6 +386,11 @@ def generate_spawn_dump(spawn):
         yield f'------------------------\n'
         yield head.execution_log or '<No System Logs>'
         yield f'\n'
+
+        yield f'\n[Blackboard]\n'
+        yield f'------------------------\n'
+        yield str(head.blackboard) if head.blackboard else '<No Blackboard>'
+        yield f'\n'
         yield f'================================================================================\n\n'
 
 
@@ -384,8 +400,9 @@ class HydraSpawnDownloadView(View):
     def get(self, request, pk):
         spawn = get_object_or_404(HydraSpawn, pk=pk)
 
-        response = StreamingHttpResponse(generate_spawn_dump(spawn),
-                                         content_type='text/plain')
+        response = StreamingHttpResponse(
+            generate_spawn_dump(spawn), content_type='text/plain'
+        )
 
         filename = f'Spawn_{str(spawn.id)[:8]}_{spawn.status.name}.log'
         response['Content-Disposition'] = f'attachment; filename="{filename}"'

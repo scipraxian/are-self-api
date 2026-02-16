@@ -44,6 +44,8 @@ def cast_hydra_spell(self, head_id):
         try:
             head = HydraHead.objects.only('spawn_id').get(id=head_id)
             spawn_id = head.spawn_id
+            head.celery_task_id = self.request.id
+            head.save(update_fields=['celery_task_id'])
         except HydraHead.DoesNotExist:
             logger.error(f'Head {head_id} missing during cast!')
             return

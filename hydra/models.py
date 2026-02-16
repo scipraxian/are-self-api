@@ -313,7 +313,7 @@ class HydraSpellbookNode(ProjectEnvironmentMixin):
     )
 
     distribution_mode = models.ForeignKey(
-        HydraDistributionMode, on_delete=models.SET_NULL, null=True
+        HydraDistributionMode, on_delete=models.SET_NULL, null=True, blank=True
     )
 
     def __str__(self):
