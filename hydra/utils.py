@@ -143,6 +143,9 @@ def resolve_environment_context(
                     context_data[var.key] = var.value
         return context_data
 
+    if head.blackboard and isinstance(head.blackboard, dict):
+        context_data.update(head.blackboard)
+
     if head.spell:
         spell_vars = HydraSpellContext.objects.filter(spell=head.spell)
         for var in spell_vars:
@@ -153,12 +156,5 @@ def resolve_environment_context(
         for var in node_vars:
             if var.key:
                 context_data[var.key] = var.value
-    if head.spawn.context_data:
-        try:
-            dynamic_ctx = json.loads(head.spawn.context_data)
-            if isinstance(dynamic_ctx, dict):
-                context_data.update(dynamic_ctx)
-        except json.JSONDecodeError:
-            logger.warning('Invalid JSON in Spawn Context Data.')
 
     return context_data

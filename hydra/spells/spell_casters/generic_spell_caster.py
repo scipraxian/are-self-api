@@ -147,6 +147,7 @@ class GenericSpellCaster:
     EXECUTION_LOG_FIELD = 'execution_log'
     SPELL_LOG_FIELD = 'spell_log'
     STATUS_FIELD = 'status'
+    BLACKBOARD_FIELD = 'blackboard'
 
     def __init__(self, head_id: uuid.UUID):
         self.head_id = head_id
@@ -355,6 +356,8 @@ class GenericSpellCaster:
                     f'\n[EXIT] Process failed with code {exit_code}\n'
                 )
                 new_status = HydraHeadStatus.FAILED
+
+        await self._save_head(fields=[self.BLACKBOARD_FIELD])
 
         self.status = new_status
         await self._update_status(new_status)

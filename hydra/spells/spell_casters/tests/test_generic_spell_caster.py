@@ -1,6 +1,7 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from asgiref.sync import sync_to_async
 from django.test import TestCase
 
 from environments.models import (
@@ -220,6 +221,46 @@ class TestGenericSpellCaster:
             assert kwargs['log_path'] == expected_resolved_log, (
                 f'Log path was not resolved! Got: {kwargs["log_path"]}'
             )
+
+    @pytest.mark.asyncio
+    async def test_blackboard_exhale_persistence(
+        self, mock_head, mock_env_utils
+    ):
+        """Verify native python tools can mutate memory and the Caster preserves it."""
+
+        # 1. Setup Initial Memory
+        mock_head.blackboard = {'state': 'initial'}
+        mock_head.save()
+
+        # 2. Mock a native Python Tool (e.g., an AI Parser)
+        async def mock_ai_handler(head_id):
+            # Native tools interact with the DB directly
+            h = await sync_to_async(HydraHead.objects.get)(id=head_id)
+            h.blackboard['state'] = 'mutated'
+            await sync_to_async(h.save)(update_fields=['blackboard'])
+            return 200, 'AI Analysis Complete'
+
+        # 3. Hijack the Caster's Native Handler routing
+        with patch.dict(
+            'hydra.spells.spell_casters.generic_spell_caster.NATIVE_HANDLERS',
+            {'ai_parser': mock_ai_handler},
+        ):
+            mock_head.spell.talos_executable.internal = True
+            mock_head.spell.talos_executable.executable = 'ai_parser'
+
+            caster = GenericSpellCaster(mock_head.id)
+            caster.head = mock_head
+            caster.spell = mock_head.spell
+
+            # THE FIX: Use AsyncMock so `await self.logger.flush()` doesn't crash
+            caster.logger = AsyncMock()
+
+            # Execute Native Route
+            await caster._execute_local_python()
+
+            # 4. Assert the Caster did NOT cause amnesia
+            mock_head.refresh_from_db()
+            assert mock_head.blackboard.get('state') == 'mutated'
 
 
 @pytest.mark.django_db

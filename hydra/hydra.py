@@ -21,6 +21,7 @@ from .models import (
     HydraSpellbook,
     HydraSpellbookConnectionWire,
     HydraSpellbookNode,
+    HydraSpellBookNodeContext,
     HydraStatusID,
     HydraWireType,
 )
@@ -208,7 +209,6 @@ class Hydra:
         spawn = HydraSpawn.objects.create(
             spellbook=book,
             status_id=HydraSpawnStatus.CREATED,
-            context_data=json.dumps({}),
             environment=active_env,
         )
         self.spawn = spawn
@@ -306,6 +306,19 @@ class Hydra:
     def _create_head_from_node(
         self, node: HydraSpellbookNode, provenance: Optional[HydraHead]
     ):
+        starting_blackboard = {}
+
+        if provenance:
+            starting_blackboard = provenance.blackboard.copy()
+        elif self.spawn.parent_head:
+            starting_blackboard = self.spawn.parent_head.blackboard.copy()
+            node_args = HydraSpellBookNodeContext.objects.filter(
+                node=self.spawn.parent_head.node
+            )
+            for arg in node_args:
+                if arg.key:
+                    starting_blackboard[arg.key] = arg.value
+
         seed_head = HydraHead.objects.create(
             spawn=self.spawn,
             node=node,
@@ -313,6 +326,7 @@ class Hydra:
             provenance=provenance,
             target=None,
             status_id=HydraHeadStatus.CREATED,
+            blackboard=starting_blackboard,
         )
 
         if node.invoked_spellbook:
@@ -386,6 +400,7 @@ class Hydra:
             provenance=seed.provenance,
             target=agent,
             status_id=HydraHeadStatus.PENDING,
+            blackboard=seed.blackboard.copy(),
         )
         transaction.on_commit(lambda: cast_hydra_spell.delay(new_head.id))
 

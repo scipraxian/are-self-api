@@ -382,10 +382,6 @@ class HydraSpawn(
     )
     status = models.ForeignKey(HydraSpawnStatus, on_delete=models.PROTECT)
 
-    context_data = models.TextField(
-        blank=True, help_text='Serialized JSON context variables'
-    )
-
     parent_head = models.ForeignKey(
         'HydraHead',
         on_delete=models.SET_NULL,

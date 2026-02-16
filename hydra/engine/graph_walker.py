@@ -2,6 +2,7 @@ import logging
 
 from django.db import transaction
 
+from hydra.hydra import Hydra
 from hydra.models import HydraHead, HydraSpawn, HydraStatusID
 
 logger = logging.getLogger(__name__)
@@ -53,7 +54,6 @@ class GraphWalker:
         """
         Creates the Child Spawn and puts the Parent Node to sleep.
         """
-        from hydra.hydra import Hydra
 
         target_book = head.node.invoked_spellbook
 
@@ -65,7 +65,6 @@ class GraphWalker:
         child_spawn = HydraSpawn.objects.create(
             spellbook=target_book,
             parent_head=head,
-            context_data=head.spawn.context_data,
             environment=head.spawn.environment,
             status_id=HydraStatusID.CREATED,
         )

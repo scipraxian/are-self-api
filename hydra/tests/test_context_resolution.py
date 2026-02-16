@@ -35,7 +35,7 @@ class ContextResolutionTest(TestCase):
     ]
 
     def setUp(self):
-        # 1. Setup Infrastructure
+        # 1. Base Environment Infrastructure
         self.env_type = ProjectEnvironmentType.objects.create(name='TestType')
         self.env_status = ProjectEnvironmentStatus.objects.create(name='Active')
         self.env = ProjectEnvironment.objects.create(
@@ -45,6 +45,7 @@ class ContextResolutionTest(TestCase):
             selected=True,
         )
 
+        # 2. Base Execution Infrastructure
         self.exe = TalosExecutable.objects.create(
             name='TestExe', executable='echo'
         )
@@ -52,86 +53,145 @@ class ContextResolutionTest(TestCase):
             name='Test Spell', talos_executable=self.exe
         )
         self.book = HydraSpellbook.objects.create(name='Test Book')
-
-        # Statuses
-        self.spawn_status = HydraSpawnStatus.objects.get(name='Created')
-        self.head_status = HydraHeadStatus.objects.get(name='Created')
-
-        # The Variable Key we are testing
-        self.VAR_KEY = 'prompt'
-
-    def test_hierarchy_resolution(self):
-        """
-        Verifies the precedence order:
-        1. Environment (Base)
-        2. Spell Default (Tier 1)
-        3. Node Override (Tier 2)
-        4. Spawn Injection (Tier 3)
-        """
-        # --- LEVEL 0: Environment ---
-        key_obj = ProjectEnvironmentContextKey.objects.create(name=self.VAR_KEY)
-        ContextVariable.objects.create(
-            environment=self.env, key=key_obj, value='LEVEL_0_ENV'
+        self.node = HydraSpellbookNode.objects.create(
+            spellbook=self.book, spell=self.spell, environment=self.env
         )
 
-        # --- LEVEL 1: Spell Default ---
-        HydraSpellContext.objects.create(
-            spell=self.spell, key=self.VAR_KEY, value='LEVEL_1_SPELL'
+        # 3. Base Run Infrastructure
+        self.spawn_status = HydraSpawnStatus.objects.get(
+            id=HydraSpawnStatus.CREATED
         )
-
-        # --- LEVEL 2: Node Override ---
-        node = HydraSpellbookNode.objects.create(
-            spellbook=self.book, spell=self.spell
+        self.head_status = HydraHeadStatus.objects.get(
+            id=HydraHeadStatus.CREATED
         )
-        HydraSpellBookNodeContext.objects.create(
-            node=node, key=self.VAR_KEY, value='LEVEL_2_NODE'
-        )
-
-        # --- LEVEL 3: Spawn Injection ---
-        spawn_context = {self.VAR_KEY: 'LEVEL_3_SPAWN'}
-        spawn = HydraSpawn.objects.create(
+        self.spawn = HydraSpawn.objects.create(
             spellbook=self.book,
-            status=self.spawn_status,
+            status_id=HydraSpawnStatus.CREATED,
             environment=self.env,
-            context_data=json.dumps(spawn_context),
         )
+
+        # 4. Standardized Test Keys
+        self.KEY_PROMPT = 'prompt'
+        self.KEY_TARGET = 'target_email'
+
+    def _create_env_variable(self, key_name: str, value: str):
+        """Helper to properly create relational environment variables."""
+        key_obj, _ = ProjectEnvironmentContextKey.objects.get_or_create(
+            name=key_name
+        )
+        ContextVariable.objects.create(
+            environment=self.env, key=key_obj, value=value
+        )
+
+    def test_pure_environment_extraction(self):
+        """
+        Prove that a pure environment variable is correctly extracted
+        when no other overrides exist.
+        """
+        self._create_env_variable(self.KEY_PROMPT, 'ENV_PROMPT')
 
         head = HydraHead.objects.create(
-            spawn=spawn, node=node, spell=self.spell, status=self.head_status
+            spawn=self.spawn,
+            node=self.node,
+            spell=self.spell,
+            status=self.head_status,
         )
 
-        # ACT 1: Full Stack -> Spawn wins
         ctx = resolve_environment_context(head_id=head.id)
-        self.assertEqual(
-            ctx[self.VAR_KEY],
-            'LEVEL_3_SPAWN',
-            'Tier 3 (Spawn) failed to override lower layers.',
+
+        self.assertIn(self.KEY_PROMPT, ctx)
+        self.assertEqual(ctx[self.KEY_PROMPT], 'ENV_PROMPT')
+
+    def test_blackboard_overrides_environment(self):
+        """
+        Prove that the dynamic Working Memory (Blackboard) correctly overwrites
+        a static Global Environment variable.
+        """
+        # 1. Set the baseline in the Environment
+        self._create_env_variable(self.KEY_TARGET, 'team@studio.com')
+
+        # 2. The AI decides to change it mid-run via the Blackboard
+        head = HydraHead.objects.create(
+            spawn=self.spawn,
+            node=self.node,
+            spell=self.spell,
+            status=self.head_status,
+            blackboard={self.KEY_TARGET: 'ceo@studio.com'},
         )
 
-        # ACT 2: Remove Spawn Context -> Node wins
-        spawn.context_data = '{}'
-        spawn.save()
+        # 3. Resolve and assert the AI's memory wins
         ctx = resolve_environment_context(head_id=head.id)
         self.assertEqual(
-            ctx[self.VAR_KEY],
-            'LEVEL_2_NODE',
-            'Tier 2 (Node) failed to override Spell/Env.',
+            ctx[self.KEY_TARGET],
+            'ceo@studio.com',
+            'Blackboard failed to override the Global Environment.',
         )
 
-        # ACT 3: Remove Node Context -> Spell wins
-        HydraSpellBookNodeContext.objects.all().delete()
-        ctx = resolve_environment_context(head_id=head.id)
-        self.assertEqual(
-            ctx[self.VAR_KEY],
-            'LEVEL_1_SPELL',
-            'Tier 1 (Spell) failed to override Environment.',
+    def test_strict_hierarchy_precedence(self):
+        """
+        The Crucible: Prove the exact 4-tier hierarchy of variable precedence.
+        Node Override > Spell Default > Blackboard > Global Environment
+        """
+        # --- LEVEL 1: Global Environment ---
+        self._create_env_variable(self.KEY_PROMPT, 'LEVEL_1_ENV')
+
+        head = HydraHead.objects.create(
+            spawn=self.spawn,
+            node=self.node,
+            spell=self.spell,
+            status=self.head_status,
+            blackboard={},
         )
 
-        # ACT 4: Remove Spell Context -> Environment wins
-        HydraSpellContext.objects.all().delete()
+        # Assert Baseline
         ctx = resolve_environment_context(head_id=head.id)
-        self.assertEqual(
-            ctx[self.VAR_KEY],
-            'LEVEL_0_ENV',
-            'Base Environment failed to provide fallback value.',
+        self.assertEqual(ctx[self.KEY_PROMPT], 'LEVEL_1_ENV')
+
+        # --- LEVEL 2: Blackboard ---
+        head.blackboard = {self.KEY_PROMPT: 'LEVEL_2_BLACKBOARD'}
+        head.save()
+
+        # Assert Blackboard wins
+        ctx = resolve_environment_context(head_id=head.id)
+        self.assertEqual(ctx[self.KEY_PROMPT], 'LEVEL_2_BLACKBOARD')
+
+        # --- LEVEL 3: Spell Default ---
+        HydraSpellContext.objects.create(
+            spell=self.spell, key=self.KEY_PROMPT, value='LEVEL_3_SPELL'
         )
+
+        # Assert Spell Default wins
+        ctx = resolve_environment_context(head_id=head.id)
+        self.assertEqual(ctx[self.KEY_PROMPT], 'LEVEL_3_SPELL')
+
+        # --- LEVEL 4: Node Override ---
+        HydraSpellBookNodeContext.objects.create(
+            node=self.node, key=self.KEY_PROMPT, value='LEVEL_4_NODE'
+        )
+
+        # Assert Node Override is the Absolute King
+        ctx = resolve_environment_context(head_id=head.id)
+        self.assertEqual(ctx[self.KEY_PROMPT], 'LEVEL_4_NODE')
+
+    def test_blackboard_preserves_unrelated_environment_keys(self):
+        """
+        Prove that merging the Blackboard doesn't accidentally erase
+        unrelated Environment variables.
+        """
+        self._create_env_variable('engine_path', 'C:/UE5')
+        self._create_env_variable('project_name', 'TalosGame')
+
+        head = HydraHead.objects.create(
+            spawn=self.spawn,
+            node=self.node,
+            spell=self.spell,
+            status=self.head_status,
+            blackboard={'ai_summary': 'Clean build.'},
+        )
+
+        ctx = resolve_environment_context(head_id=head.id)
+
+        # Both the Environment and the Blackboard should co-exist
+        self.assertEqual(ctx['engine_path'], 'C:/UE5')
+        self.assertEqual(ctx['project_name'], 'TalosGame')
+        self.assertEqual(ctx['ai_summary'], 'Clean build.')
