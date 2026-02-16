@@ -33,7 +33,7 @@ class HydraSpawnFilter(django_filters.FilterSet):
 
 
 class HydraHeadFilter(django_filters.FilterSet):
-    # Delta Cursors
+    spawn_id = django_filters.UUIDFilter(field_name='spawn_id')
     modified__gt = django_filters.IsoDateTimeFilter(
         field_name='modified', lookup_expr='gt'
     )
