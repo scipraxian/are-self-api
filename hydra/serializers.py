@@ -3,6 +3,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
+from django.db.models import Avg
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -524,12 +525,16 @@ class HydraHeadSerializer(serializers.ModelSerializer):
         source='target.hostname', read_only=True
     )
     spell_name = serializers.CharField(source='spell.name', read_only=True)
-    duration = serializers.CharField(read_only=True)
-    timestamp_str = serializers.CharField(read_only=True)
+    average_delta = serializers.SerializerMethodField()
 
     class Meta:
         model = HydraHead
         exclude = ['spell_log', 'execution_log']
+
+    def get_average_delta(self, obj):
+        return HydraHead.objects.filter(spell=obj.spell).aggregate(
+            Avg('delta')
+        )['delta__avg']
 
 
 class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
@@ -538,7 +543,7 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
     exec_logs = serializers.SerializerMethodField()
     command = serializers.SerializerMethodField()
     agent = serializers.SerializerMethodField()
-    duration = serializers.SerializerMethodField()
+    average_delta = serializers.SerializerMethodField()
 
     class Meta:
         model = HydraHead
@@ -551,22 +556,12 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
             'logs',
             'exec_logs',
             'command',
-            'duration',
+            'delta',
+            'average_delta',
         ]
 
     def get_agent(self, obj):
         return str(obj.target) if obj.target else constants.VAL_PENDING
-
-    def get_duration(self, obj) -> str:
-        if not obj.created:
-            return '0s'
-        is_terminal = obj.status_id in HydraHeadStatus.IS_TERMINAL_STATUS_LIST
-        end_time = obj.modified if is_terminal else timezone.now()
-        delta = end_time - obj.created
-        total_seconds = int(delta.total_seconds())
-        minutes = total_seconds // 60
-        seconds = total_seconds % 60
-        return f'{minutes}m {seconds}s' if minutes > 0 else f'{seconds}s'
 
     def get_logs(self, obj):
         return _tail_log(obj.spell_log)
@@ -586,6 +581,11 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
             return ' '.join(cmd_list)
         except Exception as e:
             return f'Error resolving command: {str(e)}'
+
+    def get_average_delta(self, obj):
+        return HydraHead.objects.filter(spell=obj.spell).aggregate(
+            Avg('delta')
+        )['delta__avg']
 
 
 class HydraSwimlaneSerializer(serializers.ModelSerializer):

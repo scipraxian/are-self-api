@@ -546,16 +546,6 @@ class HydraHead(UUIDIdMixin, CreatedAndModifiedWithDelta):
         ]
 
     @property
-    def duration(self):
-        if not self.created or not self.modified:
-            return '0s'
-        delta = self.modified - self.created
-        total_seconds = int(delta.total_seconds())
-        minutes = total_seconds // 60
-        seconds = total_seconds % 60
-        return f'{minutes}m {seconds}s' if minutes > 0 else f'{seconds}s'
-
-    @property
     def timestamp_str(self):
         return self.created.strftime('%H:%M:%S') if self.created else ''
 
