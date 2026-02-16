@@ -116,16 +116,24 @@
 <template id="tpl-hydra-head">
     <a href="#" class="hydra-head-card js-hydra-head">
         <div class="head-header">
-            <div class="head-name js-head-name">Unknown Node</div>
-            <div class="card-drill-btn" title="View Logs">☍</div>
+            <div class="head-name js-head-name">NODE</div>
+            <div class="js-head-status-pill status-pill-text">STATUS</div>
         </div>
+
         <div class="head-meta">
-            <span class="head-target js-head-target">LOCAL</span>
-            <span class="head-time js-head-time">--:--:--</span>
+            <span class="js-head-time">00:00:00</span>
+            <span class="js-head-target" style="opacity: 0.5;">LOCAL</span>
         </div>
+
+        <div class="head-telemetry">
+            <span class="js-head-trend" style="font-size: 0.6rem;"></span>
+            <span class="js-head-delta">0s</span>
+            <span class="js-head-delta-avg" style="color: #666;"></span>
+        </div>
+
         <div class="head-footer">
-            <span class="head-log js-head-log">Waiting...</span>
-            <span class="head-duration js-head-duration">⏱ 0s</span>
+            <span class="js-head-log">...</span>
+            <span class="js-head-bb-indicator" style="display:none; color: var(--lcars-blue);">[BB]</span>
         </div>
     </a>
 </template>

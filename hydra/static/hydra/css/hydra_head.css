@@ -1,3 +1,7 @@
+/* * Talos Hydra Head Card
+ * LCARS Density Overhaul
+ */
+
 .hydra-head-card {
     background: #111;
     border: 1px solid #333;
@@ -8,31 +12,31 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 6px;
+    gap: 4px;
     height: 80px;
     text-decoration: none;
     transition: transform 0.2s, border-color 0.2s, background 0.2s;
     overflow: hidden;
+    /* Aggressive LCARS Sidebar */
+    border-left: 6px solid #444;
+    padding-left: 12px;
 }
 
 .hydra-head-card:hover {
     transform: translateY(-2px);
+    background: #1a1a1a;
 }
 
-.hydra-head-card.is-begin-play {
-    border-left: 3px solid #f99f1b;
-    background: linear-gradient(145deg, #1a1a1a 0%, #222 100%);
+/* Remove Redundant Icon */
+.card-drill-btn {
+    display: none !important;
 }
-
-.hydra-head-card.is-begin-play {
-    display: none;
-}
-
 
 .head-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
+    margin-bottom: 2px;
 }
 
 .head-name {
@@ -42,6 +46,14 @@
     overflow: hidden;
     text-overflow: ellipsis;
     color: #fff;
+    text-transform: uppercase;
+}
+
+.status-pill-text {
+    font-size: 0.6rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    color: var(--lcars-elbow);
 }
 
 .head-meta {
@@ -52,42 +64,54 @@
     color: #888;
 }
 
+.head-telemetry {
+    margin: 2px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .head-footer {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
     font-size: 0.6rem;
     color: #666;
+    height: 12px;
 }
 
-.head-log {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 80px;
+.js-head-bb-indicator {
+    color: var(--lcars-blue);
+    font-weight: 900;
+    font-size: 0.6rem;
 }
 
-
-/* Status Colors */
-.status-running {
-    border-top: 3px solid #f99f1b;
-    border-color: #f99f1b;
-    background: rgba(249, 159, 27, 0.05);
-}
-
+/* LCARS Color Accents per Status */
 .status-success {
-    border-top: 3px solid #4ade80;
-    border-color: rgba(74, 222, 128, 0.3);
-    background: rgba(74, 222, 128, 0.05);
+    border-left-color: #4ade80;
 }
 
 .status-failed {
-    border-top: 3px solid #ef4444;
-    border-color: rgba(239, 68, 68, 0.3);
-    background: rgba(239, 68, 68, 0.05);
+    border-left-color: #ef4444;
 }
 
+.status-running {
+    border-left-color: var(--lcars-elbow);
+}
+
+.status-stopping {
+    border-left-color: #f97316;
+}
+
+/* Handle Pending States */
 .status-created, .status-pending {
-    border-top: 3px dashed #444;
-    opacity: 0.8;
+    border-left-style: dashed;
+    opacity: 0.6;
+}
+
+/* Special Case: Begin Play */
+.hydra-head-card.is-begin-play {
+    display: none; /* Auto-hidden as per mission control standards */
 }
