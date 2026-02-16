@@ -986,6 +986,86 @@
     }
   },
   {
+    "model": "environments.talosexecutableargument",
+    "pk": 38,
+    "fields": {
+      "created": "2026-02-12T22:07:06.628Z",
+      "modified": "2026-02-12T22:07:06.628Z",
+      "name": "Project Root",
+      "argument": "{{project_root}}"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 39,
+    "fields": {
+      "created": "2026-02-16T18:39:55.793Z",
+      "modified": "2026-02-16T18:39:55.793Z",
+      "name": "Generate Prompt Payload",
+      "argument": "generate_prompt_payload"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 40,
+    "fields": {
+      "created": "2026-02-16T18:42:01.725Z",
+      "modified": "2026-02-16T18:42:01.725Z",
+      "name": "--head_id={{head_id}}",
+      "argument": "--head_id={{head_id}}"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 41,
+    "fields": {
+      "created": "2026-02-16T18:47:26.334Z",
+      "modified": "2026-02-16T18:48:16.940Z",
+      "name": "local_prompt_path",
+      "argument": "{{local_prompt_path}}"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 42,
+    "fields": {
+      "created": "2026-02-16T18:47:50.424Z",
+      "modified": "2026-02-16T18:47:50.424Z",
+      "name": "Pipe from <",
+      "argument": "<"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 43,
+    "fields": {
+      "created": "2026-02-16T18:59:05.758Z",
+      "modified": "2026-02-16T18:59:05.758Z",
+      "name": "Prompt Key",
+      "argument": "--key=prompt"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 44,
+    "fields": {
+      "created": "2026-02-16T20:31:09.136Z",
+      "modified": "2026-02-16T20:31:09.136Z",
+      "name": "ollama",
+      "argument": "ollama"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 45,
+    "fields": {
+      "created": "2026-02-16T21:52:59.872Z",
+      "modified": "2026-02-16T21:52:59.872Z",
+      "name": "Delete (CMD)",
+      "argument": "del"
+    }
+  },
+  {
     "model": "environments.talosexecutable",
     "pk": 1,
     "fields": {
@@ -1006,11 +1086,11 @@
     "fields": {
       "created": "2026-01-21T00:00:00Z",
       "description": "Standard Python Interpreter.",
-      "modified": "2026-01-31T16:10:55.098Z",
+      "modified": "2026-02-12T22:16:40.306Z",
       "name": "PYTHON",
       "internal": false,
-      "working_path": "{{talos_root}}",
-      "executable": "{{talos_root}}\\venv\\Scripts\\python.exe",
+      "working_path": "{{venv_root}}",
+      "executable": "{{venv_root}}/Scripts/python.exe",
       "log": "",
       "switches": []
     }
@@ -1021,11 +1101,11 @@
     "fields": {
       "created": "2026-01-21T00:00:00Z",
       "description": "Python Interpreter intended for manage.py commands.",
-      "modified": "2026-01-31T16:08:00.670Z",
+      "modified": "2026-02-12T22:17:08.081Z",
       "name": "DJANGO",
       "internal": false,
-      "working_path": "{{talos_root}}",
-      "executable": "{{talos_root}}\\venv\\Scripts\\python.exe",
+      "working_path": "{{venv_root}}",
+      "executable": "{{venv_root}}/Scripts/python.exe",
       "log": "{{talos_root}}\\logs\\django.log",
       "switches": []
     }
@@ -1376,6 +1456,13 @@
     }
   },
   {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 12,
+    "fields": {
+      "name": "venv_root"
+    }
+  },
+  {
     "model": "environments.projectenvironmentstatus",
     "pk": 1,
     "fields": {
@@ -1395,7 +1482,7 @@
     "fields": {
       "created": "2026-02-11T15:33:50.687Z",
       "description": "Default UE Environment for Talos",
-      "modified": "2026-02-11T22:32:04.484Z",
+      "modified": "2026-02-14T19:56:45.632Z",
       "name": "Default Environment",
       "type": 1,
       "status": 1,
@@ -1409,8 +1496,8 @@
     "fields": {
       "created": "2026-02-11T20:15:38.794Z",
       "description": null,
-      "modified": "2026-02-11T22:32:03.132Z",
-      "name": "Game Two",
+      "modified": "2026-02-13T15:28:35.948Z",
+      "name": "HSH Python",
       "type": 1,
       "status": 1,
       "available": true,
@@ -1514,6 +1601,42 @@
       "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
       "key": 11,
       "value": "HSHVacancy.uproject"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 12,
+    "fields": {
+      "environment": "4d82fab0-c62d-4204-a316-476476c10a55",
+      "key": 2,
+      "value": "C:\\hsh_python"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 13,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 12,
+      "value": "c:\\talos\\venv"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 14,
+    "fields": {
+      "environment": "4d82fab0-c62d-4204-a316-476476c10a55",
+      "key": 12,
+      "value": "c:/talos/venv"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 15,
+    "fields": {
+      "environment": "4d82fab0-c62d-4204-a316-476476c10a55",
+      "key": 5,
+      "value": "c:/talos"
     }
   }
 ]
