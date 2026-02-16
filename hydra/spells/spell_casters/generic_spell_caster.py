@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 import sys
 import time
 import traceback
@@ -26,6 +27,15 @@ from talos_agent.talos_agent import (
 from talos_agent.talos_agent_finder import scan_and_register
 
 logger = logging.getLogger(__name__)
+
+BLACKBOARD_SET_KEY = '::blackboard_set '
+BLACKBOARD_SET_KEY_REGEX = re.compile(
+    r'^::blackboard_set\s+(.+?)::(.*)$', flags=re.MULTILINE
+)
+BLACKBOARD_SET_STRIPPER = re.compile(
+    r'^::blackboard_set\s+.*?::.*$\n?', flags=re.MULTILINE
+)
+
 
 # Native Python Handlers
 # TODO: these should only be internal nodes like begin_play,logic_node,sequence.
@@ -314,10 +324,25 @@ class GenericSpellCaster:
         try:
             async for event in event_stream:
                 if event.type == TalosAgentConstants.T_LOG:
-                    if event.source == 'file':
-                        await self.logger.append_spell(event.text)
-                    else:
-                        await self.logger.append(event.text)
+                    text_to_log = event.text
+                    if BLACKBOARD_SET_KEY in text_to_log:
+                        matches = list(
+                            BLACKBOARD_SET_KEY_REGEX.finditer(text_to_log)
+                        )
+                        for match in matches:
+                            key = match.group(1).strip()
+                            val = match.group(2).strip()
+                            if not isinstance(self.head.blackboard, dict):
+                                self.head.blackboard = {}
+                            self.head.blackboard[key] = val
+                        text_to_log = BLACKBOARD_SET_STRIPPER.sub(
+                            '', text_to_log
+                        )
+                    if text_to_log:
+                        if event.source == 'file':
+                            await self.logger.append_spell(text_to_log)
+                        else:
+                            await self.logger.append(text_to_log)
                 elif event.type == TalosAgentConstants.T_EXIT:
                     exit_code = event.code
         except Exception as e:

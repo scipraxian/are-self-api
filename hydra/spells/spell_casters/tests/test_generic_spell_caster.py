@@ -262,6 +262,96 @@ class TestGenericSpellCaster:
             mock_head.refresh_from_db()
             assert mock_head.blackboard.get('state') == 'mutated'
 
+    def test_unified_pipeline_blackboard_interception(
+        self, mock_head, mock_env_utils
+    ):
+        """Verify the Caster intercepts ::blackboard_set, mutates memory, and strips the log."""
+        mock_head.blackboard = {}
+        mock_head.execution_log = ''
+        mock_head.spell_log = ''
+
+        caster = GenericSpellCaster(mock_head.id)
+
+        # Mixed log output mimicking a CLI tool sending secret commands
+        log_payload = (
+            'Standard log line 1\n'
+            '::blackboard_set status_msg::All systems nominal\n'
+            'Standard log line 2\n'
+            '::blackboard_set error_count::0\n'
+        )
+
+        events = [
+            TalosEvent(
+                type=TalosAgentConstants.T_LOG,
+                text=log_payload,
+                source='stdout',
+            ),
+            TalosEvent(type=TalosAgentConstants.T_EXIT, code=0),
+        ]
+
+        with patch(
+            'talos_agent.talos_agent.TalosAgent.execute_local'
+        ) as mock_exec:
+            mock_exec.return_value = mock_event_stream(events)
+
+            caster.execute()
+
+            # 1. Assert Blackboard Mutations
+            assert (
+                mock_head.blackboard.get('status_msg') == 'All systems nominal'
+            )
+            assert mock_head.blackboard.get('error_count') == '0'
+
+            # 2. Assert Log Stripping
+            assert '::blackboard_set' not in mock_head.execution_log
+            assert 'Standard log line 1' in mock_head.execution_log
+            assert 'Standard log line 2' in mock_head.execution_log
+
+    def test_blackboard_interception_edge_cases(
+        self, mock_head, mock_env_utils
+    ):
+        """Verify robust parsing of ::blackboard_set with weird spacing, empty DB fields, and JSON."""
+        mock_head.blackboard = None  # Simulate an uninitialized JSONField
+        mock_head.execution_log = ''
+
+        caster = GenericSpellCaster(mock_head.id)
+
+        # Edge cases
+        log_payload = (
+            '::blackboard_set   weird_spacing  ::  value with spaces  \n'
+            '::blackboard_set empty_val::\n'
+            '::blackboard_set json_data::{"key": "val", "nested": "data"}\n'
+        )
+
+        events = [
+            TalosEvent(
+                type=TalosAgentConstants.T_LOG,
+                text=log_payload,
+                source='stdout',
+            ),
+            TalosEvent(type=TalosAgentConstants.T_EXIT, code=0),
+        ]
+
+        with patch(
+            'talos_agent.talos_agent.TalosAgent.execute_local'
+        ) as mock_exec:
+            mock_exec.return_value = mock_event_stream(events)
+            caster.execute()
+
+            # Assert Initialization and Extraction
+            assert isinstance(mock_head.blackboard, dict)
+            assert (
+                mock_head.blackboard.get('weird_spacing') == 'value with spaces'
+            )
+            assert mock_head.blackboard.get('empty_val') == ''
+            assert (
+                mock_head.blackboard.get('json_data')
+                == '{"key": "val", "nested": "data"}'
+            )
+
+            # Assert Scrubbing
+            assert '::blackboard_set' not in mock_head.execution_log
+
 
 @pytest.mark.django_db
 class GenericSpellCasterQueryTest(TestCase):
