@@ -1080,6 +1080,115 @@ class GraphEditor {
         }
     }
 
+    renderInspectorEdit(data) {
+        if (!this.inspectorContent) return;
+        let html = '';
+
+        // Header
+        html += `<div class="inspector-section-header" style="margin-bottom: 20px;">
+            <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px;">SPELL</div>
+            <div style="font-size: 1.1rem; color: #f1f5f9; font-weight: 600;">${data.name || 'Unknown'}</div>
+            <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px; font-style: italic;">
+                ${data.description || 'No description'}
+            </div>
+        </div>`;
+
+        // Context Variables
+        html += `<div class="section-title">Context Variables</div>`;
+
+        if (data.context_matrix && data.context_matrix.length > 0) {
+            html += `<table class="smart-table">`;
+            html += `<thead><tr><th style="width: 40%">Variable</th><th>Value</th></tr></thead>`;
+            html += `<tbody>`;
+
+            data.context_matrix.forEach(item => {
+                const sourceClass = `source-${item.source}`;
+                const inputClass = item.source === 'override' ? 'input-override' : (item.source === 'global' ? 'input-global' : '');
+
+                // Determine if we need a textarea
+                const isLong = item.display_value.length > 50 || item.key.toLowerCase().includes('prompt') || item.key.toLowerCase().includes('script');
+                const uniqueId = `ctx-${item.key}-${data.node_id}`;
+
+                let inputHtml = '';
+                if (isLong) {
+                    inputHtml = `<textarea 
+                        id="${uniqueId}"
+                        class="var-input ${inputClass}" 
+                        placeholder="${item.source === 'global' ? 'Global Value' : 'Default'}"
+                        ${item.is_readonly ? 'readonly' : ''}
+                        rows="3"
+                        style="resize: vertical; min-height: 60px;"
+                        onblur="window.app.handleContextChange('${data.node_id}', '${item.key}', this.value)"
+                    >${item.value}</textarea>`;
+                } else {
+                    inputHtml = `<input type="text" 
+                        id="${uniqueId}"
+                        class="var-input ${inputClass}" 
+                        value="${item.value}" 
+                        placeholder="${item.source === 'global' ? 'Global Value' : 'Default'}"
+                        ${item.is_readonly ? 'readonly' : ''}
+                        onchange="window.app.handleContextChange('${data.node_id}', '${item.key}', this.value)"
+                    >`;
+                }
+
+                // add clear button if override
+                let actionsHtml = '';
+                if (item.source === 'override') {
+                    // X button to clear override
+                    actionsHtml = `<div style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #ef4444; opacity: 0.7;" 
+                        onclick="window.app.handleContextChange('${data.node_id}', '${item.key}', '')" title="Reset to Default">✕</div>`;
+
+                    if (isLong) {
+                        actionsHtml = `<div style="position: absolute; right: 8px; top: 12px; cursor: pointer; color: #ef4444; opacity: 0.7;" 
+                        onclick="window.app.handleContextChange('${data.node_id}', '${item.key}', '')" title="Reset to Default">✕</div>`;
+                    }
+                }
+
+                html += `<tr class="var-row">
+                    <td>
+                        <label for="${uniqueId}" class="var-key" style="cursor: pointer;">${item.key}</label>
+                        <div style="font-size: 0.7rem; color: #64748b; display: flex; align-items: center; gap: 4px;">
+                            <div class="source-indicator ${sourceClass}" style="position: static;"></div>
+                            ${item.source}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="var-input-wrapper" style="${isLong ? 'align-items: flex-start;' : ''}">
+                            ${inputHtml}
+                            ${actionsHtml}
+                        </div>
+                    </td>
+                </tr>`;
+            });
+
+            html += `</tbody></table>`;
+        } else {
+            html += `<div style="font-style: italic; color: #64748b; padding: 10px; text-align: center; border: 1px dashed #334155; border-radius: 6px;">No variables detected in Spell.</div>`;
+        }
+
+        // Action Bar
+        html += `
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #1e293b; display: flex; gap: 10px;">
+             <a href="/admin/hydra/hydraspellbooknode/${data.node_id}/change/" target="_blank" class="action-btn" style="text-decoration: none; justify-content: center;">
+                ⚙️ Advanced Edit
+            </a>
+            <button class="action-btn" style="color: #ef4444; border-color: #ef4444;" onclick="window.app.deleteNode('${data.node_id}')">
+                🗑 Delete Node
+            </button>
+        </div>`;
+
+        // Instructions
+        html += `
+         <div style="margin-top: 20px; font-size: 0.7rem; color: #475569; line-height: 1.4; background: #0f172a; padding: 10px; border-radius: 4px;">
+            <div style="margin-bottom: 4px; font-weight: 600; color: #64748b;">COLOR LEGEND</div>
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;"><span style="color: #4ade80">●</span> Default (Spell)</div>
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;"><span style="color: #facc15">●</span> Override (Node)</div>
+            <div style="display: flex; align-items: center; gap: 6px;"><span style="color: #3b82f6">●</span> Global (Env)</div>
+        </div>`;
+
+        this.inspectorContent.innerHTML = html;
+    }
+
     async fetchNodeTelemetry(nodeId) {
         // Only fetch if this is still the active node (avoid race conditions)
         if (this.activeNodeId !== nodeId) return;
