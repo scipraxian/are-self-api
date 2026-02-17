@@ -2,6 +2,7 @@ import json
 import logging
 
 from django_filters.rest_framework import DjangoFilterBackend
+from djangorestframework_mcp.decorators import mcp_viewset
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -36,13 +37,13 @@ from .serializers import (
 
 logger = logging.getLogger(__name__)
 
-
 # API Constants
 CATEGORY_SPELLS = 'Spells'
 CATEGORY_SUBGRAPHS = 'Sub-Graphs'
 STATUS_OK = 'ok'
 
 
+@mcp_viewset()
 class HydraSpellViewSet(viewsets.ReadOnlyModelViewSet):
     """Registry of all available spells."""
 
@@ -54,6 +55,7 @@ class HydraSpellViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = HydraSpellSerializer
 
 
+@mcp_viewset()
 class HydraSpellbookViewSet(viewsets.ModelViewSet):
     """Library of available Protocols (Spellbooks)."""
 
@@ -109,6 +111,7 @@ class HydraSpellbookViewSet(viewsets.ModelViewSet):
         return Response({'status': STATUS_OK, 'is_favorite': book.is_favorite})
 
 
+@mcp_viewset()
 class HydraSpellbookNodeViewSet(viewsets.ModelViewSet):
     """Graph Nodes CRUD."""
 
@@ -143,6 +146,7 @@ class HydraSpellbookNodeViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+@mcp_viewset()
 class HydraSpellbookConnectionWireViewSet(
     mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet
 ):
@@ -239,6 +243,7 @@ class HydraSpawnViewSet(
         return Response({'status': 'Termination complete.'})
 
 
+@mcp_viewset()
 class HydraHeadViewSet(
     mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet
 ):
