@@ -10,6 +10,9 @@ class HydraSpawnController {
         this.trackEl = this.el.querySelector('.js-spawn-track');
         this.nestedSpawnsEl = this.el.closest('.js-hydra-spawn-wrapper').querySelector('.js-nested-spawns');
 
+        this.leftBtn = this.el.querySelector('.js-scroll-left');
+        this.rightBtn = this.el.querySelector('.js-scroll-right');
+
         if (this.controlCardEl) {
             this.controlCard = new HydraSpawnControlCardController(this.controlCardEl, this.spawnId, this.el.dataset.spellbookId);
         }
@@ -46,26 +49,56 @@ class HydraSpawnController {
 
     initTrackObservers() {
         if (!this.trackEl) return;
-        this.observer = new ResizeObserver(() => this.checkOverflow());
-        this.observer.observe(this.trackEl);
 
-        const leftBtn = this.el.querySelector('.js-scroll-left');
-        const rightBtn = this.el.querySelector('.js-scroll-right');
-        if (leftBtn) leftBtn.addEventListener('click', () => this.trackEl.scrollBy({left: -300, behavior: 'smooth'}));
-        if (rightBtn) rightBtn.addEventListener('click', () => this.trackEl.scrollBy({left: 300, behavior: 'smooth'}));
+        // Observe the outer element. When the window resizes, this triggers.
+        this.resizeObserver = new ResizeObserver(() => {
+            window.requestAnimationFrame(() => this.checkOverflow());
+        });
+        this.resizeObserver.observe(this.el);
+
+        // Observe the track. When a new card is injected via JS, this triggers.
+        this.mutationObserver = new MutationObserver(() => {
+            window.requestAnimationFrame(() => this.checkOverflow());
+        });
+        this.mutationObserver.observe(this.trackEl, {childList: true});
+
+        if (this.leftBtn) this.leftBtn.addEventListener('click', () => this.trackEl.scrollBy({
+            left: -300,
+            behavior: 'smooth'
+        }));
+        if (this.rightBtn) this.rightBtn.addEventListener('click', () => this.trackEl.scrollBy({
+            left: 300,
+            behavior: 'smooth'
+        }));
+
+        setTimeout(() => this.checkOverflow(), 100);
     }
 
     checkOverflow() {
-        const hasOverflow = this.trackEl.scrollWidth > (this.trackEl.clientWidth + 1);
-        const btns = this.el.querySelectorAll('.scroll-btn');
-        btns.forEach(btn => btn.style.display = hasOverflow ? 'flex' : 'none');
+        if (!this.trackEl || !this.leftBtn || !this.rightBtn) return;
+
+        const isShowing = this.leftBtn.style.display === 'flex';
+        const scrollW = this.trackEl.scrollWidth;
+        const clientW = this.trackEl.clientWidth;
+
+        // MATH: When arrows are visible, the track is compressed by ~60px.
+        // We add that back to calculate the "true" available space.
+        const availableSpace = isShowing ? (clientW + 60) : clientW;
+
+        const isOverflowing = scrollW > availableSpace;
+
+        if (isOverflowing && !isShowing) {
+            this.leftBtn.style.display = 'flex';
+            this.rightBtn.style.display = 'flex';
+        } else if (!isOverflowing && isShowing) {
+            this.leftBtn.style.display = 'none';
+            this.rightBtn.style.display = 'none';
+        }
     }
 
     async initializeState() {
-        // Fetch heads and discover subgraphs immediately
         await this.syncHeads();
         await this.fetchState();
-
         if (this.isActive) this.startPolling();
     }
 
@@ -85,31 +118,27 @@ class HydraSpawnController {
 
     async syncHeads() {
         try {
-            // One call gets all heads for this spawn. Eliminates the N+1 fetch crash.
             const response = await fetch(`/api/v1/heads/?spawn_id=${this.spawnId}`);
             if (!response.ok) return;
 
             const data = await response.json();
             const heads = data.results || data;
 
-            // CIRCUIT BREAKER 2: Hard verify the heads belong to this exact spawn
             const myHeads = heads.filter(h => String(h.spawn) === String(this.spawnId) || String(h.spawn_id) === String(this.spawnId));
 
             for (const headData of myHeads) {
                 const existingEl = this.trackEl.querySelector(`.js-hydra-head[data-head-id="${headData.id}"]`);
 
                 if (existingEl) {
-                    // Update existing DOM inline
                     HydraHeadController.populateTemplate({querySelector: (sel) => existingEl.querySelector(sel) || existingEl}, headData);
                 } else {
-                    // Inject new
                     const tpl = document.getElementById('tpl-hydra-head');
                     const clone = tpl.content.cloneNode(true);
                     HydraHeadController.populateTemplate(clone, headData);
                     this.trackEl.appendChild(clone);
+                    // Note: MutationObserver will automatically detect this appendChild and run checkOverflow()
                 }
             }
-            this.checkOverflow();
         } catch (error) {
             console.error(`[HydraSpawn ${this.spawnId}] Head sync failed:`, error);
         }
@@ -117,7 +146,6 @@ class HydraSpawnController {
 
     async fetchState() {
         try {
-            // live_status returns exact child_spawn_id map.
             const response = await fetch(`/api/v1/spawns/${this.spawnId}/live_status/`);
             if (!response.ok) return;
             const data = await response.json();
@@ -148,7 +176,6 @@ class HydraSpawnController {
 
         if (this.controlCard) this.controlCard.setMode(data.is_active);
 
-        // CIRCUIT BREAKER 3: Explicit child injection from literal map. No array looping queries.
         if (data.nodes) {
             for (const node of Object.values(data.nodes)) {
                 if (node.child_spawn_id) {
@@ -162,7 +189,6 @@ class HydraSpawnController {
         if (this.nestedSpawnsEl.querySelector(`.js-hydra-spawn-wrapper > .js-hydra-spawn[data-spawn-id="${childSpawnId}"]`)) return;
 
         try {
-            // Exact UUID lookup. Zero chance of returning a recursive list.
             const response = await fetch(`/api/v1/spawns/${childSpawnId}/`);
             if (!response.ok) return;
             const spawnData = await response.json();

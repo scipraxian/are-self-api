@@ -4,6 +4,7 @@
     gap: 8px;
     width: 100%;
     margin-bottom: 8px;
+    min-width: 0;
 }
 
 .hydra-spawn {
@@ -15,6 +16,7 @@
     min-height: 90px;
     padding: 8px;
     gap: 12px;
+    min-width: 0;
 }
 
 .hydra-spawn.active-lane {
@@ -62,7 +64,7 @@
     overflow-x: auto;
     overflow-y: hidden;
     scroll-behavior: smooth;
-    flex: 1;
+    flex: 1 1 0%;
     min-width: 0;
     scrollbar-width: none;
     padding: 4px 0;
