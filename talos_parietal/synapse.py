@@ -1,62 +1,128 @@
-import requests
-import json
 import logging
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, List, Optional
+
+import requests
 
 logger = logging.getLogger(__name__)
 
 
-class OllamaClient:
-    """
-    Synaptic interface to the local AI.
-    """
-    BASE_URL = "http://localhost:11434/api/generate"
+class OllamaConstants:
+    """Centralized string literals for the Ollama Synapse."""
 
-    def __init__(self, model):
+    BASE_URL = 'http://localhost:11434/api/chat'
+    TIMEOUT_SECONDS = 300
+
+    # Payload Keys
+    KEY_MODEL = 'model'
+    KEY_MESSAGES = 'messages'
+    KEY_STREAM = 'stream'
+    KEY_OPTIONS = 'options'
+    KEY_TOOLS = 'tools'
+
+    # Response Keys
+    KEY_MESSAGE = 'message'
+    KEY_CONTENT = 'content'
+    KEY_TOOL_CALLS = 'tool_calls'
+    KEY_PROMPT_EVAL_COUNT = 'prompt_eval_count'
+    KEY_EVAL_COUNT = 'eval_count'
+
+    # System Strings
+    ERR_MSG_PREFIX = 'Error communicating with local LLM:'
+
+
+@dataclass
+class OllamaChatPayload:
+    """Strictly typed payload for the /api/chat endpoint."""
+
+    model: str
+    messages: List[Dict[str, Any]]
+    options: Dict[str, Any]
+    stream: bool = False
+    tools: Optional[List[Dict[str, Any]]] = None
+
+
+@dataclass
+class ChatMessage:
+    """Strictly typed representation of a single message in a Chat array."""
+
+    role: str
+    content: str
+    tool_calls: Optional[List[Dict[str, Any]]] = None
+    name: Optional[str] = None  # Used exclusively when role='tool'
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serializes to dict, stripping None values to satisfy strict JSON parsers."""
+        return {k: v for k, v in asdict(self).items() if v is not None}
+
+
+@dataclass
+class OllamaResponse:
+    """Strictly typed return structure for the reasoning engine."""
+
+    content: str
+    tool_calls: List[Dict[str, Any]]
+    tokens_input: int
+    tokens_output: int
+    model: str
+
+
+class OllamaClient:
+    """Synaptic interface to the local AI. Supports Native Tool Calling."""
+
+    def __init__(self, model: str):
         self.model = model
 
-    def chat(self, system_prompt, user_content, options=None):
+    def chat(
+        self,
+        messages: List[Dict[str, Any]],
+        tools: Optional[List[Dict[str, Any]]] = None,
+        options: Optional[Dict[str, Any]] = None,
+    ) -> OllamaResponse:
         """
-        Send a thought to the model and receive a completion.
+        Transmits message history to the model, optionally with tool schemas.
         """
+        payload_obj = OllamaChatPayload(
+            model=self.model,
+            messages=messages,
+            options=options or {},
+            tools=tools,
+        )
 
-        # MERGE OPTIONS
-        final_options = options or {}
+        # Serialize to dict and strip None values to satisfy Ollama strict JSON parsing
+        payload_dict = {
+            k: v for k, v in asdict(payload_obj).items() if v is not None
+        }
 
-        # CRITICAL: Stop the AI from hallucinating the tool's output
-        # If it writes "Result (", it's faking it. Stop it there.
-        # We also stop at standard breaks.
-        stop_tokens = ["Result (", "System:", "User:", "LOG DATA:"]
+        logger.info(
+            f'[Synapse] Firing API payload: [ {len(str(payload_dict))} chars ]'
+        )
 
-        # Add to payload
-        payload = {
-            "model": self.model,
-            "prompt": f"{system_prompt}\n\nUser Input:\n{user_content}",
-            "stream": False,
-            "keep_alive": 0,
-            "options": {
-                "stop": stop_tokens,
-                **final_options
-            }}
-
-        logger.info(f"[Synapse] Sending payload: [ {len(json.dumps(payload))} chars]")
         try:
-            response = requests.post(self.BASE_URL, json=payload, timeout=300)
-            logger.info(f"[Synapse] Response received")
+            response = requests.post(
+                OllamaConstants.BASE_URL,
+                json=payload_dict,
+                timeout=OllamaConstants.TIMEOUT_SECONDS,
+            )
             response.raise_for_status()
             data = response.json()
 
-            # Return DICT, not string
-            return {
-                "content": data.get("response", ""),
-                "tokens_input": data.get("prompt_eval_count", 0),
-                "tokens_output": data.get("eval_count", 0),
-                "model": data.get("model", self.model)
-            }
+            msg_data = data.get(OllamaConstants.KEY_MESSAGE, {})
+
+            return OllamaResponse(
+                content=msg_data.get(OllamaConstants.KEY_CONTENT, ''),
+                tool_calls=msg_data.get(OllamaConstants.KEY_TOOL_CALLS, []),
+                tokens_input=data.get(OllamaConstants.KEY_PROMPT_EVAL_COUNT, 0),
+                tokens_output=data.get(OllamaConstants.KEY_EVAL_COUNT, 0),
+                model=data.get(OllamaConstants.KEY_MODEL, self.model),
+            )
+
         except requests.RequestException as e:
-            logger.error(f"Ollama Synapse Misfire: {e}")
-            return {
-                "content": f"Error analyzing thought: {e}",
-                "tokens_input": 0,
-                "tokens_output": 0,
-                "model": self.model
-            }
+            logger.error(f'Ollama Synapse Misfire: {e}')
+            return OllamaResponse(
+                content=f'{OllamaConstants.ERR_MSG_PREFIX} {e}',
+                tool_calls=[],
+                tokens_input=0,
+                tokens_output=0,
+                model=self.model,
+            )

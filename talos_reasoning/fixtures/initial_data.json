@@ -55,7 +55,23 @@
       "name": "ai_read_file",
       "description": "ai_read_file(path, start_line=1, max_lines=50): Reads a specific line range from a file. Use this to examine code or logs.",
       "is_async": false,
-      "parameters_schema": "{\"type\": \"object\", \"properties\": {\"path\": {\"type\": \"string\"}, \"start_line\": {\"type\": \"integer\"}, \"max_lines\": {\"type\": \"integer\"}}, \"required\": [\"path\"]}",
+      "parameters_schema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "start_line": {
+            "type": "integer"
+          },
+          "max_lines": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
       "created": "2026-01-12T12:00:00Z",
       "modified": "2026-01-12T12:00:00Z"
     }
@@ -67,7 +83,21 @@
       "name": "ai_search_file",
       "description": "ai_search_file(path, pattern): Searches a file for a regex pattern. Always use this FIRST to find line numbers before reading.",
       "is_async": false,
-      "parameters_schema": "{\"type\": \"object\", \"properties\": {\"path\": {\"type\": \"string\"}, \"pattern\": {\"type\": \"string\"}}, \"required\": [\"path\", \"pattern\"]}",
+      "parameters_schema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "pattern": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "pattern"
+        ]
+      },
       "created": "2026-01-12T12:00:00Z",
       "modified": "2026-01-12T12:00:00Z"
     }
@@ -79,9 +109,52 @@
       "name": "ai_list_files",
       "description": "ai_list_files(path): Lists directory contents.",
       "is_async": false,
-      "parameters_schema": "{\"type\": \"object\", \"properties\": {\"path\": {\"type\": \"string\"}}, \"required\": [\"path\"]}",
+      "parameters_schema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
       "created": "2026-01-12T12:00:00Z",
       "modified": "2026-01-12T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_reasoning.tooldefinition",
+    "pk": 4,
+    "fields": {
+      "name": "ai_update_blackboard",
+      "description": "Writes a key-value pair to the current execution Blackboard. Use this to change the routing state of the Hydra Graph or pass variables to downstream spells.",
+      "is_async": false,
+      "parameters_schema": {
+        "type": "object",
+        "properties": {
+          "head_id": {
+            "type": "string",
+            "description": "The UUID of the current execution head. Always extract this from your system context."
+          },
+          "key": {
+            "type": "string",
+            "description": "The blackboard variable name to set."
+          },
+          "value": {
+            "type": "string",
+            "description": "The value to assign to the key."
+          }
+        },
+        "required": [
+          "head_id",
+          "key",
+          "value"
+        ]
+      },
+      "created": "2026-02-17T12:00:00Z",
+      "modified": "2026-02-17T12:00:00Z"
     }
   }
 ]

@@ -12,6 +12,9 @@ from asgiref.sync import sync_to_async
 from environments.variable_renderer import VariableRenderer
 from hydra.models import HydraHead, HydraHeadStatus
 from hydra.spells.spell_casters.begin_play_node import begin_play
+from hydra.spells.spell_casters.spell_handlers.frontal_lobe_handler import (
+    run_frontal_lobe,
+)
 from hydra.spells.spell_casters.spell_handlers.version_metadata_handler import (
     update_version_metadata,
 )
@@ -39,11 +42,14 @@ BLACKBOARD_SET_STRIPPER = re.compile(
 
 # Native Python Handlers
 # TODO: these should only be internal nodes like begin_play,logic_node,sequence.
+# NOTE: DO NOT USE THIS METHOD UNLESS YOU KNOW EXACTLY WHAT YOU ARE DOING
+# Instead use a management command with a spell. This is for special cases.
 NATIVE_HANDLERS = dict(
     begin_play=begin_play,
     update_version_metadata=update_version_metadata,  # TODO: move to management
     scan_and_register=scan_and_register,  # TODO: move to management
     spellbook_logic_node=spellbook_logic_node,
+    run_frontal_lobe=run_frontal_lobe,
 )
 
 
