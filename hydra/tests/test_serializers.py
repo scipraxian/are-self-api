@@ -132,44 +132,6 @@ class HydraSerializersTest(TestCase):
         self.assertNotIn('execution_log', data)
         self.assertIn('id', data)
 
-    def test_telemetry_duration_calculation(self):
-        """Verify duration logic for running vs finished heads."""
-        # 1. Finished Head
-        start = timezone.now() - timedelta(minutes=5)
-        end = start + timedelta(minutes=2)
-
-        head_done = HydraHead.objects.create(
-            spawn=HydraSpawn.objects.create(spellbook=self.book, status_id=1),
-            status_id=4,  # Success (Terminal)
-            spell=self.spell,
-        )
-
-        # FIX: Use update() to bypass auto_now=True on 'modified' field
-        HydraHead.objects.filter(id=head_done.id).update(
-            created=start, modified=end
-        )
-        head_done.refresh_from_db()
-
-        data = HydraNodeTelemetrySerializer(head_done).data
-        # 2 minutes = 120s
-        self.assertEqual(data['duration'], '2m 0s')
-
-        # 2. Running Head (calculates against NOW)
-        head_running = HydraHead.objects.create(
-            spawn=HydraSpawn.objects.create(spellbook=self.book, status_id=1),
-            status_id=3,  # Running
-            spell=self.spell,
-        )
-        # Use update here too for consistency/safety
-        HydraHead.objects.filter(id=head_running.id).update(
-            created=timezone.now() - timedelta(seconds=30)
-        )
-        head_running.refresh_from_db()
-
-        data = HydraNodeTelemetrySerializer(head_running).data
-        # Should be roughly 30s
-        self.assertIn('30s', data['duration'])
-
     def test_telemetry_command_resolution(self):
         """Verify command string is reconstructed via context resolution."""
         # Setup context

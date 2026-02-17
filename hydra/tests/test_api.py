@@ -27,9 +27,8 @@ class HydraAPITest(TestCase):
 
     def setUp(self):
         # 1. Setup Auth
-        self.user = User.objects.create_superuser(
-            'testadmin', 'admin@talos.dev', 'password'
-        )
+        self.user = User.objects.create_superuser('testadmin',
+                                                  'admin@talos.dev', 'password')
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
@@ -37,13 +36,11 @@ class HydraAPITest(TestCase):
         self.book = HydraSpellbook.objects.create(name='API Test Protocol')
         self.exe = TalosExecutable.objects.first()  # Should exist from fixtures
         if not self.exe:
-            self.exe = TalosExecutable.objects.create(
-                name='TestExe', executable='cmd.exe'
-            )
+            self.exe = TalosExecutable.objects.create(name='TestExe',
+                                                      executable='cmd.exe')
 
-        self.spell = HydraSpell.objects.create(
-            name='Test Spell', talos_executable=self.exe
-        )
+        self.spell = HydraSpell.objects.create(name='Test Spell',
+                                               talos_executable=self.exe)
 
         # Get statuses from fixtures
         self.status_created = HydraSpawnStatus.objects.get(id=1)
@@ -59,9 +56,8 @@ class HydraAPITest(TestCase):
 
         # When the controller is initialized, we want it to simulate creating a spawn object
         # so the serializer can return it.
-        mock_spawn = HydraSpawn.objects.create(
-            spellbook=self.book, status=self.status_created
-        )
+        mock_spawn = HydraSpawn.objects.create(spellbook=self.book,
+                                               status=self.status_created)
         mock_instance.spawn = mock_spawn
 
         url = '/api/v1/spawns/'
@@ -90,9 +86,8 @@ class HydraAPITest(TestCase):
         """
         Verify GET /api/v1/heads/{id}/ returns rich telemetry including reconstructed commands.
         """
-        spawn = HydraSpawn.objects.create(
-            spellbook=self.book, status=self.status_created
-        )
+        spawn = HydraSpawn.objects.create(spellbook=self.book,
+                                          status=self.status_created)
         head = HydraHead.objects.create(
             spawn=spawn,
             spell=self.spell,
@@ -109,7 +104,7 @@ class HydraAPITest(TestCase):
         # Verify Fields from HydraNodeTelemetrySerializer
         self.assertIn('logs', response.data)
         self.assertIn('command', response.data)
-        self.assertIn('duration', response.data)
+        self.assertIn('delta', response.data)
 
         # Verify content
         self.assertIn('Output Log Content', response.data['logs'])
@@ -118,15 +113,14 @@ class HydraAPITest(TestCase):
 
     def test_list_spawn_heads(self):
         """Verify the nested action /api/v1/spawns/{id}/heads/ works."""
-        spawn = HydraSpawn.objects.create(
-            spellbook=self.book, status=self.status_created
-        )
-        HydraHead.objects.create(
-            spawn=spawn, spell=self.spell, status=self.head_status
-        )
-        HydraHead.objects.create(
-            spawn=spawn, spell=self.spell, status=self.head_status
-        )
+        spawn = HydraSpawn.objects.create(spellbook=self.book,
+                                          status=self.status_created)
+        HydraHead.objects.create(spawn=spawn,
+                                 spell=self.spell,
+                                 status=self.head_status)
+        HydraHead.objects.create(spawn=spawn,
+                                 spell=self.spell,
+                                 status=self.head_status)
 
         url = f'/api/v1/spawns/{spawn.id}/heads/'
         response = self.client.get(url)

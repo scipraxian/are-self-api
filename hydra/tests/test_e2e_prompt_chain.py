@@ -108,12 +108,31 @@ class E2EPromptChainTest(TestCase):
         )
 
         # STEP 4: Execute the Payload Generator (Simulating the Caster running the DJANGO executable)
-        call_command('generate_prompt_payload', head_id=str(head_2.id))
+        with self.assertLogs(level='INFO') as log_capture:
+            call_command('generate_prompt_payload', head_id=str(head_2.id))
 
-        # STEP 5: Verify the Blackboard Exhale
-        head_2.refresh_from_db()
-        self.assertIn(BLACKBOARD_RESULT_KEY, head_2.blackboard)
-        self.generated_file_path = head_2.blackboard[BLACKBOARD_RESULT_KEY]
+            # extract the path from the logs
+            found_path = None
+            for record in log_capture.output:
+                if (
+                    '::blackboard_set' in record
+                    and BLACKBOARD_RESULT_KEY in record
+                ):
+                    parts = record.split('::')
+                    if len(parts) >= 3:
+                        found_path = parts[2].strip()
+                        break
+
+            self.assertIsNotNone(
+                found_path, 'Did not find blackboard instruction in logs'
+            )
+            self.generated_file_path = found_path
+
+        # STEP 5: Verify the Blackboard Exhale (Simulated via log check)
+        # We cannot check head_2.blackboard because the log parser isn't running.
+        # head_2.refresh_from_db()
+        # self.assertIn(BLACKBOARD_RESULT_KEY, head_2.blackboard)
+        # self.generated_file_path = head_2.blackboard[BLACKBOARD_RESULT_KEY]
 
         self.assertTrue(
             os.path.exists(self.generated_file_path),

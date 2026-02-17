@@ -54,17 +54,32 @@ class GeneratePromptPayloadTest(TestCase):
     def test_generate_prompt_payload_command(self):
         """
         Verify the command resolves the context, renders the string,
-        creates the file, and mutates the blackboard.
+        logs the instruction, and creates the file.
         """
         # ACT: Execute the management command exactly as the Caster would
-        call_command('generate_prompt_payload', head_id=str(self.head.id))
+        with self.assertLogs(level='INFO') as log_capture:
+            call_command('generate_prompt_payload', head_id=str(self.head.id))
 
-        # Refresh the head from the database to see the mutation
+            # extract the path from the logs
+            found_path = None
+            for record in log_capture.output:
+                if (
+                    '::blackboard_set' in record
+                    and BLACKBOARD_RESULT_KEY in record
+                ):
+                    # Format: ::blackboard_set local_prompt_path::/tmp/path
+                    parts = record.split('::')
+                    if len(parts) >= 3:
+                        found_path = parts[2].strip()
+                        break
+
+            self.assertIsNotNone(
+                found_path, 'Did not find blackboard instruction in logs'
+            )
+            self.generated_file_path = found_path
+
+        # Refresh is irrelevant now since command is read-only
         self.head.refresh_from_db()
-
-        # ASSERT 1: The blackboard was updated with the path
-        self.assertIn(BLACKBOARD_RESULT_KEY, self.head.blackboard)
-        self.generated_file_path = self.head.blackboard[BLACKBOARD_RESULT_KEY]
 
         # ASSERT 2: The physical file exists
         self.assertTrue(os.path.exists(self.generated_file_path))

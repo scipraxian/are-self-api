@@ -32,6 +32,7 @@ class Command(BaseCommand):
         parser.add_argument(KEY_ARGUMENT, type=str, default=DEFAULT_TARGET_KEY)
 
     def handle(self, *args, **options):
+        """This method is DB READ ONLY."""
         head_id = options[HEAD_ID]
         target_key = options[KEY]
         try:

@@ -304,8 +304,8 @@ class TestGenericSpellCaster:
 
             # 2. Assert Log Stripping
             assert '::blackboard_set' not in mock_head.execution_log
-            assert 'Standard log line 1' in mock_head.execution_log
-            assert 'Standard log line 2' in mock_head.execution_log
+            assert 'Standard log line 1' in mock_head.spell_log
+            assert 'Standard log line 2' in mock_head.spell_log
 
     def test_blackboard_interception_edge_cases(
         self, mock_head, mock_env_utils
