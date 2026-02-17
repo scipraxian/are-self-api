@@ -27,16 +27,7 @@
                 </svg>
                 Admin
             </a>
-            <button class="btn-secondary" hx-post="{% url 'scan_network' %}" hx-target="#scan-status">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <path d="M12 2v2"></path>
-                    <path d="M12 20v2"></path>
-                    <path d="M2 12h2"></path>
-                    <path d="M20 12h2"></path>
-                </svg>
-                Scan Network
-            </button>
+
         {% endblock %}
         <button class="btn-secondary shutdown-btn" hx-post="{% url 'dashboard:shutdown' %}" onclick="window.close()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
