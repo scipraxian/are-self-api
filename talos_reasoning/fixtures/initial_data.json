@@ -52,37 +52,40 @@
     "model": "talos_reasoning.tooldefinition",
     "pk": 1,
     "fields": {
-      "name": "ai_read_file",
-      "description": "ai_read_file(path, start_line=1, max_lines=50): Reads a specific line range from a file. Use this to examine code or logs.",
-      "is_async": false,
+      "name": "mcp_read_file",
+      "description": "Reads a specific line range from a local file. Use this to examine source code or config files. Do not use this for database records.",
+      "is_async": true,
       "parameters_schema": {
         "type": "object",
         "properties": {
           "path": {
-            "type": "string"
+            "type": "string",
+            "description": "Relative or absolute file path."
           },
           "start_line": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Line to start reading from."
           },
           "max_lines": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Max lines to return (max 50)."
           }
         },
         "required": [
           "path"
         ]
       },
-      "created": "2026-01-12T12:00:00Z",
-      "modified": "2026-01-12T12:00:00Z"
+      "created": "2026-02-17T12:00:00Z",
+      "modified": "2026-02-17T12:00:00Z"
     }
   },
   {
     "model": "talos_reasoning.tooldefinition",
     "pk": 2,
     "fields": {
-      "name": "ai_search_file",
-      "description": "ai_search_file(path, pattern): Searches a file for a regex pattern. Always use this FIRST to find line numbers before reading.",
-      "is_async": false,
+      "name": "mcp_search_file",
+      "description": "Searches a local file for a regex pattern. Always use this FIRST to find line numbers before reading a file.",
+      "is_async": true,
       "parameters_schema": {
         "type": "object",
         "properties": {
@@ -90,7 +93,8 @@
             "type": "string"
           },
           "pattern": {
-            "type": "string"
+            "type": "string",
+            "description": "Regex pattern to search for."
           }
         },
         "required": [
@@ -98,49 +102,50 @@
           "pattern"
         ]
       },
-      "created": "2026-01-12T12:00:00Z",
-      "modified": "2026-01-12T12:00:00Z"
+      "created": "2026-02-17T12:00:00Z",
+      "modified": "2026-02-17T12:00:00Z"
     }
   },
   {
     "model": "talos_reasoning.tooldefinition",
     "pk": 3,
     "fields": {
-      "name": "ai_list_files",
-      "description": "ai_list_files(path): Lists directory contents.",
-      "is_async": false,
+      "name": "mcp_list_files",
+      "description": "Lists directory contents on the local filesystem.",
+      "is_async": true,
       "parameters_schema": {
         "type": "object",
         "properties": {
           "path": {
-            "type": "string"
+            "type": "string",
+            "description": "Directory path to list."
           }
         },
         "required": [
           "path"
         ]
       },
-      "created": "2026-01-12T12:00:00Z",
-      "modified": "2026-01-12T12:00:00Z"
+      "created": "2026-02-17T12:00:00Z",
+      "modified": "2026-02-17T12:00:00Z"
     }
   },
   {
     "model": "talos_reasoning.tooldefinition",
     "pk": 4,
     "fields": {
-      "name": "ai_update_blackboard",
+      "name": "mcp_update_blackboard",
       "description": "Writes a key-value pair to the current execution Blackboard. Use this to change the routing state of the Hydra Graph or pass variables to downstream spells.",
-      "is_async": false,
+      "is_async": true,
       "parameters_schema": {
         "type": "object",
         "properties": {
           "head_id": {
             "type": "string",
-            "description": "The UUID of the current execution head. Always extract this from your system context."
+            "description": "The UUID of the current execution head. Extract this from your system context."
           },
           "key": {
             "type": "string",
-            "description": "The blackboard variable name to set."
+            "description": "The blackboard variable name to set (e.g., 'correction_strategy')."
           },
           "value": {
             "type": "string",
@@ -151,6 +156,150 @@
           "head_id",
           "key",
           "value"
+        ]
+      },
+      "created": "2026-02-17T12:00:00Z",
+      "modified": "2026-02-17T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_reasoning.tooldefinition",
+    "pk": 5,
+    "fields": {
+      "name": "mcp_inspect_record",
+      "description": "Inspects a database record, returning its schema, field types, and the exact sizes of text fields. Always use this before reading a database log field to avoid massive outputs.",
+      "is_async": true,
+      "parameters_schema": {
+        "type": "object",
+        "properties": {
+          "app_label": {
+            "type": "string",
+            "description": "Django app name (e.g., 'hydra')."
+          },
+          "model_name": {
+            "type": "string",
+            "description": "Model name (e.g., 'HydraHead')."
+          },
+          "record_id": {
+            "type": "string",
+            "description": "The UUID or ID of the record."
+          }
+        },
+        "required": [
+          "app_label",
+          "model_name",
+          "record_id"
+        ]
+      },
+      "created": "2026-02-17T12:00:00Z",
+      "modified": "2026-02-17T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_reasoning.tooldefinition",
+    "pk": 6,
+    "fields": {
+      "name": "mcp_read_record_field",
+      "description": "Reads a specific line range from a text field in the database (e.g., reading 'spell_log' from 'HydraHead').",
+      "is_async": true,
+      "parameters_schema": {
+        "type": "object",
+        "properties": {
+          "app_label": {
+            "type": "string"
+          },
+          "model_name": {
+            "type": "string"
+          },
+          "record_id": {
+            "type": "string"
+          },
+          "field_name": {
+            "type": "string",
+            "description": "The specific field to read (e.g., 'spell_log')."
+          },
+          "start_line": {
+            "type": "integer"
+          },
+          "max_lines": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "app_label",
+          "model_name",
+          "record_id",
+          "field_name"
+        ]
+      },
+      "created": "2026-02-17T12:00:00Z",
+      "modified": "2026-02-17T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_reasoning.tooldefinition",
+    "pk": 7,
+    "fields": {
+      "name": "mcp_search_record_field",
+      "description": "Searches a massive database text field (like an execution log) for a regex pattern (e.g., 'error|fatal'). Use this to find the exact line numbers before using mcp_read_record_field.",
+      "is_async": true,
+      "parameters_schema": {
+        "type": "object",
+        "properties": {
+          "app_label": {
+            "type": "string"
+          },
+          "model_name": {
+            "type": "string"
+          },
+          "record_id": {
+            "type": "string"
+          },
+          "field_name": {
+            "type": "string"
+          },
+          "pattern": {
+            "type": "string",
+            "description": "Regex pattern to search for."
+          }
+        },
+        "required": [
+          "app_label",
+          "model_name",
+          "record_id",
+          "field_name",
+          "pattern"
+        ]
+      },
+      "created": "2026-02-17T12:00:00Z",
+      "modified": "2026-02-17T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_reasoning.tooldefinition",
+    "pk": 8,
+    "fields": {
+      "name": "mcp_query_model",
+      "description": "Queries a Django database table. Use this to find IDs of records you need to inspect (e.g., finding failed heads in a spawn).",
+      "is_async": true,
+      "parameters_schema": {
+        "type": "object",
+        "properties": {
+          "app_label": {
+            "type": "string"
+          },
+          "model_name": {
+            "type": "string"
+          },
+          "filters": {
+            "type": "object",
+            "description": "Key-value pairs for filtering (e.g., {\"spawn_id\": \"123\", \"status_id\": 5})."
+          }
+        },
+        "required": [
+          "app_label",
+          "model_name",
+          "filters"
         ]
       },
       "created": "2026-02-17T12:00:00Z",
