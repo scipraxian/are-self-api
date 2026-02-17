@@ -544,6 +544,8 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
     command = serializers.SerializerMethodField()
     agent = serializers.SerializerMethodField()
     average_delta = serializers.SerializerMethodField()
+    blackboard = serializers.JSONField(read_only=True)
+    context_matrix = serializers.SerializerMethodField()
 
     class Meta:
         model = HydraHead
@@ -558,6 +560,8 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
             'command',
             'delta',
             'average_delta',
+            'blackboard',
+            'context_matrix',
         ]
 
     def get_agent(self, obj):
@@ -586,6 +590,28 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
         return HydraHead.objects.filter(spell=obj.spell).aggregate(
             Avg('delta')
         )['delta__avg']
+
+    def get_context_matrix(self, obj):
+        # Ported from hydra_graph.py:
+        # 1. Inspect the Spell to find variables
+        variables = _extract_variables_from_spell(obj.spell)
+
+        # 2. Get Global Context
+        # We try to get from node environment first, then spawn, then spellbook
+        env = get_active_environment(obj)
+        global_context = VariableRenderer.extract_variables(env)
+
+        # 3. Get Overrides
+        overrides = {}
+        if obj.node:
+            overrides = {
+                c.key: c.value
+                for c in obj.node.hydraspellbooknodecontext_set.all()
+            }
+
+        # 4. Build Matrix using helper
+        dtos = _build_context_matrix_data(obj.spell, global_context, overrides)
+        return ContextMatrixRowSerializer(dtos, many=True).data
 
 
 class HydraSwimlaneSerializer(serializers.ModelSerializer):

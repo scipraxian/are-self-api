@@ -1084,116 +1084,61 @@ class GraphEditor {
         // Only fetch if this is still the active node (avoid race conditions)
         if (this.activeNodeId !== nodeId) return;
 
-        const data = await this.apiFetch(`node_telemetry?node_id=${nodeId}&spawn_id=${this.spawnId}`);
-        if (data) {
-            this.renderInspectorMonitor(nodeId, data);
-        }
-    }
+        // Try to find the Head ID from the local model (updated by polling)
+        const node = this.nodes.find(n => n.id === nodeId);
+        if (!node) return;
 
-    renderInspectorEdit(data) {
-        if (!this.inspectorContent) return;
-        let html = '';
-
-        // Distribution Mode
-        // We assume we have a simple dropdown or label for now. 
-        // Ideally we fetch modes loop, but let's keep it simple or read-only if not implemented fully.
-        // For this iteration, we focus on the Smart Matrix.
-
-        html += `<div class="section-title">Context Variables</div>`;
-
-        if (data.context_matrix && data.context_matrix.length > 0) {
-            html += `<table class="smart-table">`;
-            html += `<thead><tr><th>Variable</th><th>Value</th></tr></thead>`;
-            html += `<tbody>`;
-
-            data.context_matrix.forEach(item => {
-                const sourceClass = `source-${item.source}`;
-                const inputClass = item.source === 'override' ? 'input-override' : (item.source === 'global' ? 'input-global' : '');
-
-                // Determine if we need a textarea (heuristic: long content or 'prompt' key)
-                const isLong = item.display_value.length > 50 || item.key.toLowerCase().includes('prompt');
-                const uniqueId = `ctx-${item.key}-${data.node_id}`;
-
-                let inputHtml = '';
-                if (isLong) {
-                    inputHtml = `<textarea 
-                        id="${uniqueId}"
-                        class="var-input ${inputClass}" 
-                        placeholder="Default"
-                        ${item.is_readonly ? 'readonly' : ''}
-                        rows="4"
-                        style="resize: vertical; min-height: 80px;"
-                        onblur="window.app.handleContextChange('${data.node_id}', '${item.key}', this.value)"
-                    >${item.display_value}</textarea>`;
-                } else {
-                    inputHtml = `<input type="text" 
-                        id="${uniqueId}"
-                        class="var-input ${inputClass}" 
-                        value="${item.display_value}" 
-                        placeholder="Default"
-                        ${item.is_readonly ? 'readonly' : ''}
-                        onchange="window.app.handleContextChange('${data.node_id}', '${item.key}', this.value)"
-                    >`;
-                }
-
-                html += `<tr class="var-row">
-                    <td>
-                        <label for="${uniqueId}" class="var-key" style="cursor: pointer;">${item.key}</label>
-                        <div style="font-size: 0.7rem; color: #64748b;">${item.source}</div>
-                    </td>
-                    <td>
-                        <div class="var-input-wrapper" style="${isLong ? 'align-items: flex-start;' : ''}">
-                            <div class="source-indicator ${sourceClass}" style="${isLong ? 'top: 12px;' : ''}"></div>
-                            ${inputHtml}
-                        </div>
-                    </td>
-                </tr>`;
-            });
-
-            html += `</tbody></table>`;
+        if (node.head_id) {
+            const data = await this.apiFetch(`/api/v1/heads/${node.head_id}/`);
+            if (data) {
+                // Ensure we pass the node ID for reference, although data has head ID
+                this.renderInspectorMonitor(nodeId, data);
+            }
         } else {
-            html += `<div style="font-style: italic; color: #64748b;">No variables detected in Spell.</div>`;
+            this.inspectorContent.innerHTML = '<div style="text-align: center; color: #64748b; margin-top: 40px;">Waiting for execution...</div>';
+
+            // Keep polling if monitor mode
+            if (this.isMonitorMode && !document.hidden && this.activeNodeId === nodeId) {
+                setTimeout(() => this.fetchNodeTelemetry(nodeId), 1000);
+            }
         }
-
-        // Add instructions
-        html += `
-        <div style="margin-top: 20px; font-size: 0.75rem; color: #475569; line-height: 1.4;">
-            <strong>Legend:</strong><br>
-            <span style="color: #4ade80">●</span> From Spell Defaults<br>
-            <span style="color: #facc15">●</span> Manual Override<br>
-            <span style="color: #3b82f6">●</span> Global Environment
-        </div>`;
-
-        this.inspectorContent.innerHTML = html;
     }
 
     renderInspectorMonitor(nodeId, data) {
         if (!this.inspectorContent) return;
         const getStatusClass = (s) => {
-            switch (s) {
-                case 4:
-                    return 'status-success'; // Success
-                case 5:
-                    return 'status-failed';  // Failed
-                case 3:
-                    return 'status-running'; // Running
-                default:
-                    return 'status-pending';
-            }
+            // Map data.status or data.status_name to CSS class
+            // The serializer returns 'status' as ID/PK or string?
+            // HydraHeadSerializer: status is ID. HydraNodeTelemetrySerializer: fields include 'status' (ID) and 'status_name'
+            // Let's use status_name for display, status (ID) for logic if needed. 
+            // The serializer uses `status` field which is relation -> ID by default in DRF unless nested.
+            // Wait, ModelSerializer default for ForeignKey is ID.
+            // Let's rely on status_name if available string.
+            const sName = data.status_name ? data.status_name.toLowerCase() : '';
+            if (sName === 'success') return 'status-success';
+            if (sName === 'failed') return 'status-failed';
+            if (sName === 'running') return 'status-running';
+            return 'status-pending';
         };
 
-        const statusClass = getStatusClass(data.status_id);
-        const isRunning = data.status_id === 3;
+        const statusClass = getStatusClass(data.status_id); // Fallback logic or use status_name mapping
+        const isRunning = data.status_name === 'Running';
 
-        // --- CONTEXT MATRIX (READ ONLY) ---
-        let contextHtml = `<div style="font-style: italic; color: #64748b;">No variables.</div>`;
+        // --- UNIFIED CONFIGURATION LIST ---
+        let configHtml = '';
+
+        // 1. Command
+        configHtml += `<div style="margin-bottom: 12px;">
+            <div class="var-key" style="color: #a5b4fc; margin-bottom: 4px;">Executed Command</div>
+            <div class="var-input" style="font-size: 0.7rem; color: #cbd5e1; user-select: text; white-space: pre-wrap; word-break: break-all;">${data.command || 'N/A'}</div>
+        </div>`;
+
+        // 2. Context Matrix
         if (data.context_matrix && data.context_matrix.length > 0) {
-            contextHtml = `<table class="smart-table" style="opacity: 0.8;">`;
-            contextHtml += `<thead><tr><th>Variable</th><th>Value</th></tr></thead>`;
-            contextHtml += `<tbody>`;
+            configHtml += `<table class="smart-table" style="margin-bottom: 12px;">`;
             data.context_matrix.forEach(item => {
                 const sourceClass = `source-${item.source}`;
-                contextHtml += `
+                configHtml += `
                <tr class="var-row">
                     <td>
                         <span class="var-key">${item.key}</span>
@@ -1202,91 +1147,79 @@ class GraphEditor {
                     <td>
                         <div class="var-input-wrapper">
                             <div class="source-indicator ${sourceClass}"></div>
-                            <span class="var-input" style="border: none; background: transparent; padding-left: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <span class="var-input" style="border: none; background: transparent; padding-left: 20px;">
                                 ${item.value}
                             </span>
                         </div>
                     </td>
                 </tr>`;
             });
-            contextHtml += `</tbody></table>`;
+            configHtml += `</table>`;
         }
 
+        // 3. Blackboard
+        if (data.blackboard && Object.keys(data.blackboard).length > 0) {
+            configHtml += `<div class="section-title" style="margin-top: 12px;">Blackboard (Runtime)</div>`;
+            configHtml += `<div class="peep-hole" style="max-height: 150px;">${JSON.stringify(data.blackboard, null, 2)}</div>`;
+        }
+
+        // --- HTML ASSEMBLY ---
         let html = `
         <div class="telemetry-card">
             <div class="monitor-header">
-                <div class="pulse-status ${statusClass}">
+                <div class="pulse-status ${getStatusClass()}">
                     <div class="pulse-dot"></div>
-                    ${data.status}
+                    ${data.status_name || 'Unknown'}
+                </div>
+                 <div style="text-align: right;">
+                    <span class="vital-value" style="font-size: 1.2rem; color: ${data.result_code === 0 ? '#4ade80' : '#f87171'};">
+                        RC: ${data.result_code !== null ? data.result_code : '--'}
+                    </span>
                 </div>
             </div>
             
             <div class="vital-grid">
                 <div class="vital-item">
-                    <span class="vital-label">Duration</span>
-                    <span class="vital-value">${data.duration}</span>
+                    <span class="vital-label">Delta</span>
+                    <span class="vital-value">${data.delta || '0s'}</span>
                 </div>
-                <div class="vital-item">
-                    <span class="vital-label">Exit Code</span>
-                    <span class="vital-value">${data.exit_code !== null ? data.exit_code : '--'}</span>
+                 <div class="vital-item">
+                    <span class="vital-label">Avg Delta</span>
+                    <span class="vital-value" style="color: #94a3b8;">${data.average_delta ? parseFloat(data.average_delta).toFixed(2) + 's' : '--'}</span>
                 </div>
                 <div class="vital-item" style="grid-column: span 2;">
                     <span class="vital-label">Agent</span>
                     <span class="vital-value">${data.agent}</span>
                 </div>
             </div>
-        </div>
-        
-        <div class="section-title">Context Parameters</div>
-        ${contextHtml}
 
-        <div class="section-title">Executed Command</div>
-        <div class="peep-hole" style="max-height: 100px; color: #a5b4fc; font-size: 0.65rem;">
-            ${data.command || 'Command not captured'}
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                 <a href="/admin/hydra/hydraspellbooknode/${nodeId}/change/" target="_blank" class="action-btn" style="text-decoration: none; flex: 1; justify-content: center;">
+                    ⚙️ Edit Node
+                </a>
+                <a href="/hydra/head/${data.id}/" target="_blank" class="action-btn primary" style="text-decoration: none; flex: 1; justify-content: center;">
+                    🚀 War Room
+                </a>
+            </div>
         </div>
 
-        <div class="section-title">Spell Log (Standard Output)</div>
-        <div class="peep-hole">
-            <div class="peep-hole-header">
-                <span>output.log</span>
-                <span>Last 20 lines</span>
-            </div>
-            ${data.logs
-                ? data.logs
-                    .split('\n')
-                    .map((l) => `<span class="log-line">${l}</span>`)
-                    .join('')
-                : '<span style="opacity: 0.5">Waiting for logs...</span>'
-            }
+        <div class="section-title">Configuration & State</div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px; border: 1px solid #334155;">
+            ${configHtml}
         </div>
+
+        <div class="section-title">Tool Output</div>
+        <div id="inspector-term-tool" style="height: 200px; background: #000; padding: 4px; border-radius: 4px; overflow: hidden;"></div>
         
-        <div class="section-title">Execution Log (System)</div>
-        <div class="peep-hole" style="max-height: 150px;">
-            <div class="peep-hole-header">
-                <span>wrapper.log</span>
-                <span>Last 20 lines</span>
-            </div>
-            ${data.exec_logs
-                ? data.exec_logs
-                    .split('\n')
-                    .map((l) => `<span class="log-line">${l}</span>`)
-                    .join('')
-                : '<span style="opacity: 0.5">No system logs.</span>'
-            }
-        </div>
-        
-        <div class="action-bar">
-             <button class="action-btn" onclick="window.open('/hydra/head/${data.head_id
-            }/', '_self')">
-                📄 View Logs
-            </button>
-            <button class="action-btn primary">
-                🧠 Analyze
-            </button>
-        </div>
+        <div class="section-title">System Log</div>
+        <div id="inspector-term-system" style="height: 150px; background: #000; padding: 4px; border-radius: 4px; overflow: hidden;"></div>
         `;
 
         this.inspectorContent.innerHTML = html;
+
+        // --- XTERM INITIALIZATION ---
+        this.initXterm('inspector-term-tool', data.logs);
+        this.initXterm('inspector-term-system', data.exec_logs);
 
         // Auto-refresh if running
         if (
@@ -1297,6 +1230,44 @@ class GraphEditor {
         ) {
             setTimeout(() => this.fetchNodeTelemetry(nodeId), 2000);
         }
+    }
+
+    initXterm(containerId, content) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        // Cleanup existing if any (simplistic approach: clear innerHTML handled by render)
+        // Check if Terminal is defined
+        if (typeof Terminal === 'undefined') {
+            container.innerHTML = `<pre style="color: #fff; font-size: 0.7rem; white-space: pre-wrap;">${content || ''}</pre>`;
+            return;
+        }
+
+        const term = new Terminal({
+            fontFamily: '"JetBrains Mono", monospace',
+            fontSize: 10,
+            theme: {
+                background: '#000000',
+                foreground: '#cbd5e1'
+            },
+            disableStdin: true,
+            cursorBlink: false,
+            convertEol: true
+        });
+
+        const fitAddon = new FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
+
+        term.open(container);
+
+        try {
+            fitAddon.fit();
+        } catch (e) { console.warn("Xterm fit failed", e); }
+
+        term.write(content || '\x1b[38;5;240m[No Output]\x1b[0m');
+
+        // Handle Resize Observer to refit
+        // Optional for now as sidebar width is fixed/transitioned
     }
 
     async handleContextChange(nodeId, key, value) {
