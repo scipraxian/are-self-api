@@ -8,10 +8,12 @@ class ModelRegistry:
     # Model Integer Constants
     SCOUT_LIGHT = 1  # llama3.2:3b
     COMMANDER = 2  # gemma3:27b
+    CODER = 3  # qwen3-coder:30b
 
     _MODEL_MAP = {
         SCOUT_LIGHT: "llama3.2:3b",
         COMMANDER: "gemma3:27b",
+        CODER: "qwen3-coder:30b"
     }
 
     @classmethod
@@ -30,6 +32,8 @@ class ModelRegistry:
                 role_id = cls.SCOUT_LIGHT
             elif role_id == 'commander':
                 role_id = cls.COMMANDER
+            elif role_id == 'coder':
+                role_id = cls.CODER
             else:
                 return cls._MODEL_MAP[cls.SCOUT_LIGHT]
 

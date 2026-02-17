@@ -52,7 +52,8 @@ class ChatMessage:
     name: Optional[str] = None  # Used exclusively when role='tool'
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serializes to dict, stripping None values to satisfy strict JSON parsers."""
+        """Serializes to dict, stripping None values to satisfy strict JSON
+        parsers."""
         return {k: v for k, v in asdict(self).items() if v is not None}
 
 
@@ -74,10 +75,10 @@ class OllamaClient:
         self.model = model
 
     def chat(
-        self,
-        messages: List[Dict[str, Any]],
-        tools: Optional[List[Dict[str, Any]]] = None,
-        options: Optional[Dict[str, Any]] = None,
+            self,
+            messages: List[Dict[str, Any]],
+            tools: Optional[List[Dict[str, Any]]] = None,
+            options: Optional[Dict[str, Any]] = None,
     ) -> OllamaResponse:
         """
         Transmits message history to the model, optionally with tool schemas.
@@ -89,7 +90,8 @@ class OllamaClient:
             tools=tools,
         )
 
-        # Serialize to dict and strip None values to satisfy Ollama strict JSON parsing
+        # Serialize to dict and strip None values to satisfy Ollama strict
+        # JSON parsing
         payload_dict = {
             k: v for k, v in asdict(payload_obj).items() if v is not None
         }
@@ -118,9 +120,12 @@ class OllamaClient:
             )
 
         except requests.RequestException as e:
-            logger.error(f'Ollama Synapse Misfire: {e}')
+            error_details = str(e)
+            if hasattr(e, 'response') and e.response is not None:
+                error_details += f" | Details: {e.response.text}"
+            logger.error(f'Ollama Synapse Misfire: {error_details}')
             return OllamaResponse(
-                content=f'{OllamaConstants.ERR_MSG_PREFIX} {e}',
+                content=f'{OllamaConstants.ERR_MSG_PREFIX} {error_details}',
                 tool_calls=[],
                 tokens_input=0,
                 tokens_output=0,
