@@ -107,7 +107,6 @@ class DeletePayload:
 
 @method_decorator(csrf_exempt, name='dispatch')
 class HydraGraphAPI(View):
-
     def get(self, request: HttpRequest, book_id: str, action: str = None):
         spellbook = get_object_or_404(HydraSpellbook, id=book_id)
         if action == ACTION_STATUS:
@@ -115,14 +114,12 @@ class HydraGraphAPI(View):
             return get_execution_status(spellbook, spawn_id)
 
         dispatch_map: Dict[str | None, Callable] = {
-            ACTION_LIBRARY:
-                get_library,
-            ACTION_NODE_DETAILS:
-                lambda book: get_node_details(book, request),
-            ACTION_NODE_TELEMETRY:
-                lambda book: get_node_telemetry(book, request),
-            None:
-                get_graph_layout,
+            ACTION_LIBRARY: get_library,
+            ACTION_NODE_DETAILS: lambda book: get_node_details(book, request),
+            ACTION_NODE_TELEMETRY: lambda book: get_node_telemetry(
+                book, request
+            ),
+            None: get_graph_layout,
         }
         handler = dispatch_map.get(action)
         if handler:
@@ -212,12 +209,14 @@ def get_graph_layout(spellbook: HydraSpellbook) -> JsonResponse:
 
     wires_data = []
     for w in spellbook.wires.all():
-        wires_data.append({
-            'from_node_id': w.source_id,
-            'to_node_id': w.target_id,
-            # Frontend expects 'status_id' key with 'success'/'fail' strings
-            'status_id': type_to_string.get(w.type_id, TYPE_FLOW_STR),
-        })
+        wires_data.append(
+            {
+                'from_node_id': w.source_id,
+                'to_node_id': w.target_id,
+                # Frontend expects 'status_id' key with 'success'/'fail' strings
+                'status_id': type_to_string.get(w.type_id, TYPE_FLOW_STR),
+            }
+        )
 
     return JsonResponse({KEY_NODES: nodes_data, KEY_CONNECTIONS: wires_data})
 
@@ -267,9 +266,9 @@ def handle_move_node(book: HydraSpellbook, data: dict) -> JsonResponse:
 def handle_disconnect(book: HydraSpellbook, data: dict) -> JsonResponse:
     source_id = data.get('source_node_id')
     target_id = data.get('target_node_id')
-    HydraSpellbookConnectionWire.objects.filter(spellbook=book,
-                                                source_id=source_id,
-                                                target_id=target_id).delete()
+    HydraSpellbookConnectionWire.objects.filter(
+        spellbook=book, source_id=source_id, target_id=target_id
+    ).delete()
     return JsonResponse({KEY_STATUS: STATUS_DISCONNECTED})
 
 
@@ -290,10 +289,7 @@ def handle_delete_node(book: HydraSpellbook, data: dict) -> JsonResponse:
     is_delegated = bool(node.invoked_spellbook_id)
     if not is_delegated and node.spell_id == HydraSpell.BEGIN_PLAY:
         return JsonResponse(
-            {
-                KEY_STATUS: STATUS_ERROR,
-                MESSAGE: 'Cannot delete BeginPlay'
-            },
+            {KEY_STATUS: STATUS_ERROR, MESSAGE: 'Cannot delete BeginPlay'},
             status=400,
         )
     node.delete()
@@ -315,7 +311,8 @@ def handle_add_node(spellbook: HydraSpellbook, payload: dict) -> JsonResponse:
 
         # Try to find a spell that looks like a runner
         dummy_spell = HydraSpell.objects.filter(
-            name__icontains='Sub-Graph').first()
+            name__icontains='Sub-Graph'
+        ).first()
         if not dummy_spell:
             dummy_spell = HydraSpell.objects.first()  # Emergency fallback
 
@@ -325,7 +322,8 @@ def handle_add_node(spellbook: HydraSpellbook, payload: dict) -> JsonResponse:
         if int(spell_id) == HydraSpell.BEGIN_PLAY:
             if spellbook.nodes.filter(is_root=True).exists():
                 return JsonResponse(
-                    {'error': 'Begin Play node already exists.'}, status=400)
+                    {'error': 'Begin Play node already exists.'}, status=400
+                )
             is_root = True
 
     ui_data = {'x': payload.get('x', 0), 'y': payload.get('y', 0)}
@@ -343,7 +341,8 @@ def handle_add_node(spellbook: HydraSpellbook, payload: dict) -> JsonResponse:
 def get_library(spellbook: HydraSpellbook) -> JsonResponse:
     # 1. Standard Spells
     spells = list(
-        HydraSpell.objects.values('id', 'name', 'distribution_mode__name'))
+        HydraSpell.objects.values('id', 'name', 'distribution_mode__name')
+    )
     # Tag them as 'Spells'
     for s in spells:
         s['category'] = 'Spells'
@@ -362,12 +361,13 @@ def get_library(spellbook: HydraSpellbook) -> JsonResponse:
     return JsonResponse({KEY_LIBRARY: spells + list(books)})
 
 
-def get_node_details(spellbook: HydraSpellbook,
-                     request: HttpRequest) -> JsonResponse:
+def get_node_details(
+    spellbook: HydraSpellbook, request: HttpRequest
+) -> JsonResponse:
     node_id = request.GET.get('node_id')
-    node = get_object_or_404(HydraSpellbookNode,
-                             id=node_id,
-                             spellbook=spellbook)
+    node = get_object_or_404(
+        HydraSpellbookNode, id=node_id, spellbook=spellbook
+    )
 
     # 1. Inspect the Spell to find variables
     # We look at all arguments and switches
@@ -389,8 +389,7 @@ def get_node_details(spellbook: HydraSpellbook,
             variables.update(found)
 
         # Check Executable Args (Base args)
-        exe_args = node.spell.talos_executable.talosexecutableargumentassignment_set.all(
-        )
+        exe_args = node.spell.talos_executable.talosexecutableargumentassignment_set.all()
         for a in exe_args:
             raw = a.argument.argument
             found = re.findall(r'\{\{\s*(\w+)\s*\}\}', raw)
@@ -409,6 +408,9 @@ def get_node_details(spellbook: HydraSpellbook,
     overrides = {
         c.key: c.value for c in node.hydraspellbooknodecontext_set.all()
     }
+
+    # [FIX] Ensure overridden variables are included even if not in the spell definition
+    variables.update(overrides.keys())
 
     # Build the Smart Matrix
     matrix = []
@@ -439,23 +441,26 @@ def get_node_details(spellbook: HydraSpellbook,
 
         matrix.append(item)
 
-    return JsonResponse({
-        'node_id': node.id,
-        'name': node.spell.name if node.spell else 'Unknown',
-        'description': node.spell.description if node.spell else '',
-        'distribution_mode_id': node.distribution_mode_id,
-        'context_matrix': matrix,
-    })
+    return JsonResponse(
+        {
+            'node_id': node.id,
+            'name': node.spell.name if node.spell else 'Unknown',
+            'description': node.spell.description if node.spell else '',
+            'distribution_mode_id': node.distribution_mode_id,
+            'context_matrix': matrix,
+        }
+    )
 
 
-def handle_save_node_context(spellbook: HydraSpellbook,
-                             payload: dict) -> JsonResponse:
+def handle_save_node_context(
+    spellbook: HydraSpellbook, payload: dict
+) -> JsonResponse:
     node_id = payload.get('node_id')
     updates = payload.get('updates', [])  # List of {key, value}
 
-    node = get_object_or_404(HydraSpellbookNode,
-                             id=node_id,
-                             spellbook=spellbook)
+    node = get_object_or_404(
+        HydraSpellbookNode, id=node_id, spellbook=spellbook
+    )
 
     from .models import HydraSpellBookNodeContext
 
@@ -468,11 +473,13 @@ def handle_save_node_context(spellbook: HydraSpellbook,
 
         if not value:
             # Remove override if empty
-            HydraSpellBookNodeContext.objects.filter(node=node,
-                                                     key=key).delete()
+            HydraSpellBookNodeContext.objects.filter(
+                node=node, key=key
+            ).delete()
         else:
             HydraSpellBookNodeContext.objects.update_or_create(
-                node=node, key=key, defaults={'value': value})
+                node=node, key=key, defaults={'value': value}
+            )
 
     # Also handle distribution mode update
     dist_mode = payload.get('distribution_mode_id')
@@ -483,8 +490,9 @@ def handle_save_node_context(spellbook: HydraSpellbook,
     return JsonResponse({'status': 'saved'})
 
 
-def get_node_telemetry(spellbook: HydraSpellbook,
-                       request: HttpRequest) -> JsonResponse:
+def get_node_telemetry(
+    spellbook: HydraSpellbook, request: HttpRequest
+) -> JsonResponse:
     node_id = request.GET.get('node_id')
     spawn_id = request.GET.get('spawn_id')
 
@@ -497,8 +505,11 @@ def get_node_telemetry(spellbook: HydraSpellbook,
 
     # We need the head belonging to the spawn.
     # The spawn might have multiple heads if looped, but usually we want the latest.
-    head = (HydraHead.objects.filter(
-        spawn_id=spawn_id, node_id=node_id).order_by('-created').first())
+    head = (
+        HydraHead.objects.filter(spawn_id=spawn_id, node_id=node_id)
+        .order_by('-created')
+        .first()
+    )
 
     if not head:
         return JsonResponse({'status': 'pending', 'logs': ''})
@@ -536,8 +547,7 @@ def get_node_telemetry(spellbook: HydraSpellbook,
             from .models import HydraSpellBookNodeContext
 
             overrides = {
-                c.key: c.value
-                for c in node.hydraspellbooknodecontext_set.all()
+                c.key: c.value for c in node.hydraspellbooknodecontext_set.all()
             }
 
             # We can't easily get the EXACT full command without the full context resolution
@@ -545,7 +555,8 @@ def get_node_telemetry(spellbook: HydraSpellbook,
             # But let's call get_full_command with what we have.
             # We need the environment from the spellbook.
             cmd_list = head.spell.get_full_command(
-                environment=spellbook.environment, extra_context=overrides)
+                environment=spellbook.environment, extra_context=overrides
+            )
             command = ' '.join(cmd_list)
         except Exception as e:
             command = f'Error interpreting command: {e}'
@@ -570,10 +581,7 @@ def get_node_telemetry(spellbook: HydraSpellbook,
             found = re.findall(r'\{\{\s*(\w+)\s*\}\}', s.flag + (s.value or ''))
             variables.update(found)
         # Exec Args
-        for (
-                a
-        ) in head.spell.talos_executable.talosexecutableargumentassignment_set.all(
-        ):
+        for a in head.spell.talos_executable.talosexecutableargumentassignment_set.all():
             found = re.findall(r'\{\{\s*(\w+)\s*\}\}', a.argument.argument)
             variables.update(found)
 
@@ -584,6 +592,7 @@ def get_node_telemetry(spellbook: HydraSpellbook,
     if head.node:  # Should usually be true
         # The model name is HydraSpellBookNodeContext in models.py
         from .models import HydraSpellBookNodeContext
+
         overrides = {
             c.key: c.value
             for c in head.node.hydraspellbooknodecontext_set.all()
@@ -603,23 +612,25 @@ def get_node_telemetry(spellbook: HydraSpellbook,
 
         matrix.append({'key': var, 'value': val, 'source': source})
 
-    return JsonResponse({
-        'status': head.status.name,
-        'status_id': head.status_id,
-        'agent': str(head.target) if head.target else 'Pending...',
-        'exit_code': head.result_code,
-        'logs': '\n'.join(spell_tail),  # Main Log (Spell Output)
-        'exec_logs': '\n'.join(exec_tail),  # Wrapper Log (System)
-        'command': command,
-        'context_matrix': matrix,
-        'head_id': str(head.id),
-        'duration':
-            '0s',  # Placeholder, implies calculation from created/modified
-    })
+    return JsonResponse(
+        {
+            'status': head.status.name,
+            'status_id': head.status_id,
+            'agent': str(head.target) if head.target else 'Pending...',
+            'exit_code': head.result_code,
+            'logs': '\n'.join(spell_tail),  # Main Log (Spell Output)
+            'exec_logs': '\n'.join(exec_tail),  # Wrapper Log (System)
+            'command': command,
+            'context_matrix': matrix,
+            'head_id': str(head.id),
+            'duration': '0s',  # Placeholder, implies calculation from created/modified
+        }
+    )
 
 
-def get_execution_status(spellbook: HydraSpellbook,
-                         spawn_id: uuid.UUID = None) -> JsonResponse:
+def get_execution_status(
+    spellbook: HydraSpellbook, spawn_id: uuid.UUID = None
+) -> JsonResponse:
     """Returns the current state of the graph and the overall spawn status."""
     if not spawn_id:
         return JsonResponse({KEY_STATUS: STATUS_READY})
@@ -643,43 +654,38 @@ def get_execution_status(spellbook: HydraSpellbook,
 
         # [FIX]: Return the real status name (e.g., "Success", "Failed")
         # instead of the hardcoded "running" string.
-        return JsonResponse({
-            KEY_STATUS: spawn.status.name,
-            'nodes': node_status_map
-        })
+        return JsonResponse(
+            {KEY_STATUS: spawn.status.name, 'nodes': node_status_map}
+        )
     except HydraSpawn.DoesNotExist:
-        return JsonResponse({
-            KEY_STATUS: STATUS_ERROR,
-            MESSAGE: 'Spawn not found'
-        })
+        return JsonResponse(
+            {KEY_STATUS: STATUS_ERROR, MESSAGE: 'Spawn not found'}
+        )
     except Exception as e:
         logger.exception('Status Check Failed')
         return JsonResponse({KEY_STATUS: STATUS_ERROR, MESSAGE: str(e)})
 
 
 class HydraGraphLaunchAPI(View):
-
     def post(self, request, book_id):
         try:
             controller = Hydra(spellbook_id=book_id)
             controller.start()
-            return JsonResponse({
-                ACTION_STATUS: STATUS_STARTED,
-                SPAWN_ID: str(controller.spawn.id),
-            })
+            return JsonResponse(
+                {
+                    ACTION_STATUS: STATUS_STARTED,
+                    SPAWN_ID: str(controller.spawn.id),
+                }
+            )
         except Exception as e:
             logger.exception('[HYDRA] Graph Launch Failed')
             return JsonResponse(
-                {
-                    ACTION_STATUS: STATUS_ERROR,
-                    MESSAGE: str(e)
-                },
+                {ACTION_STATUS: STATUS_ERROR, MESSAGE: str(e)},
                 status=ERROR_STATUS_CODE,
             )
 
 
 class HydraGraphSpawnStatusAPI(View):
-
     def get(self, request, spawn_id):
         spawn = get_object_or_404(HydraSpawn, id=spawn_id)
 
@@ -688,7 +694,8 @@ class HydraGraphSpawnStatusAPI(View):
 
         # Special Case: Begin Play Node (always green once spawn exists)
         begin_play_node = spawn.spellbook.nodes.filter(
-            spell_id=HydraSpell.BEGIN_PLAY).first()
+            spell_id=HydraSpell.BEGIN_PLAY
+        ).first()
         if begin_play_node:
             node_status_map[str(begin_play_node.id)] = {
                 'status_id': HydraStatusID.SUCCESS,
@@ -702,8 +709,10 @@ class HydraGraphSpawnStatusAPI(View):
                     'head_id': str(head.id),
                 }
 
-        return JsonResponse({
-            'status_label': spawn.status.name,
-            'is_active': spawn.is_active,
-            'nodes': node_status_map,
-        })
+        return JsonResponse(
+            {
+                'status_label': spawn.status.name,
+                'is_active': spawn.is_active,
+                'nodes': node_status_map,
+            }
+        )

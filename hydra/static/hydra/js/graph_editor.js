@@ -1094,7 +1094,11 @@ class GraphEditor {
         </div>`;
 
         // Context Variables
-        html += `<div class="section-title">Context Variables</div>`;
+        html += `<div class="section-title" style="display: flex; align-items: center; justify-content: space-between;">
+            <span>Context Variables</span>
+            <button class="mini-btn" style="padding: 2px 8px; font-size: 1rem; color: #cbd5e1; border: 1px solid #334155; background: #1e293b; cursor: pointer; border-radius: 4px;" 
+                onclick="window.app.promptAddVariable('${data.node_id}')" title="Add Override">+</button>
+        </div>`;
 
         if (data.context_matrix && data.context_matrix.length > 0) {
             html += `<table class="smart-table">`;
@@ -1377,6 +1381,13 @@ class GraphEditor {
 
         // Handle Resize Observer to refit
         // Optional for now as sidebar width is fixed/transitioned
+    }
+
+    async promptAddVariable(nodeId) {
+        const key = prompt("Enter variable name (e.g. MY_VAR):");
+        if (key && key.trim()) {
+            await this.handleContextChange(nodeId, key.trim().toUpperCase(), '');
+        }
     }
 
     async handleContextChange(nodeId, key, value) {

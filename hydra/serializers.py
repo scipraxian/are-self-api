@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from django.db.models import Avg
-from django.utils import timezone
 from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
@@ -15,7 +14,6 @@ from hydra.utils import get_active_environment, resolve_environment_context
 from .models import (
     HydraDistributionMode,
     HydraHead,
-    HydraHeadStatus,
     HydraSpawn,
     HydraSpell,
     HydraSpellArgumentAssignment,
@@ -116,6 +114,7 @@ def _build_context_matrix_data(
     node_overrides: Dict[str, Any],
 ) -> List[ContextMatrixRow]:
     variables = _extract_variables_from_spell(spell)
+    variables.update(node_overrides.keys())
     matrix = []
 
     for var in sorted(list(variables)):
