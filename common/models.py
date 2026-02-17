@@ -60,9 +60,7 @@ class ModifiedByMixin(models.Model):
 class DescriptionMixin(models.Model):
     """Adds a standard sized description field to a model."""
 
-    description = models.CharField(
-        max_length=STANDARD_CHARFIELD_LENGTH, blank=True, null=True
-    )
+    description = models.TextField(blank=True, null=True)
 
     class Meta(object):
         """Standard Django Meta object, for model configuration."""
