@@ -32,3 +32,6 @@ djangorestframework
 django-filter
 django-rest-framework-mcp
 djangorestframework-stubs
+
+aiosmtpd
+
