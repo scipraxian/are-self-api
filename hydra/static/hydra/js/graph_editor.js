@@ -30,6 +30,7 @@ class GraphEditor {
         this.grid = document.getElementById('canvas-grid');
         this.tempLine = document.getElementById('temp-line');
         this.libraryContainer = document.getElementById('node-library');
+        this.searchInput = document.getElementById('node-search');
 
         // Inspector
         this.inspector = document.getElementById('inspector');
@@ -115,6 +116,28 @@ class GraphEditor {
             this.setExecutionStatus('error', `API Failure: ${error.message}`);
             return null;
         }
+    }
+
+    filterLibrary(query) {
+        if (!this.libraryContainer) return;
+        const q = query.toLowerCase();
+
+        const categories = this.libraryContainer.querySelectorAll('.category');
+        categories.forEach(cat => {
+            let hasVisible = false;
+            const items = cat.querySelectorAll('.library-item');
+            items.forEach(item => {
+                const text = item.innerText.toLowerCase();
+                if (text.includes(q)) {
+                    item.style.display = '';
+                    hasVisible = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            cat.style.display = hasVisible ? '' : 'none';
+        });
     }
 
     async loadLibrary() {
@@ -336,6 +359,12 @@ class GraphEditor {
         const autoLayoutBtn = document.getElementById('auto-layout-btn');
         if (autoLayoutBtn) {
             autoLayoutBtn.addEventListener('click', () => this.autoLayout());
+        }
+
+        if (this.searchInput) {
+            this.searchInput.addEventListener('input', (e) => {
+                this.filterLibrary(e.target.value);
+            });
         }
 
         // Title Edit Logic
