@@ -149,44 +149,64 @@ class FrontalLobe:
             ).to_dict(),
         ]
 
-    def _build_tool_schemas(self) -> List[Dict[str, Any]]:
-        """Fetches active tools and maps them to the Ollama schema using strict constants."""
-        db_tools = list(ToolDefinition.objects.all())
+    async def _build_tool_schemas(self) -> List[Dict[str, Any]]:
+        """
+        Constructs strict JSON schemas from the normalized ToolParameterAssignment relations.
+        """
+        # Prefetch assignments AND the linked parameter definition
+        db_tools = await sync_to_async(
+            lambda: list(
+                ToolDefinition.objects.prefetch_related(
+                    'assignments__parameter',
+                    'assignments__parameter__enum_values',
+                ).all()
+            )
+        )()
+
         ollama_tools = []
 
         for t in db_tools:
-            # 1. Parse valid JSON or Dict
-            raw_schema = (
-                t.parameters_schema
-                if isinstance(t.parameters_schema, dict)
-                else json.loads(t.parameters_schema)
-            )
+            properties = {}
+            required_fields = []
 
-            # 2. Enforce strict OpenAI-spec structure (Required for Qwen XML parsing)
-            # Qwen crashes if 'type' is missing or 'properties' is absent.
-            safe_parameters = {
-                FrontalLobeConstants.SCHEMA_TYPE: raw_schema.get(
-                    FrontalLobeConstants.SCHEMA_TYPE,
-                    FrontalLobeConstants.TYPE_OBJECT,
-                ),
-                FrontalLobeConstants.SCHEMA_PROPERTIES: raw_schema.get(
-                    FrontalLobeConstants.SCHEMA_PROPERTIES, {}
-                ),
-                FrontalLobeConstants.SCHEMA_REQUIRED: raw_schema.get(
-                    FrontalLobeConstants.SCHEMA_REQUIRED, []
-                ),
-            }
+            # Iterate the Assignments (The Link Table)
+            for assignment in t.assignments.all():
+                param_def = assignment.parameter
 
+                # Build the parameter schema from the Definition
+                schema_def = {
+                    'type': param_def.type.name,  # e.g. 'string'
+                    'description': param_def.description
+                    or f'The {param_def.name} parameter.',
+                }
+
+                # Add Enums if they exist on the definition
+                enums = [e.value for e in param_def.enum_values.all()]
+                if enums:
+                    schema_def['enum'] = enums
+
+                properties[param_def.name] = schema_def
+
+                # check the Assignment for requirement status
+                if assignment.required:
+                    required_fields.append(param_def.name)
+
+            # Construct Payload
             ollama_tools.append(
                 {
                     FrontalLobeConstants.T_TYPE: FrontalLobeConstants.TYPE_FUNCTION,
                     FrontalLobeConstants.T_FUNC: {
                         FrontalLobeConstants.T_NAME: t.name,
                         FrontalLobeConstants.T_DESC: t.description,
-                        FrontalLobeConstants.T_PARAMS: safe_parameters,
+                        FrontalLobeConstants.T_PARAMS: {
+                            FrontalLobeConstants.SCHEMA_TYPE: FrontalLobeConstants.TYPE_OBJECT,
+                            FrontalLobeConstants.SCHEMA_PROPERTIES: properties,
+                            FrontalLobeConstants.SCHEMA_REQUIRED: required_fields,
+                        },
                     },
                 }
             )
+
         return ollama_tools
 
     # --- Execution Subroutines ---

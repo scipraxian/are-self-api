@@ -4,7 +4,9 @@
     "pk": 1,
     "fields": {
       "name": "string",
-      "description": "Textual data."
+      "description": "Text",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
@@ -12,7 +14,9 @@
     "pk": 2,
     "fields": {
       "name": "number",
-      "description": "Floating point numbers."
+      "description": "Float",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
@@ -20,7 +24,9 @@
     "pk": 3,
     "fields": {
       "name": "integer",
-      "description": "Whole numbers."
+      "description": "Int",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
@@ -28,7 +34,9 @@
     "pk": 4,
     "fields": {
       "name": "boolean",
-      "description": "True or False."
+      "description": "Bool",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
@@ -36,7 +44,9 @@
     "pk": 5,
     "fields": {
       "name": "array",
-      "description": "List of items."
+      "description": "List",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
@@ -44,7 +54,9 @@
     "pk": 6,
     "fields": {
       "name": "object",
-      "description": "Nested dictionary."
+      "description": "Dict",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
@@ -52,95 +64,9 @@
     "pk": 7,
     "fields": {
       "name": "null",
-      "description": "Empty value."
-    }
-  },
-  {
-    "model": "talos_parietal.tooldefinition",
-    "pk": 11,
-    "fields": {
-      "name": "mcp_conclude_session",
-      "description": "Finalizes the session. MANDATORY: You must call this to finish.",
-      "is_async": true
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameter",
-    "pk": 101,
-    "fields": {
-      "tool": 11,
-      "name": "session_id",
-      "description": "The current Session ID.",
-      "type": 1,
-      "required": true
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameter",
-    "pk": 102,
-    "fields": {
-      "tool": 11,
-      "name": "goal_achieved",
-      "description": "Did you accomplish the objective?",
-      "type": 4,
-      "required": true
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameter",
-    "pk": 103,
-    "fields": {
-      "tool": 11,
-      "name": "outcome_status",
-      "description": "The status of the result.",
-      "type": 1,
-      "required": true
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameter",
-    "pk": 104,
-    "fields": {
-      "tool": 11,
-      "name": "summary",
-      "description": "Detailed text summary.",
-      "type": 1,
-      "required": true
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameter",
-    "pk": 105,
-    "fields": {
-      "tool": 11,
-      "name": "recommended_action",
-      "description": "Next steps (e.g. RETRY).",
-      "type": 1,
-      "required": true
-    }
-  },
-  {
-    "model": "talos_parietal.parameterenum",
-    "pk": 1,
-    "fields": {
-      "parameter": 103,
-      "value": "SUCCESS"
-    }
-  },
-  {
-    "model": "talos_parietal.parameterenum",
-    "pk": 2,
-    "fields": {
-      "parameter": 103,
-      "value": "FAILURE"
-    }
-  },
-  {
-    "model": "talos_parietal.parameterenum",
-    "pk": 3,
-    "fields": {
-      "parameter": 103,
-      "value": "NEEDS_CLARIFICATION"
+      "description": "Null",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
@@ -148,30 +74,10 @@
     "pk": 1,
     "fields": {
       "name": "mcp_read_file",
-      "description": "Reads a specific line range from a local file. Use this to examine source code or config files. Do not use this for database records.",
+      "description": "Reads a specific line range from a local file. Use this to examine source code, config files, or logs. efficient for large files by reading only relevant chunks.",
       "is_async": true,
-      "parameters_schema": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string",
-            "description": "Relative or absolute file path."
-          },
-          "start_line": {
-            "type": "integer",
-            "description": "Line to start reading from."
-          },
-          "max_lines": {
-            "type": "integer",
-            "description": "Max lines to return (max 50)."
-          }
-        },
-        "required": [
-          "path"
-        ]
-      },
-      "created": "2026-02-17T12:00:00Z",
-      "modified": "2026-02-17T12:00:00Z"
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
@@ -179,26 +85,10 @@
     "pk": 2,
     "fields": {
       "name": "mcp_search_file",
-      "description": "Searches a local file for a regex pattern. Always use this FIRST to find line numbers before reading a file.",
+      "description": "Searches a local file for a regex pattern and returns matching line numbers. Always use this FIRST to locate code or errors before using mcp_read_file.",
       "is_async": true,
-      "parameters_schema": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string"
-          },
-          "pattern": {
-            "type": "string",
-            "description": "Regex pattern to search for."
-          }
-        },
-        "required": [
-          "path",
-          "pattern"
-        ]
-      },
-      "created": "2026-02-17T12:00:00Z",
-      "modified": "2026-02-17T12:00:00Z"
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
@@ -206,22 +96,10 @@
     "pk": 3,
     "fields": {
       "name": "mcp_list_files",
-      "description": "Lists directory contents on the local filesystem.",
+      "description": "Lists files and directories at a specific path. Use this to explore the project structure or verify file existence.",
       "is_async": true,
-      "parameters_schema": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string",
-            "description": "Directory path to list."
-          }
-        },
-        "required": [
-          "path"
-        ]
-      },
-      "created": "2026-02-17T12:00:00Z",
-      "modified": "2026-02-17T12:00:00Z"
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
@@ -229,32 +107,10 @@
     "pk": 4,
     "fields": {
       "name": "mcp_update_blackboard",
-      "description": "Writes a key-value pair to the current execution Blackboard. Use this to change the routing state of the Hydra Graph or pass variables to downstream spells.",
+      "description": "Writes variables to the execution Blackboard. Use this to affect the routing logic of the Hydra Graph (e.g. set 'correction_strategy') or pass data to downstream agents.",
       "is_async": true,
-      "parameters_schema": {
-        "type": "object",
-        "properties": {
-          "head_id": {
-            "type": "string",
-            "description": "The UUID of the current execution head. Extract this from your system context."
-          },
-          "key": {
-            "type": "string",
-            "description": "The blackboard variable name to set (e.g., 'correction_strategy')."
-          },
-          "value": {
-            "type": "string",
-            "description": "The value to assign to the key."
-          }
-        },
-        "required": [
-          "head_id",
-          "key",
-          "value"
-        ]
-      },
-      "created": "2026-02-17T12:00:00Z",
-      "modified": "2026-02-17T12:00:00Z"
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
@@ -262,32 +118,10 @@
     "pk": 5,
     "fields": {
       "name": "mcp_inspect_record",
-      "description": "Inspects a database record, returning its schema, field types, and the exact sizes of text fields. Always use this before reading a database log field to avoid massive outputs.",
+      "description": "Returns the schema and field sizes of a database record. MANDATORY: Call this before reading any database field to ensure you do not load massive text blobs blindly.",
       "is_async": true,
-      "parameters_schema": {
-        "type": "object",
-        "properties": {
-          "app_label": {
-            "type": "string",
-            "description": "Django app name (e.g., 'hydra')."
-          },
-          "model_name": {
-            "type": "string",
-            "description": "Model name (e.g., 'HydraHead')."
-          },
-          "record_id": {
-            "type": "string",
-            "description": "The UUID or ID of the record."
-          }
-        },
-        "required": [
-          "app_label",
-          "model_name",
-          "record_id"
-        ]
-      },
-      "created": "2026-02-17T12:00:00Z",
-      "modified": "2026-02-17T12:00:00Z"
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
@@ -295,40 +129,10 @@
     "pk": 6,
     "fields": {
       "name": "mcp_read_record_field",
-      "description": "Reads a specific line range from a text field in the database (e.g., reading 'spell_log' from 'HydraHead').",
+      "description": "Reads a segment of text from a specific database field (like 'spell_log' or 'source_code'). Requires 'start_line' and 'max_lines' to handle large data efficiently.",
       "is_async": true,
-      "parameters_schema": {
-        "type": "object",
-        "properties": {
-          "app_label": {
-            "type": "string"
-          },
-          "model_name": {
-            "type": "string"
-          },
-          "record_id": {
-            "type": "string"
-          },
-          "field_name": {
-            "type": "string",
-            "description": "The specific field to read (e.g., 'spell_log')."
-          },
-          "start_line": {
-            "type": "integer"
-          },
-          "max_lines": {
-            "type": "integer"
-          }
-        },
-        "required": [
-          "app_label",
-          "model_name",
-          "record_id",
-          "field_name"
-        ]
-      },
-      "created": "2026-02-17T12:00:00Z",
-      "modified": "2026-02-17T12:00:00Z"
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
@@ -336,38 +140,10 @@
     "pk": 7,
     "fields": {
       "name": "mcp_search_record_field",
-      "description": "Searches a massive database text field (like an execution log) for a regex pattern (e.g., 'error|fatal'). Use this to find the exact line numbers before using mcp_read_record_field.",
+      "description": "Searches a large database text field for a regex pattern. Use this to find error messages or specific log entries without reading the entire record.",
       "is_async": true,
-      "parameters_schema": {
-        "type": "object",
-        "properties": {
-          "app_label": {
-            "type": "string"
-          },
-          "model_name": {
-            "type": "string"
-          },
-          "record_id": {
-            "type": "string"
-          },
-          "field_name": {
-            "type": "string"
-          },
-          "pattern": {
-            "type": "string",
-            "description": "Regex pattern to search for."
-          }
-        },
-        "required": [
-          "app_label",
-          "model_name",
-          "record_id",
-          "field_name",
-          "pattern"
-        ]
-      },
-      "created": "2026-02-17T12:00:00Z",
-      "modified": "2026-02-17T12:00:00Z"
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
@@ -375,43 +151,10 @@
     "pk": 8,
     "fields": {
       "name": "mcp_query_model",
-      "description": "Queries a Django database table. Use 'filters' for basic lookups, or 'q_string' for complex AND/OR logic using Django Q objects. Use 'action'='count' to just get the number of records. Use this to find IDs of records you need to inspect.",
+      "description": "Queries the database for records matching specific criteria. Supports simple 'filters' (dict) or complex 'q_string' (Q objects). Use 'action=count' to check volume before listing.",
       "is_async": true,
-      "parameters_schema": {
-        "type": "object",
-        "properties": {
-          "app_label": {
-            "type": "string",
-            "description": "Django app name (e.g., 'hydra')."
-          },
-          "model_name": {
-            "type": "string",
-            "description": "Model name (e.g., 'HydraHead')."
-          },
-          "filters": {
-            "type": "object",
-            "description": "Key-value pairs for basic filtering (e.g., {\"spawn_id\": \"123\", \"status_id\": 5})."
-          },
-          "q_string": {
-            "type": "string",
-            "description": "A raw string evaluating to a Django Q object for complex AND/OR logic (e.g., \"Q(status_id=5) | Q(name__icontains='error')\")."
-          },
-          "action": {
-            "type": "string",
-            "enum": [
-              "list",
-              "count"
-            ],
-            "description": "Whether to return a list of records (max 50) or just the total count. Defaults to 'list'."
-          }
-        },
-        "required": [
-          "app_label",
-          "model_name"
-        ]
-      },
-      "created": "2026-02-17T12:00:00Z",
-      "modified": "2026-02-17T12:00:00Z"
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
@@ -419,23 +162,10 @@
     "pk": 9,
     "fields": {
       "name": "mcp_search_memory",
-      "description": "Searches long-term memory for past facts, errors, or solutions. Use this to see if a problem has happened before.",
+      "description": "Searches the Cortex (Long-Term Memory) for similar past issues, solutions, or patterns. Use this early in your process to avoid repeating known mistakes.",
       "is_async": true,
-      "parameters_schema": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "string",
-            "description": "Text to search for."
-          },
-          "tags": {
-            "type": "string",
-            "description": "Filter by tags (comma separated)."
-          }
-        }
-      },
-      "created": "2026-02-17T12:00:00Z",
-      "modified": "2026-02-17T12:00:00Z"
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
@@ -443,32 +173,10 @@
     "pk": 10,
     "fields": {
       "name": "mcp_save_memory",
-      "description": "Saves a fact to memory. Use 'update_id' to edit an existing memory, otherwise creates new.",
+      "description": "Saves a valuable finding, fix, or pattern to Long-Term Memory. If you solve a hard problem, save it here so future agents know the solution.",
       "is_async": true,
-      "parameters_schema": {
-        "type": "object",
-        "properties": {
-          "session_id": {
-            "type": "string"
-          },
-          "fact": {
-            "type": "string"
-          },
-          "tags": {
-            "type": "string"
-          },
-          "update_id": {
-            "type": "integer",
-            "description": "Optional ID of existing memory to update."
-          }
-        },
-        "required": [
-          "session_id",
-          "fact"
-        ]
-      },
-      "created": "2026-02-17T12:00:00Z",
-      "modified": "2026-02-17T12:00:00Z"
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
@@ -476,41 +184,764 @@
     "pk": 11,
     "fields": {
       "name": "mcp_conclude_session",
-      "description": "Finalizes the session. MANDATORY: You must call this to finish.",
+      "description": "Finalizes the session and submits your report. MANDATORY: You must call this tool to end your turn. It triggers the next step in the workflow.",
       "is_async": true,
-      "parameters_schema": {
-        "type": "object",
-        "properties": {
-          "session_id": {
-            "type": "string"
-          },
-          "goal_achieved": {
-            "type": "boolean",
-            "description": "Did you accomplish the user's objective?"
-          },
-          "outcome_status": {
-            "type": "string",
-            "enum": [
-              "SUCCESS",
-              "FAILURE"
-            ]
-          },
-          "summary": {
-            "type": "string"
-          },
-          "recommended_action": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "goal_achieved",
-          "outcome_status",
-          "summary",
-          "recommended_action"
-        ]
-      },
-      "created": "2026-02-17T12:00:00Z",
-      "modified": "2026-02-17T12:00:00Z"
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 1,
+    "fields": {
+      "name": "path",
+      "type": 1,
+      "description": "File system path.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 2,
+    "fields": {
+      "name": "start_line",
+      "type": 3,
+      "description": "Line number start.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 3,
+    "fields": {
+      "name": "max_lines",
+      "type": 3,
+      "description": "Line count limit.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 4,
+    "fields": {
+      "name": "pattern",
+      "type": 1,
+      "description": "Regex pattern.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 5,
+    "fields": {
+      "name": "head_id",
+      "type": 1,
+      "description": "Head UUID.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 6,
+    "fields": {
+      "name": "key",
+      "type": 1,
+      "description": "Variable Key.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 7,
+    "fields": {
+      "name": "value",
+      "type": 1,
+      "description": "Variable Value.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 8,
+    "fields": {
+      "name": "app_label",
+      "type": 1,
+      "description": "Django App Label.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 9,
+    "fields": {
+      "name": "model_name",
+      "type": 1,
+      "description": "Django Model Name.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 10,
+    "fields": {
+      "name": "record_id",
+      "type": 1,
+      "description": "Record UUID/ID.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 11,
+    "fields": {
+      "name": "field_name",
+      "type": 1,
+      "description": "DB Field Name.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 12,
+    "fields": {
+      "name": "filters",
+      "type": 6,
+      "description": "Filter Dict.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 13,
+    "fields": {
+      "name": "q_string",
+      "type": 1,
+      "description": "Q Object String.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 14,
+    "fields": {
+      "name": "action",
+      "type": 1,
+      "description": "Action type.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 15,
+    "fields": {
+      "name": "query",
+      "type": 1,
+      "description": "Search Query.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 16,
+    "fields": {
+      "name": "tags",
+      "type": 1,
+      "description": "Comma tags.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 17,
+    "fields": {
+      "name": "session_id",
+      "type": 1,
+      "description": "Session UUID.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 18,
+    "fields": {
+      "name": "fact",
+      "type": 1,
+      "description": "Fact string.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 19,
+    "fields": {
+      "name": "update_id",
+      "type": 3,
+      "description": "Existing ID.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 20,
+    "fields": {
+      "name": "relevance",
+      "type": 2,
+      "description": "Float 0-1.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 21,
+    "fields": {
+      "name": "goal_achieved",
+      "type": 4,
+      "description": "Boolean Success.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 22,
+    "fields": {
+      "name": "outcome_status",
+      "type": 1,
+      "description": "Enum Status.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 23,
+    "fields": {
+      "name": "summary",
+      "type": 1,
+      "description": "Text Summary.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 24,
+    "fields": {
+      "name": "recommended_action",
+      "type": 1,
+      "description": "Action String.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.parameterenum",
+    "pk": 1,
+    "fields": {
+      "parameter": 14,
+      "value": "list",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.parameterenum",
+    "pk": 2,
+    "fields": {
+      "parameter": 14,
+      "value": "count",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.parameterenum",
+    "pk": 3,
+    "fields": {
+      "parameter": 22,
+      "value": "SUCCESS",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.parameterenum",
+    "pk": 4,
+    "fields": {
+      "parameter": 22,
+      "value": "FAILURE",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.parameterenum",
+    "pk": 5,
+    "fields": {
+      "parameter": 22,
+      "value": "NEEDS_CLARIFICATION",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 1,
+    "fields": {
+      "tool": 1,
+      "parameter": 1,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 2,
+    "fields": {
+      "tool": 1,
+      "parameter": 2,
+      "required": false,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 3,
+    "fields": {
+      "tool": 1,
+      "parameter": 3,
+      "required": false,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 4,
+    "fields": {
+      "tool": 2,
+      "parameter": 1,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 5,
+    "fields": {
+      "tool": 2,
+      "parameter": 4,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 6,
+    "fields": {
+      "tool": 3,
+      "parameter": 1,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 7,
+    "fields": {
+      "tool": 4,
+      "parameter": 5,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 8,
+    "fields": {
+      "tool": 4,
+      "parameter": 6,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 9,
+    "fields": {
+      "tool": 4,
+      "parameter": 7,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 10,
+    "fields": {
+      "tool": 5,
+      "parameter": 8,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 11,
+    "fields": {
+      "tool": 5,
+      "parameter": 9,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 12,
+    "fields": {
+      "tool": 5,
+      "parameter": 10,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 13,
+    "fields": {
+      "tool": 6,
+      "parameter": 8,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 14,
+    "fields": {
+      "tool": 6,
+      "parameter": 9,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 15,
+    "fields": {
+      "tool": 6,
+      "parameter": 10,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 16,
+    "fields": {
+      "tool": 6,
+      "parameter": 11,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 17,
+    "fields": {
+      "tool": 6,
+      "parameter": 2,
+      "required": false,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 18,
+    "fields": {
+      "tool": 6,
+      "parameter": 3,
+      "required": false,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 19,
+    "fields": {
+      "tool": 7,
+      "parameter": 8,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 20,
+    "fields": {
+      "tool": 7,
+      "parameter": 9,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 21,
+    "fields": {
+      "tool": 7,
+      "parameter": 10,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 22,
+    "fields": {
+      "tool": 7,
+      "parameter": 11,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 23,
+    "fields": {
+      "tool": 7,
+      "parameter": 4,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 24,
+    "fields": {
+      "tool": 8,
+      "parameter": 8,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 25,
+    "fields": {
+      "tool": 8,
+      "parameter": 9,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 26,
+    "fields": {
+      "tool": 8,
+      "parameter": 12,
+      "required": false,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 27,
+    "fields": {
+      "tool": 8,
+      "parameter": 13,
+      "required": false,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 28,
+    "fields": {
+      "tool": 8,
+      "parameter": 14,
+      "required": false,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 29,
+    "fields": {
+      "tool": 9,
+      "parameter": 15,
+      "required": false,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 30,
+    "fields": {
+      "tool": 9,
+      "parameter": 16,
+      "required": false,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 31,
+    "fields": {
+      "tool": 10,
+      "parameter": 17,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 32,
+    "fields": {
+      "tool": 10,
+      "parameter": 18,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 33,
+    "fields": {
+      "tool": 10,
+      "parameter": 16,
+      "required": false,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 34,
+    "fields": {
+      "tool": 10,
+      "parameter": 19,
+      "required": false,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 35,
+    "fields": {
+      "tool": 10,
+      "parameter": 20,
+      "required": false,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 36,
+    "fields": {
+      "tool": 11,
+      "parameter": 17,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 37,
+    "fields": {
+      "tool": 11,
+      "parameter": 21,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 38,
+    "fields": {
+      "tool": 11,
+      "parameter": 22,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 39,
+    "fields": {
+      "tool": 11,
+      "parameter": 23,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 40,
+    "fields": {
+      "tool": 11,
+      "parameter": 24,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
     }
   }
 ]

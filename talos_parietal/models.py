@@ -38,13 +38,9 @@ class ToolParameter(DefaultFieldsMixin, DescriptionMixin):
     A strictly typed argument for a ToolDefinition.
     """
 
-    tool = models.ForeignKey(
-        ToolDefinition, on_delete=models.CASCADE, related_name='parameters'
-    )
     type = models.ForeignKey(
         ToolParameterType, on_delete=models.PROTECT, related_name='usages'
     )
-    required = models.BooleanField(default=True)
 
     # Maybe if we need it...
     # If this parameter is an array, what is the type of the items?
@@ -53,17 +49,36 @@ class ToolParameter(DefaultFieldsMixin, DescriptionMixin):
 
     class Meta:
         ordering = ['name']
-        unique_together = ('tool', 'name')
 
     def __str__(self):
         return f'{self.tool.name}.{self.name} ({self.type.name})'
 
 
-class ParameterEnum(DefaultFieldsMixin):
+class ToolParameterAssignment(CreatedMixin, ModifiedMixin):
     """
-    Joined table for parameters that have strict pre-defined values.
-    Example: outcome_status must be one of ['SUCCESS', 'FAILURE'].
+    The Link Table.
+    Inherits strictly from timestamp mixins to avoid unique name constraints.
     """
+
+    tool = models.ForeignKey(
+        ToolDefinition, on_delete=models.CASCADE, related_name='assignments'
+    )
+    parameter = models.ForeignKey(
+        ToolParameter, on_delete=models.CASCADE, related_name='tool_assignments'
+    )
+    required = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['tool', 'parameter__name']
+        unique_together = ('tool', 'parameter')
+
+    def __str__(self):
+        req = '*' if self.required else ''
+        return f'{self.tool.name} -> {self.parameter.name}{req}'
+
+
+class ParameterEnum(CreatedMixin, ModifiedMixin):
+    """Joined table for parameters that have strict pre-defined values."""
 
     parameter = models.ForeignKey(
         ToolParameter, related_name='enum_values', on_delete=models.CASCADE
