@@ -6,6 +6,7 @@ from django.conf import settings
 
 from talos_frontal.utils import parse_command_string
 from talos_parietal import tools as parietal_tools
+from talos_parietal.models import ToolCall, ToolDefinition
 from talos_parietal.registry import ModelRegistry
 from talos_parietal.synapse import OllamaClient
 
@@ -14,8 +15,6 @@ from .models import (
     ReasoningSession,
     ReasoningStatusID,
     ReasoningTurn,
-    ToolCall,
-    ToolDefinition,
 )
 
 logger = logging.getLogger(__name__)

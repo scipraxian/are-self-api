@@ -14,8 +14,8 @@ from hydra.spells.spell_casters.spell_handlers.frontal_lobe_handler import (
     FrontalLobeConstants,
     run_frontal_lobe,
 )
+from talos_parietal.models import ToolDefinition
 from talos_parietal.synapse import OllamaResponse
-from talos_reasoning.models import ToolDefinition
 
 
 class FrontalLobeHandlerTest(TestCase):

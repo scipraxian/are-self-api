@@ -1,28 +1,43 @@
 from django.contrib import admin
 
+from talos_parietal.models import ToolCall, ToolDefinition
+
 from .models import (
     ModelRegistry,
     ReasoningGoal,
     ReasoningSession,
     ReasoningTurn,
     SessionConclusion,
-    ToolCall,
-    ToolDefinition,
 )
 
 
 class ToolCallInline(admin.StackedInline):
     model = ToolCall
     extra = 0
-    readonly_fields = ('tool', 'arguments', 'result_payload', 'traceback', 'created', 'status')
+    readonly_fields = (
+        'tool',
+        'arguments',
+        'result_payload',
+        'traceback',
+        'created',
+        'status',
+    )
     classes = ['collapse']
+
 
 class ReasoningTurnInline(admin.StackedInline):
     model = ReasoningTurn
     extra = 0
-    readonly_fields = ('turn_number', 'input_context_snapshot', 'thought_process', 'created', 'status')
+    readonly_fields = (
+        'turn_number',
+        'input_context_snapshot',
+        'thought_process',
+        'created',
+        'status',
+    )
     inlines = [ToolCallInline]
     classes = ['collapse']
+
 
 @admin.register(ReasoningSession)
 class ReasoningSessionAdmin(admin.ModelAdmin):
@@ -33,15 +48,18 @@ class ReasoningSessionAdmin(admin.ModelAdmin):
     inlines = [ReasoningTurnInline]
 
     def goal_preview(self, obj):
-        return obj.goal[:50] + "..." if obj.goal else ""
+        return obj.goal[:50] + '...' if obj.goal else ''
+
 
 @admin.register(ToolDefinition)
 class ToolDefinitionAdmin(admin.ModelAdmin):
     list_display = ('name', 'is_async', 'description')
 
+
 @admin.register(ModelRegistry)
 class ModelRegistryAdmin(admin.ModelAdmin):
     list_display = ('name', 'api_variant', 'context_window_size')
+
 
 @admin.register(SessionConclusion)
 class SessionConclusionAdmin(admin.ModelAdmin):

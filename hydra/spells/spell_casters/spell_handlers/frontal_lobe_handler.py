@@ -9,6 +9,7 @@ from asgiref.sync import sync_to_async
 from environments.variable_renderer import VariableRenderer
 from hydra.models import HydraHead, HydraHeadStatus
 from hydra.utils import resolve_environment_context
+from talos_parietal.models import ToolCall, ToolDefinition
 from talos_parietal.parietal_mcp.gateway import ParietalMCP
 from talos_parietal.synapse import ChatMessage, OllamaClient
 from talos_reasoning.models import (
@@ -17,8 +18,6 @@ from talos_reasoning.models import (
     ReasoningSession,
     ReasoningStatusID,
     ReasoningTurn,
-    ToolCall,
-    ToolDefinition,
 )
 
 logger = logging.getLogger(__name__)
@@ -62,6 +61,11 @@ class FrontalLobeConstants:
     DEFAULT_MAX_TURNS = 10
 
     MODEL_ID_KEY = 'model_id'
+
+    SCHEMA_TYPE = 'type'
+    SCHEMA_PROPERTIES = 'properties'
+    SCHEMA_REQUIRED = 'required'
+    TYPE_OBJECT = 'object'
 
 
 class FrontalLobe:
@@ -146,21 +150,40 @@ class FrontalLobe:
         ]
 
     def _build_tool_schemas(self) -> List[Dict[str, Any]]:
+        """Fetches active tools and maps them to the Ollama schema using strict constants."""
         db_tools = list(ToolDefinition.objects.all())
         ollama_tools = []
+
         for t in db_tools:
-            schema = (
+            # 1. Parse valid JSON or Dict
+            raw_schema = (
                 t.parameters_schema
                 if isinstance(t.parameters_schema, dict)
                 else json.loads(t.parameters_schema)
             )
+
+            # 2. Enforce strict OpenAI-spec structure (Required for Qwen XML parsing)
+            # Qwen crashes if 'type' is missing or 'properties' is absent.
+            safe_parameters = {
+                FrontalLobeConstants.SCHEMA_TYPE: raw_schema.get(
+                    FrontalLobeConstants.SCHEMA_TYPE,
+                    FrontalLobeConstants.TYPE_OBJECT,
+                ),
+                FrontalLobeConstants.SCHEMA_PROPERTIES: raw_schema.get(
+                    FrontalLobeConstants.SCHEMA_PROPERTIES, {}
+                ),
+                FrontalLobeConstants.SCHEMA_REQUIRED: raw_schema.get(
+                    FrontalLobeConstants.SCHEMA_REQUIRED, []
+                ),
+            }
+
             ollama_tools.append(
                 {
                     FrontalLobeConstants.T_TYPE: FrontalLobeConstants.TYPE_FUNCTION,
                     FrontalLobeConstants.T_FUNC: {
                         FrontalLobeConstants.T_NAME: t.name,
                         FrontalLobeConstants.T_DESC: t.description,
-                        FrontalLobeConstants.T_PARAMS: schema,
+                        FrontalLobeConstants.T_PARAMS: safe_parameters,
                     },
                 }
             )

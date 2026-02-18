@@ -1,10 +1,15 @@
+from unittest.mock import MagicMock, patch
+
 from django.test import TestCase
-from unittest.mock import patch, MagicMock
-from talos_reasoning.models import (
-    ReasoningSession, ReasoningGoal, ReasoningTurn,
-    ToolDefinition, ReasoningStatusID
-)
+
+from talos_parietal.models import ToolDefinition
 from talos_reasoning.engine import ReasoningEngine
+from talos_reasoning.models import (
+    ReasoningGoal,
+    ReasoningSession,
+    ReasoningStatusID,
+    ReasoningTurn,
+)
 
 
 class GoalSwitchingTest(TestCase):

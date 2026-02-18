@@ -1,12 +1,18 @@
 import os
 import shutil
 import tempfile
-from django.test import TestCase, SimpleTestCase, override_settings
 from unittest.mock import patch
+
+from django.test import SimpleTestCase, TestCase, override_settings
+
 from talos_frontal.utils import parse_command_string
+from talos_parietal.models import ToolCall
 from talos_reasoning.engine import ReasoningEngine
-from talos_reasoning.models import (ReasoningSession, ReasoningGoal,
-                                    ReasoningStatusID, ToolCall)
+from talos_reasoning.models import (
+    ReasoningGoal,
+    ReasoningSession,
+    ReasoningStatusID,
+)
 
 
 class ParserStressTest(SimpleTestCase):

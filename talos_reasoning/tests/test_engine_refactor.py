@@ -1,8 +1,14 @@
-from django.test import TestCase
 from unittest.mock import patch
+
+from django.test import TestCase
+
+from talos_parietal.models import ToolDefinition
 from talos_reasoning.engine import ReasoningEngine
-from talos_reasoning.models import (ReasoningSession, ReasoningGoal,
-                                    ReasoningStatusID, ToolDefinition)
+from talos_reasoning.models import (
+    ReasoningGoal,
+    ReasoningSession,
+    ReasoningStatusID,
+)
 
 
 class EngineRefactorTest(TestCase):
