@@ -11,6 +11,7 @@ from environments.variable_renderer import VariableRenderer
 from hydra.models import HydraHead, HydraHeadStatus
 from hydra.utils import resolve_environment_context
 from talos_parietal import tools as parietal_tools
+from talos_parietal.parietal_mcp.gateway import ParietalMCP
 from talos_parietal.registry import ModelRegistry
 from talos_parietal.synapse import ChatMessage, OllamaClient
 from talos_reasoning.models import ToolDefinition
@@ -187,10 +188,9 @@ class FrontalLobe:
 
             await self._log_live(f'Tool Call: {tool_name}({args})')
 
-            # Tools hit the filesystem/DB and are fully synchronous, offload
-            # them
-            tool_result = await sync_to_async(self._execute_tool)(tool_name,
-                                                                  args)
+            # --- THE MAGIC ROUTING LINE ---
+            tool_result = await ParietalMCP.execute(tool_name, args)
+
             await self._log_live(f'Result: {tool_result[:200]}...')
 
             messages.append(

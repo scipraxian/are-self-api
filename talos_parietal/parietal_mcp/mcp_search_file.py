@@ -29,11 +29,12 @@ def _resolve_path(path: str, root_path: str = None) -> tuple[
                                                                 f"not found.")
 
 
-def _search_sync(full_path: str, pattern: str, context_lines: int = 2) -> str:
-    if os.path.isdir(full_path): return f"Error: '{full_path}' is a directory."
+def _search_sync(path: str, pattern: str, context_lines: int = 2) -> str:
+    if not os.path.exists(path): return f"Error: '{path}' not found."
+    if os.path.isdir(path): return f"Error: '{path}' is a directory."
     results = []
     try:
-        with open(full_path, 'r', encoding='utf-8', errors='replace') as f:
+        with open(path, 'r', encoding='utf-8', errors='replace') as f:
             lines = f.readlines()
         matches_found = 0
         for i, line in enumerate(lines):
@@ -52,6 +53,10 @@ def _search_sync(full_path: str, pattern: str, context_lines: int = 2) -> str:
             results) if results else f"No matches found for '{pattern}'."
     except Exception as e:
         return f"Error searching file: {str(e)}"
+
+
+async def mcp_search_file(path: str, pattern: str) -> str:
+    return await asyncio.to_thread(_search_sync, path, pattern)
 
 
 async def mcp_search_file(path: str, pattern: str,

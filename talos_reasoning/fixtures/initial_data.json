@@ -280,26 +280,39 @@
     "pk": 8,
     "fields": {
       "name": "mcp_query_model",
-      "description": "Queries a Django database table. Use this to find IDs of records you need to inspect (e.g., finding failed heads in a spawn).",
+      "description": "Queries a Django database table. Use 'filters' for basic lookups, or 'q_string' for complex AND/OR logic using Django Q objects. Use 'action'='count' to just get the number of records. Use this to find IDs of records you need to inspect.",
       "is_async": true,
       "parameters_schema": {
         "type": "object",
         "properties": {
           "app_label": {
-            "type": "string"
+            "type": "string",
+            "description": "Django app name (e.g., 'hydra')."
           },
           "model_name": {
-            "type": "string"
+            "type": "string",
+            "description": "Model name (e.g., 'HydraHead')."
           },
           "filters": {
             "type": "object",
-            "description": "Key-value pairs for filtering (e.g., {\"spawn_id\": \"123\", \"status_id\": 5})."
+            "description": "Key-value pairs for basic filtering (e.g., {\"spawn_id\": \"123\", \"status_id\": 5})."
+          },
+          "q_string": {
+            "type": "string",
+            "description": "A raw string evaluating to a Django Q object for complex AND/OR logic (e.g., \"Q(status_id=5) | Q(name__icontains='error')\")."
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "list",
+              "count"
+            ],
+            "description": "Whether to return a list of records (max 50) or just the total count. Defaults to 'list'."
           }
         },
         "required": [
           "app_label",
-          "model_name",
-          "filters"
+          "model_name"
         ]
       },
       "created": "2026-02-17T12:00:00Z",

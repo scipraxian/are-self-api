@@ -35,3 +35,4 @@ djangorestframework-stubs
 
 aiosmtpd
 
+playwright

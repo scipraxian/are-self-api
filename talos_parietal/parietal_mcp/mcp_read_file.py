@@ -29,19 +29,19 @@ def _resolve_path(path: str, root_path: str = None) -> tuple[
                                                                 f"not found.")
 
 
-def _read_sync(full_path: str, start_line: int, max_lines: int) -> str:
-    if os.path.isdir(full_path):
-        return f"Error: '{full_path}' is a directory. Use mcp_list_files."
+def _read_sync(path: str, start_line: int, max_lines: int) -> str:
+    if not os.path.exists(path): return f"Error: '{path}' not found."
+    if os.path.isdir(path): return f"Error: '{path}' is a directory."
     try:
-        with open(full_path, 'r', encoding='utf-8', errors='replace') as f:
+        with open(path, 'r', encoding='utf-8', errors='replace') as f:
             lines = f.readlines()
         total_lines = len(lines)
         start_idx = max(0, start_line - 1)
         end_idx = start_idx + max_lines
-        chunk = lines[start_idx:end_idx]
 
         content = "".join([f"{i + 1}: {line}" for i, line in
-                           enumerate(chunk, start=start_idx)])
+                           enumerate(lines[start_idx:end_idx],
+                                     start=start_idx)])
         if end_idx < total_lines:
             content += (f"\n... [Displaying lines {start_idx + 1}-"
                         f"{min(end_idx, total_lines)} of {total_lines}. Use"
@@ -51,9 +51,6 @@ def _read_sync(full_path: str, start_line: int, max_lines: int) -> str:
         return f"Error reading file: {str(e)}"
 
 
-async def mcp_read_file(path: str, start_line: int = 1, max_lines: int = 50,
-                        root_path: str = None) -> str:
-    """MCP Tool: Reads a specific line range from a file."""
-    full_path, error = _resolve_path(path, root_path)
-    if error: return error
-    return await asyncio.to_thread(_read_sync, full_path, start_line, max_lines)
+async def mcp_read_file(path: str, start_line: int = 1,
+                        max_lines: int = 50) -> str:
+    return await asyncio.to_thread(_read_sync, path, start_line, max_lines)

@@ -28,15 +28,15 @@ def _resolve_path(path: str, root_path: str = None) -> tuple[
                                                                 f"not found.")
 
 
-def _list_sync(full_path: str) -> str:
-    if not os.path.isdir(full_path):
-        return f"Error: '{full_path}' is not a directory."
+def _list_sync(path: str) -> str:
+    if not os.path.exists(path): return f"Error: '{path}' not found."
+    if not os.path.isdir(path): return f"Error: '{path}' is not a directory."
     try:
-        items = os.listdir(full_path)
+        items = os.listdir(path)
         items.sort()
-        result = [f"Listing for: {full_path}"]
+        result = [f"Listing for: {path}"]
         for item in items[:50]:
-            item_path = os.path.join(full_path, item)
+            item_path = os.path.join(path, item)
             kind = "[DIR] " if os.path.isdir(item_path) else "[FILE]"
             result.append(f"{kind} {item}")
         if len(items) > 50:
@@ -46,8 +46,5 @@ def _list_sync(full_path: str) -> str:
         return f"Error listing directory: {str(e)}"
 
 
-async def mcp_list_files(path: str, root_path: str = None) -> str:
-    """MCP Tool: Lists directory contents."""
-    full_path, error = _resolve_path(path, root_path)
-    if error: return error
-    return await asyncio.to_thread(_list_sync, full_path)
+async def mcp_list_files(path: str) -> str:
+    return await asyncio.to_thread(_list_sync, path)
