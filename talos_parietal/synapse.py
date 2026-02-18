@@ -135,10 +135,14 @@ class OllamaClient:
     def unload(self) -> bool:
         """Forces Ollama to immediately unload the model from VRAM."""
         try:
-            payload = {'model': self.model, 'keep_alive': 0}
-            response = requests.post(
-                f'{OllamaConstants.BASE_URL}/api/chat', json=payload
+            url = (
+                self.base_url
+                if self.base_url.endswith('/api/chat')
+                else f'{self.base_url}/api/chat'
             )
+
+            payload = {'model': self.model, 'keep_alive': 0}
+            response = requests.post(url, json=payload)
             response.raise_for_status()
             logger.info(f'[Synapse] Successfully unloaded model {self.model}')
             return True

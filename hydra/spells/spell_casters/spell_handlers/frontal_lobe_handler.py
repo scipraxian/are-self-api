@@ -10,9 +10,9 @@ from environments.variable_renderer import VariableRenderer
 from hydra.models import HydraHead, HydraHeadStatus
 from hydra.utils import resolve_environment_context
 from talos_parietal.parietal_mcp.gateway import ParietalMCP
-from talos_parietal.registry import ModelRegistry
 from talos_parietal.synapse import ChatMessage, OllamaClient
 from talos_reasoning.models import (
+    ModelRegistry,
     ReasoningGoal,
     ReasoningSession,
     ReasoningStatusID,
@@ -61,6 +61,8 @@ class FrontalLobeConstants:
 
     DEFAULT_MAX_TURNS = 10
 
+    MODEL_ID_KEY = 'model_id'
+
 
 class FrontalLobe:
     """Async execution wrapper for the Frontal Lobe AI loop."""
@@ -69,8 +71,6 @@ class FrontalLobe:
         self.head = head
         self.head_id = head.id
         self.log_output: List[str] = []
-        # We will resolve the actual model name in run() via the Registry
-        self.model_alias = ModelRegistry.CODER
         self.client = None  # Initialized in run()
 
         self.session: Optional[ReasoningSession] = None
@@ -309,11 +309,31 @@ class FrontalLobe:
             raw_context = await sync_to_async(resolve_environment_context)(
                 head_id=self.head.id
             )
-
-            # Resolve Model from Registry based on Context or Default
-            model_name = await sync_to_async(ModelRegistry.get_model)(
-                ModelRegistry.CODER
+            # 1. Get the ID from context (defaults to 1 if missing)
+            target_id = int(
+                raw_context.get(
+                    FrontalLobeConstants.MODEL_ID_KEY,
+                    ModelRegistry.DEFAULT_MODEL_ID,
+                )
             )
+
+            # 2. Await the DB lookup safely
+            try:
+                model_entry = await sync_to_async(ModelRegistry.objects.get)(
+                    id=target_id
+                )
+                model_name = model_entry.name
+            except ModelRegistry.DoesNotExist:
+                # Fallback to default if the specific ID is missing (safety net)
+                logger.warning(
+                    f'Model ID {target_id} not found. Reverting to Default.'
+                )
+                model_entry = await sync_to_async(ModelRegistry.objects.get)(
+                    id=ModelRegistry.DEFAULT_MODEL_ID
+                )
+                model_name = model_entry.name
+
+            # 3. Initialize Client
             self.client = OllamaClient(model=model_name)
             await self._log_live(f'Model: {model_name}')
 
@@ -375,8 +395,11 @@ class FrontalLobe:
 
 
 async def run_frontal_lobe(head_id: UUID) -> Tuple[int, str]:
+    """Asynchronous entry point for the generic spell caster."""
     try:
-        head = await sync_to_async(HydraHead.objects.get)(id=head_id)
+        head = await sync_to_async(
+            lambda: HydraHead.objects.select_related('spawn').get(id=head_id)
+        )()
         lobe = FrontalLobe(head)
         return await lobe.run()
     except Exception as e:
