@@ -158,23 +158,3 @@ class ToolCall(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
 
     def __str__(self):
         return f'ToolCall: {self.tool.name} in Turn {self.turn.turn_number}'
-
-
-class RelevantEngram(CreatedMixin, ModifiedMixin):
-    """
-    Facts or memories extracted during reasoning.
-    """
-
-    session = models.ForeignKey(
-        ReasoningSession, on_delete=models.CASCADE, related_name='engrams'
-    )
-    source_turn = models.ForeignKey(
-        ReasoningTurn, on_delete=models.CASCADE, related_name='engrams'
-    )
-    fact = models.TextField()
-    memory_hash = models.CharField(max_length=64, db_index=True)
-    relevance_score = models.FloatField(default=1.0)
-    is_active = models.BooleanField(default=True)
-
-    def __str__(self):
-        return f'Engram ({self.relevance_score}): {self.fact[:50]}...'

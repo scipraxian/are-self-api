@@ -1,7 +1,16 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import (ReasoningStatus, ToolDefinition, ReasoningSession,
-                     ReasoningGoal, ReasoningTurn, ToolCall, RelevantEngram)
+
+from talos_hippocampus.models import RelevantEngram
+
+from .models import (
+    ReasoningGoal,
+    ReasoningSession,
+    ReasoningStatus,
+    ReasoningTurn,
+    ToolCall,
+    ToolDefinition,
+)
 
 
 class ToolCallInline(admin.TabularInline):
