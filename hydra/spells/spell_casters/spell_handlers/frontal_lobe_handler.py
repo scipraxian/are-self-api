@@ -58,7 +58,7 @@ class FrontalLobeConstants:
     LOG_START = '=== FRONTAL LOBE ACTIVATED ==='
     LOG_END = '\n=== FRONTAL LOBE DEACTIVATED ==='
 
-    DEFAULT_MAX_TURNS = 10
+    DEFAULT_MAX_TURNS = 100
 
     MODEL_ID_KEY = 'model_id'
 
