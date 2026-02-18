@@ -28,10 +28,18 @@ class TalosEngram(DefaultFieldsMixin, DescriptionMixin):
 
     RELATED_NAME = 'engram'
 
-    sessions = models.ManyToManyField(ReasoningSession)
-    source_turns = models.ManyToManyField(ReasoningTurn)
-    heads = models.ManyToManyField(HydraHead, related_name=RELATED_NAME)
-    tags = models.ManyToManyField(TalosEngramTag, related_name=RELATED_NAME)
+    sessions = models.ManyToManyField(
+        ReasoningSession, related_name=RELATED_NAME, blank=True
+    )
+    source_turns = models.ManyToManyField(
+        ReasoningTurn, related_name=RELATED_NAME, blank=True
+    )
+    heads = models.ManyToManyField(
+        HydraHead, related_name=RELATED_NAME, blank=True
+    )
+    tags = models.ManyToManyField(
+        TalosEngramTag, related_name=RELATED_NAME, blank=True
+    )
     is_active = models.BooleanField(default=True)
     relevance_score = models.FloatField(default=0.0)
     vector_id = models.UUIDField(null=True, blank=True)

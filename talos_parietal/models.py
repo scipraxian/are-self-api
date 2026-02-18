@@ -51,7 +51,7 @@ class ToolParameter(DefaultFieldsMixin, DescriptionMixin):
         ordering = ['name']
 
     def __str__(self):
-        return f'{self.tool.name}.{self.name} ({self.type.name})'
+        return f'{self.name} ({self.type.name})'
 
 
 class ToolParameterAssignment(CreatedMixin, ModifiedMixin):

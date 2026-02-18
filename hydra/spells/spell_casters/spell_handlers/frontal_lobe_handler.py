@@ -153,13 +153,12 @@ class FrontalLobe:
         """
         Constructs strict JSON schemas from the normalized ToolParameterAssignment relations.
         """
-        # Prefetch assignments AND the linked parameter definition
         db_tools = await sync_to_async(
             lambda: list(
                 ToolDefinition.objects.prefetch_related(
-                    'assignments__parameter',
+                    'assignments__parameter__type',
                     'assignments__parameter__enum_values',
-                ).all()
+                ).filter(is_async=True)  # Optional: filter active tools
             )
         )()
 
@@ -173,9 +172,12 @@ class FrontalLobe:
             for assignment in t.assignments.all():
                 param_def = assignment.parameter
 
+                # Now this is safe because .type was pre-fetched
+                type_name = param_def.type.name
+
                 # Build the parameter schema from the Definition
                 schema_def = {
-                    'type': param_def.type.name,  # e.g. 'string'
+                    'type': type_name,
                     'description': param_def.description
                     or f'The {param_def.name} parameter.',
                 }
@@ -389,7 +391,7 @@ class FrontalLobe:
             await self._initialize_session(rendered_objective, max_turns)
 
             # 3. Build Synapse Payload
-            ollama_tools = await sync_to_async(self._build_tool_schemas)()
+            ollama_tools = await self._build_tool_schemas()
             messages = await self._build_initial_messages(
                 rendered_objective, blackboard
             )

@@ -74,7 +74,7 @@
     "pk": 1,
     "fields": {
       "name": "mcp_read_file",
-      "description": "Reads a specific line range from a local file. Use this to examine source code, config files, or logs. efficient for large files by reading only relevant chunks.",
+      "description": "Reads a specific line range from a local file. Use this to examine source code, config files, or logs. Efficient for large files by reading only relevant chunks.",
       "is_async": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -84,8 +84,8 @@
     "model": "talos_parietal.tooldefinition",
     "pk": 2,
     "fields": {
-      "name": "mcp_search_file",
-      "description": "Searches a local file for a regex pattern and returns matching line numbers. Always use this FIRST to locate code or errors before using mcp_read_file.",
+      "name": "mcp_grep",
+      "description": "Recursively searches for a regex pattern in files. Equivalent to 'grep -r'. Returns file paths and line numbers. Use '.' as path to search the entire project.",
       "is_async": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -229,7 +229,7 @@
     "fields": {
       "name": "pattern",
       "type": 1,
-      "description": "Regex pattern.",
+      "description": "Regex pattern to match.",
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
     }
@@ -237,6 +237,17 @@
   {
     "model": "talos_parietal.toolparameter",
     "pk": 5,
+    "fields": {
+      "name": "case_insensitive",
+      "type": 4,
+      "description": "Ignore case (default True).",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 6,
     "fields": {
       "name": "head_id",
       "type": 1,
@@ -247,7 +258,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 6,
+    "pk": 7,
     "fields": {
       "name": "key",
       "type": 1,
@@ -258,7 +269,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 7,
+    "pk": 8,
     "fields": {
       "name": "value",
       "type": 1,
@@ -269,7 +280,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 8,
+    "pk": 9,
     "fields": {
       "name": "app_label",
       "type": 1,
@@ -280,7 +291,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 9,
+    "pk": 10,
     "fields": {
       "name": "model_name",
       "type": 1,
@@ -291,7 +302,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 10,
+    "pk": 11,
     "fields": {
       "name": "record_id",
       "type": 1,
@@ -302,7 +313,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 11,
+    "pk": 12,
     "fields": {
       "name": "field_name",
       "type": 1,
@@ -313,7 +324,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 12,
+    "pk": 13,
     "fields": {
       "name": "filters",
       "type": 6,
@@ -324,7 +335,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 13,
+    "pk": 14,
     "fields": {
       "name": "q_string",
       "type": 1,
@@ -335,7 +346,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 14,
+    "pk": 15,
     "fields": {
       "name": "action",
       "type": 1,
@@ -346,7 +357,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 15,
+    "pk": 16,
     "fields": {
       "name": "query",
       "type": 1,
@@ -357,7 +368,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 16,
+    "pk": 17,
     "fields": {
       "name": "tags",
       "type": 1,
@@ -368,7 +379,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 17,
+    "pk": 18,
     "fields": {
       "name": "session_id",
       "type": 1,
@@ -379,7 +390,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 18,
+    "pk": 19,
     "fields": {
       "name": "fact",
       "type": 1,
@@ -390,7 +401,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 19,
+    "pk": 20,
     "fields": {
       "name": "update_id",
       "type": 3,
@@ -401,7 +412,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 20,
+    "pk": 21,
     "fields": {
       "name": "relevance",
       "type": 2,
@@ -412,7 +423,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 21,
+    "pk": 22,
     "fields": {
       "name": "goal_achieved",
       "type": 4,
@@ -423,7 +434,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 22,
+    "pk": 23,
     "fields": {
       "name": "outcome_status",
       "type": 1,
@@ -434,7 +445,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 23,
+    "pk": 24,
     "fields": {
       "name": "summary",
       "type": 1,
@@ -445,7 +456,7 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 24,
+    "pk": 25,
     "fields": {
       "name": "recommended_action",
       "type": 1,
@@ -458,7 +469,7 @@
     "model": "talos_parietal.parameterenum",
     "pk": 1,
     "fields": {
-      "parameter": 14,
+      "parameter": 15,
       "value": "list",
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -468,7 +479,7 @@
     "model": "talos_parietal.parameterenum",
     "pk": 2,
     "fields": {
-      "parameter": 14,
+      "parameter": 15,
       "value": "count",
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -478,7 +489,7 @@
     "model": "talos_parietal.parameterenum",
     "pk": 3,
     "fields": {
-      "parameter": 22,
+      "parameter": 23,
       "value": "SUCCESS",
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -488,7 +499,7 @@
     "model": "talos_parietal.parameterenum",
     "pk": 4,
     "fields": {
-      "parameter": 22,
+      "parameter": 23,
       "value": "FAILURE",
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -498,7 +509,7 @@
     "model": "talos_parietal.parameterenum",
     "pk": 5,
     "fields": {
-      "parameter": 22,
+      "parameter": 23,
       "value": "NEEDS_CLARIFICATION",
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -563,9 +574,9 @@
     "model": "talos_parietal.toolparameterassignment",
     "pk": 6,
     "fields": {
-      "tool": 3,
-      "parameter": 1,
-      "required": true,
+      "tool": 2,
+      "parameter": 5,
+      "required": false,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
     }
@@ -574,8 +585,8 @@
     "model": "talos_parietal.toolparameterassignment",
     "pk": 7,
     "fields": {
-      "tool": 4,
-      "parameter": 5,
+      "tool": 3,
+      "parameter": 1,
       "required": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -607,7 +618,7 @@
     "model": "talos_parietal.toolparameterassignment",
     "pk": 10,
     "fields": {
-      "tool": 5,
+      "tool": 4,
       "parameter": 8,
       "required": true,
       "created": "2026-02-18T12:00:00Z",
@@ -640,8 +651,8 @@
     "model": "talos_parietal.toolparameterassignment",
     "pk": 13,
     "fields": {
-      "tool": 6,
-      "parameter": 8,
+      "tool": 5,
+      "parameter": 11,
       "required": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -685,8 +696,8 @@
     "pk": 17,
     "fields": {
       "tool": 6,
-      "parameter": 2,
-      "required": false,
+      "parameter": 12,
+      "required": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
     }
@@ -696,7 +707,7 @@
     "pk": 18,
     "fields": {
       "tool": 6,
-      "parameter": 3,
+      "parameter": 2,
       "required": false,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -706,9 +717,9 @@
     "model": "talos_parietal.toolparameterassignment",
     "pk": 19,
     "fields": {
-      "tool": 7,
-      "parameter": 8,
-      "required": true,
+      "tool": 6,
+      "parameter": 3,
+      "required": false,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
     }
@@ -751,7 +762,7 @@
     "pk": 23,
     "fields": {
       "tool": 7,
-      "parameter": 4,
+      "parameter": 12,
       "required": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -761,8 +772,8 @@
     "model": "talos_parietal.toolparameterassignment",
     "pk": 24,
     "fields": {
-      "tool": 8,
-      "parameter": 8,
+      "tool": 7,
+      "parameter": 4,
       "required": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -784,8 +795,8 @@
     "pk": 26,
     "fields": {
       "tool": 8,
-      "parameter": 12,
-      "required": false,
+      "parameter": 10,
+      "required": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
     }
@@ -816,7 +827,7 @@
     "model": "talos_parietal.toolparameterassignment",
     "pk": 29,
     "fields": {
-      "tool": 9,
+      "tool": 8,
       "parameter": 15,
       "required": false,
       "created": "2026-02-18T12:00:00Z",
@@ -838,9 +849,9 @@
     "model": "talos_parietal.toolparameterassignment",
     "pk": 31,
     "fields": {
-      "tool": 10,
+      "tool": 9,
       "parameter": 17,
-      "required": true,
+      "required": false,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
     }
@@ -861,8 +872,8 @@
     "pk": 33,
     "fields": {
       "tool": 10,
-      "parameter": 16,
-      "required": false,
+      "parameter": 19,
+      "required": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
     }
@@ -872,7 +883,7 @@
     "pk": 34,
     "fields": {
       "tool": 10,
-      "parameter": 19,
+      "parameter": 17,
       "required": false,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -893,9 +904,9 @@
     "model": "talos_parietal.toolparameterassignment",
     "pk": 36,
     "fields": {
-      "tool": 11,
-      "parameter": 17,
-      "required": true,
+      "tool": 10,
+      "parameter": 21,
+      "required": false,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
     }
@@ -905,7 +916,7 @@
     "pk": 37,
     "fields": {
       "tool": 11,
-      "parameter": 21,
+      "parameter": 18,
       "required": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -939,6 +950,17 @@
     "fields": {
       "tool": 11,
       "parameter": 24,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 41,
+    "fields": {
+      "tool": 11,
+      "parameter": 25,
       "required": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
