@@ -199,19 +199,15 @@ class FrontalLobe:
     async def _handle_tool_execution(
         self, turn_record: ReasoningTurn, tool_call_data: Dict[str, Any]
     ) -> Dict[str, Any]:
+        """Parses, records, and executes a single tool call."""
         func_data = tool_call_data.get(FrontalLobeConstants.T_FUNC, {})
         tool_name = func_data.get(FrontalLobeConstants.T_NAME)
         raw_args = func_data.get(FrontalLobeConstants.T_ARGS, {})
         args = self._parse_tool_arguments(raw_args)
 
-        # INJECTION: If we have a session, inject it into args for tools that need it
-        # (e.g. mcp_hippocampus_imprint)
-        if self.session and 'session_id' not in args:
-            args['session_id'] = str(self.session.id)
-
         await self._log_live(f'Tool Call: {tool_name}({args})')
 
-        # 1. Resolve Tool Definition
+        # 1. Resolve Tool Definition for DB Integrity
         try:
             tool_def = await sync_to_async(ToolDefinition.objects.get)(
                 name=tool_name
@@ -230,10 +226,10 @@ class FrontalLobe:
                 status_id=ReasoningStatusID.ACTIVE,
             )
 
-        # 3. Execute via Parietal Gateway (Clean Signature)
+        # 3. Execute via Parietal Gateway (Pure, no injection)
         try:
             tool_result = await ParietalMCP.execute(tool_name, args)
-
+            # Record Success
             if db_tool_call:
                 db_tool_call.result_payload = tool_result[:10000]
                 db_tool_call.status_id = ReasoningStatusID.COMPLETED
@@ -241,6 +237,7 @@ class FrontalLobe:
 
         except Exception as e:
             tool_result = f'Tool Execution Error: {str(e)}'
+            # Record Failure
             if db_tool_call:
                 db_tool_call.traceback = str(e)
                 db_tool_call.status_id = ReasoningStatusID.ERROR
