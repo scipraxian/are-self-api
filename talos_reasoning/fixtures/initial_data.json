@@ -318,5 +318,53 @@
       "created": "2026-02-17T12:00:00Z",
       "modified": "2026-02-17T12:00:00Z"
     }
+  },
+  {
+    "model": "talos_reasoning.modelregistry",
+    "pk": 1,
+    "fields": {
+      "name": "qwen3-coder:30b",
+      "description": "Default Coder Model via Ollama",
+      "api_variant": "ollama",
+      "context_window_size": 262144,
+      "created": "2026-02-17T12:00:00Z",
+      "modified": "2026-02-17T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_reasoning.modelregistry",
+    "pk": 2,
+    "fields": {
+      "name": "gemma3:27b",
+      "description": "High-Intelligence General Reasoning",
+      "api_variant": "ollama",
+      "context_window_size": 131072,
+      "created": "2026-02-17T12:00:00Z",
+      "modified": "2026-02-17T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_reasoning.modelregistry",
+    "pk": 3,
+    "fields": {
+      "name": "llama3:latest",
+      "description": "Lightweight Llama 3 Model. Recommended for low-resource environments.",
+      "api_variant": "ollama",
+      "context_window_size": 8192,
+      "created": "2026-02-17T12:00:00Z",
+      "modified": "2026-02-17T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_reasoning.modelregistry",
+    "pk": 4,
+    "fields": {
+      "name": "llama3.2:3b",
+      "description": "Flyweight Llama 3 Model. Recommended for medium-resource environments.",
+      "api_variant": "ollama",
+      "context_window_size": 131072,
+      "created": "2026-02-17T12:00:00Z",
+      "modified": "2026-02-17T12:00:00Z"
+    }
   }
 ]

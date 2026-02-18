@@ -1,20 +1,25 @@
 import asyncio
 import json
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
 from asgiref.sync import sync_to_async
-from django.conf import settings
 
 from environments.variable_renderer import VariableRenderer
 from hydra.models import HydraHead, HydraHeadStatus
 from hydra.utils import resolve_environment_context
-from talos_parietal import tools as parietal_tools
 from talos_parietal.parietal_mcp.gateway import ParietalMCP
 from talos_parietal.registry import ModelRegistry
 from talos_parietal.synapse import ChatMessage, OllamaClient
-from talos_reasoning.models import ToolDefinition
+from talos_reasoning.models import (
+    ReasoningGoal,
+    ReasoningSession,
+    ReasoningStatusID,
+    ReasoningTurn,
+    ToolCall,
+    ToolDefinition,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +59,7 @@ class FrontalLobeConstants:
     LOG_START = '=== FRONTAL LOBE ACTIVATED ==='
     LOG_END = '\n=== FRONTAL LOBE DEACTIVATED ==='
 
-    MAX_TURNS = 100
-    FILE_TOOLS = ['ai_read_file', 'ai_search_file', 'ai_list_files']
+    DEFAULT_MAX_TURNS = 10
 
 
 class FrontalLobe:
@@ -65,28 +69,25 @@ class FrontalLobe:
         self.head = head
         self.head_id = head.id
         self.log_output: List[str] = []
-        self.model_name = ModelRegistry.get_model(ModelRegistry.CODER)
-        self.client = OllamaClient(model=self.model_name)
+        # We will resolve the actual model name in run() via the Registry
+        self.model_alias = ModelRegistry.CODER
+        self.client = None  # Initialized in run()
+
+        self.session: Optional[ReasoningSession] = None
+        self.current_goal: Optional[ReasoningGoal] = None
 
     # --- IO & Logging ---
 
     async def _log_live(self, message: str) -> None:
-        """Appends to the execution log in memory and writes to the DB
-        immediately."""
+        """Appends to the execution log in memory and writes to the DB immediately."""
         self.log_output.append(message)
-
         current_log = self.head.spell_log or ''
         self.head.spell_log = current_log + message + '\n'
-
-        # Async ORM save
         await sync_to_async(self.head.save)(update_fields=['spell_log'])
 
-    # --- Setup & Context ---
+    # --- Initialization ---
 
     def _get_rendered_objective(self, raw_context: Dict[str, Any]) -> str:
-        """Extracts the prompt template and renders it using the full
-        environment context."""
-        # get prompt else get objective else default.
         raw_prompt = raw_context.get(
             FrontalLobeConstants.KEY_PROMPT,
             raw_context.get(
@@ -97,23 +98,38 @@ class FrontalLobe:
         rendered_prompt = VariableRenderer.render_string(
             str(raw_prompt), raw_context
         )
-
         if not rendered_prompt.strip():
-            rendered_prompt = (
-                f'{FrontalLobeConstants.DEFAULT_PROMPT} Context '
-                f'Head: {self.head_id}'
-            )
-
+            rendered_prompt = f'{FrontalLobeConstants.DEFAULT_PROMPT} Context Head: {self.head_id}'
         return rendered_prompt
+
+    async def _initialize_session(
+        self, rendered_objective: str, max_turns: int
+    ) -> None:
+        """Creates the ReasoningSession and primary ReasoningGoal in the DB."""
+        self.session = await sync_to_async(ReasoningSession.objects.create)(
+            spawn_link=self.head.spawn,
+            goal=rendered_objective,
+            status_id=ReasoningStatusID.ACTIVE,
+            max_turns=max_turns,
+        )
+        self.current_goal = await sync_to_async(ReasoningGoal.objects.create)(
+            session=self.session,
+            rendered_goal=rendered_objective,
+            status_id=ReasoningStatusID.ACTIVE,
+        )
+        await self._log_live(f'Session ID: {self.session.id}')
 
     async def _build_initial_messages(
         self, rendered_objective: str, blackboard: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
-        """Constructs the exact starting payload."""
         bb_str = json.dumps(blackboard, indent=2) if blackboard else '{}'
-        user_content = (
-            f'BLACKBOARD STATE:\n{bb_str}\n\nOBJECTIVE:\n{rendered_objective}'
+
+        # We explicitly tell the AI its Session ID so it can use memory tools correctly
+        session_context = (
+            f'SESSION ID: {self.session.id}' if self.session else ''
         )
+
+        user_content = f'{session_context}\nBLACKBOARD STATE:\n{bb_str}\n\nOBJECTIVE:\n{rendered_objective}'
 
         await self._log_live('\n--- AI INPUT PAYLOAD ---')
         await self._log_live(user_content)
@@ -130,12 +146,8 @@ class FrontalLobe:
         ]
 
     def _build_tool_schemas(self) -> List[Dict[str, Any]]:
-        """Fetches active tools from the database and maps them to the Ollama
-        schema."""
-        # Called via sync_to_async, so ORM calls are safe here
         db_tools = list(ToolDefinition.objects.all())
         ollama_tools = []
-
         for t in db_tools:
             schema = (
                 t.parameters_schema
@@ -157,7 +169,6 @@ class FrontalLobe:
     # --- Execution Subroutines ---
 
     def _parse_tool_arguments(self, raw_args: Any) -> Dict[str, Any]:
-        """Ensures tool arguments are a valid dictionary."""
         if isinstance(raw_args, dict):
             return raw_args
         if isinstance(raw_args, str):
@@ -167,47 +178,81 @@ class FrontalLobe:
                 return {}
         return {}
 
-    def _execute_tool(self, tool_name: str, args: Dict[str, Any]) -> str:
-        """Safely dispatches the requested tool to the parietal lobe."""
-        if tool_name in FrontalLobeConstants.FILE_TOOLS:
-            args['root_path'] = str(settings.BASE_DIR)
+    async def _record_turn_start(
+        self, turn_index: int, snapshot: str
+    ) -> ReasoningTurn:
+        return await sync_to_async(ReasoningTurn.objects.create)(
+            session=self.session,
+            active_goal=self.current_goal,
+            turn_number=turn_index + 1,
+            input_context_snapshot=snapshot[:5000],
+            status_id=ReasoningStatusID.ACTIVE,
+        )
 
-        tool_func = getattr(parietal_tools, tool_name, None)
-        if not tool_func:
-            return f"Error: Tool '{tool_name}' not found in registry."
-
-        try:
-            return str(tool_func(**args))
-        except Exception as e:
-            logger.error(f'[FrontalLobe] Tool {tool_name} crashed: {e}')
-            return f'Tool crashed: {str(e)}'
-
-    async def _process_tool_calls(
-        self, tool_calls: List[Dict[str, Any]], messages: List[Dict[str, Any]]
+    async def _record_turn_completion(
+        self, turn_record: ReasoningTurn, thought_process: str
     ) -> None:
-        """Iterates through AI-requested tools, executes them, and appends
-        results."""
-        for tool_call in tool_calls:
-            func_data = tool_call.get(FrontalLobeConstants.T_FUNC, {})
-            tool_name = func_data.get(FrontalLobeConstants.T_NAME)
+        turn_record.thought_process = thought_process
+        turn_record.status_id = ReasoningStatusID.COMPLETED
+        await sync_to_async(turn_record.save)()
 
-            raw_args = func_data.get(FrontalLobeConstants.T_ARGS, {})
-            args = self._parse_tool_arguments(raw_args)
+    async def _handle_tool_execution(
+        self, turn_record: ReasoningTurn, tool_call_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        func_data = tool_call_data.get(FrontalLobeConstants.T_FUNC, {})
+        tool_name = func_data.get(FrontalLobeConstants.T_NAME)
+        raw_args = func_data.get(FrontalLobeConstants.T_ARGS, {})
+        args = self._parse_tool_arguments(raw_args)
 
-            await self._log_live(f'Tool Call: {tool_name}({args})')
+        # INJECTION: If we have a session, inject it into args for tools that need it
+        # (e.g. mcp_hippocampus_imprint)
+        if self.session and 'session_id' not in args:
+            args['session_id'] = str(self.session.id)
 
-            # --- THE MAGIC ROUTING LINE ---
+        await self._log_live(f'Tool Call: {tool_name}({args})')
+
+        # 1. Resolve Tool Definition
+        try:
+            tool_def = await sync_to_async(ToolDefinition.objects.get)(
+                name=tool_name
+            )
+        except ToolDefinition.DoesNotExist:
+            tool_def = None
+            logger.error(f'AI tried to call unknown tool: {tool_name}')
+
+        # 2. Create ToolCall DB Record
+        db_tool_call = None
+        if tool_def:
+            db_tool_call = await sync_to_async(ToolCall.objects.create)(
+                turn=turn_record,
+                tool=tool_def,
+                arguments=json.dumps(args),
+                status_id=ReasoningStatusID.ACTIVE,
+            )
+
+        # 3. Execute via Parietal Gateway (Clean Signature)
+        try:
             tool_result = await ParietalMCP.execute(tool_name, args)
 
-            await self._log_live(f'Result: {tool_result[:200]}...')
+            if db_tool_call:
+                db_tool_call.result_payload = tool_result[:10000]
+                db_tool_call.status_id = ReasoningStatusID.COMPLETED
+                await sync_to_async(db_tool_call.save)()
 
-            messages.append(
-                ChatMessage(
-                    role=FrontalLobeConstants.ROLE_TOOL,
-                    content=tool_result,
-                    name=tool_name,
-                ).to_dict()
-            )
+        except Exception as e:
+            tool_result = f'Tool Execution Error: {str(e)}'
+            if db_tool_call:
+                db_tool_call.traceback = str(e)
+                db_tool_call.status_id = ReasoningStatusID.ERROR
+                await sync_to_async(db_tool_call.save)()
+
+        await self._log_live(f'Result: {tool_result[:200]}...')
+
+        return ChatMessage(
+            role=FrontalLobeConstants.ROLE_TOOL,
+            content=tool_result,
+            name=tool_name,
+        ).to_dict()
 
     async def _execute_turn(
         self,
@@ -215,16 +260,17 @@ class FrontalLobe:
         messages: List[Dict[str, Any]],
         ollama_tools: List[Dict[str, Any]],
     ) -> bool:
-        """Executes a single conversational turn. Returns True to continue,
-        False to stop."""
         await self._log_live(f'\n--- Turn {turn_index + 1} ---')
-        logger.info(f'[FrontalLobe] Turn {turn_index + 1} tick...')
 
-        # The HTTP Request blocks, so we run it in a background thread to
-        # keep the asyncio loop moving
+        last_input = messages[-1]['content'] if messages else 'Start of Session'
+        turn_record = await self._record_turn_start(turn_index, str(last_input))
+
+        # Run Model (Blocking IO in Thread)
         response = await asyncio.to_thread(
             self.client.chat, messages, ollama_tools
         )
+
+        await self._record_turn_completion(turn_record, response.content or '')
 
         assistant_msg = ChatMessage(
             role=FrontalLobeConstants.ROLE_ASSISTANT,
@@ -242,10 +288,13 @@ class FrontalLobe:
             )
             return False
 
-        await self._process_tool_calls(response.tool_calls, messages)
-        return True
+        for tool_call_data in response.tool_calls:
+            result_msg = await self._handle_tool_execution(
+                turn_record, tool_call_data
+            )
+            messages.append(result_msg)
 
-    # --- Core Orchestrator ---
+        return True
 
     async def run(self) -> Tuple[int, str]:
         """Main asynchronous execution orchestrator."""
@@ -256,66 +305,76 @@ class FrontalLobe:
         await self._log_live(FrontalLobeConstants.LOG_START)
 
         try:
-            # 1. Gather Raw Data
+            # 1. Resolve Environment & Model
             raw_context = await sync_to_async(resolve_environment_context)(
                 head_id=self.head.id
             )
+
+            # Resolve Model from Registry based on Context or Default
+            model_name = await sync_to_async(ModelRegistry.get_model)(
+                ModelRegistry.CODER
+            )
+            self.client = OllamaClient(model=model_name)
+            await self._log_live(f'Model: {model_name}')
+
             blackboard = self.head.blackboard
             rendered_objective = self._get_rendered_objective(raw_context)
 
-            # 2. Build Tools & Messages
-            # Pass raw_context so we can filter tools if needed later
+            # 2. Initialize DB Session
+            max_turns = int(
+                raw_context.get(
+                    'max_turns', FrontalLobeConstants.DEFAULT_MAX_TURNS
+                )
+            )
+            await self._initialize_session(rendered_objective, max_turns)
+
+            # 3. Build Synapse Payload
             ollama_tools = await sync_to_async(self._build_tool_schemas)()
             messages = await self._build_initial_messages(
                 rendered_objective, blackboard
             )
-
-            await self._log_live(f'Model: {self.model_name}')
             await self._log_live(f'Loaded {len(ollama_tools)} tools.')
 
-            # 3. The Loop
-            for turn in range(FrontalLobeConstants.MAX_TURNS):
-                # Check for Stop Signal
+            # 4. The Loop
+            for turn in range(self.session.max_turns):
                 await sync_to_async(self.head.refresh_from_db)(
                     fields=['status']
                 )
                 if self.head.status_id == HydraHeadStatus.STOPPING:
-                    await self._log_live(
-                        '\n[WARNING] Graceful Stop Signal Received. '
-                        'Halting Cognitive Loop.'
-                    )
+                    await self._log_live('\n[WARNING] Stop Signal. Halting.')
                     break
 
                 should_continue = await self._execute_turn(
                     turn, messages, ollama_tools
                 )
+
                 if not should_continue:
                     break
 
-                if turn == FrontalLobeConstants.MAX_TURNS - 1:
-                    await self._log_live(
-                        '\n[WARNING] Max cognitive turns reached. Halting.'
-                    )
+                if turn == self.session.max_turns - 1:
+                    await self._log_live('\n[WARNING] Max turns reached.')
+                    if self.session:
+                        self.session.status_id = ReasoningStatusID.MAXED_OUT
+                        await sync_to_async(self.session.save)()
 
         except Exception as e:
-            logger.exception(f'[FrontalLobe] Crash during execution: {e}')
-            await self._log_live(
-                f'\n[CRITICAL ERROR] Cognitive Loop Crashed: {str(e)}'
-            )
+            logger.exception(f'[FrontalLobe] Crash: {e}')
+            await self._log_live(f'\n[CRITICAL ERROR]: {str(e)}')
+            if self.session:
+                self.session.status_id = ReasoningStatusID.ERROR
+                await sync_to_async(self.session.save)()
             return 500, '\n'.join(self.log_output)
 
         finally:
-            # --- THE CLEANUP ---
             await self._log_live('\n[SYSTEM] Unloading model to free VRAM...')
-            # We run this in a thread because requests is sync
-            await asyncio.to_thread(self.client.unload)
+            if self.client:
+                await asyncio.to_thread(self.client.unload)
             await self._log_live(FrontalLobeConstants.LOG_END)
 
         return 200, '\n'.join(self.log_output)
 
 
 async def run_frontal_lobe(head_id: UUID) -> Tuple[int, str]:
-    """Asynchronous entry point for the generic spell caster."""
     try:
         head = await sync_to_async(HydraHead.objects.get)(id=head_id)
         lobe = FrontalLobe(head)

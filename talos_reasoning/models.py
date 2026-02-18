@@ -2,6 +2,7 @@ from django.db import models
 
 from common.models import (
     BigIdMixin,
+    CreatedAndModifiedWithDelta,
     CreatedMixin,
     DefaultFieldsMixin,
     DescriptionMixin,
@@ -21,7 +22,7 @@ class ReasoningStatusID:
     ATTENTION_REQUIRED = 7
 
 
-class ReasoningStatus(BigIdMixin, NameMixin):
+class ReasoningStatus(NameMixin):
     """
     Lookup table for Reasoning States.
     """
@@ -33,9 +34,7 @@ class ReasoningStatus(BigIdMixin, NameMixin):
 
 
 class ReasoningStatusMixin(models.Model):
-    """
-    Mixin to standardize lifecycle states.
-    """
+    """Mixin to standardize lifecycle states."""
 
     status = models.ForeignKey(
         ReasoningStatus,
@@ -45,6 +44,26 @@ class ReasoningStatusMixin(models.Model):
 
     class Meta:
         abstract = True
+
+
+class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
+    """
+    Database-driven LLM definition.
+    Allows us to switch from 'qwen2.5-coder' to 'gpt-4o' via the Admin panel
+    without redeploying code.
+    """
+
+    api_variant = models.CharField(max_length=50, default='ollama')
+    context_window_size = models.IntegerField(default=32768)
+    cost_per_1k_input = models.DecimalField(
+        max_digits=10, decimal_places=6, default=0
+    )
+    cost_per_1k_output = models.DecimalField(
+        max_digits=10, decimal_places=6, default=0
+    )
+
+    class Meta:
+        verbose_name_plural = 'Model Registries'
 
 
 class ToolDefinition(DefaultFieldsMixin, DescriptionMixin):
@@ -90,24 +109,14 @@ class ReasoningSession(
         return f'Session {self.id} Status: {self.status}'
 
 
-class ReasoningGoal(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
-    """
-    Individual objectives within a session.
-    """
+class ReasoningGoal(ReasoningStatusMixin, CreatedAndModifiedWithDelta):
+    """Individual objectives within a session."""
 
     session = models.ForeignKey(
         ReasoningSession, on_delete=models.CASCADE, related_name='goals'
     )
-    reasoning_prompt = models.TextField(
-        help_text='Specific instruction for this goal.'
-    )
-    parent_goal = models.ForeignKey(
-        'self',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='sub_goals',
-    )
+    achieved = models.BooleanField(default=False)
+    rendered_goal = models.TextField(blank=True, default='')
 
     def __str__(self):
         return f'Goal: {self.reasoning_prompt[:50]}...'
@@ -158,3 +167,30 @@ class ToolCall(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
 
     def __str__(self):
         return f'ToolCall: {self.tool.name} in Turn {self.turn.turn_number}'
+
+
+class SessionConclusion(DefaultFieldsMixin, ReasoningStatusMixin):
+    """The crystallized result of a ReasoningSession."""
+
+    session = models.OneToOneField(
+        ReasoningSession, on_delete=models.CASCADE, related_name='conclusion'
+    )
+    summary = models.TextField()
+    reasoning_trace = models.TextField(
+        help_text='A high-level summary of the thought process.'
+    )
+
+    # Structured analog outcome statements by the llm.
+    outcome_status = models.CharField(
+        max_length=50
+    )  # SUCCESS, FAILURE, NEEDS_CLARIFICATION
+    recommended_action = models.CharField(
+        max_length=100
+    )  # RETRY, ABORT, PROCEED, BRANCH_B
+
+    # The 'Seed' for the next thought
+    next_goal_suggestion = models.TextField(blank=True, null=True)
+
+    @property
+    def engrams(self):
+        return self.session.talosengram_set.all()

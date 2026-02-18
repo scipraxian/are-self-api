@@ -5,6 +5,7 @@ from common.models import (
     DescriptionMixin,
     NameMixin,
 )
+from hydra.models import HydraHead
 from talos_reasoning.models import ReasoningSession, ReasoningTurn
 
 
@@ -16,7 +17,8 @@ class TalosEngram(DefaultFieldsMixin, DescriptionMixin):
     """A single memory extracted during reasoning.
 
     args:
-        name: A unique hash representing the memory content.
+        name: A unique hash representing the memory content. You would use it to
+        look up this memory in the future even if you didn't know you had it.
         description: The extracted fact or memory.
 
         session: The reasoning session this engram belongs to.
@@ -24,14 +26,12 @@ class TalosEngram(DefaultFieldsMixin, DescriptionMixin):
         is_active: Indicates if the engram is currently active.
     """
 
-    session = models.ForeignKey(
-        ReasoningSession, on_delete=models.CASCADE, related_name='engrams'
-    )
-    source_turn = models.ForeignKey(
-        ReasoningTurn, on_delete=models.CASCADE, related_name='engrams'
-    )
-    heads = models.ManyToManyField(
-        'talos_agent.HydraHead', related_name='engrams'
-    )
-    tags = models.ManyToManyField(TalosEngramTag, related_name='engrams')
+    RELATED_NAME = 'engram'
+
+    sessions = models.ManyToManyField(ReasoningSession)
+    source_turns = models.ManyToManyField(ReasoningTurn)
+    heads = models.ManyToManyField(HydraHead, related_name=RELATED_NAME)
+    tags = models.ManyToManyField(TalosEngramTag, related_name=RELATED_NAME)
     is_active = models.BooleanField(default=True)
+    relevance_score = models.FloatField(default=0.0)
+    vector_id = models.UUIDField(null=True, blank=True)
