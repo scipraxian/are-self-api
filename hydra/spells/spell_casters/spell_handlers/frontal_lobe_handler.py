@@ -29,8 +29,10 @@ class FrontalLobeConstants:
 
     KEY_PROMPT = 'prompt'
     KEY_OBJECTIVE = 'objective'
-    DEFAULT_PROMPT = ('Analyze the current state and execute necessary tools '
-                      'to resolve issues.')
+    DEFAULT_PROMPT = (
+        'Analyze the current state and execute necessary tools '
+        'to resolve issues.'
+    )
 
     SYSTEM_PERSONA = (
         'You are Talos, you are an engineer. '
@@ -52,7 +54,7 @@ class FrontalLobeConstants:
     LOG_START = '=== FRONTAL LOBE ACTIVATED ==='
     LOG_END = '\n=== FRONTAL LOBE DEACTIVATED ==='
 
-    MAX_TURNS = 10
+    MAX_TURNS = 100
     FILE_TOOLS = ['ai_read_file', 'ai_search_file', 'ai_list_files']
 
 
@@ -84,40 +86,46 @@ class FrontalLobe:
     def _get_rendered_objective(self, raw_context: Dict[str, Any]) -> str:
         """Extracts the prompt template and renders it using the full
         environment context."""
+        # get prompt else get objective else default.
         raw_prompt = raw_context.get(
             FrontalLobeConstants.KEY_PROMPT,
-            raw_context.get(FrontalLobeConstants.KEY_OBJECTIVE,
-                            FrontalLobeConstants.DEFAULT_PROMPT)
+            raw_context.get(
+                FrontalLobeConstants.KEY_OBJECTIVE,
+                FrontalLobeConstants.DEFAULT_PROMPT,
+            ),
         )
-        rendered_prompt = VariableRenderer.render_string(str(raw_prompt),
-                                                         raw_context)
+        rendered_prompt = VariableRenderer.render_string(
+            str(raw_prompt), raw_context
+        )
 
         if not rendered_prompt.strip():
-            rendered_prompt = (f"{FrontalLobeConstants.DEFAULT_PROMPT} Context "
-                               f"Head: {self.head_id}")
+            rendered_prompt = (
+                f'{FrontalLobeConstants.DEFAULT_PROMPT} Context '
+                f'Head: {self.head_id}'
+            )
 
         return rendered_prompt
 
-    async def _build_initial_messages(self, rendered_objective: str,
-                                      blackboard: Dict[str, Any]) -> List[
-        Dict[str, Any]]:
+    async def _build_initial_messages(
+        self, rendered_objective: str, blackboard: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Constructs the exact starting payload."""
-        bb_str = json.dumps(blackboard, indent=2) if blackboard else "{}"
-        user_content = f'BLACKBOARD STATE:\n{bb_str}\n\nOBJECTIVE:\n{
-        rendered_objective}'
+        bb_str = json.dumps(blackboard, indent=2) if blackboard else '{}'
+        user_content = (
+            f'BLACKBOARD STATE:\n{bb_str}\n\nOBJECTIVE:\n{rendered_objective}'
+        )
 
-        await self._log_live("\n--- AI INPUT PAYLOAD ---")
+        await self._log_live('\n--- AI INPUT PAYLOAD ---')
         await self._log_live(user_content)
-        await self._log_live("------------------------\n")
+        await self._log_live('------------------------\n')
 
         return [
             ChatMessage(
                 role=FrontalLobeConstants.ROLE_SYSTEM,
-                content=FrontalLobeConstants.SYSTEM_PERSONA
+                content=FrontalLobeConstants.SYSTEM_PERSONA,
             ).to_dict(),
             ChatMessage(
-                role=FrontalLobeConstants.ROLE_USER,
-                content=user_content
+                role=FrontalLobeConstants.ROLE_USER, content=user_content
             ).to_dict(),
         ]
 
@@ -136,8 +144,7 @@ class FrontalLobe:
             )
             ollama_tools.append(
                 {
-                    FrontalLobeConstants.T_TYPE:
-                        FrontalLobeConstants.TYPE_FUNCTION,
+                    FrontalLobeConstants.T_TYPE: FrontalLobeConstants.TYPE_FUNCTION,
                     FrontalLobeConstants.T_FUNC: {
                         FrontalLobeConstants.T_NAME: t.name,
                         FrontalLobeConstants.T_DESC: t.description,
@@ -175,8 +182,9 @@ class FrontalLobe:
             logger.error(f'[FrontalLobe] Tool {tool_name} crashed: {e}')
             return f'Tool crashed: {str(e)}'
 
-    async def _process_tool_calls(self, tool_calls: List[Dict[str, Any]],
-                                  messages: List[Dict[str, Any]]) -> None:
+    async def _process_tool_calls(
+        self, tool_calls: List[Dict[str, Any]], messages: List[Dict[str, Any]]
+    ) -> None:
         """Iterates through AI-requested tools, executes them, and appends
         results."""
         for tool_call in tool_calls:
@@ -197,13 +205,16 @@ class FrontalLobe:
                 ChatMessage(
                     role=FrontalLobeConstants.ROLE_TOOL,
                     content=tool_result,
-                    name=tool_name
+                    name=tool_name,
                 ).to_dict()
             )
 
-    async def _execute_turn(self, turn_index: int,
-                            messages: List[Dict[str, Any]],
-                            ollama_tools: List[Dict[str, Any]]) -> bool:
+    async def _execute_turn(
+        self,
+        turn_index: int,
+        messages: List[Dict[str, Any]],
+        ollama_tools: List[Dict[str, Any]],
+    ) -> bool:
         """Executes a single conversational turn. Returns True to continue,
         False to stop."""
         await self._log_live(f'\n--- Turn {turn_index + 1} ---')
@@ -211,13 +222,14 @@ class FrontalLobe:
 
         # The HTTP Request blocks, so we run it in a background thread to
         # keep the asyncio loop moving
-        response = await asyncio.to_thread(self.client.chat, messages,
-                                           ollama_tools)
+        response = await asyncio.to_thread(
+            self.client.chat, messages, ollama_tools
+        )
 
         assistant_msg = ChatMessage(
             role=FrontalLobeConstants.ROLE_ASSISTANT,
             content=response.content,
-            tool_calls=response.tool_calls if response.tool_calls else None
+            tool_calls=response.tool_calls if response.tool_calls else None,
         )
         messages.append(assistant_msg.to_dict())
 
@@ -226,7 +238,8 @@ class FrontalLobe:
 
         if not response.tool_calls:
             await self._log_live(
-                '\nNo further actions requested. Objective Complete.')
+                '\nNo further actions requested. Objective Complete.'
+            )
             return False
 
         await self._process_tool_calls(response.tool_calls, messages)
@@ -242,39 +255,62 @@ class FrontalLobe:
         await sync_to_async(self.head.save)(update_fields=['spell_log'])
         await self._log_live(FrontalLobeConstants.LOG_START)
 
-        # Gather context using sync_to_async for DB safety
-        raw_context = await sync_to_async(resolve_environment_context)(
-            head_id=self.head.id)
-        blackboard = self.head.blackboard
-        rendered_objective = self._get_rendered_objective(raw_context)
+        try:
+            # 1. Gather Raw Data
+            raw_context = await sync_to_async(resolve_environment_context)(
+                head_id=self.head.id
+            )
+            blackboard = self.head.blackboard
+            rendered_objective = self._get_rendered_objective(raw_context)
 
-        ollama_tools = await sync_to_async(self._build_tool_schemas)()
-        messages = await self._build_initial_messages(rendered_objective,
-                                                      blackboard)
+            # 2. Build Tools & Messages
+            # Pass raw_context so we can filter tools if needed later
+            ollama_tools = await sync_to_async(self._build_tool_schemas)()
+            messages = await self._build_initial_messages(
+                rendered_objective, blackboard
+            )
 
-        await self._log_live(f'Model: {self.model_name}')
-        await self._log_live(f'Loaded {len(ollama_tools)} tools.')
+            await self._log_live(f'Model: {self.model_name}')
+            await self._log_live(f'Loaded {len(ollama_tools)} tools.')
 
-        for turn in range(FrontalLobeConstants.MAX_TURNS):
+            # 3. The Loop
+            for turn in range(FrontalLobeConstants.MAX_TURNS):
+                # Check for Stop Signal
+                await sync_to_async(self.head.refresh_from_db)(
+                    fields=['status']
+                )
+                if self.head.status_id == HydraHeadStatus.STOPPING:
+                    await self._log_live(
+                        '\n[WARNING] Graceful Stop Signal Received. '
+                        'Halting Cognitive Loop.'
+                    )
+                    break
 
-            # --- GRACEFUL STOP INTERCEPT ---
-            await sync_to_async(self.head.refresh_from_db)(fields=['status'])
-            if self.head.status_id == HydraHeadStatus.STOPPING:
-                await self._log_live(
-                    '\n[WARNING] Graceful Stop Signal Received. Halting '
-                    'Cognitive Loop.')
-                break
+                should_continue = await self._execute_turn(
+                    turn, messages, ollama_tools
+                )
+                if not should_continue:
+                    break
 
-            should_continue = await self._execute_turn(turn, messages,
-                                                       ollama_tools)
-            if not should_continue:
-                break
+                if turn == FrontalLobeConstants.MAX_TURNS - 1:
+                    await self._log_live(
+                        '\n[WARNING] Max cognitive turns reached. Halting.'
+                    )
 
-            if turn == FrontalLobeConstants.MAX_TURNS - 1:
-                await self._log_live(
-                    '\n[WARNING] Max cognitive turns reached. Halting.')
+        except Exception as e:
+            logger.exception(f'[FrontalLobe] Crash during execution: {e}')
+            await self._log_live(
+                f'\n[CRITICAL ERROR] Cognitive Loop Crashed: {str(e)}'
+            )
+            return 500, '\n'.join(self.log_output)
 
-        await self._log_live(FrontalLobeConstants.LOG_END)
+        finally:
+            # --- THE CLEANUP ---
+            await self._log_live('\n[SYSTEM] Unloading model to free VRAM...')
+            # We run this in a thread because requests is sync
+            await asyncio.to_thread(self.client.unload)
+            await self._log_live(FrontalLobeConstants.LOG_END)
+
         return 200, '\n'.join(self.log_output)
 
 

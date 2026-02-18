@@ -49,3 +49,8 @@ TYPE_FAIL_STR = 'fail'
 VAL_UNKNOWN = 'Unknown'
 VAL_PENDING = 'Pending...'
 VAL_CMD_NOT_CAPTURED = 'Command not captured.'
+
+HEAD_FIELD_NAME = 'head'
+NODE_FIELD_NAME = 'node'
+SPAWN_FIELD_NAME = 'spawn'
+SPELLBOOK_FIELD_NAME = 'spellbook'

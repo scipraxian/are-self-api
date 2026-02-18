@@ -75,10 +75,10 @@ class OllamaClient:
         self.model = model
 
     def chat(
-            self,
-            messages: List[Dict[str, Any]],
-            tools: Optional[List[Dict[str, Any]]] = None,
-            options: Optional[Dict[str, Any]] = None,
+        self,
+        messages: List[Dict[str, Any]],
+        tools: Optional[List[Dict[str, Any]]] = None,
+        options: Optional[Dict[str, Any]] = None,
     ) -> OllamaResponse:
         """
         Transmits message history to the model, optionally with tool schemas.
@@ -122,7 +122,7 @@ class OllamaClient:
         except requests.RequestException as e:
             error_details = str(e)
             if hasattr(e, 'response') and e.response is not None:
-                error_details += f" | Details: {e.response.text}"
+                error_details += f' | Details: {e.response.text}'
             logger.error(f'Ollama Synapse Misfire: {error_details}')
             return OllamaResponse(
                 content=f'{OllamaConstants.ERR_MSG_PREFIX} {error_details}',
@@ -131,3 +131,17 @@ class OllamaClient:
                 tokens_output=0,
                 model=self.model,
             )
+
+    def unload(self) -> bool:
+        """Forces Ollama to immediately unload the model from VRAM."""
+        try:
+            payload = {'model': self.model, 'keep_alive': 0}
+            response = requests.post(
+                f'{OllamaConstants.BASE_URL}/api/chat', json=payload
+            )
+            response.raise_for_status()
+            logger.info(f'[Synapse] Successfully unloaded model {self.model}')
+            return True
+        except requests.RequestException as e:
+            logger.warning(f'[Synapse] Failed to unload model: {e}')
+            return False

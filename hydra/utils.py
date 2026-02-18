@@ -9,15 +9,19 @@ from environments.models import ProjectEnvironment
 from environments.variable_renderer import VariableRenderer
 from hydra.constants import (
     EXECUTION_LOG_FIELD_NAME,
+    HEAD_FIELD_NAME,
     KEY_BOOK_ID,
     KEY_ENVIRONMENT_ID,
     KEY_HEAD_ID,
     KEY_PROVENANCE_ID,
     KEY_SPAWN_ID,
     KEY_SPELL_ID,
+    NODE_FIELD_NAME,
     PROVENANCE_FIELD_NAME,
     RESULT_CODE_FIELD_NAME,
+    SPAWN_FIELD_NAME,
     SPELL_LOG_FIELD_NAME,
+    SPELLBOOK_FIELD_NAME,
 )
 from hydra.models import HydraHead, HydraSpellBookNodeContext, HydraSpellContext
 
@@ -132,6 +136,13 @@ def resolve_environment_context(
         raise ValueError('Must provide either head_id or (env_id and spell_id)')
 
     context_data = metadata.copy()
+    if head:
+        context_data[HEAD_FIELD_NAME] = head
+        context_data[SPAWN_FIELD_NAME] = head.spawn
+        if head.node:
+            context_data[NODE_FIELD_NAME] = head.node
+        if head.spawn.spellbook:
+            context_data[SPELLBOOK_FIELD_NAME] = head.spawn.spellbook
     if env:
         context_data.update(VariableRenderer.extract_variables(env))
 

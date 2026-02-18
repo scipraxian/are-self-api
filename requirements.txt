@@ -36,3 +36,6 @@ djangorestframework-stubs
 aiosmtpd
 
 playwright
+
+ruff
+
