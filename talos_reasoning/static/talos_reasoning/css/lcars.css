@@ -284,3 +284,27 @@ body {
     filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
 }
 
+/* Active Node Pulsing */
+@keyframes lcars-pulse {
+    0% {
+        filter: drop-shadow(0 0 2px var(--lcars-gold));
+        stroke-width: 1px;
+        stroke: transparent;
+    }
+    50% {
+        filter: drop-shadow(0 0 15px var(--lcars-gold));
+        stroke-width: 3px;
+        stroke: #fff;
+    }
+    100% {
+        filter: drop-shadow(0 0 2px var(--lcars-gold));
+        stroke-width: 1px;
+        stroke: transparent;
+    }
+}
+
+.nodes g.active-node circle,
+.nodes g.active-node rect,
+.nodes g.active-node polygon {
+    animation: lcars-pulse 1.5s infinite;
+}

@@ -1,4 +1,5 @@
 import importlib
+import inspect
 import logging
 from typing import Any, Dict
 
@@ -17,30 +18,43 @@ class ParietalMCP:
         Dynamically loads and awaits the requested mcp tool.
         """
         if not tool_name.startswith('mcp_'):
-            return (f"Error: Tool '{tool_name}' violates nomenclature. Must "
-                    f"start with 'mcp_'.")
+            return (
+                f"Error: Tool '{tool_name}' violates nomenclature. Must "
+                f"start with 'mcp_'."
+            )
 
         try:
-            # Dynamically import the module:
-            # talos_parietal.parietal_mcp.mcp_read_file
-            module_path = f"talos_parietal.parietal_mcp.{tool_name}"
+            module_path = f'talos_parietal.parietal_mcp.{tool_name}'
             tool_module = importlib.import_module(module_path)
 
-            # We expect the module to have a main function sharing the exact
-            # tool name
             tool_func = getattr(tool_module, tool_name, None)
 
             if not tool_func:
-                return (f"Error: Function '{tool_name}' not found inside "
-                        f"module '{module_path}'.")
+                return (
+                    f"Error: Function '{tool_name}' not found inside "
+                    f"module '{module_path}'."
+                )
 
-            # Await the execution
-            result = await tool_func(**args)
+            # --- ARMOR: Hallucination Defense ---
+            # Inspect the target function's signature and drop any invented arguments
+            sig = inspect.signature(tool_func)
+            safe_args = {k: v for k, v in args.items() if k in sig.parameters}
+
+            hallucinated = set(args.keys()) - set(safe_args.keys())
+            if hallucinated:
+                logger.warning(
+                    f'[ParietalMCP] Stripped hallucinated arguments from {tool_name}: {hallucinated}'
+                )
+
+            # Await the execution safely
+            result = await tool_func(**safe_args)
             return str(result)
 
         except ImportError:
-            return (f"Error: Tool module '{tool_name}' does not exist in "
-                    f"parietal_mcp.")
+            return (
+                f"Error: Tool module '{tool_name}' does not exist in "
+                f'parietal_mcp.'
+            )
         except Exception as e:
-            logger.exception(f"[ParietalMCP] Execution crash in {tool_name}")
-            return f"Tool Execution Crash: {str(e)}"
+            logger.exception(f'[ParietalMCP] Execution crash in {tool_name}')
+            return f'Tool Execution Crash: {str(e)}'

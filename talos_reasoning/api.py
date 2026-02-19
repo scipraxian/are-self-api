@@ -75,7 +75,6 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         """Returns fully resolved, DTO-bound JSON for the D3 visualization."""
         session = self.get_object()
 
-        # Optimize queries by dumping to list immediately
         turns = list(
             session.turns.all()
             .order_by('turn_number')
@@ -87,9 +86,13 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         links = []
         tool_map = {}
 
+        # --- FIX: Track valid nodes to prevent D3 dangling edge crashes ---
+        valid_node_ids = set()
+
         # 1. Process Turns
         for i, turn in enumerate(turns):
             node_id = f'{constants.NODE_TURN}-{turn.id}'
+            valid_node_ids.add(node_id)  # Register Node
 
             nodes.append(
                 serializers.GraphNodeDTO(
@@ -103,7 +106,6 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
                 )
             )
 
-            # Link sequential turns (O(1) list lookup instead of N+1 query)
             if i > 0:
                 prev_turn = turns[i - 1]
                 links.append(
@@ -121,6 +123,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
 
                 if tool_name not in tool_map:
                     tool_map[tool_name] = tool_node_id
+                    valid_node_ids.add(tool_node_id)  # Register Node
                     nodes.append(
                         serializers.GraphNodeDTO(
                             id=tool_node_id,
@@ -145,6 +148,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         # 2. Process Engrams
         for engram in engrams:
             node_id = f'{constants.NODE_ENGRAM}-{engram.id}'
+            valid_node_ids.add(node_id)  # Register Node
 
             nodes.append(
                 serializers.GraphNodeDTO(
@@ -158,15 +162,18 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
             )
 
             for turn in engram.source_turns.all():
-                links.append(
-                    serializers.GraphLinkDTO(
-                        source=f'{constants.NODE_TURN}-{turn.id}',
-                        target=node_id,
-                        type=constants.LINK_CREATED_IN,
-                    )
-                )
+                turn_node_id = f'{constants.NODE_TURN}-{turn.id}'
 
-        # 3. Serialize and Dispatch
+                # --- FIX: Only link if the Turn exists in THIS specific graph ---
+                if turn_node_id in valid_node_ids:
+                    links.append(
+                        serializers.GraphLinkDTO(
+                            source=turn_node_id,
+                            target=node_id,
+                            type=constants.LINK_CREATED_IN,
+                        )
+                    )
+
         session_data = serializers.ReasoningSessionSerializer(session).data
         dto_payload = serializers.SessionGraphDTO(
             session=session_data, nodes=nodes, links=links

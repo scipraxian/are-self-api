@@ -4,12 +4,14 @@ let svg, g, simulation;
 let linkGroup, nodeGroup;
 let currentData = {nodes: [], links: []};
 let selectedNodeId = null;
+let selectedNodeHash = null;
+let pollTimer;
 
 document.addEventListener('DOMContentLoaded', () => {
     sessionId = document.getElementById('lcars-data').dataset.sessionId;
     initGraphContainer();
     fetchData();
-    setInterval(fetchData, POLL_INTERVAL_MS);
+    pollTimer = setInterval(fetchData, POLL_INTERVAL_MS);
 });
 
 function fetchData() {
@@ -17,12 +19,33 @@ function fetchData() {
         .then(response => response.json())
         .then(data => {
             updateSessionInfo(data.session);
+
+            // --- 1. DIRTY CHECKING ---
+            let shouldUpdateInspector = false;
+            if (selectedNodeId) {
+                const rawNode = data.nodes.find(n => n.id === selectedNodeId);
+                const rawLinks = data.links.filter(l => l.target === selectedNodeId || l.source === selectedNodeId);
+                const currentStateHash = JSON.stringify({node: rawNode, links: rawLinks});
+
+                if (selectedNodeHash !== currentStateHash) {
+                    shouldUpdateInspector = true;
+                    selectedNodeHash = currentStateHash;
+                }
+            }
+
             updateGraph(data);
 
-            // Live update the inspector if the selected node got new data
-            if (selectedNodeId) {
+            // --- 2. UPDATE INSPECTOR IF DATA CHANGED ---
+            if (shouldUpdateInspector && selectedNodeId) {
                 const updatedNode = currentData.nodes.find(n => n.id === selectedNodeId);
                 if (updatedNode) showDetails(updatedNode);
+            }
+
+            // --- 3. HALT ON TERMINAL STATE ---
+            const terminalStates = ['Completed', 'Maxed Out', 'Error'];
+            if (terminalStates.includes(data.session.status_name)) {
+                console.log("Session reached terminal state. Halting telemetry poll.");
+                clearInterval(pollTimer);
             }
         })
         .catch(err => console.error("Graph Data Fetch Error:", err));
@@ -45,7 +68,6 @@ function initGraphContainer() {
 
     g = svg.append("g");
 
-    // Groups for z-indexing
     linkGroup = g.append("g").attr("class", "links");
     nodeGroup = g.append("g").attr("class", "nodes");
 
@@ -57,7 +79,18 @@ function initGraphContainer() {
 }
 
 function updateGraph(newData) {
-    // 1. Merge nodes to preserve X/Y physics coordinates of existing nodes
+// --- SHIELD: Drop dangling links immediately to prevent physics crash ---
+    const validNodeIds = new Set(newData.nodes.map(n => n.id));
+    newData.links = newData.links.filter(l => {
+        const sourceId = l.source.id || l.source;
+        const targetId = l.target.id || l.target;
+        return validNodeIds.has(sourceId) && validNodeIds.has(targetId);
+    });
+
+    const topologyChanged = (newData.nodes.length !== currentData.nodes.length) ||
+        (newData.links.length !== currentData.links.length);
+
+    // Merge nodes to preserve X/Y coordinates
     const oldNodeMap = new Map(currentData.nodes.map(n => [n.id, n]));
     const mergedNodes = newData.nodes.map(n => {
         return oldNodeMap.has(n.id) ? Object.assign(oldNodeMap.get(n.id), n) : n;
@@ -66,7 +99,7 @@ function updateGraph(newData) {
     currentData.nodes = mergedNodes;
     currentData.links = newData.links;
 
-    // 2. Data Join: Links
+    // --- DATA JOIN: LINKS ---
     const links = linkGroup.selectAll("line")
         .data(currentData.links, d => `${d.source.id || d.source}-${d.target.id || d.target}`);
 
@@ -79,7 +112,7 @@ function updateGraph(newData) {
     links.exit().remove();
     const allLinks = linksEnter.merge(links);
 
-    // 3. Data Join: Nodes
+    // --- DATA JOIN: NODES ---
     const nodes = nodeGroup.selectAll("g")
         .data(currentData.nodes, d => d.id);
 
@@ -87,12 +120,12 @@ function updateGraph(newData) {
         .call(drag(simulation))
         .on("click", (event, d) => {
             selectedNodeId = d.id;
+            selectedNodeHash = null;
             nodeGroup.selectAll("g").classed("selected", false);
             d3.select(event.currentTarget).classed("selected", true);
             showDetails(d);
         });
 
-    // Draw Shapes based on type
     nodesEnter.each(function (d) {
         const el = d3.select(this);
         if (d.type === 'turn') {
@@ -115,10 +148,16 @@ function updateGraph(newData) {
     nodes.exit().remove();
     const allNodes = nodesEnter.merge(nodes);
 
-    // 4. Update Simulation
+    const activeStates = ['Active', 'Pending', 'Running'];
+    allNodes.classed("active-node", d => activeStates.includes(d.status));
+
+    // --- EXECUTE SIMULATION ---
     simulation.nodes(currentData.nodes);
     simulation.force("link").links(currentData.links);
-    simulation.alpha(0.3).restart(); // Gentle nudge to layout
+
+    if (topologyChanged) {
+        simulation.alpha(0.3).restart();
+    }
 
     simulation.on("tick", () => {
         allLinks
@@ -132,6 +171,11 @@ function updateGraph(newData) {
 
 function showDetails(d) {
     const panel = document.getElementById('details-content');
+    const scrollContainer = document.getElementById('details-panel');
+
+    // --- PRESERVE SCROLL STATE ---
+    const prevScrollTop = scrollContainer.scrollTop;
+
     let html = `<div class="detail-header">${d.type.toUpperCase()}: ${d.label || d.id}</div>`;
 
     if (d.type === 'turn') {
@@ -144,12 +188,12 @@ function showDetails(d) {
             </div>
         `;
     } else if (d.type === 'tool') {
-        // Aggregate all calls for this tool from the links
         const calls = currentData.links.filter(l => l.target.id === d.id && l.type === 'uses_tool');
         html += `<div class="detail-row"><div class="detail-label">Total Invocations</div><div class="detail-value">${calls.length}</div></div>`;
 
         calls.forEach((call, idx) => {
-            const turnNum = call.source.turn_number || '?';
+            // Check if call.source is populated fully or just an ID string
+            const turnNum = call.source.turn_number ? call.source.turn_number : call.source.split('-')[1];
             html += `
                 <div class="tool-call-block">
                     <div style="color: #99ccff; font-weight: bold; margin-bottom: 5px;">Call ${idx + 1} (Triggered by Turn ${turnNum})</div>
@@ -169,6 +213,9 @@ function showDetails(d) {
     }
 
     panel.innerHTML = html;
+
+    // --- RESTORE SCROLL STATE ---
+    scrollContainer.scrollTop = prevScrollTop;
 }
 
 // UI Handlers
