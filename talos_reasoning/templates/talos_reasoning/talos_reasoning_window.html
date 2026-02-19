@@ -1,0 +1,84 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CORTEX // {{ session.id|slice:":8" }}</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=JetBrains+Mono&family=Inter:wght@400;600&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'talos_reasoning/css/talos_reasoning_window.css' %}">
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+
+<div class="cortex-grid">
+    <header class="cortex-header">
+        <div class="brand">
+            <span class="icon">🧠</span>
+            <span class="title">TALOS REASONING CORTEX</span>
+        </div>
+        <div class="session-meta">
+            <span class="label">SESSION ID</span>
+            <span class="value">{{ session.id }}</span>
+            <span class="status-pill status-{{ session.status.name|lower }}">{{ session.status.name }}</span>
+        </div>
+        <div class="controls">
+            <button class="btn-tick"
+                    hx-post="{% url 'talos_reasoning:cortex_tick' session.id %}"
+                    hx-swap="none"
+                    {% if not is_active %}disabled{% endif %}>
+                ⚡ TICK ENGINE
+            </button>
+        </div>
+    </header>
+
+    <aside class="col-strategy">
+        <div class="panel-header">STRATEGIC OBJECTIVES</div>
+        <div class="goal-list">
+            {% for goal in goals %}
+                <div class="goal-card {% if goal.status.name == 'Active' %}active{% endif %}">
+                    <div class="goal-status">{{ goal.status.name }}</div>
+                    <div class="goal-text">{{ goal.rendered_goal|default:goal.reasoning_prompt }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    </aside>
+
+    <main class="col-tactics" id="cortex-feed"
+          hx-get="{% url 'talos_reasoning:reasoning_interface' session.id %}?partial=stream"
+          hx-trigger="refresh-cortex from:body, every 5s"
+          hx-swap="innerHTML"
+          hx-on::after-swap="scrollToBottom()">
+
+        {% include "talos_reasoning/partials/cortex_stream_partial.html" %}
+
+    </main>
+
+    <aside class="col-memory">
+        <div class="panel-header">HIPPOCAMPUS (ENGRAMS)</div>
+        <div class="engram-list">
+            <div class="memory-block summary">
+                <div class="memory-label">SHORT-TERM CONTEXT</div>
+                <div class="memory-content">{{ session.rolling_context_summary|default:"No context established." }}</div>
+            </div>
+
+            {% for engram in engrams %}
+                <div class="memory-block engram">
+                    <div class="memory-label">FACT #{{ engram.id }} ({{ engram.relevance_score }})</div>
+                    <div class="memory-content">{{ engram.description }}</div>
+                    <div class="memory-tags">
+                        {% for tag in engram.tags.all %}
+                            <span class="tag">{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="empty-state">No long-term memories retrieved.</div>
+            {% endfor %}
+        </div>
+    </aside>
+</div>
+
+<script src="{% static 'talos_reasoning/js/talos_reasoning_window.js' %}"></script>
+</body>
+</html>

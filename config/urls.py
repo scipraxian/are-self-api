@@ -13,6 +13,7 @@ v1_router.registry.extend(DASHBOARD_ROUTER.registry)
 urlpatterns = [
     path('', include('dashboard.urls')),
     path('hydra/', include('hydra.urls')),
+    path('environments/', include('environments.urls')),
     path('api/v1/', include(v1_router.urls)),
     path('admin/', admin.site.urls),
     path(
