@@ -21,7 +21,7 @@ class ReasoningStatusID:
     ATTENTION_REQUIRED = 7
 
 
-class ReasoningStatus(NameMixin):
+class ReasoningStatus(NameMixin, ReasoningStatusID):
     """
     Lookup table for Reasoning States.
     """
