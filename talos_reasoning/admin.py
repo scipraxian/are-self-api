@@ -41,14 +41,11 @@ class ReasoningTurnInline(admin.StackedInline):
 
 @admin.register(ReasoningSession)
 class ReasoningSessionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'spawn_link', 'created', 'status', 'goal_preview')
+    list_display = ('id', 'head', 'created', 'status')
     list_filter = ('status', 'created')
-    search_fields = ('id', 'goal')
+    search_fields = ('id',)
     readonly_fields = ('created', 'modified')
     inlines = [ReasoningTurnInline]
-
-    def goal_preview(self, obj):
-        return obj.goal[:50] + '...' if obj.goal else ''
 
 
 @admin.register(ToolDefinition)

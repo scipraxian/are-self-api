@@ -9,6 +9,7 @@ from common.models import (
     NameMixin,
     UUIDIdMixin,
 )
+from hydra.models import HydraSpellbookNode
 
 
 class ReasoningStatusID:
@@ -75,23 +76,16 @@ class ReasoningSession(
     The record of a reasoning process.
     """
 
-    spawn_link = models.ForeignKey(
-        'hydra.HydraSpawn',
-        on_delete=models.CASCADE,
+    RELATED_NAME = 'reasoning_session'
+
+    head = models.ForeignKey(
+        'hydra.HydraHead',
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='reasoning_sessions',
+        related_name=RELATED_NAME,
     )
-    goal = models.TextField()
-    max_turns = models.IntegerField(default=10)
-    rolling_context_summary = models.TextField(
-        blank=True, default=''
-    )  # DEPRECIATED
-    message_history = models.JSONField(
-        default=list,
-        blank=True,
-        help_text='The exact array of message dicts sent to the Chat API.',
-    )
+    max_turns = models.IntegerField(default=100)
 
     def __str__(self):
         return f'Session {self.id} Status: {self.status}'
@@ -145,12 +139,8 @@ class SessionConclusion(DefaultFieldsMixin, ReasoningStatusMixin):
     )
 
     # Structured analog outcome statements by the llm.
-    outcome_status = models.CharField(
-        max_length=50
-    )  # SUCCESS, FAILURE, NEEDS_CLARIFICATION
-    recommended_action = models.CharField(
-        max_length=100
-    )  # RETRY, ABORT, PROCEED, BRANCH_B
+    outcome_status = models.TextField()
+    recommended_action = models.TextField()
 
     # The 'Seed' for the next thought
     next_goal_suggestion = models.TextField(blank=True, null=True)

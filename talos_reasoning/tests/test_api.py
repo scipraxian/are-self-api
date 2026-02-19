@@ -19,30 +19,39 @@ class ReasoningAPITest(TestCase):
         self.client = APIClient()
 
         # Assuming ReasoningStatus inherits from ID constants via NameMixin modifications
-        self.status_active = ReasoningStatus.objects.create(id=ReasoningStatus.ACTIVE, name="Active")
-        self.status_pending = ReasoningStatus.objects.create(id=ReasoningStatus.PENDING, name="Pending")
+        self.status_active = ReasoningStatus.objects.create(
+            id=ReasoningStatus.ACTIVE, name='Active'
+        )
+        self.status_pending = ReasoningStatus.objects.create(
+            id=ReasoningStatus.PENDING, name='Pending'
+        )
 
-        self.session = ReasoningSession.objects.create(goal="Test Goal", status=self.status_active)
-        self.goal = ReasoningGoal.objects.create(session=self.session, status=self.status_active, rendered_goal="Sub Goal 1")
+        self.session = ReasoningSession.objects.create(
+            status=self.status_active
+        )
+        self.goal = ReasoningGoal.objects.create(
+            session=self.session,
+            status=self.status_active,
+            rendered_goal='Sub Goal 1',
+        )
 
         self.turn = ReasoningTurn.objects.create(
             session=self.session,
             active_goal=self.goal,
             turn_number=1,
-            input_context_snapshot="Input 1",
-            thought_process="Thinking 1",
-            status=self.status_active
+            input_context_snapshot='Input 1',
+            thought_process='Thinking 1',
+            status=self.status_active,
         )
 
-        self.tool = ToolDefinition.objects.create(name="TestTool")
+        self.tool = ToolDefinition.objects.create(name='TestTool')
         self.tool_call = ToolCall.objects.create(
-            turn=self.turn,
-            tool=self.tool,
-            arguments="{}",
-            call_id="call_123"
+            turn=self.turn, tool=self.tool, arguments='{}', call_id='call_123'
         )
 
-        self.engram = TalosEngram.objects.create(description="Test Engram", relevance_score=0.9)
+        self.engram = TalosEngram.objects.create(
+            description='Test Engram', relevance_score=0.9
+        )
         self.engram.sessions.add(self.session)
         self.engram.source_turns.add(self.turn)
 
