@@ -86,13 +86,22 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         links = []
         tool_map = {}
 
-        # --- FIX: Track valid nodes to prevent D3 dangling edge crashes ---
         valid_node_ids = set()
 
         # 1. Process Turns
         for i, turn in enumerate(turns):
             node_id = f'{constants.NODE_TURN}-{turn.id}'
-            valid_node_ids.add(node_id)  # Register Node
+            valid_node_ids.add(node_id)
+
+            # Format Times safely
+            delta_str = (
+                f'{turn.delta.total_seconds():.1f}s' if turn.delta else '0s'
+            )
+            inf_str = (
+                f'{turn.inference_time.total_seconds():.1f}s'
+                if turn.inference_time
+                else '0s'
+            )
 
             nodes.append(
                 serializers.GraphNodeDTO(
@@ -102,7 +111,12 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
                     turn_number=turn.turn_number,
                     status=turn.status.name,
                     thought_process=turn.thought_process,
-                    input_context_snapshot=turn.input_context_snapshot,
+                    request_payload=turn.request_payload,
+                    tokens_input=turn.tokens_input,
+                    tokens_output=turn.tokens_output,
+                    inference_time=inf_str,
+                    created=turn.created.isoformat(),
+                    delta=delta_str,
                 )
             )
 

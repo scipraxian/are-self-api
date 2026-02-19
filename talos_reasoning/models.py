@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.db import models
 
 from common.models import (
@@ -20,6 +22,7 @@ class ReasoningStatusID:
     MAXED_OUT = 5
     ERROR = 6
     ATTENTION_REQUIRED = 7
+    STOPPED = 8
 
 
 class ReasoningStatus(NameMixin, ReasoningStatusID):
@@ -109,19 +112,24 @@ class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
     A single 'tick' or step in the reasoning process.
     """
 
+    RELATED_NAME = 'turns'
+
     session = models.ForeignKey(
-        ReasoningSession, on_delete=models.CASCADE, related_name='turns'
-    )
-    active_goal = models.ForeignKey(
-        ReasoningGoal, on_delete=models.CASCADE, related_name='turns'
+        ReasoningSession, on_delete=models.CASCADE, related_name=RELATED_NAME
     )
     turn_number = models.IntegerField()
-    input_context_snapshot = models.TextField(
-        help_text='What the AI saw at the start of this turn.'
+
+    request_payload = models.JSONField(blank=True, default=dict)
+    tokens_input = models.IntegerField(default=0)
+    inference_time = models.DurationField(default=timedelta)
+
+    turn_goals = models.ManyToManyField(
+        ReasoningGoal, blank=True, related_name=RELATED_NAME
     )
     thought_process = models.TextField(
         help_text='The internal monologue of the AI.'
     )
+    tokens_output = models.IntegerField(default=0)
 
     def __str__(self):
         return f'Turn {self.turn_number} (Session: {self.session_id})'

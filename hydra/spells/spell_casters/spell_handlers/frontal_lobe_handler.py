@@ -1,6 +1,8 @@
 import asyncio
 import json
 import logging
+import time
+from datetime import timedelta
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
@@ -223,20 +225,31 @@ class FrontalLobe:
         return {}
 
     async def _record_turn_start(
-        self, turn_index: int, snapshot: str
+        self, turn_index: int, payload_dict: dict
     ) -> ReasoningTurn:
-        return await sync_to_async(ReasoningTurn.objects.create)(
+        turn = await sync_to_async(ReasoningTurn.objects.create)(
             session=self.session,
-            active_goal=self.current_goal,
             turn_number=turn_index + 1,
-            input_context_snapshot=snapshot[:5000],
+            request_payload=payload_dict,
             status_id=ReasoningStatusID.ACTIVE,
         )
+        # Handle the new Many-to-Many relation
+        if self.current_goal:
+            await sync_to_async(turn.turn_goals.add)(self.current_goal)
+        return turn
 
     async def _record_turn_completion(
-        self, turn_record: ReasoningTurn, thought_process: str
+        self,
+        turn_record: ReasoningTurn,
+        thought_process: str,
+        tokens_in: int,
+        tokens_out: int,
+        inference_duration: timedelta,
     ) -> None:
         turn_record.thought_process = thought_process
+        turn_record.tokens_input = tokens_in
+        turn_record.tokens_output = tokens_out
+        turn_record.inference_time = inference_duration
         turn_record.status_id = ReasoningStatusID.COMPLETED
         await sync_to_async(turn_record.save)()
 
@@ -303,15 +316,26 @@ class FrontalLobe:
     ) -> bool:
         await self._log_live(f'\n--- Turn {turn_index + 1} ---')
 
-        last_input = messages[-1]['content'] if messages else 'Start of Session'
-        turn_record = await self._record_turn_start(turn_index, str(last_input))
+        # Store the exact payload sent to the LLM
+        payload_snapshot = {'messages': messages}
+        turn_record = await self._record_turn_start(
+            turn_index, payload_snapshot
+        )
 
-        # Run Model (Blocking IO in Thread)
+        # Run Model & Track Inference Time
+        start_time = time.time()
         response = await asyncio.to_thread(
             self.client.chat, messages, ollama_tools
         )
+        inf_duration = timedelta(seconds=time.time() - start_time)
 
-        await self._record_turn_completion(turn_record, response.content or '')
+        await self._record_turn_completion(
+            turn_record,
+            response.content or '',
+            response.tokens_input,
+            response.tokens_output,
+            inf_duration,
+        )
 
         assistant_msg = ChatMessage(
             role=FrontalLobeConstants.ROLE_ASSISTANT,

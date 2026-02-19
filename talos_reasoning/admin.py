@@ -30,7 +30,6 @@ class ReasoningTurnInline(admin.StackedInline):
     extra = 0
     readonly_fields = (
         'turn_number',
-        'input_context_snapshot',
         'thought_process',
         'created',
         'status',

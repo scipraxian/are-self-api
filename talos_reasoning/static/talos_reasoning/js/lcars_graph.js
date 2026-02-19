@@ -6,6 +6,7 @@ let currentData = {nodes: [], links: []};
 let selectedNodeId = null;
 let selectedNodeHash = null;
 let pollTimer;
+let liveTimerInterval = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     sessionId = document.getElementById('lcars-data').dataset.sessionId;
@@ -169,6 +170,7 @@ function updateGraph(newData) {
     });
 }
 
+
 function showDetails(d) {
     const panel = document.getElementById('details-content');
     const scrollContainer = document.getElementById('details-panel');
@@ -176,23 +178,76 @@ function showDetails(d) {
     // --- PRESERVE SCROLL STATE ---
     const prevScrollTop = scrollContainer.scrollTop;
 
+    // Clear any existing live timer from a previous click
+    if (liveTimerInterval) {
+        clearInterval(liveTimerInterval);
+        liveTimerInterval = null;
+    }
+
     let html = `<div class="detail-header">${d.type.toUpperCase()}: ${d.label || d.id}</div>`;
 
     if (d.type === 'turn') {
+        const activeStates = ['Active', 'Pending', 'Running', 'Thinking'];
+        const isLive = activeStates.includes(d.status);
+
+        // Calculate Tokens Per Second (TPS)
+        let tps = "0.0";
+        if (d.inference_time && d.tokens_output) {
+            let seconds = parseFloat(d.inference_time.replace('s', ''));
+            if (seconds > 0) tps = (d.tokens_output / seconds).toFixed(1);
+        }
+
         html += `
-            <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value" style="color:#f99f1b">${d.status}</div></div>
-            <div class="detail-row"><div class="detail-label">Thought Process</div><div class="detail-value text-content">${d.thought_process || 'Thinking...'}</div></div>
             <div class="detail-row">
-                <div class="detail-label">Context Snapshot (Incoming Data)</div>
-                <div class="detail-value code-block">${d.input_context_snapshot || 'No Context Recorded.'}</div>
+                <div class="detail-label">Status</div>
+                <div class="detail-value" style="color:#f99f1b">${d.status}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Turn Duration</div>
+                <div class="detail-value" id="node-duration" style="color:#99ccff; font-family: monospace;">
+                    ${isLive ? '⏱ Calculating...' : (d.delta || '0s')}
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Cognitive Load (LLM)</div>
+                <div class="detail-value" style="color:#cc99cc; font-family: monospace;">
+                    [ IN: ${d.tokens_input || 0} ] -> [ OUT: ${d.tokens_output || 0} ]
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Inference Speed</div>
+                <div class="detail-value" style="color:#4ade80; font-family: monospace;">
+                    ${d.inference_time || '0s'} (${tps} tokens/sec)
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Thought Process</div>
+                <div class="detail-value text-content">${d.thought_process || 'Executing without monologue...'}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Request Payload (JSON)</div>
+                <div class="detail-value code-block">${d.request_payload ? JSON.stringify(d.request_payload, null, 2) : 'No Payload Recorded.'}</div>
             </div>
         `;
+
+        // If the turn is currently active, run a high-frame-rate local timer
+        if (isLive && d.created) {
+            const startTime = new Date(d.created).getTime();
+            liveTimerInterval = setInterval(() => {
+                const clockEl = document.getElementById('node-duration');
+                if (clockEl) {
+                    const diffMs = Date.now() - startTime;
+                    clockEl.textContent = `⏱ ${(diffMs / 1000).toFixed(1)}s`;
+                } else {
+                    clearInterval(liveTimerInterval);
+                }
+            }, 100);
+        }
     } else if (d.type === 'tool') {
         const calls = currentData.links.filter(l => l.target.id === d.id && l.type === 'uses_tool');
         html += `<div class="detail-row"><div class="detail-label">Total Invocations</div><div class="detail-value">${calls.length}</div></div>`;
 
         calls.forEach((call, idx) => {
-            // Check if call.source is populated fully or just an ID string
             const turnNum = call.source.turn_number ? call.source.turn_number : call.source.split('-')[1];
             html += `
                 <div class="tool-call-block">

@@ -29,11 +29,16 @@ class GraphNodeDTO:
     turn_number: Optional[int] = None
     status: Optional[str] = None
     thought_process: Optional[str] = None
-    input_context_snapshot: Optional[str] = None
     is_async: Optional[bool] = None
     description: Optional[str] = None
     relevance: Optional[float] = None
     is_active: Optional[bool] = None
+    created: Optional[str] = None
+    delta: Optional[str] = None
+    tokens_input: Optional[int] = None
+    tokens_output: Optional[int] = None
+    inference_time: Optional[str] = None
+    request_payload: Optional[str] = None
 
 
 @dataclass
@@ -64,13 +69,16 @@ class GraphNodeSerializer(serializers.Serializer):
     turn_number = serializers.IntegerField(required=False, allow_null=True)
     status = serializers.CharField(required=False, allow_null=True)
     thought_process = serializers.CharField(required=False, allow_null=True)
-    input_context_snapshot = serializers.CharField(
-        required=False, allow_null=True
-    )
     is_async = serializers.BooleanField(required=False, allow_null=True)
     description = serializers.CharField(required=False, allow_null=True)
     relevance = serializers.FloatField(required=False, allow_null=True)
     is_active = serializers.BooleanField(required=False, allow_null=True)
+    created = serializers.CharField(required=False, allow_null=True)
+    delta = serializers.CharField(required=False, allow_null=True)
+    tokens_input = serializers.IntegerField(required=False, allow_null=True)
+    tokens_output = serializers.IntegerField(required=False, allow_null=True)
+    inference_time = serializers.DurationField(required=False, allow_null=True)
+    request_payload = serializers.JSONField(required=False, allow_null=True)
 
 
 class GraphLinkSerializer(serializers.Serializer):

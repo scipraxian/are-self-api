@@ -54,12 +54,12 @@ class ReasoningAPITest(TestCase):
 
         self.turn = ReasoningTurn.objects.create(
             session=self.session,
-            active_goal=self.goal,
             turn_number=1,
-            input_context_snapshot='Input 1',
+            request_payload={'test': 'data'},
             thought_process='Thinking 1',
             status=self.status_active,
         )
+        self.turn.turn_goals.add(self.goal)
 
         self.tool = ToolDefinition.objects.create(name='TestTool')
         self.tool_call = ToolCall.objects.create(

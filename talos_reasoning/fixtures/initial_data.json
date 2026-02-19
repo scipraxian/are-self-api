@@ -49,6 +49,13 @@
     }
   },
   {
+    "model": "talos_reasoning.reasoningstatus",
+    "pk": 8,
+    "fields": {
+      "name": "Stopped"
+    }
+  },
+  {
     "model": "talos_reasoning.modelregistry",
     "pk": 1,
     "fields": {
