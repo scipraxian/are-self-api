@@ -1,8 +1,10 @@
 # talos_reasoning/views.py
+from dataclasses import asdict
 
 from django.views.generic import DetailView
 
 from .models import ReasoningSession, ReasoningStatusID
+from .serializers import CortexContextDTO
 
 
 class ReasoningInterfaceView(DetailView):
@@ -28,20 +30,22 @@ class ReasoningInterfaceView(DetailView):
         context = super().get_context_data(**kwargs)
         session = self.object
 
-        context['goals'] = session.goals.all().order_by('created')
-        context['turns'] = (
-            session.turns.all()
+        # 1. Build the strongly-typed DTO
+        context_dto = CortexContextDTO(
+            session=session,
+            goals=session.goals.all().order_by('created'),
+            turns=session.turns.all()
             .prefetch_related('tool_calls', 'tool_calls__tool')
-            .order_by('turn_number')
+            .order_by('turn_number'),
+            engrams=session.engram.filter(is_active=True).order_by(
+                '-relevance_score', '-created'
+            ),
+            is_active=session.status_id
+            in [ReasoningStatusID.ACTIVE, ReasoningStatusID.PENDING],
         )
 
-        context['engrams'] = session.engram.filter(is_active=True).order_by(
-            '-relevance_score', '-created'
-        )
-        context['is_active'] = session.status_id in [
-            ReasoningStatusID.ACTIVE,
-            ReasoningStatusID.PENDING,
-        ]
+        # 2. Safely unpack it into Django's context dictionary
+        context.update(asdict(context_dto))
         return context
 
 

@@ -1,13 +1,24 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
+from django.db.models import QuerySet
 from rest_framework import serializers
 
 from talos_hippocampus.models import TalosEngram
 from talos_parietal.models import ToolCall, ToolDefinition
 from talos_reasoning.models import ReasoningSession, ReasoningTurn
 
+
 # --- DTOs (Data Transfer Objects) ---
+@dataclass
+class CortexContextDTO:
+    """Strict contract for the Cortex Situation Room HTML template."""
+
+    session: ReasoningSession
+    goals: QuerySet
+    turns: QuerySet
+    engrams: QuerySet
+    is_active: bool
 
 
 @dataclass
