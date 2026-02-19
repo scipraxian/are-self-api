@@ -16,7 +16,7 @@ class OllamaConstants:
         '/'
     )
     CHAT_URL = f'{BASE_URL}/api/chat'
-    TIMEOUT_SECONDS = 300
+    TIMEOUT_SECONDS = 600
 
     # Payload Keys
     KEY_MODEL = 'model'
