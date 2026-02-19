@@ -69,7 +69,7 @@ class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
 
 
 class ReasoningSession(
-    UUIDIdMixin, CreatedMixin, ModifiedMixin, ReasoningStatusMixin
+    UUIDIdMixin, CreatedAndModifiedWithDelta, ReasoningStatusMixin
 ):
     """
     The record of a reasoning process.
@@ -97,7 +97,7 @@ class ReasoningSession(
         return f'Session {self.id} Status: {self.status}'
 
 
-class ReasoningGoal(ReasoningStatusMixin, CreatedAndModifiedWithDelta):
+class ReasoningGoal(ReasoningStatusMixin, CreatedMixin, ModifiedMixin):
     """Individual objectives within a session."""
 
     session = models.ForeignKey(
@@ -110,7 +110,7 @@ class ReasoningGoal(ReasoningStatusMixin, CreatedAndModifiedWithDelta):
         return f'Goal: {self.rendered_goal[:50]}...'
 
 
-class ReasoningTurn(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
+class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
     """
     A single 'tick' or step in the reasoning process.
     """
