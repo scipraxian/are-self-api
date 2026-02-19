@@ -133,7 +133,7 @@ class ReasoningSessionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReasoningSession
-        fields = ['id', 'goal', 'status_name']
+        fields = ['id', 'status_name']
 
 
 class SessionGraphDataSerializer(serializers.Serializer):

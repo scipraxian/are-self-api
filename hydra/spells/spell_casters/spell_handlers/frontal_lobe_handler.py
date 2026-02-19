@@ -111,8 +111,7 @@ class FrontalLobe:
     ) -> None:
         """Creates the ReasoningSession and primary ReasoningGoal in the DB."""
         self.session = await sync_to_async(ReasoningSession.objects.create)(
-            spawn_link=self.head.spawn,
-            goal=rendered_objective,
+            head=self.head,
             status_id=ReasoningStatusID.ACTIVE,
             max_turns=max_turns,
         )

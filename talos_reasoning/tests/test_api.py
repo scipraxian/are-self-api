@@ -3,6 +3,12 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from hydra.models import (
+    HydraHead,
+    HydraHeadStatus,
+    HydraSpawn,
+    HydraSpawnStatus,
+)
 from talos_hippocampus.models import TalosEngram
 from talos_parietal.models import ToolCall, ToolDefinition
 from talos_reasoning import constants
@@ -18,7 +24,6 @@ class ReasoningAPITest(TestCase):
     def setUp(self):
         self.client = APIClient()
 
-        # Assuming ReasoningStatus inherits from ID constants via NameMixin modifications
         self.status_active = ReasoningStatus.objects.create(
             id=ReasoningStatus.ACTIVE, name='Active'
         )
@@ -26,8 +31,20 @@ class ReasoningAPITest(TestCase):
             id=ReasoningStatus.PENDING, name='Pending'
         )
 
+        head_status, _ = HydraHeadStatus.objects.get_or_create(
+            id=1, defaults={'name': 'Created'}
+        )
+        spawn_status, _ = HydraSpawnStatus.objects.get_or_create(
+            id=1, defaults={'name': 'Created'}
+        )
+
+        self.spawn = HydraSpawn.objects.create(status=spawn_status)
+        self.head = HydraHead.objects.create(
+            spawn=self.spawn, status=head_status
+        )
+
         self.session = ReasoningSession.objects.create(
-            status=self.status_active
+            head=self.head, status=self.status_active
         )
         self.goal = ReasoningGoal.objects.create(
             session=self.session,
