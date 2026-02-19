@@ -108,6 +108,7 @@ function flattenTreeToGraph(sessionData, oldData) {
                 id: engramNodeId,
                 type: 'engram',
                 label: `Engram ${engram.id}`,
+                name: engram.name,
                 description: engram.description,
                 relevance: engram.relevance_score
             });
@@ -313,18 +314,49 @@ function updateGraph(newData) {
 function showDetails(d) {
     const panel = document.getElementById('details-content');
     const scrollContainer = document.getElementById('details-panel');
-
-    // --- PRESERVE SCROLL STATE ---
     const prevScrollTop = scrollContainer.scrollTop;
 
-    // Clear any existing live timer from a previous click
     if (liveTimerInterval) {
         clearInterval(liveTimerInterval);
         liveTimerInterval = null;
     }
 
+    // --- SMART DJANGO ADMIN LINKS ---
+    const dbId = d.id.split('-').slice(1).join('-');
+    let adminUrl = '#';
+    if (d.type === 'turn') adminUrl = `/admin/talos_reasoning/reasoningturn/${dbId}/change/`;
+    else if (d.type === 'goal') adminUrl = `/admin/talos_reasoning/reasoninggoal/${dbId}/change/`;
+    else if (d.type === 'session') adminUrl = `/admin/talos_reasoning/reasoningsession/${dbId}/change/`;
+    else if (d.type === 'engram') adminUrl = `/admin/talos_hippocampus/talosengram/${dbId}/change/`;
+    else if (d.type === 'tool') adminUrl = `/admin/talos_parietal/tooldefinition/?q=${dbId}`;
+
+    // Keep the header pristine so it doesn't clash with EXPAND
     let html = `<div class="detail-header">${d.type.toUpperCase()}: ${d.label || d.id}</div>`;
 
+    // Put the Admin Button safely inside a standard row
+    html += `
+        <div class="detail-row" style="align-items: center;">
+            <div class="detail-label">Database Record</div>
+            <div class="detail-value">
+                <a href="${adminUrl}" target="_blank" style="color: #1a1a1a; background-color: #f99f1b; text-decoration: none; font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 3px; display: inline-block;">OPEN IN ADMIN ↗</a>
+            </div>
+        </div>
+    `;
+
+    // --- TYPE-SPECIFIC RENDERING ---
+    if (d.type === 'goal') {
+        html += `
+            <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value" style="color:#f99f1b">${d.status}</div></div>
+            <div class="detail-row"><div class="detail-label">Duration</div><div class="detail-value" style="color:#99ccff; font-family: monospace;">${d.delta || '0s'}</div></div>
+            <div class="detail-row"><div class="detail-label">Objective</div><div class="detail-value text-content">${d.rendered_goal || 'No goal text provided.'}</div></div>
+        `;
+    } else if (d.type === 'engram') {
+        html += `
+            <div class="detail-row"><div class="detail-label">Memory Key</div><div class="detail-value code-block">${d.name || 'Unnamed Hash'}</div></div>
+            <div class="detail-row"><div class="detail-label">Relevance Score</div><div class="detail-value">${d.relevance}</div></div>
+            <div class="detail-row"><div class="detail-label">Fact/Memory</div><div class="detail-value text-content">${d.description}</div></div>
+        `;
+    }
     if (d.type === 'turn') {
         const activeStates = ['Active', 'Pending', 'Running', 'Thinking'];
         const isLive = activeStates.includes(d.status);
@@ -399,11 +431,6 @@ function showDetails(d) {
                 </div>
             `;
         });
-    } else if (d.type === 'engram') {
-        html += `
-            <div class="detail-row"><div class="detail-label">Relevance Score</div><div class="detail-value">${d.relevance}</div></div>
-            <div class="detail-row"><div class="detail-label">Fact/Memory</div><div class="detail-value text-content">${d.description}</div></div>
-        `;
     }
 
     panel.innerHTML = html;

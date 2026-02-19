@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 
 from .models import (
     ReasoningGoal,
@@ -14,40 +15,102 @@ class ReasoningGoalInline(admin.TabularInline):
     fields = ('status', 'rendered_goal', 'achieved', 'created')
     readonly_fields = ('created',)
 
+
 class ReasoningTurnInline(admin.TabularInline):
     model = ReasoningTurn
     extra = 0
-    fields = ('turn_number', 'status', 'tokens_input', 'tokens_output', 'inference_time')
-    readonly_fields = ('turn_number', 'tokens_input', 'tokens_output', 'inference_time')
+    fields = (
+        'turn_number',
+        'status',
+        'tokens_input',
+        'tokens_output',
+        'inference_time',
+    )
+    readonly_fields = (
+        'turn_number',
+        'tokens_input',
+        'tokens_output',
+        'inference_time',
+    )
     show_change_link = True
+
 
 @admin.register(ReasoningSession)
 class ReasoningSessionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'head', 'status', 'max_turns', 'created', 'delta')
+    # Add 'launch_cortex' to your list_display
+    list_display = (
+        'id',
+        'head',
+        'status',
+        'launch_cortex',
+        'max_turns',
+        'created',
+        'delta',
+    )
     list_filter = ('status', 'created')
     search_fields = ('id', 'head__id', 'goals__rendered_goal')
     readonly_fields = ('created', 'modified', 'delta')
     inlines = [ReasoningGoalInline, ReasoningTurnInline]
 
+    @admin.display(description='Interface')
+    def launch_cortex(self, obj):
+        """Generates a direct link to the LCARS Situation Room for this session."""
+        url = f'/reasoning/{obj.id}/'
+        return format_html(
+            '<a class="button" href="{}" target="_blank" style="background-color: #f99f1b; color: #1a1a1a; font-weight: bold;">OPEN CORTEX</a>',
+            url,
+        )
+
+    launch_cortex.short_description = 'Interface'
+
+
 @admin.register(ReasoningGoal)
 class ReasoningGoalAdmin(admin.ModelAdmin):
-    list_display = ('id', 'session', 'status', 'achieved', 'short_goal', 'created')
+    list_display = (
+        'id',
+        'session',
+        'status',
+        'achieved',
+        'short_goal',
+        'created',
+    )
     list_filter = ('status', 'achieved')
     search_fields = ('rendered_goal', 'session__id')
 
     def short_goal(self, obj):
-        return obj.rendered_goal[:50] + '...' if len(obj.rendered_goal) > 50 else obj.rendered_goal
+        return (
+            obj.rendered_goal[:50] + '...'
+            if len(obj.rendered_goal) > 50
+            else obj.rendered_goal
+        )
+
     short_goal.short_description = 'Goal Preview'
+
 
 @admin.register(ReasoningTurn)
 class ReasoningTurnAdmin(admin.ModelAdmin):
-    list_display = ('turn_number', 'session', 'status', 'tokens_input', 'tokens_output', 'inference_time')
+    list_display = (
+        'turn_number',
+        'session',
+        'status',
+        'tokens_input',
+        'tokens_output',
+        'inference_time',
+    )
     list_filter = ('status', 'created')
     search_fields = ('thought_process', 'session__id')
-    filter_horizontal = ('turn_goals',) # Renders a nice dual-selector for the M2M field
+    filter_horizontal = (
+        'turn_goals',
+    )  # Renders a nice dual-selector for the M2M field
     readonly_fields = ('created', 'modified', 'delta')
+
 
 @admin.register(SessionConclusion)
 class SessionConclusionAdmin(admin.ModelAdmin):
     list_display = ('id', 'session', 'status', 'outcome_status')
-    search_fields = ('summary', 'reasoning_trace', 'outcome_status', 'session__id')
+    search_fields = (
+        'summary',
+        'reasoning_trace',
+        'outcome_status',
+        'session__id',
+    )
