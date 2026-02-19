@@ -1,19 +1,16 @@
 from django.urls import path
 
-from . import api
+from . import views
 
 app_name = 'talos_reasoning'
 
 urlpatterns = [
     path(
         'interface/<uuid:session_id>/',
-        api.reasoning_interface,
+        views.ReasoningInterfaceView.as_view(),
         name='reasoning_interface',
     ),
-    path('lcars/<uuid:session_id>/', api.lcars_view, name='lcars_view'),
     path(
-        'api/graph/<uuid:session_id>/',
-        api.session_graph_data_api,
-        name='session_graph_data',
+        'lcars/<uuid:session_id>/', views.LcarsView.as_view(), name='lcars_view'
     ),
 ]

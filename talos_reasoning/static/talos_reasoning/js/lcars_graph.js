@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sessionId = document.getElementById('lcars-data').dataset.sessionId;
 
     // Fetch Data
-    fetch(`/reasoning/api/graph/${sessionId}/`)
+    fetch(`/api/v1/reasoning_sessions/${sessionId}/graph_data/`)
         .then(response => response.json())
         .then(data => {
             initGraph(data);

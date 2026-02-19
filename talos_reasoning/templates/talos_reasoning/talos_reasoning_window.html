@@ -38,7 +38,7 @@
     </aside>
 
     <main class="col-tactics" id="cortex-feed"
-          hx-get="{% url 'talos_reasoning:reasoning_interface' session.id %}?partial=stream"
+          hx-get="{% url 'reasoningsession-interface' session.id %}?partial=stream"
           hx-trigger="refresh-cortex from:body, every 5s"
           hx-swap="innerHTML"
           hx-on::after-swap="scrollToBottom()">
