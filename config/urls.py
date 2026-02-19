@@ -14,10 +14,10 @@ urlpatterns = [
     path('', include('dashboard.urls')),
     path('hydra/', include('hydra.urls')),
     path('environments/', include('environments.urls')),
+    path('reasoning/', include('talos_reasoning.urls')),
     path('api/v1/', include(v1_router.urls)),
     path('admin/', admin.site.urls),
-    path(
-        'api-auth/', include('rest_framework.urls', namespace='rest_framework')
-    ),
+    path('api-auth/', include('rest_framework.urls',
+                              namespace='rest_framework')),
     path('mcp/', include('djangorestframework_mcp.urls')),
 ]

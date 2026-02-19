@@ -22,14 +22,7 @@
             <span class="value">{{ session.id }}</span>
             <span class="status-pill status-{{ session.status.name|lower }}">{{ session.status.name }}</span>
         </div>
-        <div class="controls">
-            <button class="btn-tick"
-                    hx-post="{% url 'talos_reasoning:cortex_tick' session.id %}"
-                    hx-swap="none"
-                    {% if not is_active %}disabled{% endif %}>
-                ⚡ TICK ENGINE
-            </button>
-        </div>
+
     </header>
 
     <aside class="col-strategy">
