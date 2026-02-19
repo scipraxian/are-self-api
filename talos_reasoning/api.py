@@ -1,3 +1,5 @@
+from dataclasses import asdict
+
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
@@ -5,7 +7,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from . import constants, serializers
-from .models import ReasoningSession, ReasoningStatus
+from .models import ReasoningSession, ReasoningStatus, ReasoningStatusID
+from .serializers import CortexContextDTO
 
 
 class ReasoningSessionViewSet(viewsets.ModelViewSet):
@@ -27,26 +30,22 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
     def interface(self, request, pk=None):
         """The Standalone Cortex 'Situation Room'."""
         session = self.get_object()
-        goals = session.goals.all().order_by('created')
-        turns = (
-            session.turns.all()
+
+        # 1. Build the strongly-typed DTO
+        context_dto = CortexContextDTO(
+            session=session,
+            goals=session.goals.all().order_by('created'),
+            turns=session.turns.all()
             .prefetch_related('tool_calls', 'tool_calls__tool')
-            .order_by('turn_number')
-        )
-        engrams = session.engram.filter(is_active=True).order_by(
-            '-relevance_score', '-created'
+            .order_by('turn_number'),
+            engrams=session.engram.filter(is_active=True).order_by(
+                '-relevance_score', '-created'
+            ),
+            is_active=session.status_id
+            in [ReasoningStatusID.ACTIVE, ReasoningStatusID.PENDING],
         )
 
-        context = {
-            'session': session,
-            'goals': goals,
-            'turns': turns,
-            'engrams': engrams,
-            'is_active': session.status_id
-            in [ReasoningStatus.ACTIVE, ReasoningStatus.PENDING],
-        }
-
-        # Handle HTMX Partial Stream Updates
+        # 2. Unpack safely into the render function
         if (
             request.headers.get('HX-Request')
             and request.GET.get('partial') == 'stream'
@@ -54,11 +53,13 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
             return render(
                 request,
                 'talos_reasoning/partials/cortex_stream_partial.html',
-                context,
+                asdict(context_dto),  # <-- Clean, typed unpacking
             )
 
         return render(
-            request, 'talos_reasoning/talos_reasoning_window.html', context
+            request,
+            'talos_reasoning/talos_reasoning_window.html',
+            asdict(context_dto),  # <-- Clean, typed unpacking
         )
 
     @action(detail=True, methods=['get'])
