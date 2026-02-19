@@ -107,7 +107,7 @@ class ReasoningGoal(ReasoningStatusMixin, CreatedAndModifiedWithDelta):
     rendered_goal = models.TextField(blank=True, default='')
 
     def __str__(self):
-        return f'Goal: {self.reasoning_prompt[:50]}...'
+        return f'Goal: {self.rendered_goal[:50]}...'
 
 
 class ReasoningTurn(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
