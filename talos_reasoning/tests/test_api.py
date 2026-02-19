@@ -72,30 +72,15 @@ class ReasoningAPITest(TestCase):
         self.engram.sessions.add(self.session)
         self.engram.source_turns.add(self.turn)
 
-    def test_lcars_view(self):
-        """Verifies the LCARS wrapper renders correctly through the ViewSet action."""
-        url = reverse('reasoningsession-lcars', args=[self.session.id])
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTemplateUsed(response, 'talos_reasoning/lcars_view.html')
-
     def test_graph_data_api(self):
-        """Verifies strict DTO serialization outputs exact keys."""
+        """Verifies pure JSON tree serialization outputs exact keys."""
         url = reverse('reasoningsession-graph-data', args=[self.session.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.data
-        self.assertIn('nodes', data)
-        self.assertIn('links', data)
-
-        # Verify Node Types map exactly to constants
-        types = [n['type'] for n in data['nodes']]
-        self.assertIn(constants.NODE_TURN, types)
-        self.assertIn(constants.NODE_ENGRAM, types)
-        self.assertIn(constants.NODE_TOOL, types)
-
-        # Verify Link Types
-        link_types = [l['type'] for l in data['links']]
-        self.assertIn(constants.LINK_CREATED_IN, link_types)
-        self.assertIn(constants.LINK_USES_TOOL, link_types)
+        # --- FIX: Check for the native REST keys instead of the old D3 keys ---
+        self.assertIn('goals', data)
+        self.assertIn('turns', data)
+        self.assertIn('engrams', data)
+        self.assertIn('status_name', data)

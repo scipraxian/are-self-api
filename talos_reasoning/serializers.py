@@ -1,152 +1,64 @@
-from dataclasses import dataclass
-from typing import List, Optional
-
-from django.db.models import QuerySet
 from rest_framework import serializers
 
+from common.constants import ALL_FIELDS
 from talos_hippocampus.models import TalosEngram
 from talos_parietal.models import ToolCall, ToolDefinition
-from talos_reasoning.models import ReasoningSession, ReasoningTurn
-
-
-# --- DTOs (Data Transfer Objects) ---
-@dataclass
-class CortexContextDTO:
-    """Strict contract for the Cortex Situation Room HTML template."""
-
-    session: ReasoningSession
-    goals: QuerySet
-    turns: QuerySet
-    engrams: QuerySet
-    is_active: bool
-
-
-@dataclass
-class GraphNodeDTO:
-    id: str
-    type: str
-    label: str
-    turn_number: Optional[int] = None
-    status: Optional[str] = None
-    thought_process: Optional[str] = None
-    is_async: Optional[bool] = None
-    description: Optional[str] = None
-    relevance: Optional[float] = None
-    is_active: Optional[bool] = None
-    created: Optional[str] = None
-    delta: Optional[str] = None
-    tokens_input: Optional[int] = None
-    tokens_output: Optional[int] = None
-    inference_time: Optional[str] = None
-    request_payload: Optional[str] = None
-
-
-@dataclass
-class GraphLinkDTO:
-    source: str
-    target: str
-    type: str
-    call_id: Optional[str] = None
-    arguments: Optional[str] = None
-    result: Optional[str] = None
-    traceback: Optional[str] = None
-
-
-@dataclass
-class SessionGraphDTO:
-    session: dict
-    nodes: List[GraphNodeDTO]
-    links: List[GraphLinkDTO]
-
-
-# --- DRF Serializers ---
-
-
-class GraphNodeSerializer(serializers.Serializer):
-    id = serializers.CharField()
-    type = serializers.CharField()
-    label = serializers.CharField()
-    turn_number = serializers.IntegerField(required=False, allow_null=True)
-    status = serializers.CharField(required=False, allow_null=True)
-    thought_process = serializers.CharField(required=False, allow_null=True)
-    is_async = serializers.BooleanField(required=False, allow_null=True)
-    description = serializers.CharField(required=False, allow_null=True)
-    relevance = serializers.FloatField(required=False, allow_null=True)
-    is_active = serializers.BooleanField(required=False, allow_null=True)
-    created = serializers.CharField(required=False, allow_null=True)
-    delta = serializers.CharField(required=False, allow_null=True)
-    tokens_input = serializers.IntegerField(required=False, allow_null=True)
-    tokens_output = serializers.IntegerField(required=False, allow_null=True)
-    inference_time = serializers.DurationField(required=False, allow_null=True)
-    request_payload = serializers.JSONField(required=False, allow_null=True)
-
-
-class GraphLinkSerializer(serializers.Serializer):
-    source = serializers.CharField()
-    target = serializers.CharField()
-    type = serializers.CharField()
-    call_id = serializers.CharField(required=False, allow_null=True)
-    arguments = serializers.CharField(required=False, allow_null=True)
-    result = serializers.CharField(required=False, allow_null=True)
-    traceback = serializers.CharField(required=False, allow_null=True)
+from talos_reasoning.models import (
+    ReasoningGoal,
+    ReasoningSession,
+    ReasoningTurn,
+)
 
 
 class ToolDefinitionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ToolDefinition
-        fields = ['name', 'is_async']
+        fields = ALL_FIELDS
 
 
 class ToolCallSerializer(serializers.ModelSerializer):
     tool_name = serializers.CharField(source='tool.name', read_only=True)
-    tool_is_async = serializers.BooleanField(
-        source='tool.is_async', read_only=True
-    )
+    is_async = serializers.BooleanField(source='tool.is_async', read_only=True)
 
     class Meta:
         model = ToolCall
-        fields = [
-            'call_id',
-            'tool_name',
-            'tool_is_async',
-            'arguments',
-            'result_payload',
-        ]
+        fields = ALL_FIELDS
+
+
+class ReasoningGoalSerializer(serializers.ModelSerializer):
+    status_name = serializers.CharField(source='status.name', read_only=True)
+
+    class Meta:
+        model = ReasoningGoal
+        fields = ALL_FIELDS
 
 
 class ReasoningTurnSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     tool_calls = ToolCallSerializer(many=True, read_only=True)
+    turn_goals = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = ReasoningTurn
-        fields = [
-            'id',
-            'turn_number',
-            'status_name',
-            'thought_process',
-            'created',
-            'tool_calls',
-        ]
+        fields = ALL_FIELDS
 
 
 class TalosEngramSerializer(serializers.ModelSerializer):
+    source_turns = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
     class Meta:
         model = TalosEngram
-        fields = ['id', 'description', 'relevance_score', 'is_active']
+        fields = ALL_FIELDS
 
 
 class ReasoningSessionSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
 
+    # Recursive joins to build the JSON tree
+    goals = ReasoningGoalSerializer(many=True, read_only=True)
+    turns = ReasoningTurnSerializer(many=True, read_only=True)
+    engrams = TalosEngramSerializer(source='engram', many=True, read_only=True)
+
     class Meta:
         model = ReasoningSession
-        fields = ['id', 'status_name']
-
-
-class SessionGraphDataSerializer(serializers.Serializer):
-    """The master serialization block for the D3 graph."""
-
-    session = ReasoningSessionSerializer()
-    nodes = GraphNodeSerializer(many=True)
-    links = GraphLinkSerializer(many=True)
+        fields = ALL_FIELDS

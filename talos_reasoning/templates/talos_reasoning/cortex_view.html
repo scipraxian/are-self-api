@@ -11,7 +11,7 @@
         <div class="session-info">
             <h2>REASONING CORTEX</h2>
             <div class="session-meta">
-                Session: {{ session.id }} | Goal: <strong>{{ session.goal|truncatechars:100 }}</strong>
+                Session: {{ session.id }} | Goal: <strong>xxxxxxxxxxx</strong>
             </div>
         </div>
 
@@ -71,7 +71,7 @@
                         <div class="engram-item"
                              style="border-left: 3px solid {% if h_session.status.name == 'Attention Required' %}#ef4444{% elif h_session.status.name == 'Active' %}#eab308{% else %}transparent{% endif %}; cursor: pointer; transition: background 0.2s;">
                             <div class="engram-fact" style="font-weight: 700; color: #e2e8f0; font-size: 0.75rem;">
-                                {{ h_session.goal|truncatechars:40 }}
+                                xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
                             </div>
                             <div class="engram-meta">
                                 <span class="status-text status-{{ h_session.status.name|lower }}">{{ h_session.status.name }}</span>

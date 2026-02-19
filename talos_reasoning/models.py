@@ -11,7 +11,6 @@ from common.models import (
     NameMixin,
     UUIDIdMixin,
 )
-from hydra.models import HydraSpellbookNode
 
 
 class ReasoningStatusID:

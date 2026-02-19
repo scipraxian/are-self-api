@@ -8,24 +8,163 @@ let selectedNodeHash = null;
 let pollTimer;
 let liveTimerInterval = null;
 
+function flattenTreeToGraph(sessionData, oldData) {
+    const nodes = [];
+    const links = [];
+    const toolMap = new Set();
+
+    // 1. Process Goals
+    if (sessionData.goals) {
+        sessionData.goals.forEach(goal => {
+            nodes.push({
+                id: `goal-${goal.id}`,
+                type: 'goal',
+                label: `Goal ${goal.id}`,
+                // If you want to stop the infinite pulsing, you can artificially map the status here:
+                // status: goal.status_name === 'Active' ? 'Goal_Active' : goal.status_name,
+                status: goal.status_name,
+                rendered_goal: goal.rendered_goal,
+                created: goal.created,
+                delta: goal.delta
+            });
+        });
+    }
+
+    // 2. Process Turns & Tools
+    if (sessionData.turns) {
+        sessionData.turns.forEach((turn, index) => {
+            const turnNodeId = `turn-${turn.id}`;
+
+            nodes.push({
+                id: turnNodeId,
+                type: 'turn',
+                label: `Turn ${turn.turn_number}`,
+                turn_number: turn.turn_number,
+                status: turn.status_name,
+                thought_process: turn.thought_process,
+                request_payload: turn.request_payload,
+                tokens_input: turn.tokens_input,
+                tokens_output: turn.tokens_output,
+                inference_time: turn.inference_time,
+                created: turn.created,
+                delta: turn.delta
+            });
+
+            // Sequence Links
+            if (index > 0) {
+                links.push({
+                    source: `turn-${sessionData.turns[index - 1].id}`,
+                    target: turnNodeId,
+                    type: 'sequence'
+                });
+            }
+
+            // Many-to-Many Link (Turn -> Goals)
+            if (turn.turn_goals) {
+                turn.turn_goals.forEach(goalId => {
+                    const targetGoalId = goalId.id ? goalId.id : goalId;
+                    links.push({
+                        source: turnNodeId,
+                        target: `goal-${targetGoalId}`,
+                        type: 'addresses_goal'
+                    });
+                });
+            }
+
+            // Tool Links (Turn -> Tool)
+            if (turn.tool_calls) {
+                turn.tool_calls.forEach(call => {
+                    const toolNodeId = `tool-${call.tool_name}`;
+
+                    if (!toolMap.has(toolNodeId)) {
+                        toolMap.add(toolNodeId);
+                        nodes.push({
+                            id: toolNodeId,
+                            type: 'tool',
+                            label: call.tool_name,
+                            is_async: call.is_async
+                        });
+                    }
+
+                    links.push({
+                        source: turnNodeId,
+                        target: toolNodeId,
+                        type: 'uses_tool',
+                        call_id: call.call_id,
+                        arguments: call.arguments,
+                        result: call.result_payload,
+                        traceback: call.traceback
+                    });
+                });
+            }
+        });
+    }
+
+    // 3. Process Engrams
+    if (sessionData.engrams) {
+        sessionData.engrams.forEach(engram => {
+            const engramNodeId = `engram-${engram.id}`;
+            nodes.push({
+                id: engramNodeId,
+                type: 'engram',
+                label: `Engram ${engram.id}`,
+                description: engram.description,
+                relevance: engram.relevance_score
+            });
+
+            if (engram.source_turns) {
+                engram.source_turns.forEach(turnId => {
+                    links.push({
+                        source: `turn-${turnId}`,
+                        target: engramNodeId,
+                        type: 'created_in'
+                    });
+                });
+            }
+        });
+    }
+    if (oldData && oldData.nodes) {
+        const oldNodeMap = new Map(oldData.nodes.map(n => [n.id, n]));
+        nodes.forEach(n => {
+            if (oldNodeMap.has(n.id)) {
+                const old = oldNodeMap.get(n.id);
+                // Copy the physics state so D3 doesn't reset them
+                n.x = old.x;
+                n.y = old.y;
+                n.vx = old.vx;
+                n.vy = old.vy;
+            }
+        });
+    }
+    return {nodes, links};
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     sessionId = document.getElementById('lcars-data').dataset.sessionId;
     initGraphContainer();
     fetchData();
-    pollTimer = setInterval(fetchData, POLL_INTERVAL_MS);
 });
 
 function fetchData() {
     fetch(`/api/v1/reasoning_sessions/${sessionId}/graph_data/`)
-        .then(response => response.json())
-        .then(data => {
-            updateSessionInfo(data.session);
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(sessionData => {
+            if (typeof updateSessionInfo === 'function') {
+                updateSessionInfo(sessionData);
+            }
 
-            // --- 1. DIRTY CHECKING ---
+            // --- PASS currentData TO RETAIN PHYSICS ---
+            const graphPayload = flattenTreeToGraph(sessionData, typeof currentData !== 'undefined' ? currentData : null);
+
+            currentData = graphPayload;
+
             let shouldUpdateInspector = false;
             if (selectedNodeId) {
-                const rawNode = data.nodes.find(n => n.id === selectedNodeId);
-                const rawLinks = data.links.filter(l => l.target === selectedNodeId || l.source === selectedNodeId);
+                const rawNode = graphPayload.nodes.find(n => n.id === selectedNodeId);
+                const rawLinks = graphPayload.links.filter(l => l.target === selectedNodeId || l.source === selectedNodeId);
                 const currentStateHash = JSON.stringify({node: rawNode, links: rawLinks});
 
                 if (selectedNodeHash !== currentStateHash) {
@@ -34,22 +173,22 @@ function fetchData() {
                 }
             }
 
-            updateGraph(data);
+            updateGraph(graphPayload);
 
-            // --- 2. UPDATE INSPECTOR IF DATA CHANGED ---
-            if (shouldUpdateInspector && selectedNodeId) {
-                const updatedNode = currentData.nodes.find(n => n.id === selectedNodeId);
+            if (shouldUpdateInspector) {
+                const updatedNode = graphPayload.nodes.find(n => n.id === selectedNodeId);
                 if (updatedNode) showDetails(updatedNode);
             }
 
-            // --- 3. HALT ON TERMINAL STATE ---
-            const terminalStates = ['Completed', 'Maxed Out', 'Error'];
-            if (terminalStates.includes(data.session.status_name)) {
-                console.log("Session reached terminal state. Halting telemetry poll.");
-                clearInterval(pollTimer);
+            // --- THE POLLING FIX: Stop polling if the session is done ---
+            // Notice we are checking status_name now!
+            const isFinished = ['Completed', 'Error', 'Maxed Out', 'Stopped'].includes(sessionData.status_name);
+            if (!isFinished) {
+                // Safely wait for the previous call to finish before queuing the next one
+                pollTimer = setTimeout(fetchData, POLL_INTERVAL_MS);
             }
         })
-        .catch(err => console.error("Graph Data Fetch Error:", err));
+        .catch(error => console.error('Graph Data Fetch Error:', error));
 }
 
 function updateSessionInfo(session) {
@@ -150,7 +289,7 @@ function updateGraph(newData) {
     const allNodes = nodesEnter.merge(nodes);
 
     const activeStates = ['Active', 'Pending', 'Running'];
-    allNodes.classed("active-node", d => activeStates.includes(d.status));
+    allNodes.classed("active-node", d => d.type === 'turn' && activeStates.includes(d.status));
 
     // --- EXECUTE SIMULATION ---
     simulation.nodes(currentData.nodes);

@@ -1,9 +1,6 @@
 from django.contrib import admin
 
-from talos_parietal.models import ToolCall, ToolDefinition
-
 from .models import (
-    ModelRegistry,
     ReasoningGoal,
     ReasoningSession,
     ReasoningTurn,
@@ -11,52 +8,46 @@ from .models import (
 )
 
 
-class ToolCallInline(admin.StackedInline):
-    model = ToolCall
+class ReasoningGoalInline(admin.TabularInline):
+    model = ReasoningGoal
     extra = 0
-    readonly_fields = (
-        'tool',
-        'arguments',
-        'result_payload',
-        'traceback',
-        'created',
-        'status',
-    )
-    classes = ['collapse']
+    fields = ('status', 'rendered_goal', 'achieved', 'created')
+    readonly_fields = ('created',)
 
-
-class ReasoningTurnInline(admin.StackedInline):
+class ReasoningTurnInline(admin.TabularInline):
     model = ReasoningTurn
     extra = 0
-    readonly_fields = (
-        'turn_number',
-        'thought_process',
-        'created',
-        'status',
-    )
-    inlines = [ToolCallInline]
-    classes = ['collapse']
-
+    fields = ('turn_number', 'status', 'tokens_input', 'tokens_output', 'inference_time')
+    readonly_fields = ('turn_number', 'tokens_input', 'tokens_output', 'inference_time')
+    show_change_link = True
 
 @admin.register(ReasoningSession)
 class ReasoningSessionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'head', 'created', 'status')
+    list_display = ('id', 'head', 'status', 'max_turns', 'created', 'delta')
     list_filter = ('status', 'created')
-    search_fields = ('id',)
-    readonly_fields = ('created', 'modified')
-    inlines = [ReasoningTurnInline]
+    search_fields = ('id', 'head__id', 'goals__rendered_goal')
+    readonly_fields = ('created', 'modified', 'delta')
+    inlines = [ReasoningGoalInline, ReasoningTurnInline]
 
+@admin.register(ReasoningGoal)
+class ReasoningGoalAdmin(admin.ModelAdmin):
+    list_display = ('id', 'session', 'status', 'achieved', 'short_goal', 'created')
+    list_filter = ('status', 'achieved')
+    search_fields = ('rendered_goal', 'session__id')
 
-@admin.register(ToolDefinition)
-class ToolDefinitionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'is_async', 'description')
+    def short_goal(self, obj):
+        return obj.rendered_goal[:50] + '...' if len(obj.rendered_goal) > 50 else obj.rendered_goal
+    short_goal.short_description = 'Goal Preview'
 
-
-@admin.register(ModelRegistry)
-class ModelRegistryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'api_variant', 'context_window_size')
-
+@admin.register(ReasoningTurn)
+class ReasoningTurnAdmin(admin.ModelAdmin):
+    list_display = ('turn_number', 'session', 'status', 'tokens_input', 'tokens_output', 'inference_time')
+    list_filter = ('status', 'created')
+    search_fields = ('thought_process', 'session__id')
+    filter_horizontal = ('turn_goals',) # Renders a nice dual-selector for the M2M field
+    readonly_fields = ('created', 'modified', 'delta')
 
 @admin.register(SessionConclusion)
 class SessionConclusionAdmin(admin.ModelAdmin):
-    list_display = ('session', 'outcome_status', 'recommended_action')
+    list_display = ('id', 'session', 'status', 'outcome_status')
+    search_fields = ('summary', 'reasoning_trace', 'outcome_status', 'session__id')
