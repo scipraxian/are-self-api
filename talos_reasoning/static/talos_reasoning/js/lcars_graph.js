@@ -1,165 +1,181 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const sessionId = document.getElementById('lcars-data').dataset.sessionId;
+const POLL_INTERVAL_MS = 2500;
+let sessionId;
+let svg, g, simulation;
+let linkGroup, nodeGroup;
+let currentData = {nodes: [], links: []};
+let selectedNodeId = null;
 
-    // Fetch Data
+document.addEventListener('DOMContentLoaded', () => {
+    sessionId = document.getElementById('lcars-data').dataset.sessionId;
+    initGraphContainer();
+    fetchData();
+    setInterval(fetchData, POLL_INTERVAL_MS);
+});
+
+function fetchData() {
     fetch(`/api/v1/reasoning_sessions/${sessionId}/graph_data/`)
         .then(response => response.json())
         .then(data => {
-            initGraph(data);
             updateSessionInfo(data.session);
-        });
+            updateGraph(data);
 
-    function updateSessionInfo(session) {
-        document.getElementById('session-id').textContent = session.id.substring(0, 8);
-        document.getElementById('session-status').textContent = session.status;
-    }
-});
+            // Live update the inspector if the selected node got new data
+            if (selectedNodeId) {
+                const updatedNode = currentData.nodes.find(n => n.id === selectedNodeId);
+                if (updatedNode) showDetails(updatedNode);
+            }
+        })
+        .catch(err => console.error("Graph Data Fetch Error:", err));
+}
 
-function initGraph(data) {
+function updateSessionInfo(session) {
+    document.getElementById('session-status').textContent = session.status_name;
+}
+
+function initGraphContainer() {
     const width = document.getElementById('graph-container').clientWidth;
     const height = document.getElementById('graph-container').clientHeight;
 
-    const svg = d3.select("#graph-container").append("svg")
+    svg = d3.select("#graph-container").append("svg")
         .attr("width", width)
         .attr("height", height)
-        .call(d3.zoom().on("zoom", (event) => {
+        .call(d3.zoom().scaleExtent([0.1, 4]).on("zoom", (event) => {
             g.attr("transform", event.transform);
         }));
 
-    const g = svg.append("g");
+    g = svg.append("g");
 
-    const simulation = d3.forceSimulation(data.nodes)
-        .force("link", d3.forceLink(data.links).id(d => d.id).distance(100))
-        .force("charge", d3.forceManyBody().strength(-300))
+    // Groups for z-indexing
+    linkGroup = g.append("g").attr("class", "links");
+    nodeGroup = g.append("g").attr("class", "nodes");
+
+    simulation = d3.forceSimulation()
+        .force("link", d3.forceLink().id(d => d.id).distance(120))
+        .force("charge", d3.forceManyBody().strength(-400))
         .force("center", d3.forceCenter(width / 2, height / 2))
-        .force("collide", d3.forceCollide().radius(30));
+        .force("collide", d3.forceCollide().radius(40));
+}
 
-    // Links
-    const link = g.append("g")
-        .attr("class", "links")
-        .selectAll("line")
-        .data(data.links)
-        .join("line")
-        .attr("stroke", "#999")
-        .attr("stroke-width", 2)
-        .attr("stroke-opacity", 0.6);
-
-    // Nodes
-    const node = g.append("g")
-        .attr("class", "nodes")
-        .selectAll("g")
-        .data(data.nodes)
-        .join("g")
-        .call(drag(simulation))
-        .on("click", (event, d) => showDetails(d));
-
-    // Node Shapes
-    node.each(function (d) {
-        const el = d3.select(this);
-        if (d.type === 'turn') {
-            el.append("circle")
-                .attr("r", 15)
-                .attr("fill", "#f99f1b"); // Gold
-        } else if (d.type === 'tool') {
-            el.append("rect")
-                .attr("width", 16)
-                .attr("height", 16)
-                .attr("x", -8)
-                .attr("y", -8)
-                .attr("fill", "#cc3333") // Red
-                .attr("rx", 4);
-        } else {
-            el.append("rect")
-                .attr("width", 20)
-                .attr("height", 20)
-                .attr("x", -10)
-                .attr("y", -10)
-                .attr("fill", "#cc99cc"); // Purple
-        }
+function updateGraph(newData) {
+    // 1. Merge nodes to preserve X/Y physics coordinates of existing nodes
+    const oldNodeMap = new Map(currentData.nodes.map(n => [n.id, n]));
+    const mergedNodes = newData.nodes.map(n => {
+        return oldNodeMap.has(n.id) ? Object.assign(oldNodeMap.get(n.id), n) : n;
     });
 
-    // Labels
-    node.append("text")
-        .attr("dy", 25)
-        .attr("text-anchor", "middle")
-        .text(d => {
-            if (d.type === 'turn') return `T${d.turn_number}`;
-            if (d.type === 'tool') return d.label;
-            return `#${d.id.split('-')[1].substring(0, 4)}`;
-        })
-        .attr("fill", "#99ccff")
-        .style("font-size", "10px")
-        .style("font-family", "sans-serif");
+    currentData.nodes = mergedNodes;
+    currentData.links = newData.links;
 
+    // 2. Data Join: Links
+    const links = linkGroup.selectAll("line")
+        .data(currentData.links, d => `${d.source.id || d.source}-${d.target.id || d.target}`);
+
+    const linksEnter = links.enter().append("line")
+        .attr("stroke", d => d.type === 'uses_tool' ? "#cc3333" : "#999")
+        .attr("stroke-width", d => d.type === 'sequence' ? 4 : 2)
+        .attr("stroke-opacity", 0.6)
+        .attr("stroke-dasharray", d => d.type === 'created_in' ? "5,5" : "none");
+
+    links.exit().remove();
+    const allLinks = linksEnter.merge(links);
+
+    // 3. Data Join: Nodes
+    const nodes = nodeGroup.selectAll("g")
+        .data(currentData.nodes, d => d.id);
+
+    const nodesEnter = nodes.enter().append("g")
+        .call(drag(simulation))
+        .on("click", (event, d) => {
+            selectedNodeId = d.id;
+            nodeGroup.selectAll("g").classed("selected", false);
+            d3.select(event.currentTarget).classed("selected", true);
+            showDetails(d);
+        });
+
+    // Draw Shapes based on type
+    nodesEnter.each(function (d) {
+        const el = d3.select(this);
+        if (d.type === 'turn') {
+            el.append("circle").attr("r", 18).attr("fill", "#f99f1b");
+        } else if (d.type === 'tool') {
+            el.append("rect").attr("width", 24).attr("height", 24).attr("x", -12).attr("y", -12).attr("fill", "#cc3333").attr("rx", 6);
+        } else {
+            el.append("polygon").attr("points", "0,-15 15,0 0,15 -15,0").attr("fill", "#cc99cc");
+        }
+
+        el.append("text")
+            .attr("dy", 30)
+            .attr("text-anchor", "middle")
+            .text(d => d.type === 'turn' ? `T${d.turn_number}` : (d.type === 'tool' ? d.label : `M${d.id.split('-')[1].substring(0, 4)}`))
+            .attr("fill", "#99ccff")
+            .style("font-size", "11px")
+            .style("font-weight", "bold");
+    });
+
+    nodes.exit().remove();
+    const allNodes = nodesEnter.merge(nodes);
+
+    // 4. Update Simulation
+    simulation.nodes(currentData.nodes);
+    simulation.force("link").links(currentData.links);
+    simulation.alpha(0.3).restart(); // Gentle nudge to layout
 
     simulation.on("tick", () => {
-        link
+        allLinks
             .attr("x1", d => d.source.x)
             .attr("y1", d => d.source.y)
             .attr("x2", d => d.target.x)
             .attr("y2", d => d.target.y);
-
-        node
-            .attr("transform", d => `translate(${d.x},${d.y})`);
+        allNodes.attr("transform", d => `translate(${d.x},${d.y})`);
     });
-
-    function showDetails(d) {
-        const panel = document.getElementById('details-content');
-        let html = `<div class="detail-header">${d.type.toUpperCase()}</div>`;
-
-        if (d.type === 'turn') {
-            html += `
-                <div class="detail-row">
-                    <div class="detail-label">Turn Number</div>
-                    <div class="detail-value">${d.turn_number}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Status</div>
-                    <div class="detail-value">${d.status}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Thought Process</div>
-                    <div class="detail-value text-content">${d.thought_process || 'N/A'}</div>
-                </div>
-            `;
-        } else if (d.type === 'tool') {
-            html += `
-                <div class="detail-row">
-                    <div class="detail-label">Tool Name</div>
-                    <div class="detail-value">${d.label}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Async</div>
-                    <div class="detail-value">${d.is_async}</div>
-                </div>
-            `;
-        } else {
-            html += `
-                <div class="detail-row">
-                    <div class="detail-label">Relevance</div>
-                    <div class="detail-value">${d.relevance}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Description</div>
-                    <div class="detail-value text-content">${d.description}</div>
-                </div>
-            `;
-        }
-
-        panel.innerHTML = html;
-
-        // If clicked tool is linked from a Turn, show arguments?
-        // That data is on the link, not the node really, unless we aggregate.
-        // For now, simpler is better.
-    }
 }
 
-// Expand Handler
+function showDetails(d) {
+    const panel = document.getElementById('details-content');
+    let html = `<div class="detail-header">${d.type.toUpperCase()}: ${d.label || d.id}</div>`;
+
+    if (d.type === 'turn') {
+        html += `
+            <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value" style="color:#f99f1b">${d.status}</div></div>
+            <div class="detail-row"><div class="detail-label">Thought Process</div><div class="detail-value text-content">${d.thought_process || 'Thinking...'}</div></div>
+            <div class="detail-row">
+                <div class="detail-label">Context Snapshot (Incoming Data)</div>
+                <div class="detail-value code-block">${d.input_context_snapshot || 'No Context Recorded.'}</div>
+            </div>
+        `;
+    } else if (d.type === 'tool') {
+        // Aggregate all calls for this tool from the links
+        const calls = currentData.links.filter(l => l.target.id === d.id && l.type === 'uses_tool');
+        html += `<div class="detail-row"><div class="detail-label">Total Invocations</div><div class="detail-value">${calls.length}</div></div>`;
+
+        calls.forEach((call, idx) => {
+            const turnNum = call.source.turn_number || '?';
+            html += `
+                <div class="tool-call-block">
+                    <div style="color: #99ccff; font-weight: bold; margin-bottom: 5px;">Call ${idx + 1} (Triggered by Turn ${turnNum})</div>
+                    <div class="detail-label">Arguments</div>
+                    <div class="detail-value code-block">${call.arguments || '{}'}</div>
+                    <div class="detail-label">Result Payload</div>
+                    <div class="detail-value code-block ${call.traceback ? 'error-text' : 'success-text'}">${call.result || 'Pending...'}</div>
+                    ${call.traceback ? `<div class="detail-label" style="color:#cc3333;">Traceback</div><div class="detail-value code-block error-text">${call.traceback}</div>` : ''}
+                </div>
+            `;
+        });
+    } else if (d.type === 'engram') {
+        html += `
+            <div class="detail-row"><div class="detail-label">Relevance Score</div><div class="detail-value">${d.relevance}</div></div>
+            <div class="detail-row"><div class="detail-label">Fact/Memory</div><div class="detail-value text-content">${d.description}</div></div>
+        `;
+    }
+
+    panel.innerHTML = html;
+}
+
+// UI Handlers
 document.getElementById('btn-expand').addEventListener('click', () => {
     const panel = document.getElementById('details-panel');
     panel.classList.toggle('expanded');
-    const btn = document.getElementById('btn-expand');
-    btn.textContent = panel.classList.contains('expanded') ? 'COLLAPSE' : 'EXPAND';
+    document.getElementById('btn-expand').textContent = panel.classList.contains('expanded') ? 'COLLAPSE' : 'EXPAND';
 });
 
 function drag(simulation) {
@@ -180,8 +196,5 @@ function drag(simulation) {
         event.subject.fy = null;
     }
 
-    return d3.drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended);
+    return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
 }

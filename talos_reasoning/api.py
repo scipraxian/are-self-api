@@ -70,7 +70,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
             request, 'talos_reasoning/lcars_view.html', {'session': session}
         )
 
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=['get'], url_path='graph_data')
     def graph_data(self, request, pk=None):
         """Returns fully resolved, DTO-bound JSON for the D3 visualization."""
         session = self.get_object()
@@ -99,7 +99,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
                     turn_number=turn.turn_number,
                     status=turn.status.name,
                     thought_process=turn.thought_process,
-                    timestamp=turn.created.isoformat(),
+                    input_context_snapshot=turn.input_context_snapshot,
                 )
             )
 
@@ -138,6 +138,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
                         call_id=call.call_id,
                         arguments=call.arguments,
                         result=call.result_payload or '',
+                        traceback=call.traceback or '',
                     )
                 )
 

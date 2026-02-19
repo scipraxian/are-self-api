@@ -50,11 +50,17 @@ class ReasoningInterfaceView(DetailView):
 
 
 class LcarsView(DetailView):
-    """
-    Renders the futuristic LCARS interface wrapper.
-    """
+    """Renders the futuristic LCARS interface wrapper."""
 
     model = ReasoningSession
     pk_url_kwarg = 'session_id'
     context_object_name = 'session'
     template_name = 'talos_reasoning/lcars_view.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Fetch the last 15 sessions excluding the current one
+        context['history_sessions'] = ReasoningSession.objects.exclude(
+            id=self.object.id
+        ).order_by('-created')[:15]
+        return context

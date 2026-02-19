@@ -4,50 +4,57 @@
 <head>
     <meta charset="UTF-8">
     <title>LCARS // REASONING</title>
-    <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;700&family=JetBrains+Mono&display=swap"
+          rel="stylesheet">
     <link rel="stylesheet" href="{% static 'talos_reasoning/css/lcars.css' %}">
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <div id="lcars-data" data-session-id="{{ session.id }}"></div>
+<div id="lcars-data" data-session-id="{{ session.id }}"></div>
 
-    <div class="lcars-container">
-        <!-- HEADER -->
-        <header class="lcars-header">
-            <div class="lcars-elbow"></div>
-            <div class="lcars-title">REASONING CORTEX // <span id="session-id">LOADING...</span></div>
-        </header>
+<div class="lcars-container">
+    <header class="lcars-header">
+        <div class="lcars-elbow"></div>
+        <div class="lcars-title">REASONING CORTEX // <span id="session-id">{{ session.id|slice:":8" }}</span></div>
+    </header>
 
-        <!-- LEFT SIDEBAR -->
-        <aside class="lcars-sidebar">
-            <div class="lcars-button">MODE: VIEW</div>
-            <div class="lcars-button">GRAPH</div>
-            <div class="lcars-button">LOGS</div>
-            <div class="lcars-button">DATA</div>
-            <div class="lcars-button long"></div>
-            <div class="lcars-button">EXIT</div>
-        </aside>
+    <aside class="lcars-sidebar">
+        <div class="sidebar-heading">CURRENT SESSION</div>
+        <a href="{% url 'talos_reasoning:lcars_view' session.id %}" class="lcars-button active">
+            <span class="sess-status">{{ session.status.name }}</span>
+            <span class="sess-goal">{{ session.goal|truncatechars:25 }}</span>
+        </a>
 
-        <!-- MAIN GRAPH AREA -->
-        <main class="lcars-main" id="graph-container">
-            <!-- D3 Graph will render here -->
-        </main>
+        <div class="sidebar-heading" style="margin-top: 20px;">ARCHIVES</div>
+        <div class="session-list">
+            {% for hs in history_sessions %}
+                <a href="{% url 'talos_reasoning:lcars_view' hs.id %}" class="lcars-button">
+                    <span class="sess-status">{{ hs.status.name }}</span>
+                    <span class="sess-goal">{{ hs.goal|truncatechars:25 }}</span>
+                </a>
+            {% endfor %}
+        </div>
 
-        <!-- RIGHT DETAILS PANEL -->
-        <aside class="lcars-details" id="details-panel">
-            <button class="detail-toggle" id="btn-expand">EXPAND</button>
-            <div id="details-content">
-                <div class="detail-header">SELECT NODE</div>
-                <div class="detail-value">Click on a Turn or Engram node to view detailed telemetry.</div>
+        <div style="flex-grow: 1;"></div>
+        <a href="{% url 'dashboard:home' %}" class="lcars-button exit">EXIT CORTEX</a>
+    </aside>
+
+    <main class="lcars-main" id="graph-container"></main>
+
+    <aside class="lcars-details" id="details-panel">
+        <button class="detail-toggle" id="btn-expand">EXPAND</button>
+        <div id="details-content">
+            <div class="detail-header">AWAITING SELECTION</div>
+            <div class="detail-value" style="color: #666;">Click on a Turn, Tool, or Engram node to inspect telemetry.
             </div>
-        </aside>
+        </div>
+    </aside>
 
-        <!-- FOOTER -->
-        <footer class="lcars-footer">
-            <div class="footer-stat">STATUS: <span id="session-status">UNKNOWN</span></div>
-        </footer>
-    </div>
+    <footer class="lcars-footer">
+        <div class="footer-stat">STATUS: <span id="session-status">{{ session.status.name }}</span></div>
+    </footer>
+</div>
 
-    <script src="{% static 'talos_reasoning/js/lcars_graph.js' %}"></script>
+<script src="{% static 'talos_reasoning/js/lcars_graph.js' %}"></script>
 </body>
 </html>

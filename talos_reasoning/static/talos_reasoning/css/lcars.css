@@ -181,3 +181,106 @@ body {
     font-size: 1.5rem;
     color: var(--lcars-gold);
 }
+
+/* Sidebar Overhauls */
+.sidebar-heading {
+    color: var(--lcars-orange);
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    margin: 10px 0 5px 15px;
+    font-weight: bold;
+}
+
+.session-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Increased gap for breathing room */
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 5px; /* Prevent scrollbar clipping */
+}
+
+/* Base button rule updates */
+.lcars-button {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: right;
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 15px 0 0 15px;
+    line-height: 1.2;
+    /* FIX: Prevent stretching and squishing */
+    flex: 0 0 auto;
+    min-height: 45px;
+}
+
+.lcars-button.active {
+    background-color: var(--lcars-gold);
+}
+
+.lcars-button.exit {
+    background-color: var(--lcars-red);
+    justify-content: center;
+    align-items: flex-end;
+    font-size: 1.5rem;
+    padding: 15px;
+}
+
+.sess-status {
+    font-size: 0.7rem;
+    opacity: 0.6;
+    color: #000;
+}
+
+.sess-goal {
+    font-size: 0.9rem;
+    color: #000;
+}
+
+/* Deep Data Inspector Elements */
+.text-content {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+    color: #ccc;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 10px;
+    border-left: 3px solid var(--lcars-purple);
+}
+
+.code-block {
+    background-color: #050505;
+    border: 1px solid var(--lcars-gray);
+    padding: 10px;
+    margin-bottom: 10px;
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    color: #a8b2c2;
+}
+
+.success-text {
+    color: #4ade80;
+}
+
+.error-text {
+    color: #ff7b72;
+    border-color: #cc3333;
+}
+
+.tool-call-block {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed var(--lcars-gray);
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+}
+
+/* Graph Node Selection Effect */
+.nodes g.selected circle, .nodes g.selected rect, .nodes g.selected polygon {
+    stroke: #fff;
+    stroke-width: 3px;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+}
+

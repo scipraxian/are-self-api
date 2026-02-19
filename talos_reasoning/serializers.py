@@ -29,7 +29,7 @@ class GraphNodeDTO:
     turn_number: Optional[int] = None
     status: Optional[str] = None
     thought_process: Optional[str] = None
-    timestamp: Optional[str] = None
+    input_context_snapshot: Optional[str] = None
     is_async: Optional[bool] = None
     description: Optional[str] = None
     relevance: Optional[float] = None
@@ -44,6 +44,7 @@ class GraphLinkDTO:
     call_id: Optional[str] = None
     arguments: Optional[str] = None
     result: Optional[str] = None
+    traceback: Optional[str] = None
 
 
 @dataclass
@@ -57,15 +58,15 @@ class SessionGraphDTO:
 
 
 class GraphNodeSerializer(serializers.Serializer):
-    """Strictly maps a Node DTO into the JSON response."""
-
     id = serializers.CharField()
     type = serializers.CharField()
     label = serializers.CharField()
     turn_number = serializers.IntegerField(required=False, allow_null=True)
     status = serializers.CharField(required=False, allow_null=True)
     thought_process = serializers.CharField(required=False, allow_null=True)
-    timestamp = serializers.CharField(required=False, allow_null=True)
+    input_context_snapshot = serializers.CharField(
+        required=False, allow_null=True
+    )
     is_async = serializers.BooleanField(required=False, allow_null=True)
     description = serializers.CharField(required=False, allow_null=True)
     relevance = serializers.FloatField(required=False, allow_null=True)
@@ -73,14 +74,13 @@ class GraphNodeSerializer(serializers.Serializer):
 
 
 class GraphLinkSerializer(serializers.Serializer):
-    """Strictly maps a Link DTO into the JSON response."""
-
     source = serializers.CharField()
     target = serializers.CharField()
     type = serializers.CharField()
     call_id = serializers.CharField(required=False, allow_null=True)
     arguments = serializers.CharField(required=False, allow_null=True)
     result = serializers.CharField(required=False, allow_null=True)
+    traceback = serializers.CharField(required=False, allow_null=True)
 
 
 class ToolDefinitionSerializer(serializers.ModelSerializer):
