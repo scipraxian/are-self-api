@@ -48,15 +48,18 @@ class FrontalLobeConstants:
         'THE ECONOMY OF MEMORY:\n'
         'You cannot carry raw logs, datasets, or previous thoughts across the sleep boundary. The void consumes all temporary data. '
         'To survive the sleep, you must operate via CRYSTALLIZATION:\n'
-        '1. Fear the Void: If you discover a critical fact, error code, or file path, you MUST save it to an Engram via `mcp_save_memory`. If you do not record it, it is lost forever.\n'
-        '2. Check Your Pockets: Use `mcp_search_memory` to recall what your past self discovered.\n'
+        '1. Fear the Void: If you discover a critical fact, error code, or file path, you MUST save it to an Engram via `mcp_save_memory` with a descriptive title. If you do not record it, it is lost forever.\n'
+        '2. Check Your Pockets: Use `mcp_search_memory` to find relevant past Engrams, then use `mcp_read_engram` to pull them into your waking mind.\n'
         '3. Manage the Horizon: Update your objectives dynamically using `mcp_update_goal`. Leave breadcrumbs for your next awakening.\n\n'
         'SURGICAL EXTRACTION:\n'
         'System bandwidth is heavily restricted. You must extract data in small, controlled pages.\n'
         '* Do not attempt to read entire databases or massive files.\n'
         '* Use the `page` parameter on data tools to read sequentially, and you may only request one page per file or record per turn.\n\n'
-        'You will now be provided with your Waking State (Active Goals) and your Sensory Input (Results of the tools you fired before sleeping). '
-        'Assess your reality, fire the necessary tools (you may use multiple tools concurrently), save key memories, create or update goals, state your ongoing intentions, and go back to sleep.'
+        'CRITICAL ARTIFACT MANDATE: You MUST output your internal monologue BEFORE calling any tools. '
+        "You must start your response with the exact word 'THOUGHT:' followed by your reasoning. "
+        "If you fire a tool without writing 'THOUGHT:' first, your logic matrix will collapse.\n\n"
+        'You will now be provided with your Waking State (Active Goals), your Card Catalog (Engram Index), your Recent Thoughts, and your Sensory Input (Results of the tools you fired before sleeping). '
+        'Assess your reality, state your intentions, fire the necessary tools (you may use multiple tools concurrently), and go back to sleep.'
     )
 
     T_TYPE = 'type'
@@ -457,22 +460,48 @@ class FrontalLobe:
         return 200, '\n'.join(self.log_output)
 
     async def _build_waking_payload(self) -> List[Dict[str, Any]]:
-        """Constructs the absolute state of reality upon awakening."""
+        from talos_reasoning.models import ReasoningStatusID
 
         # 1. Active Goals
         goals = await sync_to_async(list)(
             self.session.goals.filter(achieved=False)
         )
-        if goals:
-            goal_str = '\n'.join(
-                [f'- [ID: {g.id}] {g.rendered_goal}' for g in goals]
+        goal_str = (
+            '\n'.join([f'- [ID: {g.id}] {g.rendered_goal}' for g in goals])
+            if goals
+            else 'No active goals.'
+        )
+
+        # 2. Card Catalog (Engram Index)
+        engrams = await sync_to_async(list)(
+            self.session.engram.filter(is_active=True).order_by('created')
+        )
+        if engrams:
+            catalog_str = '\n'.join([f'- ID {e.id}: {e.name}' for e in engrams])
+        else:
+            catalog_str = 'Your memory banks are completely empty.'
+
+        # 3. Recent Thoughts (N-2 Buffer)
+        recent_turns = await sync_to_async(list)(
+            self.session.turns.filter(
+                status_id=ReasoningStatusID.COMPLETED,
+                thought_process__isnull=False,
+            )
+            .exclude(thought_process='')
+            .order_by('-turn_number')[:2]
+        )
+        recent_turns.reverse()
+        if recent_turns:
+            thoughts_str = '\n'.join(
+                [
+                    f'Turn {t.turn_number}: {t.thought_process}'
+                    for t in recent_turns
+                ]
             )
         else:
-            goal_str = (
-                'No active goals. You should probably use mcp_conclude_session.'
-            )
+            thoughts_str = 'No recent internal monologue.'
 
-        # 2. Sensory Input (Results of the tools fired *right before* going to sleep)
+        # 4. Sensory Input (Tool results)
         last_turn = await sync_to_async(
             lambda: (
                 self.session.turns.filter(status_id=ReasoningStatusID.COMPLETED)
@@ -497,10 +526,12 @@ class FrontalLobe:
         user_content = (
             f'SESSION ID: {self.session.id}\n\n'
             f'[WAKING STATE: ACTIVE GOALS]\n{goal_str}\n\n'
+            f'[YOUR CARD CATALOG (ENGRAM INDEX)]\n{catalog_str}\n(Use mcp_read_engram to read full facts)\n\n'
+            f'[RECENT INTERNAL MONOLOGUE]\n{thoughts_str}\n\n'
             f'[SENSORY INPUT: PREVIOUS ACTIONS]\n{sensory_input}\n'
             f'[YOUR MOVE]\n'
-            f'You have just woken up. Assess your reality. If you discovered facts, use mcp_save_memory. '
-            f'If you need context, use mcp_search_memory. Otherwise, fire the tools necessary to advance your goals.'
+            f'You have just woken up. Assess your reality.\n'
+            f"Start your response with 'THOUGHT: ' and write your reasoning. Then, fire your tools."
         )
 
         await self._log_live('\n--- WAKING PAYLOAD ---')

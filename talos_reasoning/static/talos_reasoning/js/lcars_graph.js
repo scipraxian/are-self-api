@@ -168,7 +168,6 @@ function fetchData() {
             }
 
             const graphPayload = flattenTreeToGraph(sessionData, typeof currentData !== 'undefined' ? currentData : null);
-            currentData = graphPayload;
 
             let shouldUpdateInspector = false;
             if (selectedNodeId) {
@@ -502,3 +501,54 @@ function renderJsonTree(data) {
     return html;
 }
 
+// --- CSRF Helper ---
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// --- Reboot Cortex Logic ---
+document.addEventListener('DOMContentLoaded', () => {
+    const rebootBtn = document.getElementById('btn-reboot');
+    if (rebootBtn) {
+        rebootBtn.addEventListener('click', () => {
+            if (confirm("WARNING: Rebooting the Cortex will re-cast the original spell and begin a completely new memory session. Proceed?")) {
+
+                rebootBtn.style.opacity = '0.5';
+                rebootBtn.textContent = 'REBOOTING...';
+
+                fetch(`/api/v1/reasoning_sessions/${sessionId}/rerun/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.spawn_id) {
+                            // Redirect to the Hydra Monitor to watch the new process spin up
+                            window.location.href = `/hydra/graph/spawn/${data.spawn_id}/?full=True`;
+                        } else {
+                            alert("Reboot triggered, but failed to find Spawn ID.");
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        rebootBtn.style.opacity = '1';
+                        rebootBtn.textContent = 'REBOOT CORTEX';
+                    });
+            }
+        });
+    }
+});
