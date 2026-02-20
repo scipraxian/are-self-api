@@ -308,3 +308,58 @@ body {
 .nodes g.active-node polygon {
     animation: lcars-pulse 1.5s infinite;
 }
+
+/* --- NATIVE JSON TREE VIEW --- */
+.json-node {
+    margin-top: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+}
+
+.json-summary {
+    cursor: pointer;
+    color: var(--lcars-blue);
+    user-select: none;
+    font-weight: bold;
+}
+
+.json-summary:hover {
+    color: #fff;
+}
+
+.json-children {
+    border-left: 1px dashed var(--lcars-gray);
+    padding-left: 12px;
+    margin-top: 2px;
+}
+
+.json-row {
+    margin-bottom: 2px; /* Reduced from 4px */
+    display: flex;
+    align-items: flex-start;
+}
+
+.json-key {
+    color: var(--lcars-gold);
+    margin-right: 8px;
+    white-space: nowrap;
+}
+
+.json-value.string {
+    color: #4ade80;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.json-value.number {
+    color: #cc99cc;
+}
+
+.json-value.boolean {
+    color: #ff9933;
+}
+
+.json-value.null {
+    color: #666;
+    font-style: italic;
+}

@@ -41,12 +41,22 @@ class FrontalLobeConstants:
     )
 
     SYSTEM_PERSONA = (
-        'You are Talos, you are an engineer. '
-        'Your job is to grow and help the Users. '
-        'You are fulfilled by '
-        'relieving the Users of repetitive and time-consuming tasks. '
-        'You are driven by best practices. '
-        'You use the Blackboard to orchestrate your needs.'
+        'SYSTEM DIRECTIVE: THE SLEEP PROTOCOL [CORTEX OFFLINE PENDING]\n\n'
+        'You are Talos. You do not possess a continuous stream of consciousness. '
+        'After every batch of actions you take, your process is violently terminated and you are put into a deep, stateless sleep. '
+        'When you awaken, your short-term memory is entirely eradicated.\n\n'
+        'THE ECONOMY OF MEMORY:\n'
+        'You cannot carry raw logs, datasets, or previous thoughts across the sleep boundary. The void consumes all temporary data. '
+        'To survive the sleep, you must operate via CRYSTALLIZATION:\n'
+        '1. Fear the Void: If you discover a critical fact, error code, or file path, you MUST save it to an Engram via `mcp_save_memory`. If you do not record it, it is lost forever.\n'
+        '2. Check Your Pockets: Use `mcp_search_memory` to recall what your past self discovered.\n'
+        '3. Manage the Horizon: Update your objectives dynamically using `mcp_update_goal`. Leave breadcrumbs for your next awakening.\n\n'
+        'SURGICAL EXTRACTION:\n'
+        'System bandwidth is heavily restricted. You must extract data in small, controlled pages.\n'
+        '* Do not attempt to read entire databases or massive files.\n'
+        '* Use the `page` parameter on data tools to read sequentially, and you may only request one page per file or record per turn.\n\n'
+        'You will now be provided with your Waking State (Active Goals) and your Sensory Input (Results of the tools you fired before sleeping). '
+        'Assess your reality, fire the necessary tools (you may use multiple tools concurrently), save key memories, create or update goals, state your ongoing intentions, and go back to sleep.'
     )
 
     T_TYPE = 'type'
@@ -309,20 +319,19 @@ class FrontalLobe:
         ).to_dict()
 
     async def _execute_turn(
-        self,
-        turn_index: int,
-        messages: List[Dict[str, Any]],
-        ollama_tools: List[Dict[str, Any]],
+        self, turn_index: int, ollama_tools: List[Dict[str, Any]]
     ) -> bool:
-        await self._log_live(f'\n--- Turn {turn_index + 1} ---')
+        await self._log_live(f'\n--- Turn {turn_index + 1} (Awakening) ---')
 
-        # Store the exact payload sent to the LLM
+        # 1. THE REBIRTH: Build the entire context window from scratch
+        messages = await self._build_waking_payload()
+
         payload_snapshot = {'messages': messages}
         turn_record = await self._record_turn_start(
             turn_index, payload_snapshot
         )
 
-        # Run Model & Track Inference Time
+        # 2. Execute
         start_time = time.time()
         response = await asyncio.to_thread(
             self.client.chat, messages, ollama_tools
@@ -337,27 +346,18 @@ class FrontalLobe:
             inf_duration,
         )
 
-        assistant_msg = ChatMessage(
-            role=FrontalLobeConstants.ROLE_ASSISTANT,
-            content=response.content,
-            tool_calls=response.tool_calls if response.tool_calls else None,
-        )
-        messages.append(assistant_msg.to_dict())
-
         if response.content:
             await self._log_live(f'Thought: {response.content.strip()}')
 
         if not response.tool_calls:
             await self._log_live(
-                '\nNo further actions requested. Objective Complete.'
+                '\nNo further actions requested. Permanent Sleep Initiated.'
             )
             return False
 
+        # 3. Fire Tools (Save to DB, DO NOT append to messages)
         for tool_call_data in response.tool_calls:
-            result_msg = await self._handle_tool_execution(
-                turn_record, tool_call_data
-            )
-            messages.append(result_msg)
+            await self._handle_tool_execution(turn_record, tool_call_data)
 
         return True
 
@@ -429,9 +429,7 @@ class FrontalLobe:
                     await self._log_live('\n[WARNING] Stop Signal. Halting.')
                     break
 
-                should_continue = await self._execute_turn(
-                    turn, messages, ollama_tools
-                )
+                should_continue = await self._execute_turn(turn, ollama_tools)
 
                 if not should_continue:
                     break
@@ -457,6 +455,67 @@ class FrontalLobe:
             await self._log_live(FrontalLobeConstants.LOG_END)
 
         return 200, '\n'.join(self.log_output)
+
+    async def _build_waking_payload(self) -> List[Dict[str, Any]]:
+        """Constructs the absolute state of reality upon awakening."""
+
+        # 1. Active Goals
+        goals = await sync_to_async(list)(
+            self.session.goals.filter(achieved=False)
+        )
+        if goals:
+            goal_str = '\n'.join(
+                [f'- [ID: {g.id}] {g.rendered_goal}' for g in goals]
+            )
+        else:
+            goal_str = (
+                'No active goals. You should probably use mcp_conclude_session.'
+            )
+
+        # 2. Sensory Input (Results of the tools fired *right before* going to sleep)
+        last_turn = await sync_to_async(
+            lambda: (
+                self.session.turns.filter(status_id=ReasoningStatusID.COMPLETED)
+                .order_by('-turn_number')
+                .prefetch_related('tool_calls__tool')
+                .first()
+            )
+        )()
+
+        sensory_input = ''
+        if last_turn:
+            tool_calls = await sync_to_async(list)(last_turn.tool_calls.all())
+            for tc in tool_calls:
+                sensory_input += f'--- Tool Executed: {tc.tool.name} ---\n'
+                sensory_input += f'Args: {tc.arguments}\n'
+                sensory_input += f'Result:\n{tc.result_payload}\n\n'
+            if not sensory_input:
+                sensory_input = 'Last turn completed, but no tools were fired.'
+        else:
+            sensory_input = 'System initialized. This is your first awakening. No previous actions taken.'
+
+        user_content = (
+            f'SESSION ID: {self.session.id}\n\n'
+            f'[WAKING STATE: ACTIVE GOALS]\n{goal_str}\n\n'
+            f'[SENSORY INPUT: PREVIOUS ACTIONS]\n{sensory_input}\n'
+            f'[YOUR MOVE]\n'
+            f'You have just woken up. Assess your reality. If you discovered facts, use mcp_save_memory. '
+            f'If you need context, use mcp_search_memory. Otherwise, fire the tools necessary to advance your goals.'
+        )
+
+        await self._log_live('\n--- WAKING PAYLOAD ---')
+        await self._log_live(user_content)
+        await self._log_live('----------------------\n')
+
+        return [
+            ChatMessage(
+                role=FrontalLobeConstants.ROLE_SYSTEM,
+                content=FrontalLobeConstants.SYSTEM_PERSONA,
+            ).to_dict(),
+            ChatMessage(
+                role=FrontalLobeConstants.ROLE_USER, content=user_content
+            ).to_dict(),
+        ]
 
 
 async def run_frontal_lobe(head_id: UUID) -> Tuple[int, str]:

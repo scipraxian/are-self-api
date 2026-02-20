@@ -1,56 +1,45 @@
 import asyncio
 import os
-from typing import Optional
 
 
-def _resolve_path(path: str, root_path: str = None) -> tuple[
-    Optional[str], Optional[str]]:
-    from django.conf import settings
-    base_dir = os.path.normpath(
-        str(root_path or getattr(settings, 'BASE_DIR', 'c:/talos')))
-    if os.path.isabs(path):
-        full_path = os.path.normpath(path)
-        return (full_path, None) if os.path.exists(full_path) else (None,
-                                                                    f"Error: "
-                                                                    f"Absolute path '{path}' does not exist.")
+def _read_sync(path: str, page: int) -> str:
+    if not os.path.exists(path):
+        return f"Error: '{path}' not found."
+    if os.path.isdir(path):
+        return f"Error: '{path}' is a directory."
 
-    full_path = os.path.normpath(os.path.join(base_dir, path))
-    try:
-        if os.path.commonpath(
-                [base_dir, full_path]).lower() != base_dir.lower():
-            return None, (f"Error: Access denied. '{path}' is outside the "
-                          f"context root.")
-    except ValueError:
-        return None, "Error: Access denied. Partition/Drive mismatch."
+    page_size = 50  # HARD CAP
 
-    return (full_path, None) if os.path.exists(full_path) else (None,
-                                                                f"Error: Path "
-                                                                f"'{path}' "
-                                                                f"not found.")
-
-
-def _read_sync(path: str, start_line: int, max_lines: int) -> str:
-    if not os.path.exists(path): return f"Error: '{path}' not found."
-    if os.path.isdir(path): return f"Error: '{path}' is a directory."
     try:
         with open(path, 'r', encoding='utf-8', errors='replace') as f:
             lines = f.readlines()
-        total_lines = len(lines)
-        start_idx = max(0, start_line - 1)
-        end_idx = start_idx + max_lines
 
-        content = "".join([f"{i + 1}: {line}" for i, line in
-                           enumerate(lines[start_idx:end_idx],
-                                     start=start_idx)])
-        if end_idx < total_lines:
-            content += (f"\n... [Displaying lines {start_idx + 1}-"
-                        f"{min(end_idx, total_lines)} of {total_lines}. Use"
-                        f" start_line={end_idx + 1} to read more.]")
+        total_lines = len(lines)
+        total_pages = max(1, (total_lines + page_size - 1) // page_size)
+
+        # Clamp page number
+        safe_page = max(1, min(page, total_pages))
+        start_idx = (safe_page - 1) * page_size
+        end_idx = start_idx + page_size
+
+        chunk = lines[start_idx:end_idx]
+        content = ''.join(
+            [
+                f'{i + 1}: {line}'
+                for i, line in enumerate(chunk, start=start_idx)
+            ]
+        )
+
+        if safe_page < total_pages:
+            content += f'\n\n... [PAGE {safe_page} of {total_pages}. Request page={safe_page + 1} to read more.]'
+        else:
+            content += f'\n\n... [END OF FILE (Page {safe_page}/{total_pages})]'
+
         return content
     except Exception as e:
-        return f"Error reading file: {str(e)}"
+        return f'Error reading file: {str(e)}'
 
 
-async def mcp_read_file(path: str, start_line: int = 1,
-                        max_lines: int = 50) -> str:
-    return await asyncio.to_thread(_read_sync, path, start_line, max_lines)
+async def mcp_read_file(path: str, page: int = 1) -> str:
+    """MCP Tool: Reads a file surgically using pagination."""
+    return await asyncio.to_thread(_read_sync, path, int(page))

@@ -11,22 +11,33 @@ let liveTimerInterval = null;
 function flattenTreeToGraph(sessionData, oldData) {
     const nodes = [];
     const links = [];
-    const toolMap = new Set();
+
+    let firstTurnId = null;
+    if (sessionData.turns && sessionData.turns.length > 0) {
+        // Assuming turns are sorted, index 0 is the first turn
+        firstTurnId = `turn-${sessionData.turns[0].id}`;
+    }
 
     // 1. Process Goals
     if (sessionData.goals) {
         sessionData.goals.forEach(goal => {
+            const goalNodeId = `goal-${goal.id}`;
             nodes.push({
-                id: `goal-${goal.id}`,
+                id: goalNodeId,
                 type: 'goal',
                 label: `Goal ${goal.id}`,
-                // If you want to stop the infinite pulsing, you can artificially map the status here:
-                // status: goal.status_name === 'Active' ? 'Goal_Active' : goal.status_name,
                 status: goal.status_name,
                 rendered_goal: goal.rendered_goal,
                 created: goal.created,
                 delta: goal.delta
             });
+            if (firstTurnId) {
+                links.push({
+                    source: firstTurnId,
+                    target: goalNodeId,
+                    type: 'goal_anchor'
+                });
+            }
         });
     }
 
@@ -50,7 +61,7 @@ function flattenTreeToGraph(sessionData, oldData) {
                 delta: turn.delta
             });
 
-            // Sequence Links
+            // Sequence Links (The Timeline)
             if (index > 0) {
                 links.push({
                     source: `turn-${sessionData.turns[index - 1].id}`,
@@ -59,32 +70,19 @@ function flattenTreeToGraph(sessionData, oldData) {
                 });
             }
 
-            // Many-to-Many Link (Turn -> Goals)
-            if (turn.turn_goals) {
-                turn.turn_goals.forEach(goalId => {
-                    const targetGoalId = goalId.id ? goalId.id : goalId;
-                    links.push({
-                        source: turnNodeId,
-                        target: `goal-${targetGoalId}`,
-                        type: 'addresses_goal'
-                    });
-                });
-            }
+            // --- GRAVITY FIX: Turn -> Goal links removed so it doesn't clump ---
 
-            // Tool Links (Turn -> Tool)
+            // --- TREE FIX: Make tool nodes unique per call so they branch outward ---
             if (turn.tool_calls) {
-                turn.tool_calls.forEach(call => {
-                    const toolNodeId = `tool-${call.tool_name}`;
+                turn.tool_calls.forEach((call, callIdx) => {
+                    const toolNodeId = `tool-${turn.id}-${call.tool_name}-${callIdx}`;
 
-                    if (!toolMap.has(toolNodeId)) {
-                        toolMap.add(toolNodeId);
-                        nodes.push({
-                            id: toolNodeId,
-                            type: 'tool',
-                            label: call.tool_name,
-                            is_async: call.is_async
-                        });
-                    }
+                    nodes.push({
+                        id: toolNodeId,
+                        type: 'tool',
+                        label: call.tool_name,
+                        is_async: call.is_async
+                    });
 
                     links.push({
                         source: turnNodeId,
@@ -124,16 +122,25 @@ function flattenTreeToGraph(sessionData, oldData) {
             }
         });
     }
+
+    // Preserve Physics & Spawn gracefully
     if (oldData && oldData.nodes) {
         const oldNodeMap = new Map(oldData.nodes.map(n => [n.id, n]));
         nodes.forEach(n => {
             if (oldNodeMap.has(n.id)) {
                 const old = oldNodeMap.get(n.id);
-                // Copy the physics state so D3 doesn't reset them
                 n.x = old.x;
                 n.y = old.y;
                 n.vx = old.vx;
                 n.vy = old.vy;
+            } else if (n.type === 'turn') {
+                // If a new turn spawns, put it near the previous turn so it doesn't fly across the screen
+                const prevTurn = nodes.find(prev => prev.type === 'turn' && prev.turn_number === n.turn_number - 1);
+                if (prevTurn && oldNodeMap.has(prevTurn.id)) {
+                    const oldPrev = oldNodeMap.get(prevTurn.id);
+                    n.x = oldPrev.x + 50;
+                    n.y = oldPrev.y + 50;
+                }
             }
         });
     }
@@ -147,7 +154,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function fetchData() {
-    fetch(`/api/v1/reasoning_sessions/${sessionId}/graph_data/`)
+    // --- CACHE BUSTER FIX: Forces the browser to actually get new turns ---
+    const url = `/api/v1/reasoning_sessions/${sessionId}/graph_data/?_ts=${Date.now()}`;
+
+    fetch(url)
         .then(response => {
             if (!response.ok) throw new Error('Network response was not ok');
             return response.json();
@@ -157,20 +167,31 @@ function fetchData() {
                 updateSessionInfo(sessionData);
             }
 
-            // --- PASS currentData TO RETAIN PHYSICS ---
             const graphPayload = flattenTreeToGraph(sessionData, typeof currentData !== 'undefined' ? currentData : null);
-
             currentData = graphPayload;
 
             let shouldUpdateInspector = false;
             if (selectedNodeId) {
                 const rawNode = graphPayload.nodes.find(n => n.id === selectedNodeId);
-                const rawLinks = graphPayload.links.filter(l => l.target === selectedNodeId || l.source === selectedNodeId);
-                const currentStateHash = JSON.stringify({node: rawNode, links: rawLinks});
+                const rawLinks = graphPayload.links.filter(l => (l.target.id || l.target) === selectedNodeId || (l.source.id || l.source) === selectedNodeId);
 
-                if (selectedNodeHash !== currentStateHash) {
-                    shouldUpdateInspector = true;
-                    selectedNodeHash = currentStateHash;
+                if (rawNode) {
+                    // --- SCROLL/JITTER FIX: Create a clean hash without timers or physics ---
+                    const cleanNode = {...rawNode};
+                    delete cleanNode.x;
+                    delete cleanNode.y;
+                    delete cleanNode.vx;
+                    delete cleanNode.vy;
+                    delete cleanNode.index;
+                    delete cleanNode.delta;
+                    delete cleanNode.inference_time;
+
+                    const currentStateHash = JSON.stringify({node: cleanNode, linkCount: rawLinks.length});
+
+                    if (selectedNodeHash !== currentStateHash) {
+                        shouldUpdateInspector = true;
+                        selectedNodeHash = currentStateHash;
+                    }
                 }
             }
 
@@ -181,11 +202,8 @@ function fetchData() {
                 if (updatedNode) showDetails(updatedNode);
             }
 
-            // --- THE POLLING FIX: Stop polling if the session is done ---
-            // Notice we are checking status_name now!
             const isFinished = ['Completed', 'Error', 'Maxed Out', 'Stopped'].includes(sessionData.status_name);
             if (!isFinished) {
-                // Safely wait for the previous call to finish before queuing the next one
                 pollTimer = setTimeout(fetchData, POLL_INTERVAL_MS);
             }
         })
@@ -208,7 +226,6 @@ function initGraphContainer() {
         }));
 
     g = svg.append("g");
-
     linkGroup = g.append("g").attr("class", "links");
     nodeGroup = g.append("g").attr("class", "nodes");
 
@@ -220,7 +237,6 @@ function initGraphContainer() {
 }
 
 function updateGraph(newData) {
-// --- SHIELD: Drop dangling links immediately to prevent physics crash ---
     const validNodeIds = new Set(newData.nodes.map(n => n.id));
     newData.links = newData.links.filter(l => {
         const sourceId = l.source.id || l.source;
@@ -231,7 +247,6 @@ function updateGraph(newData) {
     const topologyChanged = (newData.nodes.length !== currentData.nodes.length) ||
         (newData.links.length !== currentData.links.length);
 
-    // Merge nodes to preserve X/Y coordinates
     const oldNodeMap = new Map(currentData.nodes.map(n => [n.id, n]));
     const mergedNodes = newData.nodes.map(n => {
         return oldNodeMap.has(n.id) ? Object.assign(oldNodeMap.get(n.id), n) : n;
@@ -240,20 +255,24 @@ function updateGraph(newData) {
     currentData.nodes = mergedNodes;
     currentData.links = newData.links;
 
-    // --- DATA JOIN: LINKS ---
     const links = linkGroup.selectAll("line")
-        .data(currentData.links, d => `${d.source.id || d.source}-${d.target.id || d.target}`);
+        .data(currentData.links, d => `${d.source.id || d.source}-${d.target.id || d.target}-${d.type}`);
 
     const linksEnter = links.enter().append("line")
-        .attr("stroke", d => d.type === 'uses_tool' ? "#cc3333" : "#999")
+        .attr("stroke", d => {
+            if (d.type === 'uses_tool') return "#cc3333";
+            if (d.type === 'goal_anchor') return "#f99f1b"; // Gold tether
+            return "#999";
+        })
         .attr("stroke-width", d => d.type === 'sequence' ? 4 : 2)
-        .attr("stroke-opacity", 0.6)
-        .attr("stroke-dasharray", d => d.type === 'created_in' ? "5,5" : "none");
+        // Make the tether highly transparent
+        .attr("stroke-opacity", d => d.type === 'goal_anchor' ? 0.2 : 0.6)
+        // Make the tether dotted
+        .attr("stroke-dasharray", d => (d.type === 'created_in' || d.type === 'goal_anchor') ? "5,5" : "none");
 
     links.exit().remove();
     const allLinks = linksEnter.merge(links);
 
-    // --- DATA JOIN: NODES ---
     const nodes = nodeGroup.selectAll("g")
         .data(currentData.nodes, d => d.id);
 
@@ -269,18 +288,30 @@ function updateGraph(newData) {
 
     nodesEnter.each(function (d) {
         const el = d3.select(this);
+
+        // 1. SHAPE & COLOR
         if (d.type === 'turn') {
-            el.append("circle").attr("r", 18).attr("fill", "#f99f1b");
+            el.append("circle").attr("r", 18).attr("fill", "#f99f1b"); // LCARS Orange
         } else if (d.type === 'tool') {
-            el.append("rect").attr("width", 24).attr("height", 24).attr("x", -12).attr("y", -12).attr("fill", "#cc3333").attr("rx", 6);
+            el.append("rect").attr("width", 24).attr("height", 24).attr("x", -12).attr("y", -12).attr("fill", "#cc3333").attr("rx", 6); // Red Square
+        } else if (d.type === 'goal') {
+            // New Shape: Larger LCARS Blue Diamond for Strategic Goals
+            el.append("polygon").attr("points", "0,-22 22,0 0,22 -22,0").attr("fill", "#38bdf8");
         } else {
+            // Engrams: Standard Purple Diamond
             el.append("polygon").attr("points", "0,-15 15,0 0,15 -15,0").attr("fill", "#cc99cc");
         }
 
+        // 2. TEXT LABEL
         el.append("text")
-            .attr("dy", 30)
+            .attr("dy", 32)
             .attr("text-anchor", "middle")
-            .text(d => d.type === 'turn' ? `T${d.turn_number}` : (d.type === 'tool' ? d.label : `M${d.id.split('-')[1].substring(0, 4)}`))
+            .text(d => {
+                if (d.type === 'turn') return `T${d.turn_number}`;
+                if (d.type === 'tool') return d.label;
+                if (d.type === 'goal') return `G${d.id.split('-')[1].substring(0, 4)}`; // G-Prefix for Goal
+                return `M${d.id.split('-')[1].substring(0, 4)}`; // M-Prefix for Memory/Engram
+            })
             .attr("fill", "#99ccff")
             .style("font-size", "11px")
             .style("font-weight", "bold");
@@ -292,7 +323,6 @@ function updateGraph(newData) {
     const activeStates = ['Active', 'Pending', 'Running'];
     allNodes.classed("active-node", d => d.type === 'turn' && activeStates.includes(d.status));
 
-    // --- EXECUTE SIMULATION ---
     simulation.nodes(currentData.nodes);
     simulation.force("link").links(currentData.links);
 
@@ -310,7 +340,6 @@ function updateGraph(newData) {
     });
 }
 
-
 function showDetails(d) {
     const panel = document.getElementById('details-content');
     const scrollContainer = document.getElementById('details-panel');
@@ -321,29 +350,26 @@ function showDetails(d) {
         liveTimerInterval = null;
     }
 
-    // --- SMART DJANGO ADMIN LINKS ---
     const dbId = d.id.split('-').slice(1).join('-');
     let adminUrl = '#';
+
     if (d.type === 'turn') adminUrl = `/admin/talos_reasoning/reasoningturn/${dbId}/change/`;
     else if (d.type === 'goal') adminUrl = `/admin/talos_reasoning/reasoninggoal/${dbId}/change/`;
     else if (d.type === 'session') adminUrl = `/admin/talos_reasoning/reasoningsession/${dbId}/change/`;
     else if (d.type === 'engram') adminUrl = `/admin/talos_hippocampus/talosengram/${dbId}/change/`;
-    else if (d.type === 'tool') adminUrl = `/admin/talos_parietal/tooldefinition/?q=${dbId}`;
+    // We appended an index to tools to separate them, so safely extract the original DB name for the search link
+    else if (d.type === 'tool') {
+        const toolName = d.id.split('-')[2];
+        adminUrl = `/admin/talos_parietal/tooldefinition/?q=${toolName}`;
+    }
 
-    // Keep the header pristine so it doesn't clash with EXPAND
-    let html = `<div class="detail-header">${d.type.toUpperCase()}: ${d.label || d.id}</div>`;
-
-    // Put the Admin Button safely inside a standard row
-    html += `
-        <div class="detail-row" style="align-items: center;">
-            <div class="detail-label">Database Record</div>
-            <div class="detail-value">
-                <a href="${adminUrl}" target="_blank" style="color: #1a1a1a; background-color: #f99f1b; text-decoration: none; font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 3px; display: inline-block;">OPEN IN ADMIN ↗</a>
-            </div>
+    let html = `
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f99f1b; padding-bottom: 5px; margin-bottom: 10px;">
+            <div class="detail-header" style="border: none; margin: 0; padding: 0;">${d.type.toUpperCase()}: ${d.label || d.id}</div>
+            <a href="${adminUrl}" target="_blank" style="color: #1a1a1a; background-color: #f99f1b; text-decoration: none; font-size: 10px; font-weight: bold; padding: 3px 6px; border-radius: 3px; letter-spacing: 1px;">ADMIN ↗</a>
         </div>
     `;
 
-    // --- TYPE-SPECIFIC RENDERING ---
     if (d.type === 'goal') {
         html += `
             <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value" style="color:#f99f1b">${d.status}</div></div>
@@ -356,12 +382,10 @@ function showDetails(d) {
             <div class="detail-row"><div class="detail-label">Relevance Score</div><div class="detail-value">${d.relevance}</div></div>
             <div class="detail-row"><div class="detail-label">Fact/Memory</div><div class="detail-value text-content">${d.description}</div></div>
         `;
-    }
-    if (d.type === 'turn') {
+    } else if (d.type === 'turn') {
         const activeStates = ['Active', 'Pending', 'Running', 'Thinking'];
         const isLive = activeStates.includes(d.status);
 
-        // Calculate Tokens Per Second (TPS)
         let tps = "0.0";
         if (d.inference_time && d.tokens_output) {
             let seconds = parseFloat(d.inference_time.replace('s', ''));
@@ -369,39 +393,25 @@ function showDetails(d) {
         }
 
         html += `
-            <div class="detail-row">
-                <div class="detail-label">Status</div>
-                <div class="detail-value" style="color:#f99f1b">${d.status}</div>
-            </div>
+            <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value" style="color:#f99f1b">${d.status}</div></div>
             <div class="detail-row">
                 <div class="detail-label">Turn Duration</div>
-                <div class="detail-value" id="node-duration" style="color:#99ccff; font-family: monospace;">
-                    ${isLive ? '⏱ Calculating...' : (d.delta || '0s')}
+                <div class="detail-value" id="node-duration" style="color:#99ccff; font-family: monospace;">${isLive ? '⏱ Calculating...' : (d.delta || '0s')}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Cognitive Load</div>
+                <div class="detail-value" style="color:#cc99cc; font-family: monospace;">[ IN: ${d.tokens_input || 0} ] -> [ OUT: ${d.tokens_output || 0} ]</div>
+            </div>
+            <div class="detail-row"><div class="detail-label">Inference Speed</div><div class="detail-value" style="color:#4ade80; font-family: monospace;">${d.inference_time || '0s'} (${tps} tokens/sec)</div></div>
+            <div class="detail-row"><div class="detail-label">Thought Process</div><div class="detail-value text-content">${d.thought_process || 'Executing without monologue...'}</div></div>
+            <div class="detail-row">
+                <div class="detail-label">Request Payload</div>
+                <div class="detail-value code-block" style="padding: 5px;">
+                    ${d.request_payload ? renderJsonTree(d.request_payload) : '<span style="color:#666; font-style:italic;">No Payload Recorded.</span>'}
                 </div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Cognitive Load (LLM)</div>
-                <div class="detail-value" style="color:#cc99cc; font-family: monospace;">
-                    [ IN: ${d.tokens_input || 0} ] -> [ OUT: ${d.tokens_output || 0} ]
-                </div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Inference Speed</div>
-                <div class="detail-value" style="color:#4ade80; font-family: monospace;">
-                    ${d.inference_time || '0s'} (${tps} tokens/sec)
-                </div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Thought Process</div>
-                <div class="detail-value text-content">${d.thought_process || 'Executing without monologue...'}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Request Payload (JSON)</div>
-                <div class="detail-value code-block">${d.request_payload ? JSON.stringify(d.request_payload, null, 2) : 'No Payload Recorded.'}</div>
             </div>
         `;
 
-        // If the turn is currently active, run a high-frame-rate local timer
         if (isLive && d.created) {
             const startTime = new Date(d.created).getTime();
             liveTimerInterval = setInterval(() => {
@@ -415,16 +425,16 @@ function showDetails(d) {
             }, 100);
         }
     } else if (d.type === 'tool') {
-        const calls = currentData.links.filter(l => l.target.id === d.id && l.type === 'uses_tool');
-        html += `<div class="detail-row"><div class="detail-label">Total Invocations</div><div class="detail-value">${calls.length}</div></div>`;
+        const calls = currentData.links.filter(l => (l.target.id || l.target) === d.id && l.type === 'uses_tool');
 
         calls.forEach((call, idx) => {
-            const turnNum = call.source.turn_number ? call.source.turn_number : call.source.split('-')[1];
             html += `
                 <div class="tool-call-block">
-                    <div style="color: #99ccff; font-weight: bold; margin-bottom: 5px;">Call ${idx + 1} (Triggered by Turn ${turnNum})</div>
+                    <div style="color: #99ccff; font-weight: bold; margin-bottom: 5px;">Call Payload</div>
                     <div class="detail-label">Arguments</div>
-                    <div class="detail-value code-block">${call.arguments || '{}'}</div>
+                    <div class="detail-value code-block" style="padding: 5px;">
+                        ${call.arguments ? renderJsonTree(call.arguments) : '{}'}
+                    </div>
                     <div class="detail-label">Result Payload</div>
                     <div class="detail-value code-block ${call.traceback ? 'error-text' : 'success-text'}">${call.result || 'Pending...'}</div>
                     ${call.traceback ? `<div class="detail-label" style="color:#cc3333;">Traceback</div><div class="detail-value code-block error-text">${call.traceback}</div>` : ''}
@@ -434,12 +444,9 @@ function showDetails(d) {
     }
 
     panel.innerHTML = html;
-
-    // --- RESTORE SCROLL STATE ---
     scrollContainer.scrollTop = prevScrollTop;
 }
 
-// UI Handlers
 document.getElementById('btn-expand').addEventListener('click', () => {
     const panel = document.getElementById('details-panel');
     panel.classList.toggle('expanded');
@@ -466,3 +473,32 @@ function drag(simulation) {
 
     return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
 }
+
+function renderJsonTree(data) {
+    if (typeof data === 'string') {
+        try {
+            data = JSON.parse(data);
+        } catch (e) {
+            return `<div class="json-value string">${data}</div>`;
+        }
+    }
+
+    if (data === null) return '<span class="json-value null">null</span>';
+    if (typeof data !== 'object') return `<span class="json-value ${typeof data}">${data}</span>`;
+
+    const isArray = Array.isArray(data);
+    const isEmpty = isArray ? data.length === 0 : Object.keys(data).length === 0;
+
+    if (isEmpty) return `<span class="json-value string">${isArray ? '[]' : '{}'}</span>`;
+
+    // ALL HTML MUST BE ON ONE LINE to prevent pre-wrap from rendering tabs/newlines
+    let html = `<details open class="json-node" style="margin:0;"><summary class="json-summary" style="margin:0;">${isArray ? 'Array [' + data.length + ']' : 'Object'}</summary><div class="json-children">`;
+
+    for (const key in data) {
+        html += `<div class="json-row"><span class="json-key">"${key}":</span><div style="flex: 1;">${renderJsonTree(data[key])}</div></div>`;
+    }
+
+    html += `</div></details>`;
+    return html;
+}
+

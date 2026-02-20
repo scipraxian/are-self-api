@@ -74,7 +74,7 @@
     "pk": 1,
     "fields": {
       "name": "mcp_read_file",
-      "description": "Reads a specific line range from a local file. Use this to examine source code, config files, or logs. Efficient for large files by reading only relevant chunks.",
+      "description": "Reads a chunk of a local file using strict pagination. Crucial for avoiding amnesia via context overflow. Request page=1, then page=2, etc.",
       "is_async": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -85,7 +85,7 @@
     "pk": 2,
     "fields": {
       "name": "mcp_grep",
-      "description": "Recursively searches for a regex pattern in files. Equivalent to 'grep -r'. Returns file paths and line numbers. Use '.' as path to search the entire project.",
+      "description": "Recursively searches files for a regex pattern. Returns file paths and line numbers. Use this to locate critical needles in the haystack before reading files.",
       "is_async": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -96,7 +96,7 @@
     "pk": 3,
     "fields": {
       "name": "mcp_list_files",
-      "description": "Lists files and directories at a specific path. Use this to explore the project structure or verify file existence.",
+      "description": "Lists files and directories at a specific path. Use this to explore the project structure.",
       "is_async": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -107,7 +107,7 @@
     "pk": 4,
     "fields": {
       "name": "mcp_update_blackboard",
-      "description": "Writes variables to the execution Blackboard. Use this to affect the routing logic of the Hydra Graph (e.g. set 'correction_strategy') or pass data to downstream agents.",
+      "description": "Updates the Hydra Blackboard. WARNING: This does NOT save to your memory. The Blackboard is ONLY used to route the underlying Hydra execution graph.",
       "is_async": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -118,7 +118,7 @@
     "pk": 5,
     "fields": {
       "name": "mcp_inspect_record",
-      "description": "Returns the schema and field sizes of a database record. MANDATORY: Call this before reading any database field to ensure you do not load massive text blobs blindly.",
+      "description": "Returns the database schema and field sizes of a record. Use this to determine which fields hold massive data before querying.",
       "is_async": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -129,7 +129,7 @@
     "pk": 6,
     "fields": {
       "name": "mcp_read_record_field",
-      "description": "Reads a segment of text from a specific database field (like 'spell_log' or 'source_code'). Requires 'start_line' and 'max_lines' to handle large data efficiently.",
+      "description": "Reads a specific text field from the database using strict pagination. Crucial for reading massive logs (e.g. 'spell_log') without destroying your context window.",
       "is_async": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -140,7 +140,7 @@
     "pk": 7,
     "fields": {
       "name": "mcp_search_record_field",
-      "description": "Searches a large database text field for a regex pattern. Use this to find error messages or specific log entries without reading the entire record.",
+      "description": "Searches a massive database field for a regex pattern to find needles in haystacks without loading the entire text.",
       "is_async": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -151,7 +151,7 @@
     "pk": 8,
     "fields": {
       "name": "mcp_query_model",
-      "description": "Queries the database for records matching specific criteria. Supports simple 'filters' (dict) or complex 'q_string' (Q objects). Use 'action=count' to check volume before listing.",
+      "description": "Queries the database for records. Returns a paginated list of full record data. Massive text fields are auto-truncated to protect your memory; use mcp_read_record_field to extract their full contents.",
       "is_async": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -162,7 +162,7 @@
     "pk": 9,
     "fields": {
       "name": "mcp_search_memory",
-      "description": "Searches the Cortex (Long-Term Memory) for similar past issues, solutions, or patterns. Use this early in your process to avoid repeating known mistakes.",
+      "description": "Queries your Long-Term Engrams. You wake up with amnesia every turn. Use this tool frequently to recall what your past selves discovered before going to sleep.",
       "is_async": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -173,7 +173,7 @@
     "pk": 10,
     "fields": {
       "name": "mcp_save_memory",
-      "description": "Saves a valuable finding, fix, or pattern to Long-Term Memory. If you solve a hard problem, save it here so future agents know the solution.",
+      "description": "CRYSTALLIZE A FACT. If you discover a critical path, error, or solution, save it immediately or it will be lost to the void. Provide update_id to append to an existing Engram.",
       "is_async": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -184,7 +184,18 @@
     "pk": 11,
     "fields": {
       "name": "mcp_conclude_session",
-      "description": "Finalizes the session and submits your report. MANDATORY: You must call this tool to end your turn. It triggers the next step in the workflow.",
+      "description": "Terminates the session and files the final report. Use this ONLY when the absolute root objective is complete or permanently blocked.",
+      "is_async": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.tooldefinition",
+    "pk": 12,
+    "fields": {
+      "name": "mcp_update_goal",
+      "description": "Manages your active objectives across sleep cycles. Use CREATE to spawn a sub-goal, UPDATE to modify it, and COMPLETE when you achieve it. This is your anchor.",
       "is_async": true,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -197,28 +208,6 @@
       "name": "path",
       "type": 1,
       "description": "File system path.",
-      "created": "2026-02-18T12:00:00Z",
-      "modified": "2026-02-18T12:00:00Z"
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameter",
-    "pk": 2,
-    "fields": {
-      "name": "start_line",
-      "type": 3,
-      "description": "Line number start.",
-      "created": "2026-02-18T12:00:00Z",
-      "modified": "2026-02-18T12:00:00Z"
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameter",
-    "pk": 3,
-    "fields": {
-      "name": "max_lines",
-      "type": 3,
-      "description": "Line count limit.",
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
     }
@@ -346,17 +335,6 @@
   },
   {
     "model": "talos_parietal.toolparameter",
-    "pk": 15,
-    "fields": {
-      "name": "action",
-      "type": 1,
-      "description": "Action type.",
-      "created": "2026-02-18T12:00:00Z",
-      "modified": "2026-02-18T12:00:00Z"
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameter",
     "pk": 16,
     "fields": {
       "name": "query",
@@ -466,21 +444,45 @@
     }
   },
   {
-    "model": "talos_parietal.parameterenum",
-    "pk": 1,
+    "model": "talos_parietal.toolparameter",
+    "pk": 26,
     "fields": {
-      "parameter": 15,
-      "value": "list",
+      "name": "page",
+      "type": 3,
+      "description": "Page number to read (starts at 1).",
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
     }
   },
   {
-    "model": "talos_parietal.parameterenum",
-    "pk": 2,
+    "model": "talos_parietal.toolparameter",
+    "pk": 27,
     "fields": {
-      "parameter": 15,
-      "value": "count",
+      "name": "goal_action",
+      "type": 1,
+      "description": "Action (CREATE, UPDATE, COMPLETE).",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 28,
+    "fields": {
+      "name": "goal_text",
+      "type": 1,
+      "description": "The description of the goal.",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 29,
+    "fields": {
+      "name": "goal_id",
+      "type": 3,
+      "description": "The integer ID of the goal (for UPDATE or COMPLETE).",
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
     }
@@ -516,6 +518,36 @@
     }
   },
   {
+    "model": "talos_parietal.parameterenum",
+    "pk": 6,
+    "fields": {
+      "parameter": 27,
+      "value": "CREATE",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.parameterenum",
+    "pk": 7,
+    "fields": {
+      "parameter": 27,
+      "value": "UPDATE",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.parameterenum",
+    "pk": 8,
+    "fields": {
+      "parameter": 27,
+      "value": "COMPLETE",
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
     "model": "talos_parietal.toolparameterassignment",
     "pk": 1,
     "fields": {
@@ -531,18 +563,7 @@
     "pk": 2,
     "fields": {
       "tool": 1,
-      "parameter": 2,
-      "required": false,
-      "created": "2026-02-18T12:00:00Z",
-      "modified": "2026-02-18T12:00:00Z"
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameterassignment",
-    "pk": 3,
-    "fields": {
-      "tool": 1,
-      "parameter": 3,
+      "parameter": 26,
       "required": false,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -707,18 +728,7 @@
     "pk": 18,
     "fields": {
       "tool": 6,
-      "parameter": 2,
-      "required": false,
-      "created": "2026-02-18T12:00:00Z",
-      "modified": "2026-02-18T12:00:00Z"
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameterassignment",
-    "pk": 19,
-    "fields": {
-      "tool": 6,
-      "parameter": 3,
+      "parameter": 26,
       "required": false,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -828,7 +838,7 @@
     "pk": 29,
     "fields": {
       "tool": 8,
-      "parameter": 15,
+      "parameter": 26,
       "required": false,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
@@ -962,6 +972,50 @@
       "tool": 11,
       "parameter": 25,
       "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 42,
+    "fields": {
+      "tool": 12,
+      "parameter": 18,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 43,
+    "fields": {
+      "tool": 12,
+      "parameter": 27,
+      "required": true,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 44,
+    "fields": {
+      "tool": 12,
+      "parameter": 28,
+      "required": false,
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 45,
+    "fields": {
+      "tool": 12,
+      "parameter": 29,
+      "required": false,
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z"
     }
