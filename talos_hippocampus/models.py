@@ -4,6 +4,7 @@ from common.models import (
     DefaultFieldsMixin,
     DescriptionMixin,
     NameMixin,
+    UUIDIdMixin,
 )
 from hydra.models import HydraHead
 from talos_reasoning.models import ReasoningSession, ReasoningTurn
@@ -13,7 +14,7 @@ class TalosEngramTag(NameMixin):
     """A tag for a Talos engram."""
 
 
-class TalosEngram(DefaultFieldsMixin, DescriptionMixin):
+class TalosEngram(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     """A single memory extracted during reasoning.
 
     args:

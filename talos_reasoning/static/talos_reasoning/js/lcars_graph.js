@@ -556,3 +556,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+const haltBtn = document.getElementById('btn-halt');
+if (haltBtn) {
+    haltBtn.addEventListener('click', () => {
+        haltBtn.style.opacity = '0.5';
+        haltBtn.textContent = 'HALTING...';
+
+        fetch(`/api/v1/reasoning_sessions/${sessionId}/stop/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(() => alert("Halt signal sent. The AI will stop after finishing its current thought."))
+            .catch(err => console.error(err));
+    });
+}
+

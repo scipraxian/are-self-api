@@ -289,9 +289,9 @@
     "model": "talos_parietal.tooldefinition",
     "pk": 14,
     "fields": {
-      "created": "2026-02-21T10:00:00.000Z",
+      "created": "2026-02-21T10:00:00Z",
       "description": "Appends new findings to an existing Engram in your Hippocampus. Use this to update a memory instead of creating duplicates.",
-      "modified": "2026-02-21T10:00:00.000Z",
+      "modified": "2026-02-21T10:00:00Z",
       "name": "mcp_engram_update",
       "is_async": true,
       "use_type": 1
@@ -639,6 +639,17 @@
     }
   },
   {
+    "model": "talos_parietal.toolparameter",
+    "pk": 32,
+    "fields": {
+      "created": "2026-02-21T20:53:49.883Z",
+      "description": "New data to append.",
+      "modified": "2026-02-21T20:53:49.883Z",
+      "name": "additional_fact",
+      "type": 1
+    }
+  },
+  {
     "model": "talos_parietal.toolparameterassignment",
     "pk": 1,
     "fields": {
@@ -948,72 +959,6 @@
   },
   {
     "model": "talos_parietal.toolparameterassignment",
-    "pk": 30,
-    "fields": {
-      "created": "2026-02-18T12:00:00Z",
-      "modified": "2026-02-18T12:00:00Z",
-      "tool": 9,
-      "parameter": 16,
-      "required": false
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameterassignment",
-    "pk": 31,
-    "fields": {
-      "created": "2026-02-18T12:00:00Z",
-      "modified": "2026-02-18T12:00:00Z",
-      "tool": 9,
-      "parameter": 17,
-      "required": false
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameterassignment",
-    "pk": 32,
-    "fields": {
-      "created": "2026-02-18T12:00:00Z",
-      "modified": "2026-02-18T12:00:00Z",
-      "tool": 10,
-      "parameter": 18,
-      "required": true
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameterassignment",
-    "pk": 33,
-    "fields": {
-      "created": "2026-02-18T12:00:00Z",
-      "modified": "2026-02-18T12:00:00Z",
-      "tool": 10,
-      "parameter": 19,
-      "required": true
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameterassignment",
-    "pk": 34,
-    "fields": {
-      "created": "2026-02-18T12:00:00Z",
-      "modified": "2026-02-18T12:00:00Z",
-      "tool": 10,
-      "parameter": 17,
-      "required": false
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameterassignment",
-    "pk": 36,
-    "fields": {
-      "created": "2026-02-18T12:00:00Z",
-      "modified": "2026-02-18T12:00:00Z",
-      "tool": 10,
-      "parameter": 21,
-      "required": false
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameterassignment",
     "pk": 37,
     "fields": {
       "created": "2026-02-18T12:00:00Z",
@@ -1113,21 +1058,87 @@
   },
   {
     "model": "talos_parietal.toolparameterassignment",
-    "pk": 46,
+    "pk": 49,
     "fields": {
-      "created": "2026-02-20T20:37:37.797Z",
-      "modified": "2026-02-20T20:37:37.797Z",
-      "tool": 13,
-      "parameter": 30,
+      "created": "2026-02-21T20:53:49.896Z",
+      "modified": "2026-02-21T20:53:49.896Z",
+      "tool": 10,
+      "parameter": 18,
       "required": true
     }
   },
   {
     "model": "talos_parietal.toolparameterassignment",
-    "pk": 47,
+    "pk": 50,
     "fields": {
-      "created": "2026-02-20T20:37:37.804Z",
-      "modified": "2026-02-20T20:37:37.804Z",
+      "created": "2026-02-21T20:53:49.898Z",
+      "modified": "2026-02-21T20:53:49.898Z",
+      "tool": 10,
+      "parameter": 31,
+      "required": true
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 51,
+    "fields": {
+      "created": "2026-02-21T20:53:49.900Z",
+      "modified": "2026-02-21T20:53:49.900Z",
+      "tool": 10,
+      "parameter": 19,
+      "required": true
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 52,
+    "fields": {
+      "created": "2026-02-21T20:53:49.901Z",
+      "modified": "2026-02-21T20:53:49.901Z",
+      "tool": 10,
+      "parameter": 17,
+      "required": false
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 53,
+    "fields": {
+      "created": "2026-02-21T20:53:49.902Z",
+      "modified": "2026-02-21T20:53:49.902Z",
+      "tool": 14,
+      "parameter": 18,
+      "required": true
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 54,
+    "fields": {
+      "created": "2026-02-21T20:53:49.903Z",
+      "modified": "2026-02-21T20:53:49.903Z",
+      "tool": 14,
+      "parameter": 31,
+      "required": true
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 55,
+    "fields": {
+      "created": "2026-02-21T20:53:49.905Z",
+      "modified": "2026-02-21T20:53:49.905Z",
+      "tool": 14,
+      "parameter": 32,
+      "required": true
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 56,
+    "fields": {
+      "created": "2026-02-21T20:53:49.906Z",
+      "modified": "2026-02-21T20:53:49.906Z",
       "tool": 13,
       "parameter": 18,
       "required": true
@@ -1135,13 +1146,35 @@
   },
   {
     "model": "talos_parietal.toolparameterassignment",
-    "pk": 48,
+    "pk": 57,
     "fields": {
-      "created": "2026-02-20T20:37:37.820Z",
-      "modified": "2026-02-20T20:37:37.820Z",
-      "tool": 10,
-      "parameter": 31,
+      "created": "2026-02-21T20:53:49.907Z",
+      "modified": "2026-02-21T20:53:49.907Z",
+      "tool": 13,
+      "parameter": 30,
       "required": true
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 58,
+    "fields": {
+      "created": "2026-02-21T20:53:49.908Z",
+      "modified": "2026-02-21T20:53:49.908Z",
+      "tool": 9,
+      "parameter": 16,
+      "required": false
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 59,
+    "fields": {
+      "created": "2026-02-21T20:53:49.909Z",
+      "modified": "2026-02-21T20:53:49.909Z",
+      "tool": 9,
+      "parameter": 17,
+      "required": false
     }
   },
   {

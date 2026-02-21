@@ -86,3 +86,23 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
                 'spawn_id': str(head.spawn.id) if head.spawn else None,
             }
         )
+
+    @action(detail=True, methods=['post'])
+    def stop(self, request, pk=None):
+        """Gracefully signals the Frontal Lobe loop to halt at the next turn."""
+        session = self.get_object()
+        head = session.head
+
+        if not head:
+            return Response(
+                {'error': 'No associated HydraHead found.'}, status=400
+            )
+
+        head.status_id = HydraHeadStatus.STOPPING
+        head.save(update_fields=['status'])
+
+        return Response(
+            {
+                'status': 'Halt signal sent. The Cortex will spin down after the current turn.'
+            }
+        )

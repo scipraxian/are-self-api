@@ -90,7 +90,7 @@ class ReasoningSession(
     max_turns = models.IntegerField(default=100)
 
     total_xp = models.IntegerField(default=0)
-    current_focus = models.IntegerField(default=10)
+    current_focus = models.IntegerField(default=5)
 
     @property
     def current_level(self):

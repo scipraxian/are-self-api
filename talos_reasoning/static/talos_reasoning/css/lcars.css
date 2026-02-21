@@ -198,6 +198,7 @@ body {
     overflow-y: auto;
     flex: 1;
     padding-right: 5px; /* Prevent scrollbar clipping */
+    scrollbar-width: none;
 }
 
 /* Base button rule updates */
