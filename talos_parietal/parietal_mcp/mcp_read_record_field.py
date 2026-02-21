@@ -16,7 +16,7 @@ def _read_field_sync(
     if not val:
         return f"Field '{field_name}' is empty or null."
 
-    page_size = 50  # HARD CAP
+    page_size = 350  # HARD CAP
     lines = str(val).split('\n')
     total_lines = len(lines)
     total_pages = max(1, (total_lines + page_size - 1) // page_size)
