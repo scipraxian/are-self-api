@@ -21,6 +21,11 @@ class ToolParameterType(DefaultFieldsMixin, DescriptionMixin):
         verbose_name_plural = 'Parameter Types'
 
 
+class ToolUseType(DefaultFieldsMixin, DescriptionMixin):
+    focus_modifier = models.IntegerField(default=0)
+    xp_reward = models.IntegerField(default=0)
+
+
 class ToolDefinition(DefaultFieldsMixin, DescriptionMixin):
     """
     The Registry for AI Tools.
@@ -28,9 +33,9 @@ class ToolDefinition(DefaultFieldsMixin, DescriptionMixin):
     """
 
     is_async = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
+    use_type = models.ForeignKey(
+        ToolUseType, on_delete=models.PROTECT, null=True, blank=True
+    )
 
 
 class ToolParameter(DefaultFieldsMixin, DescriptionMixin):

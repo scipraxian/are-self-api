@@ -89,6 +89,32 @@ class ReasoningSession(
     )
     max_turns = models.IntegerField(default=100)
 
+    total_xp = models.IntegerField(default=0)
+    current_focus = models.IntegerField(default=10)
+
+    @property
+    def current_level(self):
+        """Fast Leveling: Every 50 XP is a new level."""
+        return (self.total_xp // 50) + 1
+
+    @property
+    def max_focus(self):
+        """Level 1 = 10. Level 2 = 15. Level 3 = 20."""
+        return 10 + ((self.current_level - 1) * 5)
+
+    @property
+    def focus_regen(self):
+        """Level 1 = 0. Level 2 = 1. Level 3 = 2."""
+        return max(0, self.current_level - 1)
+
+    def apply_sleep_regeneration(self):
+        """Called at the start of a turn to apply passive healing."""
+        if self.focus_regen > 0:
+            self.current_focus = min(
+                self.max_focus, self.current_focus + self.focus_regen
+            )
+            self.save(update_fields=['current_focus'])
+
     def __str__(self):
         return f'Session {self.id} Status: {self.status}'
 
