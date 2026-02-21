@@ -362,10 +362,14 @@ function showDetails(d) {
         adminUrl = `/admin/talos_parietal/tooldefinition/?q=${toolName}`;
     }
 
-    let html = `
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f99f1b; padding-bottom: 5px; margin-bottom: 10px;">
-            <div class="detail-header" style="border: none; margin: 0; padding: 0;">${d.type.toUpperCase()}: ${d.label || d.id}</div>
-            <a href="${adminUrl}" target="_blank" style="color: #1a1a1a; background-color: #f99f1b; text-decoration: none; font-size: 10px; font-weight: bold; padding: 3px 6px; border-radius: 3px; letter-spacing: 1px;">ADMIN ↗</a>
+    let html = `<div class="detail-header">${d.type.toUpperCase()}: ${d.label || d.id}</div>`;
+
+    html += `
+        <div class="detail-row" style="align-items: center;">
+            <div class="detail-label">Database Record</div>
+            <div class="detail-value">
+                <a href="${adminUrl}" target="_blank" style="color: #1a1a1a; background-color: #f99f1b; text-decoration: none; font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 3px; display: inline-block; letter-spacing: 1px;">OPEN IN ADMIN ↗</a>
+            </div>
         </div>
     `;
 
