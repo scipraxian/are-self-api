@@ -364,3 +364,78 @@ body {
     color: #666;
     font-style: italic;
 }
+
+/* THE HUD OVERLAY */
+.lcars-hud-overlay {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    background-color: rgba(0, 0, 0, 0.85);
+    border: 2px solid #cc99cc;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    z-index: 1000;
+    pointer-events: none; /* Lets you click the graph beneath it */
+    font-family: var(--lcars-font, 'Arial', sans-serif);
+}
+
+.hud-header {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.hud-stat-box {
+    padding: 5px 15px;
+    border-radius: 10px;
+    color: black;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+/* LCARS Colors */
+.lcars-bg-orange { background-color: #ff9900; }
+.lcars-bg-purple { background-color: #cc99cc; }
+.lcars-bg-blue { background-color: #9999ff; }
+.lcars-bg-red { background-color: #cc0000; }
+
+.hud-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.hud-label {
+    color: #ff9900;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.hud-text {
+    color: #ffffff;
+    font-size: 1.1rem;
+    line-height: 1.4;
+    max-height: 100px;
+    overflow-y: hidden;
+    font-style: italic;
+}
+
+/* THE TERMINAL DETAILS PANEL */
+.terminal-output {
+    background-color: #111;
+    color: #ddd;
+    font-family: 'Courier New', Courier, monospace;
+    padding: 15px;
+    border-radius: 10px;
+    height: 600px;
+    overflow-y: auto;
+    border-left: 4px solid #ff9900;
+}
+
+.term-thought { color: #cc99cc; font-style: italic; margin-bottom: 15px; }
+.term-spell { color: #9999ff; font-weight: bold; margin-top: 10px; }
+.term-result { color: #aaa; margin-bottom: 15px; padding-left: 10px; border-left: 2px solid #555; }
+.term-fizzle { color: #ff3333; font-weight: bold; }
+.term-success { color: #33cc33; font-weight: bold; }

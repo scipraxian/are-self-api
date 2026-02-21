@@ -61,13 +61,27 @@
         <a href="{% url 'dashboard:home' %}" class="lcars-button exit">EXIT CORTEX</a>
     </aside>
 
-    <main class="lcars-main" id="graph-container"></main>
+    <main class="lcars-main" id="graph-container">
+        <div id="talos-hud" class="lcars-hud-overlay">
+            <div class="hud-header">
+                <div class="hud-stat-box lcars-bg-orange">LVL <span id="hud-level">--</span></div>
+                <div class="hud-stat-box lcars-bg-purple">XP <span id="hud-xp">--</span></div>
+                <div class="hud-stat-box lcars-bg-blue">FOCUS <span id="hud-focus">--</span></div>
+                <div class="hud-stat-box lcars-bg-red">TURN <span id="hud-turn">--</span></div>
+            </div>
+            <div class="hud-body">
+                <span class="hud-label">LATEST THOUGHT:</span>
+                <div id="hud-thought" class="hud-text">Awaiting cortex synchronization...</div>
+            </div>
+        </div>
+    </main>
 
     <aside class="lcars-details" id="details-panel">
         <button class="detail-toggle" id="btn-expand">EXPAND</button>
-        <div id="details-content">
-            <div class="detail-header">AWAITING SELECTION</div>
-            <div class="detail-value" style="color: #666;">Click on a Turn, Tool, or Engram node to inspect telemetry.
+        <div id="node-details-container" class="lcars-details-panel">
+            <h3 id="details-title" class="lcars-text-orange" style="margin-top: 5px; text-transform: uppercase;">Awaiting Selection</h3>
+            <div id="details-terminal" class="terminal-output">
+                Select a node on the graph to view the chronological event log.
             </div>
         </div>
     </aside>

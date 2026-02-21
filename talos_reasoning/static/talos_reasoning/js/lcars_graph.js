@@ -2,7 +2,7 @@ const POLL_INTERVAL_MS = 2500;
 let sessionId;
 let svg, g, simulation;
 let linkGroup, nodeGroup;
-let currentData = {nodes: [], links: []};
+let currentData = { nodes: [], links: [] };
 let selectedNodeId = null;
 let selectedNodeHash = null;
 let pollTimer;
@@ -144,7 +144,7 @@ function flattenTreeToGraph(sessionData, oldData) {
             }
         });
     }
-    return {nodes, links};
+    return { nodes, links };
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -166,6 +166,35 @@ function fetchData() {
             if (typeof updateSessionInfo === 'function') {
                 updateSessionInfo(sessionData);
             }
+            if (typeof updateTalosHUD === 'function') {
+                let latestTurn = null;
+                if (sessionData.turns && sessionData.turns.length > 0) {
+                    // Try to find the latest turn with a thought
+                    for (let i = sessionData.turns.length - 1; i >= 0; i--) {
+                        let t = sessionData.turns[i];
+                        let hasThought = false;
+                        if (t.thought_process && t.thought_process.trim() !== '') {
+                            hasThought = true;
+                        } else if (t.request_payload) {
+                            try {
+                                let parsedReq = typeof t.request_payload === 'string' ? JSON.parse(t.request_payload) : t.request_payload;
+                                if (parsedReq && parsedReq.thought_process) {
+                                    hasThought = true;
+                                }
+                            } catch (e) { }
+                        }
+                        if (hasThought) {
+                            latestTurn = t;
+                            break;
+                        }
+                    }
+                    // Fallback to the absolute latest if no thought found at all
+                    if (!latestTurn) {
+                        latestTurn = sessionData.turns[sessionData.turns.length - 1];
+                    }
+                }
+                updateTalosHUD(sessionData, latestTurn);
+            }
 
             const graphPayload = flattenTreeToGraph(sessionData, typeof currentData !== 'undefined' ? currentData : null);
 
@@ -176,7 +205,7 @@ function fetchData() {
 
                 if (rawNode) {
                     // --- SCROLL/JITTER FIX: Create a clean hash without timers or physics ---
-                    const cleanNode = {...rawNode};
+                    const cleanNode = { ...rawNode };
                     delete cleanNode.x;
                     delete cleanNode.y;
                     delete cleanNode.vx;
@@ -185,7 +214,7 @@ function fetchData() {
                     delete cleanNode.delta;
                     delete cleanNode.inference_time;
 
-                    const currentStateHash = JSON.stringify({node: cleanNode, linkCount: rawLinks.length});
+                    const currentStateHash = JSON.stringify({ node: cleanNode, linkCount: rawLinks.length });
 
                     if (selectedNodeHash !== currentStateHash) {
                         shouldUpdateInspector = true;
@@ -290,6 +319,7 @@ function updateGraph(newData) {
 
         // 1. SHAPE & COLOR
         if (d.type === 'turn') {
+            // Node circles are initialized with a base size 18, and updated later.
             el.append("circle").attr("r", 18).attr("fill", "#f99f1b"); // LCARS Orange
         } else if (d.type === 'tool') {
             el.append("rect").attr("width", 24).attr("height", 24).attr("x", -12).attr("y", -12).attr("fill", "#cc3333").attr("rx", 6); // Red Square
@@ -319,6 +349,57 @@ function updateGraph(newData) {
     nodes.exit().remove();
     const allNodes = nodesEnter.merge(nodes);
 
+    // Helper to parse Django duration string (e.g. "00:00:23.456" or "1.23s") to total seconds
+    function parseDurationToSeconds(str) {
+        if (!str) return 0;
+        let sStr = String(str).replace('s', '').trim();
+        if (sStr.includes(':')) {
+            let parts = sStr.split(':');
+            let h = 0, m = 0, s = 0;
+            if (parts.length === 3) {
+                // Check if days are prepended like "1 00:00:00"
+                let days = 0;
+                if (parts[0].includes(' ')) {
+                    let dParts = parts[0].split(' ');
+                    days = parseFloat(dParts[0]) || 0;
+                    h = parseFloat(dParts[1]) || 0;
+                } else {
+                    h = parseFloat(parts[0]) || 0;
+                }
+                m = parseFloat(parts[1]) || 0;
+                s = parseFloat(parts[2]) || 0;
+                return (days * 86400) + (h * 3600) + (m * 60) + s;
+            } else if (parts.length === 2) {
+                m = parseFloat(parts[0]) || 0;
+                s = parseFloat(parts[1]) || 0;
+                return (m * 60) + s;
+            }
+        }
+        return parseFloat(sStr) || 0;
+    }
+
+    // Apply Dynamic Scales to All Turn Nodes (New and Existing)
+    let avgDelta = 1.0;
+    let validTurns = currentData.nodes.filter(n => n.type === 'turn' && n.delta);
+    if (validTurns.length > 0) {
+        let totalSeconds = validTurns.reduce((sum, n) => sum + parseDurationToSeconds(n.delta), 0);
+        avgDelta = totalSeconds / validTurns.length;
+    }
+
+    allNodes.filter(d => d.type === 'turn').select("circle").attr("r", d => {
+        let baseRadius = 18;
+        if (d.delta && avgDelta > 0) {
+            let seconds = parseDurationToSeconds(d.delta);
+            if (seconds > 0) {
+                // Scale between 0.3x and 3.0x of base radius linearly to make it much more pronounced
+                let ratio = seconds / avgDelta;
+                ratio = Math.max(0.3, Math.min(ratio, 3.0));
+                baseRadius = 18 * ratio;
+            }
+        }
+        return baseRadius;
+    });
+
     const activeStates = ['Active', 'Pending', 'Running'];
     allNodes.classed("active-node", d => d.type === 'turn' && activeStates.includes(d.status));
 
@@ -340,7 +421,8 @@ function updateGraph(newData) {
 }
 
 function showDetails(d) {
-    const panel = document.getElementById('details-content');
+    const titleEl = document.getElementById('details-title');
+    const terminalEl = document.getElementById('details-terminal');
     const scrollContainer = document.getElementById('details-panel');
     const prevScrollTop = scrollContainer.scrollTop;
 
@@ -356,64 +438,98 @@ function showDetails(d) {
     else if (d.type === 'goal') adminUrl = `/admin/talos_reasoning/reasoninggoal/${dbId}/change/`;
     else if (d.type === 'session') adminUrl = `/admin/talos_reasoning/reasoningsession/${dbId}/change/`;
     else if (d.type === 'engram') adminUrl = `/admin/talos_hippocampus/talosengram/${dbId}/change/`;
-    // We appended an index to tools to separate them, so safely extract the original DB name for the search link
     else if (d.type === 'tool') {
         const toolName = d.id.split('-')[2];
         adminUrl = `/admin/talos_parietal/tooldefinition/?q=${toolName}`;
     }
 
-    let html = `<div class="detail-header">${d.type.toUpperCase()}: ${d.label || d.id}</div>`;
+    // Clear previous
+    terminalEl.innerHTML = '';
 
-    html += `
-        <div class="detail-row" style="align-items: center;">
-            <div class="detail-label">Database Record</div>
-            <div class="detail-value">
-                <a href="${adminUrl}" target="_blank" style="color: #1a1a1a; background-color: #f99f1b; text-decoration: none; font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 3px; display: inline-block; letter-spacing: 1px;">OPEN IN ADMIN ↗</a>
-            </div>
-        </div>
-    `;
+    if (d.type === 'turn') {
+        titleEl.textContent = `Turn ${d.turn_number} Execution Log`;
 
-    if (d.type === 'goal') {
-        html += `
-            <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value" style="color:#f99f1b">${d.status}</div></div>
-            <div class="detail-row"><div class="detail-label">Duration</div><div class="detail-value" style="color:#99ccff; font-family: monospace;">${d.delta || '0s'}</div></div>
-            <div class="detail-row"><div class="detail-label">Objective</div><div class="detail-value text-content">${d.rendered_goal || 'No goal text provided.'}</div></div>
-        `;
-    } else if (d.type === 'engram') {
-        html += `
-            <div class="detail-row"><div class="detail-label">Memory Key</div><div class="detail-value code-block">${d.name || 'Unnamed Hash'}</div></div>
-            <div class="detail-row"><div class="detail-label">Relevance Score</div><div class="detail-value">${d.relevance}</div></div>
-            <div class="detail-row"><div class="detail-label">Fact/Memory</div><div class="detail-value text-content">${d.description}</div></div>
-        `;
-    } else if (d.type === 'turn') {
         const activeStates = ['Active', 'Pending', 'Running', 'Thinking'];
         const isLive = activeStates.includes(d.status);
 
         let tps = "0.0";
         if (d.inference_time && d.tokens_output) {
-            let seconds = parseFloat(d.inference_time.replace('s', ''));
+            // Helper parsing for robust conversion of Django duration
+            let str = String(d.inference_time).replace('s', '').trim();
+            let seconds = parseFloat(str);
+            if (str.includes(':')) {
+                let parts = str.split(':');
+                if (parts.length === 3) {
+                    seconds = (parseFloat(parts[0] || 0) * 3600) + (parseFloat(parts[1] || 0) * 60) + parseFloat(parts[2] || 0);
+                } else if (parts.length === 2) {
+                    seconds = (parseFloat(parts[0] || 0) * 60) + parseFloat(parts[1] || 0);
+                }
+            }
             if (seconds > 0) tps = (d.tokens_output / seconds).toFixed(1);
         }
 
-        html += `
-            <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value" style="color:#f99f1b">${d.status}</div></div>
-            <div class="detail-row">
-                <div class="detail-label">Turn Duration</div>
-                <div class="detail-value" id="node-duration" style="color:#99ccff; font-family: monospace;">${isLive ? '⏱ Calculating...' : (d.delta || '0s')}</div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-label">Cognitive Load</div>
-                <div class="detail-value" style="color:#cc99cc; font-family: monospace;">[ IN: ${d.tokens_input || 0} ] -> [ OUT: ${d.tokens_output || 0} ]</div>
-            </div>
-            <div class="detail-row"><div class="detail-label">Inference Speed</div><div class="detail-value" style="color:#4ade80; font-family: monospace;">${d.inference_time || '0s'} (${tps} tokens/sec)</div></div>
-            <div class="detail-row"><div class="detail-label">Thought Process</div><div class="detail-value text-content">${d.thought_process || 'Executing without monologue...'}</div></div>
-            <div class="detail-row">
-                <div class="detail-label">Request Payload</div>
-                <div class="detail-value code-block" style="padding: 5px;">
-                    ${d.request_payload ? renderJsonTree(d.request_payload) : '<span style="color:#666; font-style:italic;">No Payload Recorded.</span>'}
+        let statusColor = d.status === 'Error' ? 'term-fizzle' : (d.status === 'Completed' ? 'term-success' : 'term-thought');
+        terminalEl.innerHTML += `<div class="${statusColor}">Status: ${d.status}</div>`;
+        terminalEl.innerHTML += `<div class="term-result">Turn Duration: <span id="node-duration" style="color:#99ccff;">${isLive ? '⏱ Calculating...' : (d.delta || '0s')}</span></div>`;
+        terminalEl.innerHTML += `<div class="term-result">Cognitive Load: <span style="color:#cc99cc;">[ IN: ${d.tokens_input || 0} ] -> [ OUT: ${d.tokens_output || 0} ]</span></div>`;
+        terminalEl.innerHTML += `<div class="term-result">Inference Speed: <span style="color:#4ade80;">${d.inference_time || '0s'} (${tps} tokens/sec)</span></div>`;
+
+        if (d.request_payload) {
+            terminalEl.innerHTML += `
+                <div class="term-result">
+                    <details>
+                        <summary style="cursor:pointer; color:#f99f1b;">[ View Request Payload ]</summary>
+                        <div class="code-block" style="margin-top:5px; padding:5px;">
+                            ${renderJsonTree(d.request_payload)}
+                        </div>
+                    </details>
                 </div>
-            </div>
-        `;
+            `;
+        }
+
+        // 1. Render the Thought
+        if (d.thought_process) {
+            let thought = d.thought_process.replace(/^(THOUGHT:\s*)+/i, '').trim();
+            terminalEl.innerHTML += `<div class="term-thought" style="margin-top: 15px;">" ${thought} "</div>`;
+        } else {
+            terminalEl.innerHTML += `<div class="term-thought" style="margin-top: 15px;">" Executing without monologue... "</div>`;
+        }
+
+        // 2. Render the Spells (Tool Calls)
+        const calls = currentData.links.filter(l => (l.source.id || l.source) === d.id && l.type === 'uses_tool');
+        if (calls && calls.length > 0) {
+            calls.forEach(call => {
+                let args = call.arguments || {};
+                let argStr = "";
+                try {
+                    let parsedArgs = typeof args === 'string' ? JSON.parse(args) : args;
+                    argStr = Object.entries(parsedArgs).map(([k, v]) => `${k}=${JSON.stringify(v)}`).join(', ');
+                } catch (e) { argStr = String(args); }
+
+                let targetId = call.target.id || call.target;
+                let toolNode = currentData.nodes.find(n => n.id === targetId);
+                let toolName = toolNode ? toolNode.label : "unknown_spell";
+
+                terminalEl.innerHTML += `<div class="term-spell">> CAST: ${toolName}(${argStr})</div>`;
+
+                let resultClass = 'term-result';
+                let resultText = call.result || call.traceback || "No result.";
+
+                if (resultText && resultText.toString().includes("FIZZLE") || call.traceback) {
+                    resultClass += ' term-fizzle';
+                } else if (resultText && resultText.toString().toLowerCase().includes("success")) {
+                    resultClass += ' term-success';
+                }
+
+                if (resultText && resultText.length > 500) {
+                    resultText = resultText.substring(0, 500) + '... [TRUNCATED FOR UI]';
+                }
+
+                terminalEl.innerHTML += `<div class="${resultClass}">${resultText}</div>`;
+            });
+        } else {
+            terminalEl.innerHTML += `<div class="term-result">No spells cast this turn. Sleep initiated.</div>`;
+        }
 
         if (isLive && d.created) {
             const startTime = new Date(d.created).getTime();
@@ -427,26 +543,33 @@ function showDetails(d) {
                 }
             }, 100);
         }
+    } else if (d.type === 'goal') {
+        titleEl.textContent = `Goal ${d.id.split('-')[1]}`;
+        terminalEl.innerHTML += `<div class="term-spell">> OBJECTIVE:</div>`;
+        terminalEl.innerHTML += `<div class="term-thought">"${d.rendered_goal || 'No goal text provided.'}"</div>`;
+        terminalEl.innerHTML += `<div class="term-result">Status: ${d.status}</div>`;
+    } else if (d.type === 'engram') {
+        titleEl.textContent = `Engram ${d.id.split('-')[1]}`;
+        terminalEl.innerHTML += `<div class="term-spell">> MEMORY RECALLED:: ${d.name || 'Unnamed Hash'}</div>`;
+        terminalEl.innerHTML += `<div class="term-thought">"${d.description}"</div>`;
+        terminalEl.innerHTML += `<div class="term-result">Relevance: ${d.relevance}</div>`;
     } else if (d.type === 'tool') {
+        titleEl.textContent = `Spell: ${d.label}`;
+        terminalEl.innerHTML += `<div class="term-spell">> INSPECTING SPELL CALL</div>`;
         const calls = currentData.links.filter(l => (l.target.id || l.target) === d.id && l.type === 'uses_tool');
-
-        calls.forEach((call, idx) => {
-            html += `
-                <div class="tool-call-block">
-                    <div style="color: #99ccff; font-weight: bold; margin-bottom: 5px;">Call Payload</div>
-                    <div class="detail-label">Arguments</div>
-                    <div class="detail-value code-block" style="padding: 5px;">
-                        ${call.arguments ? renderJsonTree(call.arguments) : '{}'}
-                    </div>
-                    <div class="detail-label">Result Payload</div>
-                    <div class="detail-value code-block ${call.traceback ? 'error-text' : 'success-text'}">${call.result || 'Pending...'}</div>
-                    ${call.traceback ? `<div class="detail-label" style="color:#cc3333;">Traceback</div><div class="detail-value code-block error-text">${call.traceback}</div>` : ''}
-                </div>
-            `;
+        calls.forEach((call) => {
+            let resultText = call.result || call.traceback || "Pending...";
+            let argsText = call.arguments ? (typeof call.arguments === 'object' ? JSON.stringify(call.arguments) : call.arguments) : '{}';
+            terminalEl.innerHTML += `<div class="term-result">Arguments: ${argsText}</div>`;
+            terminalEl.innerHTML += `<div class="term-result ${call.traceback ? 'term-fizzle' : 'term-success'}">Result: ${resultText}</div>`;
         });
+    } else {
+        titleEl.textContent = d.type ? d.type.toUpperCase() + ": " + (d.label || d.id) : 'Node Details';
+        terminalEl.innerHTML = `<div class="term-result">Select a Turn node to view the action log.</div>`;
     }
 
-    panel.innerHTML = html;
+    terminalEl.innerHTML += `<br><div class="term-result"><a href="${adminUrl}" target="_blank" style="color: #f99f1b; text-decoration: none;">[ OPEN IN ADMIN ↗ ]</a></div>`;
+
     scrollContainer.scrollTop = prevScrollTop;
 }
 
@@ -573,5 +696,33 @@ if (haltBtn) {
             .then(() => alert("Halt signal sent. The AI will stop after finishing its current thought."))
             .catch(err => console.error(err));
     });
+}
+
+function updateTalosHUD(sessionData, latestTurnData) {
+    if (!sessionData) return;
+
+    document.getElementById('hud-level').textContent = sessionData.current_level || 1;
+    document.getElementById('hud-xp').textContent = sessionData.total_xp || 0;
+    document.getElementById('hud-focus').textContent = `${sessionData.current_focus || 0} / ${sessionData.max_focus || 10}`;
+
+    if (latestTurnData) {
+        document.getElementById('hud-turn').textContent = latestTurnData.turn_number;
+
+        // Clean up the thought text to remove the "THOUGHT:" prefix if it exists
+        let thoughtText = "No thought registered.";
+        if (latestTurnData.thought_process && latestTurnData.thought_process.trim() !== "") {
+            thoughtText = latestTurnData.thought_process;
+        } else if (latestTurnData.request_payload) {
+            try {
+                let parsedReq = typeof latestTurnData.request_payload === 'string' ? JSON.parse(latestTurnData.request_payload) : latestTurnData.request_payload;
+                if (parsedReq && parsedReq.thought_process) {
+                    thoughtText = parsedReq.thought_process;
+                }
+            } catch (e) { }
+        }
+
+        thoughtText = thoughtText.replace(/^(THOUGHT:\s*)+/i, '').trim();
+        document.getElementById('hud-thought').textContent = `"${thoughtText}"`;
+    }
 }
 
