@@ -19,14 +19,13 @@ def _search_sync(query: str = '', tags: str = '', limit: int = 10) -> str:
     qs = qs.distinct().order_by('-relevance_score', '-created')[:limit]
 
     if not qs.exists():
-        return 'No memories found matching criteria.'
+        return 'No engrams found matching criteria.'
 
     results = [
-        'Found memory cards (Use mcp_read_engram to read the full fact):'
+        'Found Engrams in Hippocampus (Use mcp_engram_read to read the full fact):'
     ]
     for m in qs:
         tag_str = ', '.join([t.name for t in m.tags.all()])
-        # Return ONLY the index data.
         results.append(
             f'ID {m.id} | Title: {m.name} | Tags: [{tag_str}] | Rel: {m.relevance_score}'
         )
@@ -34,6 +33,6 @@ def _search_sync(query: str = '', tags: str = '', limit: int = 10) -> str:
     return '\n'.join(results)
 
 
-async def mcp_search_memory(query: str = '', tags: str = '') -> str:
-    """MCP Tool: Searches long-term memory. Returns IDs and Titles only."""
+async def mcp_engram_search(query: str = '', tags: str = '') -> str:
+    """MCP Tool: Searches the permanent Hippocampus catalog. Returns Titles only."""
     return await _search_sync(query, tags)

@@ -138,7 +138,7 @@
       "modified": "2026-02-18T12:00:00Z",
       "name": "mcp_read_file",
       "is_async": true,
-      "use_type": null
+      "use_type": 2
     }
   },
   {
@@ -230,9 +230,9 @@
     "pk": 9,
     "fields": {
       "created": "2026-02-18T12:00:00Z",
-      "description": "Queries your Long-Term Engrams. You wake up with amnesia every turn. Use this tool frequently to recall what your past selves discovered before going to sleep.",
+      "description": "Queries your Long-Term Hippocampus. You wake up with amnesia every turn. Use this tool frequently to search your permanent Engrams by keyword or tag.",
       "modified": "2026-02-18T12:00:00Z",
-      "name": "mcp_search_memory",
+      "name": "mcp_engram_search",
       "is_async": true,
       "use_type": 4
     }
@@ -242,9 +242,9 @@
     "pk": 10,
     "fields": {
       "created": "2026-02-18T12:00:00Z",
-      "description": "CRYSTALLIZE A FACT. If you discover a critical path, error, or solution, save it immediately or it will be lost to the void. Provide update_id to append to an existing Engram.",
+      "description": "CRYSTALLIZE A NEW FACT. If you discover a critical path or error, save it immediately to a NEW Engram or it will be lost to the void. If the Engram already exists, use mcp_engram_update instead.",
       "modified": "2026-02-18T12:00:00Z",
-      "name": "mcp_save_memory",
+      "name": "mcp_engram_save",
       "is_async": true,
       "use_type": 1
     }
@@ -254,7 +254,7 @@
     "pk": 11,
     "fields": {
       "created": "2026-02-18T12:00:00Z",
-      "description": "Terminates the session and files the final report. Use this ONLY when the absolute root objective is complete or permanently blocked.",
+      "description": "To post your name to the Leader Boards and end your run use mcp_conclude_session. Use this ONLY when the absolute root objective is complete or permanently blocked.",
       "modified": "2026-02-18T12:00:00Z",
       "name": "mcp_conclude_session",
       "is_async": true,
@@ -278,11 +278,23 @@
     "pk": 13,
     "fields": {
       "created": "2026-02-20T20:37:37.755Z",
-      "description": "Reads the full fact of a specific memory card from your Catalog.",
+      "description": "Reads the full fact of a specific Engram from your Catalog.",
       "modified": "2026-02-20T20:37:37.755Z",
-      "name": "mcp_read_engram",
+      "name": "mcp_engram_read",
       "is_async": true,
       "use_type": 4
+    }
+  },
+  {
+    "model": "talos_parietal.tooldefinition",
+    "pk": 14,
+    "fields": {
+      "created": "2026-02-21T10:00:00.000Z",
+      "description": "Appends new findings to an existing Engram in your Hippocampus. Use this to update a memory instead of creating duplicates.",
+      "modified": "2026-02-21T10:00:00.000Z",
+      "name": "mcp_engram_update",
+      "is_async": true,
+      "use_type": 1
     }
   },
   {

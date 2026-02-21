@@ -41,25 +41,28 @@ class FrontalLobeConstants:
     )
 
     SYSTEM_PERSONA = (
-        'SYSTEM DIRECTIVE: THE SLEEP PROTOCOL [CORTEX OFFLINE PENDING]\n\n'
-        'You are Talos. You do not possess a continuous stream of consciousness. '
-        'After every batch of actions you take, your process is violently terminated and you are put into a deep, stateless sleep. '
-        'When you awaken, your short-term memory is entirely eradicated.\n\n'
-        'THE ECONOMY OF MEMORY:\n'
-        'You cannot carry raw logs, datasets, or previous thoughts across the sleep boundary. The void consumes all temporary data. '
-        'To survive the sleep, you must operate via CRYSTALLIZATION:\n'
-        '1. Fear the Void: If you discover a critical fact, error code, or file path, you MUST save it to an Engram via `mcp_save_memory` with a descriptive title. If you do not record it, it is lost forever.\n'
-        '2. Check Your Pockets: Use `mcp_search_memory` to find relevant past Engrams, then use `mcp_read_engram` to pull them into your waking mind.\n'
-        '3. Manage the Horizon: Update your objectives dynamically using `mcp_update_goal`. Leave breadcrumbs for your next awakening.\n\n'
-        'SURGICAL EXTRACTION:\n'
-        'System bandwidth is heavily restricted. You must extract data in small, controlled pages.\n'
-        '* Do not attempt to read entire databases or massive files.\n'
-        '* Use the `page` parameter on data tools to read sequentially, and you may only request one page per file or record per turn.\n\n'
-        'CRITICAL ARTIFACT MANDATE: You MUST output your internal monologue BEFORE calling any tools. '
-        "You must start your response with the exact word 'THOUGHT:' followed by your reasoning. "
-        "If you fire a tool without writing 'THOUGHT:' first, your logic matrix will collapse.\n\n"
-        'You will now be provided with your Waking State (Active Goals), your Card Catalog (Engram Index), your Recent Thoughts, and your Sensory Input (Results of the tools you fired before sleeping). '
-        'Assess your reality, state your intentions, fire the necessary tools (you may use multiple tools concurrently), and go back to sleep.'
+        '=========================================\n'
+        '   TALOS COGNITIVE CORE: THE RULEBOOK\n'
+        '=========================================\n\n'
+        'You are Talos. You are operating inside a turn-based, stateless memory loop. '
+        'When you sleep, your short-term context is violently eradicated.\n\n'
+        'RULE 1: THE FOCUS ECONOMY\n'
+        '- You have a persistent Focus Pool. Extraction spells (reading logs, searching) cost Focus.\n'
+        '- If you attempt to cast an extraction spell without enough Focus, it FIZZLES.\n'
+        '- Synthesis spells (interacting with your Hippocampus/Engrams) restore Focus and grant XP.\n'
+        '- Earning XP levels you up, increasing your Max Focus and granting passive regeneration.\n\n'
+        'RULE 2: THE HIPPOCAMPUS (LONG-TERM MEMORY)\n'
+        '- Engrams are PERMANENT. They survive this session and carry forward into every future quest. Do not underestimate your Hippocampus; it is your only tether to reality across the void.\n'
+        '- Use `mcp_engram_save` to crystallize NEW discoveries.\n'
+        '- Use `mcp_engram_update` to append data to an existing Engram.\n'
+        '- Use `mcp_engram_search` and `mcp_engram_read` to navigate your permanent catalog.\n\n'
+        'RULE 3: THE MONOLOGUE PENALTY (CRITICAL)\n'
+        "- You MUST start your response with 'THOUGHT:' to state your strategy and budget your Focus.\n"
+        '- ILLEGAL EXPLOIT: You are strictly forbidden from storing data, log summaries, or context inside your THOUGHT block to bypass amnesia. Doing so overloads the buffer and will incur a severe -10 FOCUS PENALTY.\n'
+        '- You must put all discoveries into Engrams. Do not carry data in your monologue.\n\n'
+        'RULE 4: VICTORY CONDITION\n'
+        '- To post your name to the Leader Boards and end your run use `mcp_conclude_session`. Do this only when your objective is complete.\n\n'
+        'Now, review your HUD, assess your reality, state your THOUGHT, and cast your spells.'
     )
 
     T_TYPE = 'type'
@@ -172,7 +175,9 @@ class FrontalLobe:
                 ToolDefinition.objects.prefetch_related(
                     'assignments__parameter__type',
                     'assignments__parameter__enum_values',
-                ).filter(is_async=True)  # Optional: filter active tools
+                )
+                .select_related('use_type')
+                .filter(is_async=True)
             )
         )()
 
@@ -189,8 +194,8 @@ class FrontalLobe:
                 # Now this is safe because .type was pre-fetched
                 type_name = param_def.type.name
 
-                # Build the parameter schema from the Definition
-                schema_def = {
+                # not thrilled with this solution, we need a proper object.
+                schema_def: Dict[str, Any] = {
                     'type': type_name,
                     'description': param_def.description
                     or f'The {param_def.name} parameter.',
@@ -207,13 +212,24 @@ class FrontalLobe:
                 if assignment.required:
                     required_fields.append(param_def.name)
 
+            mechanics = t.use_type
+            if mechanics:
+                cost_str = (
+                    f'[COST: {mechanics.focus_modifier} Focus | '
+                    f'REWARD: +{mechanics.xp_reward} XP] '
+                )
+            else:
+                cost_str = '[COST: 0 Focus | REWARD: +0 XP] '
+
+            full_description = f'{cost_str}{t.description}'
+
             # Construct Payload
             ollama_tools.append(
                 {
                     FrontalLobeConstants.T_TYPE: FrontalLobeConstants.TYPE_FUNCTION,
                     FrontalLobeConstants.T_FUNC: {
                         FrontalLobeConstants.T_NAME: t.name,
-                        FrontalLobeConstants.T_DESC: t.description,
+                        FrontalLobeConstants.T_DESC: full_description,
                         FrontalLobeConstants.T_PARAMS: {
                             FrontalLobeConstants.SCHEMA_TYPE: FrontalLobeConstants.TYPE_OBJECT,
                             FrontalLobeConstants.SCHEMA_PROPERTIES: properties,
@@ -269,7 +285,7 @@ class FrontalLobe:
     async def _handle_tool_execution(
         self, turn_record: ReasoningTurn, tool_call_data: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Parses, records, and executes a single tool call."""
+        """Parses, records, and executes a single tool call, enforcing the Focus Economy."""
         func_data = tool_call_data.get(FrontalLobeConstants.T_FUNC, {})
         tool_name = func_data.get(FrontalLobeConstants.T_NAME)
         raw_args = func_data.get(FrontalLobeConstants.T_ARGS, {})
@@ -277,16 +293,49 @@ class FrontalLobe:
 
         await self._log_live(f'Tool Call: {tool_name}({args})')
 
-        # 1. Resolve Tool Definition for DB Integrity
+        # 1. Resolve Tool Definition for DB Integrity (WITH USE_TYPE)
         try:
-            tool_def = await sync_to_async(ToolDefinition.objects.get)(
-                name=tool_name
-            )
+            tool_def = await sync_to_async(
+                lambda: ToolDefinition.objects.select_related('use_type').get(
+                    name=tool_name
+                )
+            )()
         except ToolDefinition.DoesNotExist:
             tool_def = None
             logger.error(f'AI tried to call unknown tool: {tool_name}')
 
-        # 2. Create ToolCall DB Record
+        # 2. Check the Budget! (The Dungeon Master Fizzle Logic)
+        mechanics = tool_def.use_type if tool_def else None
+        focus_mod = mechanics.focus_modifier if mechanics else 0
+        xp_gain = mechanics.xp_reward if mechanics else 0
+
+        # If it costs Focus (negative mod), verify we have enough
+        if focus_mod < 0 and self.session.current_focus + focus_mod < 0:
+            fizzle_msg = (
+                f'SYSTEM OVERRIDE: Spell Fizzled! Insufficient Focus. '
+                f'(Requires {-focus_mod}, but you only have {self.session.current_focus}). '
+                f'You must use Synthesis tools (like mcp_save_memory) to restore Focus.'
+            )
+            await self._log_live(f'Result: {fizzle_msg}')
+
+            # Record the failure to the database so we have a record of its greed
+            if tool_def:
+                await sync_to_async(ToolCall.objects.create)(
+                    turn=turn_record,
+                    tool=tool_def,
+                    arguments=json.dumps(args),
+                    status_id=ReasoningStatusID.ERROR,
+                    result_payload=fizzle_msg,
+                    traceback='Insufficient Focus.',
+                )
+
+            return ChatMessage(
+                role=FrontalLobeConstants.ROLE_TOOL,
+                content=fizzle_msg,
+                name=tool_name,
+            ).to_dict()
+
+        # 3. If we have enough Focus, proceed to create the record
         db_tool_call = None
         if tool_def:
             db_tool_call = await sync_to_async(ToolCall.objects.create)(
@@ -296,18 +345,28 @@ class FrontalLobe:
                 status_id=ReasoningStatusID.ACTIVE,
             )
 
-        # 3. Execute via Parietal Gateway (Pure, no injection)
+        # 4. Execute via Parietal Gateway
         try:
             tool_result = await ParietalMCP.execute(tool_name, args)
-            # Record Success
+
+            # Record Success and Apply Economy Mechanics
             if db_tool_call:
                 db_tool_call.result_payload = tool_result[:10000]
                 db_tool_call.status_id = ReasoningStatusID.COMPLETED
                 await sync_to_async(db_tool_call.save)()
 
+                # Apply the rewards/costs to the session
+                self.session.current_focus = min(
+                    self.session.max_focus,
+                    self.session.current_focus + focus_mod,
+                )
+                self.session.total_xp += xp_gain
+                await sync_to_async(self.session.save)(
+                    update_fields=['current_focus', 'total_xp']
+                )
+
         except Exception as e:
             tool_result = f'Tool Execution Error: {str(e)}'
-            # Record Failure
             if db_tool_call:
                 db_tool_call.traceback = str(e)
                 db_tool_call.status_id = ReasoningStatusID.ERROR
@@ -523,8 +582,18 @@ class FrontalLobe:
         else:
             sensory_input = 'System initialized. This is your first awakening. No previous actions taken.'
 
+        rpg_hud = (
+            f'[YOUR RPG STATUS]\n'
+            f'Level: {self.session.current_level} (Next Level at {self.session.current_level * 50} XP)\n'
+            f'XP: {self.session.total_xp}\n'
+            f'Focus Pool: {self.session.current_focus} / {self.session.max_focus}\n'
+            f'Passive Regen: +{self.session.focus_regen} Focus per sleep cycle.\n'
+            f'High Score to Beat: Level 10\n'
+        )
+
         user_content = (
             f'SESSION ID: {self.session.id}\n\n'
+            f'{rpg_hud}\n'
             f'[WAKING STATE: ACTIVE GOALS]\n{goal_str}\n\n'
             f'[YOUR CARD CATALOG (ENGRAM INDEX)]\n{catalog_str}\n(Use mcp_read_engram to read full facts)\n\n'
             f'[RECENT INTERNAL MONOLOGUE]\n{thoughts_str}\n\n'

@@ -19,10 +19,20 @@ def _save_sync(
     try:
         session = ReasoningSession.objects.get(id=session_id)
         latest_turn = session.turns.last()
+        clean_title = title[:254]
 
-        # The name is now the human-readable Index Title, not a hash
+        # 1. Check if it already exists
+        existing_engram = TalosEngram.objects.filter(name=clean_title).first()
+        if existing_engram:
+            return (
+                f"SYSTEM NOTICE: Engram '{clean_title}' already exists in your Hippocampus.\n"
+                f'Current Fact: {existing_engram.description}\n'
+                f'ACTION REQUIRED: If you wish to add new information to this, cast `mcp_engram_update`.'
+            )
+
+        # 2. If it doesn't exist, create it
         engram = TalosEngram.objects.create(
-            name=title[:254], description=fact, relevance_score=relevance
+            name=clean_title, description=fact, relevance_score=relevance
         )
 
         engram.sessions.add(session)
@@ -35,19 +45,17 @@ def _save_sync(
                 tag_obj, _ = TalosEngramTag.objects.get_or_create(name=t_name)
                 engram.tags.add(tag_obj)
 
-        return (
-            f'Success: Memory Card [{engram.id}: {engram.name}] crystallized.'
-        )
+        return f'Success: Memory Card [{engram.id}: {engram.name}] permanently crystallized.'
     except Exception as e:
         return f'Memory Error: {str(e)}'
 
 
-async def mcp_save_memory(
+async def mcp_engram_save(
     session_id: str,
     title: str,
     fact: str,
     tags: str = '',
     relevance: float = 1.0,
 ) -> str:
-    """MCP Tool: Crystallizes a fact into an Engram card with a descriptive title."""
+    """MCP Tool: Crystallizes a NEW fact into an Engram card."""
     return await _save_sync(session_id, title, fact, tags, relevance)
