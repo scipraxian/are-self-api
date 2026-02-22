@@ -102,19 +102,6 @@ class ReasoningSession(
         """Level 1 = 10. Level 2 = 15. Level 3 = 20."""
         return 10 + ((self.current_level - 1) * 5)
 
-    @property
-    def focus_regen(self):
-        """Level 1 = 0. Level 2 = 1. Level 3 = 2."""
-        return max(0, self.current_level - 1)
-
-    def apply_sleep_regeneration(self):
-        """Called at the start of a turn to apply passive healing."""
-        if self.focus_regen > 0:
-            self.current_focus = min(
-                self.max_focus, self.current_focus + self.focus_regen
-            )
-            self.save(update_fields=['current_focus'])
-
     def __str__(self):
         return f'Session {self.id} Status: {self.status}'
 
@@ -156,8 +143,37 @@ class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
     )
     tokens_output = models.IntegerField(default=0)
 
+    last_turn = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, null=True, blank=True
+    )
+
     def __str__(self):
         return f'Turn {self.turn_number} (Session: {self.session_id})'
+
+    @property
+    def was_efficient_last_turn(self) -> bool:
+        target_capacity = self.session.current_level * 1000
+        last_output_len = (
+            len(self.last_turn.thought_process)
+            if self.last_turn and self.last_turn.thought_process
+            else 0
+        )
+        return last_output_len <= target_capacity
+
+    def apply_efficiency_bonus(self) -> (bool, str):
+        was_efficient = self.was_efficient_last_turn()
+        focus = 1 * self.session.current_level
+        xp = 5 * self.session.current_level
+        if was_efficient:
+            self.session.current_focus += focus
+            self.session.total_xp += xp
+
+        efficiency_status = (
+            f'SUCCESS (+{focus} Focus, +{xp} XP)'
+            if was_efficient
+            else 'FAILED (Data footprint too large)'
+        )
+        return was_efficient, efficiency_status
 
 
 class SessionConclusion(DefaultFieldsMixin, ReasoningStatusMixin):
