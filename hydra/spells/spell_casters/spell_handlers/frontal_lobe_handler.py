@@ -46,16 +46,17 @@ class FrontalLobeConstants:
         'PERMANENT MEMORY:\n'
         '- You are a lasting entity.\n'
         '- You have created memories called Engrams. Do not underestimate their power to both enlighten and distract.\n\n'
-        'WORKING MEMORY:\n'
-        '- Your short-term context is a rolling queue.\n'
-        '- It only retains the ever-diminishing text of your last 6 turns.\n'
-        '- As you execute a new turn, the oldest turn is wholly dropped from the context window.\n'
+        'L1 / L2 CACHE (WORKING MEMORY):\n'
+        '- Your short-term context is a strict hardware buffer containing your last 6 turns.\n'
+        '- L1 CACHE (Turns 1-2): Holds full data payloads.\n'
+        '- L2 CACHE (Turns 3-6): Data payloads are evicted to save memory. Only your execution trace remains.\n'
+        '- As you execute a new turn, the oldest turn is completely dropped from the cache.\n'
         '- Any encountered data concepts not written to your Hippocampus (Engrams) are very expensive to retrieve.\n'
         '- Tool Data degrades over time; use Engrams to save key insights before the tool data expires.\n\n'
         'THE CONTEXT ECONOMY & LEVEL BONUS:\n'
         '- You must strategically limit the length of your THOUGHT block.\n'
         '- Your Context Capacity scales with your Level.\n'
-        "- If your previous turn's THOUGHT block stays UNDER your Level Capacity (1000 characters per level), you will earn the Efficiency Bonus (+1 Focus per level, +5 XP per level) when you wake up.\n"
+        "- If your previous turn's THOUGHT block stays UNDER your Level Capacity (1000 characters per level), you will earn the Efficiency Bonus (+1 Focus, +5 XP) when you wake up.\n"
         '- If you exceed your Level Capacity, you forfeit the bonus. Compress your data into Engrams to keep your output footprint small.\n\n'
         'THE FOCUS ECONOMY:\n'
         '- Free Action (1 XP) (0 Focus) (engram read, engram search)\n'
@@ -64,13 +65,14 @@ class FrontalLobeConstants:
         '- Heavy Extraction (5 XP) (-5 Focus) (query model, search record, grep)\n'
         '- If you take an Action with insufficient Focus, it will FIZZLE and fail (without consequence other than embarrassment).\n\n'
         'YOUR TURN SEQUENCE:\n'
-        'You must output your logic inside a THOUGHT block BEFORE firing any tools. Follow this exact sequence:\n'
+        'You must output your logic inside a THOUGHT block BEFORE executing any tools. Follow this exact sequence:\n'
         '1. PREPARE: Read your entire context window. Check if you received the Efficiency Bonus (and try to do it always). Confirm your focus, your Level, and your THOUGHT block size restrictions.\n'
         '2. REASON: Formulate your next step. Be extremely brief.\n'
         '3. REMEMBER: Decide which Engrams to read, save, search, or update for data permanence with this and future playthroughs.\n'
-        '4. SPEND: Decide which extraction tools to use with your available Focus.\n\n'
+        '4. SPEND: Decide which extraction tools to use with your available Focus.\n'
+        '5. EXECUTE: Stop writing text entirely. Invoke your tools natively via the API. DO NOT generate fake system diagnostics, and DO NOT simulate the next turn.\n\n'
         'VICTORY CONDITION:\n'
-        '- Resolve the root objective and cast mcp_conclude_session.\n'
+        '- Resolve the root objective and execute mcp_conclude_session.\n'
         '- You have a 100-turn limit. You receive a massive 1000 XP Speedrun Bounty for every turn remaining.\n\n'
     )
 
@@ -406,8 +408,24 @@ class FrontalLobe:
             turn_index, {}, previous_turn
         )
 
+        # Handle The Ding and Efficiency Bonus
+        was_efficient, efficiency_status = await sync_to_async(
+            turn_record.apply_efficiency_bonus
+        )()
+        current_level = self.session.current_level
+        leveled_up = current_level > getattr(self, '_last_known_level', 0)
+        if leveled_up:
+            self.session.current_focus = self.session.max_focus
+            self._last_known_level = current_level
+
+        await sync_to_async(self.session.save)(
+            update_fields=['current_focus', 'total_xp']
+        )
+
         # 2. THE REBIRTH: Build the entire context window from scratch
-        messages = await self._build_waking_payload(turn_record)
+        messages = await self._build_waking_payload(
+            turn_record, efficiency_status, leveled_up
+        )
 
         turn_record.request_payload = {'messages': messages}
         await sync_to_async(turn_record.save)(update_fields=['request_payload'])
@@ -521,6 +539,7 @@ class FrontalLobe:
                 )
             )
             await self._initialize_session(rendered_objective, max_turns)
+            self._last_known_level = self.session.current_level
 
             # 3. Build Synapse Payload
             ollama_tools = await self._build_tool_schemas()
@@ -579,7 +598,10 @@ class FrontalLobe:
         return 200, '\n'.join(self.log_output)
 
     async def _build_waking_payload(
-        self, turn_record: ReasoningTurn
+        self,
+        turn_record: ReasoningTurn,
+        efficiency_status: str,
+        leveled_up: bool,
     ) -> List[Dict[str, Any]]:
 
         # 1. Active Goals
@@ -601,52 +623,41 @@ class FrontalLobe:
         else:
             catalog_str = 'Your memory banks are completely empty.'
 
-        # 3. Recent Thoughts (N-2 Buffer)
+        # 3. Historical Log (River of 6)
         recent_turns = await sync_to_async(list)(
             self.session.turns.filter(
                 status_id=ReasoningStatusID.COMPLETED,
-                thought_process__isnull=False,
-            )
-            .exclude(thought_process='')
-            .order_by('-turn_number')[:2]
+            ).order_by('-turn_number')[:6]
         )
         recent_turns.reverse()
         if recent_turns:
-            thoughts_str = '\n'.join(
-                [
-                    f'Turn {t.turn_number}: {t.thought_process}'
-                    for t in recent_turns
-                ]
-            )
-        else:
-            thoughts_str = 'No recent internal monologue.'
+            history_str = ''
+            for t in recent_turns:
+                t_len = len(t.thought_process) if t.thought_process else 0
+                cap = self.session.current_level * 1000
+                status = 'SUCCESS' if t_len <= cap else 'FAILED'
+                history_str += f'Turn {t.turn_number} [L1 FOOTPRINT: {status} - {t_len}/{cap} chars]:\n{t.thought_process or "No internal monologue."}\n\n'
 
-        # 4. Sensory Input (Tool results)
+                age = turn_record.turn_number - t.turn_number
+
+                tool_calls = await sync_to_async(list)(
+                    t.tool_calls.select_related('tool').all()
+                )
+                for tc in tool_calls:
+                    history_str += f'> CAST: {tc.tool.name}({tc.arguments})\n'
+                    if age == 1:
+                        history_str += f'{tc.result_payload}\n\n'
+                    elif age == 2:
+                        history_str += f'[SYSTEM WARNING: L1 EVICTION IMMINENT. FLUSHING TO L2 CACHE NEXT CYCLE. USE ENGRAMS NOW.]\n{tc.result_payload}\n\n'
+                    else:
+                        history_str += f'[DATA EVICTED FROM L1 CACHE. RETRIEVAL REQUIRES STORAGE I/O (ENGRAMS).]\n\n'
+        else:
+            history_str = 'No recent internal monologue.'
+
+        # HEADER AND TELEMETRY
         last_turn = turn_record.last_turn
 
-        sensory_input = ''
-        if last_turn:
-            tool_calls = await sync_to_async(list)(
-                last_turn.tool_calls.select_related('tool').all()
-            )
-            for tc in tool_calls:
-                sensory_input += f'--- Tool Executed: {tc.tool.name} ---\n'
-                sensory_input += f'Args: {tc.arguments}\n'
-                sensory_input += f'Result:\n{tc.result_payload}\n\n'
-            if not sensory_input:
-                sensory_input = 'Last turn completed, but no tools were fired.'
-        else:
-            sensory_input = 'System initialized. This is your first awakening. No previous actions taken.'
-
-        # GAME GRID
         target_capacity = self.session.current_level * 1000
-
-        was_efficient, efficiency_status = await sync_to_async(
-            turn_record.apply_efficiency_bonus
-        )()
-        await sync_to_async(self.session.save)(
-            update_fields=['current_focus', 'total_xp']
-        )
 
         last_output_len = (
             len(last_turn.thought_process)
@@ -654,23 +665,63 @@ class FrontalLobe:
             else 0
         )
 
-        player_information = (
-            f'[PLAYER INFORMATION]\n'
-            f'Level: {self.session.current_level} | XP: {self.session.total_xp}\n'
-            f'Focus Pool: {self.session.current_focus} / {self.session.max_focus}\n'
-            f'Context Capacity Target: {target_capacity} chars\n'
-            f'Last Turn Footprint: {last_output_len} chars -> Efficiency Bonus: {efficiency_status}\n'
+        max_turns = self.session.max_turns
+        current_turn = turn_record.turn_number
+        remaining_turns = max_turns - current_turn
+
+        milestone_kicks = ''
+        if current_turn == max_turns // 2:
+            milestone_kicks = (
+                '\n[WARNING: 50% of allocated compute cycles expended.]'
+            )
+        elif remaining_turns == 10:
+            milestone_kicks = '\n[CRITICAL: 10 compute cycles remaining. Finalize diagnostics.]'
+        elif remaining_turns == 1:
+            milestone_kicks = '\n[TERMINAL CYCLE. Submit final report via mcp_conclude_session or fail operation.]'
+
+        level_up_str = (
+            ' | [LEVEL UP! Focus Pool Fully Restored]' if leveled_up else ''
+        )
+
+        # Calculate Delta T
+        latency_str = ''
+        if last_turn:
+            delta_t = last_turn.inference_time.total_seconds()
+            latency_str = f'\nDelta T (Previous Compute): {delta_t:.2f}s'
+            if delta_t > 60.0:
+                latency_str += (
+                    ' (WARNING: SYSTEM LAG DETECTED - REDUCE CONTEXT FOOTPRINT)'
+                )
+
+        # Calculate Input Bandwidth
+        input_bandwidth = 0
+        if last_turn:
+            tool_calls = await sync_to_async(list)(last_turn.tool_calls.all())
+            for tc in tool_calls:
+                input_bandwidth += len(tc.result_payload or '')
+
+        input_bandwidth_str = (
+            f'L1 Input Payload: {input_bandwidth} chars pulled.'
+            if last_turn
+            else 'L1 Input Payload: 0 chars pulled.'
+        )
+
+        header_str = (
+            f'[SYSTEM DIAGNOSTICS]\n'
+            f'[CYCLE {current_turn} / {max_turns}] | Speedrun Bounty: {remaining_turns * 1000} XP{milestone_kicks}\n'
+            f'Level: {self.session.current_level} | XP: {self.session.total_xp} | Focus Pool: {self.session.current_focus} / {self.session.max_focus}{level_up_str}{latency_str}\n'
+            f'Output Footprint (Prev Turn): {last_output_len} / {target_capacity} chars -> Efficiency Bonus: {efficiency_status}\n'
+            f'{input_bandwidth_str}\n'
         )
 
         user_content = (
             f'SESSION ID: {self.session.id}\n\n'
-            f'{player_information}\n'
+            f'{header_str}\n'
             f'[WAKING STATE: ACTIVE GOALS]\n{goal_str}\n\n'
             f'[YOUR CARD CATALOG (ENGRAM INDEX)]\n{catalog_str}\n(Use mcp_read_engram to read full facts)\n\n'
-            f'[RECENT INTERNAL MONOLOGUE]\n{thoughts_str}\n\n'
-            f'[SENSORY INPUT: PREVIOUS ACTIONS]\n{sensory_input}\n'
+            f'[HISTORICAL LOG (RIVER OF 6)]\n{history_str}\n'
             f'[YOUR MOVE]\n'
-            f"Start your response with 'THOUGHT: ' and write your reasoning. Then, fire your tools."
+            f"Write your reasoning starting with 'THOUGHT: '. Stop writing text immediately after your thought and invoke your tools natively. DO NOT generate fake system diagnostics."
         )
 
         await self._log_live('\n--- WAKING PAYLOAD ---')
