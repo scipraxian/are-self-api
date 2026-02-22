@@ -172,29 +172,7 @@ function fetchData() {
             if (typeof updateTalosHUD === 'function') {
                 let latestTurn = null;
                 if (sessionData.turns && sessionData.turns.length > 0) {
-                    // Try to find the latest turn with a thought
-                    for (let i = sessionData.turns.length - 1; i >= 0; i--) {
-                        let t = sessionData.turns[i];
-                        let hasThought = false;
-                        if (t.thought_process && t.thought_process.trim() !== '') {
-                            hasThought = true;
-                        } else if (t.request_payload) {
-                            try {
-                                let parsedReq = typeof t.request_payload === 'string' ? JSON.parse(t.request_payload) : t.request_payload;
-                                if (parsedReq && parsedReq.thought_process) {
-                                    hasThought = true;
-                                }
-                            } catch (e) { }
-                        }
-                        if (hasThought) {
-                            latestTurn = t;
-                            break;
-                        }
-                    }
-                    // Fallback to the absolute latest if no thought found at all
-                    if (!latestTurn) {
-                        latestTurn = sessionData.turns[sessionData.turns.length - 1];
-                    }
+                    latestTurn = sessionData.turns[sessionData.turns.length - 1];
                 }
                 updateTalosHUD(sessionData, latestTurn);
             }
@@ -389,21 +367,29 @@ function updateGraph(newData) {
         avgDelta = totalSeconds / validTurns.length;
     }
 
+    const activeStates = ['Active', 'Pending', 'Running', 'Thinking'];
+
     allNodes.filter(d => d.type === 'turn').select("circle").attr("r", d => {
         let baseRadius = 18;
-        if (d.delta && avgDelta > 0) {
-            let seconds = parseDurationToSeconds(d.delta);
-            if (seconds > 0) {
-                // Scale between 0.3x and 3.0x of base radius linearly to make it much more pronounced
-                let ratio = seconds / avgDelta;
-                ratio = Math.max(0.3, Math.min(ratio, 3.0));
-                baseRadius = 18 * ratio;
-            }
+        let isLive = activeStates.includes(d.status);
+        let seconds = 0;
+
+        if (isLive && d.created) {
+            let startTime = new Date(d.created).getTime();
+            seconds = (Date.now() - startTime) / 1000;
+        } else if (d.delta) {
+            seconds = parseDurationToSeconds(d.delta);
+        }
+
+        if (seconds > 0 && avgDelta > 0) {
+            // Scale between 0.3x and 3.0x of base radius linearly to make it much more pronounced
+            let ratio = seconds / avgDelta;
+            ratio = Math.max(0.3, Math.min(ratio, 4.0)); // Allowed to get a bit bigger for active
+            baseRadius = 18 * ratio;
         }
         return baseRadius;
     });
 
-    const activeStates = ['Active', 'Pending', 'Running', 'Thinking'];
     allNodes.classed("active-node", d => d.type === 'turn' && activeStates.includes(d.status));
 
     simulation.nodes(currentData.nodes);
@@ -820,17 +806,24 @@ function updateTalosHUD(sessionData, latestTurnData) {
             totalClockEl.textContent = `⏱ ${((Date.now() - sessionStartTime) / 1000).toFixed(1)}s`;
         }
 
-        // Clean up the thought text to remove the "THOUGHT:" prefix if it exists
-        let thoughtText = "No thought registered.";
-        if (latestTurnData.thought_process && latestTurnData.thought_process.trim() !== "") {
-            thoughtText = latestTurnData.thought_process;
-        } else if (latestTurnData.request_payload) {
-            try {
-                let parsedReq = typeof latestTurnData.request_payload === 'string' ? JSON.parse(latestTurnData.request_payload) : latestTurnData.request_payload;
-                if (parsedReq && parsedReq.thought_process) {
-                    thoughtText = parsedReq.thought_process;
+        // Try to find the latest thought by walking backwards from the current turns array
+        let thoughtText = "Awaiting cortex synchronization...";
+        if (sessionData.turns && sessionData.turns.length > 0) {
+            for (let i = sessionData.turns.length - 1; i >= 0; i--) {
+                let t = sessionData.turns[i];
+                if (t.thought_process && t.thought_process.trim() !== "") {
+                    thoughtText = t.thought_process.replace(/^(THOUGHT:\s*)+/i, '').trim();
+                    break;
+                } else if (t.request_payload) {
+                    try {
+                        let parsedReq = typeof t.request_payload === 'string' ? JSON.parse(t.request_payload) : t.request_payload;
+                        if (parsedReq && parsedReq.thought_process) {
+                            thoughtText = parsedReq.thought_process.replace(/^(THOUGHT:\s*)+/i, '').trim();
+                            break;
+                        }
+                    } catch (e) { }
                 }
-            } catch (e) { }
+            }
         }
 
         let elThought = document.getElementById('hud-thought');
