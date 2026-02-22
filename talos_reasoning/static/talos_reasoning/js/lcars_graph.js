@@ -8,6 +8,7 @@ let selectedNodeHash = null;
 let pollTimer;
 let liveTimerInterval = null;
 let currentSessionData = null;
+let globalHudTimer = null;
 
 function flattenTreeToGraph(sessionData, oldData) {
     const nodes = [];
@@ -402,7 +403,7 @@ function updateGraph(newData) {
         return baseRadius;
     });
 
-    const activeStates = ['Active', 'Pending', 'Running'];
+    const activeStates = ['Active', 'Pending', 'Running', 'Thinking'];
     allNodes.classed("active-node", d => d.type === 'turn' && activeStates.includes(d.status));
 
     simulation.nodes(currentData.nodes);
@@ -745,12 +746,79 @@ if (haltBtn) {
 function updateTalosHUD(sessionData, latestTurnData) {
     if (!sessionData) return;
 
-    document.getElementById('hud-level').textContent = sessionData.current_level || 1;
-    document.getElementById('hud-xp').textContent = sessionData.total_xp || 0;
-    document.getElementById('hud-focus').textContent = `${sessionData.current_focus || 0} / ${sessionData.max_focus || 10}`;
+    let elLevel = document.getElementById('hud-level');
+    if (elLevel) elLevel.textContent = sessionData.current_level || 1;
+    let elXp = document.getElementById('hud-xp');
+    if (elXp) elXp.textContent = sessionData.total_xp || 0;
+    let elFocus = document.getElementById('hud-focus');
+    if (elFocus) elFocus.textContent = `${sessionData.current_focus || 0} / ${sessionData.max_focus || 10}`;
+
+    if (globalHudTimer) {
+        clearInterval(globalHudTimer);
+        globalHudTimer = null;
+    }
 
     if (latestTurnData) {
-        document.getElementById('hud-turn').textContent = latestTurnData.turn_number;
+        let elTurn = document.getElementById('hud-turn');
+        if (elTurn) elTurn.textContent = latestTurnData.turn_number;
+
+        let lastNodeTimeStr = "--";
+        if (sessionData.turns && sessionData.turns.length > 1) {
+            let latestIndex = sessionData.turns.findIndex(t => t.id === latestTurnData.id);
+            if (latestIndex > 0) {
+                let prevTurn = sessionData.turns[latestIndex - 1];
+                lastNodeTimeStr = prevTurn.inference_time || prevTurn.delta || '0s';
+            } else {
+                lastNodeTimeStr = sessionData.turns[0].inference_time || sessionData.turns[0].delta || '0s';
+            }
+        } else if (sessionData.turns && sessionData.turns.length === 1) {
+            lastNodeTimeStr = "N/A";
+        }
+        let elLastTime = document.getElementById('hud-last-time');
+        if (elLastTime) elLastTime.textContent = lastNodeTimeStr;
+
+        const activeStates = ['Active', 'Pending', 'Running', 'Thinking'];
+        const isLive = activeStates.includes(latestTurnData.status_name);
+        const sessionFinished = ['Completed', 'Error', 'Maxed Out', 'Stopped'].includes(sessionData.status_name);
+
+        const clockEl = document.getElementById('hud-clock');
+        const totalClockEl = document.getElementById('hud-total-clock');
+
+        // Parse Session Created for Total Time
+        let sessionStartTime = null;
+        if (sessionData.created) sessionStartTime = new Date(sessionData.created).getTime();
+
+        if (isLive && latestTurnData.created) {
+            const turnStartTime = new Date(latestTurnData.created).getTime();
+
+            globalHudTimer = setInterval(() => {
+                const now = Date.now();
+                if (clockEl) {
+                    clockEl.textContent = `⏱ ${((now - turnStartTime) / 1000).toFixed(1)}s`;
+                }
+
+                if (totalClockEl && !sessionFinished && sessionStartTime) {
+                    totalClockEl.textContent = `⏱ ${((now - sessionStartTime) / 1000).toFixed(1)}s`;
+                }
+            }, 100);
+        } else {
+            if (clockEl) clockEl.textContent = latestTurnData.inference_time || latestTurnData.delta || '0s';
+
+            // If the turn is dead but session isn't finished and we don't have a turn running, start a timer just for the total clock
+            if (!sessionFinished && sessionStartTime) {
+                globalHudTimer = setInterval(() => {
+                    const now = Date.now();
+                    if (totalClockEl) totalClockEl.textContent = `⏱ ${((now - sessionStartTime) / 1000).toFixed(1)}s`;
+                }, 100);
+            }
+        }
+
+        // Final fallback for total time if session is finished or not ticking
+        if (sessionFinished && totalClockEl) {
+            totalClockEl.textContent = sessionData.delta || '0s';
+        } else if (!sessionFinished && !globalHudTimer && totalClockEl && sessionStartTime) {
+            totalClockEl.textContent = `⏱ ${((Date.now() - sessionStartTime) / 1000).toFixed(1)}s`;
+        }
 
         // Clean up the thought text to remove the "THOUGHT:" prefix if it exists
         let thoughtText = "No thought registered.";
@@ -765,8 +833,8 @@ function updateTalosHUD(sessionData, latestTurnData) {
             } catch (e) { }
         }
 
-        thoughtText = thoughtText.replace(/^(THOUGHT:\s*)+/i, '').trim();
-        document.getElementById('hud-thought').textContent = `"${thoughtText}"`;
+        let elThought = document.getElementById('hud-thought');
+        if (elThought) elThought.textContent = `"${thoughtText}"`;
     }
 }
 

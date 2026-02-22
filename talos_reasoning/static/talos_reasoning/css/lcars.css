@@ -285,29 +285,32 @@ body {
     filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
 }
 
-/* Active Node Pulsing */
-@keyframes lcars-pulse {
+/* Intense Active Node Pulsing */
+@keyframes lcars-pulse-intense {
     0% {
-        filter: drop-shadow(0 0 2px var(--lcars-gold));
-        stroke-width: 1px;
-        stroke: transparent;
+        filter: drop-shadow(0 0 5px #4ade80);
+        stroke-width: 2px;
+        stroke: #4ade80;
+        fill: #4ade80;
     }
     50% {
-        filter: drop-shadow(0 0 15px var(--lcars-gold));
-        stroke-width: 3px;
+        filter: drop-shadow(0 0 25px #4ade80);
+        stroke-width: 5px;
         stroke: #fff;
+        fill: #33cc33;
     }
     100% {
-        filter: drop-shadow(0 0 2px var(--lcars-gold));
-        stroke-width: 1px;
-        stroke: transparent;
+        filter: drop-shadow(0 0 5px #4ade80);
+        stroke-width: 2px;
+        stroke: #4ade80;
+        fill: #4ade80;
     }
 }
 
 .nodes g.active-node circle,
 .nodes g.active-node rect,
 .nodes g.active-node polygon {
-    animation: lcars-pulse 1.5s infinite;
+    animation: lcars-pulse-intense 1s infinite;
 }
 
 /* --- NATIVE JSON TREE VIEW --- */
@@ -400,7 +403,8 @@ body {
 .lcars-bg-orange { background-color: #ff9900; }
 .lcars-bg-purple { background-color: #cc99cc; }
 .lcars-bg-blue { background-color: #9999ff; }
-.lcars-bg-red { background-color: #cc0000; }
+.lcars-bg-red { background-color: #cc3333; }
+.lcars-bg-green { background-color: #4ade80; }
 
 .hud-body {
     display: flex;
