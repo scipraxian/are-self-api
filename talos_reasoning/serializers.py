@@ -11,6 +11,7 @@ from talos_reasoning.models import (
 
 
 class ToolDefinitionSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = ToolDefinition
         fields = ALL_FIELDS
@@ -58,6 +59,9 @@ class ReasoningSessionSerializer(serializers.ModelSerializer):
     goals = ReasoningGoalSerializer(many=True, read_only=True)
     turns = ReasoningTurnSerializer(many=True, read_only=True)
     engrams = TalosEngramSerializer(source='engram', many=True, read_only=True)
+
+    current_level = serializers.IntegerField(read_only=True)
+    max_focus = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = ReasoningSession

@@ -7,6 +7,7 @@ let selectedNodeId = null;
 let selectedNodeHash = null;
 let pollTimer;
 let liveTimerInterval = null;
+let currentSessionData = null;
 
 function flattenTreeToGraph(sessionData, oldData) {
     const nodes = [];
@@ -163,6 +164,7 @@ function fetchData() {
             return response.json();
         })
         .then(sessionData => {
+            currentSessionData = sessionData;
             if (typeof updateSessionInfo === 'function') {
                 updateSessionInfo(sessionData);
             }
@@ -468,19 +470,33 @@ function showDetails(d) {
             if (seconds > 0) tps = (d.tokens_output / seconds).toFixed(1);
         }
 
+        let statsHtml = `
+            <div style="display: flex; gap: 10px; margin-top: 10px; margin-bottom: 20px; font-family: 'Antonio', sans-serif;">
+                <div style="flex: 1; padding: 8px; text-align: center; background-color: #f99f1b; color: black; font-weight: bold; border-radius: 20px; font-size: 1.2rem;">TURN ${d.turn_number}</div>
+                <div style="flex: 1; padding: 8px; text-align: center; background-color: #cc99cc; color: black; font-weight: bold; border-radius: 20px; font-size: 1.2rem;">IN ${d.tokens_input || 0}</div>
+                <div style="flex: 1; padding: 8px; text-align: center; background-color: #38bdf8; color: black; font-weight: bold; border-radius: 20px; font-size: 1.2rem;">OUT ${d.tokens_output || 0}</div>
+                <div style="flex: 1; padding: 8px; text-align: center; background-color: #4ade80; color: black; font-weight: bold; border-radius: 20px; font-size: 1.2rem;" id="node-duration">${isLive ? '⏱ --' : (d.inference_time || d.delta || '0s')}</div>
+            </div>
+        `;
         let statusColor = d.status === 'Error' ? 'term-fizzle' : (d.status === 'Completed' ? 'term-success' : 'term-thought');
-        terminalEl.innerHTML += `<div class="${statusColor}">Status: ${d.status}</div>`;
-        terminalEl.innerHTML += `<div class="term-result">Turn Duration: <span id="node-duration" style="color:#99ccff;">${isLive ? '⏱ Calculating...' : (d.delta || '0s')}</span></div>`;
-        terminalEl.innerHTML += `<div class="term-result">Cognitive Load: <span style="color:#cc99cc;">[ IN: ${d.tokens_input || 0} ] -> [ OUT: ${d.tokens_output || 0} ]</span></div>`;
-        terminalEl.innerHTML += `<div class="term-result">Inference Speed: <span style="color:#4ade80;">${d.inference_time || '0s'} (${tps} tokens/sec)</span></div>`;
+
+        terminalEl.innerHTML += statsHtml;
+        terminalEl.innerHTML += `<div class="${statusColor}" style="margin-bottom: 10px; font-weight: bold; font-size: 1.1rem;">Status: ${d.status}</div>`;
 
         if (d.request_payload) {
+            let reqStr;
+            try {
+                reqStr = typeof d.request_payload === 'string' ? JSON.parse(d.request_payload) : d.request_payload;
+                reqStr = JSON.stringify(reqStr, null, 2);
+            } catch (e) {
+                reqStr = String(d.request_payload);
+            }
             terminalEl.innerHTML += `
-                <div class="term-result">
+                <div class="term-result" style="margin-top: 15px;">
                     <details>
-                        <summary style="cursor:pointer; color:#f99f1b;">[ View Request Payload ]</summary>
-                        <div class="code-block" style="margin-top:5px; padding:5px;">
-                            ${renderJsonTree(d.request_payload)}
+                        <summary style="cursor:pointer; color:#f99f1b; font-weight: bold; border-bottom: 1px solid #f99f1b; padding-bottom: 5px; margin-bottom: 10px;">► View Raw Request Payload</summary>
+                        <div class="code-block" style="margin-top:5px; padding:10px; background-color: rgba(0,0,0,0.5); border: 1px solid #f99f1b; border-radius: 4px; overflow-x: auto;">
+                            <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #99ccff;">${reqStr}</pre>
                         </div>
                     </details>
                 </div>
@@ -490,27 +506,39 @@ function showDetails(d) {
         // 1. Render the Thought
         if (d.thought_process) {
             let thought = d.thought_process.replace(/^(THOUGHT:\s*)+/i, '').trim();
-            terminalEl.innerHTML += `<div class="term-thought" style="margin-top: 15px;">" ${thought} "</div>`;
+            terminalEl.innerHTML += `
+                <div class="term-result" style="margin-top: 15px;">
+                    <details open>
+                        <summary style="cursor:pointer; color:#cc99cc; font-weight: bold; border-bottom: 1px solid #cc99cc; padding-bottom: 5px; margin-bottom: 10px;">► Thought Process</summary>
+                        <div style="margin-top: 5px; padding: 10px; border-left: 3px solid #cc99cc; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; color: #cc99cc; font-size: 12px; line-height: 1.4;">${thought}</div>
+                    </details>
+                </div>
+            `;
         } else {
-            terminalEl.innerHTML += `<div class="term-thought" style="margin-top: 15px;">" Executing without monologue... "</div>`;
+            terminalEl.innerHTML += `<div class="term-thought" style="margin-top: 15px; font-style: italic;">" Executing without monologue... "</div>`;
         }
 
         // 2. Render the Spells (Tool Calls)
         const calls = currentData.links.filter(l => (l.source.id || l.source) === d.id && l.type === 'uses_tool');
         if (calls && calls.length > 0) {
-            calls.forEach(call => {
+            let spellsHtml = `
+                <div class="term-result" style="margin-top: 15px;">
+                    <details open>
+                        <summary style="cursor:pointer; color:#4ade80; font-weight: bold; border-bottom: 1px solid #4ade80; padding-bottom: 5px; margin-bottom: 10px;">► Spells Cast (${calls.length})</summary>
+                        <div style="padding-left: 10px;">
+            `;
+
+            calls.forEach((call, i) => {
                 let args = call.arguments || {};
                 let argStr = "";
                 try {
                     let parsedArgs = typeof args === 'string' ? JSON.parse(args) : args;
-                    argStr = Object.entries(parsedArgs).map(([k, v]) => `${k}=${JSON.stringify(v)}`).join(', ');
+                    argStr = JSON.stringify(parsedArgs, null, 2);
                 } catch (e) { argStr = String(args); }
 
                 let targetId = call.target.id || call.target;
                 let toolNode = currentData.nodes.find(n => n.id === targetId);
                 let toolName = toolNode ? toolNode.label : "unknown_spell";
-
-                terminalEl.innerHTML += `<div class="term-spell">> CAST: ${toolName}(${argStr})</div>`;
 
                 let resultClass = 'term-result';
                 let resultText = call.result || call.traceback || "No result.";
@@ -521,14 +549,24 @@ function showDetails(d) {
                     resultClass += ' term-success';
                 }
 
-                if (resultText && resultText.length > 500) {
-                    resultText = resultText.substring(0, 500) + '... [TRUNCATED FOR UI]';
-                }
-
-                terminalEl.innerHTML += `<div class="${resultClass}">${resultText}</div>`;
+                spellsHtml += `
+                    <div style="margin-bottom: 15px; border: 1px solid #4ade80; border-radius: 4px; padding: 10px; background-color: rgba(0,0,0,0.3);">
+                        <div class="term-spell" style="font-weight: bold; color: #4ade80; margin-bottom: 10px;">> CAST [${i + 1}]: ${toolName}</div>
+                        <details style="margin-bottom: 10px;">
+                            <summary style="cursor:pointer; color:#99ccff; font-weight: bold;">► Arguments</summary>
+                            <pre style="margin-top: 5px; padding: 10px; background: rgba(0,0,0,0.5); white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; font-size: 11px; color:#99ccff;">${argStr}</pre>
+                        </details>
+                        <details open>
+                            <summary style="cursor:pointer; color:#ccc; font-weight: bold;">► Result</summary>
+                            <div class="${resultClass}" style="margin-top: 5px; padding: 10px; background: rgba(0,0,0,0.5); white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; font-size: 11px; word-wrap: break-word; overflow-x: auto;">${resultText}</div>
+                        </details>
+                    </div>
+                `;
             });
+            spellsHtml += `</div></details></div>`;
+            terminalEl.innerHTML += spellsHtml;
         } else {
-            terminalEl.innerHTML += `<div class="term-result">No spells cast this turn. Sleep initiated.</div>`;
+            terminalEl.innerHTML += `<div class="term-result" style="margin-top: 15px; font-style: italic;">No spells cast this turn. Sleep initiated.</div>`;
         }
 
         if (isLive && d.created) {
@@ -568,7 +606,13 @@ function showDetails(d) {
         terminalEl.innerHTML = `<div class="term-result">Select a Turn node to view the action log.</div>`;
     }
 
-    terminalEl.innerHTML += `<br><div class="term-result"><a href="${adminUrl}" target="_blank" style="color: #f99f1b; text-decoration: none;">[ OPEN IN ADMIN ↗ ]</a></div>`;
+
+
+    terminalEl.innerHTML += `
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="${adminUrl}" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #cc3333; color: black; font-family: 'Antonio', sans-serif; font-weight: bold; font-size: 1.2rem; text-decoration: none; border-radius: 20px; cursor: pointer; border: 2px solid #ff4444; width: 80%;">ACCESS DB RECORD ↗</a>
+        </div>
+    `;
 
     scrollContainer.scrollTop = prevScrollTop;
 }
