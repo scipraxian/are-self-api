@@ -11,13 +11,13 @@ class ModelRegistry:
     CODER = 3  # qwen3-coder:30b
 
     _MODEL_MAP = {
-        SCOUT_LIGHT: "llama3.2:3b",
-        COMMANDER: "gemma3:27b",
-        CODER: "qwen3-coder:30b"
+        SCOUT_LIGHT: 'llama3.2:3b',
+        COMMANDER: 'gemma3:27b',
+        CODER: 'qwen3-coder:30b',
     }
 
     @classmethod
-    def get_model(cls, role_id: int | str) -> str:
+    def get_model(cls, role_id: int | str) -> str:  # DEPRECIATED
         """Returns the string model name for a given role ID.
 
         Args:

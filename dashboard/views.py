@@ -5,6 +5,7 @@ from django.views.generic import TemplateView
 
 from environments.models import ProjectEnvironment
 from hydra.models import HydraSpellbook
+from talos_reasoning.models import ReasoningSession, ReasoningStatusID
 
 logger = logging.getLogger(__name__)
 
@@ -52,5 +53,9 @@ class DashboardHomeView(TemplateView):
             {'name': k, 'books': v} for k, v in sorted(tagged_groups.items())
         ]
         context['uncategorized'] = uncategorized
+
+        context['last_cortex_session'] = (
+            ReasoningSession.objects.all().order_by('-created').first()
+        )
 
         return context

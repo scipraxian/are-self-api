@@ -545,6 +545,7 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
     average_delta = serializers.SerializerMethodField()
     blackboard = serializers.JSONField(read_only=True)
     context_matrix = serializers.SerializerMethodField()
+    reasoning_session_id = serializers.SerializerMethodField()
 
     class Meta:
         model = HydraHead
@@ -561,6 +562,7 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
             'average_delta',
             'blackboard',
             'context_matrix',
+            'reasoning_session_id',
         ]
 
     def get_agent(self, obj):
@@ -611,6 +613,10 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
         # 4. Build Matrix using helper
         dtos = _build_context_matrix_data(obj.spell, global_context, overrides)
         return ContextMatrixRowSerializer(dtos, many=True).data
+
+    def get_reasoning_session_id(self, obj):
+        session = obj.reasoning_session.first()
+        return str(session.id) if session else None
 
 
 class HydraSwimlaneSerializer(serializers.ModelSerializer):

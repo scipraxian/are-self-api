@@ -1,0 +1,728 @@
+const POLL_INTERVAL_MS = 2500;
+let sessionId;
+let svg, g, simulation;
+let linkGroup, nodeGroup;
+let currentData = { nodes: [], links: [] };
+let selectedNodeId = null;
+let selectedNodeHash = null;
+let pollTimer;
+let liveTimerInterval = null;
+
+function flattenTreeToGraph(sessionData, oldData) {
+    const nodes = [];
+    const links = [];
+
+    let firstTurnId = null;
+    if (sessionData.turns && sessionData.turns.length > 0) {
+        // Assuming turns are sorted, index 0 is the first turn
+        firstTurnId = `turn-${sessionData.turns[0].id}`;
+    }
+
+    // 1. Process Goals
+    if (sessionData.goals) {
+        sessionData.goals.forEach(goal => {
+            const goalNodeId = `goal-${goal.id}`;
+            nodes.push({
+                id: goalNodeId,
+                type: 'goal',
+                label: `Goal ${goal.id}`,
+                status: goal.status_name,
+                rendered_goal: goal.rendered_goal,
+                created: goal.created,
+                delta: goal.delta
+            });
+            if (firstTurnId) {
+                links.push({
+                    source: firstTurnId,
+                    target: goalNodeId,
+                    type: 'goal_anchor'
+                });
+            }
+        });
+    }
+
+    // 2. Process Turns & Tools
+    if (sessionData.turns) {
+        sessionData.turns.forEach((turn, index) => {
+            const turnNodeId = `turn-${turn.id}`;
+
+            nodes.push({
+                id: turnNodeId,
+                type: 'turn',
+                label: `Turn ${turn.turn_number}`,
+                turn_number: turn.turn_number,
+                status: turn.status_name,
+                thought_process: turn.thought_process,
+                request_payload: turn.request_payload,
+                tokens_input: turn.tokens_input,
+                tokens_output: turn.tokens_output,
+                inference_time: turn.inference_time,
+                created: turn.created,
+                delta: turn.delta
+            });
+
+            // Sequence Links (The Timeline)
+            if (index > 0) {
+                links.push({
+                    source: `turn-${sessionData.turns[index - 1].id}`,
+                    target: turnNodeId,
+                    type: 'sequence'
+                });
+            }
+
+            // --- GRAVITY FIX: Turn -> Goal links removed so it doesn't clump ---
+
+            // --- TREE FIX: Make tool nodes unique per call so they branch outward ---
+            if (turn.tool_calls) {
+                turn.tool_calls.forEach((call, callIdx) => {
+                    const toolNodeId = `tool-${turn.id}-${call.tool_name}-${callIdx}`;
+
+                    nodes.push({
+                        id: toolNodeId,
+                        type: 'tool',
+                        label: call.tool_name,
+                        is_async: call.is_async
+                    });
+
+                    links.push({
+                        source: turnNodeId,
+                        target: toolNodeId,
+                        type: 'uses_tool',
+                        call_id: call.call_id,
+                        arguments: call.arguments,
+                        result: call.result_payload,
+                        traceback: call.traceback
+                    });
+                });
+            }
+        });
+    }
+
+    // 3. Process Engrams
+    if (sessionData.engrams) {
+        sessionData.engrams.forEach(engram => {
+            const engramNodeId = `engram-${engram.id}`;
+            nodes.push({
+                id: engramNodeId,
+                type: 'engram',
+                label: `Engram ${engram.id}`,
+                name: engram.name,
+                description: engram.description,
+                relevance: engram.relevance_score
+            });
+
+            if (engram.source_turns) {
+                engram.source_turns.forEach(turnId => {
+                    links.push({
+                        source: `turn-${turnId}`,
+                        target: engramNodeId,
+                        type: 'created_in'
+                    });
+                });
+            }
+        });
+    }
+
+    // Preserve Physics & Spawn gracefully
+    if (oldData && oldData.nodes) {
+        const oldNodeMap = new Map(oldData.nodes.map(n => [n.id, n]));
+        nodes.forEach(n => {
+            if (oldNodeMap.has(n.id)) {
+                const old = oldNodeMap.get(n.id);
+                n.x = old.x;
+                n.y = old.y;
+                n.vx = old.vx;
+                n.vy = old.vy;
+            } else if (n.type === 'turn') {
+                // If a new turn spawns, put it near the previous turn so it doesn't fly across the screen
+                const prevTurn = nodes.find(prev => prev.type === 'turn' && prev.turn_number === n.turn_number - 1);
+                if (prevTurn && oldNodeMap.has(prevTurn.id)) {
+                    const oldPrev = oldNodeMap.get(prevTurn.id);
+                    n.x = oldPrev.x + 50;
+                    n.y = oldPrev.y + 50;
+                }
+            }
+        });
+    }
+    return { nodes, links };
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    sessionId = document.getElementById('lcars-data').dataset.sessionId;
+    initGraphContainer();
+    fetchData();
+});
+
+function fetchData() {
+    // --- CACHE BUSTER FIX: Forces the browser to actually get new turns ---
+    const url = `/api/v1/reasoning_sessions/${sessionId}/graph_data/?_ts=${Date.now()}`;
+
+    fetch(url)
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(sessionData => {
+            if (typeof updateSessionInfo === 'function') {
+                updateSessionInfo(sessionData);
+            }
+            if (typeof updateTalosHUD === 'function') {
+                let latestTurn = null;
+                if (sessionData.turns && sessionData.turns.length > 0) {
+                    // Try to find the latest turn with a thought
+                    for (let i = sessionData.turns.length - 1; i >= 0; i--) {
+                        let t = sessionData.turns[i];
+                        let hasThought = false;
+                        if (t.thought_process && t.thought_process.trim() !== '') {
+                            hasThought = true;
+                        } else if (t.request_payload) {
+                            try {
+                                let parsedReq = typeof t.request_payload === 'string' ? JSON.parse(t.request_payload) : t.request_payload;
+                                if (parsedReq && parsedReq.thought_process) {
+                                    hasThought = true;
+                                }
+                            } catch (e) { }
+                        }
+                        if (hasThought) {
+                            latestTurn = t;
+                            break;
+                        }
+                    }
+                    // Fallback to the absolute latest if no thought found at all
+                    if (!latestTurn) {
+                        latestTurn = sessionData.turns[sessionData.turns.length - 1];
+                    }
+                }
+                updateTalosHUD(sessionData, latestTurn);
+            }
+
+            const graphPayload = flattenTreeToGraph(sessionData, typeof currentData !== 'undefined' ? currentData : null);
+
+            let shouldUpdateInspector = false;
+            if (selectedNodeId) {
+                const rawNode = graphPayload.nodes.find(n => n.id === selectedNodeId);
+                const rawLinks = graphPayload.links.filter(l => (l.target.id || l.target) === selectedNodeId || (l.source.id || l.source) === selectedNodeId);
+
+                if (rawNode) {
+                    // --- SCROLL/JITTER FIX: Create a clean hash without timers or physics ---
+                    const cleanNode = { ...rawNode };
+                    delete cleanNode.x;
+                    delete cleanNode.y;
+                    delete cleanNode.vx;
+                    delete cleanNode.vy;
+                    delete cleanNode.index;
+                    delete cleanNode.delta;
+                    delete cleanNode.inference_time;
+
+                    const currentStateHash = JSON.stringify({ node: cleanNode, linkCount: rawLinks.length });
+
+                    if (selectedNodeHash !== currentStateHash) {
+                        shouldUpdateInspector = true;
+                        selectedNodeHash = currentStateHash;
+                    }
+                }
+            }
+
+            updateGraph(graphPayload);
+
+            if (shouldUpdateInspector) {
+                const updatedNode = graphPayload.nodes.find(n => n.id === selectedNodeId);
+                if (updatedNode) showDetails(updatedNode);
+            }
+
+            const isFinished = ['Completed', 'Error', 'Maxed Out', 'Stopped'].includes(sessionData.status_name);
+            if (!isFinished) {
+                pollTimer = setTimeout(fetchData, POLL_INTERVAL_MS);
+            }
+        })
+        .catch(error => console.error('Graph Data Fetch Error:', error));
+}
+
+function updateSessionInfo(session) {
+    document.getElementById('session-status').textContent = session.status_name;
+}
+
+function initGraphContainer() {
+    const width = document.getElementById('graph-container').clientWidth;
+    const height = document.getElementById('graph-container').clientHeight;
+
+    svg = d3.select("#graph-container").append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .call(d3.zoom().scaleExtent([0.1, 4]).on("zoom", (event) => {
+            g.attr("transform", event.transform);
+        }));
+
+    g = svg.append("g");
+    linkGroup = g.append("g").attr("class", "links");
+    nodeGroup = g.append("g").attr("class", "nodes");
+
+    simulation = d3.forceSimulation()
+        .force("link", d3.forceLink().id(d => d.id).distance(120))
+        .force("charge", d3.forceManyBody().strength(-400))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collide", d3.forceCollide().radius(40));
+}
+
+function updateGraph(newData) {
+    const validNodeIds = new Set(newData.nodes.map(n => n.id));
+    newData.links = newData.links.filter(l => {
+        const sourceId = l.source.id || l.source;
+        const targetId = l.target.id || l.target;
+        return validNodeIds.has(sourceId) && validNodeIds.has(targetId);
+    });
+
+    const topologyChanged = (newData.nodes.length !== currentData.nodes.length) ||
+        (newData.links.length !== currentData.links.length);
+
+    const oldNodeMap = new Map(currentData.nodes.map(n => [n.id, n]));
+    const mergedNodes = newData.nodes.map(n => {
+        return oldNodeMap.has(n.id) ? Object.assign(oldNodeMap.get(n.id), n) : n;
+    });
+
+    currentData.nodes = mergedNodes;
+    currentData.links = newData.links;
+
+    const links = linkGroup.selectAll("line")
+        .data(currentData.links, d => `${d.source.id || d.source}-${d.target.id || d.target}-${d.type}`);
+
+    const linksEnter = links.enter().append("line")
+        .attr("stroke", d => {
+            if (d.type === 'uses_tool') return "#cc3333";
+            if (d.type === 'goal_anchor') return "#f99f1b"; // Gold tether
+            return "#999";
+        })
+        .attr("stroke-width", d => d.type === 'sequence' ? 4 : 2)
+        // Make the tether highly transparent
+        .attr("stroke-opacity", d => d.type === 'goal_anchor' ? 0.2 : 0.6)
+        // Make the tether dotted
+        .attr("stroke-dasharray", d => (d.type === 'created_in' || d.type === 'goal_anchor') ? "5,5" : "none");
+
+    links.exit().remove();
+    const allLinks = linksEnter.merge(links);
+
+    const nodes = nodeGroup.selectAll("g")
+        .data(currentData.nodes, d => d.id);
+
+    const nodesEnter = nodes.enter().append("g")
+        .call(drag(simulation))
+        .on("click", (event, d) => {
+            selectedNodeId = d.id;
+            selectedNodeHash = null;
+            nodeGroup.selectAll("g").classed("selected", false);
+            d3.select(event.currentTarget).classed("selected", true);
+            showDetails(d);
+        });
+
+    nodesEnter.each(function (d) {
+        const el = d3.select(this);
+
+        // 1. SHAPE & COLOR
+        if (d.type === 'turn') {
+            // Node circles are initialized with a base size 18, and updated later.
+            el.append("circle").attr("r", 18).attr("fill", "#f99f1b"); // LCARS Orange
+        } else if (d.type === 'tool') {
+            el.append("rect").attr("width", 24).attr("height", 24).attr("x", -12).attr("y", -12).attr("fill", "#cc3333").attr("rx", 6); // Red Square
+        } else if (d.type === 'goal') {
+            // New Shape: Larger LCARS Blue Diamond for Strategic Goals
+            el.append("polygon").attr("points", "0,-22 22,0 0,22 -22,0").attr("fill", "#38bdf8");
+        } else {
+            // Engrams: Standard Purple Diamond
+            el.append("polygon").attr("points", "0,-15 15,0 0,15 -15,0").attr("fill", "#cc99cc");
+        }
+
+        // 2. TEXT LABEL
+        el.append("text")
+            .attr("dy", 32)
+            .attr("text-anchor", "middle")
+            .text(d => {
+                if (d.type === 'turn') return `T${d.turn_number}`;
+                if (d.type === 'tool') return d.label;
+                if (d.type === 'goal') return `G${d.id.split('-')[1].substring(0, 4)}`; // G-Prefix for Goal
+                return `M${d.id.split('-')[1].substring(0, 4)}`; // M-Prefix for Memory/Engram
+            })
+            .attr("fill", "#99ccff")
+            .style("font-size", "11px")
+            .style("font-weight", "bold");
+    });
+
+    nodes.exit().remove();
+    const allNodes = nodesEnter.merge(nodes);
+
+    // Helper to parse Django duration string (e.g. "00:00:23.456" or "1.23s") to total seconds
+    function parseDurationToSeconds(str) {
+        if (!str) return 0;
+        let sStr = String(str).replace('s', '').trim();
+        if (sStr.includes(':')) {
+            let parts = sStr.split(':');
+            let h = 0, m = 0, s = 0;
+            if (parts.length === 3) {
+                // Check if days are prepended like "1 00:00:00"
+                let days = 0;
+                if (parts[0].includes(' ')) {
+                    let dParts = parts[0].split(' ');
+                    days = parseFloat(dParts[0]) || 0;
+                    h = parseFloat(dParts[1]) || 0;
+                } else {
+                    h = parseFloat(parts[0]) || 0;
+                }
+                m = parseFloat(parts[1]) || 0;
+                s = parseFloat(parts[2]) || 0;
+                return (days * 86400) + (h * 3600) + (m * 60) + s;
+            } else if (parts.length === 2) {
+                m = parseFloat(parts[0]) || 0;
+                s = parseFloat(parts[1]) || 0;
+                return (m * 60) + s;
+            }
+        }
+        return parseFloat(sStr) || 0;
+    }
+
+    // Apply Dynamic Scales to All Turn Nodes (New and Existing)
+    let avgDelta = 1.0;
+    let validTurns = currentData.nodes.filter(n => n.type === 'turn' && n.delta);
+    if (validTurns.length > 0) {
+        let totalSeconds = validTurns.reduce((sum, n) => sum + parseDurationToSeconds(n.delta), 0);
+        avgDelta = totalSeconds / validTurns.length;
+    }
+
+    allNodes.filter(d => d.type === 'turn').select("circle").attr("r", d => {
+        let baseRadius = 18;
+        if (d.delta && avgDelta > 0) {
+            let seconds = parseDurationToSeconds(d.delta);
+            if (seconds > 0) {
+                // Scale between 0.3x and 3.0x of base radius linearly to make it much more pronounced
+                let ratio = seconds / avgDelta;
+                ratio = Math.max(0.3, Math.min(ratio, 3.0));
+                baseRadius = 18 * ratio;
+            }
+        }
+        return baseRadius;
+    });
+
+    const activeStates = ['Active', 'Pending', 'Running'];
+    allNodes.classed("active-node", d => d.type === 'turn' && activeStates.includes(d.status));
+
+    simulation.nodes(currentData.nodes);
+    simulation.force("link").links(currentData.links);
+
+    if (topologyChanged) {
+        simulation.alpha(0.3).restart();
+    }
+
+    simulation.on("tick", () => {
+        allLinks
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+        allNodes.attr("transform", d => `translate(${d.x},${d.y})`);
+    });
+}
+
+function showDetails(d) {
+    const titleEl = document.getElementById('details-title');
+    const terminalEl = document.getElementById('details-terminal');
+    const scrollContainer = document.getElementById('details-panel');
+    const prevScrollTop = scrollContainer.scrollTop;
+
+    if (liveTimerInterval) {
+        clearInterval(liveTimerInterval);
+        liveTimerInterval = null;
+    }
+
+    const dbId = d.id.split('-').slice(1).join('-');
+    let adminUrl = '#';
+
+    if (d.type === 'turn') adminUrl = `/admin/talos_reasoning/reasoningturn/${dbId}/change/`;
+    else if (d.type === 'goal') adminUrl = `/admin/talos_reasoning/reasoninggoal/${dbId}/change/`;
+    else if (d.type === 'session') adminUrl = `/admin/talos_reasoning/reasoningsession/${dbId}/change/`;
+    else if (d.type === 'engram') adminUrl = `/admin/talos_hippocampus/talosengram/${dbId}/change/`;
+    else if (d.type === 'tool') {
+        const toolName = d.id.split('-')[2];
+        adminUrl = `/admin/talos_parietal/tooldefinition/?q=${toolName}`;
+    }
+
+    // Clear previous
+    terminalEl.innerHTML = '';
+
+    if (d.type === 'turn') {
+        titleEl.textContent = `Turn ${d.turn_number} Execution Log`;
+
+        const activeStates = ['Active', 'Pending', 'Running', 'Thinking'];
+        const isLive = activeStates.includes(d.status);
+
+        let tps = "0.0";
+        if (d.inference_time && d.tokens_output) {
+            // Helper parsing for robust conversion of Django duration
+            let str = String(d.inference_time).replace('s', '').trim();
+            let seconds = parseFloat(str);
+            if (str.includes(':')) {
+                let parts = str.split(':');
+                if (parts.length === 3) {
+                    seconds = (parseFloat(parts[0] || 0) * 3600) + (parseFloat(parts[1] || 0) * 60) + parseFloat(parts[2] || 0);
+                } else if (parts.length === 2) {
+                    seconds = (parseFloat(parts[0] || 0) * 60) + parseFloat(parts[1] || 0);
+                }
+            }
+            if (seconds > 0) tps = (d.tokens_output / seconds).toFixed(1);
+        }
+
+        let statusColor = d.status === 'Error' ? 'term-fizzle' : (d.status === 'Completed' ? 'term-success' : 'term-thought');
+        terminalEl.innerHTML += `<div class="${statusColor}">Status: ${d.status}</div>`;
+        terminalEl.innerHTML += `<div class="term-result">Turn Duration: <span id="node-duration" style="color:#99ccff;">${isLive ? '⏱ Calculating...' : (d.delta || '0s')}</span></div>`;
+        terminalEl.innerHTML += `<div class="term-result">Cognitive Load: <span style="color:#cc99cc;">[ IN: ${d.tokens_input || 0} ] -> [ OUT: ${d.tokens_output || 0} ]</span></div>`;
+        terminalEl.innerHTML += `<div class="term-result">Inference Speed: <span style="color:#4ade80;">${d.inference_time || '0s'} (${tps} tokens/sec)</span></div>`;
+
+        if (d.request_payload) {
+            terminalEl.innerHTML += `
+                <div class="term-result">
+                    <details>
+                        <summary style="cursor:pointer; color:#f99f1b;">[ View Request Payload ]</summary>
+                        <div class="code-block" style="margin-top:5px; padding:5px;">
+                            ${renderJsonTree(d.request_payload)}
+                        </div>
+                    </details>
+                </div>
+            `;
+        }
+
+        // 1. Render the Thought
+        if (d.thought_process) {
+            let thought = d.thought_process.replace(/^(THOUGHT:\s*)+/i, '').trim();
+            terminalEl.innerHTML += `<div class="term-thought" style="margin-top: 15px;">" ${thought} "</div>`;
+        } else {
+            terminalEl.innerHTML += `<div class="term-thought" style="margin-top: 15px;">" Executing without monologue... "</div>`;
+        }
+
+        // 2. Render the Spells (Tool Calls)
+        const calls = currentData.links.filter(l => (l.source.id || l.source) === d.id && l.type === 'uses_tool');
+        if (calls && calls.length > 0) {
+            calls.forEach(call => {
+                let args = call.arguments || {};
+                let argStr = "";
+                try {
+                    let parsedArgs = typeof args === 'string' ? JSON.parse(args) : args;
+                    argStr = Object.entries(parsedArgs).map(([k, v]) => `${k}=${JSON.stringify(v)}`).join(', ');
+                } catch (e) { argStr = String(args); }
+
+                let targetId = call.target.id || call.target;
+                let toolNode = currentData.nodes.find(n => n.id === targetId);
+                let toolName = toolNode ? toolNode.label : "unknown_spell";
+
+                terminalEl.innerHTML += `<div class="term-spell">> CAST: ${toolName}(${argStr})</div>`;
+
+                let resultClass = 'term-result';
+                let resultText = call.result || call.traceback || "No result.";
+
+                if (resultText && resultText.toString().includes("FIZZLE") || call.traceback) {
+                    resultClass += ' term-fizzle';
+                } else if (resultText && resultText.toString().toLowerCase().includes("success")) {
+                    resultClass += ' term-success';
+                }
+
+                if (resultText && resultText.length > 500) {
+                    resultText = resultText.substring(0, 500) + '... [TRUNCATED FOR UI]';
+                }
+
+                terminalEl.innerHTML += `<div class="${resultClass}">${resultText}</div>`;
+            });
+        } else {
+            terminalEl.innerHTML += `<div class="term-result">No spells cast this turn. Sleep initiated.</div>`;
+        }
+
+        if (isLive && d.created) {
+            const startTime = new Date(d.created).getTime();
+            liveTimerInterval = setInterval(() => {
+                const clockEl = document.getElementById('node-duration');
+                if (clockEl) {
+                    const diffMs = Date.now() - startTime;
+                    clockEl.textContent = `⏱ ${(diffMs / 1000).toFixed(1)}s`;
+                } else {
+                    clearInterval(liveTimerInterval);
+                }
+            }, 100);
+        }
+    } else if (d.type === 'goal') {
+        titleEl.textContent = `Goal ${d.id.split('-')[1]}`;
+        terminalEl.innerHTML += `<div class="term-spell">> OBJECTIVE:</div>`;
+        terminalEl.innerHTML += `<div class="term-thought">"${d.rendered_goal || 'No goal text provided.'}"</div>`;
+        terminalEl.innerHTML += `<div class="term-result">Status: ${d.status}</div>`;
+    } else if (d.type === 'engram') {
+        titleEl.textContent = `Engram ${d.id.split('-')[1]}`;
+        terminalEl.innerHTML += `<div class="term-spell">> MEMORY RECALLED:: ${d.name || 'Unnamed Hash'}</div>`;
+        terminalEl.innerHTML += `<div class="term-thought">"${d.description}"</div>`;
+        terminalEl.innerHTML += `<div class="term-result">Relevance: ${d.relevance}</div>`;
+    } else if (d.type === 'tool') {
+        titleEl.textContent = `Spell: ${d.label}`;
+        terminalEl.innerHTML += `<div class="term-spell">> INSPECTING SPELL CALL</div>`;
+        const calls = currentData.links.filter(l => (l.target.id || l.target) === d.id && l.type === 'uses_tool');
+        calls.forEach((call) => {
+            let resultText = call.result || call.traceback || "Pending...";
+            let argsText = call.arguments ? (typeof call.arguments === 'object' ? JSON.stringify(call.arguments) : call.arguments) : '{}';
+            terminalEl.innerHTML += `<div class="term-result">Arguments: ${argsText}</div>`;
+            terminalEl.innerHTML += `<div class="term-result ${call.traceback ? 'term-fizzle' : 'term-success'}">Result: ${resultText}</div>`;
+        });
+    } else {
+        titleEl.textContent = d.type ? d.type.toUpperCase() + ": " + (d.label || d.id) : 'Node Details';
+        terminalEl.innerHTML = `<div class="term-result">Select a Turn node to view the action log.</div>`;
+    }
+
+    terminalEl.innerHTML += `<br><div class="term-result"><a href="${adminUrl}" target="_blank" style="color: #f99f1b; text-decoration: none;">[ OPEN IN ADMIN ↗ ]</a></div>`;
+
+    scrollContainer.scrollTop = prevScrollTop;
+}
+
+document.getElementById('btn-expand').addEventListener('click', () => {
+    const panel = document.getElementById('details-panel');
+    panel.classList.toggle('expanded');
+    document.getElementById('btn-expand').textContent = panel.classList.contains('expanded') ? 'COLLAPSE' : 'EXPAND';
+});
+
+function drag(simulation) {
+    function dragstarted(event) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        event.subject.fx = event.subject.x;
+        event.subject.fy = event.subject.y;
+    }
+
+    function dragged(event) {
+        event.subject.fx = event.x;
+        event.subject.fy = event.y;
+    }
+
+    function dragended(event) {
+        if (!event.active) simulation.alphaTarget(0);
+        event.subject.fx = null;
+        event.subject.fy = null;
+    }
+
+    return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+}
+
+function renderJsonTree(data) {
+    if (typeof data === 'string') {
+        try {
+            data = JSON.parse(data);
+        } catch (e) {
+            return `<div class="json-value string">${data}</div>`;
+        }
+    }
+
+    if (data === null) return '<span class="json-value null">null</span>';
+    if (typeof data !== 'object') return `<span class="json-value ${typeof data}">${data}</span>`;
+
+    const isArray = Array.isArray(data);
+    const isEmpty = isArray ? data.length === 0 : Object.keys(data).length === 0;
+
+    if (isEmpty) return `<span class="json-value string">${isArray ? '[]' : '{}'}</span>`;
+
+    // ALL HTML MUST BE ON ONE LINE to prevent pre-wrap from rendering tabs/newlines
+    let html = `<details open class="json-node" style="margin:0;"><summary class="json-summary" style="margin:0;">${isArray ? 'Array [' + data.length + ']' : 'Object'}</summary><div class="json-children">`;
+
+    for (const key in data) {
+        html += `<div class="json-row"><span class="json-key">"${key}":</span><div style="flex: 1;">${renderJsonTree(data[key])}</div></div>`;
+    }
+
+    html += `</div></details>`;
+    return html;
+}
+
+// --- CSRF Helper ---
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// --- Reboot Cortex Logic ---
+document.addEventListener('DOMContentLoaded', () => {
+    const rebootBtn = document.getElementById('btn-reboot');
+    if (rebootBtn) {
+        rebootBtn.addEventListener('click', () => {
+            if (confirm("WARNING: Rebooting the Cortex will re-cast the original spell and begin a completely new memory session. Proceed?")) {
+
+                rebootBtn.style.opacity = '0.5';
+                rebootBtn.textContent = 'REBOOTING...';
+
+                fetch(`/api/v1/reasoning_sessions/${sessionId}/rerun/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.spawn_id) {
+                            // Redirect to the Hydra Monitor to watch the new process spin up
+                            window.location.href = `/hydra/graph/spawn/${data.spawn_id}/?full=True`;
+                        } else {
+                            alert("Reboot triggered, but failed to find Spawn ID.");
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        rebootBtn.style.opacity = '1';
+                        rebootBtn.textContent = 'REBOOT CORTEX';
+                    });
+            }
+        });
+    }
+});
+
+const haltBtn = document.getElementById('btn-halt');
+if (haltBtn) {
+    haltBtn.addEventListener('click', () => {
+        haltBtn.style.opacity = '0.5';
+        haltBtn.textContent = 'HALTING...';
+
+        fetch(`/api/v1/reasoning_sessions/${sessionId}/stop/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(() => alert("Halt signal sent. The AI will stop after finishing its current thought."))
+            .catch(err => console.error(err));
+    });
+}
+
+function updateTalosHUD(sessionData, latestTurnData) {
+    if (!sessionData) return;
+
+    document.getElementById('hud-level').textContent = sessionData.current_level || 1;
+    document.getElementById('hud-xp').textContent = sessionData.total_xp || 0;
+    document.getElementById('hud-focus').textContent = `${sessionData.current_focus || 0} / ${sessionData.max_focus || 10}`;
+
+    if (latestTurnData) {
+        document.getElementById('hud-turn').textContent = latestTurnData.turn_number;
+
+        // Clean up the thought text to remove the "THOUGHT:" prefix if it exists
+        let thoughtText = "No thought registered.";
+        if (latestTurnData.thought_process && latestTurnData.thought_process.trim() !== "") {
+            thoughtText = latestTurnData.thought_process;
+        } else if (latestTurnData.request_payload) {
+            try {
+                let parsedReq = typeof latestTurnData.request_payload === 'string' ? JSON.parse(latestTurnData.request_payload) : latestTurnData.request_payload;
+                if (parsedReq && parsedReq.thought_process) {
+                    thoughtText = parsedReq.thought_process;
+                }
+            } catch (e) { }
+        }
+
+        thoughtText = thoughtText.replace(/^(THOUGHT:\s*)+/i, '').trim();
+        document.getElementById('hud-thought').textContent = `"${thoughtText}"`;
+    }
+}
+

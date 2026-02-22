@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'djangorestframework_mcp',
     'rest_framework',
     'django_filters',
+    'talos_hippocampus.apps.TalosHippocampusConfig',
 ]
 
 MIDDLEWARE = [

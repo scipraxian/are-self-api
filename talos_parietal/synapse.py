@@ -3,15 +3,20 @@ from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional
 
 import requests
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
 
 class OllamaConstants:
-    """Centralized string literals for the Ollama Synapse."""
+    """Centralized string literals and configuration for the Ollama Synapse."""
 
-    BASE_URL = 'http://localhost:11434/api/chat'
-    TIMEOUT_SECONDS = 300
+    # TODO: Get this from environments.models.Environment
+    BASE_URL = getattr(settings, 'OLLAMA_URL', 'http://localhost:11434').rstrip(
+        '/'
+    )
+    CHAT_URL = f'{BASE_URL}/api/chat'
+    TIMEOUT_SECONDS = 600
 
     # Payload Keys
     KEY_MODEL = 'model'
@@ -52,8 +57,7 @@ class ChatMessage:
     name: Optional[str] = None  # Used exclusively when role='tool'
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serializes to dict, stripping None values to satisfy strict JSON
-        parsers."""
+        """Serializes to dict, stripping None values to satisfy strict JSON parsers."""
         return {k: v for k, v in asdict(self).items() if v is not None}
 
 
@@ -80,9 +84,8 @@ class OllamaClient:
         tools: Optional[List[Dict[str, Any]]] = None,
         options: Optional[Dict[str, Any]] = None,
     ) -> OllamaResponse:
-        """
-        Transmits message history to the model, optionally with tool schemas.
-        """
+        """Transmits message history to the model, optionally with tool schemas."""
+
         payload_obj = OllamaChatPayload(
             model=self.model,
             messages=messages,
@@ -90,8 +93,7 @@ class OllamaClient:
             tools=tools,
         )
 
-        # Serialize to dict and strip None values to satisfy Ollama strict
-        # JSON parsing
+        # Strip None values
         payload_dict = {
             k: v for k, v in asdict(payload_obj).items() if v is not None
         }
@@ -102,7 +104,7 @@ class OllamaClient:
 
         try:
             response = requests.post(
-                OllamaConstants.BASE_URL,
+                OllamaConstants.CHAT_URL,
                 json=payload_dict,
                 timeout=OllamaConstants.TIMEOUT_SECONDS,
             )
@@ -124,6 +126,8 @@ class OllamaClient:
             if hasattr(e, 'response') and e.response is not None:
                 error_details += f' | Details: {e.response.text}'
             logger.error(f'Ollama Synapse Misfire: {error_details}')
+
+            # Return a safe fallback response so the loop doesn't explode
             return OllamaResponse(
                 content=f'{OllamaConstants.ERR_MSG_PREFIX} {error_details}',
                 tool_calls=[],
@@ -136,12 +140,9 @@ class OllamaClient:
         """Forces Ollama to immediately unload the model from VRAM."""
         try:
             payload = {'model': self.model, 'keep_alive': 0}
-            response = requests.post(
-                f'{OllamaConstants.BASE_URL}/api/chat', json=payload
-            )
-            response.raise_for_status()
+            requests.post(OllamaConstants.CHAT_URL, json=payload, timeout=2)
             logger.info(f'[Synapse] Successfully unloaded model {self.model}')
             return True
         except requests.RequestException as e:
-            logger.warning(f'[Synapse] Failed to unload model: {e}')
+            logger.warning(f'[Synapse] Unload warning (non-fatal): {e}')
             return False

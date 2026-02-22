@@ -3,43 +3,49 @@ from django.apps import apps
 
 
 @sync_to_async
-def _read_field_sync(app_label: str, model_name: str, record_id: str,
-                     field_name: str, start_line: int, max_lines: int) -> str:
+def _read_field_sync(
+    app_label: str, model_name: str, record_id: str, field_name: str, page: int
+) -> str:
     try:
         model_class = apps.get_model(app_label, model_name)
-    except LookupError:
-        return f"Error: Model '{app_label}.{model_name}' not found."
-
-    try:
         record = model_class.objects.get(pk=record_id)
-    except model_class.DoesNotExist:
-        return f"Error: Record {record_id} not found in {model_name}."
+    except Exception as e:
+        return f'Database Error: {str(e)}'
 
     val = getattr(record, field_name, None)
-    if val is None:
+    if not val:
         return f"Field '{field_name}' is empty or null."
 
-    text_val = str(val)
-    lines = text_val.split('\n')
+    page_size = 350  # HARD CAP
+    lines = str(val).split('\n')
     total_lines = len(lines)
+    total_pages = max(1, (total_lines + page_size - 1) // page_size)
 
-    start_idx = max(0, start_line - 1)
-    end_idx = start_idx + max_lines
+    safe_page = max(1, min(int(page), total_pages))
+    start_idx = (safe_page - 1) * page_size
+    end_idx = start_idx + page_size
+
     chunk = lines[start_idx:end_idx]
+    content = ''.join(
+        [f'{i + 1}: {line}\n' for i, line in enumerate(chunk, start=start_idx)]
+    )
 
-    content = "".join(
-        [f"{i + 1}: {line}\n" for i, line in enumerate(chunk, start=start_idx)])
-    if end_idx < total_lines:
-        content += (f"... [Displaying lines {start_idx + 1}-"
-                    f"{min(end_idx, total_lines)} of {total_lines}. Use"
-                    f" start_line={end_idx + 1} to read more.]")
+    if safe_page < total_pages:
+        content += f'\n... [PAGE {safe_page} of {total_pages}. Request page={safe_page + 1} to read more.]'
+    else:
+        content += f'\n... [END OF RECORD (Page {safe_page}/{total_pages})]'
 
     return content
 
 
-async def mcp_read_record_field(app_label: str, model_name: str, record_id: str,
-                                field_name: str, start_line: int = 1,
-                                max_lines: int = 50) -> str:
-    """MCP Tool: Reads a specific text field from the database in chunks."""
-    return await _read_field_sync(app_label, model_name, record_id, field_name,
-                                  start_line, max_lines)
+async def mcp_read_record_field(
+    app_label: str,
+    model_name: str,
+    record_id: str,
+    field_name: str,
+    page: int = 1,
+) -> str:
+    """MCP Tool: Reads a specific database text field via pagination."""
+    return await _read_field_sync(
+        app_label, model_name, record_id, field_name, page
+    )

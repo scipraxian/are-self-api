@@ -47,8 +47,8 @@ class GraphEditor {
         this.isDraggingNode = null;
         this.activeWire = null;
 
-        this.dragOffset = { x: 0, y: 0 };
-        this.lastMousePos = { x: 0, y: 0 };
+        this.dragOffset = {x: 0, y: 0};
+        this.lastMousePos = {x: 0, y: 0};
 
         // Execution State
         this.executionState = 'ready'; // ready, running, error, finished
@@ -87,7 +87,7 @@ class GraphEditor {
     async updateBookName(name) {
         const result = await this.apiFetch('update_book', {
             method: 'POST',
-            body: JSON.stringify({ name: name })
+            body: JSON.stringify({name: name})
         });
         if (result && result.status === 'updated') {
             document.title = `${result.name} | Talos Graph Editor`;
@@ -106,7 +106,7 @@ class GraphEditor {
         try {
             const response = await fetch(url, {
                 ...options,
-                headers: { ...defaultHeaders, ...options.headers }
+                headers: {...defaultHeaders, ...options.headers}
             });
 
             if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
@@ -297,7 +297,7 @@ class GraphEditor {
             this.panY -= mouseY * (newZoom / this.zoom - 1);
             this.zoom = newZoom;
             this.updateCanvasTransform();
-        }, { passive: false });
+        }, {passive: false});
 
         window.addEventListener('mousemove', (e) => {
             const dx = e.clientX - this.lastMousePos.x;
@@ -323,7 +323,7 @@ class GraphEditor {
                 this.updateTempWire(e.clientX, e.clientY);
             }
 
-            this.lastMousePos = { x: e.clientX, y: e.clientY };
+            this.lastMousePos = {x: e.clientX, y: e.clientY};
         });
 
         window.addEventListener('mouseup', async (e) => {
@@ -395,7 +395,7 @@ class GraphEditor {
                     if (confirm("WARNING: Force Stop this Operation?")) {
                         fetch(window.djangoContext.terminateUrl, {
                             method: 'POST',
-                            headers: { 'X-CSRFToken': this.csrfToken }
+                            headers: {'X-CSRFToken': this.csrfToken}
                         }).then(() => {
                             window.location.reload();
                         });
@@ -596,7 +596,7 @@ class GraphEditor {
             nodeEl.style.zIndex = 1000;
             this.nodesLayer.appendChild(nodeEl);
             this.isDraggingNode = node;
-            this.lastMousePos = { x: e.clientX, y: e.clientY };
+            this.lastMousePos = {x: e.clientX, y: e.clientY};
 
             const rect = nodeEl.getBoundingClientRect();
             this.dragOffset = {
@@ -696,7 +696,7 @@ class GraphEditor {
         if (!localOnly && !targetId.startsWith('temp_')) {
             await this.apiFetch('delete_node', {
                 method: 'POST',
-                body: JSON.stringify({ node_id: targetId })
+                body: JSON.stringify({node_id: targetId})
             });
         }
     }
@@ -889,7 +889,7 @@ class GraphEditor {
         this.setExecutionStatus('running', 'Spawning Process...');
         const result = await this.apiFetch('launch/', {
             method: 'POST',
-            body: JSON.stringify({ book_id: this.bookId })
+            body: JSON.stringify({book_id: this.bookId})
         });
         if (result && result.status === 'started') {
             // this.setExecutionStatus('running', 'Process Active');
@@ -915,15 +915,15 @@ class GraphEditor {
         const startNode = this.nodes.find(n => n.isRoot) || this.nodes[0];
         const levels = new Map();
         const visited = new Set();
-        const queue = [{ id: startNode.id, level: 0 }];
+        const queue = [{id: startNode.id, level: 0}];
 
         while (queue.length > 0) {
-            const { id, level } = queue.shift();
+            const {id, level} = queue.shift();
             if (visited.has(id)) continue;
             visited.add(id);
             levels.set(id, Math.max(levels.get(id) || 0, level));
             const children = this.connections.filter(c => c.fromNode === id).map(c => c.toNode);
-            children.forEach(childId => queue.push({ id: childId, level: level + 1 }));
+            children.forEach(childId => queue.push({id: childId, level: level + 1}));
         }
 
         this.nodes.forEach(node => {
@@ -951,7 +951,7 @@ class GraphEditor {
                     if (!this.isMonitorMode) {
                         this.apiFetch('move_node', {
                             method: 'POST',
-                            body: JSON.stringify({ node_id: node.id, x: node.x, y: node.y })
+                            body: JSON.stringify({node_id: node.id, x: node.x, y: node.y})
                         });
                     }
                 }
@@ -1342,6 +1342,11 @@ class GraphEditor {
                 <a href="/hydra/head/${data.id}/" target="_blank" class="action-btn primary" style="text-decoration: none; flex: 1; justify-content: center;">
                     🚀 War Room
                 </a>
+                ${data.reasoning_session_id ? `
+                <a href="/reasoning/lcars/${data.reasoning_session_id}/" target="_blank" class="action-btn" style="text-decoration: none; flex: 1; justify-content: center; background: linear-gradient(135deg, #f99f1b 0%, #d97706 100%); border-color: #f99f1b; color: #020617; font-weight: 800; box-shadow: 0 2px 5px rgba(249, 159, 27, 0.3);">
+                    🧠 Cortex
+                </a>
+                ` : ''}
             </div>
         </div>
 
@@ -1404,7 +1409,9 @@ class GraphEditor {
 
         try {
             fitAddon.fit();
-        } catch (e) { console.warn("Xterm fit failed", e); }
+        } catch (e) {
+            console.warn("Xterm fit failed", e);
+        }
 
         term.write(content || '\x1b[38;5;240m[No Output]\x1b[0m');
 
@@ -1430,7 +1437,7 @@ class GraphEditor {
             method: 'POST',
             body: JSON.stringify({
                 node_id: nodeId,
-                updates: [{ key: key, value: value }]
+                updates: [{key: key, value: value}]
             })
         });
 

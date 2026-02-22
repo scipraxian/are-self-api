@@ -6,8 +6,13 @@ from django.db.models import Q
 
 
 @sync_to_async
-def _query_model_sync(app_label: str, model_name: str, filters: dict = None,
-                      q_string: str = None, action: str = "list") -> str:
+def _query_model_sync(
+    app_label: str,
+    model_name: str,
+    filters: dict = None,
+    q_string: str = None,
+    page: int = 1,
+) -> str:
     try:
         model_class = apps.get_model(app_label, model_name)
     except LookupError:
@@ -15,53 +20,76 @@ def _query_model_sync(app_label: str, model_name: str, filters: dict = None,
 
     qs = model_class.objects.all()
 
-    # Apply standard kwargs filters if provided
     if filters:
         try:
             qs = qs.filter(**filters)
         except Exception as e:
-            return f"Error applying filters: {str(e)}"
+            return f'Error applying filters: {str(e)}'
 
-    # Apply advanced Q() object string if provided
     if q_string:
         try:
-            # Safely evaluate the string using a restricted environment
-            # containing ONLY 'Q'
-            q_obj = eval(q_string, {"__builtins__": {}}, {"Q": Q})
-            if not isinstance(q_obj, Q):
-                return "Error: q_string must evaluate to a Django Q object."
+            q_obj = eval(q_string, {'__builtins__': {}}, {'Q': Q})
             qs = qs.filter(q_obj)
         except Exception as e:
-            return f"Error evaluating q_string '{q_string}': {str(e)}"
+            return f'Error evaluating q_string: {str(e)}'
 
-    # Handle the requested action
-    if action == "count":
-        try:
-            return json.dumps({"count": qs.count()}, indent=2)
-        except Exception as e:
-            return f"Error performing count: {str(e)}"
+    # --- STRICT PAGINATION ---
+    page_size = 5  # HARD CAP FOR DB ROWS TO PROTECT CONTEXT
+    total_records = qs.count()
+    total_pages = max(1, (total_records + page_size - 1) // page_size)
 
-    # Default action: return a list of records
+    safe_page = max(1, min(int(page), total_pages))
+    start_idx = (safe_page - 1) * page_size
+    end_idx = start_idx + page_size
+
     try:
-        qs = qs[:50]  # Hard limit to prevent memory explosions
+        qs_page = qs[start_idx:end_idx]
         results = []
-        for obj in qs:
-            item = {"id": str(obj.pk), "display": str(obj)}
-            if hasattr(obj, 'name'): item['name'] = obj.name
-            if hasattr(obj, 'status'): item['status'] = str(obj.status)
+        for obj in qs_page:
+            # 1. Base identity
+            item = {'_model': f'{app_label}.{model_name}', 'id': str(obj.pk)}
+
+            # 2. Extract all native fields safely
+            for field in obj._meta.get_fields():
+                if field.is_relation:
+                    continue  # Skip relational dumps to prevent recursive explosions
+
+                val = getattr(obj, field.name, None)
+                if val is None:
+                    item[field.name] = None
+                    continue
+
+                str_val = str(val)
+
+                # 3. Truncate heavy text fields (protects the AI from gorging)
+                if len(str_val) > 200:
+                    item[field.name] = (
+                        str_val[:200]
+                        + '... [TRUNCATED: Use mcp_read_record_field to read full content]'
+                    )
+                else:
+                    item[field.name] = str_val
+
             results.append(item)
 
-        return json.dumps({"count_returned": len(results), "records": results},
-                          indent=2)
+        output = {
+            'meta': f'Page {safe_page} of {total_pages} (Total Records: {total_records})',
+            'records': results,
+        }
+        return json.dumps(output, indent=2)
     except Exception as e:
-        return f"Error executing query: {str(e)}"
+        return f'Error executing query: {str(e)}'
 
 
-async def mcp_query_model(app_label: str, model_name: str, filters: dict = None,
-                          q_string: str = None, action: str = "list") -> str:
-    """MCP Tool: Queries a database model using kwargs or complex Q()
-    objects."""
-    # Ensure at least an empty dict if None is passed by the LLM
+async def mcp_query_model(
+    app_label: str,
+    model_name: str,
+    filters: dict = None,
+    q_string: str = None,
+    page: int = 1,
+) -> str:
+    """MCP Tool: Queries database via pagination. Auto-truncates massive fields."""
     filters = filters or {}
-    return await _query_model_sync(app_label, model_name, filters, q_string,
-                                   action)
+    return await _query_model_sync(
+        app_label, model_name, filters, q_string, page
+    )
