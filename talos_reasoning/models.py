@@ -161,7 +161,7 @@ class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
         return last_output_len <= target_capacity
 
     def apply_efficiency_bonus(self) -> (bool, str):
-        was_efficient = self.was_efficient_last_turn()
+        was_efficient = self.was_efficient_last_turn
         focus = 1 * self.session.current_level
         xp = 5 * self.session.current_level
         if was_efficient:

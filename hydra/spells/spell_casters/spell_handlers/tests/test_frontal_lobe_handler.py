@@ -40,37 +40,32 @@ class FrontalLobeHandlerTest(TransactionTestCase):
         # Base Data
         self.book = HydraSpellbook.objects.create(name='Test Protocol')
         self.spawn = HydraSpawn.objects.create(
-            spellbook=self.book, status_id=HydraSpawnStatus.RUNNING
-        )
-        self.head = HydraHead.objects.create(
-            spawn=self.spawn, status_id=HydraHeadStatus.RUNNING, blackboard={}
-        )
+            spellbook=self.book, status_id=HydraSpawnStatus.RUNNING)
+        self.head = HydraHead.objects.create(spawn=self.spawn,
+                                             status_id=HydraHeadStatus.RUNNING,
+                                             blackboard={})
 
         # FIX 2: Setup an MCP Tool with the strict 'mcp_' nomenclature
         self.tool_def, _ = ToolDefinition.objects.get_or_create(
-            name='mcp_update_blackboard',
-        )
+            name='mcp_update_blackboard',)
 
         t_str, _ = ToolParameterType.objects.get_or_create(name='string')
         p_head_id, _ = ToolParameter.objects.get_or_create(
-            name='head_id', defaults={'type': t_str}
-        )
-        p_key, _ = ToolParameter.objects.get_or_create(
-            name='key', defaults={'type': t_str}
-        )
-        p_val, _ = ToolParameter.objects.get_or_create(
-            name='value', defaults={'type': t_str}
-        )
+            name='head_id', defaults={'type': t_str})
+        p_key, _ = ToolParameter.objects.get_or_create(name='key',
+                                                       defaults={'type': t_str})
+        p_val, _ = ToolParameter.objects.get_or_create(name='value',
+                                                       defaults={'type': t_str})
 
-        ToolParameterAssignment.objects.get_or_create(
-            tool=self.tool_def, parameter=p_head_id, required=True
-        )
-        ToolParameterAssignment.objects.get_or_create(
-            tool=self.tool_def, parameter=p_key, required=True
-        )
-        ToolParameterAssignment.objects.get_or_create(
-            tool=self.tool_def, parameter=p_val, required=True
-        )
+        ToolParameterAssignment.objects.get_or_create(tool=self.tool_def,
+                                                      parameter=p_head_id,
+                                                      required=True)
+        ToolParameterAssignment.objects.get_or_create(tool=self.tool_def,
+                                                      parameter=p_key,
+                                                      required=True)
+        ToolParameterAssignment.objects.get_or_create(tool=self.tool_def,
+                                                      parameter=p_val,
+                                                      required=True)
 
     @pytest.mark.asyncio
     @patch(
@@ -92,7 +87,7 @@ class FrontalLobeHandlerTest(TransactionTestCase):
         status_code, log = await run_frontal_lobe(self.head.id)
 
         self.assertEqual(status_code, 200)
-        self.assertIn('Objective Complete', log)
+        self.assertIn('Permanent Sleep Initiated.', log)
 
     @pytest.mark.asyncio
     @patch(
@@ -105,18 +100,16 @@ class FrontalLobeHandlerTest(TransactionTestCase):
         # Turn 1: Model requests a tool call (using correct mcp_ name)
         resp_turn_1 = OllamaResponse(
             content='I need to update the blackboard.',
-            tool_calls=[
-                {
-                    FrontalLobeConstants.T_FUNC: {
-                        FrontalLobeConstants.T_NAME: 'mcp_update_blackboard',
-                        FrontalLobeConstants.T_ARGS: {
-                            'head_id': str(self.head.id),
-                            'key': 'test_var',
-                            'value': 'alpha',
-                        },
-                    }
+            tool_calls=[{
+                FrontalLobeConstants.T_FUNC: {
+                    FrontalLobeConstants.T_NAME: 'mcp_update_blackboard',
+                    FrontalLobeConstants.T_ARGS: {
+                        'head_id': str(self.head.id),
+                        'key': 'test_var',
+                        'value': 'alpha',
+                    },
                 }
-            ],
+            }],
             tokens_input=10,
             tokens_output=10,
             model='test_model',
@@ -153,14 +146,12 @@ class FrontalLobeHandlerTest(TransactionTestCase):
 
         endless_resp = OllamaResponse(
             content='Let me try this again...',
-            tool_calls=[
-                {
-                    FrontalLobeConstants.T_FUNC: {
-                        FrontalLobeConstants.T_NAME: 'mcp_hallucinated_tool',
-                        FrontalLobeConstants.T_ARGS: {},
-                    }
+            tool_calls=[{
+                FrontalLobeConstants.T_FUNC: {
+                    FrontalLobeConstants.T_NAME: 'mcp_hallucinated_tool',
+                    FrontalLobeConstants.T_ARGS: {},
                 }
-            ],
+            }],
             tokens_input=10,
             tokens_output=10,
             model='test_model',

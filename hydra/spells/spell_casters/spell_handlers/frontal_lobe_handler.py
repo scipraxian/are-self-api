@@ -263,13 +263,17 @@ class FrontalLobe:
         return {}
 
     async def _record_turn_start(
-        self, turn_index: int, payload_dict: dict
+        self,
+        turn_index: int,
+        payload_dict: dict,
+        previous_turn: Optional[ReasoningTurn] = None,
     ) -> ReasoningTurn:
         turn = await sync_to_async(ReasoningTurn.objects.create)(
             session=self.session,
             turn_number=turn_index + 1,
             request_payload=payload_dict,
             status_id=ReasoningStatusID.ACTIVE,
+            last_turn=previous_turn,
         )
         # Handle the new Many-to-Many relation
         if self.current_goal:
@@ -390,19 +394,25 @@ class FrontalLobe:
         ).to_dict()
 
     async def _execute_turn(
-        self, turn_index: int, ollama_tools: List[Dict[str, Any]]
-    ) -> bool:
+        self,
+        turn_index: int,
+        ollama_tools: List[Dict[str, Any]],
+        previous_turn: Optional[ReasoningTurn] = None,
+    ) -> Tuple[bool, Optional[ReasoningTurn]]:
         await self._log_live(f'\n--- Turn {turn_index + 1} (Awakening) ---')
 
-        # 1. THE REBIRTH: Build the entire context window from scratch
-        messages = await self._build_waking_payload()
-
-        payload_snapshot = {'messages': messages}
+        # 1. Start the turn record
         turn_record = await self._record_turn_start(
-            turn_index, payload_snapshot
+            turn_index, {}, previous_turn
         )
 
-        # 2. Execute
+        # 2. THE REBIRTH: Build the entire context window from scratch
+        messages = await self._build_waking_payload(turn_record)
+
+        turn_record.request_payload = {'messages': messages}
+        await sync_to_async(turn_record.save)(update_fields=['request_payload'])
+
+        # 3. Execute
         start_time = time.time()
         response = await asyncio.to_thread(
             self.client.chat, messages, ollama_tools
@@ -424,13 +434,41 @@ class FrontalLobe:
             await self._log_live(
                 '\nNo further actions requested. Permanent Sleep Initiated.'
             )
-            return False
+            return False, turn_record
 
-        # 3. Fire Tools (Save to DB, DO NOT append to messages)
-        for tool_call_data in response.tool_calls:
+        # 4. Fire Tools (intercept and sort by focus_modifier)
+        tool_names = [
+            tc.get(FrontalLobeConstants.T_FUNC, {}).get(
+                FrontalLobeConstants.T_NAME
+            )
+            for tc in response.tool_calls
+        ]
+        tool_defs = await sync_to_async(
+            lambda: list(
+                ToolDefinition.objects.select_related('use_type').filter(
+                    name__in=tool_names
+                )
+            )
+        )()
+        tool_def_map = {td.name: td for td in tool_defs}
+
+        def get_focus_mod(tc):
+            name = tc.get(FrontalLobeConstants.T_FUNC, {}).get(
+                FrontalLobeConstants.T_NAME
+            )
+            td = tool_def_map.get(name)
+            if td and td.use_type:
+                return td.use_type.focus_modifier
+            return 0
+
+        sorted_tool_calls = sorted(
+            response.tool_calls, key=get_focus_mod, reverse=True
+        )
+
+        for tool_call_data in sorted_tool_calls:
             await self._handle_tool_execution(turn_record, tool_call_data)
 
-        return True
+        return True, turn_record
 
     async def run(self) -> Tuple[int, str]:
         """Main asynchronous execution orchestrator."""
@@ -492,6 +530,7 @@ class FrontalLobe:
             await self._log_live(f'Loaded {len(ollama_tools)} tools.')
 
             # 4. The Loop
+            previous_turn = None
             for turn in range(self.session.max_turns):
                 await sync_to_async(self.head.refresh_from_db)(
                     fields=['status']
@@ -500,7 +539,9 @@ class FrontalLobe:
                     await self._log_live('\n[WARNING] Stop Signal. Halting.')
                     break
 
-                should_continue = await self._execute_turn(turn, ollama_tools)
+                should_continue, previous_turn = await self._execute_turn(
+                    turn, ollama_tools, previous_turn
+                )
 
                 if not should_continue:
                     break
@@ -537,7 +578,9 @@ class FrontalLobe:
 
         return 200, '\n'.join(self.log_output)
 
-    async def _build_waking_payload(self) -> List[Dict[str, Any]]:
+    async def _build_waking_payload(
+        self, turn_record: ReasoningTurn
+    ) -> List[Dict[str, Any]]:
 
         # 1. Active Goals
         goals = await sync_to_async(list)(
@@ -579,18 +622,13 @@ class FrontalLobe:
             thoughts_str = 'No recent internal monologue.'
 
         # 4. Sensory Input (Tool results)
-        last_turn = await sync_to_async(
-            lambda: (
-                self.session.turns.filter(status_id=ReasoningStatusID.COMPLETED)
-                .order_by('-turn_number')
-                .prefetch_related('tool_calls__tool')
-                .first()
-            )
-        )()
+        last_turn = turn_record.last_turn
 
         sensory_input = ''
         if last_turn:
-            tool_calls = await sync_to_async(list)(last_turn.tool_calls.all())
+            tool_calls = await sync_to_async(list)(
+                last_turn.tool_calls.select_related('tool').all()
+            )
             for tc in tool_calls:
                 sensory_input += f'--- Tool Executed: {tc.tool.name} ---\n'
                 sensory_input += f'Args: {tc.arguments}\n'
@@ -602,16 +640,18 @@ class FrontalLobe:
 
         # GAME GRID
         target_capacity = self.session.current_level * 1000
+
+        was_efficient, efficiency_status = await sync_to_async(
+            turn_record.apply_efficiency_bonus
+        )()
+        await sync_to_async(self.session.save)(
+            update_fields=['current_focus', 'total_xp']
+        )
+
         last_output_len = (
             len(last_turn.thought_process)
             if last_turn and last_turn.thought_process
             else 0
-        )
-
-        efficiency_status = (
-            'SUCCESS (+1 Focus, +5 XP)'
-            if last_output_len <= target_capacity
-            else 'FAILED (Data footprint too large)'
         )
 
         player_information = (
