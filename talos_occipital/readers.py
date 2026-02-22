@@ -77,7 +77,7 @@ def read_build_log(run_id, max_token_budget=128000):
     full_log_content = ""
     for head in heads:
         full_log_content += f"\n--- HEAD {head.id} ({head.spell.name}) ---\n"
-        full_log_content += head.spell_log or ""
+        full_log_content += head.application_log or ""
 
     # Reserve tokens for Prompt + Overheads. 1 Token ~= 4 Chars.
     safe_token_limit = max_token_budget - 2000

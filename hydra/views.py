@@ -175,7 +175,7 @@ class HeadLogDetailView(DetailView):
         log_type = request.GET.get('type')
         content = ''
         if log_type == 'tool':
-            content = head.spell_log or ''
+            content = head.application_log or ''
         elif log_type == 'system':
             content = head.execution_log or ''
         if request.GET.get('format') == 'raw':
@@ -289,8 +289,8 @@ class HydraBattleStreamView(View):
         except HydraHead.DoesNotExist:
             return HttpResponse('Invalid Head IDs', status=404)
 
-        full_log1 = h1.spell_log or h1.execution_log or ''
-        full_log2 = h2.spell_log or h2.execution_log or ''
+        full_log1 = h1.application_log or h1.execution_log or ''
+        full_log2 = h2.application_log or h2.execution_log or ''
 
         # Calculate Deltas
         delta_log1 = full_log1[cursor_1:]
@@ -385,8 +385,8 @@ def generate_spawn_dump(spawn, depth=0):
 
         yield f'\n{indent}[SPELL LOG (Tool Output)]\n'
         yield f'{indent}-------------------------\n'
-        if head.spell_log:
-            yield head.spell_log
+        if head.application_log:
+            yield head.application_log
         else:
             yield f'<No Output>'
         yield f'\n'

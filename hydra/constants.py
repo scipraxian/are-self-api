@@ -28,7 +28,7 @@ KEY_ENVIRONMENT_ID = 'environment_id'
 
 PROVENANCE_FIELD_NAME = 'provenance'
 
-SPELL_LOG_FIELD_NAME = 'spell_log'
+APPLICATION_LOG_FIELD_NAME = 'application_log'
 EXECUTION_LOG_FIELD_NAME = 'execution_log'
 RESULT_CODE_FIELD_NAME = 'result_code'
 

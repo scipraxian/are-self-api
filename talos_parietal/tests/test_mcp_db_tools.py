@@ -12,25 +12,23 @@ from talos_parietal.parietal_mcp.gateway import ParietalMCP
 def db_setup():
     """Sets up base database records for the tools to query."""
     # Create required statuses
-    spawn_status, _ = HydraSpawnStatus.objects.get_or_create(id=1, defaults={
-        'name': 'Created'})
-    head_status_active, _ = HydraHeadStatus.objects.get_or_create(id=2,
-                                                                  defaults={
-                                                                      'name':
-                                                                          'Active'})
-    head_status_error, _ = HydraHeadStatus.objects.get_or_create(id=6,
-                                                                 defaults={
-                                                                     'name':
-                                                                         'Error'})
+    spawn_status, _ = HydraSpawnStatus.objects.get_or_create(
+        id=1, defaults={'name': 'Created'})
+    head_status_active, _ = HydraHeadStatus.objects.get_or_create(
+        id=2, defaults={'name': 'Active'})
+    head_status_error, _ = HydraHeadStatus.objects.get_or_create(
+        id=6, defaults={'name': 'Error'})
 
     # Create a Spawn
     spawn = HydraSpawn.objects.create(status=spawn_status)
 
     # Create Heads
-    head_1 = HydraHead.objects.create(spawn=spawn, status=head_status_active,
+    head_1 = HydraHead.objects.create(spawn=spawn,
+                                      status=head_status_active,
                                       blackboard={"var": "alpha"})
-    head_2 = HydraHead.objects.create(spawn=spawn, status=head_status_error,
-                                      spell_log="Fatal error on line 42")
+    head_2 = HydraHead.objects.create(spawn=spawn,
+                                      status=head_status_error,
+                                      application_log="Fatal error on line 42")
 
     return {
         "spawn": spawn,
@@ -62,14 +60,17 @@ async def test_gateway_dynamic_routing(db_setup):
 @pytest.mark.asyncio
 async def test_mcp_query_model_basic_filters(db_setup):
     """Ensures basic kwargs filtering works."""
-    result = await ParietalMCP.execute("mcp_query_model", {
-        "app_label": "hydra",
-        "model_name": "HydraHead",
-        "filters": {"status_id": db_setup["status_error_id"]}
-    })
+    result = await ParietalMCP.execute(
+        "mcp_query_model", {
+            "app_label": "hydra",
+            "model_name": "HydraHead",
+            "filters": {
+                "status_id": db_setup["status_error_id"]
+            }
+        })
 
     data = json.loads(result)
-    assert data["count_returned"] == 1
+    assert len(data["records"]) == 1
     assert data["records"][0]["id"] == str(db_setup["head_2"].id)
 
 
@@ -88,7 +89,7 @@ async def test_mcp_query_model_q_string_logic(db_setup):
     })
 
     data = json.loads(result)
-    assert data["count_returned"] == 2
+    assert len(data["records"]) == 2
 
 
 @pytest.mark.django_db(transaction=True)
@@ -97,13 +98,11 @@ async def test_mcp_query_model_count_action(db_setup):
     """Ensures the AI can request a raw integer count instead of heavy data."""
     result = await ParietalMCP.execute("mcp_query_model", {
         "app_label": "hydra",
-        "model_name": "HydraHead",
-        "action": "count"
+        "model_name": "HydraHead"
     })
 
     data = json.loads(result)
-    assert "count" in data
-    assert data["count"] >= 2  # The 2 we created
+    assert "Total Records:" in data["meta"]
 
 
 @pytest.mark.django_db(transaction=True)
@@ -121,9 +120,9 @@ async def test_mcp_inspect_record(db_setup):
 
     data = json.loads(result)
     assert "id" in data
-    assert "spell_log" in data
-    assert data["spell_log"]["type"] == "TextField"
-    assert "size_chars" in data["spell_log"]
+    assert "application_log" in data
+    assert data["application_log"]["type"] == "TextField"
+    assert "size_chars" in data["application_log"]
 
 
 @pytest.mark.django_db(transaction=True)
@@ -134,25 +133,27 @@ async def test_mcp_search_and_read_record(db_setup):
     head_id = str(db_setup["head_2"].id)
 
     # 1. Search the log
-    search_result = await ParietalMCP.execute("mcp_search_record_field", {
-        "app_label": "hydra",
-        "model_name": "HydraHead",
-        "record_id": head_id,
-        "field_name": "spell_log",
-        "pattern": "Fatal"
-    })
+    search_result = await ParietalMCP.execute(
+        "mcp_search_record_field", {
+            "app_label": "hydra",
+            "model_name": "HydraHead",
+            "record_id": head_id,
+            "field_name": "application_log",
+            "pattern": "Fatal"
+        })
 
     assert "Match 1" in search_result
     assert "Fatal error" in search_result
 
     # 2. Read the log
-    read_result = await ParietalMCP.execute("mcp_read_record_field", {
-        "app_label": "hydra",
-        "model_name": "HydraHead",
-        "record_id": head_id,
-        "field_name": "spell_log",
-        "start_line": 1,
-        "max_lines": 5
-    })
+    read_result = await ParietalMCP.execute(
+        "mcp_read_record_field", {
+            "app_label": "hydra",
+            "model_name": "HydraHead",
+            "record_id": head_id,
+            "field_name": "application_log",
+            "start_line": 1,
+            "max_lines": 5
+        })
 
     assert "1: Fatal error on line 42" in read_result

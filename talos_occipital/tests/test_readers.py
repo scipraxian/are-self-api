@@ -24,7 +24,7 @@ class ReadersTest(SimpleTestCase):
         mock_spawn_cls.objects.get.return_value = mock_spawn
 
         # Log with real errors and false positives
-        mock_head.spell_log = """
+        mock_head.application_log = """
 [2026-01-11 10:00:01] LogTemp: Display: Building...
 [2026-01-11 10:00:02] LogTemp: Error: Critical Failure in Module X
 [2026-01-11 10:00:03] LogTemp: Display: Still Trying...
@@ -47,7 +47,7 @@ class ReadersTest(SimpleTestCase):
         # However, "Critical Failure" IS in ERROR SUMMARY.
 
         # Let's verify false positive logic specifically
-        mock_head.spell_log = """
+        mock_head.application_log = """
 [2026-01-11 10:00:04] Cmd: Success - 0 Error(s), 0 Warning(s)
 """
         summary_clean = read_build_log(1)

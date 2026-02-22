@@ -112,9 +112,9 @@ class FrontalLobe:
     async def _log_live(self, message: str) -> None:
         """Appends to the execution log in memory and writes to the DB immediately."""
         self.log_output.append(message)
-        current_log = self.head.spell_log or ''
-        self.head.spell_log = current_log + message + '\n'
-        await sync_to_async(self.head.save)(update_fields=['spell_log'])
+        current_log = self.head.application_log or ''
+        self.head.application_log = current_log + message + '\n'
+        await sync_to_async(self.head.save)(update_fields=['application_log'])
 
     # --- Initialization ---
 
@@ -474,8 +474,8 @@ class FrontalLobe:
         """Main asynchronous execution orchestrator."""
         logger.info(f'[FrontalLobe] Waking up for Head {self.head_id}')
 
-        self.head.spell_log = ''
-        await sync_to_async(self.head.save)(update_fields=['spell_log'])
+        self.head.application_log = ''
+        await sync_to_async(self.head.save)(update_fields=['application_log'])
         await self._log_live(FrontalLobeConstants.LOG_START)
 
         try:

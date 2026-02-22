@@ -194,7 +194,7 @@
     "pk": 6,
     "fields": {
       "created": "2026-02-18T12:00:00Z",
-      "description": "Reads a specific text field from the database using strict pagination. Crucial for reading massive logs (e.g. 'spell_log') without destroying your context window.",
+      "description": "Reads a specific text field from the database using strict pagination. Crucial for reading massive logs (e.g. 'application_log') without destroying your context window.",
       "modified": "2026-02-20T18:51:30.037Z",
       "name": "mcp_read_record_field",
       "is_async": true,

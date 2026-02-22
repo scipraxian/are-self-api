@@ -122,7 +122,7 @@ class AsyncLogManager:
             self.exec_buffer.clear()
 
         if self.spell_buffer:
-            self.head.spell_log += ''.join(self.spell_buffer)
+            self.head.application_log += ''.join(self.spell_buffer)
             self.spell_buffer.clear()
 
         await self._save_to_db()
@@ -137,7 +137,7 @@ class AsyncLogManager:
             if self.head.status_id == HydraHeadStatus.ABORTED:
                 raise ConnectionAbortedError('Hydra Head Aborted by User')
             await sync_to_async(self.head.save)(
-                update_fields=['execution_log', 'spell_log']
+                update_fields=['execution_log', 'application_log']
             )
         except ConnectionAbortedError:
             raise
@@ -161,7 +161,7 @@ class GenericSpellCaster:
     ]
 
     EXECUTION_LOG_FIELD = 'execution_log'
-    SPELL_LOG_FIELD = 'spell_log'
+    APPLICATION_LOG_FIELD = 'application_log'
     STATUS_FIELD = 'status'
     BLACKBOARD_FIELD = 'blackboard'
 
@@ -412,13 +412,13 @@ class GenericSpellCaster:
                     self.head_id
                 )
         except Exception as e:
-            self.head.spell_log = f'Native Handler Exception: {str(e)}'
-            await self._save_head(fields=[self.SPELL_LOG_FIELD])
+            self.head.application_log = f'Native Handler Exception: {str(e)}'
+            await self._save_head(fields=[self.APPLICATION_LOG_FIELD])
             self.status = HydraHeadStatus.FAILED
             return
 
-        self.head.spell_log = output_log
-        await self._save_head(fields=[self.SPELL_LOG_FIELD])
+        self.head.application_log = output_log
+        await self._save_head(fields=[self.APPLICATION_LOG_FIELD])
 
         new_status = (
             HydraHeadStatus.SUCCESS

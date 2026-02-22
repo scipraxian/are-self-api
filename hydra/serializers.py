@@ -528,7 +528,7 @@ class HydraHeadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HydraHead
-        exclude = ['spell_log', 'execution_log']
+        exclude = ['application_log', 'execution_log']
 
     def get_average_delta(self, obj):
         return HydraHead.objects.filter(spell=obj.spell).aggregate(
@@ -569,7 +569,7 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
         return str(obj.target) if obj.target else constants.VAL_PENDING
 
     def get_logs(self, obj):
-        return _tail_log(obj.spell_log)
+        return _tail_log(obj.application_log)
 
     def get_exec_logs(self, obj):
         return _tail_log(obj.execution_log)

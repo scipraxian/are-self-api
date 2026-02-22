@@ -152,7 +152,7 @@ class HydraHeadAdmin(admin.ModelAdmin):
     list_filter = ('status', 'spell__name')
     readonly_fields = (
         'celery_task_id',
-        'spell_log',
+        'application_log',
         'execution_log',
         'resolved_command_preview',
     )

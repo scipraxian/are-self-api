@@ -20,7 +20,7 @@ from hydra.constants import (
     PROVENANCE_FIELD_NAME,
     RESULT_CODE_FIELD_NAME,
     SPAWN_FIELD_NAME,
-    SPELL_LOG_FIELD_NAME,
+    APPLICATION_LOG_FIELD_NAME,
     SPELLBOOK_FIELD_NAME,
 )
 from hydra.models import HydraHead, HydraSpellBookNodeContext, HydraSpellContext
@@ -121,14 +121,14 @@ def resolve_environment_context(
         if head.provenance:
             metadata[PROVENANCE_FIELD_NAME] = {
                 ID: str(head.provenance.id),
-                SPELL_LOG_FIELD_NAME: head.provenance.spell_log or '',
+                APPLICATION_LOG_FIELD_NAME: head.provenance.application_log or '',
                 EXECUTION_LOG_FIELD_NAME: head.provenance.execution_log or '',
                 RESULT_CODE_FIELD_NAME: head.provenance.result_code,
             }
         else:
             metadata[PROVENANCE_FIELD_NAME] = {
                 ID: '',
-                SPELL_LOG_FIELD_NAME: '',
+                APPLICATION_LOG_FIELD_NAME: '',
                 EXECUTION_LOG_FIELD_NAME: '',
                 RESULT_CODE_FIELD_NAME: '',
             }

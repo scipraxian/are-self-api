@@ -2843,7 +2843,7 @@
     "fields": {
       "node": 122,
       "key": "prompt",
-      "value": "Please attempt to count the number of files in this list {{provenance.spell_log}}"
+      "value": "Please attempt to count the number of files in this list {{provenance.application_log}}"
     }
   },
   {

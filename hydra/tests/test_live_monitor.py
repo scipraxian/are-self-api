@@ -31,7 +31,7 @@ class LiveMonitorTests(StaticLiveServerTestCase):
         self.head = HydraHead.objects.create(spawn=self.spawn,
                                              spell=spell,
                                              status_id=1,
-                                             spell_log="Initial Log Content...")
+                                             application_log="Initial Log Content...")
 
     @pytest.mark.live
     def test_log_interaction_stability(self):
