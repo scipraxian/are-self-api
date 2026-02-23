@@ -22,7 +22,6 @@ class FastValidateIntegrationTest(TestCase):
         'talos_agent/fixtures/initial_data.json',
         'talos_agent/fixtures/test_agents.json',
         'hydra/fixtures/initial_data.json',
-        'talos_frontal/fixtures/initial_data.json',
         'talos_reasoning/fixtures/initial_data.json',
     ]
 
@@ -33,29 +32,40 @@ class FastValidateIntegrationTest(TestCase):
         # or rely on fixtures if you load hydra/fixtures/initial_data.json too.
         # Keeping your manual setup below to minimize changes:
         self.status_created = HydraHeadStatus.objects.get_or_create(
-            id=1, defaults={'name': 'Created'})[0]
+            id=1, defaults={'name': 'Created'}
+        )[0]
         self.status_pending = HydraHeadStatus.objects.get_or_create(
-            id=2, defaults={'name': 'Pending'})[0]
+            id=2, defaults={'name': 'Pending'}
+        )[0]
         self.status_running = HydraHeadStatus.objects.get_or_create(
-            id=3, defaults={'name': 'Running'})[0]
+            id=3, defaults={'name': 'Running'}
+        )[0]
         self.status_success = HydraHeadStatus.objects.get_or_create(
-            id=4, defaults={'name': 'Success'})[0]
+            id=4, defaults={'name': 'Success'}
+        )[0]
         self.status_failed = HydraHeadStatus.objects.get_or_create(
-            id=5, defaults={'name': 'Failed'})[0]
+            id=5, defaults={'name': 'Failed'}
+        )[0]
 
         self.spawn_created = HydraSpawnStatus.objects.get_or_create(
-            id=1, defaults={'name': 'Created'})[0]
+            id=1, defaults={'name': 'Created'}
+        )[0]
         self.spawn_running = HydraSpawnStatus.objects.get_or_create(
-            id=3, defaults={'name': 'Running'})[0]
+            id=3, defaults={'name': 'Running'}
+        )[0]
         self.spawn_success = HydraSpawnStatus.objects.get_or_create(
-            id=4, defaults={'name': 'Success'})[0]
+            id=4, defaults={'name': 'Success'}
+        )[0]
         self.spawn_failed = HydraSpawnStatus.objects.get_or_create(
-            id=5, defaults={'name': 'Failed'})[0]
+            id=5, defaults={'name': 'Failed'}
+        )[0]
 
-        self.exe = TalosExecutable.objects.create(name='TestRunner',
-                                                  executable='Test.exe')
-        self.spell = HydraSpell.objects.create(name='Run Headless',
-                                               talos_executable=self.exe)
+        self.exe = TalosExecutable.objects.create(
+            name='TestRunner', executable='Test.exe'
+        )
+        self.spell = HydraSpell.objects.create(
+            name='Run Headless', talos_executable=self.exe
+        )
         self.book = HydraSpellbook.objects.create(name='Fast Validate')
         # FIX: Node must be marked as root for Hydra to find it
         self.book.nodes.create(spell=self.spell, is_root=True)
@@ -102,14 +112,14 @@ class FastValidateIntegrationTest(TestCase):
             spellbook=self.book,
             status_id=HydraSpawnStatus.RUNNING,
         )
-        head = HydraHead.objects.create(spawn=spawn,
-                                        spell=self.spell,
-                                        status_id=HydraHeadStatus.PENDING)
+        head = HydraHead.objects.create(
+            spawn=spawn, spell=self.spell, status_id=HydraHeadStatus.PENDING
+        )
 
         # 2. Run the task
         with (
-                mock.patch('hydra.tasks.build_command') as mock_build,
-                mock.patch('hydra.tasks.stream_command_to_db') as mock_stream,
+            mock.patch('hydra.tasks.build_command') as mock_build,
+            mock.patch('hydra.tasks.stream_command_to_db') as mock_stream,
         ):
             mock_stream.return_value = 0  # Success
 

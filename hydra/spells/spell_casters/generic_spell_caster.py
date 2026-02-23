@@ -12,9 +12,6 @@ from asgiref.sync import sync_to_async
 from environments.variable_renderer import VariableRenderer
 from hydra.models import HydraHead, HydraHeadStatus
 from hydra.spells.spell_casters.begin_play_node import begin_play
-from hydra.spells.spell_casters.spell_handlers.frontal_lobe_handler import (
-    run_frontal_lobe,
-)
 from hydra.spells.spell_casters.spell_handlers.version_metadata_handler import (
     update_version_metadata,
 )
@@ -28,6 +25,9 @@ from talos_agent.talos_agent import (
     TalosAgentConstants,
 )
 from talos_agent.talos_agent_finder import scan_and_register
+from talos_reasoning.frontal_lobe import (
+    run_frontal_lobe,
+)
 
 logger = logging.getLogger(__name__)
 

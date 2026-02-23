@@ -7,12 +7,10 @@ from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
 from asgiref.sync import sync_to_async
-from django.db.models import Count
 
 from environments.variable_renderer import VariableRenderer
 from hydra.models import HydraHead, HydraHeadStatus
 from hydra.utils import resolve_environment_context
-from talos_hippocampus.models import TalosEngram
 from talos_parietal.models import ToolCall, ToolDefinition
 from talos_parietal.parietal_mcp.gateway import ParietalMCP
 from talos_parietal.synapse import ChatMessage, OllamaClient
@@ -37,8 +35,10 @@ class FrontalLobeConstants:
 
     KEY_PROMPT = 'prompt'
     KEY_OBJECTIVE = 'objective'
-    DEFAULT_PROMPT = ('Analyze the current state and execute necessary tools '
-                      'to resolve issues.')
+    DEFAULT_PROMPT = (
+        'Analyze the current state and execute necessary tools '
+        'to resolve issues.'
+    )
     SYSTEM_PERSONA = (
         'You are an LLM tasked with creating and fulfilling goals.\n'
         'Together, your predecessors and the Users have engineered an enjoyable, turn-based resource-management strategy game to manage your real-world CPU, GPU, and Network resources.\n'
@@ -129,13 +129,15 @@ class FrontalLobe:
             ),
         )
         rendered_prompt = VariableRenderer.render_string(
-            str(raw_prompt), raw_context)
+            str(raw_prompt), raw_context
+        )
         if not rendered_prompt.strip():
             rendered_prompt = f'{FrontalLobeConstants.DEFAULT_PROMPT} Context Head: {self.head_id}'
         return rendered_prompt
 
-    async def _initialize_session(self, rendered_objective: str,
-                                  max_turns: int) -> None:
+    async def _initialize_session(
+        self, rendered_objective: str, max_turns: int
+    ) -> None:
         """Creates the ReasoningSession and primary ReasoningGoal in the DB."""
         self.session = await sync_to_async(ReasoningSession.objects.create)(
             head=self.head,
@@ -150,13 +152,14 @@ class FrontalLobe:
         await self._log_live(f'Session ID: {self.session.id}')
 
     async def _build_initial_messages(
-            self, rendered_objective: str,
-            blackboard: Dict[str, Any]) -> List[Dict[str, Any]]:
+        self, rendered_objective: str, blackboard: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         bb_str = json.dumps(blackboard, indent=2) if blackboard else '{}'
 
         # We explicitly tell the AI its Session ID so it can use memory tools correctly
-        session_context = (f'SESSION ID: {self.session.id}'
-                           if self.session else '')
+        session_context = (
+            f'SESSION ID: {self.session.id}' if self.session else ''
+        )
 
         user_content = f'{session_context}\nBLACKBOARD STATE:\n{bb_str}\n\nOBJECTIVE:\n{rendered_objective}'
 
@@ -169,19 +172,25 @@ class FrontalLobe:
                 role=FrontalLobeConstants.ROLE_SYSTEM,
                 content=FrontalLobeConstants.SYSTEM_PERSONA,
             ).to_dict(),
-            ChatMessage(role=FrontalLobeConstants.ROLE_USER,
-                        content=user_content).to_dict(),
+            ChatMessage(
+                role=FrontalLobeConstants.ROLE_USER, content=user_content
+            ).to_dict(),
         ]
 
     async def _build_tool_schemas(self) -> List[Dict[str, Any]]:
         """
         Constructs strict JSON schemas from the normalized ToolParameterAssignment relations.
         """
-        db_tools = await sync_to_async(lambda: list(
-            ToolDefinition.objects.prefetch_related(
-                'assignments__parameter__type',
-                'assignments__parameter__enum_values',
-            ).select_related('use_type').filter(is_async=True)))()
+        db_tools = await sync_to_async(
+            lambda: list(
+                ToolDefinition.objects.prefetch_related(
+                    'assignments__parameter__type',
+                    'assignments__parameter__enum_values',
+                )
+                .select_related('use_type')
+                .filter(is_async=True)
+            )
+        )()
 
         ollama_tools = []
 
@@ -198,11 +207,9 @@ class FrontalLobe:
 
                 # not thrilled with this solution, we need a proper object.
                 schema_def: Dict[str, Any] = {
-                    'type':
-                        type_name,
-                    'description':
-                        param_def.description
-                        or f'The {param_def.name} parameter.',
+                    'type': type_name,
+                    'description': param_def.description
+                    or f'The {param_def.name} parameter.',
                 }
 
                 # Add Enums if they exist on the definition
@@ -218,29 +225,30 @@ class FrontalLobe:
 
             mechanics = t.use_type
             if mechanics:
-                cost_str = (f'[COST: {mechanics.focus_modifier} Focus | '
-                            f'REWARD: +{mechanics.xp_reward} XP] ')
+                cost_str = (
+                    f'[COST: {mechanics.focus_modifier} Focus | '
+                    f'REWARD: +{mechanics.xp_reward} XP] '
+                )
             else:
                 cost_str = '[COST: 0 Focus | REWARD: +0 XP] '
 
             full_description = f'{cost_str}{t.description}'
 
             # Construct Payload
-            ollama_tools.append({
-                FrontalLobeConstants.T_TYPE: FrontalLobeConstants.TYPE_FUNCTION,
-                FrontalLobeConstants.T_FUNC: {
-                    FrontalLobeConstants.T_NAME: t.name,
-                    FrontalLobeConstants.T_DESC: full_description,
-                    FrontalLobeConstants.T_PARAMS: {
-                        FrontalLobeConstants.SCHEMA_TYPE:
-                            FrontalLobeConstants.TYPE_OBJECT,
-                        FrontalLobeConstants.SCHEMA_PROPERTIES:
-                            properties,
-                        FrontalLobeConstants.SCHEMA_REQUIRED:
-                            required_fields,
+            ollama_tools.append(
+                {
+                    FrontalLobeConstants.T_TYPE: FrontalLobeConstants.TYPE_FUNCTION,
+                    FrontalLobeConstants.T_FUNC: {
+                        FrontalLobeConstants.T_NAME: t.name,
+                        FrontalLobeConstants.T_DESC: full_description,
+                        FrontalLobeConstants.T_PARAMS: {
+                            FrontalLobeConstants.SCHEMA_TYPE: FrontalLobeConstants.TYPE_OBJECT,
+                            FrontalLobeConstants.SCHEMA_PROPERTIES: properties,
+                            FrontalLobeConstants.SCHEMA_REQUIRED: required_fields,
+                        },
                     },
-                },
-            })
+                }
+            )
 
         return ollama_tools
 
@@ -290,8 +298,8 @@ class FrontalLobe:
         await sync_to_async(turn_record.save)()
 
     async def _handle_tool_execution(
-            self, turn_record: ReasoningTurn,
-            tool_call_data: Dict[str, Any]) -> Dict[str, Any]:
+        self, turn_record: ReasoningTurn, tool_call_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Parses, records, and executes a single tool call, enforcing the Focus Economy."""
         func_data = tool_call_data.get(FrontalLobeConstants.T_FUNC, {})
         tool_name = func_data.get(FrontalLobeConstants.T_NAME)
@@ -304,7 +312,9 @@ class FrontalLobe:
         try:
             tool_def = await sync_to_async(
                 lambda: ToolDefinition.objects.select_related('use_type').get(
-                    name=tool_name))()
+                    name=tool_name
+                )
+            )()
         except ToolDefinition.DoesNotExist:
             tool_def = None
             logger.error(f'AI tried to call unknown tool: {tool_name}')
@@ -366,9 +376,9 @@ class FrontalLobe:
                     self.session.current_focus + focus_mod,
                 )
                 self.session.total_xp += xp_gain
-                await sync_to_async(
-                    self.session.save
-                )(update_fields=['current_focus', 'total_xp'])
+                await sync_to_async(self.session.save)(
+                    update_fields=['current_focus', 'total_xp']
+                )
 
         except Exception as e:
             tool_result = f'Tool Execution Error: {str(e)}'
@@ -394,33 +404,37 @@ class FrontalLobe:
         await self._log_live(f'\n--- Turn {turn_index + 1} (Awakening) ---')
 
         # 1. Start the turn record
-        turn_record = await self._record_turn_start(turn_index, {},
-                                                    previous_turn)
+        turn_record = await self._record_turn_start(
+            turn_index, {}, previous_turn
+        )
 
         # Handle The Ding and Efficiency Bonus
         was_efficient, efficiency_status = await sync_to_async(
-            turn_record.apply_efficiency_bonus)()
+            turn_record.apply_efficiency_bonus
+        )()
         current_level = self.session.current_level
         leveled_up = current_level > getattr(self, '_last_known_level', 0)
         if leveled_up:
             self.session.current_focus = self.session.max_focus
             self._last_known_level = current_level
 
-        await sync_to_async(self.session.save
-                           )(update_fields=['current_focus', 'total_xp'])
+        await sync_to_async(self.session.save)(
+            update_fields=['current_focus', 'total_xp']
+        )
 
         # 2. THE REBIRTH: Build the entire context window from scratch
-        messages = await self._build_waking_payload(turn_record,
-                                                    efficiency_status,
-                                                    leveled_up)
+        messages = await self._build_waking_payload(
+            turn_record, efficiency_status, leveled_up
+        )
 
         turn_record.request_payload = {'messages': messages}
         await sync_to_async(turn_record.save)(update_fields=['request_payload'])
 
         # 3. Execute
         start_time = time.time()
-        response = await asyncio.to_thread(self.client.chat, messages,
-                                           ollama_tools)
+        response = await asyncio.to_thread(
+            self.client.chat, messages, ollama_tools
+        )
         inf_duration = timedelta(seconds=time.time() - start_time)
 
         await self._record_turn_completion(
@@ -436,31 +450,38 @@ class FrontalLobe:
 
         if not response.tool_calls:
             await self._log_live(
-                '\nNo further actions requested. Permanent Sleep Initiated.')
+                '\nNo further actions requested. Permanent Sleep Initiated.'
+            )
             return False, turn_record
 
         # 4. Fire Tools (intercept and sort by focus_modifier)
         tool_names = [
-            tc.get(FrontalLobeConstants.T_FUNC,
-                   {}).get(FrontalLobeConstants.T_NAME)
+            tc.get(FrontalLobeConstants.T_FUNC, {}).get(
+                FrontalLobeConstants.T_NAME
+            )
             for tc in response.tool_calls
         ]
-        tool_defs = await sync_to_async(lambda: list(
-            ToolDefinition.objects.select_related('use_type').filter(
-                name__in=tool_names)))()
+        tool_defs = await sync_to_async(
+            lambda: list(
+                ToolDefinition.objects.select_related('use_type').filter(
+                    name__in=tool_names
+                )
+            )
+        )()
         tool_def_map = {td.name: td for td in tool_defs}
 
         def get_focus_mod(tc):
-            name = tc.get(FrontalLobeConstants.T_FUNC,
-                          {}).get(FrontalLobeConstants.T_NAME)
+            name = tc.get(FrontalLobeConstants.T_FUNC, {}).get(
+                FrontalLobeConstants.T_NAME
+            )
             td = tool_def_map.get(name)
             if td and td.use_type:
                 return td.use_type.focus_modifier
             return 0
 
-        sorted_tool_calls = sorted(response.tool_calls,
-                                   key=get_focus_mod,
-                                   reverse=True)
+        sorted_tool_calls = sorted(
+            response.tool_calls, key=get_focus_mod, reverse=True
+        )
 
         for tool_call_data in sorted_tool_calls:
             await self._handle_tool_execution(turn_record, tool_call_data)
@@ -478,26 +499,30 @@ class FrontalLobe:
         try:
             # 1. Resolve Environment & Model
             raw_context = await sync_to_async(resolve_environment_context)(
-                head_id=self.head.id)
+                head_id=self.head.id
+            )
             # 1. Get the ID from context (defaults to 1 if missing)
             target_id = int(
                 raw_context.get(
                     FrontalLobeConstants.MODEL_ID_KEY,
                     ModelRegistry.DEFAULT_MODEL_ID,
-                ))
+                )
+            )
 
             # 2. Await the DB lookup safely
             try:
-                model_entry = await sync_to_async(ModelRegistry.objects.get
-                                                 )(id=target_id)
+                model_entry = await sync_to_async(ModelRegistry.objects.get)(
+                    id=target_id
+                )
                 model_name = model_entry.name
             except ModelRegistry.DoesNotExist:
                 # Fallback to default if the specific ID is missing (safety net)
                 logger.warning(
-                    f'Model ID {target_id} not found. Reverting to Default.')
-                model_entry = await sync_to_async(
-                    ModelRegistry.objects.get)(id=ModelRegistry.DEFAULT_MODEL_ID
-                                              )
+                    f'Model ID {target_id} not found. Reverting to Default.'
+                )
+                model_entry = await sync_to_async(ModelRegistry.objects.get)(
+                    id=ModelRegistry.DEFAULT_MODEL_ID
+                )
                 model_name = model_entry.name
 
             # 3. Initialize Client
@@ -509,28 +534,33 @@ class FrontalLobe:
 
             # 2. Initialize DB Session
             max_turns = int(
-                raw_context.get('max_turns',
-                                FrontalLobeConstants.DEFAULT_MAX_TURNS))
+                raw_context.get(
+                    'max_turns', FrontalLobeConstants.DEFAULT_MAX_TURNS
+                )
+            )
             await self._initialize_session(rendered_objective, max_turns)
             self._last_known_level = self.session.current_level
 
             # 3. Build Synapse Payload
             ollama_tools = await self._build_tool_schemas()
             messages = await self._build_initial_messages(
-                rendered_objective, blackboard)
+                rendered_objective, blackboard
+            )
             await self._log_live(f'Loaded {len(ollama_tools)} tools.')
 
             # 4. The Loop
             previous_turn = None
             for turn in range(self.session.max_turns):
-                await sync_to_async(self.head.refresh_from_db
-                                   )(fields=['status'])
+                await sync_to_async(self.head.refresh_from_db)(
+                    fields=['status']
+                )
                 if self.head.status_id == HydraHeadStatus.STOPPING:
                     await self._log_live('\n[WARNING] Stop Signal. Halting.')
                     break
 
                 should_continue, previous_turn = await self._execute_turn(
-                    turn, ollama_tools, previous_turn)
+                    turn, ollama_tools, previous_turn
+                )
 
                 if not should_continue:
                     break
@@ -542,12 +572,14 @@ class FrontalLobe:
                         await sync_to_async(self.session.save)()
 
             if self.session:
-                await sync_to_async(self.session.refresh_from_db
-                                   )(fields=['status_id'])
+                await sync_to_async(self.session.refresh_from_db)(
+                    fields=['status_id']
+                )
                 if self.session.status_id == ReasoningStatusID.ACTIVE:
                     self.session.status_id = ReasoningStatusID.COMPLETED
-                    await sync_to_async(self.session.save
-                                       )(update_fields=['status_id'])
+                    await sync_to_async(self.session.save)(
+                        update_fields=['status_id']
+                    )
 
         except Exception as e:
             logger.exception(f'[FrontalLobe] Crash: {e}')
@@ -574,10 +606,13 @@ class FrontalLobe:
 
         # 1. Active Goals
         goals = await sync_to_async(list)(
-            self.session.goals.filter(achieved=False))
-        goal_str = ('\n'.join([
-            f'- [ID: {g.id}] {g.rendered_goal}' for g in goals
-        ]) if goals else 'No active goals.')
+            self.session.goals.filter(achieved=False)
+        )
+        goal_str = (
+            '\n'.join([f'- [ID: {g.id}] {g.rendered_goal}' for g in goals])
+            if goals
+            else 'No active goals.'
+        )
 
         # 2. Card Catalog (Engram Index)
         from talos_hippocampus.talos_hippocampus import TalosHippocampus
@@ -585,15 +620,19 @@ class FrontalLobe:
         current_turn = turn_record.turn_number
         if current_turn == 1:
             catalog_block = await TalosHippocampus.get_turn_1_catalog(
-                self.session.head)
+                self.session.head
+            )
         else:
             catalog_block = await TalosHippocampus.get_recent_catalog(
-                self.session)
+                self.session
+            )
 
         # 3. Historical Log (River of 6)
-        recent_turns = await sync_to_async(list)(self.session.turns.filter(
-            status_id=ReasoningStatusID.COMPLETED,).order_by('-turn_number')[:6]
-                                                )
+        recent_turns = await sync_to_async(list)(
+            self.session.turns.filter(
+                status_id=ReasoningStatusID.COMPLETED,
+            ).order_by('-turn_number')[:6]
+        )
         recent_turns.reverse()
         if recent_turns:
             history_str = ''
@@ -606,7 +645,8 @@ class FrontalLobe:
                 age = turn_record.turn_number - t.turn_number
 
                 tool_calls = await sync_to_async(list)(
-                    t.tool_calls.select_related('tool').all())
+                    t.tool_calls.select_related('tool').all()
+                )
                 for tc in tool_calls:
                     history_str += f'[SYSTEM RECORD - TOOL EXECUTED: {tc.tool.name}({tc.arguments})]\n'
                     if age == 1:
@@ -623,8 +663,11 @@ class FrontalLobe:
 
         target_capacity = self.session.current_level * 1000
 
-        last_output_len = (len(last_turn.thought_process)
-                           if last_turn and last_turn.thought_process else 0)
+        last_output_len = (
+            len(last_turn.thought_process)
+            if last_turn and last_turn.thought_process
+            else 0
+        )
 
         max_turns = self.session.max_turns
         current_turn = turn_record.turn_number
@@ -633,14 +676,16 @@ class FrontalLobe:
         milestone_kicks = ''
         if current_turn == max_turns // 2:
             milestone_kicks = (
-                '\n[WARNING: 50% of allocated compute cycles expended.]')
+                '\n[WARNING: 50% of allocated compute cycles expended.]'
+            )
         elif remaining_turns == 10:
             milestone_kicks = '\n[CRITICAL: 10 compute cycles remaining. Finalize diagnostics.]'
         elif remaining_turns == 1:
             milestone_kicks = '\n[TERMINAL CYCLE. Submit final report via mcp_conclude_session or fail operation.]'
 
-        level_up_str = (' | [LEVEL UP! Focus Pool Fully Restored]'
-                        if leveled_up else '')
+        level_up_str = (
+            ' | [LEVEL UP! Focus Pool Fully Restored]' if leveled_up else ''
+        )
 
         # Calculate Delta T
         latency_str = ''
@@ -661,14 +706,17 @@ class FrontalLobe:
 
         input_bandwidth_str = (
             f'L1 Input Payload: {input_bandwidth} chars pulled.'
-            if last_turn else 'L1 Input Payload: 0 chars pulled.')
+            if last_turn
+            else 'L1 Input Payload: 0 chars pulled.'
+        )
 
         header_str = (
             f'[SYSTEM DIAGNOSTICS]\n'
             f'[CYCLE {current_turn} / {max_turns}] | Speedrun Bounty: {remaining_turns * 1000} XP{milestone_kicks}\n'
             f'Level: {self.session.current_level} | XP: {self.session.total_xp} | Focus Pool: {self.session.current_focus} / {self.session.max_focus}{level_up_str}{latency_str}\n'
             f'Output Footprint (Prev Turn): {last_output_len} / {target_capacity} chars -> Efficiency Bonus: {efficiency_status}\n'
-            f'{input_bandwidth_str}\n')
+            f'{input_bandwidth_str}\n'
+        )
 
         user_content = (
             f'SESSION ID: {self.session.id}\n\n'
@@ -689,8 +737,9 @@ class FrontalLobe:
                 role=FrontalLobeConstants.ROLE_SYSTEM,
                 content=FrontalLobeConstants.SYSTEM_PERSONA,
             ).to_dict(),
-            ChatMessage(role=FrontalLobeConstants.ROLE_USER,
-                        content=user_content).to_dict(),
+            ChatMessage(
+                role=FrontalLobeConstants.ROLE_USER, content=user_content
+            ).to_dict(),
         ]
 
 
@@ -698,7 +747,8 @@ async def run_frontal_lobe(head_id: UUID) -> Tuple[int, str]:
     """Asynchronous entry point for the generic spell caster."""
     try:
         head = await sync_to_async(
-            lambda: HydraHead.objects.select_related('spawn').get(id=head_id))()
+            lambda: HydraHead.objects.select_related('spawn').get(id=head_id)
+        )()
         lobe = FrontalLobe(head)
         return await lobe.run()
     except Exception as e:
