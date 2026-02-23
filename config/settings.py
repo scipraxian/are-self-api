@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     'talos_parietal',
     'talos_occipital',
     'talos_temporal',
-    'talos_reasoning',
+    'frontal_lobe',
     'djangorestframework_mcp',
     'rest_framework',
     'django_filters',

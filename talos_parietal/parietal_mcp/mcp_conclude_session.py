@@ -1,6 +1,6 @@
 from asgiref.sync import sync_to_async
 
-from talos_reasoning.models import (
+from frontal_lobe.models import (
     ReasoningSession,
     ReasoningStatusID,
     SessionConclusion,

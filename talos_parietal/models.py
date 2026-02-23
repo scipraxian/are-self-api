@@ -7,7 +7,7 @@ from common.models import (
     DescriptionMixin,
     ModifiedMixin,
 )
-from talos_reasoning.models import ReasoningStatusMixin, ReasoningTurn
+from frontal_lobe.models import ReasoningStatusMixin, ReasoningTurn
 
 
 class ToolParameterType(DefaultFieldsMixin, DescriptionMixin):

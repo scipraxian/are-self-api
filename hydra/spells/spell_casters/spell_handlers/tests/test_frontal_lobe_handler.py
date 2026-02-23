@@ -18,8 +18,8 @@ from talos_parietal.models import (
     ToolParameterType,
 )
 from talos_parietal.parietal_lobe import ParietalLobe
-from talos_parietal.synapse import OllamaResponse
-from talos_reasoning.frontal_lobe import (
+from frontal_lobe.synapse import OllamaResponse
+from frontal_lobe.frontal_lobe import (
     FrontalLobeConstants,
     run_frontal_lobe,
 )
@@ -32,7 +32,7 @@ class FrontalLobeHandlerTest(TransactionTestCase):
         'talos_agent/fixtures/initial_data.json',
         'talos_agent/fixtures/test_agents.json',
         'hydra/fixtures/initial_data.json',
-        'talos_reasoning/fixtures/initial_data.json',
+        'frontal_lobe/fixtures/initial_data.json',
         'talos_parietal/fixtures/initial_data.json',
     ]
 

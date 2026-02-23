@@ -25,7 +25,7 @@ from talos_agent.talos_agent import (
     TalosAgentConstants,
 )
 from talos_agent.talos_agent_finder import scan_and_register
-from talos_reasoning.frontal_lobe import (
+from frontal_lobe.frontal_lobe import (
     run_frontal_lobe,
 )
 

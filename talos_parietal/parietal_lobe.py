@@ -7,8 +7,8 @@ from asgiref.sync import sync_to_async
 
 from talos_parietal.models import ToolCall, ToolDefinition
 from talos_parietal.parietal_mcp.gateway import ParietalMCP
-from talos_parietal.synapse import ChatMessage, OllamaClient
-from talos_reasoning.models import ReasoningSession, ReasoningStatusID, ReasoningTurn
+from frontal_lobe.synapse import ChatMessage, OllamaClient
+from frontal_lobe.models import ReasoningSession, ReasoningStatusID, ReasoningTurn
 
 logger = logging.getLogger(__name__)
 

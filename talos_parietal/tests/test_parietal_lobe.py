@@ -14,7 +14,7 @@ from talos_parietal.models import (
     ToolUseType,
 )
 from talos_parietal.parietal_lobe import ParietalLobe
-from talos_reasoning.models import (
+from frontal_lobe.models import (
     ReasoningGoal,
     ReasoningSession,
     ReasoningStatusID,
@@ -28,7 +28,7 @@ class ParietalLobeTest(TransactionTestCase):
         'talos_agent/fixtures/initial_data.json',
         'talos_agent/fixtures/test_agents.json',
         'hydra/fixtures/initial_data.json',
-        'talos_reasoning/fixtures/initial_data.json',
+        'frontal_lobe/fixtures/initial_data.json',
         'talos_parietal/fixtures/initial_data.json',
     ]
 

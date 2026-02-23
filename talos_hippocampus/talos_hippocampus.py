@@ -12,7 +12,7 @@ from django.db.models import Count, Q
 
 from hydra.models import HydraHead
 from talos_hippocampus.models import TalosEngram, TalosEngramTag
-from talos_reasoning.models import ReasoningSession
+from frontal_lobe.models import ReasoningSession
 
 logger = logging.getLogger(__name__)
 
