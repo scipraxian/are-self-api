@@ -125,6 +125,32 @@ function flattenTreeToGraph(sessionData, oldData) {
         });
     }
 
+    // 4. Process Conclusion
+    if (sessionData.conclusion) {
+        const conclusionNodeId = `conclusion-${sessionData.conclusion.id}`;
+        nodes.push({
+            id: conclusionNodeId,
+            type: 'conclusion',
+            label: 'Final Report',
+            status: sessionData.conclusion.status_name,
+            summary: sessionData.conclusion.summary,
+            reasoning_trace: sessionData.conclusion.reasoning_trace,
+            outcome_status: sessionData.conclusion.outcome_status,
+            recommended_action: sessionData.conclusion.recommended_action,
+            next_goal_suggestion: sessionData.conclusion.next_goal_suggestion,
+        });
+
+        // Link it to the last turn
+        if (sessionData.turns && sessionData.turns.length > 0) {
+            const lastTurnId = sessionData.turns[sessionData.turns.length - 1].id;
+            links.push({
+                source: `turn-${lastTurnId}`,
+                target: conclusionNodeId,
+                type: 'sequence' // Treat it like the final sequence step
+            });
+        }
+    }
+
     // Preserve Physics & Spawn gracefully
     if (oldData && oldData.nodes) {
         const oldNodeMap = new Map(oldData.nodes.map(n => [n.id, n]));
@@ -307,6 +333,9 @@ function updateGraph(newData) {
         } else if (d.type === 'goal') {
             // New Shape: Larger LCARS Blue Diamond for Strategic Goals
             el.append("polygon").attr("points", "0,-22 22,0 0,22 -22,0").attr("fill", "#38bdf8");
+        } else if (d.type === 'conclusion') {
+            // Hexagon for the Final Conclusion
+            el.append("polygon").attr("points", "0,-25 22,-12 22,12 0,25 -22,12 -22,-12").attr("fill", "#4ade80");
         } else {
             // Engrams: Standard Purple Diamond
             el.append("polygon").attr("points", "0,-15 15,0 0,15 -15,0").attr("fill", "#cc99cc");
@@ -319,6 +348,7 @@ function updateGraph(newData) {
             .text(d => {
                 if (d.type === 'turn') return `T${d.turn_number}`;
                 if (d.type === 'tool') return d.label;
+                if (d.type === 'conclusion') return 'REPORT';
                 if (d.type === 'goal') return `G${d.id.split('-')[1].substring(0, 4)}`; // G-Prefix for Goal
                 return `M${d.id.split('-')[1].substring(0, 4)}`; // M-Prefix for Memory/Engram
             })
@@ -427,6 +457,7 @@ function showDetails(d) {
     else if (d.type === 'goal') adminUrl = `/admin/talos_reasoning/reasoninggoal/${dbId}/change/`;
     else if (d.type === 'session') adminUrl = `/admin/talos_reasoning/reasoningsession/${dbId}/change/`;
     else if (d.type === 'engram') adminUrl = `/admin/talos_hippocampus/talosengram/${dbId}/change/`;
+    else if (d.type === 'conclusion') adminUrl = `/admin/talos_reasoning/sessionconclusion/${dbId}/change/`;
     else if (d.type === 'tool') {
         const toolName = d.id.split('-')[2];
         adminUrl = `/admin/talos_parietal/tooldefinition/?q=${toolName}`;
@@ -578,6 +609,43 @@ function showDetails(d) {
         terminalEl.innerHTML += `<div class="term-spell">> MEMORY RECALLED:: ${d.name || 'Unnamed Hash'}</div>`;
         terminalEl.innerHTML += `<div class="term-thought">"${d.description}"</div>`;
         terminalEl.innerHTML += `<div class="term-result">Relevance: ${d.relevance}</div>`;
+    } else if (d.type === 'conclusion') {
+        titleEl.textContent = `Mission Conclusion Report`;
+        terminalEl.innerHTML += `<div class="term-result" style="margin-top: 15px;">
+            <details open>
+                <summary style="cursor:pointer; color:#4ade80; font-weight: bold; border-bottom: 1px solid #4ade80; padding-bottom: 5px; margin-bottom: 10px;">► Executive Summary</summary>
+                <div style="margin-top: 5px; padding: 10px; border-left: 3px solid #4ade80; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; color: #4ade80; font-size: 13px; line-height: 1.5;">${d.summary || 'No summary available.'}</div>
+            </details>
+        </div>`;
+
+        terminalEl.innerHTML += `<div class="term-result" style="margin-top: 15px;">
+            <details>
+                <summary style="cursor:pointer; color:#cc99cc; font-weight: bold; border-bottom: 1px solid #cc99cc; padding-bottom: 5px; margin-bottom: 10px;">► Reasoning Trace</summary>
+                <div style="margin-top: 5px; padding: 10px; background-color: rgba(204, 153, 204, 0.1); border-left: 3px solid #cc99cc; white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; color: #cc99cc; font-size: 12px; line-height: 1.4;">${d.reasoning_trace || 'No trace available.'}</div>
+            </details>
+        </div>`;
+
+        terminalEl.innerHTML += `
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <div style="flex: 1; padding: 10px; background-color: rgba(0,0,0,0.5); border: 1px solid #38bdf8; border-radius: 5px;">
+                    <div style="color: #38bdf8; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; text-transform: uppercase;">Outcome Status</div>
+                    <div style="color: white; font-size: 1.1rem;">${d.outcome_status || 'N/A'}</div>
+                </div>
+                <div style="flex: 1; padding: 10px; background-color: rgba(0,0,0,0.5); border: 1px solid #f99f1b; border-radius: 5px;">
+                    <div style="color: #f99f1b; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; text-transform: uppercase;">Recommended Action</div>
+                    <div style="color: white; font-size: 1.1rem;">${d.recommended_action || 'N/A'}</div>
+                </div>
+            </div>
+        `;
+
+        if (d.next_goal_suggestion) {
+            terminalEl.innerHTML += `<div class="term-result" style="margin-top: 15px;">
+                <details open>
+                    <summary style="cursor:pointer; color:#99ccff; font-weight: bold; border-bottom: 1px solid #99ccff; padding-bottom: 5px; margin-bottom: 10px;">► Next Goal Suggestion</summary>
+                    <div style="margin-top: 5px; padding: 10px; font-style: italic; color: #99ccff; font-size: 12px; line-height: 1.4;">"${d.next_goal_suggestion}"</div>
+                </details>
+            </div>`;
+        }
     } else if (d.type === 'tool') {
         titleEl.textContent = `Spell: ${d.label}`;
         terminalEl.innerHTML += `<div class="term-spell">> INSPECTING SPELL CALL</div>`;

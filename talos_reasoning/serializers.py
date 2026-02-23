@@ -7,6 +7,7 @@ from talos_reasoning.models import (
     ReasoningGoal,
     ReasoningSession,
     ReasoningTurn,
+    SessionConclusion,
 )
 
 
@@ -52,6 +53,14 @@ class TalosEngramSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
+class SessionConclusionSerializer(serializers.ModelSerializer):
+    status_name = serializers.CharField(source='status.name', read_only=True)
+
+    class Meta:
+        model = SessionConclusion
+        fields = ALL_FIELDS
+
+
 class ReasoningSessionSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
 
@@ -59,6 +68,7 @@ class ReasoningSessionSerializer(serializers.ModelSerializer):
     goals = ReasoningGoalSerializer(many=True, read_only=True)
     turns = ReasoningTurnSerializer(many=True, read_only=True)
     engrams = TalosEngramSerializer(source='engram', many=True, read_only=True)
+    conclusion = SessionConclusionSerializer(read_only=True)
 
     current_level = serializers.IntegerField(read_only=True)
     max_focus = serializers.IntegerField(read_only=True)

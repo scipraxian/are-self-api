@@ -37,10 +37,8 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         Serves the pure, nested JSON tree of the Reasoning Session.
         The frontend JS is responsible for squashing this into D3 nodes and links.
         """
-        session = (
-            self.get_queryset()
-            .select_related('status')
-            .prefetch_related(
+        session = (self.get_queryset().select_related(
+            'status', 'conclusion', 'conclusion__status').prefetch_related(
                 Prefetch(
                     'goals',
                     queryset=ReasoningGoal.objects.select_related('status'),
@@ -48,15 +46,12 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
                 Prefetch(
                     'turns',
                     queryset=ReasoningTurn.objects.select_related(
-                        'status'
-                    ).order_by('turn_number'),
+                        'status').order_by('turn_number'),
                 ),
                 'turns__tool_calls__tool',
                 'turns__turn_goals',
                 'engram__source_turns',
-            )
-            .get(pk=pk)
-        )
+            ).get(pk=pk))
 
         serializer = serializers.ReasoningSessionSerializer(session)
         return Response(serializer.data)
@@ -68,9 +63,8 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         head = session.head
 
         if not head:
-            return Response(
-                {'error': 'No associated HydraHead found.'}, status=400
-            )
+            return Response({'error': 'No associated HydraHead found.'},
+                            status=400)
 
         # 1. Reset the head state
         head.status_id = HydraHeadStatus.PENDING
@@ -80,12 +74,10 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         cast_hydra_spell.delay(head.id)
 
         # 3. Return the Spawn ID so the frontend can redirect to the Monitor
-        return Response(
-            {
-                'status': 'Rebooting',
-                'spawn_id': str(head.spawn.id) if head.spawn else None,
-            }
-        )
+        return Response({
+            'status': 'Rebooting',
+            'spawn_id': str(head.spawn.id) if head.spawn else None,
+        })
 
     @action(detail=True, methods=['post'])
     def stop(self, request, pk=None):
@@ -94,15 +86,13 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         head = session.head
 
         if not head:
-            return Response(
-                {'error': 'No associated HydraHead found.'}, status=400
-            )
+            return Response({'error': 'No associated HydraHead found.'},
+                            status=400)
 
         head.status_id = HydraHeadStatus.STOPPING
         head.save(update_fields=['status'])
 
-        return Response(
-            {
-                'status': 'Halt signal sent. The Cortex will spin down after the current turn.'
-            }
-        )
+        return Response({
+            'status':
+                'Halt signal sent. The Cortex will spin down after the current turn.'
+        })
