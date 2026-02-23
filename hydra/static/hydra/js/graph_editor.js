@@ -39,16 +39,22 @@ class GraphEditor {
         this.activeNodeId = null;
         this.contextSaveTimer = null;
 
+        // Resize handles
+        this.resizeHandleLeft = document.getElementById('resize-handle-left');
+        this.resizeHandleRight = document.getElementById('resize-handle-right');
+
         // State
         this.panX = 0;
         this.panY = 0;
         this.zoom = 1;
         this.isPanning = false;
+        this.panButton = null;
         this.isDraggingNode = null;
         this.activeWire = null;
 
         this.dragOffset = {x: 0, y: 0};
         this.lastMousePos = {x: 0, y: 0};
+        this.resizing = {side: null};
 
         // Execution State
         this.executionState = 'ready'; // ready, running, error, finished
@@ -65,6 +71,7 @@ class GraphEditor {
         }
 
         this.setupEventListeners();
+        this.applySavedSidebarWidths();
         this.render();
 
         if (this.mode === 'edit') {
@@ -265,23 +272,17 @@ class GraphEditor {
     setupEventListeners() {
         // Panning logic
         this.container.addEventListener('mousedown', (e) => {
-            // Allow panning in monitor mode
-            if (e.button === 1 || (e.button === 0 && e.target === this.container)) {
+            // Start pan on left-drag over canvas (container or any layer), but not on nodes
+            if (e.button === 0 && this.container.contains(e.target) && !e.target.closest('.node')) {
                 this.isPanning = true;
+                this.panButton = 0;
                 this.container.style.cursor = 'grabbing';
-                // Clear selection if clicking on empty space
-                if (e.target === this.container) {
-                    this.nodes.forEach(n => {
-                        const el = document.getElementById(n.id);
-                        if (el) el.classList.remove('selected');
-                    });
-                    this.nodes.forEach(n => {
-                        const el = document.getElementById(n.id);
-                        if (el) el.classList.remove('selected');
-                    });
-                    this.updateEyeballState();
-                    this.closeInspector();
-                }
+                this.nodes.forEach(n => {
+                    const el = document.getElementById(n.id);
+                    if (el) el.classList.remove('selected');
+                });
+                this.updateEyeballState();
+                this.closeInspector();
             }
         });
 
@@ -300,6 +301,24 @@ class GraphEditor {
         }, {passive: false});
 
         window.addEventListener('mousemove', (e) => {
+            if (this.resizing.side) {
+                const deltaX = e.clientX - this.resizing.startX;
+                const root = document.documentElement;
+                if (this.resizing.side === 'left') {
+                    const minW = 180;
+                    const maxW = 500;
+                    const newW = Math.min(maxW, Math.max(minW, this.resizing.startWidth + deltaX));
+                    root.style.setProperty('--sidebar-left-width', `${newW}px`);
+                } else {
+                    const minW = 280;
+                    const maxW = 600;
+                    const newW = Math.min(maxW, Math.max(minW, this.resizing.startWidth - deltaX));
+                    root.style.setProperty('--inspector-width', `${newW}px`);
+                }
+                this.lastMousePos = {x: e.clientX, y: e.clientY};
+                return;
+            }
+
             const dx = e.clientX - this.lastMousePos.x;
             const dy = e.clientY - this.lastMousePos.y;
 
@@ -327,9 +346,17 @@ class GraphEditor {
         });
 
         window.addEventListener('mouseup', async (e) => {
-            if (this.isPanning) {
+            if (this.resizing.side) {
+                this.saveSidebarWidths();
+                this.resizing.side = null;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+
+            if (this.isPanning && e.button === this.panButton) {
                 this.isPanning = false;
-                this.container.style.cursor = 'grab';
+                this.panButton = null;
+                this.container.style.cursor = '';
             }
 
             if (this.activeWire) {
@@ -446,6 +473,89 @@ class GraphEditor {
                 });
             }
         });
+
+        this.setupResizeHandles();
+    }
+
+    setupResizeHandles() {
+        const root = document.documentElement;
+        const SIDEBAR_DEFAULT = 250;
+        const INSPECTOR_DEFAULT = 380;
+
+        const startResize = (side, e) => {
+            if (e.button !== 0) return;
+            e.preventDefault();
+            const leftW = parseFloat(getComputedStyle(root).getPropertyValue('--sidebar-left-width')) || SIDEBAR_DEFAULT;
+            const rightW = parseFloat(getComputedStyle(root).getPropertyValue('--inspector-width')) || INSPECTOR_DEFAULT;
+            this.resizing = {
+                side,
+                startX: e.clientX,
+                startWidth: side === 'left' ? leftW : rightW
+            };
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        };
+
+        const resetWidth = (side) => {
+            if (side === 'left') {
+                root.style.setProperty('--sidebar-left-width', `${SIDEBAR_DEFAULT}px`);
+            } else {
+                root.style.setProperty('--inspector-width', `${INSPECTOR_DEFAULT}px`);
+            }
+            this.saveSidebarWidths();
+        };
+
+        if (this.resizeHandleLeft) {
+            this.resizeHandleLeft.addEventListener('mousedown', (e) => {
+                startResize('left', e);
+            });
+            this.resizeHandleLeft.addEventListener('dblclick', () => resetWidth('left'));
+        }
+        if (this.resizeHandleRight) {
+            this.resizeHandleRight.addEventListener('mousedown', (e) => {
+                if (this.inspector && this.inspector.classList.contains('hidden')) return;
+                startResize('right', e);
+            });
+            this.resizeHandleRight.addEventListener('dblclick', () => resetWidth('right'));
+        }
+    }
+
+    saveSidebarWidths() {
+        try {
+            const root = document.documentElement;
+            const left = getComputedStyle(root).getPropertyValue('--sidebar-left-width').trim();
+            const right = getComputedStyle(root).getPropertyValue('--inspector-width').trim();
+            if (left) localStorage.setItem('graphEditor.sidebarLeftWidth', left);
+            if (right) localStorage.setItem('graphEditor.inspectorWidth', right);
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    applySavedSidebarWidths() {
+        try {
+            const root = document.documentElement;
+            const left = localStorage.getItem('graphEditor.sidebarLeftWidth');
+            const right = localStorage.getItem('graphEditor.inspectorWidth');
+            const minLeft = 180;
+            const maxLeft = 500;
+            const minRight = 280;
+            const maxRight = 600;
+            if (left) {
+                const px = parseFloat(left);
+                if (!isNaN(px)) {
+                    root.style.setProperty('--sidebar-left-width', `${Math.min(maxLeft, Math.max(minLeft, px))}px`);
+                }
+            }
+            if (right) {
+                const px = parseFloat(right);
+                if (!isNaN(px)) {
+                    root.style.setProperty('--inspector-width', `${Math.min(maxRight, Math.max(minRight, px))}px`);
+                }
+            }
+        } catch (e) {
+            // ignore
+        }
     }
 
     updateCanvasTransform() {

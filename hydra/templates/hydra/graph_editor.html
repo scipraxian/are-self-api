@@ -44,9 +44,11 @@
             cursor: not-allowed !important;
         }
 
-        /* INSPECTOR MODIFICATIONS */
+        /* INSPECTOR MODIFICATIONS (width from graph_editor.css vars for drag-resize) */
         .inspector-panel {
-            width: 380px; /* Slight increase for better log viewing */
+            width: var(--inspector-width);
+            min-width: var(--inspector-min);
+            max-width: var(--inspector-max);
             background: #0f172a;
             border-left: 1px solid #1e293b;
             display: flex;
@@ -478,6 +480,7 @@
                 </div>
             </div>
         </aside>
+        <div id="resize-handle-left" class="resize-handle" aria-label="Resize left sidebar"></div>
 
         <main id="editor-container">
             <div id="canvas-grid" class="canvas-layer"></div>
@@ -498,7 +501,7 @@
 
             <div id="nodes-layer" class="canvas-layer"></div>
         </main>
-
+        <div id="resize-handle-right" class="resize-handle resize-handle-right" aria-label="Resize inspector"></div>
         <aside id="inspector" class="inspector-panel hidden">
             <div class="inspector-header">
                 <h2>Inspector</h2>
@@ -519,7 +522,7 @@
             {% if mode == 'monitor' %}
                 Monitor Mode: Read Only
             {% else %}
-                Right-click wire to delete | Drag header to move
+                Right-click wire to delete | Drag header to move | Left-drag on canvas to pan
             {% endif %}
         </div>
     </footer>
