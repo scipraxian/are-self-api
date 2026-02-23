@@ -14,6 +14,8 @@ def _conclude_sync(
     outcome_status: str,
     summary: str,
     recommended_action: str,
+    next_goal_suggestion: str,
+    system_persona_and_prompt_feedback: str,
 ) -> str:
 
     try:
@@ -28,12 +30,13 @@ def _conclude_sync(
         # Create Conclusion
         SessionConclusion.objects.update_or_create(
             session=session,
-            defaults={
-                'outcome_status': outcome_status,
-                'summary': summary,
-                'recommended_action': recommended_action,
-                # 'reasoning_trace': ... (removed to simplify, or keep if you prefer)
-            },
+            defaults=dict(
+                outcome_status=outcome_status,
+                summary=summary,
+                recommended_action=recommended_action,
+                next_goal_suggestion=next_goal_suggestion,
+                system_persona_and_prompt_feedback=system_persona_and_prompt_feedback,
+            ),
         )
 
         session.status_id = ReasoningStatusID.COMPLETED
@@ -51,6 +54,8 @@ async def mcp_conclude_session(
     outcome_status: str,
     summary: str,
     recommended_action: str,
+    next_goal_suggestion: str,
+    system_persona_and_prompt_feedback: str,
 ) -> str:
     """
     MCP Tool: Files the final report.
@@ -59,5 +64,11 @@ async def mcp_conclude_session(
         outcome_status: 'SUCCESS', 'FAILURE', 'PARTIAL'
     """
     return await _conclude_sync(
-        session_id, goal_achieved, outcome_status, summary, recommended_action
+        session_id=session_id,
+        goal_achieved=goal_achieved,
+        outcome_status=outcome_status,
+        summary=summary,
+        recommended_action=recommended_action,
+        next_goal_suggestion=next_goal_suggestion,
+        system_persona_and_prompt_feedback=system_persona_and_prompt_feedback,
     )

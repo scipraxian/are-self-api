@@ -255,7 +255,7 @@
     "fields": {
       "created": "2026-02-18T12:00:00Z",
       "description": "To post your name to the Leader Boards and end your run use mcp_conclude_session. Use this ONLY when the absolute root objective is complete or permanently blocked.",
-      "modified": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-23T14:23:21.136Z",
       "name": "mcp_conclude_session",
       "is_async": true,
       "use_type": 5
@@ -646,6 +646,28 @@
       "description": "New data to append.",
       "modified": "2026-02-21T20:53:49.883Z",
       "name": "additional_fact",
+      "type": 1
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 33,
+    "fields": {
+      "created": "2026-02-23T14:22:58.300Z",
+      "description": "",
+      "modified": "2026-02-23T14:22:58.300Z",
+      "name": "next_goal_suggestion",
+      "type": 1
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 34,
+    "fields": {
+      "created": "2026-02-23T14:23:14.246Z",
+      "description": "",
+      "modified": "2026-02-23T14:23:14.246Z",
+      "name": "system_persona_and_prompt_feedback",
       "type": 1
     }
   },
@@ -1175,6 +1197,28 @@
       "tool": 9,
       "parameter": 17,
       "required": false
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 60,
+    "fields": {
+      "created": "2026-02-23T14:23:21.138Z",
+      "modified": "2026-02-23T14:23:21.138Z",
+      "tool": 11,
+      "parameter": 33,
+      "required": true
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 61,
+    "fields": {
+      "created": "2026-02-23T14:23:21.141Z",
+      "modified": "2026-02-23T14:23:21.141Z",
+      "tool": 11,
+      "parameter": 34,
+      "required": true
     }
   },
   {

@@ -178,7 +178,7 @@ class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
         return was_efficient, efficiency_status
 
 
-class SessionConclusion(DefaultFieldsMixin, ReasoningStatusMixin):
+class SessionConclusion(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
     """The crystallized result of a ReasoningSession."""
 
     session = models.OneToOneField(
@@ -195,6 +195,7 @@ class SessionConclusion(DefaultFieldsMixin, ReasoningStatusMixin):
 
     # The 'Seed' for the next thought
     next_goal_suggestion = models.TextField(blank=True, null=True)
+    system_persona_and_prompt_feedback = models.TextField(blank=True, null=True)
 
     @property
     def engrams(self):
