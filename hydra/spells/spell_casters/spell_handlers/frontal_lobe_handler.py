@@ -615,13 +615,66 @@ class FrontalLobe:
         )
 
         # 2. Card Catalog (Engram Index)
-        engrams = await sync_to_async(list)(
-            self.session.engram.filter(is_active=True).order_by('created')
-        )
-        if engrams:
-            catalog_str = '\n'.join([f'- ID {e.id}: {e.name}' for e in engrams])
+        current_turn = turn_record.turn_number
+        catalog_block = ''
+        if current_turn == 1:
+            from django.db.models import Count
+
+            from talos_hippocampus.models import TalosEngram
+
+            def get_turn_1_engrams_lines():
+                qs = (
+                    TalosEngram.objects.filter(
+                        heads=self.session.head, is_active=True
+                    )
+                    .annotate(
+                        session_count=Count('sessions', distinct=True),
+                        head_count=Count('heads', distinct=True),
+                    )
+                    .order_by('-session_count')[:15]
+                    .prefetch_related('tags')
+                )
+                res_lines = []
+                for e in qs:
+                    tags_str = ', '.join([tag.name for tag in e.tags.all()])
+                    res_lines.append(
+                        f'- ID {e.id} | Sessions: {e.session_count} | Heads: {e.head_count} | Title: {e.name} | Tags: {tags_str}'
+                    )
+                return res_lines
+
+            engram_lines = await sync_to_async(get_turn_1_engrams_lines)()
+
+            if engram_lines:
+                catalog_body = '\n'.join(engram_lines)
+                catalog_block = (
+                    f'[YOUR CARD CATALOG (ENGRAM INDEX)]\n'
+                    f'[SYSTEM BOOT: RELEVANT ENGRAM INDEX INJECTED]\n'
+                    f'The following historical memory cards are explicitly linked to this HydraHead:\n\n'
+                    f'{catalog_body}\n\n'
+                    f'(Action: The data payloads are currently evicted. Use mcp_engram_read as a Free Action (0 Focus) to retrieve the full facts into your L1 Cache before proceeding.)\n\n'
+                )
+            else:
+                catalog_block = (
+                    f'[YOUR CARD CATALOG (ENGRAM INDEX)]\n'
+                    f'Your memory banks are completely empty.\n'
+                    f'(Use mcp_engram_read to read full facts)\n\n'
+                )
         else:
-            catalog_str = 'Your memory banks are completely empty.'
+            engrams = await sync_to_async(list)(
+                self.session.engram.filter(is_active=True).order_by('created')
+            )
+            if engrams:
+                catalog_str = '\n'.join(
+                    [f'- ID {e.id}: {e.name}' for e in engrams]
+                )
+            else:
+                catalog_str = 'Your memory banks are completely empty.'
+
+            catalog_block = (
+                f'[YOUR CARD CATALOG (ENGRAM INDEX)]\n'
+                f'{catalog_str}\n'
+                f'(Use mcp_engram_read to read full facts)\n\n'
+            )
 
         # 3. Historical Log (River of 6)
         recent_turns = await sync_to_async(list)(
@@ -714,24 +767,11 @@ class FrontalLobe:
             f'{input_bandwidth_str}\n'
         )
 
-        # SYSTEM BOOT ENGRAM INJECTION
-        system_boot_str = ''
-        if current_turn == 1 and self.current_goal:
-            from talos_parietal.parietal_mcp.mcp_engram_search import (
-                _search_sync,
-            )
-
-            search_result = await _search_sync(
-                query=self.current_goal.rendered_goal, limit=3
-            )
-            system_boot_str = f'[SYSTEM BOOT: Retrieved relevant historical Engrams]\n{search_result}\n\n'
-
         user_content = (
             f'SESSION ID: {self.session.id}\n\n'
-            f'{system_boot_str}'
             f'{header_str}\n'
             f'[WAKING STATE: ACTIVE GOALS]\n{goal_str}\n\n'
-            f'[YOUR CARD CATALOG (ENGRAM INDEX)]\n{catalog_str}\n(Use mcp_read_engram to read full facts)\n\n'
+            f'{catalog_block}'
             f'[HISTORICAL LOG (RIVER OF 6)]\n{history_str}\n'
             f'[YOUR MOVE]\n'
             f"Write your reasoning starting with 'THOUGHT: '. Stop writing text immediately after your thought and invoke your tools natively. DO NOT generate fake system diagnostics."
