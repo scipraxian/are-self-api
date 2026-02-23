@@ -15,10 +15,14 @@ function toggleChat() {
 }
 
 // --- Launch Pad Search ---
-document.addEventListener('DOMContentLoaded', () => {
+function initSearch() {
     const searchInput = document.getElementById('protocol-search');
 
     if (searchInput) {
+        // Remove old listener to prevent duplicates if re-initializing
+        // (Note: anonymous functions can't be removed easily, but ensuring
+        // this runs once per page load/swap is usually sufficient)
+
         searchInput.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             const groups = document.querySelectorAll('.launch-group');
@@ -28,6 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const filterRow = (row) => {
                 const btn = row.querySelector('.launch-btn');
                 const text = btn ? btn.textContent.toLowerCase() : '';
+
+                // Flexible matching
                 if (text.includes(term)) {
                     row.style.display = 'flex';
                     return true;
@@ -39,6 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 1. Filter Tag Groups
             groups.forEach(group => {
+                // FIX: Do not hide the group containing the search input itself
+                if (group.contains(searchInput)) return;
+
                 const rows = group.querySelectorAll('.launch-row');
                 let hasVisible = false;
                 rows.forEach(row => {
@@ -52,4 +61,13 @@ document.addEventListener('DOMContentLoaded', () => {
             ungrouped.forEach(row => filterRow(row));
         });
     }
-});
+}
+
+
+// Initialize on page load
+// Initialize search if function exists
+if (typeof initSearch === 'function') {
+    initSearch();
+}
+
+

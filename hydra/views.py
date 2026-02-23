@@ -1,11 +1,12 @@
-import os
+import json
 
-from django.http import HttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, TemplateView
 
+from hydra.utils import get_active_environment, resolve_environment_context
 from ue_tools.merge_logs import merge_logs
 
 from .hydra import Hydra
@@ -131,9 +132,10 @@ class GracefulStopSpawnView(View):
 
             # Common stopping state button
             stopping_btn = (
-                '<button class="btn-secondary" disabled '
-                'style="opacity: 0.5; cursor: wait; border-color: #f85149; color: #f85149; background: rgba(248, 81, 73, 0.1);">'
-                'Stopping...'
+                '<button class="btn-control stop" disabled '
+                'style="opacity: 0.5; cursor: wait; border-color: #f97316; color: #f97316;">'
+                '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'
+                '<rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect></svg>'
                 '</button>'
             )
 
@@ -144,20 +146,15 @@ class GracefulStopSpawnView(View):
                     f'<div id="actions-container" style="display: inline-block;" '
                     f'hx-get="{referer}" hx-vals=\'{{"partial": "actions"}}\' '
                     f'hx-trigger="every 2s" hx-swap="outerHTML">'
-                    f'{stopping_btn}'
+                    f'<button class="btn-secondary" disabled style="opacity:0.5;">Stopping...</button>'
                     '</div>'
                 )
 
-            # 2. MONITOR (Spawn List) logic
+            # 2. MONITOR / DASHBOARD logic
             else:
-                # Legacy behavior for the main dashboard list
-                # It uses hx-select because that view doesn't have a partial for just buttons yet
-                common_attrs = f'hx-get="{referer}" hx-select=".actions" hx-target="closest .actions" hx-swap="outerHTML" hx-trigger="every 2s"'
-                return HttpResponse(
-                    f'<div class="actions" {common_attrs}>'
-                    '<button class="btn-done" disabled style="border-color: #fb923c; color: #fb923c; opacity: 0.8; cursor: wait;">Stopping...</button>'
-                    '</div>'
-                )
+                # FIX: Do NOT try to poll .actions on dashboard as it doesn't exist in the partial.
+                # Just return the disabled button. The main swimlane poll will pick up the 'Stopping' state naturally.
+                return HttpResponse(stopping_btn)
 
         target_url = reverse('hydra:graph_monitor', kwargs={'spawn_id': pk})
         return redirect(target_url)
@@ -334,3 +331,90 @@ class SpawnMonitorDetailView(DetailView):
         context['is_full_page'] = self.request.GET.get('full') == 'True'
         context['is_active'] = self.object.is_active
         return context
+
+
+def generate_spawn_dump(spawn, depth=0):
+    """Generator that streams the entire execution context of a Spawn and its subgraphs."""
+    indent = '    ' * depth
+
+    yield f'{indent}TALOS SPAWN EXPORT {"(SUBGRAPH)" if depth > 0 else ""}\n'
+    yield f'{indent}================================================================================\n'
+    yield f'{indent}Spawn ID:   {spawn.id}\n'
+    yield f'{indent}Spellbook:  {spawn.spellbook.name if spawn.spellbook else "Deleted"}\n'
+    yield f'{indent}Status:     {spawn.status.name}\n'
+    yield f'{indent}Created:    {spawn.created}\n'
+    yield f'{indent}Environment: {spawn.environment.name if spawn.environment else "None"}\n'
+    yield f'{indent}================================================================================\n\n'
+
+    # Fetch all heads in order
+    heads = (
+        spawn.heads.all()
+        .order_by('created')
+        .select_related(
+            'spell', 'status', 'target', 'node', 'spell__talos_executable'
+        )
+    )
+
+    for i, head in enumerate(heads):
+        yield f'{indent}--- HEAD #{i + 1} [{head.id}] ---\n'
+        yield f'{indent}Spell:      {head.spell.name if head.spell else "None"}\n'
+        yield f'{indent}Status:     {head.status.name}\n'
+        yield f'{indent}Target:     {head.target.hostname if head.target else "Local Server"}\n'
+
+        # Resolve the command string for context
+        cmd_str = 'Command resolution failed'
+        try:
+            env = get_active_environment(head)
+            ctx = resolve_environment_context(head_id=head.id)
+            if head.spell:
+                full_cmd = head.spell.get_full_command(
+                    environment=env, extra_context=ctx
+                )
+                cmd_str = ' '.join(full_cmd)
+            else:
+                cmd_str = '<No Spell Attached>'
+        except Exception as e:
+            cmd_str = f'<Error: {e}>'
+
+        yield f'{indent}Command:    {cmd_str}\n'
+        yield f'{indent}Result RC:  {head.result_code}\n'
+
+        # Output the exact Blackboard state!
+        if head.blackboard:
+            yield f'{indent}Blackboard: {json.dumps(head.blackboard)}\n'
+
+        yield f'\n{indent}[SPELL LOG (Tool Output)]\n'
+        yield f'{indent}-------------------------\n'
+        if head.spell_log:
+            yield head.spell_log
+        else:
+            yield f'<No Output>'
+        yield f'\n'
+
+        yield f'\n{indent}[EXECUTION LOG (System)]\n'
+        yield f'{indent}------------------------\n'
+        if head.execution_log:
+            yield head.execution_log
+        else:
+            yield f'<No System Logs>'
+        yield f'\n'
+        yield f'\n'
+        yield f'{indent}================================================================================\n\n'
+        child_spawns = head.child_spawns.all().order_by('created')
+        for child in child_spawns:
+            yield from generate_spawn_dump(child, depth + 1)
+
+
+class HydraSpawnDownloadView(View):
+    """Streams all data from a spawn into a single .log file download."""
+
+    def get(self, request, pk):
+        spawn = get_object_or_404(HydraSpawn, pk=pk)
+
+        response = StreamingHttpResponse(
+            generate_spawn_dump(spawn), content_type='text/plain'
+        )
+
+        filename = f'Spawn_{str(spawn.id)[:8]}_{spawn.status.name}.log'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response

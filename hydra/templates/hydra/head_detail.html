@@ -14,7 +14,7 @@
 {% block main_content %}
     <div class="head-info-bar">
         <div class="breadcrumbs">
-            <a href="{% url 'home' %}">Dashboard</a>
+            <a href="{% url 'dashboard:home' %}">Dashboard</a>
             <span class="separator">/</span>
             <a href="{% url 'hydra:hydra_spawn_monitor' head.spawn.id %}?full=True">Monitor</a>
             <span class="separator">/</span>

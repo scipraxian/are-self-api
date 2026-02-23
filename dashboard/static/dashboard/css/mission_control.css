@@ -117,6 +117,11 @@ body {
     overflow-y: auto;
 }
 
+.launch-pad::-webkit-scrollbar {
+    display: none;
+}
+
+
 /* Search Box */
 .search-container {
     padding: 0 5px 10px 5px;
@@ -284,6 +289,10 @@ body {
     padding-bottom: 20px;
 }
 
+.mission-monitor::-webkit-scrollbar {
+    display: none;
+}
+
 /* --- LANE WRAPPER --- */
 .lane-wrapper {
     display: flex;
@@ -445,7 +454,7 @@ body {
     color: #94a3b8;
     width: 24px;
     height: 70px; /* Match card height */
-    display: flex;
+    display: none; /* CHANGED: Default to hidden */
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -453,6 +462,11 @@ body {
     border-radius: 4px;
     flex-shrink: 0;
     z-index: 15;
+}
+
+/* [NEW] Show buttons only when container detects overflow */
+.swimlane.has-overflow .lane-scroll-btn {
+    display: flex;
 }
 
 .lane-scroll-btn:hover {
@@ -465,79 +479,102 @@ body {
 .head-card {
     background: #111;
     border: 1px solid #333;
-    border-radius: 4px;
-    padding: 6px;
-    width: 140px;
+    border-radius: 6px;
+    padding: 8px 10px;
+    width: 170px; /* Wider to fit metadata */
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: 70px;
+    gap: 6px;
+    height: 80px;
     overflow: hidden;
     position: relative;
     text-decoration: none;
-    transition: transform 0.2s, border-color 0.2s;
+    transition: transform 0.2s, border-color 0.2s, background 0.2s;
 }
 
-.head-card:hover {
-    transform: translateY(-2px);
-    border-color: #555;
-    background: #151515;
-}
-
-.head-card.active {
-    border-color: var(--lcars-elbow);
-    background: #1a1a1a;
-    box-shadow: 0 0 8px rgba(249, 159, 27, 0.1);
-}
-
-/* Pending State (Important!) */
-.head-card.pending {
-    border-color: #444;
-    opacity: 0.8;
-    border-style: dashed;
-    background: rgba(255, 255, 255, 0.02);
-}
-
-.head-card.success {
-    border-top: 3px solid var(--lcars-blue);
-}
-
-.head-card.failed {
-    border-top: 3px solid var(--lcars-red);
+.head-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
 }
 
 .head-name {
     font-size: 0.7rem;
     font-weight: 700;
-    color: #ddd;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.head-target {
+.head-meta {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+}
+
+.head-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
     font-size: 0.6rem;
-    color: #888;
-    font-family: monospace;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    color: #666;
 }
 
-.head-log {
-    font-size: 0.55rem;
-    color: #666;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+/* Colorful States */
+.head-card.success {
+    background: rgba(74, 222, 128, 0.05);
+    border-color: rgba(74, 222, 128, 0.3);
+    border-top: 3px solid #4ade80;
+}
+
+.head-card.success:hover {
+    background: rgba(74, 222, 128, 0.1);
+    border-color: #4ade80;
+    transform: translateY(-2px);
+}
+
+.head-card.failed {
+    background: rgba(239, 68, 68, 0.05);
+    border-color: rgba(239, 68, 68, 0.3);
+    border-top: 3px solid #ef4444;
+}
+
+.head-card.failed:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+    transform: translateY(-2px);
+}
+
+.head-card.active {
+    background: rgba(249, 159, 27, 0.05);
+    border-color: var(--lcars-elbow);
+    border-top: 3px solid var(--lcars-elbow);
+    box-shadow: 0 0 10px rgba(249, 159, 27, 0.2);
+}
+
+.head-card.active:hover {
+    background: rgba(249, 159, 27, 0.1);
+    transform: translateY(-2px);
+}
+
+.head-card.pending {
+    border-color: #444;
+    border-style: dashed;
+    background: rgba(255, 255, 255, 0.02);
+    opacity: 0.8;
+}
+
+.head-card.stopped {
+    background: rgba(148, 163, 184, 0.05);
+    border-color: #444;
+    border-top: 3px solid #94a3b8;
 }
 
 /* Drill Button */
 .card-drill-btn {
-    position: absolute;
-    top: 4px;
-    right: 4px;
     width: 16px;
     height: 16px;
     border-radius: 50%;
@@ -547,7 +584,7 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
 }
 
 .head-card:hover .card-drill-btn {
@@ -576,4 +613,36 @@ body {
 .thought-bubble:hover {
     background: var(--lcars-blue);
     color: #000;
+}
+
+/* --- SWIMLANE STATE OVERRIDES --- */
+/* Base successful lane (green tint) */
+.swimlane.success-lane {
+    background: rgba(74, 222, 128, 0.05);
+    border-color: rgba(74, 222, 128, 0.3);
+}
+
+
+/* Text Status Colors (Matches LCARS/Tailwind definitions) */
+.status-success {
+    color: #4ade80 !important;
+}
+
+.status-failed,
+.status-aborted {
+    color: #ef4444 !important;
+}
+
+.status-running {
+    color: var(--lcars-elbow) !important;
+}
+
+.status-pending,
+.status-created {
+    color: #94a3b8 !important;
+}
+
+.status-stopping,
+.status-stopped {
+    color: #888 !important;
 }

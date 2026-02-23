@@ -17,3 +17,40 @@ DELETE_LABEL = 'Delete'
 DELEGATED_LABEL = 'Delegated'
 IS_ALIVE_LABEL = 'Is Alive'
 IS_TERMINAL_LABEL = 'Is Terminal'
+
+KEY_HEAD_ID = 'head_id'
+KEY_SPAWN_ID = 'spawn_id'
+KEY_SPELL_ID = 'spell_id'
+KEY_BOOK_ID = 'book_id'
+KEY_PROVENANCE_ID = 'provenance_id'
+KEY_SERVER = 'server'
+KEY_ENVIRONMENT_ID = 'environment_id'
+
+PROVENANCE_FIELD_NAME = 'provenance'
+
+SPELL_LOG_FIELD_NAME = 'spell_log'
+EXECUTION_LOG_FIELD_NAME = 'execution_log'
+RESULT_CODE_FIELD_NAME = 'result_code'
+
+ENVIRONMENT_KEY = 'environment'
+ENVIRONMENT_LABEL = 'Environment'
+
+# --- Graph Editor Constants (Added) ---
+KEY_ID = 'id'
+KEY_TITLE = 'title'
+KEY_X = 'x'
+KEY_Y = 'y'
+KEY_IS_ROOT = 'is_root'
+
+TYPE_FLOW_STR = 'flow'
+TYPE_SUCCESS_STR = 'success'
+TYPE_FAIL_STR = 'fail'
+
+VAL_UNKNOWN = 'Unknown'
+VAL_PENDING = 'Pending...'
+VAL_CMD_NOT_CAPTURED = 'Command not captured.'
+
+HEAD_FIELD_NAME = 'head'
+NODE_FIELD_NAME = 'node'
+SPAWN_FIELD_NAME = 'spawn'
+SPELLBOOK_FIELD_NAME = 'spellbook'

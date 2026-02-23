@@ -54,6 +54,10 @@ INSTALLED_APPS = [
     'talos_occipital',
     'talos_temporal',
     'talos_reasoning',
+    'djangorestframework_mcp',
+    'rest_framework',
+    'django_filters',
+    'talos_hippocampus.apps.TalosHippocampusConfig',
 ]
 
 MIDDLEWARE = [
@@ -99,9 +103,9 @@ ASGI_APPLICATION = 'config.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',  # Default name
-        'USER': 'postgres',  # Default user
-        'PASSWORD': 'frith',
+        'NAME': 'postgres-talos-local',  # Default name
+        'USER': 'postgres_guest',  # Default user
+        'PASSWORD': 'Wingsofbronze22!',
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -149,3 +153,31 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {'format': '[%(levelname)s] %(message)s'},
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'stream': 'ext://sys.stdout',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'hydra': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}

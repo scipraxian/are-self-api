@@ -9,6 +9,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from config.celery import app as celery_app
+from environments.models import ProjectEnvironment
 from talos_agent.models import TalosAgentRegistry, TalosAgentStatus
 
 from .models import (
@@ -20,6 +21,7 @@ from .models import (
     HydraSpellbook,
     HydraSpellbookConnectionWire,
     HydraSpellbookNode,
+    HydraSpellBookNodeContext,
     HydraStatusID,
     HydraWireType,
 )
@@ -116,13 +118,12 @@ class Hydra:
     def stop_gracefully(self) -> None:
         """
         Signals active heads to stop gracefully.
-        Sets status to STOPPING. The GenericSpellCaster will see this
-        and trigger the agent's graceful termination logic.
+        Sets status to STOPPING.
         """
+
         with transaction.atomic():
             spawn = HydraSpawn.objects.select_for_update().get(id=self.spawn.id)
 
-            # Filter for active heads that aren't already stopping/done
             active_heads = spawn.heads.select_for_update().filter(
                 status_id__in=[
                     HydraHeadStatus.RUNNING,
@@ -130,13 +131,17 @@ class Hydra:
                 ]
             )
 
-            count = active_heads.update(status_id=HydraHeadStatus.STOPPING)
+            count = active_heads.update(
+                status_id=HydraHeadStatus.STOPPING, modified=timezone.now()
+            )
+
             if count > 0:
                 spawn.status_id = HydraSpawnStatus.STOPPING
                 spawn.save(update_fields=['status'])
 
             logger.info(
-                f'[HYDRA] Spawn {self.spawn.id}: stop_gracefully signaled {count} heads.'
+                f'[HYDRA] Spawn {self.spawn.id}: '
+                f'stop_gracefully signaled {count} heads.'
             )
 
     def poll(self) -> None:
@@ -200,10 +205,11 @@ class Hydra:
 
     def _create_spawn(self, spellbook_id: uuid.UUID) -> HydraSpawn:
         book = HydraSpellbook.objects.get(id=spellbook_id)
+        active_env = ProjectEnvironment.objects.filter(selected=True).first()
         spawn = HydraSpawn.objects.create(
             spellbook=book,
             status_id=HydraSpawnStatus.CREATED,
-            context_data=json.dumps({}),
+            environment=active_env,
         )
         self.spawn = spawn
         return spawn
@@ -288,7 +294,8 @@ class Hydra:
             return
 
         logger.info(
-            f'[HYDRA] Triggering {wires.count()} wires from Head {finished_head.id}'
+            f'[HYDRA] Triggering {wires.count()} '
+            f'wires from Head {finished_head.id}'
         )
 
         for wire in wires:
@@ -299,6 +306,19 @@ class Hydra:
     def _create_head_from_node(
         self, node: HydraSpellbookNode, provenance: Optional[HydraHead]
     ):
+        starting_blackboard = {}
+
+        if provenance:
+            starting_blackboard = provenance.blackboard.copy()
+        elif self.spawn.parent_head:
+            starting_blackboard = self.spawn.parent_head.blackboard.copy()
+            node_args = HydraSpellBookNodeContext.objects.filter(
+                node=self.spawn.parent_head.node
+            )
+            for arg in node_args:
+                if arg.key:
+                    starting_blackboard[arg.key] = arg.value
+
         seed_head = HydraHead.objects.create(
             spawn=self.spawn,
             node=node,
@@ -306,6 +326,7 @@ class Hydra:
             provenance=provenance,
             target=None,
             status_id=HydraHeadStatus.CREATED,
+            blackboard=starting_blackboard,
         )
 
         if node.invoked_spellbook:
@@ -315,7 +336,10 @@ class Hydra:
             walker.process_node(seed_head)
             return
 
-        mode = node.spell.distribution_mode_id
+        if node.distribution_mode:
+            mode = node.distribution_mode_id
+        else:
+            mode = node.spell.distribution_mode_id
 
         if mode == HydraDistributionModeID.ALL_ONLINE_AGENTS:
             self._dispatch_fleet_wave(seed_head)
@@ -376,6 +400,7 @@ class Hydra:
             provenance=seed.provenance,
             target=agent,
             status_id=HydraHeadStatus.PENDING,
+            blackboard=seed.blackboard.copy(),
         )
         transaction.on_commit(lambda: cast_hydra_spell.delay(new_head.id))
 

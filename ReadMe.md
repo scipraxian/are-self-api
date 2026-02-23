@@ -38,6 +38,8 @@ Talos isn't just a build runner—it's a mission control center. Every interacti
 
 ## 🏗 Architecture & Tech Stack
 
+For a comprehensive overview of each part of the codebase and how they work together, see [docs/CODEBASE_OVERVIEW.md](docs/CODEBASE_OVERVIEW.md).
+
 Talos is built for speed, stability, and maximum responsiveness:
 
 * **Backend:** Django 6.x (running on **Daphne ASGI** for high-concurrency).

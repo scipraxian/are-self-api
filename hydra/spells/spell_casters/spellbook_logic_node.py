@@ -3,8 +3,9 @@ import asyncio
 from asgiref.sync import sync_to_async
 
 from hydra.models import HydraHead
-from hydra.spells.spell_casters.switches_and_arguments import (
-    spell_switches_and_arguments,
+from hydra.utils import (
+    get_active_environment,
+    resolve_environment_context,
 )
 
 
@@ -15,15 +16,20 @@ async def spellbook_logic_node(head_id: str) -> tuple[int, str]:
     """
 
     # 1. Fetch Head with Provenance
-    head = await sync_to_async(
-        lambda: HydraHead.objects.select_related('spell', 'provenance').get(
-            id=head_id
-        )
-    )()
+    head = await sync_to_async(lambda: HydraHead.objects.select_related(
+        'spell', 'provenance').get(id=head_id))()
 
     # 2. Parse Arguments (retry=N, delay=N)
 
-    cmd_list = await sync_to_async(spell_switches_and_arguments)(head.spell.id)
+    env = await sync_to_async(get_active_environment)(head)
+    full_context = await sync_to_async(resolve_environment_context)(
+        head_id=head.id)
+
+    full_cmd = await sync_to_async(head.spell.get_full_command
+                                  )(environment=env, extra_context=full_context)
+
+    # We only care about arguments, skipping the executable (index 0)
+    cmd_list = full_cmd[1:]
     max_retries = 0
     delay_seconds = 0
 
@@ -49,10 +55,8 @@ async def spellbook_logic_node(head_id: str) -> tuple[int, str]:
                 current_retry_count += 1
             cursor = await sync_to_async(lambda: cursor.provenance)()
 
-        log_msg = (
-            f'Retry Check: '
-            f'Attempt {current_retry_count + 1} of {max_retries + 1}'
-        )
+        log_msg = (f'Retry Check: '
+                   f'Attempt {current_retry_count + 1} of {max_retries + 1}')
 
         if current_retry_count < max_retries:
             # We are under the limit -> Return SUCCESS (Green Wire loops back)

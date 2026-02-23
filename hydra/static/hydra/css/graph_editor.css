@@ -21,6 +21,14 @@
     --accent: #0078d4;
     --font-main: 'Inter', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
+
+    /* Sidebar widths (draggable) */
+    --sidebar-left-width: 250px;
+    --sidebar-left-min: 180px;
+    --sidebar-left-max: 500px;
+    --inspector-width: 380px;
+    --inspector-min: 280px;
+    --inspector-max: 600px;
 }
 
 * {
@@ -53,12 +61,52 @@ body {
 
 /* Sidebar */
 .sidebar {
-    width: 250px;
+    width: var(--sidebar-left-width);
+    min-width: var(--sidebar-left-min);
+    max-width: var(--sidebar-left-max);
+    flex-shrink: 0;
     background: #252525;
     border-right: 1px solid #333;
     display: flex;
     flex-direction: column;
     z-index: 10;
+}
+
+/* Resize handle between sidebar and editor */
+.resize-handle {
+    width: 6px;
+    flex-shrink: 0;
+    cursor: col-resize;
+    background: #333;
+    transition: background 0.15s;
+    user-select: none;
+}
+
+.resize-handle:hover {
+    background: var(--accent);
+}
+
+.resize-handle:active {
+    background: var(--node-selected);
+}
+
+/* Right resize handle hidden when inspector is collapsed */
+.resize-handle-right:has(+ .inspector-panel.hidden) {
+    display: none;
+}
+
+/* Inspector panel width (overrides inline width when present) */
+.inspector-panel {
+    width: var(--inspector-width);
+    min-width: var(--inspector-min);
+    max-width: var(--inspector-max);
+    flex-shrink: 0;
+}
+
+.inspector-panel.hidden {
+    width: 0;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .sidebar-header {
@@ -296,6 +344,7 @@ body {
 /* Editor Container */
 #editor-container {
     flex: 1;
+    min-width: 0;
     position: relative;
     overflow: hidden;
     background-color: var(--canvas-bg);

@@ -1,24 +1,39 @@
 """Assert commonX models perform as expected."""
-from datetime import datetime, timedelta
+
+from datetime import timedelta
+from unittest.mock import patch
+
 from django.db import models
 from django.test import TestCase
+from django.utils.timezone import now
 
 from common import constants
-from common.models import (CreatedMixin, DefaultFieldsMixin, DescriptionMixin,
-                           ModifiedMixin, NameMixin, CreatedByMixin,
-                           ModifiedByMixin, UUIDIdMixin, BigIdMixin,
-                           CreatedAndModifiedBy,
-                           DjangoAdminReverseRequirementsMixin)
+from common.models import (
+    BigIdMixin,
+    CreatedAndModifiedBy,
+    CreatedAndModifiedWithDelta,
+    CreatedByMixin,
+    CreatedMixin,
+    DefaultFieldsMixin,
+    DescriptionMixin,
+    DjangoAdminReverseRequirementsMixin,
+    ModifiedByMixin,
+    ModifiedMixin,
+    NameMixin,
+    UUIDIdMixin,
+)
 
 # pylint: disable=invalid-name
 
 
 class SimpleModelClass(models.Model):
     """Basic model class, used for testing mixins."""
+
     test_field = models.BooleanField()
 
     class Meta(object):  # pylint:disable=too-few-public-methods
         """Django meta accessor."""
+
         abstract = True
 
 
@@ -30,6 +45,7 @@ class CommonMixinTests(TestCase):  # pylint: disable=too-many-public-methods
 
         class MixedCreated(SimpleModelClass, CreatedMixin):
             """Mixed Model."""
+
             pass
 
         class_instance = MixedCreated()
@@ -43,6 +59,7 @@ class CommonMixinTests(TestCase):  # pylint: disable=too-many-public-methods
 
         class MixedModified(SimpleModelClass, ModifiedMixin):
             """Mixed Model."""
+
             pass
 
         class_instance = MixedModified()
@@ -56,6 +73,7 @@ class CommonMixinTests(TestCase):  # pylint: disable=too-many-public-methods
 
         class MixedDescription(SimpleModelClass, DescriptionMixin):
             """Mixed Model."""
+
             pass
 
         class_instance = MixedDescription()
@@ -69,6 +87,7 @@ class CommonMixinTests(TestCase):  # pylint: disable=too-many-public-methods
 
         class MixedName(SimpleModelClass, NameMixin):
             """Mixed Model."""
+
             pass
 
         class_instance = MixedName()
@@ -88,6 +107,7 @@ class CommonMixinTests(TestCase):  # pylint: disable=too-many-public-methods
         # pylint:disable=too-many-ancestors
         class TestMixedDefaultFields(SimpleModelClass, DefaultFieldsMixin):
             """Mixed Model."""
+
             pass
 
         class_instance = TestMixedDefaultFields()
@@ -109,6 +129,7 @@ class CommonMixinTests(TestCase):  # pylint: disable=too-many-public-methods
 
         class MixedCreatedBy(SimpleModelClass, CreatedByMixin):
             """Mixed Model."""
+
             pass
 
         class_instance = MixedCreatedBy()
@@ -121,6 +142,7 @@ class CommonMixinTests(TestCase):  # pylint: disable=too-many-public-methods
 
         class MixedModifiedBy(SimpleModelClass, ModifiedByMixin):
             """Mixed Model."""
+
             pass
 
         class_instance = MixedModifiedBy()
@@ -133,6 +155,7 @@ class CommonMixinTests(TestCase):  # pylint: disable=too-many-public-methods
 
         class MixedUUID(UUIDIdMixin):
             """Mixed Model."""
+
             pass
 
         class_instance = MixedUUID()
@@ -145,6 +168,7 @@ class CommonMixinTests(TestCase):  # pylint: disable=too-many-public-methods
 
         class MixedBigId(BigIdMixin):
             """Mixed Model."""
+
             pass
 
         class_instance = MixedBigId()
@@ -156,6 +180,7 @@ class CommonMixinTests(TestCase):  # pylint: disable=too-many-public-methods
         # pylint:disable=too-many-ancestors
         class MixedAll(CreatedAndModifiedBy):
             """Mixed Model."""
+
             pass
 
         class_instance = MixedAll()
@@ -172,6 +197,7 @@ class CommonMixinTests(TestCase):  # pylint: disable=too-many-public-methods
 
             class Meta(object):
                 """Meta."""
+
                 app_label = 'common'
 
         class_instance = MixedAdmin()
@@ -179,3 +205,58 @@ class CommonMixinTests(TestCase):  # pylint: disable=too-many-public-methods
         self.assertEqual(class_instance.model_name, 'mixedadmin')
         self.assertTrue(hasattr(class_instance, 'get_absolute_url'))
         self.assertTrue(hasattr(class_instance, 'get_admin_url'))
+
+    def test_created_and_modified_with_delta_mixin(self):
+        """Assert CreatedAndModifiedWithDelta adds delta and updates it."""
+
+        class MixedDelta(CreatedAndModifiedWithDelta):
+            """Mixed Model."""
+
+            class Meta(object):
+                """Meta."""
+
+                app_label = 'common'
+
+        class_instance = MixedDelta()
+        self.assertTrue(hasattr(class_instance, 'delta'))
+        self.assertEqual(class_instance.delta, timedelta(0))
+
+        # Manually set created to simulate an existing object
+        past_time = now() - timedelta(seconds=60)
+        class_instance.created = past_time
+
+        # Save should update delta.
+        # We mock super().save to avoid hitting the database.
+        with patch('django.db.models.Model.save', autospec=True):
+            class_instance.save()
+
+        self.assertAlmostEqual(
+            class_instance.delta.total_seconds(), 60, delta=1
+        )
+
+    def test_created_and_modified_with_delta_mixin_update_fields(self):
+        """Assert delta is added to update_fields if present."""
+
+        class MixedDeltaFields(CreatedAndModifiedWithDelta):
+            """Mixed Model."""
+
+            class Meta(object):
+                """Meta."""
+
+                app_label = 'common'
+
+        class_instance = MixedDeltaFields()
+        class_instance.created = now()
+
+        with patch('django.db.models.Model.save', autospec=True) as mock_save:
+            # Test with update_fields NOT containing delta
+            class_instance.save(update_fields=['created'])
+            args, kwargs = mock_save.call_args
+            self.assertIn('delta', kwargs['update_fields'])
+            self.assertIn('created', kwargs['update_fields'])
+            self.assertIn('modified', kwargs['update_fields'])
+
+            # Test with update_fields being None
+            class_instance.save(update_fields=None)
+            args, kwargs = mock_save.call_args
+            self.assertIsNone(kwargs.get('update_fields'))

@@ -1,8 +1,13 @@
 """Hydra Data Models."""
 
+from typing import Any, Dict, List, Optional
+
 from django.db import models
 
+import environments
+from common.constants import STANDARD_CHARFIELD_LENGTH
 from common.models import (
+    CreatedAndModifiedWithDelta,
     CreatedMixin,
     DefaultFieldsMixin,
     DescriptionMixin,
@@ -11,10 +16,12 @@ from common.models import (
     UUIDIdMixin,
 )
 from environments.models import (
+    ProjectEnvironmentMixin,
     TalosExecutable,
     TalosExecutableArgument,
     TalosExecutableSwitch,
 )
+from environments.variable_renderer import VariableRenderer
 
 from .constants import (
     ABORTED_LABEL,
@@ -144,7 +151,7 @@ class HydraDistributionMode(NameMixin, DescriptionMixin):
         verbose_name = 'Hydra Distribution Mode'
 
 
-class HydraSpell(DefaultFieldsMixin, TagsAndFavoriteMixin):
+class HydraSpell(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
     """
     A configured action (Tool + specific Switches).
     """
@@ -160,6 +167,71 @@ class HydraSpell(DefaultFieldsMixin, TagsAndFavoriteMixin):
         on_delete=models.PROTECT,
         default=HydraDistributionModeID.LOCAL_SERVER,
     )
+
+    def get_full_command(
+        self,
+        environment: Optional['environments.models.ProjectEnvironment'] = None,
+        extra_context: Optional[Dict[str, Any]] = None,
+    ) -> List[str]:
+        """
+        Constructs the full command line [executable, arg1, arg2...]
+        Resolves proper environment context and interpolates variables.
+        """
+        # 1. Resolve Global Context
+        # Start with base wrapper context (e.g. hostname)
+        context = VariableRenderer.extract_variables(None)
+
+        # Update with Environment specific variables
+        if environment:
+            env_vars = VariableRenderer.extract_variables(environment)
+            context.update(env_vars)
+
+        # Apply runtime overrides (e.g. spawn_id, head_id)
+        if extra_context:
+            context.update(extra_context)
+
+        # 2. Render Executable
+        executable_path = self.talos_executable.get_rendered_executable(
+            environment
+        )
+        command_list = [executable_path]
+
+        # 3. Gather and Render Arguments & Switches
+        # We need to render them using the FULL context
+        executable_args = (
+            self.talos_executable.talosexecutableargumentassignment_set.all()
+        )
+        spell_args = self.hydraspellargumentassignment_set.all()
+
+        # Combine arguments, preserving order is tricky because they are separate querysets
+        # But typically executable args come first in logic, though the model has 'order'
+        # The legacy implementation merged them. Let's strictly follow the 'order' field if possible?
+        # Actually legacy implementation did: list(executable_args) + list(spell_args)
+        # We will stick to that behavior to be safe, but we should probably sort them by order if they share the same space?
+        # Replicating legacy behavior:
+        for assignment in list(executable_args) + list(spell_args):
+            raw_arg = assignment.argument.argument.strip()
+            resolved_arg = VariableRenderer.render_string(raw_arg, context)
+            command_list.append(resolved_arg)
+
+        # Switches
+        executable_switches = self.talos_executable.switches.all()
+        spell_switches = self.switches.all()
+
+        for switch in list(executable_switches) + list(spell_switches):
+            flag = switch.flag.strip()
+            value = switch.value.strip() if switch.value else ''
+            # Legacy logic concatenated flag + value
+            item = VariableRenderer.render_string(flag + value, context)
+            command_list.append(item)
+
+        return command_list
+
+
+class HydraSpellContext(models.Model):
+    spell = models.ForeignKey(HydraSpell, on_delete=models.CASCADE)
+    key = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
+    value = models.TextField(blank=True)
 
 
 class HydraSpellTarget(models.Model):
@@ -193,9 +265,16 @@ class HydraSpellArgumentAssignment(models.Model):
     class Meta(object):
         ordering = ['order']
 
+    def __str__(self):
+        return f'{self.spell.name} -> {self.argument.argument}'
+
 
 class HydraSpellbook(
-    UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin, TagsAndFavoriteMixin
+    UUIDIdMixin,
+    DefaultFieldsMixin,
+    DescriptionMixin,
+    TagsAndFavoriteMixin,
+    ProjectEnvironmentMixin,
 ):
     """
     The Container. Now supports a visual JSON layout, Tags, and Favorites.
@@ -207,7 +286,7 @@ class HydraSpellbook(
         return self.name
 
 
-class HydraSpellbookNode(models.Model):
+class HydraSpellbookNode(ProjectEnvironmentMixin):
     """
     A visual instance of a Spell on the Graph.
     Allows the same Spell (e.g., 'Wait') to be used
@@ -233,8 +312,18 @@ class HydraSpellbookNode(models.Model):
         ),
     )
 
+    distribution_mode = models.ForeignKey(
+        HydraDistributionMode, on_delete=models.SET_NULL, null=True, blank=True
+    )
+
     def __str__(self):
         return f'Node {self.id}: {self.spell.name}'
+
+
+class HydraSpellBookNodeContext(models.Model):
+    node = models.ForeignKey(HydraSpellbookNode, on_delete=models.CASCADE)
+    key = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
+    value = models.TextField(blank=True)
 
 
 class HydraWireType(NameMixin):
@@ -283,17 +372,15 @@ class HydraSpellbookConnectionWire(ModifiedMixin):
 # --- EXECUTION STATE (The Runtime) ---
 
 
-class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
+class HydraSpawn(
+    UUIDIdMixin, CreatedAndModifiedWithDelta, ProjectEnvironmentMixin
+):
     """Spellbook Instance."""
 
     spellbook = models.ForeignKey(
         HydraSpellbook, on_delete=models.SET_NULL, null=True, blank=True
     )
     status = models.ForeignKey(HydraSpawnStatus, on_delete=models.PROTECT)
-
-    context_data = models.TextField(
-        blank=True, help_text='Serialized JSON context variables'
-    )
 
     parent_head = models.ForeignKey(
         'HydraHead',
@@ -373,17 +460,16 @@ class HydraSpawn(UUIDIdMixin, CreatedMixin, ModifiedMixin):
             status__in=HydraSpawnStatus.IS_TERMINAL_STATUS_LIST,
         )
 
+    def __str__(self):
+        # Handle case where spellbook was deleted
+        book_name = (
+            self.spellbook.name if self.spellbook else 'Deleted Spellbook'
+        )
+        return f'Spawn {self.id} ({book_name})'
 
-def __str__(self):
-    # Handle case where spellbook was deleted
-    book_name = self.spellbook.name if self.spellbook else 'Deleted Spellbook'
-    return f'Spawn {self.id} ({book_name})'
 
-
-class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
-    """
-    A single execution head (Process).
-    """
+class HydraHead(UUIDIdMixin, CreatedAndModifiedWithDelta):
+    """A single execution head (Process)."""
 
     status = models.ForeignKey(HydraHeadStatus, on_delete=models.PROTECT)
     spawn = models.ForeignKey(
@@ -415,6 +501,8 @@ class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     spell_log = models.TextField(blank=True)
     execution_log = models.TextField(blank=True)
     result_code = models.IntegerField(null=True, blank=True)
+
+    blackboard = models.JSONField(default=dict, blank=True)
 
     @property
     def is_active(self):  # TODO: DEPRECIATED LEGACY REMOVE, use is_alive.
@@ -456,6 +544,10 @@ class HydraHead(UUIDIdMixin, CreatedMixin, ModifiedMixin):
             HydraHeadStatus.SUCCESS,
             HydraHeadStatus.STOPPED,
         ]
+
+    @property
+    def timestamp_str(self):
+        return self.created.strftime('%H:%M:%S') if self.created else ''
 
     class Meta:
         ordering = ['created']

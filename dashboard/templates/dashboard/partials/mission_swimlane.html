@@ -45,6 +45,8 @@
                 <button class="btn-control stop"
                         hx-post="{% url 'hydra:hydra_spawn_stop_graceful' lane.object.id %}"
                         hx-confirm="Stop Mission?"
+                        hx-target="this"
+                        hx-swap="outerHTML"
                         title="Stop">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect>
@@ -77,40 +79,13 @@
                 </div>
             {% endif %}
 
-            {# UNIFIED LIVE LOOP: Handles both Queued and Running via .is_queued property #}
+            {# UNIFIED LIVE & HISTORY LOOP #}
             {% for head in lane.live_children %}
-                {% if head.is_queued %}
-                    <div class="head-card pending">
-                        <div class="head-name" style="color:#888;">{{ head.spell.name }}</div>
-                        <div class="head-target" style="color:#666;">QUEUED</div>
-                        <div class="head-log" style="font-size:0.55rem; color:#444;">Waiting...</div>
-                    </div>
-                {% else %}
-                    <a href="{% url 'hydra:head_detail' head.id %}" class="head-card active">
-                        <div class="head-name" style="color:#fff;">{{ head.spell.name }}</div>
-                        <div class="head-target" style="color:var(--lcars-elbow);">
-                            {{ head.target.hostname|default:"LOCAL" }}
-                        </div>
-                        <div class="head-log" style="font-size:0.55rem; color:#888;">
-                            {{ head.spell_log|slice:"-30:"|default:"..." }}
-                        </div>
-                        <div class="card-drill-btn" title="View Logs">☍</div>
-                    </a>
-                {% endif %}
+                {% include "dashboard/partials/head_card.html" with head=head %}
             {% endfor %}
 
             {% for head in lane.history %}
-                <a href="{% url 'hydra:head_detail' head.id %}"
-                   class="head-card {% if head.status.name == 'Success' %}success{% else %}failed{% endif %}">
-                    <div class="head-name">{{ head.spell.name }}</div>
-                    <div class="head-target" style="{% if head.status.name == 'Failed' %}color:#ef4444;{% endif %}">
-                        {% if head.result_code != None %}
-                            RC: {{ head.result_code }}
-                        {% else %}
-                            {{ head.status.name }}
-                        {% endif %}
-                    </div>
-                </a>
+                {% include "dashboard/partials/head_card.html" with head=head %}
             {% endfor %}
         </div>
 

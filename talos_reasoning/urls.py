@@ -1,18 +1,16 @@
 from django.urls import path
 
-from .views import CortexLaunchView, CortexSessionView, CortexStreamPartialView, CortexTickActionView
+from . import views
 
 app_name = 'talos_reasoning'
 
 urlpatterns = [
-    path('cortex/<uuid:session_id>/',
-         CortexSessionView.as_view(),
-         name='cortex_view'),
-    path('cortex/<uuid:session_id>/stream/',
-         CortexStreamPartialView.as_view(),
-         name='cortex_stream'),
-    path('cortex/<uuid:session_id>/tick/',
-         CortexTickActionView.as_view(),
-         name='cortex_tick'),
-    path('launch/', CortexLaunchView.as_view(), name='cortex_launch'),
+    path(
+        'interface/<uuid:session_id>/',
+        views.ReasoningInterfaceView.as_view(),
+        name='reasoning_interface',
+    ),
+    path(
+        'lcars/<uuid:session_id>/', views.LcarsView.as_view(), name='lcars_view'
+    ),
 ]

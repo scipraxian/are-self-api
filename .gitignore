@@ -37,4 +37,10 @@ Thumbs.db
 _talos_concatenated_source.txt
 /live_reports/
 .cursor/rules/julia-lang-styling.mdc
+<<<<<<< HEAD
 .gitignore
+=======
+.cursorrules
+.gitignore
+config/settings.py
+>>>>>>> main

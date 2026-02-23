@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 import sys
 import time
 import traceback
@@ -8,14 +9,19 @@ from typing import List, Optional
 
 from asgiref.sync import sync_to_async
 
+from environments.variable_renderer import VariableRenderer
 from hydra.models import HydraHead, HydraHeadStatus
 from hydra.spells.spell_casters.begin_play_node import begin_play
+from hydra.spells.spell_casters.spell_handlers.frontal_lobe_handler import (
+    run_frontal_lobe,
+)
 from hydra.spells.spell_casters.spell_handlers.version_metadata_handler import (
     update_version_metadata,
 )
 from hydra.spells.spell_casters.spellbook_logic_node import spellbook_logic_node
-from hydra.spells.spell_casters.switches_and_arguments import (
-    spell_switches_and_arguments,
+from hydra.utils import (
+    get_active_environment,
+    resolve_environment_context,
 )
 from talos_agent.talos_agent import (
     TalosAgent,
@@ -25,12 +31,25 @@ from talos_agent.talos_agent_finder import scan_and_register
 
 logger = logging.getLogger(__name__)
 
+BLACKBOARD_SET_KEY = '::blackboard_set '
+BLACKBOARD_SET_KEY_REGEX = re.compile(
+    r'^.*?::blackboard_set\s+(.+?)::(.*)$', flags=re.MULTILINE
+)
+BLACKBOARD_SET_STRIPPER = re.compile(
+    r'^.*?::blackboard_set\s+.*?::.*$\n?', flags=re.MULTILINE
+)
+
+
 # Native Python Handlers
+# TODO: these should only be internal nodes like begin_play,logic_node,sequence.
+# NOTE: DO NOT USE THIS METHOD UNLESS YOU KNOW EXACTLY WHAT YOU ARE DOING
+# Instead use a management command with a spell. This is for special cases.
 NATIVE_HANDLERS = dict(
     begin_play=begin_play,
-    update_version_metadata=update_version_metadata,
-    scan_and_register=scan_and_register,
+    update_version_metadata=update_version_metadata,  # TODO: move to management
+    scan_and_register=scan_and_register,  # TODO: move to management
     spellbook_logic_node=spellbook_logic_node,
+    run_frontal_lobe=run_frontal_lobe,
 )
 
 
@@ -144,6 +163,7 @@ class GenericSpellCaster:
     EXECUTION_LOG_FIELD = 'execution_log'
     SPELL_LOG_FIELD = 'spell_log'
     STATUS_FIELD = 'status'
+    BLACKBOARD_FIELD = 'blackboard'
 
     def __init__(self, head_id: uuid.UUID):
         self.head_id = head_id
@@ -268,12 +288,20 @@ class GenericSpellCaster:
         Replaces the old _execute_local_popen.
         """
         # 1. Prepare Arguments
-        cmd_list = await sync_to_async(spell_switches_and_arguments)(
-            self.spell.id
+        env = await sync_to_async(get_active_environment)(self.head)
+        full_context = await sync_to_async(resolve_environment_context)(
+            head_id=self.head_id
         )
-        executable = self.spell.talos_executable.executable
-        full_cmd = [executable] + cmd_list
-        log_path = self.spell.talos_executable.log
+
+        full_cmd = await sync_to_async(self.spell.get_full_command)(
+            environment=env, extra_context=full_context
+        )
+
+        executable = full_cmd[0]
+        params = full_cmd[1:]
+
+        raw_log_path = self.spell.talos_executable.log
+        log_path = VariableRenderer.render_string(raw_log_path, full_context)
 
         is_remote = self.head.target is not None
         target_name = self.head.target.hostname if is_remote else 'Local Server'
@@ -287,7 +315,7 @@ class GenericSpellCaster:
             event_stream = TalosAgent.execute_remote(
                 target_hostname=self.head.target.hostname,
                 executable=executable,
-                params=cmd_list,
+                params=params,
                 log_path=log_path,
                 stop_event=self.stop_event,
             )
@@ -302,10 +330,26 @@ class GenericSpellCaster:
         try:
             async for event in event_stream:
                 if event.type == TalosAgentConstants.T_LOG:
-                    if event.source == 'file':
-                        await self.logger.append_spell(event.text)
-                    else:
-                        await self.logger.append(event.text)
+                    text_to_log = event.text
+                    if BLACKBOARD_SET_KEY in text_to_log:
+                        self._log_info('Blackboard update detected.')
+                        matches = list(
+                            BLACKBOARD_SET_KEY_REGEX.finditer(text_to_log)
+                        )
+                        for match in matches:
+                            key = match.group(1).strip()
+                            val = match.group(2).strip()
+                            if not isinstance(self.head.blackboard, dict):
+                                self.head.blackboard = {}
+                            self.head.blackboard[key] = val
+                            self._log_info(
+                                f'Blackboard updated with {key}={val}.'
+                            )
+                        text_to_log = BLACKBOARD_SET_STRIPPER.sub(
+                            '', text_to_log
+                        )
+                    if text_to_log:
+                        await self.logger.append_spell(text_to_log)
                 elif event.type == TalosAgentConstants.T_EXIT:
                     exit_code = event.code
         except Exception as e:
@@ -345,6 +389,8 @@ class GenericSpellCaster:
                 )
                 new_status = HydraHeadStatus.FAILED
 
+        await self._save_head(fields=[self.BLACKBOARD_FIELD])
+
         self.status = new_status
         await self._update_status(new_status)
 
@@ -383,7 +429,13 @@ class GenericSpellCaster:
 
     def _load_head_sync(self):
         self.head = HydraHead.objects.select_related(
-            'spell', 'spell__talos_executable', 'target'
+            'spell',
+            'spell__talos_executable',
+            'target',
+            'spawn',
+            'spawn__environment',
+            'node',
+            'node__environment',
         ).get(id=self.head_id)
         self.spell = self.head.spell
 

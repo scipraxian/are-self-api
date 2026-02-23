@@ -1,87 +1,106 @@
 [
-    {
-        "model": "talos_reasoning.reasoningstatus",
-        "pk": 1,
-        "fields": {
-            "name": "Pending"
-        }
-    },
-    {
-        "model": "talos_reasoning.reasoningstatus",
-        "pk": 2,
-        "fields": {
-            "name": "Active"
-        }
-    },
-    {
-        "model": "talos_reasoning.reasoningstatus",
-        "pk": 3,
-        "fields": {
-            "name": "Paused"
-        }
-    },
-    {
-        "model": "talos_reasoning.reasoningstatus",
-        "pk": 4,
-        "fields": {
-            "name": "Completed"
-        }
-    },
-    {
-        "model": "talos_reasoning.reasoningstatus",
-        "pk": 5,
-        "fields": {
-            "name": "Maxed Out"
-        }
-    },
-    {
-        "model": "talos_reasoning.reasoningstatus",
-        "pk": 6,
-        "fields": {
-            "name": "Error"
-        }
-    },
-    {
-        "model": "talos_reasoning.reasoningstatus",
-        "pk": 7,
-        "fields": {
-            "name": "Attention Required"
-        }
-    },
-    {
-        "model": "talos_reasoning.tooldefinition",
-        "pk": 1,
-        "fields": {
-            "name": "ai_read_file",
-            "system_prompt_context": "ai_read_file(path, start_line=1, max_lines=50): Reads a specific line range from a file. Use this to examine code or logs.",
-            "is_async": false,
-            "parameters_schema": "{\"type\": \"object\", \"properties\": {\"path\": {\"type\": \"string\"}, \"start_line\": {\"type\": \"integer\"}, \"max_lines\": {\"type\": \"integer\"}}, \"required\": [\"path\"]}",
-            "created": "2026-01-12T12:00:00Z",
-            "modified": "2026-01-12T12:00:00Z"
-        }
-    },
-    {
-        "model": "talos_reasoning.tooldefinition",
-        "pk": 2,
-        "fields": {
-            "name": "ai_search_file",
-            "system_prompt_context": "ai_search_file(path, pattern): Searches a file for a regex pattern. Always use this FIRST to find line numbers before reading.",
-            "is_async": false,
-            "parameters_schema": "{\"type\": \"object\", \"properties\": {\"path\": {\"type\": \"string\"}, \"pattern\": {\"type\": \"string\"}}, \"required\": [\"path\", \"pattern\"]}",
-            "created": "2026-01-12T12:00:00Z",
-            "modified": "2026-01-12T12:00:00Z"
-        }
-    },
-    {
-        "model": "talos_reasoning.tooldefinition",
-        "pk": 3,
-        "fields": {
-            "name": "ai_list_files",
-            "system_prompt_context": "ai_list_files(path): Lists directory contents.",
-            "is_async": false,
-            "parameters_schema": "{\"type\": \"object\", \"properties\": {\"path\": {\"type\": \"string\"}}, \"required\": [\"path\"]}",
-            "created": "2026-01-12T12:00:00Z",
-            "modified": "2026-01-12T12:00:00Z"
-        }
+  {
+    "model": "talos_reasoning.reasoningstatus",
+    "pk": 1,
+    "fields": {
+      "name": "Pending"
     }
+  },
+  {
+    "model": "talos_reasoning.reasoningstatus",
+    "pk": 2,
+    "fields": {
+      "name": "Active"
+    }
+  },
+  {
+    "model": "talos_reasoning.reasoningstatus",
+    "pk": 3,
+    "fields": {
+      "name": "Paused"
+    }
+  },
+  {
+    "model": "talos_reasoning.reasoningstatus",
+    "pk": 4,
+    "fields": {
+      "name": "Completed"
+    }
+  },
+  {
+    "model": "talos_reasoning.reasoningstatus",
+    "pk": 5,
+    "fields": {
+      "name": "Maxed Out"
+    }
+  },
+  {
+    "model": "talos_reasoning.reasoningstatus",
+    "pk": 6,
+    "fields": {
+      "name": "Error"
+    }
+  },
+  {
+    "model": "talos_reasoning.reasoningstatus",
+    "pk": 7,
+    "fields": {
+      "name": "Attention Required"
+    }
+  },
+  {
+    "model": "talos_reasoning.reasoningstatus",
+    "pk": 8,
+    "fields": {
+      "name": "Stopped"
+    }
+  },
+  {
+    "model": "talos_reasoning.modelregistry",
+    "pk": 1,
+    "fields": {
+      "name": "qwen3-coder:30b",
+      "description": "Default Coder Model via Ollama",
+      "api_variant": "ollama",
+      "context_window_size": 262144,
+      "created": "2026-02-17T12:00:00Z",
+      "modified": "2026-02-17T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_reasoning.modelregistry",
+    "pk": 2,
+    "fields": {
+      "name": "gemma3:27b",
+      "description": "High-Intelligence General Reasoning",
+      "api_variant": "ollama",
+      "context_window_size": 131072,
+      "created": "2026-02-17T12:00:00Z",
+      "modified": "2026-02-17T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_reasoning.modelregistry",
+    "pk": 3,
+    "fields": {
+      "name": "llama3:latest",
+      "description": "Lightweight Llama 3 Model. Recommended for low-resource environments.",
+      "api_variant": "ollama",
+      "context_window_size": 8192,
+      "created": "2026-02-17T12:00:00Z",
+      "modified": "2026-02-17T12:00:00Z"
+    }
+  },
+  {
+    "model": "talos_reasoning.modelregistry",
+    "pk": 4,
+    "fields": {
+      "name": "llama3.2:3b",
+      "description": "Flyweight Llama 3 Model. Recommended for medium-resource environments.",
+      "api_variant": "ollama",
+      "context_window_size": 131072,
+      "created": "2026-02-17T12:00:00Z",
+      "modified": "2026-02-17T12:00:00Z"
+    }
+  }
 ]

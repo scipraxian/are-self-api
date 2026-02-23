@@ -3,6 +3,7 @@
  * Built by Antigravity - Senior Frontend Engineer Refactor
  */
 
+
 class GraphEditor {
     constructor() {
         this.nodes = [];
@@ -29,17 +30,31 @@ class GraphEditor {
         this.grid = document.getElementById('canvas-grid');
         this.tempLine = document.getElementById('temp-line');
         this.libraryContainer = document.getElementById('node-library');
+        this.searchInput = document.getElementById('node-search');
+
+        // Inspector
+        this.inspector = document.getElementById('inspector');
+        this.inspectorHeaderSub = this.inspector ? this.inspector.querySelector('.sub-id') : null;
+        this.inspectorContent = this.inspector ? this.inspector.querySelector('.inspector-content') : null;
+        this.activeNodeId = null;
+        this.contextSaveTimer = null;
+
+        // Resize handles
+        this.resizeHandleLeft = document.getElementById('resize-handle-left');
+        this.resizeHandleRight = document.getElementById('resize-handle-right');
 
         // State
         this.panX = 0;
         this.panY = 0;
         this.zoom = 1;
         this.isPanning = false;
+        this.panButton = null;
         this.isDraggingNode = null;
         this.activeWire = null;
 
         this.dragOffset = {x: 0, y: 0};
         this.lastMousePos = {x: 0, y: 0};
+        this.resizing = {side: null};
 
         // Execution State
         this.executionState = 'ready'; // ready, running, error, finished
@@ -56,6 +71,7 @@ class GraphEditor {
         }
 
         this.setupEventListeners();
+        this.applySavedSidebarWidths();
         this.render();
 
         if (this.mode === 'edit') {
@@ -107,6 +123,28 @@ class GraphEditor {
             this.setExecutionStatus('error', `API Failure: ${error.message}`);
             return null;
         }
+    }
+
+    filterLibrary(query) {
+        if (!this.libraryContainer) return;
+        const q = query.toLowerCase();
+
+        const categories = this.libraryContainer.querySelectorAll('.category');
+        categories.forEach(cat => {
+            let hasVisible = false;
+            const items = cat.querySelectorAll('.library-item');
+            items.forEach(item => {
+                const text = item.innerText.toLowerCase();
+                if (text.includes(q)) {
+                    item.style.display = '';
+                    hasVisible = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            cat.style.display = hasVisible ? '' : 'none';
+        });
     }
 
     async loadLibrary() {
@@ -234,18 +272,17 @@ class GraphEditor {
     setupEventListeners() {
         // Panning logic
         this.container.addEventListener('mousedown', (e) => {
-            // Allow panning in monitor mode
-            if (e.button === 1 || (e.button === 0 && e.target === this.container)) {
+            // Start pan on left-drag over canvas (container or any layer), but not on nodes
+            if (e.button === 0 && this.container.contains(e.target) && !e.target.closest('.node')) {
                 this.isPanning = true;
+                this.panButton = 0;
                 this.container.style.cursor = 'grabbing';
-                // Clear selection if clicking on empty space
-                if (e.target === this.container) {
-                    this.nodes.forEach(n => {
-                        const el = document.getElementById(n.id);
-                        if (el) el.classList.remove('selected');
-                    });
-                    this.updateEyeballState();
-                }
+                this.nodes.forEach(n => {
+                    const el = document.getElementById(n.id);
+                    if (el) el.classList.remove('selected');
+                });
+                this.updateEyeballState();
+                this.closeInspector();
             }
         });
 
@@ -264,6 +301,24 @@ class GraphEditor {
         }, {passive: false});
 
         window.addEventListener('mousemove', (e) => {
+            if (this.resizing.side) {
+                const deltaX = e.clientX - this.resizing.startX;
+                const root = document.documentElement;
+                if (this.resizing.side === 'left') {
+                    const minW = 180;
+                    const maxW = 500;
+                    const newW = Math.min(maxW, Math.max(minW, this.resizing.startWidth + deltaX));
+                    root.style.setProperty('--sidebar-left-width', `${newW}px`);
+                } else {
+                    const minW = 280;
+                    const maxW = 600;
+                    const newW = Math.min(maxW, Math.max(minW, this.resizing.startWidth - deltaX));
+                    root.style.setProperty('--inspector-width', `${newW}px`);
+                }
+                this.lastMousePos = {x: e.clientX, y: e.clientY};
+                return;
+            }
+
             const dx = e.clientX - this.lastMousePos.x;
             const dy = e.clientY - this.lastMousePos.y;
 
@@ -291,9 +346,17 @@ class GraphEditor {
         });
 
         window.addEventListener('mouseup', async (e) => {
-            if (this.isPanning) {
+            if (this.resizing.side) {
+                this.saveSidebarWidths();
+                this.resizing.side = null;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+
+            if (this.isPanning && e.button === this.panButton) {
                 this.isPanning = false;
-                this.container.style.cursor = 'grab';
+                this.panButton = null;
+                this.container.style.cursor = '';
             }
 
             if (this.activeWire) {
@@ -323,6 +386,12 @@ class GraphEditor {
         const autoLayoutBtn = document.getElementById('auto-layout-btn');
         if (autoLayoutBtn) {
             autoLayoutBtn.addEventListener('click', () => this.autoLayout());
+        }
+
+        if (this.searchInput) {
+            this.searchInput.addEventListener('input', (e) => {
+                this.filterLibrary(e.target.value);
+            });
         }
 
         // Title Edit Logic
@@ -404,6 +473,89 @@ class GraphEditor {
                 });
             }
         });
+
+        this.setupResizeHandles();
+    }
+
+    setupResizeHandles() {
+        const root = document.documentElement;
+        const SIDEBAR_DEFAULT = 250;
+        const INSPECTOR_DEFAULT = 380;
+
+        const startResize = (side, e) => {
+            if (e.button !== 0) return;
+            e.preventDefault();
+            const leftW = parseFloat(getComputedStyle(root).getPropertyValue('--sidebar-left-width')) || SIDEBAR_DEFAULT;
+            const rightW = parseFloat(getComputedStyle(root).getPropertyValue('--inspector-width')) || INSPECTOR_DEFAULT;
+            this.resizing = {
+                side,
+                startX: e.clientX,
+                startWidth: side === 'left' ? leftW : rightW
+            };
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        };
+
+        const resetWidth = (side) => {
+            if (side === 'left') {
+                root.style.setProperty('--sidebar-left-width', `${SIDEBAR_DEFAULT}px`);
+            } else {
+                root.style.setProperty('--inspector-width', `${INSPECTOR_DEFAULT}px`);
+            }
+            this.saveSidebarWidths();
+        };
+
+        if (this.resizeHandleLeft) {
+            this.resizeHandleLeft.addEventListener('mousedown', (e) => {
+                startResize('left', e);
+            });
+            this.resizeHandleLeft.addEventListener('dblclick', () => resetWidth('left'));
+        }
+        if (this.resizeHandleRight) {
+            this.resizeHandleRight.addEventListener('mousedown', (e) => {
+                if (this.inspector && this.inspector.classList.contains('hidden')) return;
+                startResize('right', e);
+            });
+            this.resizeHandleRight.addEventListener('dblclick', () => resetWidth('right'));
+        }
+    }
+
+    saveSidebarWidths() {
+        try {
+            const root = document.documentElement;
+            const left = getComputedStyle(root).getPropertyValue('--sidebar-left-width').trim();
+            const right = getComputedStyle(root).getPropertyValue('--inspector-width').trim();
+            if (left) localStorage.setItem('graphEditor.sidebarLeftWidth', left);
+            if (right) localStorage.setItem('graphEditor.inspectorWidth', right);
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    applySavedSidebarWidths() {
+        try {
+            const root = document.documentElement;
+            const left = localStorage.getItem('graphEditor.sidebarLeftWidth');
+            const right = localStorage.getItem('graphEditor.inspectorWidth');
+            const minLeft = 180;
+            const maxLeft = 500;
+            const minRight = 280;
+            const maxRight = 600;
+            if (left) {
+                const px = parseFloat(left);
+                if (!isNaN(px)) {
+                    root.style.setProperty('--sidebar-left-width', `${Math.min(maxLeft, Math.max(minLeft, px))}px`);
+                }
+            }
+            if (right) {
+                const px = parseFloat(right);
+                if (!isNaN(px)) {
+                    root.style.setProperty('--inspector-width', `${Math.min(maxRight, Math.max(minRight, px))}px`);
+                }
+            }
+        } catch (e) {
+            // ignore
+        }
     }
 
     updateCanvasTransform() {
@@ -536,6 +688,11 @@ class GraphEditor {
 
             // Update "Big Eyeball" State
             this.updateEyeballState();
+
+            // Inspector Logic
+            if (!e.shiftKey) {
+                this.openInspector(node);
+            }
         });
 
         // Dragging (Disable in Monitor Mode)
@@ -564,7 +721,6 @@ class GraphEditor {
             e.stopPropagation();
             if (this.mode === 'monitor') {
                 if (node.child_spawn_id) {
-                    // DRILL DOWN to Child Graph
                     window.location.href = `/hydra/monitor/${node.child_spawn_id}/?full=True`;
                 } else if (node.head_id) {
                     window.open(`/hydra/head/${node.head_id}/`, '_self');
@@ -574,8 +730,8 @@ class GraphEditor {
             } else {
                 if (node.invoked_spellbook_id) {
                     window.open(`/hydra/graph/editor/${node.invoked_spellbook_id}/`, '_self');
-                } else if (node.spell_id) {
-                    window.open(`/admin/hydra/hydraspell/${node.spell_id}/change/`);
+                } else {
+                    window.open(`/admin/hydra/hydraspellbooknode/${node.id}/change/`);
                 }
             }
         });
@@ -1014,6 +1170,389 @@ class GraphEditor {
 
     render() {
         this.updateCanvasTransform();
+    }
+
+    // --- Inspector Logic ---
+
+    async openInspector(node) {
+        if (!this.inspector) return;
+
+        this.activeNodeId = node.id;
+        this.inspector.classList.remove('hidden');
+
+        // Set Header
+        const isDelegated = !!node.invoked_spellbook_id;
+        const inspectorTitle = this.inspector.querySelector('h2');
+        if (inspectorTitle) {
+            inspectorTitle.innerHTML = `
+                <span style="color: ${isDelegated ? '#a855f7' : '#f8fafc'}">
+                    ${isDelegated ? '🌀 ' : ''}${node.title}
+                </span>
+            `;
+        }
+
+        if (this.inspectorHeaderSub) {
+            this.inspectorHeaderSub.innerText = `ID: ${node.id}`;
+        }
+
+        if (this.inspectorContent) {
+            this.inspectorContent.innerHTML = '<div style="text-align: center; color: #64748b; margin-top: 20px;">Loading details...</div>';
+        }
+
+        if (this.isMonitorMode) {
+            await this.fetchNodeTelemetry(node.id);
+        } else {
+            await this.fetchNodeDetails(node.id);
+        }
+    }
+
+    closeInspector() {
+        if (!this.inspector) return;
+        this.inspector.classList.add('hidden');
+        this.activeNodeId = null;
+    }
+
+    async fetchNodeDetails(nodeId) {
+        const data = await this.apiFetch(`node_details?node_id=${nodeId}`);
+        if (data) {
+            this.renderInspectorEdit(data);
+        }
+    }
+
+    renderInspectorEdit(data) {
+        if (!this.inspectorContent) return;
+        let html = '';
+
+        // Header
+        html += `<div class="inspector-section-header" style="margin-bottom: 20px;">
+            <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px;">SPELL</div>
+            <div style="font-size: 1.1rem; color: #f1f5f9; font-weight: 600;">${data.name || 'Unknown'}</div>
+            <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px; font-style: italic;">
+                ${data.description || 'No description'}
+            </div>
+        </div>`;
+
+        // Context Variables
+        html += `<div class="section-title" style="display: flex; align-items: center; justify-content: space-between;">
+            <span>Context Variables</span>
+            <button class="mini-btn" style="padding: 2px 8px; font-size: 1rem; color: #cbd5e1; border: 1px solid #334155; background: #1e293b; cursor: pointer; border-radius: 4px;" 
+                onclick="window.app.promptAddVariable('${data.node_id}')" title="Add Override">+</button>
+        </div>`;
+
+        if (data.context_matrix && data.context_matrix.length > 0) {
+            html += `<table class="smart-table">`;
+            html += `<thead><tr><th style="width: 40%">Variable</th><th>Value</th></tr></thead>`;
+            html += `<tbody>`;
+
+            data.context_matrix.forEach(item => {
+                const sourceClass = `source-${item.source}`;
+                const inputClass = item.source === 'override' ? 'input-override' : (item.source === 'global' ? 'input-global' : '');
+
+                // Determine if we need a textarea
+                const isLong = item.display_value.length > 50 || item.key.toLowerCase().includes('prompt') || item.key.toLowerCase().includes('script');
+                const uniqueId = `ctx-${item.key}-${data.node_id}`;
+
+                let inputHtml = '';
+                if (isLong) {
+                    inputHtml = `<textarea 
+                        id="${uniqueId}"
+                        class="var-input ${inputClass}" 
+                        placeholder="${item.source === 'global' ? 'Global Value' : 'Default'}"
+                        ${item.is_readonly ? 'readonly' : ''}
+                        rows="3"
+                        style="resize: vertical; min-height: 60px;"
+                        onblur="window.app.handleContextChange('${data.node_id}', '${item.key}', this.value)"
+                    >${item.value}</textarea>`;
+                } else {
+                    inputHtml = `<input type="text" 
+                        id="${uniqueId}"
+                        class="var-input ${inputClass}" 
+                        value="${item.value}" 
+                        placeholder="${item.source === 'global' ? 'Global Value' : 'Default'}"
+                        ${item.is_readonly ? 'readonly' : ''}
+                        onchange="window.app.handleContextChange('${data.node_id}', '${item.key}', this.value)"
+                    >`;
+                }
+
+                // add clear button if override
+                let actionsHtml = '';
+                if (item.source === 'override') {
+                    // X button to clear override
+                    actionsHtml = `<div style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #ef4444; opacity: 0.7;" 
+                        onclick="window.app.handleContextChange('${data.node_id}', '${item.key}', '')" title="Reset to Default">✕</div>`;
+
+                    if (isLong) {
+                        actionsHtml = `<div style="position: absolute; right: 8px; top: 12px; cursor: pointer; color: #ef4444; opacity: 0.7;" 
+                        onclick="window.app.handleContextChange('${data.node_id}', '${item.key}', '')" title="Reset to Default">✕</div>`;
+                    }
+                }
+
+                html += `<tr class="var-row">
+                    <td>
+                        <label for="${uniqueId}" class="var-key" style="cursor: pointer;">${item.key}</label>
+                        <div style="font-size: 0.7rem; color: #64748b; display: flex; align-items: center; gap: 4px;">
+                            <div class="source-indicator ${sourceClass}" style="position: static;"></div>
+                            ${item.source}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="var-input-wrapper" style="${isLong ? 'align-items: flex-start;' : ''}">
+                            ${inputHtml}
+                            ${actionsHtml}
+                        </div>
+                    </td>
+                </tr>`;
+            });
+
+            html += `</tbody></table>`;
+        } else {
+            html += `<div style="font-style: italic; color: #64748b; padding: 10px; text-align: center; border: 1px dashed #334155; border-radius: 6px;">No variables detected in Spell.</div>`;
+        }
+
+        // Action Bar
+        html += `
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #1e293b; display: flex; gap: 10px;">
+             <a href="/admin/hydra/hydraspellbooknode/${data.node_id}/change/" target="_blank" class="action-btn" style="text-decoration: none; justify-content: center;">
+                ⚙️ Advanced Edit
+            </a>
+            <button class="action-btn" style="color: #ef4444; border-color: #ef4444;" onclick="window.app.deleteNode('${data.node_id}')">
+                🗑 Delete Node
+            </button>
+        </div>`;
+
+        // Instructions
+        html += `
+         <div style="margin-top: 20px; font-size: 0.7rem; color: #475569; line-height: 1.4; background: #0f172a; padding: 10px; border-radius: 4px;">
+            <div style="margin-bottom: 4px; font-weight: 600; color: #64748b;">COLOR LEGEND</div>
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;"><span style="color: #4ade80">●</span> Default (Spell)</div>
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;"><span style="color: #facc15">●</span> Override (Node)</div>
+            <div style="display: flex; align-items: center; gap: 6px;"><span style="color: #3b82f6">●</span> Global (Env)</div>
+        </div>`;
+
+        this.inspectorContent.innerHTML = html;
+    }
+
+    async fetchNodeTelemetry(nodeId) {
+        // Only fetch if this is still the active node (avoid race conditions)
+        if (this.activeNodeId !== nodeId) return;
+
+        // Try to find the Head ID from the local model (updated by polling)
+        const node = this.nodes.find(n => n.id === nodeId);
+        if (!node) return;
+
+        if (node.head_id) {
+            const data = await this.apiFetch(`/api/v1/heads/${node.head_id}/`);
+            if (data) {
+                // Ensure we pass the node ID for reference, although data has head ID
+                this.renderInspectorMonitor(nodeId, data);
+            }
+        } else {
+            this.inspectorContent.innerHTML = '<div style="text-align: center; color: #64748b; margin-top: 40px;">Waiting for execution...</div>';
+
+            // Keep polling if monitor mode
+            if (this.isMonitorMode && !document.hidden && this.activeNodeId === nodeId) {
+                setTimeout(() => this.fetchNodeTelemetry(nodeId), 1000);
+            }
+        }
+    }
+
+    renderInspectorMonitor(nodeId, data) {
+        if (!this.inspectorContent) return;
+        const getStatusClass = (s) => {
+            // Map data.status or data.status_name to CSS class
+            // The serializer returns 'status' as ID/PK or string?
+            // HydraHeadSerializer: status is ID. HydraNodeTelemetrySerializer: fields include 'status' (ID) and 'status_name'
+            // Let's use status_name for display, status (ID) for logic if needed. 
+            // The serializer uses `status` field which is relation -> ID by default in DRF unless nested.
+            // Wait, ModelSerializer default for ForeignKey is ID.
+            // Let's rely on status_name if available string.
+            const sName = data.status_name ? data.status_name.toLowerCase() : '';
+            if (sName === 'success') return 'status-success';
+            if (sName === 'failed') return 'status-failed';
+            if (sName === 'running') return 'status-running';
+            return 'status-pending';
+        };
+
+        const statusClass = getStatusClass(data.status_id); // Fallback logic or use status_name mapping
+        const isRunning = data.status_name === 'Running';
+
+        // --- UNIFIED CONFIGURATION LIST ---
+        let configHtml = '';
+
+        // 1. Command
+        configHtml += `<div style="margin-bottom: 12px;">
+            <div class="var-key" style="color: #a5b4fc; margin-bottom: 4px;">Executed Command</div>
+            <div class="var-input" style="font-size: 0.7rem; color: #cbd5e1; user-select: text; white-space: pre-wrap; word-break: break-all;">${data.command || 'N/A'}</div>
+        </div>`;
+
+        // 2. Context Matrix
+        if (data.context_matrix && data.context_matrix.length > 0) {
+            configHtml += `<table class="smart-table" style="margin-bottom: 12px;">`;
+            data.context_matrix.forEach(item => {
+                const sourceClass = `source-${item.source}`;
+                configHtml += `
+               <tr class="var-row">
+                    <td>
+                        <span class="var-key">${item.key}</span>
+                        <div style="font-size: 0.7rem; color: #64748b;">${item.source}</div>
+                    </td>
+                    <td>
+                        <div class="var-input-wrapper">
+                            <div class="source-indicator ${sourceClass}"></div>
+                            <span class="var-input" style="border: none; background: transparent; padding-left: 20px;">
+                                ${item.value}
+                            </span>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            configHtml += `</table>`;
+        }
+
+        // 3. Blackboard
+        if (data.blackboard && Object.keys(data.blackboard).length > 0) {
+            configHtml += `<div class="section-title" style="margin-top: 12px;">Blackboard (Runtime)</div>`;
+            configHtml += `<div class="peep-hole" style="max-height: 150px;">${JSON.stringify(data.blackboard, null, 2)}</div>`;
+        }
+
+        // --- HTML ASSEMBLY ---
+        let html = `
+        <div class="telemetry-card">
+            <div class="monitor-header">
+                <div class="pulse-status ${getStatusClass()}">
+                    <div class="pulse-dot"></div>
+                    ${data.status_name || 'Unknown'}
+                </div>
+                 <div style="text-align: right;">
+                    <span class="vital-value" style="font-size: 1.2rem; color: ${data.result_code === 0 ? '#4ade80' : '#f87171'};">
+                        RC: ${data.result_code !== null ? data.result_code : '--'}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="vital-grid">
+                <div class="vital-item">
+                    <span class="vital-label">Delta</span>
+                    <span class="vital-value">${data.delta || '0s'}</span>
+                </div>
+                 <div class="vital-item">
+                    <span class="vital-label">Avg Delta</span>
+                    <span class="vital-value" style="color: #94a3b8;">${data.average_delta ? parseFloat(data.average_delta).toFixed(2) + 's' : '--'}</span>
+                </div>
+                <div class="vital-item" style="grid-column: span 2;">
+                    <span class="vital-label">Agent</span>
+                    <span class="vital-value">${data.agent}</span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                 <a href="/admin/hydra/hydraspellbooknode/${nodeId}/change/" target="_blank" class="action-btn" style="text-decoration: none; flex: 1; justify-content: center;">
+                    ⚙️ Edit Node
+                </a>
+                <a href="/hydra/head/${data.id}/" target="_blank" class="action-btn primary" style="text-decoration: none; flex: 1; justify-content: center;">
+                    🚀 War Room
+                </a>
+                ${data.reasoning_session_id ? `
+                <a href="/reasoning/lcars/${data.reasoning_session_id}/" target="_blank" class="action-btn" style="text-decoration: none; flex: 1; justify-content: center; background: linear-gradient(135deg, #f99f1b 0%, #d97706 100%); border-color: #f99f1b; color: #020617; font-weight: 800; box-shadow: 0 2px 5px rgba(249, 159, 27, 0.3);">
+                    🧠 Cortex
+                </a>
+                ` : ''}
+            </div>
+        </div>
+
+        <div class="section-title">Configuration & State</div>
+        <div style="background: #1e293b; padding: 10px; border-radius: 6px; border: 1px solid #334155;">
+            ${configHtml}
+        </div>
+
+        <div class="section-title">Tool Output</div>
+        <div id="inspector-term-tool" style="height: 200px; background: #000; padding: 4px; border-radius: 4px; overflow: hidden;"></div>
+        
+        <div class="section-title">System Log</div>
+        <div id="inspector-term-system" style="height: 150px; background: #000; padding: 4px; border-radius: 4px; overflow: hidden;"></div>
+        `;
+
+        this.inspectorContent.innerHTML = html;
+
+        // --- XTERM INITIALIZATION ---
+        this.initXterm('inspector-term-tool', data.logs);
+        this.initXterm('inspector-term-system', data.exec_logs);
+
+        // Auto-refresh if running
+        if (
+            isRunning &&
+            this.activeNodeId === nodeId &&
+            !document.hidden &&
+            this.isMonitorMode
+        ) {
+            setTimeout(() => this.fetchNodeTelemetry(nodeId), 2000);
+        }
+    }
+
+    initXterm(containerId, content) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        // Cleanup existing if any (simplistic approach: clear innerHTML handled by render)
+        // Check if Terminal is defined
+        if (typeof Terminal === 'undefined') {
+            container.innerHTML = `<pre style="color: #fff; font-size: 0.7rem; white-space: pre-wrap;">${content || ''}</pre>`;
+            return;
+        }
+
+        const term = new Terminal({
+            fontFamily: '"JetBrains Mono", monospace',
+            fontSize: 10,
+            theme: {
+                background: '#000000',
+                foreground: '#cbd5e1'
+            },
+            disableStdin: true,
+            cursorBlink: false,
+            convertEol: true
+        });
+
+        const fitAddon = new FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
+
+        term.open(container);
+
+        try {
+            fitAddon.fit();
+        } catch (e) {
+            console.warn("Xterm fit failed", e);
+        }
+
+        term.write(content || '\x1b[38;5;240m[No Output]\x1b[0m');
+
+        // Handle Resize Observer to refit
+        // Optional for now as sidebar width is fixed/transitioned
+    }
+
+    async promptAddVariable(nodeId) {
+        const key = prompt("Enter variable name (e.g. MY_VAR):");
+        if (key && key.trim()) {
+            await this.handleContextChange(nodeId, key.trim().toUpperCase(), '');
+        }
+    }
+
+    async handleContextChange(nodeId, key, value) {
+        // Debounce or immediate? Immediate for now, usually user stops typing when clicking away.
+        // Actually, onchange fires on blur.
+
+        // Optimistic UI Update
+        // Re-render handled by full refresh? No, let's just send API request.
+
+        await this.apiFetch('save_node_context', {
+            method: 'POST',
+            body: JSON.stringify({
+                node_id: nodeId,
+                updates: [{key: key, value: value}]
+            })
+        });
+
+        // Refresh to get correct colors/states
+        this.fetchNodeDetails(nodeId);
     }
 }
 

@@ -1,5 +1,16 @@
+from datetime import timedelta
+
 from django.db import models
-from common.models import CreatedMixin, ModifiedMixin, BigIdMixin, NameMixin, UUIDIdMixin
+
+from common.models import (
+    CreatedAndModifiedWithDelta,
+    CreatedMixin,
+    DefaultFieldsMixin,
+    DescriptionMixin,
+    ModifiedMixin,
+    NameMixin,
+    UUIDIdMixin,
+)
 
 
 class ReasoningStatusID:
@@ -10,135 +21,163 @@ class ReasoningStatusID:
     MAXED_OUT = 5
     ERROR = 6
     ATTENTION_REQUIRED = 7
+    STOPPED = 8
 
 
-class ReasoningStatus(BigIdMixin, NameMixin):
+class ReasoningStatus(NameMixin, ReasoningStatusID):
     """
     Lookup table for Reasoning States.
     """
+
     IDs = ReasoningStatusID
 
     class Meta:
-        verbose_name_plural = "Reasoning Statuses"
+        verbose_name_plural = 'Reasoning Statuses'
 
 
 class ReasoningStatusMixin(models.Model):
-    """
-    Mixin to standardize lifecycle states.
-    """
-    status = models.ForeignKey(ReasoningStatus,
-                               on_delete=models.PROTECT,
-                               default=ReasoningStatusID.PENDING)
+    """Mixin to standardize lifecycle states."""
+
+    status = models.ForeignKey(
+        ReasoningStatus,
+        on_delete=models.PROTECT,
+        default=ReasoningStatusID.PENDING,
+    )
 
     class Meta:
         abstract = True
 
 
-class ToolDefinition(CreatedMixin, ModifiedMixin, BigIdMixin, NameMixin):
+class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
     """
-    The Registry for AI Tools.
+    Database-driven LLM definition.
+    Allows us to switch from 'qwen2.5-coder' to 'gpt-4o' via the Admin panel
+    without redeploying code.
     """
-    system_prompt_context = models.TextField(
-        help_text=
-        "The exact text injected into the LLM system prompt to explain the tool."
+
+    DEFAULT_MODEL_ID = 1
+    QUEN3_CODER = 1
+
+    api_variant = models.CharField(max_length=50, default='ollama')
+    context_window_size = models.IntegerField(default=32768)
+    cost_per_1k_input = models.DecimalField(
+        max_digits=10, decimal_places=6, default=0
     )
-    is_async = models.BooleanField(default=False)
-    parameters_schema = models.TextField(
-        default=dict, blank=True, help_text="JSON schema for tool parameters.")
+    cost_per_1k_output = models.DecimalField(
+        max_digits=10, decimal_places=6, default=0
+    )
 
-    def __str__(self):
-        return self.name
+    class Meta:
+        verbose_name_plural = 'Model Registries'
 
 
-class ReasoningSession(UUIDIdMixin, CreatedMixin, ModifiedMixin,
-                       ReasoningStatusMixin):
+class ReasoningSession(
+    UUIDIdMixin, CreatedAndModifiedWithDelta, ReasoningStatusMixin
+):
     """
     The record of a reasoning process.
     """
-    spawn_link = models.ForeignKey('hydra.HydraSpawn',
-                                   on_delete=models.CASCADE,
-                                   null=True,
-                                   blank=True,
-                                   related_name='reasoning_sessions')
-    goal = models.TextField()
-    rolling_context_summary = models.TextField(blank=True, default='')
-    max_turns = models.IntegerField(default=10)
+
+    RELATED_NAME = 'reasoning_session'
+
+    head = models.ForeignKey(
+        'hydra.HydraHead',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name=RELATED_NAME,
+    )
+    max_turns = models.IntegerField(default=100)
+
+    total_xp = models.IntegerField(default=0)
+    current_focus = models.IntegerField(default=5)
+
+    @property
+    def current_level(self):
+        """Fast Leveling: Every 50 XP is a new level."""
+        return (self.total_xp // 50) + 1
+
+    @property
+    def max_focus(self):
+        """Level 1 = 10. Level 2 = 15. Level 3 = 20."""
+        return 10 + ((self.current_level - 1) * 5)
+
+    @property
+    def focus_regen(self):
+        """Level 1 = 0. Level 2 = 1. Level 3 = 2."""
+        return max(0, self.current_level - 1)
+
+    def apply_sleep_regeneration(self):
+        """Called at the start of a turn to apply passive healing."""
+        if self.focus_regen > 0:
+            self.current_focus = min(
+                self.max_focus, self.current_focus + self.focus_regen
+            )
+            self.save(update_fields=['current_focus'])
 
     def __str__(self):
-        return f"Session {self.id} Status: {self.status}"
+        return f'Session {self.id} Status: {self.status}'
 
 
-class ReasoningGoal(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
-    """
-    Individual objectives within a session.
-    """
-    session = models.ForeignKey(ReasoningSession,
-                                on_delete=models.CASCADE,
-                                related_name='goals')
-    reasoning_prompt = models.TextField(
-        help_text="Specific instruction for this goal.")
-    parent_goal = models.ForeignKey('self',
-                                    on_delete=models.SET_NULL,
-                                    null=True,
-                                    blank=True,
-                                    related_name='sub_goals')
+class ReasoningGoal(ReasoningStatusMixin, CreatedMixin, ModifiedMixin):
+    """Individual objectives within a session."""
+
+    session = models.ForeignKey(
+        ReasoningSession, on_delete=models.CASCADE, related_name='goals'
+    )
+    achieved = models.BooleanField(default=False)
+    rendered_goal = models.TextField(blank=True, default='')
 
     def __str__(self):
-        return f"Goal: {self.reasoning_prompt[:50]}..."
+        return f'Goal: {self.rendered_goal[:50]}...'
 
 
-class ReasoningTurn(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
+class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
     """
     A single 'tick' or step in the reasoning process.
     """
-    session = models.ForeignKey(ReasoningSession,
-                                on_delete=models.CASCADE,
-                                related_name='turns')
-    active_goal = models.ForeignKey(ReasoningGoal,
-                                    on_delete=models.CASCADE,
-                                    related_name='turns')
+
+    RELATED_NAME = 'turns'
+
+    session = models.ForeignKey(
+        ReasoningSession, on_delete=models.CASCADE, related_name=RELATED_NAME
+    )
     turn_number = models.IntegerField()
-    input_context_snapshot = models.TextField(
-        help_text="What the AI saw at the start of this turn.")
+
+    request_payload = models.JSONField(blank=True, default=dict)
+    tokens_input = models.IntegerField(default=0)
+    inference_time = models.DurationField(default=timedelta)
+
+    turn_goals = models.ManyToManyField(
+        ReasoningGoal, blank=True, related_name=RELATED_NAME
+    )
     thought_process = models.TextField(
-        help_text="The internal monologue of the AI.")
+        help_text='The internal monologue of the AI.'
+    )
+    tokens_output = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"Turn {self.turn_number} (Session: {self.session_id})"
+        return f'Turn {self.turn_number} (Session: {self.session_id})'
 
 
-class ToolCall(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
-    """
-    The execution of a tool during a turn.
-    """
-    turn = models.ForeignKey(ReasoningTurn,
-                             on_delete=models.CASCADE,
-                             related_name='tool_calls')
-    tool = models.ForeignKey(ToolDefinition, on_delete=models.PROTECT)
-    arguments = models.TextField(help_text="JSON payload of arguments.")
-    result_payload = models.TextField(blank=True, default='')
-    traceback = models.TextField(blank=True,
-                                 default='',
-                                 help_text="Error details if the tool crashed.")
+class SessionConclusion(DefaultFieldsMixin, ReasoningStatusMixin):
+    """The crystallized result of a ReasoningSession."""
 
-    def __str__(self):
-        return f"ToolCall: {self.tool.name} in Turn {self.turn.turn_number}"
+    session = models.OneToOneField(
+        ReasoningSession, on_delete=models.CASCADE, related_name='conclusion'
+    )
+    summary = models.TextField()
+    reasoning_trace = models.TextField(
+        help_text='A high-level summary of the thought process.'
+    )
 
+    # Structured analog outcome statements by the llm.
+    outcome_status = models.TextField()
+    recommended_action = models.TextField()
 
-class RelevantEngram(CreatedMixin, ModifiedMixin):
-    """
-    Facts or memories extracted during reasoning.
-    """
-    session = models.ForeignKey(ReasoningSession,
-                                on_delete=models.CASCADE,
-                                related_name='engrams')
-    source_turn = models.ForeignKey(ReasoningTurn,
-                                    on_delete=models.CASCADE,
-                                    related_name='engrams')
-    fact = models.TextField()
-    memory_hash = models.CharField(max_length=64, db_index=True)
-    relevance_score = models.FloatField(default=1.0)
-    is_active = models.BooleanField(default=True)
+    # The 'Seed' for the next thought
+    next_goal_suggestion = models.TextField(blank=True, null=True)
 
-    def __str__(self):
-        return f"Engram ({self.relevance_score}): {self.fact[:50]}..."
+    @property
+    def engrams(self):
+        return self.session.talosengram_set.all()

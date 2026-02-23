@@ -23,18 +23,17 @@ urlpatterns = [
         HydraGraphLaunchAPI.as_view(),
         name='graph_launch_api',
     ),
-    path(
-        'graph/<str:book_id>/', HydraGraphAPI.as_view(), name='graph_api_root'
-    ),
+    path('graph/<str:book_id>/', HydraGraphAPI.as_view(),
+         name='graph_api_root'),
     path(
         'graph/<str:book_id>/<str:action>',
         HydraGraphAPI.as_view(),
         name='graph_api_action',
     ),
     # --- The War Room ---
-    path(
-        'head/<uuid:pk>/', views.HeadLogDetailView.as_view(), name='head_detail'
-    ),
+    path('head/<uuid:pk>/',
+         views.HeadLogDetailView.as_view(),
+         name='head_detail'),
     # --- Actions ---
     path(
         'launch/<uuid:spellbook_id>/',
@@ -83,5 +82,10 @@ urlpatterns = [
         'battle/stream/<uuid:spawn_id>/',
         views.HydraBattleStreamView.as_view(),
         name='hydra_battle_stream',
+    ),
+    path(
+        'spawn/<uuid:pk>/download/',
+        views.HydraSpawnDownloadView.as_view(),
+        name='hydra_spawn_download',
     ),
 ]

@@ -1,57 +1,116 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import (ReasoningStatus, ToolDefinition, ReasoningSession,
-                     ReasoningGoal, ReasoningTurn, ToolCall, RelevantEngram)
+
+from .models import (
+    ReasoningGoal,
+    ReasoningSession,
+    ReasoningTurn,
+    SessionConclusion,
+)
 
 
-class ToolCallInline(admin.TabularInline):
-    model = ToolCall
+class ReasoningGoalInline(admin.TabularInline):
+    model = ReasoningGoal
     extra = 0
-    readonly_fields = ('created', 'status', 'result_payload', 'traceback')
-    can_delete = False
+    fields = ('status', 'rendered_goal', 'achieved', 'created')
+    readonly_fields = ('created',)
 
 
 class ReasoningTurnInline(admin.TabularInline):
     model = ReasoningTurn
     extra = 0
-    fields = ('turn_number', 'status', 'thought_preview', 'created')
-    readonly_fields = ('thought_preview', 'created')
+    fields = (
+        'turn_number',
+        'status',
+        'tokens_input',
+        'tokens_output',
+        'inference_time',
+    )
+    readonly_fields = (
+        'turn_number',
+        'tokens_input',
+        'tokens_output',
+        'inference_time',
+    )
     show_change_link = True
-    can_delete = False
-
-    def thought_preview(self, obj):
-        return obj.thought_process[:100] + "..."
 
 
 @admin.register(ReasoningSession)
 class ReasoningSessionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'status_badge', 'goal', 'turn_count', 'created')
+    # Add 'launch_cortex' to your list_display
+    list_display = (
+        'id',
+        'head',
+        'status',
+        'launch_cortex',
+        'max_turns',
+        'created',
+        'delta',
+    )
     list_filter = ('status', 'created')
-    inlines = [ReasoningTurnInline]  # Links Turns to Session
+    search_fields = ('id', 'head__id', 'goals__rendered_goal')
+    readonly_fields = ('created', 'modified', 'delta')
+    inlines = [ReasoningGoalInline, ReasoningTurnInline]
 
-    def status_badge(self, obj):
-        color = '#64748b'
-        if obj.status.name == 'Active': color = '#eab308'
-        if obj.status.name == 'Completed': color = '#22c55e'
-        if obj.status.name in ['Error', 'Attention Required']: color = '#ef4444'
+    @admin.display(description='Interface')
+    def launch_cortex(self, obj):
+        """Generates a direct link to the LCARS Situation Room for this session."""
+        url = f'/reasoning/{obj.id}/'
         return format_html(
-            '<span style="color:white; background:{}; padding:4px 8px; border-radius:4px; font-weight:bold;">{}</span>',
-            color, obj.status.name
+            '<a class="button" href="{}" target="_blank" style="background-color: #f99f1b; color: #1a1a1a; font-weight: bold;">OPEN CORTEX</a>',
+            url,
         )
 
-    def turn_count(self, obj):
-        return obj.turns.count()
+    launch_cortex.short_description = 'Interface'
+
+
+@admin.register(ReasoningGoal)
+class ReasoningGoalAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'session',
+        'status',
+        'achieved',
+        'short_goal',
+        'created',
+    )
+    list_filter = ('status', 'achieved')
+    search_fields = ('rendered_goal', 'session__id')
+
+    def short_goal(self, obj):
+        return (
+            obj.rendered_goal[:50] + '...'
+            if len(obj.rendered_goal) > 50
+            else obj.rendered_goal
+        )
+
+    short_goal.short_description = 'Goal Preview'
 
 
 @admin.register(ReasoningTurn)
 class ReasoningTurnAdmin(admin.ModelAdmin):
-    list_display = ('session', 'turn_number', 'status', 'created')
-    inlines = [ToolCallInline]  # Links Tools to Turn
+    list_display = (
+        'turn_number',
+        'session',
+        'status',
+        'tokens_input',
+        'tokens_output',
+        'inference_time',
+    )
+    list_filter = ('status', 'created')
+    search_fields = ('thought_process', 'session__id')
+    filter_horizontal = (
+        'turn_goals',
+    )  # Renders a nice dual-selector for the M2M field
+    readonly_fields = ('created', 'modified', 'delta')
 
 
-# Register others
-admin.site.register(ReasoningStatus)
-admin.site.register(ToolDefinition)
-admin.site.register(ReasoningGoal)
-admin.site.register(RelevantEngram)
-admin.site.register(ToolCall)
+@admin.register(SessionConclusion)
+class SessionConclusionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'session', 'status', 'outcome_status')
+    search_fields = (
+        'summary',
+        'reasoning_trace',
+        'outcome_status',
+        'session__id',
+    )

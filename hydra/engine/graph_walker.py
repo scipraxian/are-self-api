@@ -2,13 +2,13 @@ import logging
 
 from django.db import transaction
 
+from hydra.hydra import Hydra
 from hydra.models import HydraHead, HydraSpawn, HydraStatusID
 
 logger = logging.getLogger(__name__)
 
 
 class GraphWalker:
-
     def __init__(self, spawn_id):
         self.spawn = HydraSpawn.objects.get(id=spawn_id)
 
@@ -32,7 +32,8 @@ class GraphWalker:
         if hydra_node and hydra_node.invoked_spellbook:
             if head.status_id == HydraStatusID.DELEGATED:
                 logger.debug(
-                    f'[WALKER] Node {head.id} is already delegated. Skipping.')
+                    f'[WALKER] Node {head.id} is already delegated. Skipping.'
+                )
                 return
 
             self._spawn_subgraph(head)
@@ -53,19 +54,18 @@ class GraphWalker:
         """
         Creates the Child Spawn and puts the Parent Node to sleep.
         """
-        from hydra.hydra import Hydra
 
         target_book = head.node.invoked_spellbook
 
         logger.info(
-            f'[WALKER] Node {head.id} spawning subgraph {target_book.name}')
+            f'[WALKER] Node {head.id} spawning subgraph {target_book.name}'
+        )
 
         # A. Create the Child Spawn
         child_spawn = HydraSpawn.objects.create(
             spellbook=target_book,
             parent_head=head,
-            # Inherit context! This is critical for data passing.
-            context_data=head.spawn.context_data,
+            environment=head.spawn.environment,
             status_id=HydraStatusID.CREATED,
         )
 

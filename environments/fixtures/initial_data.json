@@ -370,7 +370,7 @@
       "modified": "2026-01-26T18:27:15.436Z",
       "name": "stagingdirectory Windows Folder",
       "flag": "-stagingdirectory=",
-      "value": "C:\\talos_bin\\1_staging"
+      "value": "{{staging_root}}"
     }
   },
   {
@@ -392,7 +392,7 @@
       "modified": "2026-01-23T18:07:04.395Z",
       "name": "Project Flag",
       "flag": "-project=",
-      "value": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\HSHVacancy.uproject"
+      "value": "{{project_root}}\\{{uproject}}"
     }
   },
   {
@@ -411,10 +411,10 @@
     "pk": 41,
     "fields": {
       "created": "2026-01-21T19:58:18.758Z",
-      "modified": "2026-01-23T18:07:04.393Z",
+      "modified": "2026-02-10T16:10:20.402Z",
       "name": "Exec Automation Tests",
       "flag": "-ExecCmds=",
-      "value": "Automation RunTests HSH.Tests;Quit"
+      "value": "Automation RunTests HSH;Quit"
     }
   },
   {
@@ -425,7 +425,7 @@
       "modified": "2026-01-26T17:35:55.478Z",
       "name": "Pre-Release: Archive Directory",
       "flag": "-archivedirectory=",
-      "value": "C:\\talos_bin\\4_prerelease"
+      "value": "{{prerelease_root}}"
     }
   },
   {
@@ -436,7 +436,7 @@
       "modified": "2026-01-28T23:24:30.309Z",
       "name": "Test Report Destination",
       "flag": "-ReportExportPath=",
-      "value": "C:\\talos_bin\\0_test\\test_report"
+      "value": "{{test_root}}\\test_report"
     }
   },
   {
@@ -605,13 +605,24 @@
     }
   },
   {
+    "model": "environments.talosexecutableswitch",
+    "pk": 63,
+    "fields": {
+      "created": "2026-02-08T22:45:40.195Z",
+      "modified": "2026-02-08T22:45:40.195Z",
+      "name": "Robocopy Recurse",
+      "flag": "/E",
+      "value": ""
+    }
+  },
+  {
     "model": "environments.talosexecutableargument",
     "pk": 1,
     "fields": {
       "created": "2026-01-21T21:58:49.251Z",
       "modified": "2026-01-21T22:01:42.874Z",
       "name": "Get PipelineCaches SHK Files",
-      "argument": "C:/Users/micha/Documents/Unreal Projects/HSHVacancy/Saved/Cooked/Windows/HSHVacancy/Metadata/PipelineCaches/*.shk"
+      "argument": "{{project_root}}\\Saved\\Cooked\\Windows\\{{project_name}}\\Metadata\\PipelineCaches\\*.shk"
     }
   },
   {
@@ -621,7 +632,7 @@
       "created": "2026-01-21T22:00:20.700Z",
       "modified": "2026-01-21T22:00:20.700Z",
       "name": "SPC File",
-      "argument": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Content\\PipelineCaches\\HSHVacancy_PCD3D_SM6.spc"
+      "argument": "{{project_root}}\\Content\\PipelineCaches\\{{project_name}}_PCD3D_SM6.spc"
     }
   },
   {
@@ -631,7 +642,7 @@
       "created": "2026-01-21T22:00:46.742Z",
       "modified": "2026-01-21T22:00:46.742Z",
       "name": "Project",
-      "argument": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\HSHVacancy.uproject"
+      "argument": "{{project_root}}\\{{uproject}}"
     }
   },
   {
@@ -641,7 +652,7 @@
       "created": "2026-01-21T22:01:08.540Z",
       "modified": "2026-01-26T17:39:01.845Z",
       "name": "Get Collected PSO Rec Files",
-      "argument": "C:/talos_bin/1_staging/Windows/HSHVacancy/Saved/CollectedPSOs/*.rec*"
+      "argument": "{{staging_root}}\\Windows\\{{project_name}}\\Saved\\CollectedPSOs\\*.rec*"
     }
   },
   {
@@ -671,7 +682,7 @@
       "created": "2026-01-22T14:21:52.388Z",
       "modified": "2026-01-22T20:12:52.946Z",
       "name": "AppVersion File",
-      "argument": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Content\\_Version\\AppVersion.json"
+      "argument": "{{project_root}}\\Content\\_Version\\AppVersion.json"
     }
   },
   {
@@ -701,7 +712,7 @@
       "created": "2026-01-27T22:42:52.057Z",
       "modified": "2026-01-27T22:55:43.025Z",
       "name": "Network Server Pre-Release Folder",
-      "argument": "\\\\{{server}}\\talos_bin\\4_prerelease"
+      "argument": "\\\\{{server}}\\{{prerelease_root}}"
     }
   },
   {
@@ -711,7 +722,7 @@
       "created": "2026-01-27T22:43:48.676Z",
       "modified": "2026-01-27T23:08:47.766Z",
       "name": "Local Pre-Release Folder",
-      "argument": "c:\\talos_bin\\4_prerelease"
+      "argument": "{{prerelease_root}}"
     }
   },
   {
@@ -721,7 +732,7 @@
       "created": "2026-01-30T16:27:56.809Z",
       "modified": "2026-01-30T16:27:56.809Z",
       "name": "Local Shader Cache",
-      "argument": "C:\\talos_bin\\2_shader_cache"
+      "argument": "{{shader_cache_root}}"
     }
   },
   {
@@ -761,7 +772,7 @@
       "created": "2026-01-30T16:32:41.643Z",
       "modified": "2026-01-30T16:32:41.643Z",
       "name": "Compiled Shader Cache Folder",
-      "argument": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Content\\PipelineCaches"
+      "argument": "{{project_root}}\\Content\\PipelineCaches"
     }
   },
   {
@@ -781,7 +792,7 @@
       "created": "2026-01-30T18:35:43.800Z",
       "modified": "2026-01-30T18:35:43.800Z",
       "name": "Prerelease Pipeline Caches Folder",
-      "argument": "c:\\talos_bin\\4_prerelease\\Windows\\HSHVacancy\\Content\\PipelineCaches"
+      "argument": "{{prerelease_root}}\\Windows\\{{project_name}}\\Content\\PipelineCaches"
     }
   },
   {
@@ -791,7 +802,7 @@
       "created": "2026-01-31T14:28:11.107Z",
       "modified": "2026-01-31T14:28:23.674Z",
       "name": "Cached SaveGames Folder",
-      "argument": "C:\\talos_bin\\3_environment_cache\\Saved\\SaveGames"
+      "argument": "{{environment_cache_root}}\\Saved\\SaveGames"
     }
   },
   {
@@ -801,7 +812,7 @@
       "created": "2026-01-31T14:28:59.875Z",
       "modified": "2026-01-31T14:28:59.875Z",
       "name": "Prerelease SaveGames Folder",
-      "argument": "C:\\talos_bin\\4_prerelease\\Windows\\HSHVacancy\\Saved\\SaveGames"
+      "argument": "{{prerelease_root}}\\Windows\\{{project_name}}\\Saved\\SaveGames"
     }
   },
   {
@@ -811,7 +822,7 @@
       "created": "2026-01-31T15:23:49.006Z",
       "modified": "2026-01-31T16:12:08.563Z",
       "name": "Talos Root",
-      "argument": "C:\\talos\\"
+      "argument": "{{talos_root}}"
     }
   },
   {
@@ -841,7 +852,7 @@
       "created": "2026-01-31T15:51:48.415Z",
       "modified": "2026-01-31T15:51:48.415Z",
       "name": "Intermediate Folder",
-      "argument": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Intermediate"
+      "argument": "{{project_root}}\\Intermediate"
     }
   },
   {
@@ -861,7 +872,7 @@
       "created": "2026-01-31T16:08:51.014Z",
       "modified": "2026-01-31T16:08:51.014Z",
       "name": "dumpscripts",
-      "argument": "C:\\talos\\hydra\\spells\\dumpscripts.py"
+      "argument": "{{talos_root}}\\hydra\\spells\\dumpscripts.py"
     }
   },
   {
@@ -931,7 +942,7 @@
       "created": "2026-02-08T17:46:49.433Z",
       "modified": "2026-02-08T17:46:49.433Z",
       "name": "Pre-Release Logs",
-      "argument": "C:\\talos_bin\\4_prerelease\\Windows\\HSHVacancy\\Saved\\Logs"
+      "argument": "{{prerelease_root}}\\Windows\\{{project_name}}\\Saved\\Logs"
     }
   },
   {
@@ -941,7 +952,7 @@
       "created": "2026-02-08T17:51:08.618Z",
       "modified": "2026-02-08T17:51:08.618Z",
       "name": "Pre-Release User Config",
-      "argument": "C:\\talos_bin\\4_prerelease\\Windows\\HSHVacancy\\Saved\\Config"
+      "argument": "{{prerelease_root}}\\Windows\\{{project_name}}\\Saved\\Config"
     }
   },
   {
@@ -951,7 +962,107 @@
       "created": "2026-02-08T17:54:50.576Z",
       "modified": "2026-02-08T17:54:50.576Z",
       "name": "Pre-Release User Config Cache",
-      "argument": "C:\\talos_bin\\3_environment_cache\\Saved\\Config"
+      "argument": "{{environment_cache_root}}\\Saved\\Config"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 36,
+    "fields": {
+      "created": "2026-02-10T18:44:45.466Z",
+      "modified": "2026-02-10T18:44:45.467Z",
+      "name": "List Folder",
+      "argument": "ls"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 37,
+    "fields": {
+      "created": "2026-02-11T16:30:44.368Z",
+      "modified": "2026-02-11T16:30:44.368Z",
+      "name": "Spell Test Argument",
+      "argument": "This should be project_name {{project_name}}"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 38,
+    "fields": {
+      "created": "2026-02-12T22:07:06.628Z",
+      "modified": "2026-02-12T22:07:06.628Z",
+      "name": "Project Root",
+      "argument": "{{project_root}}"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 39,
+    "fields": {
+      "created": "2026-02-16T18:39:55.793Z",
+      "modified": "2026-02-16T18:39:55.793Z",
+      "name": "Generate Prompt Payload",
+      "argument": "generate_prompt_payload"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 40,
+    "fields": {
+      "created": "2026-02-16T18:42:01.725Z",
+      "modified": "2026-02-16T18:42:01.725Z",
+      "name": "--head_id={{head_id}}",
+      "argument": "--head_id={{head_id}}"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 41,
+    "fields": {
+      "created": "2026-02-16T18:47:26.334Z",
+      "modified": "2026-02-16T18:48:16.940Z",
+      "name": "local_prompt_path",
+      "argument": "{{local_prompt_path}}"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 42,
+    "fields": {
+      "created": "2026-02-16T18:47:50.424Z",
+      "modified": "2026-02-16T18:47:50.424Z",
+      "name": "Pipe from <",
+      "argument": "<"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 43,
+    "fields": {
+      "created": "2026-02-16T18:59:05.758Z",
+      "modified": "2026-02-16T18:59:05.758Z",
+      "name": "Prompt Key",
+      "argument": "--key=prompt"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 44,
+    "fields": {
+      "created": "2026-02-16T20:31:09.136Z",
+      "modified": "2026-02-16T20:31:09.136Z",
+      "name": "ollama",
+      "argument": "ollama"
+    }
+  },
+  {
+    "model": "environments.talosexecutableargument",
+    "pk": 45,
+    "fields": {
+      "created": "2026-02-16T21:52:59.872Z",
+      "modified": "2026-02-16T21:52:59.872Z",
+      "name": "Delete (CMD)",
+      "argument": "del"
     }
   },
   {
@@ -975,11 +1086,11 @@
     "fields": {
       "created": "2026-01-21T00:00:00Z",
       "description": "Standard Python Interpreter.",
-      "modified": "2026-01-31T16:10:55.098Z",
+      "modified": "2026-02-12T22:16:40.306Z",
       "name": "PYTHON",
       "internal": false,
-      "working_path": "C:\\talos",
-      "executable": "C:\\talos\\venv\\Scripts\\python.exe",
+      "working_path": "{{venv_root}}",
+      "executable": "{{venv_root}}/Scripts/python.exe",
       "log": "",
       "switches": []
     }
@@ -990,12 +1101,12 @@
     "fields": {
       "created": "2026-01-21T00:00:00Z",
       "description": "Python Interpreter intended for manage.py commands.",
-      "modified": "2026-01-31T16:08:00.670Z",
+      "modified": "2026-02-12T22:17:08.081Z",
       "name": "DJANGO",
       "internal": false,
-      "working_path": "C:\\talos",
-      "executable": "C:\\talos\\venv\\Scripts\\python.exe",
-      "log": "C:\\talos\\logs\\django.log",
+      "working_path": "{{venv_root}}",
+      "executable": "{{venv_root}}/Scripts/python.exe",
+      "log": "{{talos_root}}\\logs\\django.log",
       "switches": []
     }
   },
@@ -1008,9 +1119,9 @@
       "modified": "2026-01-22T20:16:15.362Z",
       "name": "UNREAL_CMD",
       "internal": false,
-      "working_path": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Binaries\\Win64",
-      "executable": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Binaries\\Win64\\UnrealEditor-Cmd.exe",
-      "log": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log",
+      "working_path": "{{engine_root}}\\Engine\\Binaries\\Win64",
+      "executable": "{{engine_root}}\\Engine\\Binaries\\Win64\\UnrealEditor-Cmd.exe",
+      "log": "{{project_root}}\\Saved\\Logs\\{{project_name}}.log",
       "switches": [
         2,
         3,
@@ -1029,8 +1140,8 @@
       "modified": "2026-01-26T17:44:52.698Z",
       "name": "UNREAL_AUTOMATION_TOOL",
       "internal": false,
-      "working_path": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Build\\BatchFiles",
-      "executable": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Build\\BatchFiles\\RunUAT.bat",
+      "working_path": "{{engine_root}}\\Engine\\Build\\BatchFiles",
+      "executable": "{{engine_root}}\\Engine\\Build\\BatchFiles\\RunUAT.bat",
       "log": "",
       "switches": [
         2,
@@ -1048,9 +1159,9 @@
       "modified": "2026-01-26T17:41:13.831Z",
       "name": "UNREAL_STAGING",
       "internal": false,
-      "working_path": "C:\\talos_bin\\1_staging\\Windows",
-      "executable": "C:\\talos_bin\\1_staging\\Windows\\HSHVacancy.exe",
-      "log": "C:\\talos_bin\\1_staging\\Windows\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log",
+      "working_path": "{{staging_root}}\\Windows",
+      "executable": "{{staging_root}}\\Windows\\{{project_name}}.exe",
+      "log": "{{staging_root}}\\Windows\\{{project_name}}\\Saved\\Logs\\{{project_name}}.log",
       "switches": []
     }
   },
@@ -1063,9 +1174,9 @@
       "modified": "2026-01-26T16:47:18Z",
       "name": "UNREAL_RELEASE_TEST",
       "internal": false,
-      "working_path": "C:\\talos_bin\\4_prerelease\\Windows",
-      "executable": "C:\\talos_bin\\4_prerelease\\Windows\\HSHVacancy.exe",
-      "log": "C:\\talos_bin\\4_prerelease\\Windows\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log",
+      "working_path": "{{prerelease_root}}\\Windows",
+      "executable": "{{prerelease_root}}\\Windows\\{{project_name}}.exe",
+      "log": "{{prerelease_root}}\\Windows\\{{project_name}}\\Saved\\Logs\\{{project_name}}.log",
       "switches": []
     }
   },
@@ -1078,8 +1189,8 @@
       "modified": "2026-01-21T00:00:00Z",
       "name": "UNREAL_SHADER_TOOL",
       "internal": false,
-      "working_path": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Binaries\\Win64",
-      "executable": "C:\\Program Files\\Epic Games\\UE_5.6\\Engine\\Binaries\\Win64\\ShaderPipelineCacheTools.exe",
+      "working_path": "{{engine_root}}\\Engine\\Binaries\\Win64",
+      "executable": "{{engine_root}}\\Engine\\Binaries\\Win64\\ShaderPipelineCacheTools.exe",
       "log": "",
       "switches": []
     }
@@ -1265,6 +1376,267 @@
       "executable": 16,
       "order": 2,
       "argument": 31
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 1,
+    "fields": {
+      "name": "project_name"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 2,
+    "fields": {
+      "name": "project_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 3,
+    "fields": {
+      "name": "engine_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 4,
+    "fields": {
+      "name": "test_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 5,
+    "fields": {
+      "name": "talos_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 6,
+    "fields": {
+      "name": "staging_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 7,
+    "fields": {
+      "name": "shader_cache_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 8,
+    "fields": {
+      "name": "environment_cache_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 9,
+    "fields": {
+      "name": "prerelease_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 10,
+    "fields": {
+      "name": "production_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 11,
+    "fields": {
+      "name": "uproject"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 12,
+    "fields": {
+      "name": "venv_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentstatus",
+    "pk": 1,
+    "fields": {
+      "name": "Online"
+    }
+  },
+  {
+    "model": "environments.projectenvironmenttype",
+    "pk": 1,
+    "fields": {
+      "name": "Unreal 5.6.1"
+    }
+  },
+  {
+    "model": "environments.projectenvironment",
+    "pk": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+    "fields": {
+      "created": "2026-02-11T15:33:50.687Z",
+      "description": "Default UE Environment for Talos",
+      "modified": "2026-02-14T19:56:45.632Z",
+      "name": "Default Environment",
+      "type": 1,
+      "status": 1,
+      "available": true,
+      "selected": true
+    }
+  },
+  {
+    "model": "environments.projectenvironment",
+    "pk": "4d82fab0-c62d-4204-a316-476476c10a55",
+    "fields": {
+      "created": "2026-02-11T20:15:38.794Z",
+      "description": null,
+      "modified": "2026-02-13T15:28:35.948Z",
+      "name": "HSH Python",
+      "type": 1,
+      "status": 1,
+      "available": true,
+      "selected": false
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 1,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 1,
+      "value": "HSHVacancy"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 2,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 2,
+      "value": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 3,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 3,
+      "value": "C:\\Program Files\\Epic Games\\UE_5.6"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 4,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 5,
+      "value": "C:\\talos"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 5,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 4,
+      "value": "C:\\talos_bin\\0_test"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 6,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 6,
+      "value": "C:\\talos_bin\\1_staging"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 7,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 7,
+      "value": "C:\\talos_bin\\2_shader_cache"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 8,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 8,
+      "value": "C:\\talos_bin\\3_environment_cache"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 9,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 9,
+      "value": "C:\\talos_bin\\4_prerelease"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 10,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 10,
+      "value": "C:\\talos_bin\\5_main"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 11,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 11,
+      "value": "HSHVacancy.uproject"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 12,
+    "fields": {
+      "environment": "4d82fab0-c62d-4204-a316-476476c10a55",
+      "key": 2,
+      "value": "C:\\hsh_python"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 13,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 12,
+      "value": "c:\\talos\\venv"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 14,
+    "fields": {
+      "environment": "4d82fab0-c62d-4204-a316-476476c10a55",
+      "key": 12,
+      "value": "c:/talos/venv"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 15,
+    "fields": {
+      "environment": "4d82fab0-c62d-4204-a316-476476c10a55",
+      "key": 5,
+      "value": "c:/talos"
     }
   }
 ]

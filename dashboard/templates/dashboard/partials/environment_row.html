@@ -1,0 +1,37 @@
+<div class="launch-row" style="margin-bottom: 2px;">
+    <div style="width: 4px; margin-right: 4px; background-color: {% if env.selected %}var(--lcars-elbow){% else %}transparent{% endif %}; opacity: 0.8;"></div>
+
+    <button
+            hx-post="{% url 'environments:select_environment' env.id %}"
+            hx-target="body"
+            class="launch-btn {% if env.selected %}active-env{% endif %}"
+            style="
+                    flex: 1;
+                    text-align: left;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 0.7rem;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    cursor: pointer;
+                    padding: 8px 12px;
+                    border: none;
+                    transition: all 0.2s ease;
+                    {% if env.selected %}
+                        background-color: var(--lcars-elbow); color: #000; box-shadow: 0 0 15px rgba(249, 159, 27, 0.3);
+                    {% else %}
+                        background-color: rgba(255, 255, 255, 0.05); color: #666;
+                    {% endif %}"
+            onmouseover="if(!this.classList.contains('active-env')) { this.style.backgroundColor='rgba(255,255,255,0.1)'; this.style.color='#fff'; }"
+            onmouseout="if(!this.classList.contains('active-env')) { this.style.backgroundColor='rgba(255,255,255,0.05)'; this.style.color='#666'; }"
+    >
+        {{ env.name }}
+    </button>
+
+    <a href="{% url 'admin:environments_projectenvironment_change' env.id %}"
+       class="edit-btn"
+       target="_blank"
+       title="Edit Environment Config"
+       style="text-decoration: none; width: 30px; display: flex; align-items: center; justify-content: center;">
+        ✎
+    </a>
+</div>

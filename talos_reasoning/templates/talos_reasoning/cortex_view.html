@@ -3,7 +3,7 @@
 {% block title %}Cortex: {{ session.id|truncatechars:8 }}{% endblock %}
 
 {% block extra_style %}
-    
+
 {% endblock %}
 
 {% block main_content %}
@@ -11,12 +11,13 @@
         <div class="session-info">
             <h2>REASONING CORTEX</h2>
             <div class="session-meta">
-                Session: {{ session.id }} | Goal: <strong>{{ session.goal|truncatechars:100 }}</strong>
+                Session: {{ session.id }} | Goal: <strong>xxxxxxxxxxx</strong>
             </div>
         </div>
 
         <div class="cortex-actions">
-            <a href="{% url 'home' %}" class="btn-secondary" style="text-decoration: none; padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 0.8rem; background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 8px;">
+            <a href="{% url 'dashboard:home' %}" class="btn-secondary"
+               style="text-decoration: none; padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 0.8rem; background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 8px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M19 12H5M12 19l-7-7 7-7"/>
                 </svg>
@@ -70,7 +71,7 @@
                         <div class="engram-item"
                              style="border-left: 3px solid {% if h_session.status.name == 'Attention Required' %}#ef4444{% elif h_session.status.name == 'Active' %}#eab308{% else %}transparent{% endif %}; cursor: pointer; transition: background 0.2s;">
                             <div class="engram-fact" style="font-weight: 700; color: #e2e8f0; font-size: 0.75rem;">
-                                {{ h_session.goal|truncatechars:40 }}
+                                xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
                             </div>
                             <div class="engram-meta">
                                 <span class="status-text status-{{ h_session.status.name|lower }}">{{ h_session.status.name }}</span>
@@ -106,7 +107,8 @@
             <div class="panel-header">
                 <h3>SHORT-TERM MEMORY</h3>
             </div>
-            <div class="panel-content" id="rolling-summary" style="border-bottom: 2px solid var(--border-color); background: rgba(96, 165, 250, 0.05);">
+            <div class="panel-content" id="rolling-summary"
+                 style="border-bottom: 2px solid var(--border-color); background: rgba(96, 165, 250, 0.05);">
                 <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.6; white-space: pre-wrap;">{{ session.rolling_context_summary|default:"Neural pathways forming..." }}</div>
             </div>
 

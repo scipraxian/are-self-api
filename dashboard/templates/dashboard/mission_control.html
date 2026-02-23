@@ -5,11 +5,18 @@
     <meta charset="UTF-8">
     <title>TALOS // MISSION CONTROL</title>
     <link rel="stylesheet" href="{% static 'dashboard/css/mission_control.css' %}">
+    <link rel="stylesheet" href="{% static 'hydra/css/hydra_head.css' %}">
+    <link rel="stylesheet" href="{% static 'hydra/css/hydra_spawn_control_card.css' %}">
+    <link rel="stylesheet" href="{% static 'hydra/css/hydra_spawn.css' %}">
+    <link rel="stylesheet" href="{% static 'hydra/css/hydra_spawns.css' %}">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=JetBrains+Mono&display=swap"
           rel="stylesheet">
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+<script>
+    window.djangoContext = {csrfToken: "{{ csrf_token }}"};
+</script>
 
 <div class="lcars-grid">
     <div class="top-nav">
@@ -17,22 +24,43 @@
             <div class="hamburger" onclick="toggleMenu()">☰</div>
             <div class="sys-title">TALOS ORCHESTRATOR</div>
         </div>
+        {% include "talos_reasoning/partials/launch_button.html" %}
         <div style="font-family:monospace; color:#444; font-size:0.8rem;">SYS.ONLINE</div>
     </div>
 
     <div id="system-menu" class="system-menu">
-        <a href="{% url 'agent_list' %}" class="menu-item">Sonar Registry</a>
         <a href="{% url 'admin:index' %}" target="_blank" class="menu-item">System Admin</a>
         <div style="height:1px; background:#444; margin:5px 0;"></div>
-        <button class="menu-item danger" hx-post="{% url 'shutdown' %}" onclick="window.close()">
+        <button class="menu-item danger"
+                hx-post="/api/v1/dashboard/shutdown/"
+                hx-swap="none"
+                onclick="this.innerText='SHUTTING DOWN...'; setTimeout(() => window.close(), 500);">
             ⚠ SYSTEM SHUTDOWN
         </button>
     </div>
 
     <div class="launch-pad">
-        <div class="search-container">
-            <input type="text" id="protocol-search" class="lcars-search" placeholder="FILTER PROTOCOLS..."
-                   autocomplete="off">
+
+
+        <div class="launch-group">
+            <div class="lcars-separator">
+                <div class="line"></div>
+                <div class="label">Environmental Control</div>
+            </div>
+            {% for env in environments %}
+                {% include "dashboard/partials/environment_row.html" with env=env %}
+            {% endfor %}
+        </div>
+
+        <div class="launch-group" hx-preserve id="search-section">
+            <div class="lcars-separator">
+                <div class="line"></div>
+                <div class="label">Search</div>
+            </div>
+            <div class="search-container">
+                <input type="text" id="protocol-search" class="lcars-search" placeholder="FILTER SPELLBOOKS..."
+                       autocomplete="off">
+            </div>
         </div>
 
         {% if favorites %}
@@ -63,7 +91,7 @@
             <div class="launch-group">
                 <div class="lcars-separator">
                     <div class="line" style="opacity: 0.3;"></div>
-                    <div class="label" style="opacity: 0.5;">PROTOCOLS</div>
+                    <div class="label" style="opacity: 0.5;">Spellbooks</div>
                 </div>
                 {% for book in uncategorized %}
                     {% include "dashboard/partials/launch_row.html" with book=book extra_class="uncategorized" %}
@@ -75,18 +103,7 @@
            style="text-decoration:none; text-align:center;">+ Protocol</a>
     </div>
 
-    <div id="mission-monitor" class="mission-monitor"
-         hx-get="{% url 'home' %}"
-         hx-select="#mission-monitor"
-         hx-swap="outerHTML"
-         hx-trigger="monitor-update from:body">
-
-        {% for lane in lanes %}
-            {% include "dashboard/partials/mission_swimlane.html" with lane=lane %}
-        {% empty %}
-            <div style="text-align:center; padding:50px; color:#444;">NO ACTIVE MISSIONS</div>
-        {% endfor %}
-    </div>
+    <main id="spawns-dispatcher-root" class="spawns-list"></main>
 </div>
 
 <div class="thought-bubble" onclick="toggleChat()" title="Frontal Lobe">
@@ -95,9 +112,89 @@
     </svg>
 </div>
 
-{% include "dashboard/partials/chat_window.html" %}
+{#{% include "dashboard/partials/chat_window.html" %}#}
+
+<template id="tpl-hydra-head">
+    <a href="#" class="hydra-head-card js-hydra-head">
+        <div class="head-header">
+            <div class="head-name js-head-name">NODE</div>
+            <div class="js-head-status-pill status-pill-text">STATUS</div>
+        </div>
+
+        <div class="head-meta">
+            <span class="js-head-time">00:00:00</span>
+            <span class="js-head-target" style="opacity: 0.5;">LOCAL</span>
+        </div>
+
+        <div class="head-telemetry">
+            <span class="js-head-trend" style="font-size: 0.6rem;"></span>
+            <span class="js-head-delta">0s</span>
+            <span class="js-head-delta-avg" style="color: #666;"></span>
+        </div>
+
+        <div class="head-footer">
+            <span class="js-head-log">...</span>
+            <span class="js-head-bb-indicator" style="display:none; color: var(--lcars-blue);">[BB]</span>
+        </div>
+    </a>
+</template>
+
+<template id="tpl-hydra-spawn">
+    <div class="hydra-spawn-wrapper js-hydra-spawn-wrapper">
+        <div class="hydra-spawn js-hydra-spawn">
+
+            <div class="spawn-header">
+                <div class="spawn-title js-spawn-title">Unknown Protocol</div>
+                <div class="spawn-status">
+                    <span class="js-spawn-id">#00000000</span>
+                    <span class="status-text js-spawn-status-text">Pending</span>
+                </div>
+                <div class="spawn-time js-spawn-time">Just now</div>
+            </div>
+
+            <div class="hydra-control-card js-hydra-control-card">
+                <a href="#" class="btn-control js-btn-monitor" title="Monitor Graph">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </a>
+                <a href="#" class="btn-control js-btn-edit" title="Edit Protocol">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </a>
+                <button class="btn-control js-action-btn stop js-btn-stop" style="display: none;" title="Stop">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect>
+                    </svg>
+                </button>
+                <button class="btn-control js-action-btn rerun js-btn-rerun" style="display: none;" title="Re-Run">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <button class="scroll-btn left js-scroll-left" style="display: none;">◄</button>
+
+            <div class="spawn-track js-spawn-track">
+            </div>
+
+            <button class="scroll-btn right js-scroll-right" style="display: none;">►</button>
+        </div>
+
+        <div class="nested-spawns js-nested-spawns"></div>
+    </div>
+</template>
 
 <script src="{% static 'dashboard/js/mission_control.js' %}"></script>
+<script src="{% static 'hydra/js/hydra_head.js' %}"></script>
+<script src="{% static 'hydra/js/hydra_spawn_control_card.js' %}"></script>
+<script src="{% static 'hydra/js/hydra_spawn.js' %}"></script>
+<script src="{% static 'hydra/js/hydra_spawns.js' %}"></script>
 
 </body>
 </html>
