@@ -238,6 +238,18 @@ function fetchData() {
             }
 
             const isFinished = ['Completed', 'Error', 'Maxed Out', 'Stopped'].includes(sessionData.status_name);
+
+            // Toggle Halt / Download Buttons
+            const haltBtn = document.getElementById('btn-halt');
+            const downloadBtn = document.getElementById('btn-download');
+            if (isFinished) {
+                if (haltBtn) haltBtn.style.display = 'none';
+                if (downloadBtn) downloadBtn.style.display = 'flex';
+            } else {
+                if (haltBtn) haltBtn.style.display = 'flex';
+                if (downloadBtn) downloadBtn.style.display = 'none';
+            }
+
             if (!isFinished) {
                 pollTimer = setTimeout(fetchData, POLL_INTERVAL_MS);
             }
@@ -794,6 +806,20 @@ if (haltBtn) {
         })
             .then(() => alert("Halt signal sent. The AI will stop after finishing its current thought."))
             .catch(err => console.error(err));
+    });
+}
+
+const downloadBtn = document.getElementById('btn-download');
+if (downloadBtn) {
+    downloadBtn.addEventListener('click', () => {
+        if (!currentSessionData) return;
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentSessionData, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", `talos_cortex_dump_${sessionId}.json`);
+        document.body.appendChild(downloadAnchorNode); // required for firefox
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
     });
 }
 
