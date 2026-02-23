@@ -11,7 +11,7 @@ from asgiref.sync import sync_to_async
 from django.contrib.postgres.search import SearchQuery, SearchVector
 from django.db.models import Count, Q
 
-from frontal_lobe.models import ReasoningSession
+from frontal_lobe.models import ReasoningSession, ReasoningTurn
 from hydra.models import HydraHead
 from talos_hippocampus.models import TalosEngram, TalosEngramTag
 
@@ -33,18 +33,12 @@ class TalosHippocampus(object):
         """
 
         def _get_catalog_sync() -> str:
-            qs = (
-                TalosEngram.objects.filter(
-                    heads__node=head.node, is_active=True
-                )
-                .exclude(heads=head)
-                .annotate(
+            qs = (TalosEngram.objects.filter(
+                heads__node=head.node,
+                is_active=True).exclude(heads=head).annotate(
                     session_count=Count('sessions', distinct=True),
                     head_count=Count('heads', distinct=True),
-                )
-                .order_by('-session_count')
-                .prefetch_related('tags')[:limit]
-            )
+                ).order_by('-session_count').prefetch_related('tags')[:limit])
 
             res_lines = []
             for e in qs:
@@ -58,11 +52,9 @@ class TalosHippocampus(object):
         catalog_body = await sync_to_async(_get_catalog_sync)()
 
         if not catalog_body:
-            return (
-                f'[YOUR CARD CATALOG (ENGRAM INDEX)]\n'
-                f'Your memory banks are completely empty.\n'
-                f'(Use mcp_engram_read to read full facts)\n\n'
-            )
+            return (f'[YOUR CARD CATALOG (ENGRAM INDEX)]\n'
+                    f'Your memory banks are completely empty.\n'
+                    f'(Use mcp_engram_read to read full facts)\n\n')
 
         return (
             f'[YOUR CARD CATALOG (ENGRAM INDEX)]\n'
@@ -86,11 +78,9 @@ class TalosHippocampus(object):
 
         catalog_str = await sync_to_async(_get_recent_sync)()
 
-        return (
-            f'[YOUR CARD CATALOG (ENGRAM INDEX)]\n'
-            f'{catalog_str}\n'
-            f'(Use mcp_engram_read to read full facts)\n\n'
-        )
+        return (f'[YOUR CARD CATALOG (ENGRAM INDEX)]\n'
+                f'{catalog_str}\n'
+                f'(Use mcp_engram_read to read full facts)\n\n')
 
     @classmethod
     async def save_engram(
@@ -98,6 +88,7 @@ class TalosHippocampus(object):
         session_id: str,
         title: str,
         fact: str,
+        turn_id: int,
         tags: str = '',
         relevance: float = 1.0,
     ) -> str:
@@ -106,12 +97,12 @@ class TalosHippocampus(object):
         def _save_sync() -> str:
             try:
                 session = ReasoningSession.objects.get(id=session_id)
-                latest_turn = session.turns.last()
+                exact_turn = ReasoningTurn.objects.get(
+                    id=turn_id) if turn_id else None
                 clean_title = title[:254]
 
                 existing_engram = TalosEngram.objects.filter(
-                    name=clean_title
-                ).first()
+                    name=clean_title).first()
                 if existing_engram:
                     return (
                         f"SYSTEM NOTICE: Engram '{clean_title}' already exists in your Hippocampus.\n"
@@ -127,15 +118,14 @@ class TalosHippocampus(object):
 
                 engram.sessions.add(session)
                 engram.heads.add(session.head)
-                if latest_turn:
-                    engram.source_turns.add(latest_turn)
+                if exact_turn:
+                    engram.source_turns.add(exact_turn)
 
                 if tags:
                     tag_list = [t.strip() for t in tags.split(',') if t.strip()]
                     for t_name in tag_list:
                         tag_obj, _ = TalosEngramTag.objects.get_or_create(
-                            name=t_name
-                        )
+                            name=t_name)
                         engram.tags.add(tag_obj)
 
                 return f'Success: Memory Card [{engram.id}: {engram.name}] permanently crystallized.'
@@ -146,9 +136,8 @@ class TalosHippocampus(object):
         return await sync_to_async(_save_sync)()
 
     @classmethod
-    async def update_engram(
-        cls, session_id: str, title: str, additional_fact: str
-    ) -> str:
+    async def update_engram(cls, session_id: str, title: str,
+                            additional_fact: str, turn_id: int) -> str:
         """Appends new findings to an existing Engram."""
 
         def _update_sync() -> str:
@@ -156,16 +145,16 @@ class TalosHippocampus(object):
                 clean_title = title[:254]
                 engram, _ = TalosEngram.objects.get_or_create(name=clean_title)
                 session = ReasoningSession.objects.get(id=session_id)
-                latest_turn = session.turns.last()
+                exact_turn = ReasoningTurn.objects.get(
+                    id=turn_id) if turn_id else None
 
                 engram.description = (
-                    f'{engram.description}\n\n[UPDATE]: {additional_fact}'
-                )
+                    f'{engram.description}\n\n[UPDATE]: {additional_fact}')
                 engram.save(update_fields=['description'])
 
                 engram.sessions.add(session)
-                if latest_turn:
-                    engram.source_turns.add(latest_turn)
+                if exact_turn:
+                    engram.source_turns.add(exact_turn)
 
                 return f"Success: Engram '{engram.name}' has been updated with the new data."
             except TalosEngram.DoesNotExist:
@@ -198,9 +187,10 @@ class TalosHippocampus(object):
         return await sync_to_async(_read_sync)()
 
     @classmethod
-    async def search_engrams(
-        cls, query: str = '', tags: str = '', limit: int = 10
-    ) -> str:
+    async def search_engrams(cls,
+                             query: str = '',
+                             tags: str = '',
+                             limit: int = 10) -> str:
         """Searches the permanent Hippocampus catalog."""
 
         def _search_sync() -> str:
@@ -208,8 +198,8 @@ class TalosHippocampus(object):
 
             if query:
                 qs = qs.annotate(
-                    search=SearchVector('name', 'description')
-                ).filter(search=SearchQuery(query))
+                    search=SearchVector('name', 'description')).filter(
+                        search=SearchQuery(query))
             if tags:
                 tag_list = [t.strip() for t in tags.split(',') if t.strip()]
                 qs = qs.filter(tags__name__in=tag_list)
