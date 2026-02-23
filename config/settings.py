@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     'environments',
     'django.contrib.staticfiles',
     'talos_thalamus',
-    'talos_frontal',
     'talos_parietal',
     'talos_occipital',
     'talos_temporal',
