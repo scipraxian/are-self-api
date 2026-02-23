@@ -2,7 +2,7 @@ const POLL_INTERVAL_MS = 2500;
 let sessionId;
 let svg, g, simulation;
 let linkGroup, nodeGroup;
-let currentData = { nodes: [], links: [] };
+let currentData = {nodes: [], links: []};
 let selectedNodeId = null;
 let selectedNodeHash = null;
 let pollTimer;
@@ -172,7 +172,7 @@ function flattenTreeToGraph(sessionData, oldData) {
             }
         });
     }
-    return { nodes, links };
+    return {nodes, links};
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -212,7 +212,7 @@ function fetchData() {
 
                 if (rawNode) {
                     // --- SCROLL/JITTER FIX: Create a clean hash without timers or physics ---
-                    const cleanNode = { ...rawNode };
+                    const cleanNode = {...rawNode};
                     delete cleanNode.x;
                     delete cleanNode.y;
                     delete cleanNode.vx;
@@ -221,7 +221,7 @@ function fetchData() {
                     delete cleanNode.delta;
                     delete cleanNode.inference_time;
 
-                    const currentStateHash = JSON.stringify({ node: cleanNode, linkCount: rawLinks.length });
+                    const currentStateHash = JSON.stringify({node: cleanNode, linkCount: rawLinks.length});
 
                     if (selectedNodeHash !== currentStateHash) {
                         shouldUpdateInspector = true;
@@ -564,7 +564,9 @@ function showDetails(d) {
                 try {
                     let parsedArgs = typeof args === 'string' ? JSON.parse(args) : args;
                     argStr = JSON.stringify(parsedArgs, null, 2);
-                } catch (e) { argStr = String(args); }
+                } catch (e) {
+                    argStr = String(args);
+                }
 
                 let targetId = call.target.id || call.target;
                 let toolNode = currentData.nodes.find(n => n.id === targetId);
@@ -596,7 +598,7 @@ function showDetails(d) {
             spellsHtml += `</div></details></div>`;
             terminalEl.innerHTML += spellsHtml;
         } else {
-            terminalEl.innerHTML += `<div class="term-result" style="margin-top: 15px; font-style: italic;">No spells cast this turn. Sleep initiated.</div>`;
+            terminalEl.innerHTML += `<div class="term-result" style="margin-top: 15px; font-style: italic;">No tools used this turn. Sleep initiated.</div>`;
         }
 
         if (isLive && d.created) {
@@ -672,7 +674,6 @@ function showDetails(d) {
         titleEl.textContent = d.type ? d.type.toUpperCase() + ": " + (d.label || d.id) : 'Node Details';
         terminalEl.innerHTML = `<div class="term-result">Select a Turn node to view the action log.</div>`;
     }
-
 
 
     terminalEl.innerHTML += `
@@ -915,7 +916,8 @@ function updateTalosHUD(sessionData, latestTurnData) {
                             thoughtText = parsedReq.thought_process.replace(/^(THOUGHT:\s*)+/i, '').trim();
                             break;
                         }
-                    } catch (e) { }
+                    } catch (e) {
+                    }
                 }
             }
         }
