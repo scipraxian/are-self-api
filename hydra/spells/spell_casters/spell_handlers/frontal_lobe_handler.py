@@ -714,8 +714,21 @@ class FrontalLobe:
             f'{input_bandwidth_str}\n'
         )
 
+        # SYSTEM BOOT ENGRAM INJECTION
+        system_boot_str = ''
+        if current_turn == 1 and self.current_goal:
+            from talos_parietal.parietal_mcp.mcp_engram_search import (
+                _search_sync,
+            )
+
+            search_result = await _search_sync(
+                query=self.current_goal.rendered_goal, limit=3
+            )
+            system_boot_str = f'[SYSTEM BOOT: Retrieved relevant historical Engrams]\n{search_result}\n\n'
+
         user_content = (
             f'SESSION ID: {self.session.id}\n\n'
+            f'{system_boot_str}'
             f'{header_str}\n'
             f'[WAKING STATE: ACTIVE GOALS]\n{goal_str}\n\n'
             f'[YOUR CARD CATALOG (ENGRAM INDEX)]\n{catalog_str}\n(Use mcp_read_engram to read full facts)\n\n'

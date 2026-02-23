@@ -195,7 +195,7 @@
     "fields": {
       "created": "2026-02-18T12:00:00Z",
       "description": "Reads a specific text field from the database using strict pagination. Crucial for reading massive logs (e.g. 'application_log') without destroying your context window.",
-      "modified": "2026-02-20T18:51:30.037Z",
+      "modified": "2026-02-23T14:26:12.500Z",
       "name": "mcp_read_record_field",
       "is_async": true,
       "use_type": 2
@@ -295,6 +295,42 @@
       "name": "mcp_engram_update",
       "is_async": true,
       "use_type": 1
+    }
+  },
+  {
+    "model": "talos_parietal.tooldefinition",
+    "pk": 15,
+    "fields": {
+      "created": "2026-02-23T15:09:02.506Z",
+      "description": "Search the web and return Titles, URLs, and Snippets of the top 5 results.",
+      "modified": "2026-02-23T15:09:02.506Z",
+      "name": "mcp_browser_search",
+      "is_async": true,
+      "use_type": 3
+    }
+  },
+  {
+    "model": "talos_parietal.tooldefinition",
+    "pk": 16,
+    "fields": {
+      "created": "2026-02-23T15:09:02.517Z",
+      "description": "Spin up headless Chromium, navigate to a URL, and return clean Markdown of the page.",
+      "modified": "2026-02-23T15:09:02.517Z",
+      "name": "mcp_browser_read",
+      "is_async": true,
+      "use_type": 3
+    }
+  },
+  {
+    "model": "talos_parietal.tooldefinition",
+    "pk": 17,
+    "fields": {
+      "created": "2026-02-23T15:09:02.523Z",
+      "description": "Parse Unreal Engine logs of a specific HydraHead and return a structural summary.",
+      "modified": "2026-02-23T15:09:02.523Z",
+      "name": "mcp_run_unreal_diagnostic_parser",
+      "is_async": true,
+      "use_type": 3
     }
   },
   {
@@ -668,6 +704,17 @@
       "description": "",
       "modified": "2026-02-23T14:23:14.246Z",
       "name": "system_persona_and_prompt_feedback",
+      "type": 1
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 35,
+    "fields": {
+      "created": "2026-02-23T15:09:02.498Z",
+      "description": "The target URL.",
+      "modified": "2026-02-23T15:09:02.499Z",
+      "name": "url",
       "type": 1
     }
   },
@@ -1218,6 +1265,39 @@
       "modified": "2026-02-23T14:23:21.141Z",
       "tool": 11,
       "parameter": 34,
+      "required": true
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 62,
+    "fields": {
+      "created": "2026-02-23T15:09:02.513Z",
+      "modified": "2026-02-23T15:09:02.513Z",
+      "tool": 15,
+      "parameter": 16,
+      "required": true
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 63,
+    "fields": {
+      "created": "2026-02-23T15:09:02.520Z",
+      "modified": "2026-02-23T15:09:02.520Z",
+      "tool": 16,
+      "parameter": 35,
+      "required": true
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 64,
+    "fields": {
+      "created": "2026-02-23T15:09:02.526Z",
+      "modified": "2026-02-23T15:09:02.526Z",
+      "tool": 17,
+      "parameter": 6,
       "required": true
     }
   },

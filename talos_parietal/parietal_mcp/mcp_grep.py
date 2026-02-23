@@ -75,19 +75,17 @@ def _grep_sync(path: str, pattern: str, case_insensitive: bool = True) -> str:
             rel_path = os.path.relpath(filepath, path)
 
             # Read file with fallback encoding (skip binary-ish text)
+            file_matches = []
             try:
                 with open(filepath, 'r', encoding='utf-8') as f:
-                    lines = f.readlines()
+                    for i, line in enumerate(f):
+                        if re.search(pattern, line, regex_flags):
+                            # Clean and truncate the line
+                            content = line.strip()[:150]
+                            file_matches.append(f'{i + 1}:{content}')
+                            hit_count_total += 1
             except UnicodeDecodeError:
                 continue
-
-            file_matches = []
-            for i, line in enumerate(lines):
-                if re.search(pattern, line, regex_flags):
-                    # Clean and truncate the line
-                    content = line.strip()[:150]
-                    file_matches.append(f'{i + 1}:{content}')
-                    hit_count_total += 1
 
             if file_matches:
                 # Add file header
@@ -120,16 +118,17 @@ def _grep_sync(path: str, pattern: str, case_insensitive: bool = True) -> str:
     output = '\n'.join(results)
 
     # Clean truncation
-    if len(output) > MAX_OUTPUT_CHARS:
-        output = output[:MAX_OUTPUT_CHARS].rsplit('\n', 1)[0]
+    MAX_RETURN_CHARS = 20000
+    if len(output) > MAX_RETURN_CHARS:
+        output = output[:MAX_RETURN_CHARS].rsplit('\n', 1)[0]
         output += f'\n... [Truncated due to length]'
 
     return output
 
 
-async def mcp_grep(
-    path: str, pattern: str, case_insensitive: bool = True
-) -> str:
+async def mcp_grep(path: str,
+                   pattern: str,
+                   case_insensitive: bool = True) -> str:
     """
     MCP Tool: grep -r.
     Recursively searches for a regex pattern starting at 'path'.

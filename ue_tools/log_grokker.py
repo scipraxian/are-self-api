@@ -17,33 +17,19 @@ logger = logging.getLogger(__name__)
 # CONFIGURATION
 # -----------------------------------------------------------------------------
 INTERESTING_CATEGORIES = [
-    'LogBlueprintUserMessages',
-    'LogNet',
-    'LogWorldPartition',
-    'LogScript',
-    'LogTemp',
-    'LogOnlineSession',
-    'LogGameMode',
-    'LogGameState',
+    'LogBlueprintUserMessages', 'LogNet', 'LogWorldPartition', 'LogScript',
+    'LogTemp', 'LogOnlineSession', 'LogGameMode', 'LogGameState',
     'LogPlayerController'
 ]
 
 INTERESTING_KEYWORDS = [
-    'Error:',
-    'Warning:',
-    'Possessed',
-    'Unpossessed',
-    'Server_TargetActorCounter',
-    'OnRep_',
-    'Client_SafeInit',
-    'BeginPlay',
-    'Steam Group',
-    'Hero',
-    'L_HSH_Hotel'
+    'Error:', 'Warning:', 'Possessed', 'Unpossessed',
+    'Server_TargetActorCounter', 'OnRep_', 'Client_SafeInit', 'BeginPlay',
+    'Steam Group', 'Hero', 'L_HSH_Hotel'
 ]
 
-
 # -----------------------------------------------------------------------------
+
 
 def parse_log_section(content, label):
     """Parses a raw log block into a list of event dictionaries.
@@ -58,11 +44,10 @@ def parse_log_section(content, label):
     events = []
     # Regex to catch the standard UE timestamp: [2026.01.02-13.07.47:881]
     timestamp_pattern = re.compile(
-        r'^\[(\d{4}\.\d{2}\.\d{2}-\d{2}\.\d{2}\.\d{2}:\d{3})\]'
-    )
+        r'^\[(\d{4}\.\d{2}\.\d{2}-\d{2}\.\d{2}\.\d{2}:\d{3})\]')
     category_pattern = re.compile(r'\]\[\s*\d*\](\w+):')
 
-    for line in content.splitlines():
+    for line_idx, line in enumerate(content.splitlines(), start=1):
         line = line.strip()
         if not line:
             continue
@@ -92,7 +77,8 @@ def parse_log_section(content, label):
                     'time_display': time_str.split('-')[1],
                     'source': label,
                     'category': category,
-                    'message': clean_msg
+                    'message': clean_msg,
+                    'line_number': line_idx
                 })
     return events
 
@@ -162,13 +148,11 @@ def generate_html(events, output_filename):
             style_class = 'error'
 
         # Build the message block
-        content = (
-            f'<div class="msg-box {style_class} '
-            f'{"host-msg" if e["source"] == "HOST" else "remote-msg"}">'
-            f'<span class="category">{e["category"]}</span>'
-            f'<span class="{msg_class}">{e["message"]}</span>'
-            '</div>'
-        )
+        content = (f'<div class="msg-box {style_class} '
+                   f'{"host-msg" if e["source"] == "HOST" else "remote-msg"}">'
+                   f'<span class="category">{e["category"]}</span>'
+                   f'<span class="{msg_class}">{e["message"]}</span>'
+                   '</div>')
 
         row = '<div class="row">'
         if e['source'] == 'HOST':
@@ -248,8 +232,5 @@ def main():
 
 if __name__ == '__main__':
     # Configure basic logging for the script
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(message)s'
-    )
+    logging.basicConfig(level=logging.INFO, format='%(message)s')
     main()
