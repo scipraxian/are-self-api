@@ -7,10 +7,12 @@ from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
 from asgiref.sync import sync_to_async
+from django.db.models import Count
 
 from environments.variable_renderer import VariableRenderer
 from hydra.models import HydraHead, HydraHeadStatus
 from hydra.utils import resolve_environment_context
+from talos_hippocampus.models import TalosEngram
 from talos_parietal.models import ToolCall, ToolDefinition
 from talos_parietal.parietal_mcp.gateway import ParietalMCP
 from talos_parietal.synapse import ChatMessage, OllamaClient
@@ -618,9 +620,6 @@ class FrontalLobe:
         current_turn = turn_record.turn_number
         catalog_block = ''
         if current_turn == 1:
-            from django.db.models import Count
-
-            from talos_hippocampus.models import TalosEngram
 
             def get_turn_1_engrams_lines():
                 qs = (
@@ -697,7 +696,7 @@ class FrontalLobe:
                     t.tool_calls.select_related('tool').all()
                 )
                 for tc in tool_calls:
-                    history_str += f'> CAST: {tc.tool.name}({tc.arguments})\n'
+                    history_str += f'[SYSTEM RECORD - TOOL EXECUTED: {tc.tool.name}({tc.arguments})]\n'
                     if age == 1:
                         history_str += f'{tc.result_payload}\n\n'
                     elif age == 2:
