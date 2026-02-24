@@ -491,3 +491,104 @@ body {
     color: #33cc33;
     font-weight: bold;
 }
+
+/* --- LCARS PAYLOAD PARSING UI --- */
+.lcars-accordion {
+    margin-bottom: 10px;
+    background-color: rgba(0, 0, 0, 0.4);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.lcars-accordion-summary {
+    cursor: pointer;
+    font-weight: bold;
+    padding: 8px 15px;
+    font-family: 'Antonio', sans-serif;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    user-select: none;
+    transition: background-color 0.2s;
+}
+
+.lcars-accordion-summary:hover {
+    filter: brightness(1.2);
+}
+
+/* System Block Styling */
+.lcars-sys-block {
+    border-left: 4px solid var(--lcars-purple);
+    background: rgba(204, 153, 204, 0.1);
+    margin-top: 10px;
+    padding: 10px;
+}
+
+.lcars-sys-header {
+    color: var(--lcars-purple);
+    font-weight: bold;
+    font-size: 0.95rem;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+/* User Block Styling */
+.lcars-user-block {
+    border-left: 4px solid var(--lcars-blue);
+    background: rgba(153, 204, 255, 0.1);
+    margin-top: 10px;
+    padding: 10px;
+}
+
+.lcars-user-header {
+    color: var(--lcars-blue);
+    font-weight: bold;
+    font-size: 0.95rem;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+/* History Turn specific */
+.lcars-turn-block {
+    border: 1px solid var(--lcars-orange);
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 10px;
+    background: #050505;
+}
+
+/* Tool execution inside history */
+.lcars-hist-tool {
+    background: rgba(74, 222, 128, 0.15);
+    border-left: 3px solid #4ade80;
+    padding: 8px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: #4ade80;
+}
+
+.lcars-payload-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: #e2e8f0;
+    white-space: pre-wrap;
+    line-height: 1.5;
+}
+
+.lcars-move-block {
+    background: var(--lcars-red);
+    color: black;
+    padding: 10px;
+    font-weight: bold;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 15px;
+    font-family: 'Antonio', sans-serif;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+}
+
+/* -------------------------------- */

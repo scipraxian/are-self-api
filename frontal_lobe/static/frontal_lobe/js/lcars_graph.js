@@ -2,7 +2,7 @@ const POLL_INTERVAL_MS = 2500;
 let sessionId;
 let svg, g, simulation;
 let linkGroup, nodeGroup;
-let currentData = {nodes: [], links: []};
+let currentData = { nodes: [], links: [] };
 let selectedNodeId = null;
 let selectedNodeHash = null;
 let pollTimer;
@@ -172,7 +172,7 @@ function flattenTreeToGraph(sessionData, oldData) {
             }
         });
     }
-    return {nodes, links};
+    return { nodes, links };
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -212,7 +212,7 @@ function fetchData() {
 
                 if (rawNode) {
                     // --- SCROLL/JITTER FIX: Create a clean hash without timers or physics ---
-                    const cleanNode = {...rawNode};
+                    const cleanNode = { ...rawNode };
                     delete cleanNode.x;
                     delete cleanNode.y;
                     delete cleanNode.vx;
@@ -221,7 +221,7 @@ function fetchData() {
                     delete cleanNode.delta;
                     delete cleanNode.inference_time;
 
-                    const currentStateHash = JSON.stringify({node: cleanNode, linkCount: rawLinks.length});
+                    const currentStateHash = JSON.stringify({ node: cleanNode, linkCount: rawLinks.length });
 
                     if (selectedNodeHash !== currentStateHash) {
                         shouldUpdateInspector = true;
@@ -514,23 +514,140 @@ function showDetails(d) {
         terminalEl.innerHTML += `<div class="${statusColor}" style="margin-bottom: 10px; font-weight: bold; font-size: 1.1rem;">Status: ${d.status}</div>`;
 
         if (d.request_payload) {
-            let reqStr;
+            let payloadHtml = "";
+            let reqObj = d.request_payload;
             try {
-                reqStr = typeof d.request_payload === 'string' ? JSON.parse(d.request_payload) : d.request_payload;
-                reqStr = JSON.stringify(reqStr, null, 2);
-            } catch (e) {
-                reqStr = String(d.request_payload);
+                if (typeof reqObj === 'string') {
+                    reqObj = JSON.parse(reqObj);
+                }
+            } catch (e) { }
+
+            if (reqObj && typeof reqObj === 'object' && reqObj.messages && Array.isArray(reqObj.messages)) {
+                payloadHtml += `<div class="term-result" style="margin-top: 15px;">
+                    <details class="lcars-accordion">
+                        <summary class="lcars-accordion-summary" style="background-color:#f99f1b; color:black;">► VIEW REQUEST PAYLOAD</summary>
+                        <div style="padding: 10px;">`;
+
+                reqObj.messages.forEach(msg => {
+                    let roleStr = String(msg.role).toUpperCase();
+                    let roleColor = msg.role === 'system' ? '#cc99cc' : (msg.role === 'user' ? '#99ccff' : '#4ade80');
+
+                    payloadHtml += `<details ${msg.role === 'user' ? 'open' : ''} class="lcars-accordion" style="border: 1px solid ${roleColor};">
+                        <summary class="lcars-accordion-summary" style="background-color:${roleColor}33; color:${roleColor};">► [${roleStr}] PROMPT</summary>
+                        <div style="padding: 10px;">`;
+
+                    let content = msg.content || "";
+
+                    if (msg.role === 'system') {
+                        let sections = content.split(/^(?=[A-Z0-9\s/()_-]+:$)/m);
+                        sections.forEach(sec => {
+                            if (!sec.trim()) return;
+                            let lines = sec.trim().split('\n');
+                            let headerMatch = lines[0].match(/^([A-Z0-9\s/()_-]+):$/);
+                            if (headerMatch) {
+                                payloadHtml += `<div class="lcars-sys-block">
+                                    <div class="lcars-sys-header">${headerMatch[1]}</div>
+                                    <div class="lcars-payload-text">${lines.slice(1).join('\n').trim()}</div>
+                                </div>`;
+                            } else {
+                                payloadHtml += `<div class="lcars-payload-text" style="margin-bottom: 10px;">${sec.trim()}</div>`;
+                            }
+                        });
+                    } else if (msg.role === 'user') {
+                        let sections = content.split(/^(?=\[[A-Z0-9\s:()-]+\])/m);
+                        sections.forEach(sec => {
+                            if (!sec.trim()) return;
+
+                            if (sec.trim().startsWith("[YOUR MOVE]")) {
+                                payloadHtml += `<div class="lcars-move-block">${sec.trim()}</div>`;
+                                return;
+                            }
+
+                            let lines = sec.trim().split('\n');
+                            let headerMatch = lines[0].match(/^\[([^\]]+)\](.*)$/);
+
+                            if (headerMatch) {
+                                let title = headerMatch[1];
+                                let restOfFirstLine = headerMatch[2].trim();
+                                let bodyText = restOfFirstLine ? restOfFirstLine + '\n' + lines.slice(1).join('\n') : lines.slice(1).join('\n');
+                                bodyText = bodyText.trim();
+
+                                if (title.includes("HISTORICAL LOG")) {
+                                    payloadHtml += `<details open class="lcars-accordion" style="margin-top:10px; border: 1px solid #f99f1b;">
+                                        <summary class="lcars-accordion-summary" style="background-color:rgba(249,159,27,0.2); color:#f99f1b; font-size: 0.95rem;">▼ ${title}</summary>
+                                        <div style="padding: 10px;">`;
+
+                                    let turns = bodyText.split(/^(?=Turn \d+ \[)/m);
+                                    turns.forEach(turnData => {
+                                        if (!turnData.trim()) return;
+                                        let tLines = turnData.trim().split('\n');
+                                        let tHeaderMatch = tLines[0].match(/^(Turn \d+ \[.*?\]):$/);
+
+                                        if (tHeaderMatch) {
+                                            let tTitle = tHeaderMatch[1];
+                                            let tBody = tLines.slice(1).join('\n').trim();
+
+                                            tBody = tBody.replace(/^(\[SYSTEM RECORD - TOOL EXECUTED.*?\])$/gm, '<div class="lcars-hist-tool">$1</div>');
+                                            tBody = tBody.replace(/^THOUGHT:/gm, '<span style="color:#cc99cc; font-weight:bold;">THOUGHT:</span>');
+                                            tBody = tBody.replace(/^(\[DATA EVICTED FROM L1 CACHE.*?\])$/gm, '<div style="color:#ff3333; font-size:0.8rem; margin-top:2px;">$1</div>');
+                                            tBody = tBody.replace(/^(\[SYSTEM WARNING:.*?\])$/gm, '<div style="color:#ff9900; font-weight:bold; margin-top:5px; margin-bottom: 5px;">$1</div>');
+                                            tBody = tBody.replace(/^(--- ENGRAM .*? ---)$/gm, '<div style="color:#99ccff; font-weight:bold; margin-top:5px; border-bottom:1px solid #99ccff;">$1</div>');
+
+                                            payloadHtml += `<details class="lcars-accordion" style="margin-top: 5px; border: 1px solid #4ade80;">
+                                                <summary class="lcars-accordion-summary" style="background-color:rgba(74,222,128,0.2); color:#4ade80; font-size: 0.85rem; padding: 4px 10px;">▼ ${tTitle}</summary>
+                                                <div style="padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #ccc; white-space: pre-wrap;">${tBody}</div>
+                                            </details>`;
+                                        } else {
+                                            payloadHtml += `<div class="lcars-payload-text">${turnData.trim()}</div>`;
+                                        }
+                                    });
+                                    payloadHtml += `</div></details>`;
+                                } else if (title.includes("SYSTEM DIAGNOSTICS") || title.includes("WAKING STATE") || title.includes("CARD CATALOG")) {
+                                    let accColor = title.includes("DIAGNOSTICS") ? "#cc3333" : (title.includes("WAKING") ? "#f99f1b" : "#cc99cc");
+                                    let innerClass = title.includes("WAKING") ? "lcars-goal-block" : "lcars-payload-text";
+
+                                    payloadHtml += `<details open class="lcars-accordion" style="margin-top:10px; border: 1px solid ${accColor};">
+                                        <summary class="lcars-accordion-summary" style="background-color:${accColor}33; color:${accColor}; font-size: 0.95rem;">▼ ${title}</summary>
+                                        <div style="padding: 10px;" class="${innerClass}">${bodyText}</div>
+                                    </details>`;
+                                } else {
+                                    payloadHtml += `<div class="lcars-user-block">
+                                        <div class="lcars-user-header">${title}</div>
+                                        <div class="lcars-payload-text">${bodyText}</div>
+                                    </div>`;
+                                }
+                            } else {
+                                payloadHtml += `<div class="lcars-payload-text" style="margin-bottom: 10px;">${sec.trim()}</div>`;
+                            }
+                        });
+                    } else {
+                        payloadHtml += `<div class="lcars-payload-text">${content}</div>`;
+                    }
+
+                    payloadHtml += `</div></details>`;
+                });
+
+                payloadHtml += `</div></details></div>`;
+            } else {
+                let reqStr = "";
+                try {
+                    reqStr = JSON.stringify(reqObj, null, 2);
+                } catch (e) {
+                    reqStr = String(reqObj);
+                }
+                payloadHtml = `
+                    <div class="term-result" style="margin-top: 15px;">
+                        <details>
+                            <summary style="cursor:pointer; color:#f99f1b; font-weight: bold; border-bottom: 1px solid #f99f1b; padding-bottom: 5px; margin-bottom: 10px;">► View Raw Request Payload</summary>
+                            <div class="code-block" style="margin-top:5px; padding:10px; background-color: rgba(0,0,0,0.5); border: 1px solid #f99f1b; border-radius: 4px; overflow-x: auto;">
+                                <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #99ccff;">${reqStr}</pre>
+                            </div>
+                        </details>
+                    </div>
+                `;
             }
-            terminalEl.innerHTML += `
-                <div class="term-result" style="margin-top: 15px;">
-                    <details>
-                        <summary style="cursor:pointer; color:#f99f1b; font-weight: bold; border-bottom: 1px solid #f99f1b; padding-bottom: 5px; margin-bottom: 10px;">► View Raw Request Payload</summary>
-                        <div class="code-block" style="margin-top:5px; padding:10px; background-color: rgba(0,0,0,0.5); border: 1px solid #f99f1b; border-radius: 4px; overflow-x: auto;">
-                            <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #99ccff;">${reqStr}</pre>
-                        </div>
-                    </details>
-                </div>
-            `;
+
+            terminalEl.innerHTML += payloadHtml;
         }
 
         // 1. Render the Thought
