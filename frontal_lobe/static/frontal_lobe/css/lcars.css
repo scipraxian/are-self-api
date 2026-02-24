@@ -9,6 +9,7 @@
     --lcars-font: 'Antonio', 'Arial Narrow', sans-serif;
 }
 
+
 body {
     background-color: var(--lcars-bg);
     color: var(--lcars-blue);
@@ -64,6 +65,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 5px;
+    min-height: 0;
 }
 
 .lcars-button {
@@ -194,10 +196,13 @@ body {
 .session-list {
     display: flex;
     flex-direction: column;
-    gap: 10px; /* Increased gap for breathing room */
+    gap: 10px;
+    /* Increased gap for breathing room */
     overflow-y: auto;
     flex: 1;
-    padding-right: 5px; /* Prevent scrollbar clipping */
+    min-height: 0;
+    padding-right: 5px;
+    /* Prevent scrollbar clipping */
     scrollbar-width: none;
 }
 
@@ -279,7 +284,9 @@ body {
 }
 
 /* Graph Node Selection Effect */
-.nodes g.selected circle, .nodes g.selected rect, .nodes g.selected polygon {
+.nodes g.selected circle,
+.nodes g.selected rect,
+.nodes g.selected polygon {
     stroke: #fff;
     stroke-width: 3px;
     filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
@@ -293,12 +300,14 @@ body {
         stroke: #4ade80;
         fill: #4ade80;
     }
+
     50% {
         filter: drop-shadow(0 0 25px #4ade80);
         stroke-width: 5px;
         stroke: #fff;
         fill: #33cc33;
     }
+
     100% {
         filter: drop-shadow(0 0 5px #4ade80);
         stroke-width: 2px;
@@ -338,7 +347,8 @@ body {
 }
 
 .json-row {
-    margin-bottom: 2px; /* Reduced from 4px */
+    margin-bottom: 2px;
+    /* Reduced from 4px */
     display: flex;
     align-items: flex-start;
 }
@@ -381,7 +391,8 @@ body {
     flex-direction: column;
     padding: 10px;
     z-index: 1000;
-    pointer-events: none; /* Lets you click the graph beneath it */
+    pointer-events: none;
+    /* Lets you click the graph beneath it */
     font-family: var(--lcars-font, 'Arial', sans-serif);
 }
 
@@ -400,11 +411,25 @@ body {
 }
 
 /* LCARS Colors */
-.lcars-bg-orange { background-color: #ff9900; }
-.lcars-bg-purple { background-color: #cc99cc; }
-.lcars-bg-blue { background-color: #9999ff; }
-.lcars-bg-red { background-color: #cc3333; }
-.lcars-bg-green { background-color: #4ade80; }
+.lcars-bg-orange {
+    background-color: #ff9900;
+}
+
+.lcars-bg-purple {
+    background-color: #cc99cc;
+}
+
+.lcars-bg-blue {
+    background-color: #9999ff;
+}
+
+.lcars-bg-red {
+    background-color: #cc3333;
+}
+
+.lcars-bg-green {
+    background-color: #4ade80;
+}
 
 .hud-body {
     display: flex;
@@ -438,8 +463,31 @@ body {
     border-left: 4px solid #ff9900;
 }
 
-.term-thought { color: #cc99cc; font-style: italic; margin-bottom: 15px; }
-.term-spell { color: #9999ff; font-weight: bold; margin-top: 10px; }
-.term-result { color: #aaa; margin-bottom: 15px; padding-left: 10px; border-left: 2px solid #555; }
-.term-fizzle { color: #ff3333; font-weight: bold; }
-.term-success { color: #33cc33; font-weight: bold; }
+.term-thought {
+    color: #cc99cc;
+    font-style: italic;
+    margin-bottom: 15px;
+}
+
+.term-spell {
+    color: #9999ff;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.term-result {
+    color: #aaa;
+    margin-bottom: 15px;
+    padding-left: 10px;
+    border-left: 2px solid #555;
+}
+
+.term-fizzle {
+    color: #ff3333;
+    font-weight: bold;
+}
+
+.term-success {
+    color: #33cc33;
+    font-weight: bold;
+}
