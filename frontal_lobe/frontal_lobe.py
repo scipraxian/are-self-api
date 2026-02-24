@@ -9,9 +9,6 @@ from uuid import UUID
 from asgiref.sync import sync_to_async
 
 from environments.variable_renderer import VariableRenderer
-from hydra.models import HydraHead, HydraHeadStatus
-from hydra.utils import resolve_environment_context
-from talos_parietal.parietal_lobe import ParietalLobe
 from frontal_lobe.models import (
     ModelRegistry,
     ReasoningGoal,
@@ -19,6 +16,9 @@ from frontal_lobe.models import (
     ReasoningStatusID,
     ReasoningTurn,
 )
+from hydra.models import HydraHead, HydraHeadStatus
+from hydra.utils import resolve_environment_context
+from talos_parietal.parietal_lobe import ParietalLobe
 
 logger = logging.getLogger(__name__)
 
@@ -300,8 +300,6 @@ class FrontalLobe:
 
             # 4. Build Synapse Payload
             ollama_tools = await self.parietal_lobe.build_tool_schemas()
-            messages = await self._build_initial_messages(
-                rendered_objective, blackboard)
             await self._log_live(f'Loaded {len(ollama_tools)} tools.')
 
             # 4. The Loop
@@ -315,6 +313,14 @@ class FrontalLobe:
 
                 should_continue, previous_turn = await self._execute_turn(
                     turn, ollama_tools, previous_turn)
+
+                await sync_to_async(self.session.refresh_from_db
+                                   )(fields=['status_id'])
+                if self.session.status_id != ReasoningStatusID.ACTIVE:
+                    await self._log_live(
+                        '\n[SYSTEM] Session halted by tool execution or intervention.'
+                    )
+                    break
 
                 if not should_continue:
                     break
