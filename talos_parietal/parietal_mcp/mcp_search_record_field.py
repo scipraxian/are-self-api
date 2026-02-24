@@ -16,6 +16,8 @@ def _search_field_sync(app_label: str, model_name: str, record_id: str,
         record = model_class.objects.get(pk=record_id)
     except model_class.DoesNotExist:
         return f"Error: Record {record_id} not found."
+    except Exception as e:
+        return f"Error: Invalid record ID {record_id}. Reason: {str(e)}"
 
     val = getattr(record, field_name, None)
     if not val:
@@ -31,8 +33,10 @@ def _search_field_sync(app_label: str, model_name: str, record_id: str,
             matches_found += 1
             start = max(0, i - context_lines)
             end = min(len(lines), i + context_lines + 1)
-            chunk = "".join([f"{idx + 1}: {l}\n" for idx, l in
-                             enumerate(lines[start:end], start=start)])
+            chunk = "".join([
+                f"{idx + 1}: {l}\n"
+                for idx, l in enumerate(lines[start:end], start=start)
+            ])
             results.append(
                 f"--- Match {matches_found} (Line {i + 1}) ---\n{chunk}")
             if len(results) >= 10:

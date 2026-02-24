@@ -20,6 +20,11 @@ def _get_record_stats(model_name: str, record_id: str) -> Dict[str, Any]:
         record = model_class.objects.get(pk=record_id)
     except model_class.DoesNotExist:
         return {'error': f'Record {record_id} not found in {model_name}.'}
+    except Exception as e:
+        return {
+            'error':
+                f'Invalid record ID {record_id} for {model_name}. Reason: {str(e)}'
+        }
 
     stats = {'id': str(record.pk)}
 
@@ -36,9 +41,8 @@ def _get_record_stats(model_name: str, record_id: str) -> Dict[str, Any]:
         # Calculate sizes for text fields
         if field_type in ['TextField', 'CharField'] and val:
             info['size_chars'] = len(str(val))
-            info['preview'] = (
-                str(val)[:50] + '...' if len(str(val)) > 50 else str(val)
-            )
+            info['preview'] = (str(val)[:50] +
+                               '...' if len(str(val)) > 50 else str(val))
         else:
             info['value'] = str(val)
 
