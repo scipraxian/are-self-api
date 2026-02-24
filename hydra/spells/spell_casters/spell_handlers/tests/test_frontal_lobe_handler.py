@@ -133,6 +133,8 @@ class FrontalLobeHandlerTest(TransactionTestCase):
         self.assertEqual(mock_instance.chat.call_count, 2)
 
     @pytest.mark.asyncio
+    @patch('frontal_lobe.frontal_lobe.FrontalLobeConstants.DEFAULT_MAX_TURNS',
+           3)
     @patch('talos_parietal.parietal_lobe.OllamaClient')
     async def test_handler_max_turns_cutoff(self, mock_client_cls):
         """Verify the loop forcibly terminates if the AI gets stuck in a loop."""
