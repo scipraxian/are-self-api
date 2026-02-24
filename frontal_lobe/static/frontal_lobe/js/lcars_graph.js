@@ -670,19 +670,29 @@ function showDetails(d) {
         if (calls && calls.length > 0) {
             let spellsHtml = `
                 <div class="term-result" style="margin-top: 15px;">
-                    <details>
-                        <summary style="cursor:pointer; color:#4ade80; font-weight: bold; border-bottom: 1px solid #4ade80; padding-bottom: 5px; margin-bottom: 10px;">► Tool Calls (${calls.length})</summary>
-                        <div style="padding-left: 10px;">
+                    <details class="lcars-accordion" style="border: 1px solid #4ade80;">
+                        <summary class="lcars-accordion-summary" style="background-color:rgba(74,222,128,0.2); color:#4ade80;">► TOOL CALLS (${calls.length})</summary>
+                        <div style="padding: 10px;">
             `;
 
             calls.forEach((call, i) => {
                 let args = call.arguments || {};
-                let argStr = "";
+                let parsedArgs = null;
+                let argHtml = "";
                 try {
-                    let parsedArgs = typeof args === 'string' ? JSON.parse(args) : args;
-                    argStr = JSON.stringify(parsedArgs, null, 2);
+                    parsedArgs = typeof args === 'string' ? JSON.parse(args) : args;
+                    if (parsedArgs && typeof parsedArgs === 'object' && !Array.isArray(parsedArgs)) {
+                        argHtml = `<div class="lcars-kv-grid">`;
+                        for (let [k, v] of Object.entries(parsedArgs)) {
+                            let valStr = typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v);
+                            argHtml += `<div class="lcars-kv-key" style="color: #99ccff;">${k}</div><div class="lcars-kv-val">${valStr}</div>`;
+                        }
+                        argHtml += `</div>`;
+                    } else {
+                        argHtml = `<pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 11px; color:#99ccff;">${JSON.stringify(parsedArgs, null, 2)}</pre>`;
+                    }
                 } catch (e) {
-                    argStr = String(args);
+                    argHtml = `<pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 11px; color:#99ccff;">${String(args)}</pre>`;
                 }
 
                 let targetId = call.target.id || call.target;
@@ -691,6 +701,8 @@ function showDetails(d) {
 
                 let resultClass = 'term-result';
                 let resultText = call.result || call.traceback || "No result.";
+                let resObj = null;
+                let resHtml = "";
 
                 if (resultText && resultText.toString().includes("FIZZLE") || call.traceback) {
                     resultClass += ' term-fizzle';
@@ -698,16 +710,39 @@ function showDetails(d) {
                     resultClass += ' term-success';
                 }
 
+                try {
+                    resObj = typeof resultText === 'string' ? JSON.parse(resultText) : resultText;
+                    if (resObj && typeof resObj === 'object' && !Array.isArray(resObj)) {
+                        resHtml = `<div class="lcars-kv-grid">`;
+                        for (let [k, v] of Object.entries(resObj)) {
+                            let valStr = typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v);
+                            resHtml += `<div class="lcars-kv-key" style="color: #ccc;">${k}</div><div class="lcars-kv-val ${resultClass}">${valStr}</div>`;
+                        }
+                        resHtml += `</div>`;
+                    } else if (Array.isArray(resObj)) {
+                        resHtml = `<div style="display: flex; flex-direction: column; gap: 5px;">`;
+                        resObj.forEach((item, idx) => {
+                            let iStr = typeof item === 'object' ? JSON.stringify(item, null, 2) : String(item);
+                            resHtml += `<div style="padding: 5px; background: rgba(255,255,255,0.05); border-left: 2px solid #ccc; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;"><strong style="color: #ccc;">[${idx}]</strong> <span style="white-space: pre-wrap; color: #e2e8f0; word-break: break-all;">${iStr}</span></div>`;
+                        });
+                        resHtml += `</div>`;
+                    } else {
+                        resHtml = `<pre class="${resultClass}" style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 11px;">${JSON.stringify(resObj, null, 2)}</pre>`;
+                    }
+                } catch (e) {
+                    resHtml = `<pre class="${resultClass}" style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; font-size: 11px;">${String(resultText)}</pre>`;
+                }
+
                 spellsHtml += `
                     <div style="margin-bottom: 15px; border: 1px solid #4ade80; border-radius: 4px; padding: 10px; background-color: rgba(0,0,0,0.3);">
                         <div class="term-spell" style="font-weight: bold; color: #4ade80; margin-bottom: 10px;">> CALL [${i + 1}]: ${toolName}</div>
-                        <details style="margin-bottom: 10px;">
-                            <summary style="cursor:pointer; color:#99ccff; font-weight: bold;">► Arguments</summary>
-                            <pre style="margin-top: 5px; padding: 10px; background: rgba(0,0,0,0.5); white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; font-size: 11px; color:#99ccff;">${argStr}</pre>
+                        <details class="lcars-accordion" style="margin-bottom: 10px; border: 1px solid rgba(153,204,255,0.4);">
+                            <summary class="lcars-accordion-summary" style="background-color:rgba(153,204,255,0.15); color:#99ccff; font-size: 0.9rem; padding: 6px 15px;">► Arguments</summary>
+                            <div style="padding: 10px;">${argHtml}</div>
                         </details>
-                        <details>
-                            <summary style="cursor:pointer; color:#ccc; font-weight: bold;">► Result</summary>
-                            <div class="${resultClass}" style="margin-top: 5px; padding: 10px; background: rgba(0,0,0,0.5); white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; font-size: 11px; word-wrap: break-word; overflow-x: auto;">${resultText}</div>
+                        <details class="lcars-accordion" style="border: 1px solid rgba(204,204,204,0.4);">
+                            <summary class="lcars-accordion-summary" style="background-color:rgba(204,204,204,0.15); color:#ccc; font-size: 0.9rem; padding: 6px 15px;">► Result</summary>
+                            <div style="padding: 10px; overflow-x: auto;">${resHtml}</div>
                         </details>
                     </div>
                 `;

@@ -612,4 +612,28 @@ body {
     text-transform: uppercase;
 }
 
+/* Tool execution parsing details */
+.lcars-kv-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+}
+
+.lcars-kv-key {
+    text-align: right;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    padding-right: 8px;
+    font-weight: bold;
+    word-break: break-word;
+}
+
+.lcars-kv-val {
+    color: #e2e8f0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    /* Allows long strings to wrap */
+}
+
 /* -------------------------------- */
