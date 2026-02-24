@@ -548,13 +548,13 @@ function showDetails(d) {
             terminalEl.innerHTML += `<div class="term-thought" style="margin-top: 15px; font-style: italic;">" Executing without monologue... "</div>`;
         }
 
-        // 2. Render the Spells (Tool Calls)
+        // 2. Render the Tool Calls
         const calls = currentData.links.filter(l => (l.source.id || l.source) === d.id && l.type === 'uses_tool');
         if (calls && calls.length > 0) {
             let spellsHtml = `
                 <div class="term-result" style="margin-top: 15px;">
                     <details open>
-                        <summary style="cursor:pointer; color:#4ade80; font-weight: bold; border-bottom: 1px solid #4ade80; padding-bottom: 5px; margin-bottom: 10px;">► Spells Cast (${calls.length})</summary>
+                        <summary style="cursor:pointer; color:#4ade80; font-weight: bold; border-bottom: 1px solid #4ade80; padding-bottom: 5px; margin-bottom: 10px;">► Tool Calls (${calls.length})</summary>
                         <div style="padding-left: 10px;">
             `;
 
@@ -661,8 +661,8 @@ function showDetails(d) {
             </div>`;
         }
     } else if (d.type === 'tool') {
-        titleEl.textContent = `Spell: ${d.label}`;
-        terminalEl.innerHTML += `<div class="term-spell">> INSPECTING SPELL CALL</div>`;
+        titleEl.textContent = `Tool: ${d.label}`;
+        terminalEl.innerHTML += `<div class="term-spell">> INSPECTING TOOL CALL</div>`;
         const calls = currentData.links.filter(l => (l.target.id || l.target) === d.id && l.type === 'uses_tool');
         calls.forEach((call) => {
             let resultText = call.result || call.traceback || "Pending...";

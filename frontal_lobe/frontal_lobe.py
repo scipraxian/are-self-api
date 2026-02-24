@@ -420,21 +420,33 @@ class FrontalLobe:
                 t_len = len(t.thought_process) if t.thought_process else 0
                 cap = self.session.current_level * 1000
                 status = 'SUCCESS' if t_len <= cap else 'FAILED'
-                history_str += f'Turn {t.turn_number} [L1 FOOTPRINT: {status} - {t_len}/{cap} chars]:\n{t.thought_process or "No internal monologue."}\n\n'
+
+                # --- NEW FORMATTING: Retrospective Bullet Points ---
+                history_str += f'--- CYCLE {t.turn_number} RETROSPECTIVE ---\n'
+                history_str += f'* Footprint: {status} ({t_len}/{cap} chars)\n'
+                history_str += f'* Your Thought: {t.thought_process or "No internal monologue."}\n'
 
                 age = turn_record.turn_number - t.turn_number
 
                 tool_calls = await sync_to_async(list)(
                     t.tool_calls.select_related('tool').all()
                 )
+
+                if not tool_calls:
+                    history_str += '* Tools Executed: None\n'
+
                 for tc in tool_calls:
-                    history_str += f'[SYSTEM RECORD - TOOL EXECUTED: {tc.tool.name}({tc.arguments})]\n'
+                    history_str += (
+                        f'* Tool Executed: {tc.tool.name}({tc.arguments})\n'
+                    )
                     if age == 1:
-                        history_str += f'{tc.result_payload}\n\n'
+                        history_str += f'  - L1 Result: {tc.result_payload}\n'
                     elif age == 2:
-                        history_str += f'[SYSTEM WARNING: L1 EVICTION IMMINENT. FLUSHING TO L2 CACHE NEXT CYCLE. USE ENGRAMS NOW.]\n{tc.result_payload}\n\n'
+                        history_str += f'  - L1 Result: {tc.result_payload}\n'
+                        history_str += f'  - System Warning: L1 EVICTION IMMINENT. FLUSH TO ENGRAMS.\n'
                     else:
-                        history_str += f'[DATA EVICTED FROM L1 CACHE. RETRIEVAL REQUIRES STORAGE I/O (ENGRAMS).]\n\n'
+                        history_str += f'  - L2 Result: [DATA EVICTED FROM L1 CACHE. REQUIRES ENGRAM RETRIEVAL.]\n'
+                history_str += '\n'
         else:
             history_str = 'No recent internal monologue.'
 
