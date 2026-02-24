@@ -1,0 +1,150 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Cortex: {{ session.id|truncatechars:8 }}{% endblock %}
+
+{% block extra_style %}
+
+{% endblock %}
+
+{% block main_content %}
+    <div class="cortex-header">
+        <div class="session-info">
+            <h2>REASONING CORTEX</h2>
+            <div class="session-meta">
+                Session: {{ session.id }} | Goal: <strong>xxxxxxxxxxx</strong>
+            </div>
+        </div>
+
+        <div class="cortex-actions">
+            <a href="{% url 'dashboard:home' %}" class="btn-secondary"
+               style="text-decoration: none; padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 0.8rem; background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                EXIT CORTEX
+            </a>
+            <div id="session-status-update">
+                <div class="status-badge status-{{ session.status.name|lower }} {% if session.status.name == 'Active' %}pulse{% endif %}">
+                    {{ session.status.name }}
+                </div>
+            </div>
+
+            <button class="btn-tick"
+                    hx-post="{% url 'frontal_lobe:cortex_tick' session.id %}"
+                    hx-target="#cognitive-stream-content"
+                    hx-indicator="#indicator"
+                    {% if not session.status.name == 'Active' and not session.status.name == 'Pending' %}disabled{% endif %}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                </svg>
+                TICK ENGINE
+            </button>
+        </div>
+    </div>
+
+    <div class="cortex-layout">
+        <!-- LEFT: STRATEGY -->
+        <aside class="panel">
+            <div class="panel-header">
+                <h3>STRATEGY (GOALS)</h3>
+            </div>
+            <div class="panel-content" id="goal-tree">
+                {% for goal in goals %}
+                    <div class="goal-item">
+                        <div class="goal-prompt">{{ goal.reasoning_prompt }}</div>
+                        <div class="status-badge status-{{ goal.status.name|lower }}"
+                             style="font-size: 0.5rem; padding: 2px 6px;">
+                            {{ goal.status.name }}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="empty-state" style="font-size: 0.8rem; color: #475569;">No sub-goals defined.</div>
+                {% endfor %}
+            </div>
+            <div class="panel-header" style="background: rgba(0,0,0,0.2);">
+                <h3>SESSION HISTORY</h3>
+            </div>
+            <div class="panel-content" style="flex: 1; background: rgba(0,0,0,0.1);">
+                {% for h_session in history_sessions %}
+                    <a href="{% url 'frontal_lobe:cortex_view' h_session.id %}"
+                       style="text-decoration: none; display: block; margin-bottom: 0.5rem;">
+                        <div class="engram-item"
+                             style="border-left: 3px solid {% if h_session.status.name == 'Attention Required' %}#ef4444{% elif h_session.status.name == 'Active' %}#eab308{% else %}transparent{% endif %}; cursor: pointer; transition: background 0.2s;">
+                            <div class="engram-fact" style="font-weight: 700; color: #e2e8f0; font-size: 0.75rem;">
+                                xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                            </div>
+                            <div class="engram-meta">
+                                <span class="status-text status-{{ h_session.status.name|lower }}">{{ h_session.status.name }}</span>
+                                <span>{{ h_session.modified|date:"M d, H:i" }}</span>
+                            </div>
+                        </div>
+                    </a>
+                {% empty %}
+                    <div class="empty-state" style="font-size: 0.8rem; color: #475569;">No previous sessions.</div>
+                {% endfor %}
+            </div>
+        </aside>
+
+        <!-- CENTER: TACTICS -->
+        <main class="panel">
+            <div class="panel-header">
+                <h3>COGNITIVE STREAM</h3>
+                <div id="polling-indicator" class="htmx-indicator">
+                    <div class="loading-ring" style="width: 14px; height: 14px; border-width: 2px;"></div>
+                </div>
+            </div>
+            <div class="panel-content"
+                 id="cognitive-stream-content"
+                 hx-get="{% url 'frontal_lobe:cortex_stream' session.id %}"
+                 hx-trigger="every 5s"
+                 hx-indicator="#polling-indicator">
+                {% include "frontal_lobe/partials/cognitive_stream.html" %}
+            </div>
+        </main>
+
+        <!-- RIGHT: MEMORY -->
+        <aside class="panel">
+            <div class="panel-header">
+                <h3>SHORT-TERM MEMORY</h3>
+            </div>
+            <div class="panel-content" id="rolling-summary"
+                 style="border-bottom: 2px solid var(--border-color); background: rgba(96, 165, 250, 0.05);">
+                <div style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.6; white-space: pre-wrap;">{{ session.rolling_context_summary|default:"Neural pathways forming..." }}</div>
+            </div>
+
+            <div class="panel-header">
+                <h3>MEMORY (ENGRAMS)</h3>
+            </div>
+            <div class="panel-content" id="engram-graph">
+                {% for engram in engrams %}
+                    <div class="engram-item">
+                        <div class="engram-fact">{{ engram.fact }}</div>
+                        <div class="engram-meta">
+                            <span>Score: {{ engram.relevance_score }}</span>
+                            <span>Turn {{ engram.source_turn.turn_number }}</span>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="empty-state" style="font-size: 0.8rem; color: #475569;">Memory banks empty.</div>
+                {% endfor %}
+            </div>
+        </aside>
+    </div>
+    <div id="chat-sidebar-container"
+         hx-get="{% url 'talos_frontal:chat_override' %}"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+    </div>
+{% endblock %}
+
+{% block extra_script %}
+    <script>
+        // Auto-scroll the cognitive stream to bottom on new turns
+        document.addEventListener('htmx:afterRequest', function (evt) {
+            if (evt.detail.target.id === 'cognitive-stream-content') {
+                const content = evt.detail.target;
+                content.scrollTop = content.scrollHeight;
+            }
+        });
+    </script>
+{% endblock %}

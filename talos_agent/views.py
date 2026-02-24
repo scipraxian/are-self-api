@@ -6,10 +6,11 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import DetailView
 
-from core.utils.config_manager import load_builder_config
 from talos_agent.models import TalosAgentEvent, TalosAgentRegistry
 from talos_agent.utils.client import TalosAgentClient
 from talos_agent.version import VERSION as SERVER_VERSION
+
+# TODO: This is all legacy agent control. Move to DRF
 
 
 class AgentDetailView(DetailView):
@@ -25,57 +26,6 @@ class AgentDetailView(DetailView):
         context['recent_events'] = self.object.events.all()[:10]
         context['server_version'] = SERVER_VERSION
         return context
-
-
-def agent_live_metrics_partial(request, pk):
-    """HTMX partial that actively queries the agent for real-time data."""
-    # agent = get_object_or_404(TalosAgentRegistry, pk=pk)
-    # config = load_builder_config()
-    # pname = config.get('ProjectName', 'HSHVacancy')
-    #
-    # client = TalosAgentClient(
-    #     agent.ip_address, port=agent.agent_port, timeout=1.0
-    # )
-    # res = client.get_status(pname, log_path=agent.remote_log_path)
-    #
-    # metrics_data = None
-    # error_msg = None
-    #
-    # if res.get('status') == 'OK':
-    #     data = res.get('data', {})
-    #
-    #     metrics_data = AgentTelemetry.objects.create(
-    #         target=agent,
-    #         cpu_usage=data.get('cpu', 0.0),
-    #         memory_usage_mb=data.get('ram_mb', 0.0),
-    #         is_functioning=data.get('functioning', False),
-    #         is_alive=data.get('alive', False),
-    #         storage_ok=agent.is_exe_available,
-    #         storage_info=f'Exe: {"READY" if agent.is_exe_available else "NOT_FOUND"}',
-    #         raw_payload=res,
-    #     )
-    #     if agent.status in ['OFFLINE', 'STORAGE_ERROR']:
-    #         agent.status = 'ONLINE'
-    #
-    #     # Capture version from handshake
-    #     if res.get('version'):
-    #         agent.version = res.get('version')
-    #
-    #     agent.save()
-    # else:
-    #     error_msg = res.get('message', 'Connection Failed')
-    #     metrics_data = agent.telemetry.first()
-    #
-    # return render(
-    #     request,
-    #     'talos_agent/partials/metrics_card.html',
-    #     {
-    #         'agent': agent,
-    #         'metrics': metrics_data,
-    #         'error': error_msg,
-    #         'server_version': SERVER_VERSION,
-    #     },
-    # )
 
 
 def agent_launch_view(request, pk):
@@ -111,32 +61,33 @@ def agent_launch_view(request, pk):
 
 
 def agent_kill_view(request, pk):
-    agent = get_object_or_404(TalosAgentRegistry, pk=pk)
-    config = load_builder_config()
-    pname = config.get('ProjectName', 'HSHVacancy')
-
-    client = TalosAgentClient(agent.ip_address, port=agent.agent_port)
-    res = client.kill(pname)
-
-    if res.get('status') in ['KILLED', 'NOT_FOUND']:
-        msg = (
-            f'Stopped {pname}.exe gracefully.'
-            if res.get('status') == 'KILLED'
-            else f'{pname}.exe was not running.'
-        )
-        TalosAgentEvent.objects.create(
-            target=agent, event_type='KILL', message=msg
-        )
-        return render(
-            request,
-            'talos_agent/partials/control_response.html',
-            {'message': msg},
-        )
-    return render(
-        request,
-        'talos_agent/partials/control_response.html',
-        {'error': f'Process {pname} kill failed: {res.get("message")}'},
-    )
+    # agent = get_object_or_404(TalosAgentRegistry, pk=pk)
+    # config = load_builder_config()
+    # pname = config.get('ProjectName', 'HSHVacancy')
+    #
+    # client = TalosAgentClient(agent.ip_address, port=agent.agent_port)
+    # res = client.kill(pname)
+    #
+    # if res.get('status') in ['KILLED', 'NOT_FOUND']:
+    #     msg = (
+    #         f'Stopped {pname}.exe gracefully.'
+    #         if res.get('status') == 'KILLED'
+    #         else f'{pname}.exe was not running.'
+    #     )
+    #     TalosAgentEvent.objects.create(
+    #         target=agent, event_type='KILL', message=msg
+    #     )
+    #     return render(
+    #         request,
+    #         'talos_agent/partials/control_response.html',
+    #         {'message': msg},
+    #     )
+    # return render(
+    #     request,
+    #     'talos_agent/partials/control_response.html',
+    #     {'error': f'Process {pname} kill failed: {res.get("message")}'},
+    # )
+    pass
 
 
 def agent_logs_view(request, pk):

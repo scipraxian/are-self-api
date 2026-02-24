@@ -92,7 +92,7 @@ class HydraAPITest(TestCase):
             spawn=spawn,
             spell=self.spell,
             status=self.head_status,
-            spell_log='Output Log Content...',
+            application_log='Output Log Content...',
             execution_log='System Context...',
         )
 
@@ -129,4 +129,4 @@ class HydraAPITest(TestCase):
         self.assertEqual(len(response.data), 2)
 
         # Verify we are using the LIGHTWEIGHT serializer (no logs)
-        self.assertNotIn('spell_log', response.data[0])
+        self.assertNotIn('application_log', response.data[0])

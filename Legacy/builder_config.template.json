@@ -1,9 +1,0 @@
-{
-    "ProjectName": "HSHVacancy",
-    "ProjectRoot": "C:/Path/To/Project",
-    "EngineRoot": "C:/Path/To/Engine",
-    "BuildRoot": "C:/Path/To/BuildOutput",
-    "StagingDir": "C:/Path/To/Staging",
-    "AgentPort": 5005,
-    "RemoteTargets": []
-}

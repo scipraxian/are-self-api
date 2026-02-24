@@ -912,7 +912,7 @@
       "created": "2026-01-31T20:24:58.474Z",
       "modified": "2026-01-31T20:24:58.474Z",
       "name": "LLM Prompt 1",
-      "argument": "{{ prompt }} Context: {{ provenance.spell_log }} {{ provenance.execution_log }}"
+      "argument": "{{ prompt }} Context: {{ provenance.application_log }} {{ provenance.execution_log }}"
     }
   },
   {

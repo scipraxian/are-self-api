@@ -30,8 +30,7 @@ class ContextResolutionTest(TestCase):
         'talos_agent/fixtures/initial_data.json',
         'talos_agent/fixtures/test_agents.json',
         'hydra/fixtures/initial_data.json',
-        'talos_frontal/fixtures/initial_data.json',
-        'talos_reasoning/fixtures/initial_data.json',
+        'frontal_lobe/fixtures/initial_data.json',
     ]
 
     def setUp(self):

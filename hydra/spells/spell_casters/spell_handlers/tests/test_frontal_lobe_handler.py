@@ -11,17 +11,18 @@ from hydra.models import (
     HydraSpawnStatus,
     HydraSpellbook,
 )
-from hydra.spells.spell_casters.spell_handlers.frontal_lobe_handler import (
-    FrontalLobeConstants,
-    run_frontal_lobe,
-)
 from talos_parietal.models import (
     ToolDefinition,
     ToolParameter,
     ToolParameterAssignment,
     ToolParameterType,
 )
-from talos_parietal.synapse import OllamaResponse
+from talos_parietal.parietal_lobe import ParietalLobe
+from frontal_lobe.synapse import OllamaResponse
+from frontal_lobe.frontal_lobe import (
+    FrontalLobeConstants,
+    run_frontal_lobe,
+)
 
 
 # FIX 1: Use TransactionTestCase to prevent early DB rollbacks during async execution
@@ -31,8 +32,7 @@ class FrontalLobeHandlerTest(TransactionTestCase):
         'talos_agent/fixtures/initial_data.json',
         'talos_agent/fixtures/test_agents.json',
         'hydra/fixtures/initial_data.json',
-        'talos_frontal/fixtures/initial_data.json',
-        'talos_reasoning/fixtures/initial_data.json',
+        'frontal_lobe/fixtures/initial_data.json',
         'talos_parietal/fixtures/initial_data.json',
     ]
 
@@ -40,42 +40,35 @@ class FrontalLobeHandlerTest(TransactionTestCase):
         # Base Data
         self.book = HydraSpellbook.objects.create(name='Test Protocol')
         self.spawn = HydraSpawn.objects.create(
-            spellbook=self.book, status_id=HydraSpawnStatus.RUNNING
-        )
-        self.head = HydraHead.objects.create(
-            spawn=self.spawn, status_id=HydraHeadStatus.RUNNING, blackboard={}
-        )
+            spellbook=self.book, status_id=HydraSpawnStatus.RUNNING)
+        self.head = HydraHead.objects.create(spawn=self.spawn,
+                                             status_id=HydraHeadStatus.RUNNING,
+                                             blackboard={})
 
         # FIX 2: Setup an MCP Tool with the strict 'mcp_' nomenclature
         self.tool_def, _ = ToolDefinition.objects.get_or_create(
-            name='mcp_update_blackboard',
-        )
+            name='mcp_update_blackboard',)
 
         t_str, _ = ToolParameterType.objects.get_or_create(name='string')
         p_head_id, _ = ToolParameter.objects.get_or_create(
-            name='head_id', defaults={'type': t_str}
-        )
-        p_key, _ = ToolParameter.objects.get_or_create(
-            name='key', defaults={'type': t_str}
-        )
-        p_val, _ = ToolParameter.objects.get_or_create(
-            name='value', defaults={'type': t_str}
-        )
+            name='head_id', defaults={'type': t_str})
+        p_key, _ = ToolParameter.objects.get_or_create(name='key',
+                                                       defaults={'type': t_str})
+        p_val, _ = ToolParameter.objects.get_or_create(name='value',
+                                                       defaults={'type': t_str})
 
-        ToolParameterAssignment.objects.get_or_create(
-            tool=self.tool_def, parameter=p_head_id, required=True
-        )
-        ToolParameterAssignment.objects.get_or_create(
-            tool=self.tool_def, parameter=p_key, required=True
-        )
-        ToolParameterAssignment.objects.get_or_create(
-            tool=self.tool_def, parameter=p_val, required=True
-        )
+        ToolParameterAssignment.objects.get_or_create(tool=self.tool_def,
+                                                      parameter=p_head_id,
+                                                      required=True)
+        ToolParameterAssignment.objects.get_or_create(tool=self.tool_def,
+                                                      parameter=p_key,
+                                                      required=True)
+        ToolParameterAssignment.objects.get_or_create(tool=self.tool_def,
+                                                      parameter=p_val,
+                                                      required=True)
 
     @pytest.mark.asyncio
-    @patch(
-        'hydra.spells.spell_casters.spell_handlers.frontal_lobe_handler.OllamaClient'
-    )
+    @patch('talos_parietal.parietal_lobe.OllamaClient')
     async def test_handler_completes_without_tools(self, mock_client_cls):
         """Verify the loop exits gracefully if the AI outputs no tool calls."""
         mock_instance = mock_client_cls.return_value
@@ -92,12 +85,10 @@ class FrontalLobeHandlerTest(TransactionTestCase):
         status_code, log = await run_frontal_lobe(self.head.id)
 
         self.assertEqual(status_code, 200)
-        self.assertIn('Objective Complete', log)
+        self.assertIn('Permanent Sleep Initiated.', log)
 
     @pytest.mark.asyncio
-    @patch(
-        'hydra.spells.spell_casters.spell_handlers.frontal_lobe_handler.OllamaClient'
-    )
+    @patch('talos_parietal.parietal_lobe.OllamaClient')
     async def test_handler_executes_tool_and_loops(self, mock_client_cls):
         """Verify the handler can execute a tool, feed the result back, and loop."""
         mock_instance = mock_client_cls.return_value
@@ -105,18 +96,16 @@ class FrontalLobeHandlerTest(TransactionTestCase):
         # Turn 1: Model requests a tool call (using correct mcp_ name)
         resp_turn_1 = OllamaResponse(
             content='I need to update the blackboard.',
-            tool_calls=[
-                {
-                    FrontalLobeConstants.T_FUNC: {
-                        FrontalLobeConstants.T_NAME: 'mcp_update_blackboard',
-                        FrontalLobeConstants.T_ARGS: {
-                            'head_id': str(self.head.id),
-                            'key': 'test_var',
-                            'value': 'alpha',
-                        },
-                    }
+            tool_calls=[{
+                ParietalLobe.T_FUNC: {
+                    ParietalLobe.T_NAME: 'mcp_update_blackboard',
+                    ParietalLobe.T_ARGS: {
+                        'head_id': str(self.head.id),
+                        'key': 'test_var',
+                        'value': 'alpha',
+                    },
                 }
-            ],
+            }],
             tokens_input=10,
             tokens_output=10,
             model='test_model',
@@ -144,23 +133,19 @@ class FrontalLobeHandlerTest(TransactionTestCase):
         self.assertEqual(mock_instance.chat.call_count, 2)
 
     @pytest.mark.asyncio
-    @patch(
-        'hydra.spells.spell_casters.spell_handlers.frontal_lobe_handler.OllamaClient'
-    )
+    @patch('talos_parietal.parietal_lobe.OllamaClient')
     async def test_handler_max_turns_cutoff(self, mock_client_cls):
         """Verify the loop forcibly terminates if the AI gets stuck in a loop."""
         mock_instance = mock_client_cls.return_value
 
         endless_resp = OllamaResponse(
             content='Let me try this again...',
-            tool_calls=[
-                {
-                    FrontalLobeConstants.T_FUNC: {
-                        FrontalLobeConstants.T_NAME: 'mcp_hallucinated_tool',
-                        FrontalLobeConstants.T_ARGS: {},
-                    }
+            tool_calls=[{
+                ParietalLobe.T_FUNC: {
+                    ParietalLobe.T_NAME: 'mcp_hallucinated_tool',
+                    ParietalLobe.T_ARGS: {},
                 }
-            ],
+            }],
             tokens_input=10,
             tokens_output=10,
             model='test_model',

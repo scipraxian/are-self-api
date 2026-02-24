@@ -5,7 +5,7 @@ from django.views.generic import TemplateView
 
 from environments.models import ProjectEnvironment
 from hydra.models import HydraSpellbook
-from talos_reasoning.models import ReasoningSession, ReasoningStatusID
+from frontal_lobe.models import ReasoningSession, ReasoningStatusID
 
 logger = logging.getLogger(__name__)
 

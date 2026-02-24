@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('hydra', '0015_alter_hydradistributionmode_description_and_more'),
         ('talos_hippocampus', '0003_delete_talosengram'),
-        ('talos_reasoning', '0010_alter_reasoningsession_current_focus'),
+        ('frontal_lobe', '0010_alter_reasoningsession_current_focus'),
     ]
 
     operations = [
@@ -25,8 +25,8 @@ class Migration(migrations.Migration):
                 ('relevance_score', models.FloatField(default=0.0)),
                 ('vector_id', models.UUIDField(blank=True, null=True)),
                 ('heads', models.ManyToManyField(blank=True, related_name='engram', to='hydra.hydrahead')),
-                ('sessions', models.ManyToManyField(blank=True, related_name='engram', to='talos_reasoning.reasoningsession')),
-                ('source_turns', models.ManyToManyField(blank=True, related_name='engram', to='talos_reasoning.reasoningturn')),
+                ('sessions', models.ManyToManyField(blank=True, related_name='engram', to='frontal_lobe.reasoningsession')),
+                ('source_turns', models.ManyToManyField(blank=True, related_name='engram', to='frontal_lobe.reasoningturn')),
                 ('tags', models.ManyToManyField(blank=True, related_name='engram', to='talos_hippocampus.talosengramtag')),
             ],
             options={

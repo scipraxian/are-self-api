@@ -19,7 +19,7 @@
             {% if head.is_queued %}
                 Waiting...
             {% else %}
-                {{ head.spell_log|slice:"-30:"|default:head.status.name }}
+                {{ head.application_log|slice:"-30:"|default:head.status.name }}
             {% endif %}
         </span>
         <span class="head-duration js-head-duration">⏱ {{ head.duration|default:"0s" }}</span>

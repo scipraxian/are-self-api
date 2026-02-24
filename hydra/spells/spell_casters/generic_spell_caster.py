@@ -12,9 +12,6 @@ from asgiref.sync import sync_to_async
 from environments.variable_renderer import VariableRenderer
 from hydra.models import HydraHead, HydraHeadStatus
 from hydra.spells.spell_casters.begin_play_node import begin_play
-from hydra.spells.spell_casters.spell_handlers.frontal_lobe_handler import (
-    run_frontal_lobe,
-)
 from hydra.spells.spell_casters.spell_handlers.version_metadata_handler import (
     update_version_metadata,
 )
@@ -28,6 +25,9 @@ from talos_agent.talos_agent import (
     TalosAgentConstants,
 )
 from talos_agent.talos_agent_finder import scan_and_register
+from frontal_lobe.frontal_lobe import (
+    run_frontal_lobe,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +122,7 @@ class AsyncLogManager:
             self.exec_buffer.clear()
 
         if self.spell_buffer:
-            self.head.spell_log += ''.join(self.spell_buffer)
+            self.head.application_log += ''.join(self.spell_buffer)
             self.spell_buffer.clear()
 
         await self._save_to_db()
@@ -137,7 +137,7 @@ class AsyncLogManager:
             if self.head.status_id == HydraHeadStatus.ABORTED:
                 raise ConnectionAbortedError('Hydra Head Aborted by User')
             await sync_to_async(self.head.save)(
-                update_fields=['execution_log', 'spell_log']
+                update_fields=['execution_log', 'application_log']
             )
         except ConnectionAbortedError:
             raise
@@ -161,7 +161,7 @@ class GenericSpellCaster:
     ]
 
     EXECUTION_LOG_FIELD = 'execution_log'
-    SPELL_LOG_FIELD = 'spell_log'
+    APPLICATION_LOG_FIELD = 'application_log'
     STATUS_FIELD = 'status'
     BLACKBOARD_FIELD = 'blackboard'
 
@@ -412,13 +412,13 @@ class GenericSpellCaster:
                     self.head_id
                 )
         except Exception as e:
-            self.head.spell_log = f'Native Handler Exception: {str(e)}'
-            await self._save_head(fields=[self.SPELL_LOG_FIELD])
+            self.head.application_log = f'Native Handler Exception: {str(e)}'
+            await self._save_head(fields=[self.APPLICATION_LOG_FIELD])
             self.status = HydraHeadStatus.FAILED
             return
 
-        self.head.spell_log = output_log
-        await self._save_head(fields=[self.SPELL_LOG_FIELD])
+        self.head.application_log = output_log
+        await self._save_head(fields=[self.APPLICATION_LOG_FIELD])
 
         new_status = (
             HydraHeadStatus.SUCCESS

@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('hydra', '0015_alter_hydradistributionmode_description_and_more'),
         ('talos_hippocampus', '0001_initial'),
-        ('talos_reasoning', '0004_remove_toolcall_status_remove_toolcall_tool_and_more'),
+        ('frontal_lobe', '0004_remove_toolcall_status_remove_toolcall_tool_and_more'),
     ]
 
     operations = [
@@ -20,12 +20,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='talosengram',
             name='sessions',
-            field=models.ManyToManyField(blank=True, related_name='engram', to='talos_reasoning.reasoningsession'),
+            field=models.ManyToManyField(blank=True, related_name='engram', to='frontal_lobe.reasoningsession'),
         ),
         migrations.AlterField(
             model_name='talosengram',
             name='source_turns',
-            field=models.ManyToManyField(blank=True, related_name='engram', to='talos_reasoning.reasoningturn'),
+            field=models.ManyToManyField(blank=True, related_name='engram', to='frontal_lobe.reasoningturn'),
         ),
         migrations.AlterField(
             model_name='talosengram',

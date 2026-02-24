@@ -498,7 +498,7 @@ class HydraHead(UUIDIdMixin, CreatedAndModifiedWithDelta):
     )
 
     celery_task_id = models.UUIDField(null=True, blank=True)
-    spell_log = models.TextField(blank=True)
+    application_log = models.TextField(blank=True)
     execution_log = models.TextField(blank=True)
     result_code = models.IntegerField(null=True, blank=True)
 

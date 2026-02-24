@@ -7,7 +7,7 @@ from common.models import (
     UUIDIdMixin,
 )
 from hydra.models import HydraHead
-from talos_reasoning.models import ReasoningSession, ReasoningTurn
+from frontal_lobe.models import ReasoningSession, ReasoningTurn
 
 
 class TalosEngramTag(NameMixin):
