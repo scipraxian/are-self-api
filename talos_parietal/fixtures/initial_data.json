@@ -830,17 +830,6 @@
   },
   {
     "model": "talos_parietal.toolparameterassignment",
-    "pk": 11,
-    "fields": {
-      "created": "2026-02-18T12:00:00Z",
-      "modified": "2026-02-18T12:00:00Z",
-      "tool": 5,
-      "parameter": 9,
-      "required": true
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameterassignment",
     "pk": 12,
     "fields": {
       "created": "2026-02-18T12:00:00Z",
@@ -968,17 +957,6 @@
       "modified": "2026-02-18T12:00:00Z",
       "tool": 7,
       "parameter": 4,
-      "required": true
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameterassignment",
-    "pk": 25,
-    "fields": {
-      "created": "2026-02-18T12:00:00Z",
-      "modified": "2026-02-18T12:00:00Z",
-      "tool": 8,
-      "parameter": 9,
       "required": true
     }
   },
