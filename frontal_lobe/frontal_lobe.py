@@ -47,8 +47,8 @@ class FrontalLobeConstants:
         '- You have created memories called Engrams. Do not underestimate their power to both enlighten and distract.\n\n'
         'L1 / L2 CACHE (WORKING MEMORY):\n'
         '- Your short-term context is a strict hardware buffer containing your last 6 turns.\n'
-        '- L1 CACHE (Turns 1-2): Holds full data payloads.\n'
-        '- L2 CACHE (Turns 3-6): Data payloads are evicted to save memory. Only your execution trace remains.\n'
+        '- L1 CACHE (Turns 1-3): Holds full data payloads.\n'
+        '- L2 CACHE (Turns 4-6): Data payloads are evicted to save memory. Only your execution trace remains.\n'
         '- As you execute a new turn, the oldest turn is completely dropped from the cache.\n'
         '- Any encountered data concepts not written to your Hippocampus (Engrams) are very expensive to retrieve.\n'
         '- Tool Data degrades over time; use Engrams to save key insights before the tool data expires.\n\n'
@@ -441,7 +441,7 @@ class FrontalLobe:
                     )
                     if age == 1:
                         history_str += f'  - L1 Result: {tc.result_payload}\n'
-                    elif age == 2:
+                    elif age <= 3:
                         history_str += f'  - L1 Result: {tc.result_payload}\n'
                         history_str += f'  - System Warning: L1 EVICTION IMMINENT. FLUSH TO ENGRAMS.\n'
                     else:

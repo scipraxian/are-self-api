@@ -25,8 +25,8 @@ body {
 /* LCARS GRID */
 .lcars-container {
     display: grid;
-    grid-template-columns: 150px 1fr 300px;
-    grid-template-rows: 80px 1fr 50px;
+    grid-template-columns: 200px 1fr;
+    grid-template-rows: 80px 1fr;
     height: 100%;
     gap: 10px;
     padding: 10px;
@@ -104,32 +104,31 @@ body {
 
 /* DETAILS (Right) */
 .lcars-details {
-    grid-column: 3;
-    grid-row: 2 / -1;
-    background-color: rgba(255, 255, 255, 0.05);
-    /* Subtle glass */
+    position: absolute;
+    right: 20px;
+    top: 100px;
+    bottom: 20px;
+    width: 450px;
+    background-color: rgba(0, 0, 0, 0.95);
     border-top: 5px solid var(--lcars-red);
     border-bottom: 5px solid var(--lcars-red);
-    padding: 20px;
+    border-left: 5px solid var(--lcars-gold);
+    padding: 0;
     font-family: 'JetBrains Mono', monospace;
-    /* Use monospaced for data */
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Forcibly prevent flex children from painting outside the LCARS frame */
     transition: all 0.3s ease;
-    position: relative;
     z-index: 10;
+    border-radius: 15px 0 0 15px;
+    /* Clean LCARS rounding on the left side */
+    pointer-events: auto;
+    /* It is absolute now, needs to catch its own events */
 }
 
 .lcars-details.expanded {
-    grid-column: 2 / -1;
-    /* Take up more space */
-    width: 50%;
-    position: absolute;
-    right: 0;
-    top: 60px;
-    /* Header height offset approx */
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.95);
-    border-left: 5px solid var(--lcars-gold);
+    width: 800px;
 }
 
 .detail-toggle {
@@ -143,6 +142,17 @@ body {
     font-weight: bold;
     cursor: pointer;
     text-transform: uppercase;
+    z-index: 100;
+}
+
+.lcars-details-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    padding: 20px;
+    padding-top: 40px;
+    /* Leave space for expand button */
 }
 
 .detail-header {
@@ -171,12 +181,19 @@ body {
 
 /* FOOTER */
 .lcars-footer {
-    grid-column: 2;
-    grid-row: 3;
+    position: absolute;
+    bottom: 5px;
+    left: 220px;
+    right: 20px;
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     align-items: center;
     gap: 20px;
+    pointer-events: none;
+}
+
+.lcars-footer>* {
+    pointer-events: auto;
 }
 
 .footer-stat {
@@ -451,16 +468,20 @@ body {
     font-style: italic;
 }
 
-/* THE TERMINAL DETAILS PANEL */
+
 .terminal-output {
-    background-color: #111;
+    background-color: transparent;
     color: #ddd;
     font-family: 'Courier New', Courier, monospace;
-    padding: 15px;
-    border-radius: 10px;
-    height: 600px;
+    flex: 1;
+    min-height: 0;
+    /* allows it to shrink instead of bleeding flex items out of bounds */
     overflow-y: auto;
     border-left: 4px solid #ff9900;
+    padding-left: 15px;
+    /* Thin modern scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: var(--lcars-purple) rgba(0, 0, 0, 0.5);
 }
 
 .term-thought {

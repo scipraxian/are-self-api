@@ -513,6 +513,19 @@ function showDetails(d) {
         terminalEl.innerHTML += statsHtml;
         terminalEl.innerHTML += `<div class="${statusColor}" style="margin-bottom: 10px; font-weight: bold; font-size: 1.1rem;">Status: ${d.status}</div>`;
 
+        // 1. Render the Thought Process Bubble FIRST
+        if (d.thought_process) {
+            let thought = d.thought_process.replace(/^(THOUGHT:\s*)+/i, '').trim();
+            terminalEl.innerHTML += `
+                <details open class="lcars-accordion" style="margin-top: 15px; border: 2px solid #cc99cc; border-radius: 12px; background: rgba(204,153,204,0.15);">
+                    <summary class="lcars-accordion-summary" style="background-color:rgba(204,153,204,0.3); color:#cc99cc; padding: 8px 15px; font-family: 'Antonio', sans-serif; font-size: 1.2rem; text-transform: uppercase;">▼ THOUGHT PROCESS</summary>
+                    <div style="padding: 15px; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; color: #e2e8f0; font-size: 13px; line-height: 1.5;">${thought}</div>
+                </details>
+            `;
+        } else {
+            terminalEl.innerHTML += `<div class="term-thought" style="margin-top: 15px; font-style: italic;">" Executing without monologue... "</div>`;
+        }
+
         if (d.request_payload) {
             let payloadHtml = "";
             let reqObj = d.request_payload;
@@ -532,7 +545,7 @@ function showDetails(d) {
                     let roleStr = String(msg.role).toUpperCase();
                     let roleColor = msg.role === 'system' ? '#cc99cc' : (msg.role === 'user' ? '#99ccff' : '#4ade80');
 
-                    payloadHtml += `<details ${msg.role === 'user' ? 'open' : ''} class="lcars-accordion" style="border: 1px solid ${roleColor};">
+                    payloadHtml += `<details class="lcars-accordion" style="border: 1px solid ${roleColor};">
                         <summary class="lcars-accordion-summary" style="background-color:${roleColor}33; color:${roleColor};">► [${roleStr}] PROMPT</summary>
                         <div style="padding: 10px;">`;
 
@@ -573,8 +586,8 @@ function showDetails(d) {
                                 bodyText = bodyText.trim();
 
                                 if (title.includes("HISTORICAL LOG")) {
-                                    payloadHtml += `<details open class="lcars-accordion" style="margin-top:10px; border: 1px solid #f99f1b;">
-                                        <summary class="lcars-accordion-summary" style="background-color:rgba(249,159,27,0.2); color:#f99f1b; font-size: 0.95rem;">▼ ${title}</summary>
+                                    payloadHtml += `<details class="lcars-accordion" style="margin-top:10px; border: 1px solid #f99f1b;">
+                                        <summary class="lcars-accordion-summary" style="background-color:rgba(249,159,27,0.2); color:#f99f1b; font-size: 0.95rem;">► ${title}</summary>
                                         <div style="padding: 10px;">`;
 
                                     let turns = bodyText.split(/^(?=Turn \d+ \[)/m);
@@ -606,15 +619,15 @@ function showDetails(d) {
                                     let accColor = title.includes("DIAGNOSTICS") ? "#cc3333" : (title.includes("WAKING") ? "#f99f1b" : "#cc99cc");
                                     let innerClass = title.includes("WAKING") ? "lcars-goal-block" : "lcars-payload-text";
 
-                                    payloadHtml += `<details open class="lcars-accordion" style="margin-top:10px; border: 1px solid ${accColor};">
-                                        <summary class="lcars-accordion-summary" style="background-color:${accColor}33; color:${accColor}; font-size: 0.95rem;">▼ ${title}</summary>
+                                    payloadHtml += `<details class="lcars-accordion" style="margin-top:10px; border: 1px solid ${accColor};">
+                                        <summary class="lcars-accordion-summary" style="background-color:${accColor}33; color:${accColor}; font-size: 0.95rem;">► ${title}</summary>
                                         <div style="padding: 10px;" class="${innerClass}">${bodyText}</div>
                                     </details>`;
                                 } else {
-                                    payloadHtml += `<div class="lcars-user-block">
-                                        <div class="lcars-user-header">${title}</div>
-                                        <div class="lcars-payload-text">${bodyText}</div>
-                                    </div>`;
+                                    payloadHtml += `<details class="lcars-accordion" style="margin-top:10px; border: 1px solid var(--lcars-blue);">
+                                        <summary class="lcars-accordion-summary" style="background-color:rgba(153,204,255,0.2); color:var(--lcars-blue); font-size: 0.95rem;">► ${title}</summary>
+                                        <div style="padding: 10px;" class="lcars-payload-text">${bodyText}</div>
+                                    </details>`;
                                 }
                             } else {
                                 payloadHtml += `<div class="lcars-payload-text" style="margin-bottom: 10px;">${sec.trim()}</div>`;
@@ -650,27 +663,14 @@ function showDetails(d) {
             terminalEl.innerHTML += payloadHtml;
         }
 
-        // 1. Render the Thought
-        if (d.thought_process) {
-            let thought = d.thought_process.replace(/^(THOUGHT:\s*)+/i, '').trim();
-            terminalEl.innerHTML += `
-                <div class="term-result" style="margin-top: 15px;">
-                    <details open>
-                        <summary style="cursor:pointer; color:#cc99cc; font-weight: bold; border-bottom: 1px solid #cc99cc; padding-bottom: 5px; margin-bottom: 10px;">► Thought Process</summary>
-                        <div style="margin-top: 5px; padding: 10px; border-left: 3px solid #cc99cc; white-space: pre-wrap; word-wrap: break-word; font-family: 'JetBrains Mono', monospace; color: #cc99cc; font-size: 12px; line-height: 1.4;">${thought}</div>
-                    </details>
-                </div>
-            `;
-        } else {
-            terminalEl.innerHTML += `<div class="term-thought" style="margin-top: 15px; font-style: italic;">" Executing without monologue... "</div>`;
-        }
+
 
         // 2. Render the Tool Calls
         const calls = currentData.links.filter(l => (l.source.id || l.source) === d.id && l.type === 'uses_tool');
         if (calls && calls.length > 0) {
             let spellsHtml = `
                 <div class="term-result" style="margin-top: 15px;">
-                    <details open>
+                    <details>
                         <summary style="cursor:pointer; color:#4ade80; font-weight: bold; border-bottom: 1px solid #4ade80; padding-bottom: 5px; margin-bottom: 10px;">► Tool Calls (${calls.length})</summary>
                         <div style="padding-left: 10px;">
             `;
@@ -700,12 +700,12 @@ function showDetails(d) {
 
                 spellsHtml += `
                     <div style="margin-bottom: 15px; border: 1px solid #4ade80; border-radius: 4px; padding: 10px; background-color: rgba(0,0,0,0.3);">
-                        <div class="term-spell" style="font-weight: bold; color: #4ade80; margin-bottom: 10px;">> CAST [${i + 1}]: ${toolName}</div>
+                        <div class="term-spell" style="font-weight: bold; color: #4ade80; margin-bottom: 10px;">> CALL [${i + 1}]: ${toolName}</div>
                         <details style="margin-bottom: 10px;">
                             <summary style="cursor:pointer; color:#99ccff; font-weight: bold;">► Arguments</summary>
                             <pre style="margin-top: 5px; padding: 10px; background: rgba(0,0,0,0.5); white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; font-size: 11px; color:#99ccff;">${argStr}</pre>
                         </details>
-                        <details open>
+                        <details>
                             <summary style="cursor:pointer; color:#ccc; font-weight: bold;">► Result</summary>
                             <div class="${resultClass}" style="margin-top: 5px; padding: 10px; background: rgba(0,0,0,0.5); white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; font-size: 11px; word-wrap: break-word; overflow-x: auto;">${resultText}</div>
                         </details>
