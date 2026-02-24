@@ -1,11 +1,6 @@
 {% if last_cortex_session %}
 <div class="cortex-launch-wrapper">
-<<<<<<< HEAD:talos_reasoning/templates/talos_reasoning/partials/launch_button.html
-    {% if last_cortex_session %}
-    <a href="{% url 'talos_reasoning:lcars_view' last_cortex_session.id %}" class="btn-cortex-launch">
-=======
     <a href="{% url 'frontal_lobe:lcars_view' last_cortex_session.id %}" class="btn-cortex-launch">
->>>>>>> 561be5a19a8305685e201e0e0e5bd85164649653:frontal_lobe/templates/frontal_lobe/partials/launch_button.html
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
             <path d="M12 2a10 10 0 0 1 10 10"></path>
