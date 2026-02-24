@@ -64,7 +64,7 @@ class E2EPromptChainTest(TestCase):
         HydraSpellBookNodeContext.objects.create(
             node=self.node_2,
             key='prompt',
-            value='AI, please analyze this output:\n{{ provenance.spell_log }}',
+            value='AI, please analyze this output:\n{{ provenance.application_log }}',
         )
 
         # 4. Prepare the Execution Instance
@@ -94,7 +94,7 @@ class E2EPromptChainTest(TestCase):
             node=self.node_1,
             spell=self.spell_dummy,
             status_id=HydraHeadStatus.SUCCESS,
-            spell_log='HELLO AI. THE SYSTEM HAS DETECTED A FATAL EXCEPTION.',
+            application_log='HELLO AI. THE SYSTEM HAS DETECTED A FATAL EXCEPTION.',
         )
 
         # STEP 2: Trigger the Hydra Graph Engine to walk the wire
@@ -146,7 +146,7 @@ class E2EPromptChainTest(TestCase):
         # Did the literal prompt text come through?
         self.assertIn('AI, please analyze this output:', content)
 
-        # Did the nested {{ provenance.spell_log }} resolve correctly from Head 1?
+        # Did the nested {{ provenance.application_log }} resolve correctly from Head 1?
         self.assertIn(
             'HELLO AI. THE SYSTEM HAS DETECTED A FATAL EXCEPTION.', content
         )

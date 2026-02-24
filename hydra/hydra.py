@@ -191,7 +191,7 @@ class Hydra:
                     'node_id': h.node_id if h.node else None,
                     'status_id': h.status.id,
                     'status_name': h.status.name,
-                    'log_preview': (h.spell_log or '')[:150],
+                    'log_preview': (h.application_log or '')[:150],
                 }
                 for h in self.spawn.heads.all()
                 .select_related('spell', 'status', 'node')

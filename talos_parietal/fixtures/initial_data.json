@@ -194,8 +194,8 @@
     "pk": 6,
     "fields": {
       "created": "2026-02-18T12:00:00Z",
-      "description": "Reads a specific text field from the database using strict pagination. Crucial for reading massive logs (e.g. 'spell_log') without destroying your context window.",
-      "modified": "2026-02-20T18:51:30.037Z",
+      "description": "Reads a specific text field from the database using strict pagination. Crucial for reading massive logs (e.g. 'application_log') without destroying your context window.",
+      "modified": "2026-02-23T14:26:12.500Z",
       "name": "mcp_read_record_field",
       "is_async": true,
       "use_type": 2
@@ -255,7 +255,7 @@
     "fields": {
       "created": "2026-02-18T12:00:00Z",
       "description": "To post your name to the Leader Boards and end your run use mcp_conclude_session. Use this ONLY when the absolute root objective is complete or permanently blocked.",
-      "modified": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-23T14:23:21.136Z",
       "name": "mcp_conclude_session",
       "is_async": true,
       "use_type": 5
@@ -295,6 +295,42 @@
       "name": "mcp_engram_update",
       "is_async": true,
       "use_type": 1
+    }
+  },
+  {
+    "model": "talos_parietal.tooldefinition",
+    "pk": 15,
+    "fields": {
+      "created": "2026-02-23T15:09:02.506Z",
+      "description": "Search the web and return Titles, URLs, and Snippets of the top 5 results.",
+      "modified": "2026-02-23T15:09:02.506Z",
+      "name": "mcp_browser_search",
+      "is_async": true,
+      "use_type": 3
+    }
+  },
+  {
+    "model": "talos_parietal.tooldefinition",
+    "pk": 16,
+    "fields": {
+      "created": "2026-02-23T15:09:02.517Z",
+      "description": "Spin up headless Chromium, navigate to a URL, and return clean Markdown of the page.",
+      "modified": "2026-02-23T15:09:02.517Z",
+      "name": "mcp_browser_read",
+      "is_async": true,
+      "use_type": 3
+    }
+  },
+  {
+    "model": "talos_parietal.tooldefinition",
+    "pk": 17,
+    "fields": {
+      "created": "2026-02-23T15:09:02.523Z",
+      "description": "Parse Unreal Engine logs for a specific HydraHead and return a structural summary.",
+      "modified": "2026-02-23T15:09:02.523Z",
+      "name": "mcp_run_unreal_diagnostic_parser",
+      "is_async": true,
+      "use_type": 3
     }
   },
   {
@@ -646,6 +682,39 @@
       "description": "New data to append.",
       "modified": "2026-02-21T20:53:49.883Z",
       "name": "additional_fact",
+      "type": 1
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 33,
+    "fields": {
+      "created": "2026-02-23T14:22:58.300Z",
+      "description": "",
+      "modified": "2026-02-23T14:22:58.300Z",
+      "name": "next_goal_suggestion",
+      "type": 1
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 34,
+    "fields": {
+      "created": "2026-02-23T14:23:14.246Z",
+      "description": "",
+      "modified": "2026-02-23T14:23:14.246Z",
+      "name": "system_persona_and_prompt_feedback",
+      "type": 1
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameter",
+    "pk": 35,
+    "fields": {
+      "created": "2026-02-23T15:09:02.498Z",
+      "description": "The target URL.",
+      "modified": "2026-02-23T15:09:02.499Z",
+      "name": "url",
       "type": 1
     }
   },
@@ -1174,6 +1243,83 @@
       "modified": "2026-02-21T20:53:49.909Z",
       "tool": 9,
       "parameter": 17,
+      "required": false
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 60,
+    "fields": {
+      "created": "2026-02-23T14:23:21.138Z",
+      "modified": "2026-02-23T14:23:21.138Z",
+      "tool": 11,
+      "parameter": 33,
+      "required": true
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 61,
+    "fields": {
+      "created": "2026-02-23T14:23:21.141Z",
+      "modified": "2026-02-23T14:23:21.141Z",
+      "tool": 11,
+      "parameter": 34,
+      "required": true
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 62,
+    "fields": {
+      "created": "2026-02-23T15:09:02.513Z",
+      "modified": "2026-02-23T15:09:02.513Z",
+      "tool": 15,
+      "parameter": 16,
+      "required": true
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 63,
+    "fields": {
+      "created": "2026-02-23T15:09:02.520Z",
+      "modified": "2026-02-23T15:09:02.520Z",
+      "tool": 16,
+      "parameter": 35,
+      "required": true
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 64,
+    "fields": {
+      "created": "2026-02-23T15:09:02.526Z",
+      "modified": "2026-02-23T15:09:02.526Z",
+      "tool": 17,
+      "parameter": 6,
+      "required": true
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 65,
+    "fields": {
+      "created": "2026-02-23T15:37:51.061Z",
+      "modified": "2026-02-23T15:37:51.061Z",
+      "tool": 2,
+      "parameter": 26,
+      "required": false
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 66,
+    "fields": {
+      "created": "2026-02-23T15:50:43.825Z",
+      "modified": "2026-02-23T15:50:43.825Z",
+      "tool": 17,
+      "parameter": 26,
       "required": false
     }
   },

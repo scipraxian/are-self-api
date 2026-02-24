@@ -1107,7 +1107,7 @@ footer {
     transition: width 0.5s ease-out;
 }
 
-/* Source: talos_reasoning\templates\talos_reasoning\cortex_view.html */
+/* Source: frontal_lobe\templates\frontal_lobe\cortex_view.html */
 
 :root {
     --cortex-bg: #0f172a;
@@ -1388,7 +1388,7 @@ footer {
     cursor: not-allowed;
 }
 
-/* Source: talos_reasoning\templates\talos_reasoning\partials\launch_button.html */
+/* Source: frontal_lobe\templates\frontal_lobe\partials\launch_button.html */
 
 .cortex-launch-wrapper {
     display: block;

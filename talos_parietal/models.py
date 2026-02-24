@@ -7,7 +7,7 @@ from common.models import (
     DescriptionMixin,
     ModifiedMixin,
 )
-from talos_reasoning.models import ReasoningStatusMixin, ReasoningTurn
+from frontal_lobe.models import ReasoningStatusMixin, ReasoningTurn
 
 
 class ToolParameterType(DefaultFieldsMixin, DescriptionMixin):
@@ -24,6 +24,11 @@ class ToolParameterType(DefaultFieldsMixin, DescriptionMixin):
 class ToolUseType(DefaultFieldsMixin, DescriptionMixin):
     focus_modifier = models.IntegerField(default=0)
     xp_reward = models.IntegerField(default=0)
+
+    def __str__(self):
+        return (
+            f'{self.name} ({self.xp_reward} XP) ({self.focus_modifier} Focus)'
+        )
 
 
 class ToolDefinition(DefaultFieldsMixin, DescriptionMixin):

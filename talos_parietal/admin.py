@@ -7,6 +7,7 @@ from .models import (
     ToolParameter,
     ToolParameterAssignment,
     ToolParameterType,
+    ToolUseType,
 )
 
 
@@ -23,7 +24,7 @@ class ToolParameterAssignmentInline(admin.TabularInline):
 
 @admin.register(ToolDefinition)
 class ToolDefinitionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'is_async', 'description')
+    list_display = ('name', 'use_type', 'is_async', 'description')
     search_fields = ('name',)
     inlines = [ToolParameterAssignmentInline]
 
@@ -54,3 +55,9 @@ class ToolCallAdmin(admin.ModelAdmin):
     list_filter = ('status', 'tool')
     search_fields = ('arguments', 'call_id')
     readonly_fields = ('created', 'modified')
+
+
+@admin.register(ToolUseType)
+class ToolUseTypeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description')
+    search_fields = ('name',)

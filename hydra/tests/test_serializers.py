@@ -123,12 +123,12 @@ class HydraSerializersTest(TestCase):
             spawn=HydraSpawn.objects.create(spellbook=self.book, status_id=1),
             spell=self.spell,
             status_id=1,
-            spell_log='MASSIVE LOG DATA ' * 1000,
+            application_log='MASSIVE LOG DATA ' * 1000,
             execution_log='SYSTEM DATA ' * 1000,
         )
 
         data = HydraHeadSerializer(head).data
-        self.assertNotIn('spell_log', data)
+        self.assertNotIn('application_log', data)
         self.assertNotIn('execution_log', data)
         self.assertIn('id', data)
 

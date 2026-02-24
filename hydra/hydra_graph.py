@@ -516,7 +516,7 @@ def get_node_telemetry(
 
     # --- 1. LOGS ---
     # Spell Log (Standard Output usually)
-    logs = head.spell_log or ''
+    logs = head.application_log or ''
     log_lines = logs.split('\n')
     spell_tail = log_lines[-20:] if len(log_lines) > 20 else log_lines
 

@@ -39,3 +39,4 @@ playwright
 
 ruff
 
+html2text

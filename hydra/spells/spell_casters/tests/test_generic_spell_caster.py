@@ -268,7 +268,7 @@ class TestGenericSpellCaster:
         """Verify the Caster intercepts ::blackboard_set, mutates memory, and strips the log."""
         mock_head.blackboard = {}
         mock_head.execution_log = ''
-        mock_head.spell_log = ''
+        mock_head.application_log = ''
 
         caster = GenericSpellCaster(mock_head.id)
 
@@ -304,8 +304,8 @@ class TestGenericSpellCaster:
 
             # 2. Assert Log Stripping
             assert '::blackboard_set' not in mock_head.execution_log
-            assert 'Standard log line 1' in mock_head.spell_log
-            assert 'Standard log line 2' in mock_head.spell_log
+            assert 'Standard log line 1' in mock_head.application_log
+            assert 'Standard log line 2' in mock_head.application_log
 
     def test_blackboard_interception_edge_cases(
         self, mock_head, mock_env_utils
