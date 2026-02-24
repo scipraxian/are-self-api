@@ -94,13 +94,13 @@ class ReasoningSession(
 
     @property
     def current_level(self):
-        """Fast Leveling: Every 50 XP is a new level."""
-        return (self.total_xp // 50) + 1
+        """Fast Leveling: Every 100 XP is a new level."""
+        return (self.total_xp // 100) + 1
 
     @property
     def max_focus(self):
-        """Level 1 = 10. Level 2 = 15. Level 3 = 20."""
-        return 10 + ((self.current_level - 1) * 5)
+        """Level 1 = 10. Level 2 = 11. Level 3 = 12."""
+        return 10 + int((self.current_level - 1) * 0.5)
 
     def __str__(self):
         return f'Session {self.id} Status: {self.status}'
