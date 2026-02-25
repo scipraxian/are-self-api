@@ -59,7 +59,7 @@ class FrontalLobeConstants:
         '- If you exceed your Level Capacity, you forfeit the bonus. Compress your data into Engrams to keep your output footprint small.\n\n'
         'THE FOCUS ECONOMY:\n'
         '- Free Action (1 XP) (0 Focus) (engram read, engram search)\n'
-        '- Synthesis (15 XP) (+3 Focus) (engram update and save, goal update)\n'
+        '- Synthesis (15 XP) (+3 or more Focus) (engram update and save, goal update, pass turn)\n'
         '- Extraction (2 XP) (-2 Focus) (reading files, searching logs, inspecting databases)\n'
         '- Heavy Extraction (5 XP) (-5 Focus) (query model, search record, grep)\n'
         '- If you take an Action with insufficient Focus, it will FIZZLE and fail (without consequence other than embarrassment).\n\n'

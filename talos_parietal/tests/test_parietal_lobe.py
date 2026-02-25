@@ -5,6 +5,12 @@ import pytest
 from asgiref.sync import sync_to_async
 from django.test import TransactionTestCase
 
+from frontal_lobe.models import (
+    ReasoningGoal,
+    ReasoningSession,
+    ReasoningStatusID,
+    ReasoningTurn,
+)
 from talos_parietal.models import (
     ToolCall,
     ToolDefinition,
@@ -14,12 +20,6 @@ from talos_parietal.models import (
     ToolUseType,
 )
 from talos_parietal.parietal_lobe import ParietalLobe
-from frontal_lobe.models import (
-    ReasoningGoal,
-    ReasoningSession,
-    ReasoningStatusID,
-    ReasoningTurn,
-)
 
 
 class ParietalLobeTest(TransactionTestCase):
@@ -34,13 +34,21 @@ class ParietalLobeTest(TransactionTestCase):
 
     def setUp(self):
         # Create minimal required objects
-        from hydra.models import HydraHead, HydraHeadStatus, HydraSpawn, HydraSpawnStatus, HydraSpellbook
+        from hydra.models import (
+            HydraHead,
+            HydraHeadStatus,
+            HydraSpawn,
+            HydraSpawnStatus,
+            HydraSpellbook,
+        )
+
         self.book = HydraSpellbook.objects.create(name='Test Book')
         self.spawn = HydraSpawn.objects.create(
-            spellbook=self.book, status_id=HydraSpawnStatus.RUNNING)
-        self.head = HydraHead.objects.create(spawn=self.spawn,
-                                             status_id=HydraHeadStatus.RUNNING,
-                                             blackboard={})
+            spellbook=self.book, status_id=HydraSpawnStatus.RUNNING
+        )
+        self.head = HydraHead.objects.create(
+            spawn=self.spawn, status_id=HydraHeadStatus.RUNNING, blackboard={}
+        )
 
         self.session = ReasoningSession.objects.create(
             head=self.head,
@@ -75,10 +83,9 @@ class ParietalLobeTest(TransactionTestCase):
 
         self.assertEqual(self.parietal_lobe.client, mock_instance)
 
-        resp = await self.parietal_lobe.chat([{
-            'role': 'user',
-            'content': 'hello'
-        }], [])
+        resp = await self.parietal_lobe.chat(
+            [{'role': 'user', 'content': 'hello'}], []
+        )
         self.assertEqual(resp, 'test_response')
         mock_instance.chat.assert_called_once()
 
@@ -90,42 +97,39 @@ class ParietalLobeTest(TransactionTestCase):
         """Test the parameter-to-schema extraction logic."""
         tool_def, _ = await sync_to_async(ToolDefinition.objects.get_or_create)(
             name='mcp_dummy_tool',
-            defaults={
-                'description': 'A dummy tool.',
-                'is_async': True
-            },
+            defaults={'description': 'A dummy tool.', 'is_async': True},
         )
         mechanics, _ = await sync_to_async(ToolUseType.objects.get_or_create)(
             name='Extraction',
-            defaults={
-                'focus_modifier': -2,
-                'xp_reward': 5,
-                'description': ''
-            },
+            defaults={'focus_modifier': -2, 'xp_reward': 5, 'description': ''},
         )
         tool_def.use_type = mechanics
         await sync_to_async(tool_def.save)()
 
-        t_str, _ = await sync_to_async(ToolParameterType.objects.get_or_create
-                                      )(name='string')
-        param = await sync_to_async(ToolParameter.objects.create
-                                   )(name='dummy_arg',
-                                     type=t_str,
-                                     description='Arg desc')
-        await sync_to_async(ToolParameterAssignment.objects.create
-                           )(tool=tool_def, parameter=param, required=True)
+        t_str, _ = await sync_to_async(ToolParameterType.objects.get_or_create)(
+            name='string'
+        )
+        param = await sync_to_async(ToolParameter.objects.create)(
+            name='dummy_arg', type=t_str, description='Arg desc'
+        )
+        await sync_to_async(ToolParameterAssignment.objects.create)(
+            tool=tool_def, parameter=param, required=True
+        )
 
         schemas = await self.parietal_lobe.build_tool_schemas()
 
         schema = next(
             (s for s in schemas if s['function']['name'] == 'mcp_dummy_tool'),
-            None)
-        self.assertIsNotNone(schema, "Dummy tool not found in schemas")
+            None,
+        )
+        self.assertIsNotNone(schema, 'Dummy tool not found in schemas')
 
         self.assertEqual(schema['type'], 'function')
         self.assertEqual(schema['function']['name'], 'mcp_dummy_tool')
-        self.assertIn('[COST: -2 Focus | REWARD: +2 XP]',
-                      schema['function']['description'])
+        self.assertIn(
+            '[COST: -2 Focus | REWARD: +2 XP]',
+            schema['function']['description'],
+        )
         self.assertIn('dummy_arg', schema['function']['parameters']['required'])
 
     @pytest.mark.asyncio
@@ -153,7 +157,8 @@ class ParietalLobeTest(TransactionTestCase):
         }
 
         result = await self.parietal_lobe.handle_tool_execution(
-            self.turn, tool_call_data)
+            self.turn, tool_call_data
+        )
 
         self.assertEqual(result['role'], 'tool')
         self.assertEqual(result['name'], 'mcp_dummy_tool')
@@ -164,12 +169,14 @@ class ParietalLobeTest(TransactionTestCase):
         self.assertEqual(self.session.current_focus, 6)  # 5 + 1
         self.assertEqual(self.session.total_xp, 10)
 
-        mock_execute.assert_called_with('mcp_dummy_tool',
-                                        {'dummy_arg': 'value'})
+        mock_execute.assert_called_with(
+            'mcp_dummy_tool', {'dummy_arg': 'value'}
+        )
 
         # Verify db record
         tool_call = await sync_to_async(
-            ToolCall.objects.filter(turn=self.turn).first)()
+            ToolCall.objects.filter(turn=self.turn).first
+        )()
         self.assertIsNotNone(tool_call)
         self.assertEqual(tool_call.status_id, ReasoningStatusID.COMPLETED)
         self.assertEqual(tool_call.result_payload, 'DUMMY_RESULT')
@@ -197,7 +204,8 @@ class ParietalLobeTest(TransactionTestCase):
         }
 
         result = await self.parietal_lobe.handle_tool_execution(
-            self.turn, tool_call_data)
+            self.turn, tool_call_data
+        )
 
         mock_execute.assert_not_called()
         self.assertIn('SYSTEM OVERRIDE: Spell Fizzled!', result['content'])
@@ -208,5 +216,51 @@ class ParietalLobeTest(TransactionTestCase):
 
         # Verify failure db record
         tool_call = await sync_to_async(
-            ToolCall.objects.filter(turn=self.turn).first)()
+            ToolCall.objects.filter(turn=self.turn).first
+        )()
         self.assertEqual(tool_call.status_id, ReasoningStatusID.ERROR)
+
+    @pytest.mark.asyncio
+    @patch('talos_parietal.parietal_lobe.ParietalMCP.execute')
+    async def test_handle_tool_execution_mcp_pass(self, mock_execute):
+        """Test that calling mcp_pass fully restores focus pool."""
+
+        # Note: the actual logic is in mcp_pass.py. We'll simulate its side effect
+        # during execution, as that's what ParietalMCP.execute normally handles.
+        async def mock_mcp_execute(*args, **kwargs):
+            self.session.current_focus = self.session.max_focus
+            await sync_to_async(self.session.save)(
+                update_fields=['current_focus']
+            )
+            return 'Turn passed. Focus pool fully restored.'
+
+        mock_execute.side_effect = mock_mcp_execute
+
+        tool_def = await sync_to_async(ToolDefinition.objects.get)(
+            name='mcp_pass'
+        )
+
+        tool_call_data = {
+            'function': {
+                'name': 'mcp_pass',
+                'arguments': f'{{"session_id": "{self.session.id}"}}',
+            }
+        }
+
+        # Ensure initial state
+        self.assertTrue(self.session.current_focus < self.session.max_focus)
+
+        result = await self.parietal_lobe.handle_tool_execution(
+            self.turn, tool_call_data
+        )
+
+        self.assertEqual(result['role'], 'tool')
+        self.assertEqual(result['name'], 'mcp_pass')
+
+        # Focus should be maxed out unconditionally
+        await sync_to_async(self.session.refresh_from_db)()
+        self.assertEqual(self.session.current_focus, self.session.max_focus)
+
+        mock_execute.assert_called_with(
+            'mcp_pass', {'session_id': str(self.session.id)}
+        )

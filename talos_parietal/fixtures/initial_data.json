@@ -334,6 +334,18 @@
     }
   },
   {
+    "model": "talos_parietal.tooldefinition",
+    "pk": 18,
+    "fields": {
+      "created": "2026-02-25T12:00:00.000Z",
+      "description": "Passes the turn. Focus pool fully restored.",
+      "modified": "2026-02-25T12:00:00.000Z",
+      "name": "mcp_pass",
+      "is_async": true,
+      "use_type": 1
+    }
+  },
+  {
     "model": "talos_parietal.toolparameter",
     "pk": 1,
     "fields": {
@@ -1299,6 +1311,17 @@
       "tool": 17,
       "parameter": 26,
       "required": false
+    }
+  },
+  {
+    "model": "talos_parietal.toolparameterassignment",
+    "pk": 67,
+    "fields": {
+      "created": "2026-02-25T12:00:00Z",
+      "modified": "2026-02-25T12:00:00Z",
+      "tool": 18,
+      "parameter": 18,
+      "required": true
     }
   },
   {
