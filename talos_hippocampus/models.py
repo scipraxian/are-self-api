@@ -6,8 +6,8 @@ from common.models import (
     NameMixin,
     UUIDIdMixin,
 )
-from hydra.models import HydraHead
 from frontal_lobe.models import ReasoningSession, ReasoningTurn
+from hydra.models import HydraHead
 
 
 class TalosEngramTag(NameMixin):
@@ -43,4 +43,5 @@ class TalosEngram(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     )
     is_active = models.BooleanField(default=True)
     relevance_score = models.FloatField(default=0.0)
-    vector_id = models.UUIDField(null=True, blank=True)
+    # REMOVE: vector_id = models.UUIDField(null=True, blank=True)
+    # TODO: vector = VectorField(dimensions=768, null=True, blank=True)
