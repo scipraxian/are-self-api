@@ -1,4 +1,5 @@
 from django.db import models
+from pgvector.django import VectorField
 
 from common.models import (
     DefaultFieldsMixin,
@@ -43,5 +44,4 @@ class TalosEngram(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     )
     is_active = models.BooleanField(default=True)
     relevance_score = models.FloatField(default=0.0)
-    # REMOVE: vector_id = models.UUIDField(null=True, blank=True)
-    # TODO: vector = VectorField(dimensions=768, null=True, blank=True)
+    vector = VectorField(dimensions=768, null=True, blank=True)
