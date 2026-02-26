@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # 1. The Database (With Vector Hardware)
   db:
@@ -17,7 +15,7 @@ services:
 
   # 2. The Nervous System (Task Queue)
   redis:
-    image: redis:alpine
+    image: redis
     container_name: talos_redis
     restart: always
     ports:

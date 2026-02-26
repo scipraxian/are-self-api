@@ -9,6 +9,9 @@ echo ========================================================
 :: Ensure we are in the right directory
 cd /d "%~dp0"
 
+:: Start Docker Containers
+docker compose up -d
+
 :: 1. Start Celery Worker in a new window
 echo Starting Celery Worker...
 start "Talos Worker" cmd /c ".\venv\Scripts\celery -A config worker --loglevel=info --concurrency=4 -P threads"

@@ -929,14 +929,6 @@
     }
   },
   {
-    "model": "hydra.hydraspelltarget",
-    "pk": 1,
-    "fields": {
-      "spell": 157,
-      "target": "a7898945-d404-1fc4-ead1-04d4c41fead0"
-    }
-  },
-  {
     "model": "hydra.hydraspellargumentassignment",
     "pk": 1,
     "fields": {

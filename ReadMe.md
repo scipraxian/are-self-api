@@ -84,10 +84,24 @@ We don't trust—we verify. Talos maintains strict testing tiers:
 
 ### 1. Infrastructure (The Grid)
 
-Talos requires a robust backend to handle asynchronous orchestration. Ensure you have the following services **online**:
+Talos requires a robust backend to handle asynchronous orchestration. The fastest way to provision the environment is
+using **Docker Compose**.
+
+```powershell
+# 1. Ignite the Services (PostgreSQL & Redis)
+docker compose up -d
+
+# 2. Enable Vector Memory (Required for Hippocampus)
+docker exec -it talos_db psql -U postgres -d postgres -c "CREATE EXTENSION IF NOT EXISTS vector;"
+```
+
+#### Manual Configuration (Alternative)
+
+Ensure you have the following services **online**:
 
 * **PostgreSQL**: The persistent memory. Talos enables connection pooling by default.
     * *Default Config:* User: `postgres`, Password: `frith` (See `config/settings.py`).
+    * *Requirement:* Must have the `pgvector` extension installed and enabled (`CREATE EXTENSION vector;`).
 * **Redis**: The nervous system. Handles Celery task queues and channel layers.
     * *Default Port:* `6379`.
 
