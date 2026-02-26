@@ -2,18 +2,20 @@
 
 import pgvector.django.vector
 from django.db import migrations
+from pgvector.django import VectorExtension
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('talos_hippocampus', '0005_remove_talosengram_vector_id'),
     ]
-
     operations = [
+        VectorExtension(),
         migrations.AddField(
             model_name='talosengram',
             name='vector',
-            field=pgvector.django.vector.VectorField(blank=True, dimensions=768, null=True),
+            field=pgvector.django.vector.VectorField(
+                blank=True, dimensions=768, null=True
+            ),
         ),
     ]
