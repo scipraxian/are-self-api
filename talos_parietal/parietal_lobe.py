@@ -5,10 +5,14 @@ from typing import Any, Callable, Dict, List
 
 from asgiref.sync import sync_to_async
 
+from frontal_lobe.models import (
+    ReasoningSession,
+    ReasoningStatusID,
+    ReasoningTurn,
+)
+from frontal_lobe.synapse import ChatMessage, OllamaClient
 from talos_parietal.models import ToolCall, ToolDefinition
 from talos_parietal.parietal_mcp.gateway import ParietalMCP
-from frontal_lobe.synapse import ChatMessage, OllamaClient
-from frontal_lobe.models import ReasoningSession, ReasoningStatusID, ReasoningTurn
 
 logger = logging.getLogger(__name__)
 
@@ -179,6 +183,13 @@ class ParietalLobe:
 
         try:
             tool_result = await ParietalMCP.execute(tool_name, args)
+
+            if hasattr(tool_result, 'focus_yield'):
+                focus_mod = getattr(tool_result, 'focus_yield')
+            if hasattr(tool_result, 'xp_yield'):
+                xp_gain = getattr(tool_result, 'xp_yield')
+
+            tool_result = str(tool_result)
 
             if db_tool_call:
                 db_tool_call.result_payload = tool_result[:10000]

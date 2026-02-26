@@ -19,8 +19,8 @@ from talos_parietal.models import (
 )
 from talos_parietal.parietal_lobe import ParietalLobe
 from frontal_lobe.synapse import OllamaResponse
+from frontal_lobe.constants import FrontalLobeConstants
 from frontal_lobe.frontal_lobe import (
-    FrontalLobeConstants,
     run_frontal_lobe,
 )
 
@@ -133,7 +133,7 @@ class FrontalLobeHandlerTest(TransactionTestCase):
         self.assertEqual(mock_instance.chat.call_count, 2)
 
     @pytest.mark.asyncio
-    @patch('frontal_lobe.frontal_lobe.FrontalLobeConstants.DEFAULT_MAX_TURNS',
+    @patch('frontal_lobe.constants.FrontalLobeConstants.DEFAULT_MAX_TURNS',
            3)
     @patch('talos_parietal.parietal_lobe.OllamaClient')
     async def test_handler_max_turns_cutoff(self, mock_client_cls):

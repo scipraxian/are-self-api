@@ -332,7 +332,7 @@ class FrontalLobe:
         goal_str = (
             '\n'.join([f'- [ID: {g.id}] {g.rendered_goal}' for g in goals])
             if goals
-            else 'No active goals.'
+            else 'ALL STRATEGIC OBJECTIVES COMPLETE. SYSTEM OVERRIDE: YOU MUST IMMEDIATELY EXECUTE mcp_conclude_session TO SECURE YOUR XP REWARD AND TERMINATE THE RUN.'
         )
 
         # 2. Card Catalog (Engram Index)

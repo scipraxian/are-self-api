@@ -93,6 +93,11 @@ docker compose up -d
 
 # 2. Enable Vector Memory (Required for Hippocampus)
 docker exec -it talos_db psql -U postgres -d postgres -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+# 3. Pull Ollama Models (Reasoning & Embeddings)
+# Ensure Ollama is running before executing at least the following:
+ollama pull qwen2.5-coder:32b
+ollama pull nomic-embed-text
 ```
 
 #### Manual Configuration (Alternative)

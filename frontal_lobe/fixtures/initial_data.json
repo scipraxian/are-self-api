@@ -110,5 +110,19 @@
       "cost_per_1k_input": "0.000000",
       "cost_per_1k_output": "0.000000"
     }
+  },
+  {
+    "model": "frontal_lobe.modelregistry",
+    "pk": 5,
+    "fields": {
+      "created": "2026-02-26T12:00:00Z",
+      "description": "Nomic Embedding Model for vectorized memory similarity.",
+      "modified": "2026-02-26T12:00:00Z",
+      "name": "nomic-embed-text",
+      "api_variant": "ollama",
+      "context_window_size": 8192,
+      "cost_per_1k_input": "0.000000",
+      "cost_per_1k_output": "0.000000"
+    }
   }
 ]
