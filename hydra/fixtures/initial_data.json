@@ -287,22 +287,22 @@
       "distribution_mode": 1,
       "tags": [],
       "switches": [
-        32,
-        33,
-        34,
         3,
-        35,
         5,
-        37,
-        38,
         9,
         10,
         11,
-        44,
         13,
         15,
         19,
-        20
+        20,
+        32,
+        33,
+        34,
+        35,
+        37,
+        38,
+        44
       ]
     }
   },
@@ -481,8 +481,8 @@
         17,
         40,
         41,
-        48,
         47,
+        48,
         49
       ]
     }
@@ -576,8 +576,8 @@
       "distribution_mode": 1,
       "tags": [],
       "switches": [
-        61,
-        62
+        62,
+        61
       ]
     }
   },
@@ -639,10 +639,10 @@
       "distribution_mode": 4,
       "tags": [],
       "switches": [
-        28,
+        23,
         24,
         25,
-        23
+        28
       ]
     }
   },
@@ -659,8 +659,8 @@
       "distribution_mode": 1,
       "tags": [],
       "switches": [
-        61,
-        62
+        62,
+        61
       ]
     }
   },
@@ -677,8 +677,8 @@
       "distribution_mode": 1,
       "tags": [],
       "switches": [
-        61,
-        62
+        62,
+        61
       ]
     }
   },
@@ -896,12 +896,44 @@
     }
   },
   {
+    "model": "hydra.hydraspell",
+    "pk": 171,
+    "fields": {
+      "created": "2026-02-17T18:23:16.500Z",
+      "description": null,
+      "modified": "2026-02-17T18:26:37.884Z",
+      "name": "Frontal Lobe Node",
+      "is_favorite": false,
+      "talos_executable": 17,
+      "distribution_mode": 1,
+      "tags": [],
+      "switches": []
+    }
+  },
+  {
     "model": "hydra.hydraspellcontext",
     "pk": 2,
     "fields": {
       "spell": 169,
       "key": "prompt",
       "value": "Yo AI dude, do you see this or what? {{provenance.execution_log}}"
+    }
+  },
+  {
+    "model": "hydra.hydraspellcontext",
+    "pk": 3,
+    "fields": {
+      "spell": 171,
+      "key": "prompt",
+      "value": "You are part of the Frontal Lobe"
+    }
+  },
+  {
+    "model": "hydra.hydraspelltarget",
+    "pk": 1,
+    "fields": {
+      "spell": 157,
+      "target": "a7898945-d404-1fc4-ead1-04d4c41fead0"
     }
   },
   {
@@ -2838,12 +2870,69 @@
     }
   },
   {
+    "model": "hydra.hydraspellbooknode",
+    "pk": 125,
+    "fields": {
+      "environment": null,
+      "is_root": false,
+      "spellbook": "925c871c-618e-4de8-a9d2-6978aed216e8",
+      "spell": 171,
+      "ui_json": "{\"x\": 357, \"y\": 274}",
+      "invoked_spellbook": null,
+      "distribution_mode": null
+    }
+  },
+  {
+    "model": "hydra.hydraspellbooknode",
+    "pk": 127,
+    "fields": {
+      "environment": null,
+      "is_root": false,
+      "spellbook": "559cecbd-2128-478a-be50-436ba30b7396",
+      "spell": 171,
+      "ui_json": "{\"x\": 1458, \"y\": 298}",
+      "invoked_spellbook": null,
+      "distribution_mode": null
+    }
+  },
+  {
+    "model": "hydra.hydraspellbooknode",
+    "pk": 128,
+    "fields": {
+      "environment": null,
+      "is_root": false,
+      "spellbook": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+      "spell": 145,
+      "ui_json": "{\"x\": 334, \"y\": 92}",
+      "invoked_spellbook": null,
+      "distribution_mode": null
+    }
+  },
+  {
     "model": "hydra.hydraspellbooknodecontext",
     "pk": 5,
     "fields": {
       "node": 122,
       "key": "prompt",
       "value": "Please attempt to count the number of files in this list {{provenance.application_log}}"
+    }
+  },
+  {
+    "model": "hydra.hydraspellbooknodecontext",
+    "pk": 6,
+    "fields": {
+      "node": 125,
+      "key": "prompt",
+      "value": "I would like to know what you can learn about yourself and what level you can achieve.... you time out at 10 minutes so be careful of your context window, enjoy the game.... you live at c:/talos/\nEnjoy please."
+    }
+  },
+  {
+    "model": "hydra.hydraspellbooknodecontext",
+    "pk": 7,
+    "fields": {
+      "node": 127,
+      "key": "prompt",
+      "value": "use the unreal parsing tool mcp_run_unreal_diagnostic_parser\non the provenance head\n{{head.provenance.id}}\n\nwhich is the output of our Unreal 5.6.1 application.\n\nyou should also inspect the record\n\nmcp_inspect_record hydra HydraHead {{head.provenance.id}}\n\nEach turn enhance the Engrams of known issues, as well as create Engrams for new issues.\nOnce you think you have tagged all issues, use mcp_conclude_session to file a report and end."
     }
   },
   {
@@ -3558,6 +3647,61 @@
       "spellbook": "925c871c-618e-4de8-a9d2-6978aed216e8",
       "source": 113,
       "target": 124
+    }
+  },
+  {
+    "model": "hydra.hydraspellbookconnectionwire",
+    "pk": 152,
+    "fields": {
+      "modified": "2026-02-18T15:16:41.739Z",
+      "type": 1,
+      "spellbook": "559cecbd-2128-478a-be50-436ba30b7396",
+      "source": 9,
+      "target": 127
+    }
+  },
+  {
+    "model": "hydra.hydraspellbookconnectionwire",
+    "pk": 153,
+    "fields": {
+      "modified": "2026-02-19T15:45:50.142Z",
+      "type": 1,
+      "spellbook": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+      "source": 60,
+      "target": 128
+    }
+  },
+  {
+    "model": "hydra.hydraspellbookconnectionwire",
+    "pk": 154,
+    "fields": {
+      "modified": "2026-02-19T15:45:57.373Z",
+      "type": 1,
+      "spellbook": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+      "source": 128,
+      "target": 92
+    }
+  },
+  {
+    "model": "hydra.hydraspellbookconnectionwire",
+    "pk": 155,
+    "fields": {
+      "modified": "2026-02-19T15:46:52.464Z",
+      "type": 1,
+      "spellbook": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+      "source": 10,
+      "target": 11
+    }
+  },
+  {
+    "model": "hydra.hydraspellbookconnectionwire",
+    "pk": 159,
+    "fields": {
+      "modified": "2026-02-24T05:00:17.385Z",
+      "type": 1,
+      "spellbook": "925c871c-618e-4de8-a9d2-6978aed216e8",
+      "source": 84,
+      "target": 125
     }
   }
 ]

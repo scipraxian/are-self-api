@@ -1316,6 +1316,21 @@
     }
   },
   {
+    "model": "environments.talosexecutable",
+    "pk": 17,
+    "fields": {
+      "created": "2026-02-17T18:22:31.543Z",
+      "description": "",
+      "modified": "2026-02-17T18:26:31.293Z",
+      "name": "Engage Frontal Lobe",
+      "internal": true,
+      "working_path": "",
+      "executable": "run_frontal_lobe",
+      "log": "",
+      "switches": []
+    }
+  },
+  {
     "model": "environments.talosexecutableargumentassignment",
     "pk": 1,
     "fields": {
@@ -1460,6 +1475,13 @@
     "pk": 12,
     "fields": {
       "name": "venv_root"
+    }
+  },
+  {
+    "model": "environments.projectenvironmentcontextkey",
+    "pk": 13,
+    "fields": {
+      "name": "network_prerelease_root"
     }
   },
   {
@@ -1637,6 +1659,15 @@
       "environment": "4d82fab0-c62d-4204-a316-476476c10a55",
       "key": 5,
       "value": "c:/talos"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": 16,
+    "fields": {
+      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": 13,
+      "value": "talos_bin\\4_prerelease"
     }
   }
 ]

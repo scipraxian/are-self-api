@@ -337,9 +337,9 @@
     "model": "talos_parietal.tooldefinition",
     "pk": 18,
     "fields": {
-      "created": "2026-02-25T12:00:00.000Z",
+      "created": "2026-02-25T12:00:00Z",
       "description": "Passes the turn. Focus pool fully restored.",
-      "modified": "2026-02-25T12:00:00.000Z",
+      "modified": "2026-02-25T12:00:00Z",
       "name": "mcp_pass",
       "is_async": true,
       "use_type": 1
