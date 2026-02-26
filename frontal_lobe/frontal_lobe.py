@@ -443,11 +443,29 @@ class FrontalLobe:
             else 'L1 Input Payload: 0 chars pulled.'
         )
 
+        l1_cache_size = len(history_str)
+        pressure_warning = ''
+
+        if l1_cache_size > 20000:
+            pressure_warning = (
+                '\n[CRITICAL WARNING: COGNITIVE OVERLOAD DETECTED]\n'
+                f'Your recent memory buffer is massive ({l1_cache_size} characters). '
+                'If you pull more data, you will suffer a fatal crash. '
+                'You MUST use `mcp_pass` to rest and flush old data out of your L1 cache before proceeding.'
+            )
+        elif l1_cache_size > 12000:
+            pressure_warning = (
+                '\n[WARNING: CONTEXT PRESSURE RISING]\n'
+                f'Your memory buffer is getting heavy ({l1_cache_size} characters). '
+                'Consider saving your findings to Engrams and using `mcp_pass` to clear your cache.'
+            )
+
         header_str = (
             f'[SYSTEM DIAGNOSTICS]\n'
             f'[CYCLE {current_turn} / {max_turns}] | Speedrun Bounty: {remaining_turns * 1000} XP{milestone_kicks}\n'
             f'Level: {self.session.current_level} | XP: {self.session.total_xp} | Focus Pool: {self.session.current_focus} / {self.session.max_focus}{level_up_str}{latency_str}\n'
             f'Output Footprint (Prev Turn): {last_output_len} / {target_capacity} chars -> Efficiency Bonus: {efficiency_status}\n'
+            f'{pressure_warning}\n'
             f'{input_bandwidth_str}\n'
         )
 
