@@ -1,13 +1,19 @@
 from asgiref.sync import sync_to_async
-from django.apps import apps
+
+from common.queries import guess_model
 
 
 @sync_to_async
 def _read_field_sync(
-    app_label: str, model_name: str, record_id: str, field_name: str, page: int
+    model_name: str, record_id: str, field_name: str, page: int
 ) -> str:
+    result = guess_model(model_name)
+    if not result.success:
+        return result.message
+
+    model_class = result.model_class
+
     try:
-        model_class = apps.get_model(app_label, model_name)
         record = model_class.objects.get(pk=record_id)
     except Exception as e:
         return f'Database Error: {str(e)}'
@@ -39,13 +45,10 @@ def _read_field_sync(
 
 
 async def mcp_read_record_field(
-    app_label: str,
     model_name: str,
     record_id: str,
     field_name: str,
     page: int = 1,
 ) -> str:
     """MCP Tool: Reads a specific database text field via pagination."""
-    return await _read_field_sync(
-        app_label, model_name, record_id, field_name, page
-    )
+    return await _read_field_sync(model_name, record_id, field_name, page)

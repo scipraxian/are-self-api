@@ -195,7 +195,7 @@
     "fields": {
       "created": "2026-02-18T12:00:00Z",
       "description": "Reads a specific text field from the database using strict pagination. Crucial for reading massive logs (e.g. 'application_log') without destroying your context window.",
-      "modified": "2026-02-23T14:26:12.500Z",
+      "modified": "2026-02-26T17:34:43.084Z",
       "name": "mcp_read_record_field",
       "is_async": true,
       "use_type": 2
@@ -207,7 +207,7 @@
     "fields": {
       "created": "2026-02-18T12:00:00Z",
       "description": "Searches a massive database field for a regex pattern to find needles in haystacks without loading the entire text.",
-      "modified": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-26T17:35:05.425Z",
       "name": "mcp_search_record_field",
       "is_async": true,
       "use_type": 3
@@ -864,17 +864,6 @@
   },
   {
     "model": "talos_parietal.toolparameterassignment",
-    "pk": 14,
-    "fields": {
-      "created": "2026-02-18T12:00:00Z",
-      "modified": "2026-02-18T12:00:00Z",
-      "tool": 6,
-      "parameter": 9,
-      "required": true
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameterassignment",
     "pk": 15,
     "fields": {
       "created": "2026-02-18T12:00:00Z",
@@ -915,17 +904,6 @@
       "tool": 6,
       "parameter": 26,
       "required": false
-    }
-  },
-  {
-    "model": "talos_parietal.toolparameterassignment",
-    "pk": 20,
-    "fields": {
-      "created": "2026-02-18T12:00:00Z",
-      "modified": "2026-02-18T12:00:00Z",
-      "tool": 7,
-      "parameter": 9,
-      "required": true
     }
   },
   {
