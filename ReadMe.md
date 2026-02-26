@@ -38,7 +38,7 @@ Talos isn't just a build runner—it's a mission control center. Every interacti
 
 ## 🏗 Architecture & Tech Stack
 
-For a comprehensive overview of each part of the codebase and how they work together, see [docs/CODEBASE_OVERVIEW.md](docs/CODEBASE_OVERVIEW.md).
+For a **high-level abstract architecture** (layers, components, and data/control flow), see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). For a comprehensive overview of each part of the codebase and how they work together, see [docs/CODEBASE_OVERVIEW.md](docs/CODEBASE_OVERVIEW.md).
 
 Talos is built for speed, stability, and maximum responsiveness:
 
