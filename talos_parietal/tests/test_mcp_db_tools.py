@@ -62,7 +62,6 @@ async def test_mcp_query_model_basic_filters(db_setup):
     """Ensures basic kwargs filtering works."""
     result = await ParietalMCP.execute(
         "mcp_query_model", {
-            "app_label": "hydra",
             "model_name": "HydraHead",
             "filters": {
                 "status_id": db_setup["status_error_id"]
@@ -83,7 +82,6 @@ async def test_mcp_query_model_q_string_logic(db_setup):
                 f"blackboard__var='alpha')")
 
     result = await ParietalMCP.execute("mcp_query_model", {
-        "app_label": "hydra",
         "model_name": "HydraHead",
         "q_string": q_string
     })
@@ -96,10 +94,8 @@ async def test_mcp_query_model_q_string_logic(db_setup):
 @pytest.mark.asyncio
 async def test_mcp_query_model_count_action(db_setup):
     """Ensures the AI can request a raw integer count instead of heavy data."""
-    result = await ParietalMCP.execute("mcp_query_model", {
-        "app_label": "hydra",
-        "model_name": "HydraHead"
-    })
+    result = await ParietalMCP.execute("mcp_query_model",
+                                       {"model_name": "HydraHead"})
 
     data = json.loads(result)
     assert "Total Records:" in data["meta"]
@@ -113,7 +109,6 @@ async def test_mcp_inspect_record(db_setup):
     head_id = str(db_setup["head_2"].id)
 
     result = await ParietalMCP.execute("mcp_inspect_record", {
-        "app_label": "hydra",
         "model_name": "HydraHead",
         "record_id": head_id
     })

@@ -126,6 +126,10 @@ class ParietalLobe:
         raw_args = func_data.get(self.T_ARGS, {})
         args = self._parse_tool_arguments(raw_args)
 
+        # Safe Injection: Pass the exact turn ID to memory tools
+        if tool_name in ['mcp_engram_save', 'mcp_engram_update']:
+            args['turn_id'] = turn_record.id
+
         await self._log_live(f'Tool Call: {tool_name}({args})')
 
         try:

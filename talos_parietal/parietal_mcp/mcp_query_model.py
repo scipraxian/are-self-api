@@ -1,22 +1,24 @@
 import json
 
 from asgiref.sync import sync_to_async
-from django.apps import apps
 from django.db.models import Q
+
+from common.queries import guess_model
 
 
 @sync_to_async
 def _query_model_sync(
-    app_label: str,
     model_name: str,
     filters: dict = None,
     q_string: str = None,
     page: int = 1,
 ) -> str:
-    try:
-        model_class = apps.get_model(app_label, model_name)
-    except LookupError:
-        return f"Error: Model '{app_label}.{model_name}' not found."
+
+    result = guess_model(model_name)
+    if not result.success:
+        return result.message
+    model_class = result.model_class
+    app_label = result.app_label
 
     qs = model_class.objects.all()
 
@@ -82,7 +84,6 @@ def _query_model_sync(
 
 
 async def mcp_query_model(
-    app_label: str,
     model_name: str,
     filters: dict = None,
     q_string: str = None,
@@ -90,6 +91,4 @@ async def mcp_query_model(
 ) -> str:
     """MCP Tool: Queries database via pagination. Auto-truncates massive fields."""
     filters = filters or {}
-    return await _query_model_sync(
-        app_label, model_name, filters, q_string, page
-    )
+    return await _query_model_sync(model_name, filters, q_string, page)

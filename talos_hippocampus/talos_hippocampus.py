@@ -8,11 +8,12 @@ An asynchronous engine for managing permanent memories (Engrams) during reasonin
 import logging
 
 from asgiref.sync import sync_to_async
+from django.contrib.postgres.search import SearchQuery, SearchVector
 from django.db.models import Count, Q
 
+from frontal_lobe.models import ReasoningSession, ReasoningTurn
 from hydra.models import HydraHead
 from talos_hippocampus.models import TalosEngram, TalosEngramTag
-from frontal_lobe.models import ReasoningSession
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,8 @@ class TalosHippocampus(object):
 
         def _get_catalog_sync() -> str:
             qs = (TalosEngram.objects.filter(
-                heads__spell=head.spell, is_active=True).annotate(
+                heads__node=head.node,
+                is_active=True).exclude(heads=head).annotate(
                     session_count=Count('sessions', distinct=True),
                     head_count=Count('heads', distinct=True),
                 ).order_by('-session_count').prefetch_related('tags')[:limit])
@@ -86,6 +88,7 @@ class TalosHippocampus(object):
         session_id: str,
         title: str,
         fact: str,
+        turn_id: int,
         tags: str = '',
         relevance: float = 1.0,
     ) -> str:
@@ -94,7 +97,8 @@ class TalosHippocampus(object):
         def _save_sync() -> str:
             try:
                 session = ReasoningSession.objects.get(id=session_id)
-                latest_turn = session.turns.last()
+                exact_turn = ReasoningTurn.objects.get(
+                    id=turn_id) if turn_id else None
                 clean_title = title[:254]
 
                 existing_engram = TalosEngram.objects.filter(
@@ -113,8 +117,9 @@ class TalosHippocampus(object):
                 )
 
                 engram.sessions.add(session)
-                if latest_turn:
-                    engram.source_turns.add(latest_turn)
+                engram.heads.add(session.head)
+                if exact_turn:
+                    engram.source_turns.add(exact_turn)
 
                 if tags:
                     tag_list = [t.strip() for t in tags.split(',') if t.strip()]
@@ -132,7 +137,7 @@ class TalosHippocampus(object):
 
     @classmethod
     async def update_engram(cls, session_id: str, title: str,
-                            additional_fact: str) -> str:
+                            additional_fact: str, turn_id: int) -> str:
         """Appends new findings to an existing Engram."""
 
         def _update_sync() -> str:
@@ -140,15 +145,16 @@ class TalosHippocampus(object):
                 clean_title = title[:254]
                 engram, _ = TalosEngram.objects.get_or_create(name=clean_title)
                 session = ReasoningSession.objects.get(id=session_id)
-                latest_turn = session.turns.last()
+                exact_turn = ReasoningTurn.objects.get(
+                    id=turn_id) if turn_id else None
 
                 engram.description = (
                     f'{engram.description}\n\n[UPDATE]: {additional_fact}')
                 engram.save(update_fields=['description'])
 
                 engram.sessions.add(session)
-                if latest_turn:
-                    engram.source_turns.add(latest_turn)
+                if exact_turn:
+                    engram.source_turns.add(exact_turn)
 
                 return f"Success: Engram '{engram.name}' has been updated with the new data."
             except TalosEngram.DoesNotExist:
@@ -191,8 +197,9 @@ class TalosHippocampus(object):
             qs = TalosEngram.objects.filter(is_active=True)
 
             if query:
-                qs = qs.filter(
-                    Q(description__icontains=query) | Q(name__icontains=query))
+                qs = qs.annotate(
+                    search=SearchVector('name', 'description')).filter(
+                        search=SearchQuery(query))
             if tags:
                 tag_list = [t.strip() for t in tags.split(',') if t.strip()]
                 qs = qs.filter(tags__name__in=tag_list)

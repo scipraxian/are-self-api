@@ -20,8 +20,9 @@
 
     <aside class="lcars-sidebar">
         <div class="sidebar-heading">CURRENT SESSION</div>
-        <a href="{% url 'frontal_lobe:lcars_view' session.id %}" class="lcars-button active">
+        <a href="{% url 'frontal_lobe:lcars_view' session.id %}" class="lcars-button active" style="flex-direction: column; align-items: flex-end;">
             <span class="sess-status">{{ session.status.name }}</span>
+            <span style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;">{{ session.created|timesince }} ago // {{ session.id|stringformat:"s"|slice:":8" }}</span>
         </a>
         <div class="cortex-goals-container">
             <div class="cortex-label">ACTIVE OBJECTIVES:</div>
@@ -41,14 +42,13 @@
         <div class="sidebar-heading" style="margin-top: 20px;">ARCHIVES</div>
         <div class="session-list">
             {% for hs in history_sessions %}
-                <a href="{% url 'frontal_lobe:lcars_view' hs.id %}" class="lcars-button">
+                <a href="{% url 'frontal_lobe:lcars_view' hs.id %}" class="lcars-button" style="flex-direction: column; align-items: flex-end;">
                     <span class="sess-status">{{ hs.status.name }}</span>
-                    <span class="sess-goal">{{ hs.goal|truncatechars:25 }}</span>
+                    <span style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;">{{ hs.created|timesince }} ago // {{ hs.id|stringformat:"s"|slice:":8" }}</span>
                 </a>
             {% endfor %}
         </div>
 
-        <div style="flex-grow: 1;"></div>
         <button id="btn-halt" class="lcars-button"
                 style="background-color: #cc3333; color: black; border: none; font-family: var(--lcars-font); cursor: pointer; text-align: right; justify-content: flex-end; align-items: flex-end; font-size: 1.5rem; padding: 15px; margin-bottom: 5px;">
             HALT CORTEX
@@ -92,7 +92,11 @@
         </div>
     </aside>
 
-    <footer class="lcars-footer">
+    <footer class="lcars-footer" style="justify-content: space-between;">
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <div class="hud-stat-box lcars-bg-blue" style="font-size: 1rem;">MODIFIED <span id="session-modified">{{ session.modified|date:"Y-m-d H:i:s" }}</span></div>
+            <div class="hud-stat-box lcars-bg-purple" style="font-size: 1rem;">UPDATED <span id="session-updated-ago">{{ session.modified|timesince }} AGO</span></div>
+        </div>
         <div class="footer-stat">STATUS: <span id="session-status">{{ session.status.name }}</span></div>
     </footer>
 </div>

@@ -90,7 +90,6 @@ async def test_mcp_record_operations():
     result = await ParietalMCP.execute(
         'mcp_inspect_record',
         {
-            'app_label': 'hydra',
             'model_name': 'HydraHead',
             'record_id': str(head_id),
         },
@@ -106,7 +105,6 @@ async def test_mcp_record_operations():
     result = await ParietalMCP.execute(
         'mcp_query_model',
         {
-            'app_label': 'hydra',
             'model_name': 'HydraHead',
             'filters': {
                 'id': str(head_id)
@@ -124,7 +122,6 @@ async def test_mcp_record_operations():
     result = await ParietalMCP.execute(
         'mcp_query_model',
         {
-            'app_label': 'hydra',
             'model_name': 'HydraHead',
             'q_string': q_string,
         },

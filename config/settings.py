@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'environments',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
     'talos_thalamus',
     'talos_parietal',
     'talos_occipital',
