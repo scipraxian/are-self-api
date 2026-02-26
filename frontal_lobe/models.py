@@ -57,6 +57,11 @@ class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
 
     DEFAULT_MODEL_ID = 1
     QUEN3_CODER = 1
+    GEMMA3 = 2
+    LLAMA3_LATEST = 3
+    LLAMA3 = 4
+    NOMIC_EMBED_TEXT = 5
+
 
     api_variant = models.CharField(max_length=50, default='ollama')
     context_window_size = models.IntegerField(default=32768)

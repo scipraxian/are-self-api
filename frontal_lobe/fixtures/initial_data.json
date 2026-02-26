@@ -102,5 +102,17 @@
       "created": "2026-02-17T12:00:00Z",
       "modified": "2026-02-17T12:00:00Z"
     }
+  },
+  {
+    "model": "frontal_lobe.modelregistry",
+    "pk": 5,
+    "fields": {
+      "name": "nomic-embed-text",
+      "description": "Standard embedding model for the Hippocampus Vector Engine.",
+      "api_variant": "ollama",
+      "context_window_size": 8192,
+      "created": "2026-02-25T12:00:00Z",
+      "modified": "2026-02-25T12:00:00Z"
+    }
   }
 ]
