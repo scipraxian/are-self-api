@@ -20,7 +20,15 @@ class TalosEngramAdmin(admin.ModelAdmin):
     filter_horizontal = ('tags', 'heads', 'sessions', 'source_turns')
 
     # Set the vector as read-only to prevent manual corruption of the embedding
-    readonly_fields = ('created', 'modified', 'vector')
+    readonly_fields = ('created', 'modified', 'vector_display')
+
+    def vector_display(self, obj):
+        """Displays the vector in a format that avoids truthiness ambiguity."""
+        if obj.vector is None:
+            return 'None'
+        return f'Vector({len(obj.vector)} dimensions)'
+
+    vector_display.short_description = 'Vector'
 
     fieldsets = (
         (
@@ -37,7 +45,7 @@ class TalosEngramAdmin(admin.ModelAdmin):
         (
             'Mathematical Lobe',
             {
-                'fields': ('vector',),
+                'fields': ('vector_display',),
                 'description': 'The 768-dimension embedding used for Cosine Similarity and Auto-Recall defense.',
             },
         ),
