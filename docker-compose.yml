@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  # 1. The Database (With Vector Hardware)
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: talos_db
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: frith
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. The Nervous System (Task Queue)
+  redis:
+    image: redis:alpine
+    container_name: talos_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
