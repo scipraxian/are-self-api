@@ -9,6 +9,7 @@ from common.models import (
 )
 from frontal_lobe.models import ReasoningSession, ReasoningTurn
 from hydra.models import HydraHead
+from prefrontal_cortex.models import PFCTask
 
 
 class TalosEngramTag(NameMixin):
@@ -28,7 +29,7 @@ class TalosEngram(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
         is_active: Indicates if the engram is currently active.
     """
 
-    RELATED_NAME = 'engram'
+    RELATED_NAME = 'engrams'
 
     sessions = models.ManyToManyField(
         ReasoningSession, related_name=RELATED_NAME, blank=True
@@ -42,6 +43,10 @@ class TalosEngram(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     tags = models.ManyToManyField(
         TalosEngramTag, related_name=RELATED_NAME, blank=True
     )
+    tasks = models.ManyToManyField(
+        PFCTask, related_name=RELATED_NAME, blank=True
+    )
+
     is_active = models.BooleanField(default=True)
     relevance_score = models.FloatField(default=0.0)
     vector = VectorField(dimensions=768, null=True, blank=True)

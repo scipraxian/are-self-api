@@ -108,7 +108,7 @@ class TalosHippocampus(object):
         """
 
         def _get_recent_sync() -> str:
-            engrams = session.engram.filter(is_active=True).order_by('created')
+            engrams = session.engrams.filter(is_active=True).order_by('created')
             if not engrams.exists():
                 return 'Your memory banks are completely empty.'
             return '\n'.join([f'- ID {e.id}: {e.name}' for e in engrams])
