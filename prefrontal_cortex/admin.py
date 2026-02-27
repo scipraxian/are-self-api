@@ -217,7 +217,7 @@ class CommentAdmin(admin.ModelAdmin):
     def user_display(self, obj):
         if obj.user:
             return obj.user.username
-        return format_html(
+        return mark_safe(
             '<span style="color: #f99f1b; font-weight: bold;">Talos (System)</span>'
         )
 
@@ -229,21 +229,27 @@ class CommentAdmin(admin.ModelAdmin):
                 'admin:prefrontal_cortex_pfcepic_change', args=[obj.epic.id]
             )
             return format_html(
-                f'<span style="color: #a855f7; font-weight: bold;">Epic:</span> <a href="{url}">{obj.epic.name}</a>'
+                '<span style="color: #a855f7; font-weight: bold;">Epic:</span> <a href="{}">{}</a>',
+                url,
+                obj.epic.name,
             )
         if obj.story:
             url = reverse(
                 'admin:prefrontal_cortex_pfcstory_change', args=[obj.story.id]
             )
             return format_html(
-                f'<span style="color: #3b82f6; font-weight: bold;">Story:</span> <a href="{url}">{obj.story.name}</a>'
+                '<span style="color: #3b82f6; font-weight: bold;">Story:</span> <a href="{}">{}</a>',
+                url,
+                obj.story.name,
             )
         if obj.task:
             url = reverse(
                 'admin:prefrontal_cortex_pfctask_change', args=[obj.task.id]
             )
             return format_html(
-                f'<span style="color: #4ade80; font-weight: bold;">Task:</span> <a href="{url}">{obj.task.name}</a>'
+                '<span style="color: #4ade80; font-weight: bold;">Task:</span> <a href="{}">{}</a>',
+                url,
+                obj.task.name,
             )
         return 'Orphaned Comment'
 
