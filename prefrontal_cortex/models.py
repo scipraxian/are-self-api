@@ -57,8 +57,10 @@ class PFCStory(
 ):
     """The Strategies (Written by Humans or Talos)."""
 
+    RELATED_NAME = 'stories'
+
     epic = models.ForeignKey(
-        PFCEpic, on_delete=models.CASCADE, related_name='stories'
+        PFCEpic, on_delete=models.CASCADE, related_name=RELATED_NAME
     )
     status = models.ForeignKey(
         PFCItemStatus, on_delete=models.PROTECT, default=PFCItemStatus.BACKLOG

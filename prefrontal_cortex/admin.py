@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
 from .models import PFCComment, PFCEpic, PFCItemStatus, PFCStory, PFCTask
 
@@ -70,7 +71,7 @@ class PFCStoryInline(admin.TabularInline):
 
 @admin.register(PFCEpic)
 class PFCEpicAdmin(admin.ModelAdmin):
-    list_display = ('name', 'status', 'story_count', 'created', 'modified')
+    list_display = ('name', 'status', 'created', 'modified', 'story_count')
     list_filter = ('status',)
     search_fields = ('name', 'description')
     readonly_fields = ('created', 'modified', 'delta', 'vector')
@@ -99,7 +100,7 @@ class PFCEpicAdmin(admin.ModelAdmin):
 
     def story_count(self, obj):
         count = obj.stories.count()
-        return format_html(f'<b>{count}</b>')
+        return format_html('<b>{}</b>', count)
 
     story_count.short_description = 'Stories'
 
@@ -137,7 +138,7 @@ class PFCStoryAdmin(admin.ModelAdmin):
 
     def task_count(self, obj):
         count = obj.tasks.count()
-        return format_html(f'<b>{count}</b>')
+        return format_html('<b>{}</b>', count)
 
     task_count.short_description = 'Tasks'
 
@@ -147,7 +148,9 @@ class PFCStoryAdmin(admin.ModelAdmin):
                 'admin:prefrontal_cortex_pfcepic_change', args=[obj.epic.id]
             )
             return format_html(
-                f'<a href="{url}" style="font-weight:bold; color:#a855f7;">{obj.epic.name}</a>'
+                '<a href="{}" style="font-weight:bold; color:#a855f7;">{}</a>',
+                url,
+                obj.epic.name,
             )
         return '-'
 
@@ -190,7 +193,9 @@ class PFCTaskAdmin(admin.ModelAdmin):
                 'admin:prefrontal_cortex_pfcstory_change', args=[obj.story.id]
             )
             return format_html(
-                f'<a href="{url}" style="font-weight:bold; color:#3b82f6;">{obj.story.name}</a>'
+                '<a href="{}" style="font-weight:bold; color:#3b82f6;">{}</a>',
+                url,
+                obj.story.name,
             )
         return '-'
 
