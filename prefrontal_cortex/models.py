@@ -12,7 +12,7 @@ from common.models import (
 )
 
 
-class ItemStatus(NameMixin):
+class PFCItemStatus(NameMixin):
     """Lookup table for Agile States."""
 
     BACKLOG = 1
@@ -32,7 +32,7 @@ class PFCEpic(
     """The High-Level Directives (Written by Humans)."""
 
     status = models.ForeignKey(
-        ItemStatus, on_delete=models.PROTECT, default=ItemStatus.BACKLOG
+        PFCItemStatus, on_delete=models.PROTECT, default=PFCItemStatus.BACKLOG
     )
 
 
@@ -49,7 +49,7 @@ class PFCStory(
         PFCEpic, on_delete=models.CASCADE, related_name='stories'
     )
     status = models.ForeignKey(
-        ItemStatus, on_delete=models.PROTECT, default=ItemStatus.BACKLOG
+        PFCItemStatus, on_delete=models.PROTECT, default=PFCItemStatus.BACKLOG
     )
 
 
@@ -66,11 +66,11 @@ class PFCTask(
         PFCStory, on_delete=models.CASCADE, related_name='tasks'
     )
     status = models.ForeignKey(
-        ItemStatus, on_delete=models.PROTECT, default=ItemStatus.BACKLOG
+        PFCItemStatus, on_delete=models.PROTECT, default=PFCItemStatus.BACKLOG
     )
 
 
-class Comment(UUIDIdMixin, CreatedMixin, ModifiedMixin):
+class PFCComment(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     """A Comment on an Item. If user is None, the comment is made by Talos."""
 
     RELATED_NAME = 'comments'
