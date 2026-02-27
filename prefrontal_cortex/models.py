@@ -10,6 +10,7 @@ from common.models import (
     UUIDIdMixin,
     VectorMixin,
 )
+from environments.models import ProjectEnvironment
 
 
 class PFCItemStatus(NameMixin):
@@ -29,10 +30,21 @@ class PFCEpic(
     CreatedAndModifiedWithDelta,
     VectorMixin,
 ):
-    """The High-Level Directives (Written by Humans)."""
+    """The High-Level Directives (Written by Humans).
+    If the environment is set, the epic is scoped to that environment.
+    """
+
+    RELATED_NAME = 'epics'
 
     status = models.ForeignKey(
         PFCItemStatus, on_delete=models.PROTECT, default=PFCItemStatus.BACKLOG
+    )
+    environment = models.ForeignKey(
+        ProjectEnvironment,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name=RELATED_NAME,
     )
 
 

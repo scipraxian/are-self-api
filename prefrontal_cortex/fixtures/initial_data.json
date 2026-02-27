@@ -1,0 +1,37 @@
+[
+  {
+    "model": "prefrontal_cortex.pfcitemstatus",
+    "pk": 1,
+    "fields": {
+      "name": "Backlog"
+    }
+  },
+  {
+    "model": "prefrontal_cortex.pfcitemstatus",
+    "pk": 2,
+    "fields": {
+      "name": "Selected for Development"
+    }
+  },
+  {
+    "model": "prefrontal_cortex.pfcitemstatus",
+    "pk": 3,
+    "fields": {
+      "name": "In Progress"
+    }
+  },
+  {
+    "model": "prefrontal_cortex.pfcitemstatus",
+    "pk": 4,
+    "fields": {
+      "name": "Blocked by User"
+    }
+  },
+  {
+    "model": "prefrontal_cortex.pfcitemstatus",
+    "pk": 5,
+    "fields": {
+      "name": "Done"
+    }
+  }
+]
