@@ -170,7 +170,7 @@
     "pk": 4,
     "fields": {
       "created": "2026-02-18T12:00:00Z",
-      "description": "Updates the Hydra Blackboard. WARNING: This does NOT save to your memory. The Blackboard is ONLY used to route the underlying Hydra execution graph.",
+      "description": "Updates the CNS Blackboard. WARNING: This does NOT save to your memory. The Blackboard is ONLY used to route the underlying CNS execution graph.",
       "modified": "2026-02-18T12:00:00Z",
       "name": "mcp_update_blackboard",
       "is_async": true,

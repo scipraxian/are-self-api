@@ -1,6 +1,6 @@
 {% extends "dashboard/base.html" %}
 
-{% block title %}Hydra Monitor: {{ spawn.spellbook.name }}{% endblock %}
+{% block title %}CNS Monitor: {{ spawn.spellbook.name }}{% endblock %}
 
 {% block extra_style %}
     <style>
@@ -43,7 +43,7 @@
         }
 
         /* --- 3. BATTLE STATION LAYOUT --- */
-        #hydra-controls {
+        #cns-controls {
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -255,7 +255,7 @@
 {% endblock %}
 
 {% block main_content %}
-    <div id="hydra-controls">
+    <div id="cns-controls">
         {% include "central_nervous_system/spawn_monitor.html" with is_full_page=True %}
     </div>
 {% endblock %}

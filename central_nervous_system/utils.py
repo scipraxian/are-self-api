@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 # TODO: everything here should be moved to somewhere more descriptive.
 
 
-class HydraContext(NamedTuple):  # depreciated.
+class CNSContext(NamedTuple):  # depreciated.
     project_root: str
     engine_root: str
     build_root: str

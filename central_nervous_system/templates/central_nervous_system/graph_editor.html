@@ -381,7 +381,7 @@
         spawnId: "{% if spawn %}{{ spawn.id }}{% elif spawn_id %}{{ spawn_id }}{% endif %}",
         mode: "{{ mode|default:'edit' }}",
         csrfToken: "{{ csrf_token }}",
-        terminateUrl: "{% if spawn %}{% url 'central_nervous_system:hydra_spawn_stop_graceful' spawn.id %}{% elif spawn_id %}{% url 'central_nervous_system:hydra_spawn_stop_graceful' spawn_id %}{% endif %}"
+        terminateUrl: "{% if spawn %}{% url 'central_nervous_system:cns_spawn_stop_graceful' spawn.id %}{% elif spawn_id %}{% url 'central_nervous_system:cns_spawn_stop_graceful' spawn_id %}{% endif %}"
     };
 </script>
 <div id="app">
@@ -465,7 +465,7 @@
             <div class="sidebar-footer">
                 {% if mode == 'monitor' %}
                     <div style="flex: 1;">
-                        <a href="{% url 'central_nervous_system:hydra_spawn_download' spawn.id %}"
+                        <a href="{% url 'central_nervous_system:cns_spawn_download' spawn.id %}"
                            target="_blank"
                            class="btn-done"
                            style="text-decoration: none; border-color: #60a5fa; color: #60a5fa; font-weight: 700;">

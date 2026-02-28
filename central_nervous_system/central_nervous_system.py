@@ -22,15 +22,15 @@ from .models import (
     CNSSpellbookConnectionWire,
     CNSSpellbookNode,
     CNSSpellBookNodeContext,
-    HydraStatusID,
+    CNSStatusID,
     CNSWireType,
 )
-from .tasks import cast_hydra_spell
+from .tasks import cast_cns_spell
 
 logger = logging.getLogger(__name__)
 
 
-class Hydra:
+class CNS:
     """
     The High-Level Job Manager (Graph Edition).
 
@@ -64,7 +64,7 @@ class Hydra:
             spawn = CNSSpawn.objects.select_for_update().get(id=self.spawn.id)
 
             if spawn.status_id != CNSSpawnStatus.CREATED:
-                logger.warning(f'[HYDRA] Spawn {spawn.id} already started.')
+                logger.warning(f'[CNS] Spawn {spawn.id} already started.')
                 return
 
             spawn.status_id = CNSSpawnStatus.RUNNING
@@ -100,7 +100,7 @@ class Hydra:
 
                 head.status_id = CNSHeadStatus.ABORTED
                 head.execution_log += (
-                    '\n[HYDRA] Terminated by User (Signal Sent).\n'
+                    '\n[CNS] Terminated by User (Signal Sent).\n'
                 )
                 head.save(update_fields=['status', 'execution_log'])
 
@@ -113,7 +113,7 @@ class Hydra:
             except Exception as e:
                 logger.warning(f'Failed to revoke task {task_id}: {e}')
 
-        logger.info(f'[HYDRA] Spawn {self.spawn.id} Terminated.')
+        logger.info(f'[CNS] Spawn {self.spawn.id} Terminated.')
 
     def stop_gracefully(self) -> None:
         """
@@ -140,7 +140,7 @@ class Hydra:
                 spawn.save(update_fields=['status'])
 
             logger.info(
-                f'[HYDRA] Spawn {self.spawn.id}: '
+                f'[CNS] Spawn {self.spawn.id}: '
                 f'stop_gracefully signaled {count} heads.'
             )
 
@@ -156,10 +156,10 @@ class Hydra:
                     continue
                 res = AsyncResult(str(head.celery_task_id))
                 if res.ready() and res.state in ['FAILURE', 'REVOKED']:
-                    logger.warning(f'[HYDRA] Ghost Task {head.id}')
+                    logger.warning(f'[CNS] Ghost Task {head.id}')
                     head.status_id = CNSHeadStatus.FAILED
                     head.execution_log += (
-                        f'\n[HYDRA POLL] Task Crash: {res.info}\n'
+                        f'\n[CNS POLL] Task Crash: {res.info}\n'
                     )
                     head.save(update_fields=['status', 'execution_log'])
 
@@ -171,7 +171,7 @@ class Hydra:
             )
             for head in stale_heads:
                 head.status_id = CNSHeadStatus.FAILED
-                head.execution_log += '\n[HYDRA POLL] Timeout.\n'
+                head.execution_log += '\n[CNS POLL] Timeout.\n'
                 head.save(update_fields=['status', 'execution_log'])
 
         # 3. Trigger Graph Logic
@@ -226,7 +226,7 @@ class Hydra:
 
             if self.spawn.status_id == CNSSpawnStatus.STOPPING:
                 logger.info(
-                    f'[HYDRA] Spawn {self.spawn.id} is STOPPING. Halting graph traversal.'
+                    f'[CNS] Spawn {self.spawn.id} is STOPPING. Halting graph traversal.'
                 )
                 self._finalize_spawn_unsafe()
                 return
@@ -263,7 +263,7 @@ class Hydra:
 
         if not root_nodes.exists() and all_nodes.exists():
             logger.error(
-                f'[HYDRA] No Begin Play node found '
+                f'[CNS] No Begin Play node found '
                 f'for {self.spawn.spellbook.name}!'
             )
             return
@@ -294,7 +294,7 @@ class Hydra:
             return
 
         logger.info(
-            f'[HYDRA] Triggering {wires.count()} '
+            f'[CNS] Triggering {wires.count()} '
             f'wires from Head {finished_head.id}'
         )
 
@@ -356,9 +356,9 @@ class Hydra:
         )
 
         if not agents.exists():
-            seed_head.status_id = HydraStatusID.FAILED
+            seed_head.status_id = CNSStatusID.FAILED
             seed_head.execution_log = (
-                '[HYDRA] No agents online for fleet broadcast.'
+                '[CNS] No agents online for fleet broadcast.'
             )
             seed_head.save()
             return
@@ -382,8 +382,8 @@ class Hydra:
         )
 
         if not agent:
-            seed_head.status_id = HydraStatusID.FAILED
-            seed_head.execution_log = '[HYDRA] No agents available.'
+            seed_head.status_id = CNSStatusID.FAILED
+            seed_head.execution_log = '[CNS] No agents available.'
             seed_head.save()
             return
 
@@ -402,12 +402,12 @@ class Hydra:
             status_id=CNSHeadStatus.PENDING,
             blackboard=seed.blackboard.copy(),
         )
-        transaction.on_commit(lambda: cast_hydra_spell.delay(new_head.id))
+        transaction.on_commit(lambda: cast_cns_spell.delay(new_head.id))
 
     def _prepare_and_dispatch(self, head: CNSHead) -> None:
         head.status_id = CNSHeadStatus.PENDING
         head.save()
-        transaction.on_commit(lambda: cast_hydra_spell.delay(head.id))
+        transaction.on_commit(lambda: cast_cns_spell.delay(head.id))
 
     def _finalize_spawn_unsafe(self) -> None:
         """Determines final status."""

@@ -9,13 +9,13 @@ from django.views.generic import DetailView, TemplateView
 from central_nervous_system.utils import get_active_environment, resolve_environment_context
 from ue_tools.merge_logs import merge_logs
 
-from .central_nervous_system import Hydra
+from .central_nervous_system import CNS
 from .models import CNSHead, CNSSpawn, CNSSpellbook
 
 # --- GRAPH VIEWS ---
 
 
-class HydraGraphEditorView(DetailView):
+class CNSGraphEditorView(DetailView):
     model = CNSSpellbook
     template_name = 'central_nervous_system/graph_editor.html'
     context_object_name = 'book'
@@ -28,7 +28,7 @@ class HydraGraphEditorView(DetailView):
         return context
 
 
-class HydraGraphMonitorView(DetailView):
+class CNSGraphMonitorView(DetailView):
     model = CNSSpawn
     template_name = 'central_nervous_system/graph_editor.html'
     context_object_name = 'spawn'
@@ -51,7 +51,7 @@ class LaunchSpellbookView(View):
     """
 
     def dispatch_launch(self, spellbook_id):
-        controller = Hydra(spellbook_id=spellbook_id)
+        controller = CNS(spellbook_id=spellbook_id)
         controller.start()
 
         target_url = reverse(
@@ -103,8 +103,8 @@ class TerminateSpawnView(View):
     """Aborts a running Spawn (Nuclear Option)."""
 
     def post(self, request, pk):
-        hydra = Hydra(spawn_id=pk)
-        hydra.terminate()
+        cns = CNS(spawn_id=pk)
+        cns.terminate()
 
         target_url = reverse('central_nervous_system:graph_monitor', kwargs={'spawn_id': pk})
 
@@ -120,8 +120,8 @@ class GracefulStopSpawnView(View):
     """Asks the heads to stop gracefully (Gentle Tap)."""
 
     def post(self, request, pk):
-        hydra = Hydra(spawn_id=pk)
-        hydra.stop_gracefully()
+        cns = CNS(spawn_id=pk)
+        cns.stop_gracefully()
 
         if request.GET.get('silent') == 'true':
             return HttpResponse(status=204)
@@ -202,7 +202,7 @@ class HeadLogDetailView(DetailView):
             # ONLY render the button if active. If not active, this returns empty string, removing it.
             if is_active:
                 stop_url = reverse(
-                    'central_nervous_system:hydra_spawn_stop_graceful', args=[head.spawn.id]
+                    'central_nervous_system:cns_spawn_stop_graceful', args=[head.spawn.id]
                 )
                 button_html = f'''
                 <button class="btn-secondary" 
@@ -235,7 +235,7 @@ class HeadLogDetailView(DetailView):
 # --- BATTLE STATION VIEWS ---
 
 
-class HydraBattleStationView(DetailView):
+class CNSBattleStationView(DetailView):
     """
     Renders the Side-by-Side 'Battle Station' view for two selected heads.
     """
@@ -260,7 +260,7 @@ class HydraBattleStationView(DetailView):
         return context
 
 
-class HydraBattleStreamView(View):
+class CNSBattleStreamView(View):
     """
     HTMX Endpoint: Merges logs from two heads into a single time-indexed stream.
     Supports incremental updates via cursors.
@@ -317,7 +317,7 @@ class HydraBattleStreamView(View):
         )
 
 
-class HydraControlsView(TemplateView):
+class CNSControlsView(TemplateView):
     template_name = 'central_nervous_system/controls.html'
 
 

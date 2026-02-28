@@ -238,6 +238,6 @@ class PrefrontalCortexDispatcher:
 
 
 async def dispatch_pfc(head_id: str) -> tuple[int, str]:
-    """Native execution handler for the Hydra Graph."""
+    """Native execution handler for the CNS Graph."""
     dispatcher = PrefrontalCortexDispatcher(head_id)
     return await dispatcher.engage()

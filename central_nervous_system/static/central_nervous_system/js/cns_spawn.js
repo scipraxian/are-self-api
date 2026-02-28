@@ -1,4 +1,4 @@
-class HydraSpawnController {
+class CNSSpawnController {
     constructor(element) {
         this.el = element;
         this.spawnId = this.el.dataset.spawnId;
@@ -6,15 +6,15 @@ class HydraSpawnController {
         this.pollInterval = null;
 
         this.statusEl = this.el.querySelector('.js-spawn-status-text');
-        this.controlCardEl = this.el.querySelector('.js-hydra-control-card');
+        this.controlCardEl = this.el.querySelector('.js-cns-control-card');
         this.trackEl = this.el.querySelector('.js-spawn-track');
-        this.nestedSpawnsEl = this.el.closest('.js-hydra-spawn-wrapper').querySelector('.js-nested-spawns');
+        this.nestedSpawnsEl = this.el.closest('.js-cns-spawn-wrapper').querySelector('.js-nested-spawns');
 
         this.leftBtn = this.el.querySelector('.js-scroll-left');
         this.rightBtn = this.el.querySelector('.js-scroll-right');
 
         if (this.controlCardEl) {
-            this.controlCard = new HydraSpawnControlCardController(this.controlCardEl, this.spawnId, this.el.dataset.spellbookId);
+            this.controlCard = new CNSSpawnControlCardController(this.controlCardEl, this.spawnId, this.el.dataset.spellbookId);
         }
 
         this.initTrackObservers();
@@ -22,7 +22,7 @@ class HydraSpawnController {
     }
 
     static populateTemplate(clone, data) {
-        const spawnEl = clone.querySelector('.js-hydra-spawn');
+        const spawnEl = clone.querySelector('.js-cns-spawn');
         spawnEl.dataset.spawnId = data.id;
         spawnEl.dataset.spellbookId = data.spellbook;
 
@@ -127,20 +127,20 @@ class HydraSpawnController {
             const myHeads = heads.filter(h => String(h.spawn) === String(this.spawnId) || String(h.spawn_id) === String(this.spawnId));
 
             for (const headData of myHeads) {
-                const existingEl = this.trackEl.querySelector(`.js-hydra-head[data-head-id="${headData.id}"]`);
+                const existingEl = this.trackEl.querySelector(`.js-cns-head[data-head-id="${headData.id}"]`);
 
                 if (existingEl) {
-                    HydraHeadController.populateTemplate({querySelector: (sel) => existingEl.querySelector(sel) || existingEl}, headData);
+                    CNSHeadController.populateTemplate({querySelector: (sel) => existingEl.querySelector(sel) || existingEl}, headData);
                 } else {
-                    const tpl = document.getElementById('tpl-hydra-head');
+                    const tpl = document.getElementById('tpl-cns-head');
                     const clone = tpl.content.cloneNode(true);
-                    HydraHeadController.populateTemplate(clone, headData);
+                    CNSHeadController.populateTemplate(clone, headData);
                     this.trackEl.appendChild(clone);
                     // Note: MutationObserver will automatically detect this appendChild and run checkOverflow()
                 }
             }
         } catch (error) {
-            console.error(`[HydraSpawn ${this.spawnId}] Head sync failed:`, error);
+            console.error(`[CNSSpawn ${this.spawnId}] Head sync failed:`, error);
         }
     }
 
@@ -158,7 +158,7 @@ class HydraSpawnController {
                 this.syncHeads();
             }
         } catch (error) {
-            console.error(`[HydraSpawn] Status fetch failed:`, error);
+            console.error(`[CNSSpawn] Status fetch failed:`, error);
         }
     }
 
@@ -186,21 +186,21 @@ class HydraSpawnController {
     }
 
     async ensureChildSpawnExists(childSpawnId) {
-        if (this.nestedSpawnsEl.querySelector(`.js-hydra-spawn-wrapper > .js-hydra-spawn[data-spawn-id="${childSpawnId}"]`)) return;
+        if (this.nestedSpawnsEl.querySelector(`.js-cns-spawn-wrapper > .js-cns-spawn[data-spawn-id="${childSpawnId}"]`)) return;
 
         try {
             const response = await fetch(`/api/v1/spawns/${childSpawnId}/`);
             if (!response.ok) return;
             const spawnData = await response.json();
 
-            const tpl = document.getElementById('tpl-hydra-spawn');
+            const tpl = document.getElementById('tpl-cns-spawn');
             const clone = tpl.content.cloneNode(true);
 
-            HydraSpawnController.populateTemplate(clone, spawnData);
+            CNSSpawnController.populateTemplate(clone, spawnData);
             this.nestedSpawnsEl.appendChild(clone.firstElementChild);
 
-            const newEl = this.nestedSpawnsEl.lastElementChild.querySelector('.js-hydra-spawn');
-            new HydraSpawnController(newEl);
+            const newEl = this.nestedSpawnsEl.lastElementChild.querySelector('.js-cns-spawn');
+            new CNSSpawnController(newEl);
         } catch (error) {
             console.error(`Failed to inject SubGraph ${childSpawnId}:`, error);
         }

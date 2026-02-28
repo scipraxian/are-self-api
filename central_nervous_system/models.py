@@ -1,4 +1,4 @@
-"""Hydra Data Models."""
+"""CNS Data Models."""
 
 from typing import Any, Dict, List, Optional
 
@@ -59,7 +59,7 @@ class TagsAndFavoriteMixin(models.Model):
         abstract = True
 
 
-class HydraStatusID(object):
+class CNSStatusID(object):
     """
     Centralized Integer IDs for Status lookups.
     """
@@ -83,21 +83,21 @@ class HydraStatusID(object):
     IS_TERMINAL_STATUS_LIST = [FAILED, SUCCESS, ABORTED, STOPPED]
 
 
-class HydraStatusTypeMixin(NameMixin):
+class CNSStatusTypeMixin(NameMixin):
     """Mixin to attach ID constants and Map to the Model Class."""
 
-    IDs = HydraStatusID
-    CREATED = HydraStatusID.CREATED
-    PENDING = HydraStatusID.PENDING
-    RUNNING = HydraStatusID.RUNNING
-    SUCCESS = HydraStatusID.SUCCESS
-    FAILED = HydraStatusID.FAILED
-    ABORTED = HydraStatusID.ABORTED
-    DELEGATED = HydraStatusID.DELEGATED
-    STOPPING = HydraStatusID.STOPPING
-    STOPPED = HydraStatusID.STOPPED
-    IS_ALIVE_STATUS_LIST = HydraStatusID.IS_ALIVE_STATUS_LIST
-    IS_TERMINAL_STATUS_LIST = HydraStatusID.IS_TERMINAL_STATUS_LIST
+    IDs = CNSStatusID
+    CREATED = CNSStatusID.CREATED
+    PENDING = CNSStatusID.PENDING
+    RUNNING = CNSStatusID.RUNNING
+    SUCCESS = CNSStatusID.SUCCESS
+    FAILED = CNSStatusID.FAILED
+    ABORTED = CNSStatusID.ABORTED
+    DELEGATED = CNSStatusID.DELEGATED
+    STOPPING = CNSStatusID.STOPPING
+    STOPPED = CNSStatusID.STOPPED
+    IS_ALIVE_STATUS_LIST = CNSStatusID.IS_ALIVE_STATUS_LIST
+    IS_TERMINAL_STATUS_LIST = CNSStatusID.IS_TERMINAL_STATUS_LIST
 
     STATUS_MAP = {
         CREATED_LABEL: CREATED,
@@ -117,13 +117,13 @@ class HydraStatusTypeMixin(NameMixin):
         abstract = True
 
 
-class CNSSpawnStatus(HydraStatusTypeMixin):
+class CNSSpawnStatus(CNSStatusTypeMixin):
     """Status lookups for Spawns."""
 
     pass
 
 
-class CNSHeadStatus(HydraStatusTypeMixin):
+class CNSHeadStatus(CNSStatusTypeMixin):
     """Status lookups for Heads."""
 
     pass
@@ -148,7 +148,7 @@ class CNSDistributionMode(NameMixin, DescriptionMixin):
     IDs = CNSDistributionModeID
 
     class Meta:
-        verbose_name = 'Hydra Distribution Mode'
+        verbose_name = 'CNS Distribution Mode'
 
 
 class CNSSpell(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
@@ -249,7 +249,7 @@ class CNSSpellTarget(models.Model):
 
     class Meta:
         unique_together = ('spell', 'target')
-        verbose_name = 'Hydra Spell Target'
+        verbose_name = 'CNS Spell Target'
 
     def __str__(self):
         return f'{self.spell.name} -> {self.target}'

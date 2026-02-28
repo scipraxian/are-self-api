@@ -2924,7 +2924,7 @@
     "fields": {
       "node": 127,
       "key": "prompt",
-      "value": "use the unreal parsing tool mcp_run_unreal_diagnostic_parser\non the provenance head\n{{head.provenance.id}}\n\nwhich is the output of our Unreal 5.6.1 application.\n\nyou should also inspect the record\n\nmcp_inspect_record hydra CNSHead {{head.provenance.id}}\n\nEach turn enhance the Engrams of known issues, as well as create Engrams for new issues.\nOnce you think you have tagged all issues, use mcp_conclude_session to file a report and end."
+      "value": "use the unreal parsing tool mcp_run_unreal_diagnostic_parser\non the provenance head\n{{head.provenance.id}}\n\nwhich is the output of our Unreal 5.6.1 application.\n\nyou should also inspect the record\n\nmcp_inspect_record cns CNSHead {{head.provenance.id}}\n\nEach turn enhance the Engrams of known issues, as well as create Engrams for new issues.\nOnce you think you have tagged all issues, use mcp_conclude_session to file a report and end."
     }
   },
   {

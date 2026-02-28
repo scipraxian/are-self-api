@@ -1,10 +1,10 @@
-<div id="hydra-history" style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
+<div id="cns-history" style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
     <h3 style="color: #64748b; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 1rem; letter-spacing: 0.05em;">
         Recent Missions</h3>
 
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
         {% for spawn in spawn_history %}
-            <a href="{% url 'central_nervous_system:hydra_spawn_monitor' spawn.id %}?full=True"
+            <a href="{% url 'central_nervous_system:cns_spawn_monitor' spawn.id %}?full=True"
                style="text-decoration: none; display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.25rem; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.03); border-radius: 12px; transition: all 0.2s;"
                class="history-item">
 

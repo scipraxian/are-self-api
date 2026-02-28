@@ -135,7 +135,7 @@ class AsyncLogManager:
         try:
             await sync_to_async(self.head.refresh_from_db)(fields=['status'])
             if self.head.status_id == CNSHeadStatus.ABORTED:
-                raise ConnectionAbortedError('Hydra Head Aborted by User')
+                raise ConnectionAbortedError('CNS Head Aborted by User')
             await sync_to_async(self.head.save)(
                 update_fields=['execution_log', 'application_log']
             )

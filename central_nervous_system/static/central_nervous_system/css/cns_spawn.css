@@ -1,4 +1,4 @@
-.hydra-spawn-wrapper {
+.cns-spawn-wrapper {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -7,7 +7,7 @@
     min-width: 0;
 }
 
-.hydra-spawn {
+.cns-spawn {
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid #333;
     border-radius: 6px;
@@ -19,12 +19,12 @@
     min-width: 0;
 }
 
-.hydra-spawn.active-lane {
+.cns-spawn.active-lane {
     background: rgba(249, 159, 27, 0.05);
     border-color: #f99f1b;
 }
 
-.hydra-spawn.failed-lane {
+.cns-spawn.failed-lane {
     background: rgba(239, 68, 68, 0.1);
     border-color: #ef4444;
 }

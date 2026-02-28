@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from central_nervous_system.models import CNSHeadStatus
-from central_nervous_system.tasks import cast_hydra_spell
+from central_nervous_system.tasks import cast_cns_spell
 
 from . import serializers
 from .models import (
@@ -77,7 +77,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         head.save(update_fields=['status'])
 
         # 2. Fire the Celery task to run the AI loop again
-        cast_hydra_spell.delay(head.id)
+        cast_cns_spell.delay(head.id)
 
         # 3. Return the Spawn ID so the frontend can redirect to the Monitor
         return Response(

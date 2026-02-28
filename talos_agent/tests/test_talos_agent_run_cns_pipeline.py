@@ -4,14 +4,14 @@ from unittest.mock import patch
 
 import pytest
 
-from talos_agent.talos_agent import run_hydra_pipeline
+from talos_agent.talos_agent import run_cns_pipeline
 
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 
 @pytest.mark.asyncio
-async def test_run_hydra_pipeline_basic(tmp_path):
+async def test_run_cns_pipeline_basic(tmp_path):
     # Use python itself to guarantee cross-platform behavior without shell syntax quirks
     script = "import time; print('start', flush=True); time.sleep(0.5); print('end', flush=True)"
     cmd = [sys.executable, '-c', script]
@@ -21,7 +21,7 @@ async def test_run_hydra_pipeline_basic(tmp_path):
     async def callback(text):
         captured.append(text.strip())
 
-    exit_code = await run_hydra_pipeline(cmd, None, callback)
+    exit_code = await run_cns_pipeline(cmd, None, callback)
 
     assert exit_code == 0
     assert 'start' in captured
@@ -29,7 +29,7 @@ async def test_run_hydra_pipeline_basic(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_run_hydra_pipeline_leash_broken():
+async def test_run_cns_pipeline_leash_broken():
     """
     CRITICAL: Verify that if the callback raises a Network Error,
     the process is killed and the exception bubbles up IMMEDIATELY.
@@ -54,7 +54,7 @@ async def test_run_hydra_pipeline_leash_broken():
         # 4. The pipeline should raise the error, NOT hang
         with pytest.raises(ConnectionResetError):
             await asyncio.wait_for(
-                run_hydra_pipeline(cmd, None, broken_callback), timeout=5.0
+                run_cns_pipeline(cmd, None, broken_callback), timeout=5.0
             )
 
         # 5. Verify the Kill Switch was actually pulled

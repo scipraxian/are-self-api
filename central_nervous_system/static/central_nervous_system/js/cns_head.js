@@ -1,15 +1,15 @@
 /**
- * Talos Hydra Head Controller
+ * Talos CNS Head Controller
  * Refactored for High-Density LCARS UI
  */
 
-class HydraHeadController {
+class CNSHeadController {
     constructor(element) {
         this.el = element;
     }
 
     static populateTemplate(clone, data) {
-        const headEl = clone.querySelector('.js-hydra-head');
+        const headEl = clone.querySelector('.js-cns-head');
         if (!headEl) return;
 
         headEl.dataset.headId = data.id;
@@ -19,7 +19,7 @@ class HydraHeadController {
         headEl.href = `/central_nervous_system/head/${data.id}/`;
 
         // Visual State Reset
-        headEl.className = 'hydra-head-card js-hydra-head';
+        headEl.className = 'cns-head-card js-cns-head';
         headEl.classList.add(`status-${statusStr.toLowerCase()}`);
         if (data.spell === 1) headEl.classList.add('is-begin-play');
 

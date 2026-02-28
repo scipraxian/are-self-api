@@ -1,7 +1,7 @@
 <div id="spawn-monitor-{{ spawn.id }}" class="monitor-card" style="margin-top: 1rem;">
     <div class="monitor-header"
             {% if is_active %}
-         hx-get="{% url 'central_nervous_system:hydra_spawn_monitor_partial' spawn.id %}?full={{ is_full_page|default:'False' }}"
+         hx-get="{% url 'central_nervous_system:cns_spawn_monitor_partial' spawn.id %}?full={{ is_full_page|default:'False' }}"
          hx-select=".monitor-header"
          hx-trigger="every 2s"
          hx-swap="outerHTML"
@@ -25,7 +25,7 @@
             </div>
         </div>
         <div class="actions" style="display: flex; gap: 10px; align-items: center;">
-            <a href="{% url 'central_nervous_system:hydra_spawn_download' spawn.id %}"
+            <a href="{% url 'central_nervous_system:cns_spawn_download' spawn.id %}"
                target="_blank"
                class="btn-done"
                style="text-decoration: none; border-color: #60a5fa; color: #60a5fa; font-weight: 700;">
@@ -45,8 +45,8 @@
                 {% if is_full_page %}
                     <a href="/" class="btn-done" style="text-decoration: none;">DISMISS</a>
                 {% else %}
-                    <button hx-get="{% url 'central_nervous_system:hydra_controls' %}"
-                            hx-target="#hydra-controls"
+                    <button hx-get="{% url 'central_nervous_system:cns_controls' %}"
+                            hx-target="#cns-controls"
                             hx-swap="outerHTML"
                             class="btn-done">DISMISS
                     </button>
@@ -59,20 +59,20 @@
                               style="display: inline-block; vertical-align: middle; margin-right: 5px;"></span>
                         STOPPING...
                     </button>
-                    <button hx-post="{% url 'central_nervous_system:hydra_spawn_stop_graceful' spawn.id %}"
+                    <button hx-post="{% url 'central_nervous_system:cns_spawn_stop_graceful' spawn.id %}"
                             hx-confirm="Force Kill? Logs will be cut."
                             class="btn-done"
                             style="border-color: #ef4444; color: #ef4444; font-size: 0.7rem; margin-left: 5px;">
                         FORCE
                     </button>
                 {% else %}
-                    <button hx-post="{% url 'central_nervous_system:hydra_spawn_stop_graceful' spawn.id %}"
+                    <button hx-post="{% url 'central_nervous_system:cns_spawn_stop_graceful' spawn.id %}"
                             class="btn-done"
                             style="border-color: #fb923c; color: #fb923c; font-weight: 800;">
                         STOP
                     </button>
 
-                    <button hx-post="{% url 'central_nervous_system:hydra_spawn_stop_graceful' spawn.id %}"
+                    <button hx-post="{% url 'central_nervous_system:cns_spawn_stop_graceful' spawn.id %}"
                             hx-confirm="KILL IMMEDIATELY? This may corrupt logs."
                             class="btn-done"
                             style="border-color: #ef4444; color: #ef4444; font-size: 0.7rem; margin-left: 10px;">
@@ -106,7 +106,7 @@
 
             <div id="battle-stream-container"
                  class="log-wrapper battle-stream"
-                 hx-get="{% url 'central_nervous_system:hydra_battle_stream' spawn.id %}?h1={{ head_1.id }}&h2={{ head_2.id }}"
+                 hx-get="{% url 'central_nervous_system:cns_battle_stream' spawn.id %}?h1={{ head_1.id }}&h2={{ head_2.id }}"
                  hx-trigger="load{% if is_active %}, every 1s{% endif %}"
                  hx-vals='js:{
                     local_cursor: document.getElementById("battle-station-cursors")?.dataset.local || 0,
@@ -134,7 +134,7 @@
                 </thead>
                 <tbody>
                 {% for head in heads %}
-                    <tr id="row-{{ head.id }}" class="step-row" onclick="toggleHydraLogs('{{ head.id }}');">
+                    <tr id="row-{{ head.id }}" class="step-row" onclick="toggleCNSLogs('{{ head.id }}');">
                         <td class="col-ord"></td>
                         <td class="col-step">
                             <span style="font-weight: 700; color: #e2e8f0;">{{ head.spell.name }}</span>
@@ -144,7 +144,7 @@
                         <span id="status-badge-{{ head.id }}"
                               class="status-badge status-{{ head.status.name|lower }}"
                                 {% if is_active %}
-                              hx-get="{% url 'central_nervous_system:hydra_spawn_monitor_partial' spawn.id %}?full={{ is_full_page|default:'False' }}"
+                              hx-get="{% url 'central_nervous_system:cns_spawn_monitor_partial' spawn.id %}?full={{ is_full_page|default:'False' }}"
                               hx-select="#status-badge-{{ head.id }}"
                               hx-trigger="every 2s"
                               hx-swap="outerHTML"
@@ -156,7 +156,7 @@
                         <span id="result-code-{{ head.id }}"
                               style="font-family: monospace; color: {% if head.result_code == 0 %}#4ade80{% elif head.result_code %}#f87171{% else %}#64748b{% endif %};"
                                 {% if is_active %}
-                              hx-get="{% url 'central_nervous_system:hydra_spawn_monitor_partial' spawn.id %}?full={{ is_full_page|default:'False' }}"
+                              hx-get="{% url 'central_nervous_system:cns_spawn_monitor_partial' spawn.id %}?full={{ is_full_page|default:'False' }}"
                               hx-select="#result-code-{{ head.id }}"
                               hx-trigger="every 2s"
                               hx-swap="outerHTML"
@@ -169,7 +169,7 @@
                         <td colspan="4" style="padding: 0; border: none;">
                             <div id="log-wrapper-{{ head.id }}"
                                  class="log-wrapper"
-                                 hx-get="{% url 'central_nervous_system:hydra_head_logs' head.id %}?type=tool"
+                                 hx-get="{% url 'central_nervous_system:cns_head_logs' head.id %}?type=tool"
                                  hx-trigger="load_now"
                                  hx-swap="innerHTML">
                                 <div style="padding: 2rem; text-align: center; color: #94a3b8;">
@@ -187,7 +187,7 @@
 </div>
 
 <script>
-    function toggleHydraLogs(id) {
+    function toggleCNSLogs(id) {
         var row = document.getElementById('logs-' + id);
         if (!row) return;
         if (row.style.display === 'none') {

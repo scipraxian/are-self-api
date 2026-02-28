@@ -1,8 +1,8 @@
-/* * Talos Hydra Head Card
+/* * Talos CNS Head Card
  * LCARS Density Overhaul
  */
 
-.hydra-head-card {
+.cns-head-card {
     background: #111;
     border: 1px solid #333;
     border-radius: 6px;
@@ -22,7 +22,7 @@
     padding-left: 12px;
 }
 
-.hydra-head-card:hover {
+.cns-head-card:hover {
     transform: translateY(-2px);
     background: #1a1a1a;
 }
@@ -112,6 +112,6 @@
 }
 
 /* Special Case: Begin Play */
-.hydra-head-card.is-begin-play {
+.cns-head-card.is-begin-play {
     display: none; /* Auto-hidden as per mission control standards */
 }

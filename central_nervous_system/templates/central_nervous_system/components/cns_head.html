@@ -1,6 +1,6 @@
 <a href="{% url 'central_nervous_system:head_detail' head.id %}"
    id="head-{{ head.id }}"
-   class="hydra-head-card js-hydra-head status-{{ head.status.name|lower }}"
+   class="cns-head-card js-cns-head status-{{ head.status.name|lower }}"
    data-head-id="{{ head.id }}"
    data-is-alive="{{ head.is_alive|yesno:'true,false' }}">
 

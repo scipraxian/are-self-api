@@ -1,4 +1,4 @@
-"""Native Hydra spell for version stamping Unreal Engine projects."""
+"""Native CNS spell for version stamping Unreal Engine projects."""
 
 import datetime
 import getpass

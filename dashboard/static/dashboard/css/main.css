@@ -491,9 +491,9 @@ endblock
     }
 }
 
-/* Source: dashboard\templates\dashboard\partials\hydra_button.html */
+/* Source: dashboard\templates\dashboard\partials\cns_button.html */
 
-.hydra-btn {
+.cns-btn {
     color: white;
     border: none;
     padding: 1rem 2rem;
@@ -506,11 +506,11 @@ endblock
     align-items: center;
 }
 
-.hydra-btn:hover {
+.cns-btn:hover {
     transform: translateY(-2px);
 }
 
-.hydra-btn:active {
+.cns-btn:active {
     transform: translateY(0);
 }
 
@@ -562,7 +562,7 @@ endblock
     box-shadow: 0 10px 20px rgba(139, 92, 246, 0.5);
 }
 
-/* Source: hydra\templates\hydra\spawn_monitor.html */
+/* Source: cns\templates\cns\spawn_monitor.html */
 
 .monitor-card {
     background: rgba(15, 23, 42, 0.8);
@@ -864,7 +864,7 @@ endblock
     border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Source: hydra\templates\hydra\partials\history_list.html */
+/* Source: cns\templates\cns\partials\history_list.html */
 
 .history-item:hover {
     background: rgba(30, 41, 59, 0.7) !important;
@@ -876,7 +876,7 @@ endblock
     stroke: #94a3b8;
 }
 
-/* Source: hydra\templates\hydra\partials\spawn_feedback.html */
+/* Source: cns\templates\cns\partials\spawn_feedback.html */
 
 @keyframes slideDown {
     from {

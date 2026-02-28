@@ -1,4 +1,4 @@
-class HydraSpawnControlCardController {
+class CNSSpawnControlCardController {
     constructor(element, spawnId, spellbookId) {
         this.el = element;
         this.spawnId = spawnId;

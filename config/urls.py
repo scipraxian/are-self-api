@@ -4,12 +4,12 @@ from rest_framework import routers
 
 from dashboard.api_urls import DASHBOARD_ROUTER
 from environments.api_urls import ENVIRONMENTS_ROUTER
-from central_nervous_system.api_urls import HYDRA_ROUTER
+from central_nervous_system.api_urls import CNS_ROUTER
 from frontal_lobe.api_urls import REASONING_ROUTER
 
 v1_router = routers.DefaultRouter()
 v1_router.registry.extend(ENVIRONMENTS_ROUTER.registry)
-v1_router.registry.extend(HYDRA_ROUTER.registry)
+v1_router.registry.extend(CNS_ROUTER.registry)
 v1_router.registry.extend(DASHBOARD_ROUTER.registry)
 v1_router.registry.extend(REASONING_ROUTER.registry)
 urlpatterns = [

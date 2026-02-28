@@ -621,7 +621,7 @@ class GraphEditor {
                 if (node.invoked_spellbook_id) {
                     window.open(`/central_nervous_system/graph/editor/${node.invoked_spellbook_id}/`, '_self');
                 } else {
-                    window.open(`/admin/central_nervous_system/hydraspellbooknode/${node.id}/change/`);
+                    window.open(`/admin/central_nervous_system/cnsspellbooknode/${node.id}/change/`);
                 }
             }
         });
@@ -1202,7 +1202,7 @@ class GraphEditor {
         // Action Bar
         html += `
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #1e293b; display: flex; gap: 10px;">
-             <a href="/admin/central_nervous_system/hydraspellbooknode/${data.node_id}/change/" target="_blank" class="action-btn" style="text-decoration: none; justify-content: center;">
+             <a href="/admin/central_nervous_system/cnsspellbooknode/${data.node_id}/change/" target="_blank" class="action-btn" style="text-decoration: none; justify-content: center;">
                 ⚙️ Advanced Edit
             </a>
             <button class="action-btn" style="color: #ef4444; border-color: #ef4444;" onclick="window.app.deleteNode('${data.node_id}')">
@@ -1251,7 +1251,7 @@ class GraphEditor {
         const getStatusClass = (s) => {
             // Map data.status or data.status_name to CSS class
             // The serializer returns 'status' as ID/PK or string?
-            // HydraHeadSerializer: status is ID. HydraNodeTelemetrySerializer: fields include 'status' (ID) and 'status_name'
+            // CNSHeadSerializer: status is ID. CNSNodeTelemetrySerializer: fields include 'status' (ID) and 'status_name'
             // Let's use status_name for display, status (ID) for logic if needed. 
             // The serializer uses `status` field which is relation -> ID by default in DRF unless nested.
             // Wait, ModelSerializer default for ForeignKey is ID.
@@ -1336,7 +1336,7 @@ class GraphEditor {
             </div>
 
             <div style="display: flex; gap: 8px; margin-top: 12px;">
-                 <a href="/admin/central_nervous_system/hydraspellbooknode/${nodeId}/change/" target="_blank" class="action-btn" style="text-decoration: none; flex: 1; justify-content: center;">
+                 <a href="/admin/central_nervous_system/cnsspellbooknode/${nodeId}/change/" target="_blank" class="action-btn" style="text-decoration: none; flex: 1; justify-content: center;">
                     ⚙️ Edit Node
                 </a>
                 <a href="/central_nervous_system/head/${data.id}/" target="_blank" class="action-btn primary" style="text-decoration: none; flex: 1; justify-content: center;">

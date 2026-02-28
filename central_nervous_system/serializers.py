@@ -23,7 +23,7 @@ from .models import (
     CNSSpellBookNodeContext,
     CNSSpellContext,
     CNSSpellTarget,
-    HydraStatusID,
+    CNSStatusID,
     CNSTag,
     CNSWireType,
 )
@@ -385,7 +385,7 @@ class CNSSpellbookSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
-class HydraGraphLayoutSerializer(serializers.ModelSerializer):
+class CNSGraphLayoutSerializer(serializers.ModelSerializer):
     """Utilizes strict DTO serializers for generating the graph canvas."""
 
     nodes = serializers.SerializerMethodField()
@@ -439,7 +439,7 @@ class HydraGraphLayoutSerializer(serializers.ModelSerializer):
         return GraphWireLayoutSerializer(dtos, many=True).data
 
 
-class HydraNodeDetailsSerializer(serializers.ModelSerializer):
+class CNSNodeDetailsSerializer(serializers.ModelSerializer):
     """Provides deep context analysis utilizing the explicit Row Serializer."""
 
     context_matrix = serializers.SerializerMethodField()
@@ -487,7 +487,7 @@ class CNSSpawnStatusSerializer(serializers.ModelSerializer):
             ).first()
             if begin_play_node:
                 node_status_map[str(begin_play_node.id)] = {
-                    'status_id': HydraStatusID.SUCCESS,
+                    'status_id': CNSStatusID.SUCCESS,
                     'head_id': None,
                 }
         heads = (
@@ -536,7 +536,7 @@ class CNSHeadSerializer(serializers.ModelSerializer):
         )['delta__avg']
 
 
-class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
+class CNSNodeTelemetrySerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     logs = serializers.SerializerMethodField()
     exec_logs = serializers.SerializerMethodField()
@@ -593,7 +593,7 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
         )['delta__avg']
 
     def get_context_matrix(self, obj):
-        # Ported from hydra_graph.py:
+        # Ported from cns_graph.py:
         # 1. Inspect the Spell to find variables
         variables = _extract_variables_from_spell(obj.spell)
 
@@ -619,7 +619,7 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
         return str(session.id) if session else None
 
 
-class HydraSwimlaneSerializer(serializers.ModelSerializer):
+class CNSSwimlaneSerializer(serializers.ModelSerializer):
     """
     Specifically shapes a Spawn and its sub-graphs for the Mission Control UI.
     Completely replaces serialize_spawn_helper.
@@ -678,4 +678,4 @@ class HydraSwimlaneSerializer(serializers.ModelSerializer):
         children.sort(key=lambda x: x.created if x.created else x.modified)
 
         # Recursive serialization for nested swimlanes
-        return HydraSwimlaneSerializer(children, many=True).data
+        return CNSSwimlaneSerializer(children, many=True).data

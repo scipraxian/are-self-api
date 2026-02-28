@@ -13,14 +13,14 @@ from django.views.decorators.csrf import csrf_exempt
 
 from environments.variable_renderer import VariableRenderer
 
-from .central_nervous_system import Hydra
+from .central_nervous_system import CNS
 from .models import (
     CNSSpawn,
     CNSSpell,
     CNSSpellbook,
     CNSSpellbookConnectionWire,
     CNSSpellbookNode,
-    HydraStatusID,
+    CNSStatusID,
     CNSWireType,
 )
 
@@ -106,7 +106,7 @@ class DeletePayload:
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class HydraGraphAPI(View):
+class CNSGraphAPI(View):
 
     def get(self, request: HttpRequest, book_id: str, action: str = None):
         spellbook = get_object_or_404(CNSSpellbook, id=book_id)
@@ -659,18 +659,18 @@ def get_execution_status(spellbook: CNSSpellbook,
         return JsonResponse({KEY_STATUS: STATUS_ERROR, MESSAGE: str(e)})
 
 
-class HydraGraphLaunchAPI(View):
+class CNSGraphLaunchAPI(View):
 
     def post(self, request, book_id):
         try:
-            controller = Hydra(spellbook_id=book_id)
+            controller = CNS(spellbook_id=book_id)
             controller.start()
             return JsonResponse({
                 ACTION_STATUS: STATUS_STARTED,
                 SPAWN_ID: str(controller.spawn.id),
             })
         except Exception as e:
-            logger.exception('[HYDRA] Graph Launch Failed')
+            logger.exception('[CNS] Graph Launch Failed')
             return JsonResponse(
                 {
                     ACTION_STATUS: STATUS_ERROR,
@@ -680,7 +680,7 @@ class HydraGraphLaunchAPI(View):
             )
 
 
-class HydraGraphSpawnStatusAPI(View):
+class CNSGraphSpawnStatusAPI(View):
 
     def get(self, request, spawn_id):
         spawn = get_object_or_404(CNSSpawn, id=spawn_id)
@@ -693,7 +693,7 @@ class HydraGraphSpawnStatusAPI(View):
             spell_id=CNSSpell.BEGIN_PLAY).first()
         if begin_play_node:
             node_status_map[str(begin_play_node.id)] = {
-                'status_id': HydraStatusID.SUCCESS,
+                'status_id': CNSStatusID.SUCCESS,
                 'head_id': None,
             }
 

@@ -14,11 +14,11 @@ def check_next_wave(spawn_id):
     """
     Checks the status of a spawn and triggers the next batch of heads if ready.
     """
-    from .central_nervous_system import Hydra  # circular import
+    from .central_nervous_system import CNS  # circular import
 
     logger.info(f'[CELERY] Checking next wave for Spawn {spawn_id}')
     try:
-        controller = Hydra(spawn_id=spawn_id)
+        controller = CNS(spawn_id=spawn_id)
         # Accessing internal dispatch logic directly for task efficiency
         controller.dispatch_next_wave()
     except Exception as e:
@@ -29,7 +29,7 @@ def check_next_wave(spawn_id):
 
 
 @shared_task(bind=True)
-def cast_hydra_spell(self, head_id):
+def cast_cns_spell(self, head_id):
     """
     The Main Execution Task.
     Instantiates the GenericSpellCaster to run the pipeline.

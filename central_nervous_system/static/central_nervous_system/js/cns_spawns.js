@@ -65,20 +65,20 @@ class DispatcherController {
     }
 
     ensureSpawnExists(spawnData, container) {
-        if (container.querySelector(`.js-hydra-spawn-wrapper > .js-hydra-spawn[data-spawn-id="${spawnData.id}"]`)) return;
+        if (container.querySelector(`.js-cns-spawn-wrapper > .js-cns-spawn[data-spawn-id="${spawnData.id}"]`)) return;
 
-        const tpl = document.getElementById('tpl-hydra-spawn');
+        const tpl = document.getElementById('tpl-cns-spawn');
         const clone = tpl.content.cloneNode(true);
 
-        HydraSpawnController.populateTemplate(clone, spawnData);
+        CNSSpawnController.populateTemplate(clone, spawnData);
 
         container.insertAdjacentElement('afterbegin', clone.firstElementChild);
-        const newEl = container.firstElementChild.querySelector('.js-hydra-spawn');
+        const newEl = container.firstElementChild.querySelector('.js-cns-spawn');
 
         const emptyState = this.root.querySelector('.empty-state');
         if (emptyState) emptyState.remove();
 
-        new HydraSpawnController(newEl);
+        new CNSSpawnController(newEl);
     }
 }
 

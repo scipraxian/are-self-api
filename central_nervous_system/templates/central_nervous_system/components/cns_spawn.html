@@ -1,5 +1,5 @@
-<div class="hydra-spawn-wrapper js-hydra-spawn-wrapper">
-    <div class="hydra-spawn js-hydra-spawn {% if spawn.is_alive %}active-lane{% endif %} {% if spawn.ended_badly %}failed-lane{% endif %}"
+<div class="cns-spawn-wrapper js-cns-spawn-wrapper">
+    <div class="cns-spawn js-cns-spawn {% if spawn.is_alive %}active-lane{% endif %} {% if spawn.ended_badly %}failed-lane{% endif %}"
          data-spawn-id="{{ spawn.id }}"
          data-is-active="{{ spawn.is_alive|yesno:'true,false' }}">
 
@@ -12,14 +12,14 @@
             <div class="spawn-time">{{ spawn.modified|timesince }} ago</div>
         </div>
 
-        {% include "central_nervous_system/components/hydra_spawn_control_card.html" with spawn=spawn %}
+        {% include "central_nervous_system/components/cns_spawn_control_card.html" with spawn=spawn %}
 
         <button class="scroll-btn left" onclick="this.nextElementSibling.scrollBy({left: -300, behavior: 'smooth'})">◄
         </button>
 
         <div class="spawn-track js-spawn-track">
             {% for head in spawn.heads.all %}
-                {% include "central_nervous_system/components/hydra_head.html" with head=head %}
+                {% include "central_nervous_system/components/cns_head.html" with head=head %}
             {% endfor %}
         </div>
 
@@ -30,7 +30,7 @@
 
     <div class="nested-spawns js-nested-spawns">
         {% for child_spawn in spawn.child_spawns.all %}
-            {% include "central_nervous_system/components/hydra_spawn.html" with spawn=child_spawn %}
+            {% include "central_nervous_system/components/cns_spawn.html" with spawn=child_spawn %}
         {% endfor %}
     </div>
 </div>

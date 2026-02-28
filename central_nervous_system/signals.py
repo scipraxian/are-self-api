@@ -2,7 +2,7 @@ from django.db import transaction  # Added transaction import
 from django.db.models.signals import post_save
 from django.dispatch import Signal, receiver
 
-from .models import CNSSpawn, HydraStatusID
+from .models import CNSSpawn, CNSStatusID
 
 # Delayed import of GraphWalker to avoid circularity if any,
 # though signals.py is usually safe.
@@ -23,7 +23,7 @@ def on_spawn_update(sender, instance, created, **kwargs):
         return
 
     # Only react to terminal states
-    if instance.status_id not in [HydraStatusID.SUCCESS, HydraStatusID.FAILED]:
+    if instance.status_id not in [CNSStatusID.SUCCESS, CNSStatusID.FAILED]:
         return
 
     # Check for Parent Link (Delegation)

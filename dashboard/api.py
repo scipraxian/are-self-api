@@ -15,7 +15,7 @@ from config.celery import app as celery_app
 from environments.models import ProjectEnvironment
 from environments.serializers import ProjectEnvironmentSerializer
 from central_nervous_system.models import CNSSpawn, CNSSpellbook
-from central_nervous_system.serializers import CNSSpellbookSerializer, HydraSwimlaneSerializer
+from central_nervous_system.serializers import CNSSpellbookSerializer, CNSSwimlaneSerializer
 
 
 def delayed_shutdown():
@@ -86,7 +86,7 @@ class DashboardViewSet(viewsets.ViewSet):
         if not is_first_load and client_sync_time and not spawns_list:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        response_data['recent_missions'] = HydraSwimlaneSerializer(
+        response_data['recent_missions'] = CNSSwimlaneSerializer(
             spawns_list, many=True
         ).data
         return Response(response_data)

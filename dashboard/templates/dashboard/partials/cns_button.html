@@ -1,12 +1,12 @@
-<div id="hydra-controls" style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem;">
+<div id="cns-controls" style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem;">
     {% if active_spawn %}
         {% include "central_nervous_system/spawn_monitor.html" with spawn=active_spawn heads=heads is_active=is_active is_full_page=False %}
     {% else %}
-        <h3 style="color: #94a3b8; text-transform: uppercase; font-size: 0.9rem; margin-bottom: 1rem;">Hydra
+        <h3 style="color: #94a3b8; text-transform: uppercase; font-size: 0.9rem; margin-bottom: 1rem;">CNS
             Spellbooks</h3>
 
         <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-            {% for book in hydra_spellbooks %}
+            {% for book in cns_spellbooks %}
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; group;">
 
                     <a href="{% url 'central_nervous_system:graph_editor' book.id %}"
@@ -15,10 +15,10 @@
                         ✏️
                     </a>
 
-                    <button hx-post="{% url 'central_nervous_system:hydra_launch' book.id %}"
+                    <button hx-post="{% url 'central_nervous_system:cns_launch' book.id %}"
                             hx-swap="outerHTML"
-                            hx-target="#hydra-controls"
-                            class="hydra-btn {% if 'Fast' in book.name %}btn-validate{% else %}btn-staging{% endif %}">
+                            hx-target="#cns-controls"
+                            class="cns-btn {% if 'Fast' in book.name %}btn-validate{% else %}btn-staging{% endif %}">
                     <span style="font-size: 1.2rem; margin-right: 8px;">
                         {% if 'Fast' in book.name %}🧪{% else %}🏗️{% endif %}
                     </span>
@@ -38,7 +38,7 @@
                     {% endif %}
                 </div>
             {% empty %}
-                <div style="color: #64748b; font-style: italic;">No Hydra Spellbooks found. Run fixtures.</div>
+                <div style="color: #64748b; font-style: italic;">No CNS Spellbooks found. Run fixtures.</div>
             {% endfor %}
         </div>
     {% endif %}

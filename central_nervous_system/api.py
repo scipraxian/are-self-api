@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from .filters import CNSHeadFilter, CNSSpawnFilter
-from .central_nervous_system import Hydra
+from .central_nervous_system import CNS
 from .models import (
     CNSHead,
     CNSSpawn,
@@ -20,10 +20,10 @@ from .models import (
     CNSSpellBookNodeContext,
 )
 from .serializers import (
-    HydraGraphLayoutSerializer,
+    CNSGraphLayoutSerializer,
     CNSHeadSerializer,
-    HydraNodeDetailsSerializer,
-    HydraNodeTelemetrySerializer,
+    CNSNodeDetailsSerializer,
+    CNSNodeTelemetrySerializer,
     CNSSpawnCreateSerializer,
     CNSSpawnLightSerializer,
     CNSSpawnSerializer,
@@ -78,7 +78,7 @@ class CNSSpellbookViewSet(viewsets.ModelViewSet):
             },
         )
 
-        serializer = HydraGraphLayoutSerializer(book)
+        serializer = CNSGraphLayoutSerializer(book)
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
@@ -139,7 +139,7 @@ class CNSSpellbookNodeViewSet(viewsets.ModelViewSet):
     def inspector_details(self, request, pk=None):
         """Returns the fully resolved variable context matrix for a node."""
         node = self.get_object()
-        serializer = HydraNodeDetailsSerializer(node)
+        serializer = CNSNodeDetailsSerializer(node)
         return Response(serializer.data)
 
 
@@ -196,7 +196,7 @@ class CNSSpawnViewSet(
         book_id = serializer.validated_data['spellbook_id']
 
         try:
-            controller = Hydra(spellbook_id=book_id)
+            controller = CNS(spellbook_id=book_id)
             controller.start()
             read_serializer = CNSSpawnSerializer(controller.spawn)
             return Response(read_serializer.data,
@@ -226,14 +226,14 @@ class CNSSpawnViewSet(
     @action(detail=True, methods=['post'])
     def stop(self, request, pk=None):
         """Graceful stop."""
-        controller = Hydra(spawn_id=self.get_object().id)
+        controller = CNS(spawn_id=self.get_object().id)
         controller.stop_gracefully()
         return Response({'status': 'Stopping signaled.'})
 
     @action(detail=True, methods=['post'])
     def terminate(self, request, pk=None):
         """Hard Kill."""
-        controller = Hydra(spawn_id=self.get_object().id)
+        controller = CNS(spawn_id=self.get_object().id)
         controller.terminate()
         return Response({'status': 'Termination complete.'})
 
@@ -259,7 +259,7 @@ class CNSHeadViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin,
     def get_serializer_class(self):
         if self.action == 'list':
             return CNSHeadSerializer
-        return HydraNodeTelemetrySerializer
+        return CNSNodeTelemetrySerializer
 
     @action(detail=True, methods=['get'])
     def status(self, request, pk=None):

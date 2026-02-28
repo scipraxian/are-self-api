@@ -7,7 +7,7 @@
     </button>
 
     <button class="launch-btn"
-            hx-post="{% url 'central_nervous_system:hydra_launch' book.id %}?no_redirect=true"
+            hx-post="{% url 'central_nervous_system:cns_launch' book.id %}?no_redirect=true"
             hx-swap="none">
         {{ book.name }}
     </button>

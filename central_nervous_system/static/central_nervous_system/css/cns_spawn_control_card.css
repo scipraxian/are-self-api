@@ -1,4 +1,4 @@
-.hydra-control-card {
+.cns-control-card {
     flex: 0 0 160px;
     background: rgba(17, 24, 39, 0.6);
     border: 1px solid rgba(56, 189, 248, 0.3);
@@ -12,7 +12,7 @@
     gap: 8px;
 }
 
-.hydra-control-card.active-state {
+.cns-control-card.active-state {
     border-color: rgba(139, 92, 246, 0.5);
     border-left-color: rgba(139, 92, 246, 0.9);
 }

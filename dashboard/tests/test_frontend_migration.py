@@ -29,25 +29,25 @@ class FrontendMigrationTests(TestCase):
 
         # 2. Check for new JS assets
         self.assertContains(response,
-                            '/central_nervous_system/js/hydra_head.js',
-                            msg_prefix="Missing hydra_head.js")
+                            '/central_nervous_system/js/cns_head.js',
+                            msg_prefix="Missing cns_head.js")
         self.assertContains(response,
-                            '/central_nervous_system/js/hydra_spawns.js',
-                            msg_prefix="Missing hydra_spawns.js")
+                            '/central_nervous_system/js/cns_spawns.js',
+                            msg_prefix="Missing cns_spawns.js")
         self.assertContains(response,
-                            '/central_nervous_system/js/hydra_spawn.js',
-                            msg_prefix="Missing hydra_spawn.js")
+                            '/central_nervous_system/js/cns_spawn.js',
+                            msg_prefix="Missing cns_spawn.js")
         self.assertContains(response,
-                            '/central_nervous_system/js/hydra_spawn_control_card.js',
-                            msg_prefix="Missing hydra_spawn_control_card.js")
+                            '/central_nervous_system/js/cns_spawn_control_card.js',
+                            msg_prefix="Missing cns_spawn_control_card.js")
 
         # 3. Check for new CSS assets
         self.assertContains(response,
-                            '/central_nervous_system/css/hydra_head.css',
-                            msg_prefix="Missing hydra_head.css")
+                            '/central_nervous_system/css/cns_head.css',
+                            msg_prefix="Missing cns_head.css")
         self.assertContains(response,
-                            '/central_nervous_system/css/hydra_spawns.css',
-                            msg_prefix="Missing hydra_spawns.css")
+                            '/central_nervous_system/css/cns_spawns.css',
+                            msg_prefix="Missing cns_spawns.css")
 
         # 4. Check for removal of legacy assets
         self.assertNotContains(
@@ -57,11 +57,11 @@ class FrontendMigrationTests(TestCase):
 
         # 5. Check for new Templates
         self.assertContains(response,
-                            '<template id="tpl-hydra-head">',
-                            msg_prefix="Missing tpl-hydra-head")
+                            '<template id="tpl-cns-head">',
+                            msg_prefix="Missing tpl-cns-head")
         self.assertContains(response,
-                            '<template id="tpl-hydra-spawn">',
-                            msg_prefix="Missing tpl-hydra-spawn")
+                            '<template id="tpl-cns-spawn">',
+                            msg_prefix="Missing tpl-cns-spawn")
         self.assertNotContains(response,
                                '<template id="tpl-swimlane">',
                                msg_prefix="Old tpl-swimlane should be removed")

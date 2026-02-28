@@ -14,7 +14,7 @@ from central_nervous_system.models import CNSSpellbook
 
 
 class DashboardAPITest(TestCase):
-    # CRITICAL: Order matters. Environments -> Agent Statuses -> Agents -> Hydra
+    # CRITICAL: Order matters. Environments -> Agent Statuses -> Agents -> CNS
     fixtures = [
         'environments/fixtures/initial_data.json',
         'talos_agent/fixtures/initial_data.json',

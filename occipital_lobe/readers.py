@@ -57,7 +57,7 @@ def extract_error_blocks(full_log_content):
 
 def read_build_log(run_id, max_token_budget=128000):
     """
-    Retrieves and sanitizes log data for a specific Hydra Spawn.
+    Retrieves and sanitizes log data for a specific CNS Spawn.
     Implements dynamic truncation based on the provided token budget.
     """
     try:

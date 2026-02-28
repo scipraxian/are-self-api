@@ -8,10 +8,10 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@700;800&family=JetBrains+Mono&display=swap"
           rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'central_nervous_system/css/hydra_head.css' %}">
-    <link rel="stylesheet" href="{% static 'central_nervous_system/css/hydra_spawn_control_card.css' %}">
-    <link rel="stylesheet" href="{% static 'central_nervous_system/css/hydra_spawn.css' %}">
-    <link rel="stylesheet" href="{% static 'central_nervous_system/css/hydra_spawns.css' %}">
+    <link rel="stylesheet" href="{% static 'central_nervous_system/css/cns_head.css' %}">
+    <link rel="stylesheet" href="{% static 'central_nervous_system/css/cns_spawn_control_card.css' %}">
+    <link rel="stylesheet" href="{% static 'central_nervous_system/css/cns_spawn.css' %}">
+    <link rel="stylesheet" href="{% static 'central_nervous_system/css/cns_spawns.css' %}">
 </head>
 <body>
 <script>
@@ -29,8 +29,8 @@
     <main id="spawns-dispatcher-root" class="spawns-list"></main>
 </div>
 
-<template id="tpl-hydra-head">
-    <a href="#" class="hydra-head-card js-hydra-head">
+<template id="tpl-cns-head">
+    <a href="#" class="cns-head-card js-cns-head">
         <div class="head-header">
             <div class="head-name js-head-name">Unknown Node</div>
             <div class="card-drill-btn" title="View Logs">☍</div>
@@ -46,9 +46,9 @@
     </a>
 </template>
 
-<template id="tpl-hydra-spawn">
-    <div class="hydra-spawn-wrapper js-hydra-spawn-wrapper">
-        <div class="hydra-spawn js-hydra-spawn">
+<template id="tpl-cns-spawn">
+    <div class="cns-spawn-wrapper js-cns-spawn-wrapper">
+        <div class="cns-spawn js-cns-spawn">
 
             <div class="spawn-header">
                 <div class="spawn-title js-spawn-title">Unknown Protocol</div>
@@ -59,7 +59,7 @@
                 <div class="spawn-time js-spawn-time">Just now</div>
             </div>
 
-            <div class="hydra-control-card js-hydra-control-card">
+            <div class="cns-control-card js-cns-control-card">
                 <a href="#" class="btn-control js-btn-monitor" title="Monitor Graph">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -97,9 +97,9 @@
     </div>
 </template>
 
-<script src="{% static 'central_nervous_system/js/hydra_head.js' %}"></script>
-<script src="{% static 'central_nervous_system/js/hydra_spawn_control_card.js' %}"></script>
-<script src="{% static 'central_nervous_system/js/hydra_spawn.js' %}"></script>
-<script src="{% static 'central_nervous_system/js/hydra_spawns.js' %}"></script>
+<script src="{% static 'central_nervous_system/js/cns_head.js' %}"></script>
+<script src="{% static 'central_nervous_system/js/cns_spawn_control_card.js' %}"></script>
+<script src="{% static 'central_nervous_system/js/cns_spawn.js' %}"></script>
+<script src="{% static 'central_nervous_system/js/cns_spawns.js' %}"></script>
 </body>
 </html>

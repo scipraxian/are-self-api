@@ -16,7 +16,7 @@
         <div class="breadcrumbs">
             <a href="{% url 'dashboard:home' %}">Dashboard</a>
             <span class="separator">/</span>
-            <a href="{% url 'central_nervous_system:hydra_spawn_monitor' head.spawn.id %}?full=True">Monitor</a>
+            <a href="{% url 'central_nervous_system:cns_spawn_monitor' head.spawn.id %}?full=True">Monitor</a>
             <span class="separator">/</span>
             <span class="current">{{ head.spell.name }}</span>
 
@@ -41,7 +41,7 @@
                     {% endif %}>
                 {% if is_active %}
                     <button class="btn-secondary"
-                            hx-post="{% url 'central_nervous_system:hydra_spawn_stop_graceful' head.spawn.id %}"
+                            hx-post="{% url 'central_nervous_system:cns_spawn_stop_graceful' head.spawn.id %}"
                             hx-swap="outerHTML"
                             style="border-color: #f85149; color: #f85149; background: rgba(248, 81, 73, 0.1);">
                         Stop Process

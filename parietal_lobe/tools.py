@@ -6,7 +6,7 @@ import uuid  # <--- RESTORED
 from django.conf import settings
 
 from central_nervous_system.models import CNSHead
-from central_nervous_system.tasks import cast_hydra_spell
+from central_nervous_system.tasks import cast_cns_spell
 
 logger = logging.getLogger(__name__)
 
@@ -157,7 +157,7 @@ def ai_execute_task(head_id):
     except ValueError:
         return f"Error: Invalid Head ID '{head_id}'. Must be a UUID."
     try:
-        cast_hydra_spell.delay(str(head_id))
+        cast_cns_spell.delay(str(head_id))
         return f'Successfully queued spell for Head {head_id}.'
     except Exception as e:
         return f'Error casting spell: {str(e)}'
