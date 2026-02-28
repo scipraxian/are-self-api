@@ -150,7 +150,7 @@ class ParietalLobe:
 
         if focus_mod < 0 and self.session.current_focus + focus_mod < 0:
             fizzle_msg = (
-                f'SYSTEM OVERRIDE: Spell Fizzled! Insufficient Focus. '
+                f'SYSTEM OVERRIDE: Effector Fizzled! Insufficient Focus. '
                 f'(Requires {-focus_mod}, but you only have {self.session.current_focus}). '
                 f'You must use Synthesis tools (like mcp_save_memory) to restore Focus.'
             )

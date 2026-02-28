@@ -10,7 +10,7 @@ from environments.models import (
     ProjectEnvironmentStatus,
     ProjectEnvironmentType,
 )
-from central_nervous_system.models import CNSSpellbook
+from central_nervous_system.models import NeuralPathway
 
 
 class DashboardAPITest(TestCase):
@@ -38,17 +38,17 @@ class DashboardAPITest(TestCase):
         ProjectEnvironment.objects.create(
             name='Test Env API', type=type_ue, status=status_ok
         )
-        CNSSpellbook.objects.create(name='Test Protocol API')
+        NeuralPathway.objects.create(name='Test Protocol API')
 
         url = '/api/v1/dashboard/summary/'
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('environments', response.data)
-        self.assertIn('spellbooks', response.data)
+        self.assertIn('pathways', response.data)
         self.assertIn('recent_missions', response.data)
         self.assertTrue(len(response.data['environments']) > 0)
-        self.assertTrue(len(response.data['spellbooks']) > 0)
+        self.assertTrue(len(response.data['pathways']) > 0)
 
     @patch('dashboard.api.threading.Thread.start')
     @patch('dashboard.api.celery_app.control.shutdown')

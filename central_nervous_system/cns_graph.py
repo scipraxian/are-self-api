@@ -15,13 +15,13 @@ from environments.variable_renderer import VariableRenderer
 
 from .central_nervous_system import CNS
 from .models import (
-    CNSSpawn,
-    CNSSpell,
-    CNSSpellbook,
-    CNSSpellbookConnectionWire,
-    CNSSpellbookNode,
+    SpikeTrain,
+    Effector,
+    NeuralPathway,
+    Axon,
+    Neuron,
     CNSStatusID,
-    CNSWireType,
+    AxonType,
 )
 
 logger = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ TYPE_FAIL_STR = 'fail'
 # JSON Response Keys
 KEY_STATUS = 'status'
 KEY_ID = 'id'
-KEY_NODES = 'nodes'
+KEY_NODES = 'neurons'
 KEY_CONNECTIONS = 'connections'
 KEY_LIBRARY = 'library'
 KEY_TITLE = 'title'
@@ -109,10 +109,10 @@ class DeletePayload:
 class CNSGraphAPI(View):
 
     def get(self, request: HttpRequest, book_id: str, action: str = None):
-        spellbook = get_object_or_404(CNSSpellbook, id=book_id)
+        pathway = get_object_or_404(NeuralPathway, id=book_id)
         if action == ACTION_STATUS:
             spawn_id = request.GET.get('spawn_id')
-            return get_execution_status(spellbook, spawn_id)
+            return get_execution_status(pathway, spawn_id)
 
         dispatch_map: Dict[str | None, Callable] = {
             ACTION_LIBRARY:
@@ -126,11 +126,11 @@ class CNSGraphAPI(View):
         }
         handler = dispatch_map.get(action)
         if handler:
-            return handler(spellbook)
+            return handler(pathway)
         return HttpResponseBadRequest(f'Unknown action: {action}')
 
     def post(self, request: HttpRequest, book_id: str, action: str):
-        spellbook = get_object_or_404(CNSSpellbook, id=book_id)
+        pathway = get_object_or_404(NeuralPathway, id=book_id)
         try:
             payload = json.loads(request.body)
         except json.JSONDecodeError:
@@ -147,35 +147,35 @@ class CNSGraphAPI(View):
         }
         handler = dispatch_map.get(action)
         if handler:
-            return handler(spellbook, payload)
+            return handler(pathway, payload)
         return HttpResponseBadRequest(f'Unknown action: {action}')
 
 
 # --- LOGIC HANDLERS ---
 
 
-def _ensure_begin_play_node(spellbook: CNSSpellbook) -> CNSSpellbookNode:
+def _ensure_begin_play_node(pathway: NeuralPathway) -> Neuron:
     """Guarantees the existence of the 'BeginPlay' anchor node."""
-    node = spellbook.nodes.filter(is_root=True).first()
+    node = pathway.neurons.filter(is_root=True).first()
     if not node:
-        node = CNSSpellbookNode.objects.create(
-            spellbook=spellbook,
-            spell_id=CNSSpell.BEGIN_PLAY,
+        node = Neuron.objects.create(
+            pathway=pathway,
+            spell_id=Effector.BEGIN_PLAY,
             is_root=True,
             ui_json=json.dumps(DEFAULT_UI_JSON_DICT),
         )
     return node
 
 
-def get_graph_layout(spellbook: CNSSpellbook) -> JsonResponse:
+def get_graph_layout(pathway: NeuralPathway) -> JsonResponse:
     """
     Returns the graph layout.
-    Maps CNSWireType IDs back to frontend strings ('success', 'fail', 'flow').
+    Maps AxonType IDs back to frontend strings ('success', 'fail', 'flow').
     """
-    _ensure_begin_play_node(spellbook)
+    _ensure_begin_play_node(pathway)
 
     nodes_data = []
-    for n in spellbook.nodes.all().select_related('spell'):
+    for n in pathway.neurons.all().select_related('effector'):
         try:
             ui = json.loads(n.ui_json)
         except json.JSONDecodeError:
@@ -183,16 +183,16 @@ def get_graph_layout(spellbook: CNSSpellbook) -> JsonResponse:
 
         is_delegated = bool(n.invoked_spellbook_id)
 
-        title = n.invoked_spellbook.name if is_delegated else n.spell.name
+        title = n.invoked_pathway.name if is_delegated else n.effector.name
 
-        is_root = (n.spell_id == CNSSpell.BEGIN_PLAY) and not is_delegated
+        is_root = (n.effector_id == Effector.BEGIN_PLAY) and not is_delegated
 
         node_data = {
             KEY_ID: n.id,
             KEY_TITLE: title,
             KEY_X: ui.get(KEY_X, 0),
             KEY_Y: ui.get(KEY_Y, 0),
-            'spell_id': n.spell_id,
+            'spell_id': n.effector_id,
             KEY_IS_ROOT: is_root,
             'has_override': n.distribution_mode is not None,
         }
@@ -205,13 +205,13 @@ def get_graph_layout(spellbook: CNSSpellbook) -> JsonResponse:
     # Map DB IDs to Frontend Strings for color coding
     # 1=Flow, 2=Success, 3=Failure
     type_to_string = {
-        CNSWireType.TYPE_FLOW: TYPE_FLOW_STR,
-        CNSWireType.TYPE_SUCCESS: TYPE_SUCCESS_STR,
-        CNSWireType.TYPE_FAILURE: TYPE_FAIL_STR,
+        AxonType.TYPE_FLOW: TYPE_FLOW_STR,
+        AxonType.TYPE_SUCCESS: TYPE_SUCCESS_STR,
+        AxonType.TYPE_FAILURE: TYPE_FAIL_STR,
     }
 
     wires_data = []
-    for w in spellbook.wires.all():
+    for w in pathway.axons.all():
         wires_data.append({
             'from_node_id': w.source_id,
             'to_node_id': w.target_id,
@@ -222,24 +222,24 @@ def get_graph_layout(spellbook: CNSSpellbook) -> JsonResponse:
     return JsonResponse({KEY_NODES: nodes_data, KEY_CONNECTIONS: wires_data})
 
 
-def handle_connect(book: CNSSpellbook, data: dict) -> JsonResponse:
+def handle_connect(book: NeuralPathway, data: dict) -> JsonResponse:
     """
-    Connects two nodes using CNSWireType.
+    Connects two neurons using AxonType.
     """
     p = ConnectPayload(**data)
 
     # Map frontend string ('success', etc) to DB ID (2, etc)
     string_to_type = {
-        TYPE_FLOW_STR: CNSWireType.TYPE_FLOW,
-        TYPE_SUCCESS_STR: CNSWireType.TYPE_SUCCESS,
-        TYPE_FAIL_STR: CNSWireType.TYPE_FAILURE,
+        TYPE_FLOW_STR: AxonType.TYPE_FLOW,
+        TYPE_SUCCESS_STR: AxonType.TYPE_SUCCESS,
+        TYPE_FAIL_STR: AxonType.TYPE_FAILURE,
     }
 
     # Default to FLOW (White Wire) if unknown
-    wire_type_id = string_to_type.get(p.type, CNSWireType.TYPE_FLOW)
+    wire_type_id = string_to_type.get(p.type, AxonType.TYPE_FLOW)
 
-    wire, created = CNSSpellbookConnectionWire.objects.get_or_create(
-        spellbook=book,
+    wire, created = Axon.objects.get_or_create(
+        pathway=book,
         source_id=p.source_node_id,
         target_id=p.target_node_id,
         defaults={'type_id': wire_type_id},
@@ -256,24 +256,24 @@ def handle_connect(book: CNSSpellbook, data: dict) -> JsonResponse:
 # --- STANDARD HANDLERS (Unchanged logic, just context) ---
 
 
-def handle_move_node(book: CNSSpellbook, data: dict) -> JsonResponse:
+def handle_move_node(book: NeuralPathway, data: dict) -> JsonResponse:
     p = MovePayload(**data)
-    node = get_object_or_404(CNSSpellbookNode, id=p.node_id, spellbook=book)
+    node = get_object_or_404(Neuron, id=p.neuron_id, pathway=book)
     node.ui_json = json.dumps({KEY_X: p.x, KEY_Y: p.y})
     node.save(update_fields=['ui_json'])
     return JsonResponse({KEY_STATUS: STATUS_MOVED})
 
 
-def handle_disconnect(book: CNSSpellbook, data: dict) -> JsonResponse:
+def handle_disconnect(book: NeuralPathway, data: dict) -> JsonResponse:
     source_id = data.get('source_node_id')
     target_id = data.get('target_node_id')
-    CNSSpellbookConnectionWire.objects.filter(spellbook=book,
+    Axon.objects.filter(pathway=book,
                                                 source_id=source_id,
                                                 target_id=target_id).delete()
     return JsonResponse({KEY_STATUS: STATUS_DISCONNECTED})
 
 
-def handle_update_book(book: CNSSpellbook, payload: dict) -> JsonResponse:
+def handle_update_book(book: NeuralPathway, payload: dict) -> JsonResponse:
     new_name = payload.get('name')
     if new_name:
         book.name = new_name
@@ -282,13 +282,13 @@ def handle_update_book(book: CNSSpellbook, payload: dict) -> JsonResponse:
     return HttpResponseBadRequest('Name required')
 
 
-def handle_delete_node(book: CNSSpellbook, data: dict) -> JsonResponse:
+def handle_delete_node(book: NeuralPathway, data: dict) -> JsonResponse:
     p = DeletePayload(**data)
-    node = get_object_or_404(CNSSpellbookNode, id=p.node_id, spellbook=book)
-    # [FIX] Delegated nodes might use BEGIN_PLAY ID as placeholder, but they ARE deletable.
+    node = get_object_or_404(Neuron, id=p.neuron_id, pathway=book)
+    # [FIX] Delegated neurons might use BEGIN_PLAY ID as placeholder, but they ARE deletable.
     # So we only block deletion if it's NOT delegated AND is explicitly the root anchor.
     is_delegated = bool(node.invoked_spellbook_id)
-    if not is_delegated and node.spell_id == CNSSpell.BEGIN_PLAY:
+    if not is_delegated and node.effector_id == Effector.BEGIN_PLAY:
         return JsonResponse(
             {
                 KEY_STATUS: STATUS_ERROR,
@@ -300,7 +300,7 @@ def handle_delete_node(book: CNSSpellbook, data: dict) -> JsonResponse:
     return JsonResponse({KEY_STATUS: STATUS_DELETED})
 
 
-def handle_add_node(spellbook: CNSSpellbook, payload: dict) -> JsonResponse:
+def handle_add_node(pathway: NeuralPathway, payload: dict) -> JsonResponse:
     spell_id = payload.get('spell_id')
     invoked_book_id = payload.get('invoked_spellbook_id')
 
@@ -308,30 +308,30 @@ def handle_add_node(spellbook: CNSSpellbook, payload: dict) -> JsonResponse:
 
     if invoked_book_id:
         # It's a Sub-Graph Node
-        # We need a placeholder Spell to satisfy the DB constraint.
-        # Ideally, we have a specific 'SubGraph' spell.
+        # We need a placeholder Effector to satisfy the DB constraint.
+        # Ideally, we have a specific 'SubGraph' effector.
         # For now, we'll try to find one named 'SubGraph' or fallback to the first available non-root.
         # This is a bit hacky but keeps schema simple.
 
-        # Try to find a spell that looks like a runner
-        dummy_spell = CNSSpell.objects.filter(
+        # Try to find a effector that looks like a runner
+        dummy_spell = Effector.objects.filter(
             name__icontains='Sub-Graph').first()
         if not dummy_spell:
-            dummy_spell = CNSSpell.objects.first()  # Emergency fallback
+            dummy_spell = Effector.objects.first()  # Emergency fallback
 
         spell_id = dummy_spell.id
     else:
         # Standard Spell
-        if int(spell_id) == CNSSpell.BEGIN_PLAY:
-            if spellbook.nodes.filter(is_root=True).exists():
+        if int(spell_id) == Effector.BEGIN_PLAY:
+            if pathway.neurons.filter(is_root=True).exists():
                 return JsonResponse(
                     {'error': 'Begin Play node already exists.'}, status=400)
             is_root = True
 
     ui_data = {'x': payload.get('x', 0), 'y': payload.get('y', 0)}
 
-    node = CNSSpellbookNode.objects.create(
-        spellbook=spellbook,
+    node = Neuron.objects.create(
+        pathway=pathway,
         spell_id=spell_id,
         invoked_spellbook_id=invoked_book_id,  # <--- NEW FIELD
         is_root=is_root,
@@ -340,17 +340,17 @@ def handle_add_node(spellbook: CNSSpellbook, payload: dict) -> JsonResponse:
     return JsonResponse({'id': str(node.id)})
 
 
-def get_library(spellbook: CNSSpellbook) -> JsonResponse:
+def get_library(pathway: NeuralPathway) -> JsonResponse:
     # 1. Standard Spells
-    spells = list(
-        CNSSpell.objects.values('id', 'name', 'distribution_mode__name'))
+    effectors = list(
+        Effector.objects.values('id', 'name', 'distribution_mode__name'))
     # Tag them as 'Spells'
-    for s in spells:
+    for s in effectors:
         s['category'] = 'Spells'
 
-    # 2. Sub-Graphs (Spellbooks)
+    # 2. Sub-Graphs (NeuralPathways)
     # Exclude self to prevent recursion!
-    books = CNSSpellbook.objects.exclude(id=spellbook.id).values('id', 'name')
+    books = NeuralPathway.objects.exclude(id=pathway.id).values('id', 'name')
     for b in books:
         b['category'] = 'Sub-Graphs'
         # We need to distinguish IDs. Let's send them as `invoked_spellbook_id` or similar
@@ -359,37 +359,37 @@ def get_library(spellbook: CNSSpellbook) -> JsonResponse:
         b['is_book'] = True
 
     # Combine
-    return JsonResponse({KEY_LIBRARY: spells + list(books)})
+    return JsonResponse({KEY_LIBRARY: effectors + list(books)})
 
 
-def get_node_details(spellbook: CNSSpellbook,
+def get_node_details(pathway: NeuralPathway,
                      request: HttpRequest) -> JsonResponse:
     node_id = request.GET.get('node_id')
-    node = get_object_or_404(CNSSpellbookNode,
+    node = get_object_or_404(Neuron,
                              id=node_id,
-                             spellbook=spellbook)
+                             pathway=pathway)
 
-    # 1. Inspect the Spell to find variables
+    # 1. Inspect the Effector to find variables
     # We look at all arguments and switches
     variables = set()
 
-    if node.spell:
+    if node.effector:
         # Check Args
-        args = node.spell.cnsspellargumentassignment_set.all()
+        args = node.effector.cnsspellargumentassignment_set.all()
         for a in args:
             raw = a.argument.argument
             found = re.findall(r'\{\{\s*(\w+)\s*\}\}', raw)
             variables.update(found)
 
         # Check Switches
-        switches = node.spell.switches.all()
+        switches = node.effector.switches.all()
         for s in switches:
             raw = s.flag + (s.value or '')
             found = re.findall(r'\{\{\s*(\w+)\s*\}\}', raw)
             variables.update(found)
 
         # Check Executable Args (Base args)
-        exe_args = node.spell.talos_executable.talosexecutableargumentassignment_set.all(
+        exe_args = node.effector.talos_executable.talosexecutableargumentassignment_set.all(
         )
         for a in exe_args:
             raw = a.argument.argument
@@ -397,20 +397,20 @@ def get_node_details(spellbook: CNSSpellbook,
             variables.update(found)
 
     # 2. Get Global Context (Blue)
-    # We use the spellbook's environment
-    global_context = VariableRenderer.extract_variables(spellbook.environment)
+    # We use the pathway's environment
+    global_context = VariableRenderer.extract_variables(pathway.environment)
 
     # 3. Get Overrides (Yellow)
-    # CNSSpellBookNodeContext doesn't exist in imports, let's dynamic import or use related manager
-    # node.cnsspellbooknodecontext_set assuming generic relation or we need to import model
-    # The model name is CNSSpellBookNodeContext in models.py
-    from .models import CNSSpellBookNodeContext
+    # NeuronContext doesn't exist in imports, let's dynamic import or use related manager
+    # node.neuroncontext_set assuming generic relation or we need to import model
+    # The model name is NeuronContext in models.py
+    from .models import NeuronContext
 
     overrides = {
-        c.key: c.value for c in node.cnsspellbooknodecontext_set.all()
+        c.key: c.value for c in node.neuroncontext_set.all()
     }
 
-    # [FIX] Ensure overridden variables are included even if not in the spell definition
+    # [FIX] Ensure overridden variables are included even if not in the effector definition
     variables.update(overrides.keys())
 
     # Build the Smart Matrix
@@ -444,23 +444,23 @@ def get_node_details(spellbook: CNSSpellbook,
 
     return JsonResponse({
         'node_id': node.id,
-        'name': node.spell.name if node.spell else 'Unknown',
-        'description': node.spell.description if node.spell else '',
+        'name': node.effector.name if node.effector else 'Unknown',
+        'description': node.effector.description if node.effector else '',
         'distribution_mode_id': node.distribution_mode_id,
         'context_matrix': matrix,
     })
 
 
-def handle_save_node_context(spellbook: CNSSpellbook,
+def handle_save_node_context(pathway: NeuralPathway,
                              payload: dict) -> JsonResponse:
     node_id = payload.get('node_id')
     updates = payload.get('updates', [])  # List of {key, value}
 
-    node = get_object_or_404(CNSSpellbookNode,
+    node = get_object_or_404(Neuron,
                              id=node_id,
-                             spellbook=spellbook)
+                             pathway=pathway)
 
-    from .models import CNSSpellBookNodeContext
+    from .models import NeuronContext
 
     for update in updates:
         key = update.get('key')
@@ -471,11 +471,11 @@ def handle_save_node_context(spellbook: CNSSpellbook,
 
         if not value:
             # Remove override if empty
-            CNSSpellBookNodeContext.objects.filter(node=node,
+            NeuronContext.objects.filter(neuron=node,
                                                      key=key).delete()
         else:
-            CNSSpellBookNodeContext.objects.update_or_create(
-                node=node, key=key, defaults={'value': value})
+            NeuronContext.objects.update_or_create(
+                neuron=node, key=key, defaults={'value': value})
 
     # Also handle distribution mode update
     dist_mode = payload.get('distribution_mode_id')
@@ -486,7 +486,7 @@ def handle_save_node_context(spellbook: CNSSpellbook,
     return JsonResponse({'status': 'saved'})
 
 
-def get_node_telemetry(spellbook: CNSSpellbook,
+def get_node_telemetry(pathway: NeuralPathway,
                        request: HttpRequest) -> JsonResponse:
     node_id = request.GET.get('node_id')
     spawn_id = request.GET.get('spawn_id')
@@ -494,61 +494,61 @@ def get_node_telemetry(spellbook: CNSSpellbook,
     if not spawn_id:
         return JsonResponse({'error': 'No spawn_id'}, status=400)
 
-    # Get the latest Head for this node in this spawn
-    # We join CNSHead -> CNSSpawn
-    from .models import CNSHead, CNSSpawn, CNSSpellbookNode
+    # Get the latest Spike for this node in this spike_train
+    # We join Spike -> SpikeTrain
+    from .models import Spike, SpikeTrain, Neuron
 
-    # We need the head belonging to the spawn.
-    # The spawn might have multiple heads if looped, but usually we want the latest.
-    head = (CNSHead.objects.filter(
+    # We need the spike belonging to the spike_train.
+    # The spike_train might have multiple spikes if looped, but usually we want the latest.
+    spike = (Spike.objects.filter(
         spawn_id=spawn_id, node_id=node_id).order_by('-created').first())
 
-    if not head:
+    if not spike:
         return JsonResponse({'status': 'pending', 'logs': ''})
 
     # --- 1. LOGS ---
-    # Spell Log (Standard Output usually)
-    logs = head.application_log or ''
+    # Effector Log (Standard Output usually)
+    logs = spike.application_log or ''
     log_lines = logs.split('\n')
     spell_tail = log_lines[-20:] if len(log_lines) > 20 else log_lines
 
     # Execution Log (Wrapper Output)
-    exec_logs = head.execution_log or ''
+    exec_logs = spike.execution_log or ''
     exec_lines = exec_logs.split('\n')
     exec_tail = exec_lines[-20:] if len(exec_lines) > 20 else exec_lines
 
     # --- 2. COMMAND ---
     # Try to find the command in the execution log first (often printed by wrapper)
-    # If not found, reconstruct it from the spell definition
+    # If not found, reconstruct it from the effector definition
     command = 'Command not captured.'
-    if head.execution_log and 'Command:' in head.execution_log:
+    if spike.execution_log and 'Command:' in spike.execution_log:
         # Simple heuristic if available
         pass
 
     # Let's reconstruct it "As Configured Now" (best effort if not snapshot)
-    if head.spell:
+    if spike.effector:
         # We need to rebuild the context to get accurate command
         # This is expensive but requested.
         try:
             # Re-fetch node to be safe
-            node = CNSSpellbookNode.objects.get(id=node_id)
+            node = Neuron.objects.get(id=node_id)
 
-            # Get Overrides (We assume they haven't changed since spawn for this view,
+            # Get Overrides (We assume they haven't changed since spike_train for this view,
             # or we accept that this shows "Current Config" command)
-            # The model name is CNSSpellBookNodeContext in models.py
-            from .models import CNSSpellBookNodeContext
+            # The model name is NeuronContext in models.py
+            from .models import NeuronContext
 
             overrides = {
                 c.key: c.value
-                for c in node.cnsspellbooknodecontext_set.all()
+                for c in node.neuroncontext_set.all()
             }
 
             # We can't easily get the EXACT full command without the full context resolution
             # (including environment) which might have changed.
             # But let's call get_full_command with what we have.
-            # We need the environment from the spellbook.
-            cmd_list = head.spell.get_full_command(
-                environment=spellbook.environment, extra_context=overrides)
+            # We need the environment from the pathway.
+            cmd_list = spike.effector.get_full_command(
+                environment=pathway.environment, extra_context=overrides)
             command = ' '.join(cmd_list)
         except Exception as e:
             command = f'Error interpreting command: {e}'
@@ -557,38 +557,38 @@ def get_node_telemetry(spellbook: CNSSpellbook,
     # We want to show what parameters were used.
     # We will reuse the logic from get_node_details but format for read-only.
     # Note: This shows CURRENT node config, not necessarily what ran if changed since.
-    # To show what ran, we'd need to parse `head.execution_log` or `spawn.context_data`.
+    # To show what ran, we'd need to parse `spike.execution_log` or `spike_train.context_data`.
     # For now, we show "Current Configuration" context.
 
     # ... (Reusing logic from get_node_details, refactor recommended if reused often)
     # Copied logic for safety and speed:
     variables = set()
-    if head.spell:
+    if spike.effector:
         # Args
-        for a in head.spell.cnsspellargumentassignment_set.all():
+        for a in spike.effector.cnsspellargumentassignment_set.all():
             found = re.findall(r'\{\{\s*(\w+)\s*\}\}', a.argument.argument)
             variables.update(found)
         # Switches
-        for s in head.spell.switches.all():
+        for s in spike.effector.switches.all():
             found = re.findall(r'\{\{\s*(\w+)\s*\}\}', s.flag + (s.value or ''))
             variables.update(found)
         # Exec Args
-        for a in head.spell.talos_executable.talosexecutableargumentassignment_set.all(
+        for a in spike.effector.talos_executable.talosexecutableargumentassignment_set.all(
         ):
             found = re.findall(r'\{\{\s*(\w+)\s*\}\}', a.argument.argument)
             variables.update(found)
 
-    global_context = VariableRenderer.extract_variables(spellbook.environment)
+    global_context = VariableRenderer.extract_variables(pathway.environment)
 
     # If we have the node, get overrides
     overrides = {}
-    if head.node:  # Should usually be true
-        # The model name is CNSSpellBookNodeContext in models.py
-        from .models import CNSSpellBookNodeContext
+    if spike.neuron:  # Should usually be true
+        # The model name is NeuronContext in models.py
+        from .models import NeuronContext
 
         overrides = {
             c.key: c.value
-            for c in head.node.cnsspellbooknodecontext_set.all()
+            for c in spike.neuron.neuroncontext_set.all()
         }
 
     matrix = []
@@ -606,53 +606,53 @@ def get_node_telemetry(spellbook: CNSSpellbook,
         matrix.append({'key': var, 'value': val, 'source': source})
 
     return JsonResponse({
-        'status': head.status.name,
-        'status_id': head.status_id,
-        'agent': str(head.target) if head.target else 'Pending...',
-        'exit_code': head.result_code,
-        'logs': '\n'.join(spell_tail),  # Main Log (Spell Output)
+        'status': spike.status.name,
+        'status_id': spike.status_id,
+        'agent': str(spike.target) if spike.target else 'Pending...',
+        'exit_code': spike.result_code,
+        'logs': '\n'.join(spell_tail),  # Main Log (Effector Output)
         'exec_logs': '\n'.join(exec_tail),  # Wrapper Log (System)
         'command': command,
         'context_matrix': matrix,
-        'head_id': str(head.id),
+        'head_id': str(spike.id),
         'duration':
             '0s',  # Placeholder, implies calculation from created/modified
     })
 
 
-def get_execution_status(spellbook: CNSSpellbook,
+def get_execution_status(pathway: NeuralPathway,
                          spawn_id: uuid.UUID = None) -> JsonResponse:
-    """Returns the current state of the graph and the overall spawn status."""
+    """Returns the current state of the graph and the overall spike_train status."""
     if not spawn_id:
         return JsonResponse({KEY_STATUS: STATUS_READY})
 
     try:
-        # [FIX]: Fetch the actual spawn to get the real status (Success/Failed/Running)
-        spawn = CNSSpawn.objects.select_related('status').get(id=spawn_id)
+        # [FIX]: Fetch the actual spike_train to get the real status (Success/Failed/Running)
+        spike_train = SpikeTrain.objects.select_related('status').get(id=spawn_id)
 
         node_status_map = {}
-        # [FIX] Order by created so latest head overwrites previous ones for the same node
-        for head in spawn.heads.all().order_by('created'):
-            if head.node_id:
+        # [FIX] Order by created so latest spike overwrites previous ones for the same node
+        for spike in spike_train.spikes.all().order_by('created'):
+            if spike.neuron_id:
                 head_data = {
-                    'status_id': head.status_id,
-                    'head_id': str(head.id),
+                    'status_id': spike.status_id,
+                    'head_id': str(spike.id),
                 }
-                child = head.child_spawns.first()
+                child = spike.child_trains.first()
                 if child:
                     head_data['child_spawn_id'] = str(child.id)
-                node_status_map[str(head.node_id)] = head_data
+                node_status_map[str(spike.neuron_id)] = head_data
 
         # [FIX]: Return the real status name (e.g., "Success", "Failed")
         # instead of the hardcoded "running" string.
         return JsonResponse({
-            KEY_STATUS: spawn.status.name,
-            'nodes': node_status_map
+            KEY_STATUS: spike_train.status.name,
+            'neurons': node_status_map
         })
-    except CNSSpawn.DoesNotExist:
+    except SpikeTrain.DoesNotExist:
         return JsonResponse({
             KEY_STATUS: STATUS_ERROR,
-            MESSAGE: 'Spawn not found'
+            MESSAGE: 'SpikeTrain not found'
         })
     except Exception as e:
         logger.exception('Status Check Failed')
@@ -667,7 +667,7 @@ class CNSGraphLaunchAPI(View):
             controller.start()
             return JsonResponse({
                 ACTION_STATUS: STATUS_STARTED,
-                SPAWN_ID: str(controller.spawn.id),
+                SPAWN_ID: str(controller.spike_train.id),
             })
         except Exception as e:
             logger.exception('[CNS] Graph Launch Failed')
@@ -683,29 +683,29 @@ class CNSGraphLaunchAPI(View):
 class CNSGraphSpawnStatusAPI(View):
 
     def get(self, request, spawn_id):
-        spawn = get_object_or_404(CNSSpawn, id=spawn_id)
+        spike_train = get_object_or_404(SpikeTrain, id=spawn_id)
 
-        heads = spawn.heads.all().order_by('created')
+        spikes = spike_train.spikes.all().order_by('created')
         node_status_map = {}
 
-        # Special Case: Begin Play Node (always green once spawn exists)
-        begin_play_node = spawn.spellbook.nodes.filter(
-            spell_id=CNSSpell.BEGIN_PLAY).first()
+        # Special Case: Begin Play Node (always green once spike_train exists)
+        begin_play_node = spike_train.pathway.neurons.filter(
+            spell_id=Effector.BEGIN_PLAY).first()
         if begin_play_node:
             node_status_map[str(begin_play_node.id)] = {
                 'status_id': CNSStatusID.SUCCESS,
                 'head_id': None,
             }
 
-        for head in heads:
-            if head.node_id:
-                node_status_map[str(head.node_id)] = {
-                    'status_id': head.status_id,
-                    'head_id': str(head.id),
+        for spike in spikes:
+            if spike.neuron_id:
+                node_status_map[str(spike.neuron_id)] = {
+                    'status_id': spike.status_id,
+                    'head_id': str(spike.id),
                 }
 
         return JsonResponse({
-            'status_label': spawn.status.name,
-            'is_active': spawn.is_active,
-            'nodes': node_status_map,
+            'status_label': spike_train.status.name,
+            'is_active': spike_train.is_active,
+            'neurons': node_status_map,
         })

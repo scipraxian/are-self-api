@@ -38,21 +38,21 @@ function timeSince(dateString) {
 async function stopSpawn(spawnId) {
     if (confirm("Signal Graceful Stop for this operation?")) {
         try {
-            await fetch(`/api/v1/spawns/${spawnId}/stop/`, {
+            await fetch(`/api/v1/spike_trains/${spawnId}/stop/`, {
                 method: 'POST',
                 headers: {'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json'}
             });
             // Force an immediate UI update
             triggerInstantSync();
         } catch (e) {
-            console.error("Failed to stop spawn:", e);
+            console.error("Failed to stop spike_train:", e);
         }
     }
 }
 
 async function rerunSpawn(spellbookId) {
     try {
-        await fetch(`/api/v1/spawns/`, {
+        await fetch(`/api/v1/spike_trains/`, {
             method: 'POST',
             headers: {'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json'},
             body: JSON.stringify({spellbook_id: spellbookId})
@@ -63,24 +63,24 @@ async function rerunSpawn(spellbookId) {
     }
 }
 
-function buildHeadDOM(head) {
-    const template = document.getElementById('tpl-head-card');
+function buildHeadDOM(spike) {
+    const template = document.getElementById('tpl-spike-card');
     const clone = template.content.cloneNode(true);
-    const card = clone.querySelector('.head-card');
+    const card = clone.querySelector('.spike-card');
 
-    card.href = `/central_nervous_system/head/${head.id}/`;
+    card.href = `/central_nervous_system/spike/${spike.id}/`;
 
-    const nameEl = card.querySelector('.head-name');
-    const targetEl = card.querySelector('.head-target');
-    const logEl = card.querySelector('.head-log');
-    const timeEl = card.querySelector('.head-time');
-    const durationEl = card.querySelector('.head-duration');
+    const nameEl = card.querySelector('.spike-name');
+    const targetEl = card.querySelector('.spike-target');
+    const logEl = card.querySelector('.spike-log');
+    const timeEl = card.querySelector('.spike-time');
+    const durationEl = card.querySelector('.spike-duration');
 
-    if (nameEl) nameEl.textContent = head.spell_name || 'Node';
-    if (timeEl) timeEl.textContent = head.timestamp_str || '--:--:--';
-    if (durationEl) durationEl.textContent = `⏱ ${head.duration || '0s'}`;
+    if (nameEl) nameEl.textContent = spike.spell_name || 'Node';
+    if (timeEl) timeEl.textContent = spike.timestamp_str || '--:--:--';
+    if (durationEl) durationEl.textContent = `⏱ ${spike.duration || '0s'}`;
 
-    const statusId = head.status_id !== undefined ? head.status_id : head.status;
+    const statusId = spike.status_id !== undefined ? spike.status_id : spike.status;
 
     // State Machine
     if (statusId === 1 || statusId === 2) {
@@ -100,10 +100,10 @@ function buildHeadDOM(head) {
         if (nameEl) nameEl.style.color = '#fff';
         if (targetEl) {
             targetEl.style.color = 'var(--lcars-elbow)';
-            targetEl.textContent = head.target_name || 'LOCAL';
+            targetEl.textContent = spike.target_name || 'LOCAL';
         }
         if (logEl) {
-            logEl.textContent = head.status_name;
+            logEl.textContent = spike.status_name;
             logEl.style.color = '#888';
             logEl.style.display = 'block';
         }
@@ -122,7 +122,7 @@ function buildHeadDOM(head) {
             if (targetEl) targetEl.style.color = '#888';
         }
 
-        if (targetEl) targetEl.textContent = (head.result_code !== null) ? `RC: ${head.result_code}` : head.status_name;
+        if (targetEl) targetEl.textContent = (spike.result_code !== null) ? `RC: ${spike.result_code}` : spike.status_name;
     }
 
     return clone;
@@ -152,7 +152,7 @@ function buildSwimlaneDOM(mission, isSubgraph = false) {
     titleEl.textContent = mission.spellbook_name || 'Unknown Protocol';
     titleEl.title = mission.spellbook_name || '';
 
-    clone.querySelector('.spawn-id').textContent = `#${mission.id.substring(0, 8)}`;
+    clone.querySelector('.spike_train-id').textContent = `#${mission.id.substring(0, 8)}`;
 
     const statusEl = clone.querySelector('.lane-status-text');
     statusEl.textContent = mission.status_name;
@@ -162,8 +162,8 @@ function buildSwimlaneDOM(mission, isSubgraph = false) {
     clone.querySelector('.lane-time').textContent = `${timeSince(mission.modified)} ago`;
 
     // Controls
-    clone.querySelector('.btn-monitor').href = `/central_nervous_system/graph/spawn/${mission.id}/?full=True`;
-    clone.querySelector('.btn-edit').href = `/central_nervous_system/graph/editor/${mission.spellbook}/`;
+    clone.querySelector('.btn-monitor').href = `/central_nervous_system/graph/spike_train/${mission.id}/?full=True`;
+    clone.querySelector('.btn-edit').href = `/central_nervous_system/graph/editor/${mission.pathway}/`;
 
     if (mission.is_alive) {
         clone.querySelector('.control-card').classList.add('active-state');
@@ -173,7 +173,7 @@ function buildSwimlaneDOM(mission, isSubgraph = false) {
     } else {
         const rerunBtn = clone.querySelector('.btn-rerun');
         rerunBtn.style.display = 'flex';
-        rerunBtn.onclick = () => rerunSpawn(mission.spellbook);
+        rerunBtn.onclick = () => rerunSpawn(mission.pathway);
     }
 
     // Scroll Area (Heads)

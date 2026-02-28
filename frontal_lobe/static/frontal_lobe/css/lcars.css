@@ -301,9 +301,9 @@ body {
 }
 
 /* Graph Node Selection Effect */
-.nodes g.selected circle,
-.nodes g.selected rect,
-.nodes g.selected polygon {
+.neurons g.selected circle,
+.neurons g.selected rect,
+.neurons g.selected polygon {
     stroke: #fff;
     stroke-width: 3px;
     filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
@@ -333,9 +333,9 @@ body {
     }
 }
 
-.nodes g.active-node circle,
-.nodes g.active-node rect,
-.nodes g.active-node polygon {
+.neurons g.active-node circle,
+.neurons g.active-node rect,
+.neurons g.active-node polygon {
     animation: lcars-pulse-intense 1s infinite;
 }
 
@@ -490,7 +490,7 @@ body {
     margin-bottom: 15px;
 }
 
-.term-spell {
+.term-effector {
     color: #9999ff;
     font-weight: bold;
     margin-top: 10px;

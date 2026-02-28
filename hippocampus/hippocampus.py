@@ -15,7 +15,7 @@ from pgvector.django import CosineDistance
 
 from frontal_lobe.models import ModelRegistry, ReasoningSession, ReasoningTurn
 from frontal_lobe.synapse import OllamaClient
-from central_nervous_system.models import CNSHead
+from central_nervous_system.models import Spike
 from hippocampus.models import TalosEngram, TalosEngramTag
 
 logger = logging.getLogger(__name__)
@@ -55,21 +55,21 @@ class TalosHippocampus(object):
     """
 
     @classmethod
-    async def get_turn_1_catalog(cls, head: CNSHead, limit: int = 15) -> str:
+    async def get_turn_1_catalog(cls, spike: Spike, limit: int = 15) -> str:
         """
-        Retrieves the indexed catalog of active engrams linked to a specific CNSHead,
+        Retrieves the indexed catalog of active engrams linked to a specific Spike,
         formatted as a context block for the L1 cache.
         """
 
         def _get_catalog_sync() -> str:
             qs = (
                 TalosEngram.objects.filter(
-                    heads__node=head.node, is_active=True
+                    heads__node=spike.node, is_active=True
                 )
-                .exclude(heads=head)
+                .exclude(spikes=spike)
                 .annotate(
                     session_count=Count('sessions', distinct=True),
-                    head_count=Count('heads', distinct=True),
+                    head_count=Count('spikes', distinct=True),
                 )
                 .order_by('-session_count')
                 .prefetch_related('tags')[:limit]
@@ -96,7 +96,7 @@ class TalosHippocampus(object):
         return (
             f'[YOUR CARD CATALOG (ENGRAM INDEX)]\n'
             f'[SYSTEM BOOT: RELEVANT ENGRAM INDEX INJECTED]\n'
-            f'The following historical memory cards are explicitly linked to this CNSHead:\n\n'
+            f'The following historical memory cards are explicitly linked to this Spike:\n\n'
             f'{catalog_body}\n\n'
             f'(Action: The data payloads are currently evicted. Use mcp_engram_read as a Free Action (0 Focus) to retrieve the full facts into your L1 Cache before proceeding.)\n\n'
         )
@@ -194,7 +194,7 @@ class TalosHippocampus(object):
                 )
 
                 engram.sessions.add(session)
-                engram.heads.add(session.head)
+                engram.spikes.add(session.spike)
                 if exact_turn:
                     engram.source_turns.add(exact_turn)
 

@@ -13,19 +13,19 @@ from central_nervous_system.utils import get_active_environment, resolve_environ
 
 from .models import (
     CNSDistributionMode,
-    CNSHead,
-    CNSSpawn,
-    CNSSpell,
-    CNSSpellArgumentAssignment,
-    CNSSpellbook,
-    CNSSpellbookConnectionWire,
-    CNSSpellbookNode,
-    CNSSpellBookNodeContext,
-    CNSSpellContext,
-    CNSSpellTarget,
+    Spike,
+    SpikeTrain,
+    Effector,
+    EffectorArgumentAssignment,
+    NeuralPathway,
+    Axon,
+    Neuron,
+    NeuronContext,
+    EffectorContext,
+    EffectorTarget,
     CNSStatusID,
     CNSTag,
-    CNSWireType,
+    AxonType,
 )
 
 # ==========================================
@@ -69,9 +69,9 @@ class GraphWireLayout:
 
 def _get_wire_status_label(type_id: int) -> str:
     mapping = {
-        CNSWireType.TYPE_FLOW: constants.TYPE_FLOW_STR,
-        CNSWireType.TYPE_SUCCESS: constants.TYPE_SUCCESS_STR,
-        CNSWireType.TYPE_FAILURE: constants.TYPE_FAIL_STR,
+        AxonType.TYPE_FLOW: constants.TYPE_FLOW_STR,
+        AxonType.TYPE_SUCCESS: constants.TYPE_SUCCESS_STR,
+        AxonType.TYPE_FAILURE: constants.TYPE_FAIL_STR,
     }
     return mapping.get(type_id, constants.TYPE_FLOW_STR)
 
@@ -91,29 +91,29 @@ def _get_ui_data(json_str: str) -> Dict[str, int]:
         return {constants.KEY_X: 100, constants.KEY_Y: 100}
 
 
-def _extract_variables_from_spell(spell: Optional[CNSSpell]) -> set:
+def _extract_variables_from_spell(effector: Optional[Effector]) -> set:
     variables = set()
-    if not spell:
+    if not effector:
         return variables
-    for a in spell.cnsspellargumentassignment_set.all():
+    for a in effector.cnsspellargumentassignment_set.all():
         found = re.findall(r'\{\{\s*(\w+)\s*\}\}', a.argument.argument)
         variables.update(found)
-    for s in spell.switches.all():
+    for s in effector.switches.all():
         raw = s.flag + (s.value or '')
         found = re.findall(r'\{\{\s*(\w+)\s*\}\}', raw)
         variables.update(found)
-    for a in spell.talos_executable.talosexecutableargumentassignment_set.all():
+    for a in effector.talos_executable.talosexecutableargumentassignment_set.all():
         found = re.findall(r'\{\{\s*(\w+)\s*\}\}', a.argument.argument)
         variables.update(found)
     return variables
 
 
 def _build_context_matrix_data(
-    spell: Optional[CNSSpell],
+    effector: Optional[Effector],
     global_context: Dict[str, Any],
     node_overrides: Dict[str, Any],
 ) -> List[ContextMatrixRow]:
-    variables = _extract_variables_from_spell(spell)
+    variables = _extract_variables_from_spell(effector)
     variables.update(node_overrides.keys())
     matrix = []
 
@@ -208,7 +208,7 @@ class DynamicFieldsModelSerializer(serializers.ModelSerializer):
                     self.fields.pop(field_name)
 
 
-class CNSSpawnLightSerializer(DynamicFieldsModelSerializer):
+class SpikeTrainLightSerializer(DynamicFieldsModelSerializer):
     """
     Ultra-lightweight serializer for list views.
     Drops massive context_data blocks.
@@ -216,35 +216,35 @@ class CNSSpawnLightSerializer(DynamicFieldsModelSerializer):
 
     status_name = serializers.CharField(source='status.name', read_only=True)
     spellbook_name = serializers.CharField(
-        source='spellbook.name', read_only=True
+        source='pathway.name', read_only=True
     )
     is_active = serializers.BooleanField(read_only=True)
 
     class Meta:
-        model = CNSSpawn
+        model = SpikeTrain
         fields = [
             'id',
             'status_name',
-            'spellbook',
+            'pathway',
             'spellbook_name',
-            'parent_head',
+            'parent_spike',
             'created',
             'modified',
             'is_active',
         ]
 
 
-class CNSSpawnSerializer(DynamicFieldsModelSerializer):
+class SpikeTrainSerializer(DynamicFieldsModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     spellbook_name = serializers.CharField(
-        source='spellbook.name', read_only=True
+        source='pathway.name', read_only=True
     )
     environment_name = serializers.CharField(
         source='environment.name', read_only=True
     )
 
     class Meta:
-        model = CNSSpawn
+        model = SpikeTrain
         fields = ALL_FIELDS
 
 
@@ -260,47 +260,47 @@ class CNSDistributionModeSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
-class CNSSpellContextSerializer(serializers.ModelSerializer):
+class EffectorContextSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CNSSpellContext
+        model = EffectorContext
         fields = ALL_FIELDS
 
 
-class CNSSpellTargetSerializer(serializers.ModelSerializer):
+class EffectorTargetSerializer(serializers.ModelSerializer):
     target_name = serializers.CharField(
         source='target.hostname', read_only=True
     )
 
     class Meta:
-        model = CNSSpellTarget
+        model = EffectorTarget
         fields = ALL_FIELDS
 
 
-class CNSSpellArgumentAssignmentSerializer(serializers.ModelSerializer):
+class EffectorArgumentAssignmentSerializer(serializers.ModelSerializer):
     argument_name = serializers.CharField(
         source='argument.argument', read_only=True
     )
 
     class Meta:
-        model = CNSSpellArgumentAssignment
+        model = EffectorArgumentAssignment
         fields = ALL_FIELDS
 
 
-class CNSSpellSerializer(serializers.ModelSerializer):
+class EffectorSerializer(serializers.ModelSerializer):
     tags = CNSTagSerializer(many=True, read_only=True)
     executable_name = serializers.CharField(
         source='talos_executable.name', read_only=True
     )
     rendered_command = serializers.SerializerMethodField()
-    args = CNSSpellArgumentAssignmentSerializer(
+    args = EffectorArgumentAssignmentSerializer(
         source='cnsspellargumentassignment_set', many=True, read_only=True
     )
-    targets = CNSSpellTargetSerializer(
+    targets = EffectorTargetSerializer(
         source='specific_targets', many=True, read_only=True
     )
 
     class Meta:
-        model = CNSSpell
+        model = Effector
         fields = ALL_FIELDS
 
     def get_rendered_command(self, obj) -> str:
@@ -309,51 +309,51 @@ class CNSSpellSerializer(serializers.ModelSerializer):
         return ' '.join(cmd_list)
 
 
-class CNSSpellBookNodeContextSerializer(serializers.ModelSerializer):
+class EffectorBookNodeContextSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CNSSpellBookNodeContext
+        model = NeuronContext
         fields = ALL_FIELDS
 
 
-class CNSSpellbookConnectionWireSerializer(serializers.ModelSerializer):
+class CNSNeuralPathwayConnectionWireSerializer(serializers.ModelSerializer):
     type_name = serializers.CharField(source='type.name', read_only=True)
     status_id = serializers.SerializerMethodField()
 
     class Meta:
-        model = CNSSpellbookConnectionWire
+        model = Axon
         fields = ALL_FIELDS
 
     def get_status_id(self, obj):
         return _get_wire_status_label(obj.type_id)
 
     def validate(self, data):
-        spellbook = data.get('spellbook')
+        pathway = data.get('pathway')
         source = data.get('source')
         target = data.get('target')
-        if spellbook and source and source.spellbook != spellbook:
+        if pathway and source and source.pathway != pathway:
             raise serializers.ValidationError(
-                'Source node does not belong to this spellbook.'
+                'Source node does not belong to this pathway.'
             )
-        if spellbook and target and target.spellbook != spellbook:
+        if pathway and target and target.pathway != pathway:
             raise serializers.ValidationError(
-                'Target node does not belong to this spellbook.'
+                'Target node does not belong to this pathway.'
             )
         return data
 
 
-class CNSSpellbookNodeSerializer(serializers.ModelSerializer):
-    spell_name = serializers.CharField(source='spell.name', read_only=True)
+class CNSNeuralPathwayNodeSerializer(serializers.ModelSerializer):
+    spell_name = serializers.CharField(source='effector.name', read_only=True)
     invoked_spellbook_name = serializers.CharField(
-        source='invoked_spellbook.name', read_only=True
+        source='invoked_pathway.name', read_only=True
     )
     ui_json = serializers.JSONField(initial=dict)
     has_override = serializers.SerializerMethodField()
-    context_overrides = CNSSpellBookNodeContextSerializer(
-        source='cnsspellbooknodecontext_set', many=True, read_only=True
+    context_overrides = EffectorBookNodeContextSerializer(
+        source='neuroncontext_set', many=True, read_only=True
     )
 
     class Meta:
-        model = CNSSpellbookNode
+        model = Neuron
         fields = ALL_FIELDS
 
     def get_has_override(self, obj):
@@ -373,41 +373,41 @@ class CNSSpellbookNodeSerializer(serializers.ModelSerializer):
         return ret
 
 
-class CNSSpellbookSerializer(serializers.ModelSerializer):
+class CNSNeuralPathwaySerializer(serializers.ModelSerializer):
     environment_name = serializers.CharField(
         source='environment.name', read_only=True
     )
-    node_count = serializers.IntegerField(source='nodes.count', read_only=True)
+    node_count = serializers.IntegerField(source='neurons.count', read_only=True)
     tags = CNSTagSerializer(many=True, read_only=True)
 
     class Meta:
-        model = CNSSpellbook
+        model = NeuralPathway
         fields = ALL_FIELDS
 
 
 class CNSGraphLayoutSerializer(serializers.ModelSerializer):
     """Utilizes strict DTO serializers for generating the graph canvas."""
 
-    nodes = serializers.SerializerMethodField()
+    neurons = serializers.SerializerMethodField()
     connections = serializers.SerializerMethodField()
 
     class Meta:
-        model = CNSSpellbook
-        fields = [constants.KEY_ID, 'nodes', 'connections']
+        model = NeuralPathway
+        fields = [constants.KEY_ID, 'neurons', 'connections']
 
     def get_nodes(self, obj):
         dtos = []
-        nodes = obj.nodes.select_related(
-            'spell', 'invoked_spellbook', 'distribution_mode'
+        neurons = obj.neurons.select_related(
+            'effector', 'invoked_pathway', 'distribution_mode'
         ).all()
-        for n in nodes:
+        for n in neurons:
             ui = _get_ui_data(n.ui_json)
             is_delegated = bool(n.invoked_spellbook_id)
-            is_root = (n.spell_id == CNSSpell.BEGIN_PLAY) and not is_delegated
+            is_root = (n.effector_id == Effector.BEGIN_PLAY) and not is_delegated
             title = (
-                n.invoked_spellbook.name
+                n.invoked_pathway.name
                 if is_delegated
-                else (n.spell.name if n.spell else constants.VAL_UNKNOWN)
+                else (n.effector.name if n.effector else constants.VAL_UNKNOWN)
             )
 
             dtos.append(
@@ -416,7 +416,7 @@ class CNSGraphLayoutSerializer(serializers.ModelSerializer):
                     title=title,
                     x=ui.get(constants.KEY_X, 0.0),
                     y=ui.get(constants.KEY_Y, 0.0),
-                    spell_id=n.spell_id,
+                    spell_id=n.effector_id,
                     is_root=is_root,
                     has_override=n.distribution_mode_id is not None,
                     invoked_spellbook_id=str(n.invoked_spellbook_id)
@@ -428,7 +428,7 @@ class CNSGraphLayoutSerializer(serializers.ModelSerializer):
 
     def get_connections(self, obj):
         dtos = []
-        for w in obj.wires.all():
+        for w in obj.axons.all():
             dtos.append(
                 GraphWireLayout(
                     from_node_id=w.source_id,
@@ -439,18 +439,18 @@ class CNSGraphLayoutSerializer(serializers.ModelSerializer):
         return GraphWireLayoutSerializer(dtos, many=True).data
 
 
-class CNSNodeDetailsSerializer(serializers.ModelSerializer):
+class NeuronDetailsSerializer(serializers.ModelSerializer):
     """Provides deep context analysis utilizing the explicit Row Serializer."""
 
     context_matrix = serializers.SerializerMethodField()
-    name = serializers.CharField(source='spell.name', read_only=True)
+    name = serializers.CharField(source='effector.name', read_only=True)
     description = serializers.CharField(
-        source='spell.description', read_only=True
+        source='effector.description', read_only=True
     )
     node_id = serializers.UUIDField(source='id', read_only=True)
 
     class Meta:
-        model = CNSSpellbookNode
+        model = Neuron
         fields = [
             'node_id',
             'name',
@@ -460,83 +460,83 @@ class CNSNodeDetailsSerializer(serializers.ModelSerializer):
         ]
 
     def get_context_matrix(self, obj):
-        env = obj.spellbook.environment if obj.spellbook else None
+        env = obj.pathway.environment if obj.pathway else None
         global_context = VariableRenderer.extract_variables(env)
         overrides = {
-            c.key: c.value for c in obj.cnsspellbooknodecontext_set.all()
+            c.key: c.value for c in obj.neuroncontext_set.all()
         }
 
-        dtos = _build_context_matrix_data(obj.spell, global_context, overrides)
+        dtos = _build_context_matrix_data(obj.effector, global_context, overrides)
         return ContextMatrixRowSerializer(dtos, many=True).data
 
 
-class CNSSpawnStatusSerializer(serializers.ModelSerializer):
+class SpikeTrainStatusSerializer(serializers.ModelSerializer):
     status_label = serializers.CharField(source='status.name', read_only=True)
-    nodes = serializers.SerializerMethodField()
+    neurons = serializers.SerializerMethodField()
     is_active = serializers.BooleanField(read_only=True)
 
     class Meta:
-        model = CNSSpawn
-        fields = ['status', 'status_label', 'is_active', 'nodes']
+        model = SpikeTrain
+        fields = ['status', 'status_label', 'is_active', 'neurons']
 
     def get_nodes(self, obj):
         node_status_map = {}
-        if obj.spellbook:
-            begin_play_node = obj.spellbook.nodes.filter(
-                spell_id=CNSSpell.BEGIN_PLAY
+        if obj.pathway:
+            begin_play_node = obj.pathway.neurons.filter(
+                spell_id=Effector.BEGIN_PLAY
             ).first()
             if begin_play_node:
                 node_status_map[str(begin_play_node.id)] = {
                     'status_id': CNSStatusID.SUCCESS,
                     'head_id': None,
                 }
-        heads = (
-            obj.heads.select_related('status')
-            .prefetch_related('child_spawns')
+        spikes = (
+            obj.spikes.select_related('status')
+            .prefetch_related('child_trains')
             .order_by('created')
         )
 
-        for head in heads:
-            if head.node_id:
-                child = head.child_spawns.first()
+        for spike in spikes:
+            if spike.neuron_id:
+                child = spike.child_trains.first()
                 child_id = str(child.id) if child else None
-                node_status_map[str(head.node_id)] = {
-                    'status_id': head.status_id,
-                    'head_id': str(head.id),
+                node_status_map[str(spike.neuron_id)] = {
+                    'status_id': spike.status_id,
+                    'head_id': str(spike.id),
                     'child_spawn_id': child_id,
                 }
         return node_status_map
 
 
-class CNSSpawnCreateSerializer(serializers.Serializer):
+class SpikeTrainCreateSerializer(serializers.Serializer):
     spellbook_id = serializers.UUIDField()
     environment_id = serializers.UUIDField(required=False, allow_null=True)
 
     def validate_spellbook_id(self, value):
-        if not CNSSpellbook.objects.filter(id=value).exists():
-            raise serializers.ValidationError('Spellbook not found.')
+        if not NeuralPathway.objects.filter(id=value).exists():
+            raise serializers.ValidationError('NeuralPathway not found.')
         return value
 
 
-class CNSHeadSerializer(serializers.ModelSerializer):
+class SpikeSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     target_name = serializers.CharField(
         source='target.hostname', read_only=True
     )
-    spell_name = serializers.CharField(source='spell.name', read_only=True)
+    spell_name = serializers.CharField(source='effector.name', read_only=True)
     average_delta = serializers.SerializerMethodField()
 
     class Meta:
-        model = CNSHead
+        model = Spike
         exclude = ['application_log', 'execution_log']
 
     def get_average_delta(self, obj):
-        return CNSHead.objects.filter(spell=obj.spell).aggregate(
+        return Spike.objects.filter(effector=obj.effector).aggregate(
             Avg('delta')
         )['delta__avg']
 
 
-class CNSNodeTelemetrySerializer(serializers.ModelSerializer):
+class NeuronTelemetrySerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     logs = serializers.SerializerMethodField()
     exec_logs = serializers.SerializerMethodField()
@@ -548,7 +548,7 @@ class CNSNodeTelemetrySerializer(serializers.ModelSerializer):
     reasoning_session_id = serializers.SerializerMethodField()
 
     class Meta:
-        model = CNSHead
+        model = Spike
         fields = [
             constants.KEY_ID,
             'status',
@@ -576,11 +576,11 @@ class CNSNodeTelemetrySerializer(serializers.ModelSerializer):
 
     def get_command(self, obj) -> str:
         try:
-            if not obj.spell:
+            if not obj.effector:
                 return constants.VAL_CMD_NOT_CAPTURED
             env = get_active_environment(obj)
             full_context = resolve_environment_context(head_id=obj.id)
-            cmd_list = obj.spell.get_full_command(
+            cmd_list = obj.effector.get_full_command(
                 environment=env, extra_context=full_context
             )
             return ' '.join(cmd_list)
@@ -588,30 +588,30 @@ class CNSNodeTelemetrySerializer(serializers.ModelSerializer):
             return f'Error resolving command: {str(e)}'
 
     def get_average_delta(self, obj):
-        return CNSHead.objects.filter(spell=obj.spell).aggregate(
+        return Spike.objects.filter(effector=obj.effector).aggregate(
             Avg('delta')
         )['delta__avg']
 
     def get_context_matrix(self, obj):
         # Ported from cns_graph.py:
-        # 1. Inspect the Spell to find variables
-        variables = _extract_variables_from_spell(obj.spell)
+        # 1. Inspect the Effector to find variables
+        variables = _extract_variables_from_spell(obj.effector)
 
         # 2. Get Global Context
-        # We try to get from node environment first, then spawn, then spellbook
+        # We try to get from node environment first, then spike_train, then pathway
         env = get_active_environment(obj)
         global_context = VariableRenderer.extract_variables(env)
 
         # 3. Get Overrides
         overrides = {}
-        if obj.node:
+        if obj.neuron:
             overrides = {
                 c.key: c.value
-                for c in obj.node.cnsspellbooknodecontext_set.all()
+                for c in obj.neuron.neuroncontext_set.all()
             }
 
         # 4. Build Matrix using helper
-        dtos = _build_context_matrix_data(obj.spell, global_context, overrides)
+        dtos = _build_context_matrix_data(obj.effector, global_context, overrides)
         return ContextMatrixRowSerializer(dtos, many=True).data
 
     def get_reasoning_session_id(self, obj):
@@ -621,7 +621,7 @@ class CNSNodeTelemetrySerializer(serializers.ModelSerializer):
 
 class CNSSwimlaneSerializer(serializers.ModelSerializer):
     """
-    Specifically shapes a Spawn and its sub-graphs for the Mission Control UI.
+    Specifically shapes a SpikeTrain and its sub-graphs for the Mission Control UI.
     Completely replaces serialize_spawn_helper.
     """
 
@@ -629,7 +629,7 @@ class CNSSwimlaneSerializer(serializers.ModelSerializer):
     history = serializers.SerializerMethodField()
     subgraphs = serializers.SerializerMethodField()
 
-    # Expose ALL properties defined on the CNSSpawn model
+    # Expose ALL properties defined on the SpikeTrain model
     is_active = serializers.BooleanField(read_only=True)  # legacy
     is_alive = serializers.BooleanField(read_only=True)
     is_dead = serializers.BooleanField(read_only=True)
@@ -638,15 +638,15 @@ class CNSSwimlaneSerializer(serializers.ModelSerializer):
     ended_badly = serializers.BooleanField(read_only=True)
     ended_successfully = serializers.BooleanField(read_only=True)
     spellbook_name = serializers.CharField(
-        source='spellbook.name', read_only=True
+        source='pathway.name', read_only=True
     )
 
     class Meta:
-        model = CNSSpawn
+        model = SpikeTrain
         fields = [
             'id',
             'status',
-            'spellbook',
+            'pathway',
             'spellbook_name',
             'created',
             'modified',
@@ -663,17 +663,17 @@ class CNSSwimlaneSerializer(serializers.ModelSerializer):
         ]
 
     def get_live_children(self, obj):
-        heads = obj.live_heads.all().order_by('created')
-        return CNSHeadSerializer(heads, many=True).data
+        spikes = obj.live_spikes.all().order_by('created')
+        return SpikeSerializer(spikes, many=True).data
 
     def get_history(self, obj):
-        heads = obj.finished_heads.all().order_by('created')
-        return CNSHeadSerializer(heads, many=True).data
+        spikes = obj.finished_spikes.all().order_by('created')
+        return SpikeSerializer(spikes, many=True).data
 
     def get_subgraphs(self, obj):
-        # Fetch children spawns
-        live = list(obj.live_head_spawns)
-        finished = list(obj.finished_head_spawns)
+        # Fetch children spike_trains
+        live = list(obj.live_spike_trains)
+        finished = list(obj.finished_spike_trains)
         children = live + finished
         children.sort(key=lambda x: x.created if x.created else x.modified)
 

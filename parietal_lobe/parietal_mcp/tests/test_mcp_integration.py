@@ -5,10 +5,10 @@ import uuid
 import pytest
 
 from central_nervous_system.models import (
-    CNSHead,
-    CNSHeadStatus,
-    CNSSpawn,
-    CNSSpawnStatus,
+    Spike,
+    SpikeStatus,
+    SpikeTrain,
+    SpikeTrainStatus,
 )
 from parietal_lobe.parietal_mcp.gateway import ParietalMCP
 
@@ -56,32 +56,32 @@ async def test_mcp_file_operations(tmp_path):
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
 async def test_mcp_record_operations():
-    # Setup: Create required status models and spawn
+    # Setup: Create required status models and spike_train
 
     # Create Statuses if they don't exist
-    head_status, _ = await asyncio.to_thread(
-        CNSHeadStatus.objects.get_or_create,
+    spike_status, _ = await asyncio.to_thread(
+        SpikeStatus.objects.get_or_create,
         id=1,
         defaults={'name': 'Created'},
     )
-    spawn_status, _ = await asyncio.to_thread(
-        CNSSpawnStatus.objects.get_or_create,
+    spike_train_status, _ = await asyncio.to_thread(
+        SpikeTrainStatus.objects.get_or_create,
         id=1,
         defaults={'name': 'Created'},
     )
 
     # Create Spawn
-    spawn = await asyncio.to_thread(CNSSpawn.objects.create,
-                                    status=spawn_status)
+    spike_train = await asyncio.to_thread(SpikeTrain.objects.create,
+                                    status=spike_train_status)
 
-    # Setup: Create a CNSHead
+    # Setup: Create a Spike
     head_id = uuid.uuid4()
 
-    head = await asyncio.to_thread(
-        CNSHead.objects.create,
+    spike = await asyncio.to_thread(
+        Spike.objects.create,
         id=head_id,
-        spawn=spawn,
-        status=head_status,
+        spike_train=spike_train,
+        status=spike_status,
         blackboard={'initial': 'value'},
     )
 
@@ -90,7 +90,7 @@ async def test_mcp_record_operations():
     result = await ParietalMCP.execute(
         'mcp_inspect_record',
         {
-            'model_name': 'CNSHead',
+            'model_name': 'Spike',
             'record_id': str(head_id),
         },
     )
@@ -101,11 +101,11 @@ async def test_mcp_record_operations():
     assert 'value' in data['blackboard']
 
     # 5. Test mcp_query_model (Basic Filters)
-    print(f'Testing mcp_query_model for CNSHead')
+    print(f'Testing mcp_query_model for Spike')
     result = await ParietalMCP.execute(
         'mcp_query_model',
         {
-            'model_name': 'CNSHead',
+            'model_name': 'Spike',
             'filters': {
                 'id': str(head_id)
             },
@@ -122,7 +122,7 @@ async def test_mcp_record_operations():
     result = await ParietalMCP.execute(
         'mcp_query_model',
         {
-            'model_name': 'CNSHead',
+            'model_name': 'Spike',
             'q_string': q_string,
         },
     )
@@ -146,8 +146,8 @@ async def test_mcp_record_operations():
     assert 'Success' in result
 
     # Verify update
-    await asyncio.to_thread(head.refresh_from_db)
-    assert head.blackboard.get(new_key) == new_value
+    await asyncio.to_thread(spike.refresh_from_db)
+    assert spike.blackboard.get(new_key) == new_value
 
     # 7. Test mcp_read_record_field
     print(f'Testing mcp_read_record_field for {head_id}')
@@ -155,7 +155,7 @@ async def test_mcp_record_operations():
         'mcp_read_record_field',
         {
             'app_label': 'central_nervous_system',
-            'model_name': 'CNSHead',
+            'model_name': 'Spike',
             'record_id': str(head_id),
             'field_name': 'blackboard',
         },
@@ -170,7 +170,7 @@ async def test_mcp_record_operations():
         'mcp_search_record_field',
         {
             'app_label': 'central_nervous_system',
-            'model_name': 'CNSHead',
+            'model_name': 'Spike',
             'record_id': str(head_id),
             'field_name': 'blackboard',
             'pattern': 'active',

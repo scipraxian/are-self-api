@@ -117,13 +117,13 @@ class CNSStatusTypeMixin(NameMixin):
         abstract = True
 
 
-class CNSSpawnStatus(CNSStatusTypeMixin):
+class SpikeTrainStatus(CNSStatusTypeMixin):
     """Status lookups for Spawns."""
 
     pass
 
 
-class CNSHeadStatus(CNSStatusTypeMixin):
+class SpikeStatus(CNSStatusTypeMixin):
     """Status lookups for Heads."""
 
     pass
@@ -151,16 +151,16 @@ class CNSDistributionMode(NameMixin, DescriptionMixin):
         verbose_name = 'CNS Distribution Mode'
 
 
-class CNSSpell(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
+class Effector(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
     """
     A configured action (Tool + specific Switches).
     """
 
     BEGIN_PLAY = 1
 
-    talos_executable = models.ForeignKey(
-        TalosExecutable, on_delete=models.PROTECT, default=1
-    )
+    talos_executable = models.ForeignKey(TalosExecutable,
+                                         on_delete=models.PROTECT,
+                                         default=1)
     switches = models.ManyToManyField(TalosExecutableSwitch, blank=True)
     distribution_mode = models.ForeignKey(
         CNSDistributionMode,
@@ -192,15 +192,13 @@ class CNSSpell(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
 
         # 2. Render Executable
         executable_path = self.talos_executable.get_rendered_executable(
-            environment
-        )
+            environment)
         command_list = [executable_path]
 
         # 3. Gather and Render Arguments & Switches
         # We need to render them using the FULL context
         executable_args = (
-            self.talos_executable.talosexecutableargumentassignment_set.all()
-        )
+            self.talos_executable.talosexecutableargumentassignment_set.all())
         spell_args = self.cnsspellargumentassignment_set.all()
 
         # Combine arguments, preserving order is tricky because they are separate querysets
@@ -228,53 +226,51 @@ class CNSSpell(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
         return command_list
 
 
-class CNSSpellContext(models.Model):
-    spell = models.ForeignKey(CNSSpell, on_delete=models.CASCADE)
+class EffectorContext(models.Model):
+    effector = models.ForeignKey(Effector, on_delete=models.CASCADE)
     key = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
     value = models.TextField(blank=True)
 
 
-class CNSSpellTarget(models.Model):
+class EffectorTarget(models.Model):
     """
     Connecting table for Mode 4 (SPECIFIC_TARGETS).
-    Links a Spell to specific 'Pinned' Agents.
+    Links a Effector to specific 'Pinned' Agents.
     """
 
-    spell = models.ForeignKey(
-        CNSSpell, on_delete=models.CASCADE, related_name='specific_targets'
-    )
-    target = models.ForeignKey(
-        'talos_agent.TalosAgentRegistry', on_delete=models.CASCADE
-    )
+    effector = models.ForeignKey(Effector,
+                                 on_delete=models.CASCADE,
+                                 related_name='specific_targets')
+    target = models.ForeignKey('talos_agent.TalosAgentRegistry',
+                               on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ('spell', 'target')
-        verbose_name = 'CNS Spell Target'
+        unique_together = ('effector', 'target')
+        verbose_name = 'CNS Effector Target'
 
     def __str__(self):
-        return f'{self.spell.name} -> {self.target}'
+        return f'{self.effector.name} -> {self.target}'
 
 
-class CNSSpellArgumentAssignment(models.Model):
-    spell = models.ForeignKey(CNSSpell, on_delete=models.CASCADE)
+class EffectorArgumentAssignment(models.Model):
+    effector = models.ForeignKey(Effector, on_delete=models.CASCADE)
     order = models.IntegerField(default=10)
-    argument = models.ForeignKey(
-        TalosExecutableArgument, on_delete=models.CASCADE
-    )
+    argument = models.ForeignKey(TalosExecutableArgument,
+                                 on_delete=models.CASCADE)
 
     class Meta(object):
         ordering = ['order']
 
     def __str__(self):
-        return f'{self.spell.name} -> {self.argument.argument}'
+        return f'{self.effector.name} -> {self.argument.argument}'
 
 
-class CNSSpellbook(
-    UUIDIdMixin,
-    DefaultFieldsMixin,
-    DescriptionMixin,
-    TagsAndFavoriteMixin,
-    ProjectEnvironmentMixin,
+class NeuralPathway(
+        UUIDIdMixin,
+        DefaultFieldsMixin,
+        DescriptionMixin,
+        TagsAndFavoriteMixin,
+        ProjectEnvironmentMixin,
 ):
     """
     The Container. Now supports a visual JSON layout, Tags, and Favorites.
@@ -286,47 +282,46 @@ class CNSSpellbook(
         return self.name
 
 
-class CNSSpellbookNode(ProjectEnvironmentMixin):
+class Neuron(ProjectEnvironmentMixin):
     """
-    A visual instance of a Spell on the Graph.
-    Allows the same Spell (e.g., 'Wait') to be used
+    A visual instance of a Effector on the Graph.
+    Allows the same Effector (e.g., 'Wait') to be used
     multiple times distinctively.
     """
 
     is_root = models.BooleanField(default=False, db_index=True)
-    spellbook = models.ForeignKey(
-        CNSSpellbook, on_delete=models.CASCADE, related_name='nodes'
-    )
-    spell = models.ForeignKey(CNSSpell, on_delete=models.CASCADE)
+    pathway = models.ForeignKey(NeuralPathway,
+                                on_delete=models.CASCADE,
+                                related_name='neurons')
+    effector = models.ForeignKey(Effector, on_delete=models.CASCADE)
     ui_json = models.TextField(blank=True, default='{}')
 
-    invoked_spellbook = models.ForeignKey(
-        CNSSpellbook,
+    invoked_pathway = models.ForeignKey(
+        NeuralPathway,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='invoking_nodes',
-        help_text=(
-            'If set, this Node acts as a container '
-            'that executes this Spellbook.'
-        ),
+        help_text=('If set, this Node acts as a container '
+                   'that executes this NeuralPathway.'),
     )
 
-    distribution_mode = models.ForeignKey(
-        CNSDistributionMode, on_delete=models.SET_NULL, null=True, blank=True
-    )
+    distribution_mode = models.ForeignKey(CNSDistributionMode,
+                                          on_delete=models.SET_NULL,
+                                          null=True,
+                                          blank=True)
 
     def __str__(self):
-        return f'Node {self.id}: {self.spell.name}'
+        return f'Neuron {self.id}: {self.effector.name}'
 
 
-class CNSSpellBookNodeContext(models.Model):
-    node = models.ForeignKey(CNSSpellbookNode, on_delete=models.CASCADE)
+class NeuronContext(models.Model):
+    neuron = models.ForeignKey(Neuron, on_delete=models.CASCADE)
     key = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
     value = models.TextField(blank=True)
 
 
-class CNSWireType(NameMixin):
+class AxonType(NameMixin):
     """Status lookups for Wires."""
 
     TYPE_FLOW = 1
@@ -335,159 +330,159 @@ class CNSWireType(NameMixin):
     pass
 
 
-class CNSSpellbookConnectionWire(ModifiedMixin):
+class Axon(ModifiedMixin):
     """
-    The Wire. Connects two NODES (not spells).
+    The Wire. Connects two NODES (not effectors).
     Trigger Condition: Fires when 'source' finishes with 'status'.
     """
 
-    type = models.ForeignKey(
-        CNSWireType, on_delete=models.PROTECT, default=CNSWireType.TYPE_FLOW
-    )
-    spellbook = models.ForeignKey(
-        CNSSpellbook, on_delete=models.CASCADE, related_name='wires'
-    )
+    type = models.ForeignKey(AxonType,
+                             on_delete=models.PROTECT,
+                             default=AxonType.TYPE_FLOW)
+    pathway = models.ForeignKey(NeuralPathway,
+                                on_delete=models.CASCADE,
+                                related_name='axons')
     source = models.ForeignKey(
-        CNSSpellbookNode,
+        Neuron,
         on_delete=models.CASCADE,
         related_name='outgoing_connections',
     )
     target = models.ForeignKey(
-        CNSSpellbookNode,
+        Neuron,
         on_delete=models.CASCADE,
         related_name='incoming_connections',
     )
 
     class Meta:
-        unique_together = ('spellbook', 'source', 'target')
+        unique_together = ('pathway', 'source', 'target')
         verbose_name = 'Wire / Connection'
 
     def __str__(self):
-        return (
-            f'{self.source.spell.name} '
-            f'--[{self.type.name}]--> {self.target.spell.name}'
-        )
+        return (f'{self.source.effector.name} '
+                f'--[{self.type.name}]--> {self.target.effector.name}')
 
 
 # --- EXECUTION STATE (The Runtime) ---
 
 
-class CNSSpawn(
-    UUIDIdMixin, CreatedAndModifiedWithDelta, ProjectEnvironmentMixin
-):
-    """Spellbook Instance."""
+class SpikeTrain(UUIDIdMixin, CreatedAndModifiedWithDelta,
+                 ProjectEnvironmentMixin):
+    """NeuralPathway Instance."""
 
-    spellbook = models.ForeignKey(
-        CNSSpellbook, on_delete=models.SET_NULL, null=True, blank=True
-    )
-    status = models.ForeignKey(CNSSpawnStatus, on_delete=models.PROTECT)
+    pathway = models.ForeignKey(NeuralPathway,
+                                on_delete=models.SET_NULL,
+                                null=True,
+                                blank=True)
+    status = models.ForeignKey(SpikeTrainStatus, on_delete=models.PROTECT)
 
-    parent_head = models.ForeignKey(
-        'CNSHead',
+    parent_spike = models.ForeignKey(
+        'Spike',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='child_spawns',
-        help_text='The Head (Node execution) in the Parent Graph that spawned this Sub-Graph.',
+        related_name='child_trains',
+        help_text=
+        'The Spike (Node execution) in the Parent Graph that spawned this Sub-Graph.',
     )
 
     @property
     def is_active(self):  # legacy
-        """Returns True if the spawn is in a non-terminal state."""
+        """Returns True if the spike_train is in a non-terminal state."""
         return self.status_id in [
-            CNSSpawnStatus.CREATED,
-            CNSSpawnStatus.PENDING,
-            CNSSpawnStatus.RUNNING,
+            SpikeTrainStatus.CREATED,
+            SpikeTrainStatus.PENDING,
+            SpikeTrainStatus.RUNNING,
         ]
 
     @property
     def is_alive(self):
-        """Returns True if the spawn is in a non-terminal state."""
-        return self.status_id in CNSSpawnStatus.IS_ALIVE_STATUS_LIST
+        """Returns True if the spike_train is in a non-terminal state."""
+        return self.status_id in SpikeTrainStatus.IS_ALIVE_STATUS_LIST
 
     @property
     def is_dead(self):
-        return self.status_id in CNSSpawnStatus.IS_TERMINAL_STATUS_LIST
+        return self.status_id in SpikeTrainStatus.IS_TERMINAL_STATUS_LIST
 
     @property
     def is_queued(self):
         return self.status_id in [
-            CNSSpawnStatus.PENDING,
-            CNSSpawnStatus.CREATED,
+            SpikeTrainStatus.PENDING,
+            SpikeTrainStatus.CREATED,
         ]
 
     @property
     def is_stopping(self):
-        return self.status_id == CNSSpawnStatus.STOPPING
+        return self.status_id == SpikeTrainStatus.STOPPING
 
     @property
     def ended_badly(self):
         return self.status_id in [
-            CNSSpawnStatus.ABORTED,
-            CNSSpawnStatus.FAILED,
+            SpikeTrainStatus.ABORTED,
+            SpikeTrainStatus.FAILED,
         ]
 
     @property
     def ended_successfully(self):
         return self.status_id in [
-            CNSSpawnStatus.SUCCESS,
-            CNSSpawnStatus.STOPPED,
+            SpikeTrainStatus.SUCCESS,
+            SpikeTrainStatus.STOPPED,
         ]
 
     @property
-    def live_heads(self):
-        return self.heads.filter(
-            status__in=CNSHeadStatus.IS_ALIVE_STATUS_LIST
-        ).exclude(spell_id=CNSSpell.BEGIN_PLAY)
+    def live_spikes(self):
+        return self.spikes.filter(
+            status__in=SpikeStatus.IS_ALIVE_STATUS_LIST).exclude(
+                spell_id=Effector.BEGIN_PLAY)
 
     @property
-    def finished_heads(self):
-        return self.heads.filter(
-            status__in=CNSHeadStatus.IS_TERMINAL_STATUS_LIST
-        ).exclude(spell_id=CNSSpell.BEGIN_PLAY)
+    def finished_spikes(self):
+        return self.spikes.filter(
+            status__in=SpikeStatus.IS_TERMINAL_STATUS_LIST).exclude(
+                spell_id=Effector.BEGIN_PLAY)
 
     @property
-    def live_head_spawns(self):
-        return CNSSpawn.objects.filter(
-            parent_head__spawn=self,
-            status__in=CNSSpawnStatus.IS_ALIVE_STATUS_LIST,
+    def live_spike_trains(self):
+        return SpikeTrain.objects.filter(
+            parent_head__spike_train=self,
+            status__in=SpikeTrainStatus.IS_ALIVE_STATUS_LIST,
         )
 
     @property
-    def finished_head_spawns(self):
-        return CNSSpawn.objects.filter(
-            parent_head__spawn=self,
-            status__in=CNSSpawnStatus.IS_TERMINAL_STATUS_LIST,
+    def finished_spike_trains(self):
+        return SpikeTrain.objects.filter(
+            parent_head__spike_train=self,
+            status__in=SpikeTrainStatus.IS_TERMINAL_STATUS_LIST,
         )
 
     def __str__(self):
-        # Handle case where spellbook was deleted
-        book_name = (
-            self.spellbook.name if self.spellbook else 'Deleted Spellbook'
-        )
-        return f'Spawn {self.id} ({book_name})'
+        # Handle case where pathway was deleted
+        book_name = (self.pathway.name
+                     if self.pathway else 'Deleted NeuralPathway')
+        return f'SpikeTrain {self.id} ({book_name})'
 
 
-class CNSHead(UUIDIdMixin, CreatedAndModifiedWithDelta):
-    """A single execution head (Process)."""
+class Spike(UUIDIdMixin, CreatedAndModifiedWithDelta):
+    """A single execution spike (Process)."""
 
-    status = models.ForeignKey(CNSHeadStatus, on_delete=models.PROTECT)
-    spawn = models.ForeignKey(
-        CNSSpawn, related_name='heads', on_delete=models.CASCADE
-    )
-    node = models.ForeignKey(
-        CNSSpellbookNode, on_delete=models.SET_NULL, null=True, blank=True
-    )
-    spell = models.ForeignKey(
-        CNSSpell, on_delete=models.SET_NULL, null=True, blank=True
-    )
+    status = models.ForeignKey(SpikeStatus, on_delete=models.PROTECT)
+    spike_train = models.ForeignKey(SpikeTrain,
+                                    related_name='spikes',
+                                    on_delete=models.CASCADE)
+    neuron = models.ForeignKey(Neuron,
+                               on_delete=models.SET_NULL,
+                               null=True,
+                               blank=True)
+    effector = models.ForeignKey(Effector,
+                                 on_delete=models.SET_NULL,
+                                 null=True,
+                                 blank=True)
     provenance = models.ForeignKey(
         'self',
         on_delete=models.CASCADE,
         null=True,
         blank=True,
         related_name='successors',
-        help_text='The Head that triggered this execution.',
+        help_text='The Spike that triggered this execution.',
     )
 
     target = models.ForeignKey(
@@ -507,42 +502,42 @@ class CNSHead(UUIDIdMixin, CreatedAndModifiedWithDelta):
     @property
     def is_active(self):  # TODO: DEPRECIATED LEGACY REMOVE, use is_alive.
         return self.status_id in [
-            CNSHeadStatus.RUNNING,
-            CNSHeadStatus.PENDING,
-            CNSHeadStatus.STOPPING,
+            SpikeStatus.RUNNING,
+            SpikeStatus.PENDING,
+            SpikeStatus.STOPPING,
         ]
 
     @property
     def is_alive(self):
-        return self.status_id in CNSHeadStatus.IS_ALIVE_STATUS_LIST
+        return self.status_id in SpikeStatus.IS_ALIVE_STATUS_LIST
 
     @property
     def is_dead(self):
-        return self.status_id in CNSHeadStatus.IS_TERMINAL_STATUS_LIST
+        return self.status_id in SpikeStatus.IS_TERMINAL_STATUS_LIST
 
     @property
     def is_queued(self):
         return self.status_id in [
-            CNSHeadStatus.PENDING,
-            CNSHeadStatus.CREATED,
+            SpikeStatus.PENDING,
+            SpikeStatus.CREATED,
         ]
 
     @property
     def is_stopping(self):
-        return self.status_id == CNSHeadStatus.STOPPING
+        return self.status_id == SpikeStatus.STOPPING
 
     @property
     def ended_badly(self):
         return self.status_id in [
-            CNSHeadStatus.ABORTED,
-            CNSHeadStatus.FAILED,
+            SpikeStatus.ABORTED,
+            SpikeStatus.FAILED,
         ]
 
     @property
     def ended_successfully(self):
         return self.status_id in [
-            CNSHeadStatus.SUCCESS,
-            CNSHeadStatus.STOPPED,
+            SpikeStatus.SUCCESS,
+            SpikeStatus.STOPPED,
         ]
 
     @property

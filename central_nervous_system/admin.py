@@ -8,35 +8,35 @@ from central_nervous_system.utils import (
 
 from .models import (
     CNSDistributionMode,
-    CNSHead,
-    CNSHeadStatus,
-    CNSSpawn,
-    CNSSpawnStatus,
-    CNSSpell,
-    CNSSpellArgumentAssignment,
-    CNSSpellbook,
-    CNSSpellbookConnectionWire,
-    CNSSpellbookNode,
-    CNSSpellBookNodeContext,
-    CNSSpellContext,
-    CNSSpellTarget,
+    Spike,
+    SpikeStatus,
+    SpikeTrain,
+    SpikeTrainStatus,
+    Effector,
+    EffectorArgumentAssignment,
+    NeuralPathway,
+    Axon,
+    Neuron,
+    NeuronContext,
+    EffectorContext,
+    EffectorTarget,
     CNSTag,
 )
 
 
-class CNSSpellContextInline(admin.TabularInline):
+class EffectorContextInline(admin.TabularInline):
     """Configuration: Default variables for this Spell."""
 
-    model = CNSSpellContext
+    model = EffectorContext
     extra = 1
     verbose_name = 'Default Variable'
     verbose_name_plural = 'Default Variables (Tier 1)'
 
 
-class CNSSpellBookNodeContextInline(admin.TabularInline):
+class EffectorBookNodeContextInline(admin.TabularInline):
     """Configuration: Overrides for this specific Node instance."""
 
-    model = CNSSpellBookNodeContext
+    model = NeuronContext
     extra = 1
     verbose_name = 'Override Variable'
     verbose_name_plural = 'Override Variables (Tier 2)'
@@ -47,22 +47,22 @@ class CNSDistributionModeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
 
 
-class CNSSpellbookNodeInline(admin.TabularInline):
-    """Shows the nodes contained in this book."""
+class CNSNeuralPathwayNodeInline(admin.TabularInline):
+    """Shows the neurons contained in this book."""
 
-    model = CNSSpellbookNode
+    model = Neuron
     extra = 0
     verbose_name = 'Graph Node'
     readonly_fields = ('ui_json', 'is_root')
-    fk_name = 'spellbook'
+    fk_name = 'pathway'
 
 
-class CNSSpellbookWireInline(admin.TabularInline):
-    """Shows the wires."""
+class CNSNeuralPathwayWireInline(admin.TabularInline):
+    """Shows the axons."""
 
-    model = CNSSpellbookConnectionWire
+    model = Axon
     extra = 0
-    fk_name = 'spellbook'
+    fk_name = 'pathway'
     verbose_name = 'Wire'
 
 
@@ -72,31 +72,31 @@ class CNSTagAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
-@admin.register(CNSSpellbook)
-class CNSSpellbookAdmin(admin.ModelAdmin):
+@admin.register(NeuralPathway)
+class CNSNeuralPathwayAdmin(admin.ModelAdmin):
     list_display = ('name', 'id', 'is_favorite', 'created', 'node_count')
     list_filter = ('is_favorite', 'tags')
     filter_horizontal = ('tags',)
     # Use the new Inlines to visualize graph data in Admin
-    inlines = [CNSSpellbookNodeInline, CNSSpellbookWireInline]
+    inlines = [CNSNeuralPathwayNodeInline, CNSNeuralPathwayWireInline]
 
     def node_count(self, obj):
-        return obj.nodes.count()
+        return obj.neurons.count()
 
 
-class CNSSpellArgumentInline(admin.TabularInline):
-    model = CNSSpellArgumentAssignment
+class EffectorArgumentInline(admin.TabularInline):
+    model = EffectorArgumentAssignment
     extra = 1
 
 
-class CNSSpellTargetInline(admin.TabularInline):
-    model = CNSSpellTarget
+class EffectorTargetInline(admin.TabularInline):
+    model = EffectorTarget
     extra = 0
     verbose_name = 'Pinned Target'
 
 
-@admin.register(CNSSpell)
-class CNSSpellAdmin(admin.ModelAdmin):
+@admin.register(Effector)
+class EffectorAdmin(admin.ModelAdmin):
     # FIXED: Removed 'order' from list_display
     list_display = (
         'name',
@@ -107,16 +107,22 @@ class CNSSpellAdmin(admin.ModelAdmin):
     list_filter = ('distribution_mode', 'talos_executable')
     filter_horizontal = ('switches',)
     inlines = [
-        CNSSpellArgumentInline,
-        CNSSpellTargetInline,
-        CNSSpellContextInline,
+        EffectorArgumentInline,
+        EffectorTargetInline,
+        EffectorContextInline,
     ]
     readonly_fields = ('resolved_command_preview',)
 
     fieldsets = (
-        ('Identity', {'fields': ('name', 'resolved_command_preview')}),
-        ('Distribution Strategy', {'fields': ('distribution_mode',)}),
-        ('Configuration (Talos)', {'fields': ('talos_executable', 'switches')}),
+        ('Identity', {
+            'fields': ('name', 'resolved_command_preview')
+        }),
+        ('Distribution Strategy', {
+            'fields': ('distribution_mode',)
+        }),
+        ('Configuration (Talos)', {
+            'fields': ('talos_executable', 'switches')
+        }),
     )
 
     def resolved_command_preview(self, obj):
@@ -124,32 +130,31 @@ class CNSSpellAdmin(admin.ModelAdmin):
             # [FIX] Fetch the currently selected environment for context
             env = ProjectEnvironment.objects.filter(selected=True).first()
 
-            # [FIX] Resolve Tier 1 Defaults (Spell Context)
-            # This fetches the variables defined in CNSSpellContextInline
+            # [FIX] Resolve Tier 1 Defaults (Effector Context)
+            # This fetches the variables defined in EffectorContextInline
             ctx = resolve_environment_context(spell_id=obj.id)
 
             # Pass BOTH the environment and the context to the renderer
-            full_cmd_list = obj.get_full_command(
-                environment=env, extra_context=ctx
-            )
+            full_cmd_list = obj.get_full_command(environment=env,
+                                                 extra_context=ctx)
 
             return ' '.join(full_cmd_list)
         except Exception as e:
             return f'Error: {str(e)}'
 
 
-@admin.register(CNSHead)
-class CNSHeadAdmin(admin.ModelAdmin):
-    # Added 'node' and 'provenance' to list for debugging
+@admin.register(Spike)
+class SpikeAdmin(admin.ModelAdmin):
+    # Added 'neuron' and 'provenance' to list for debugging
     list_display = (
         'id',
         'spell_name',
         'status',
         'created',
-        'node',
+        'neuron',
         'provenance',
     )
-    list_filter = ('status', 'spell__name')
+    list_filter = ('status', 'effector__name')
     readonly_fields = (
         'celery_task_id',
         'application_log',
@@ -158,45 +163,47 @@ class CNSHeadAdmin(admin.ModelAdmin):
     )
 
     def spell_name(self, obj):
-        return obj.spell.name
+        return obj.effector.name
 
     def resolved_command_preview(self, obj):
         try:
-            if not obj.spell:
+            if not obj.effector:
                 return '-'
 
             env = get_active_environment(obj)
             ctx = resolve_environment_context(head_id=obj.id)
 
-            full_cmd_list = obj.spell.get_full_command(
-                environment=env, extra_context=ctx
-            )
+            full_cmd_list = obj.effector.get_full_command(environment=env,
+                                                          extra_context=ctx)
             return ' '.join(full_cmd_list)
         except Exception as e:
             return f'Error: {str(e)}'
 
 
-@admin.register(CNSSpellbookNode)
-class CNSSpellbookNodeAdmin(admin.ModelAdmin):
+@admin.register(Neuron)
+class CNSNeuralPathwayNodeAdmin(admin.ModelAdmin):
     """
-    Instance-level configuration for Spells on a Graph.
+    Instance-level configuration for Effectors on a Graph.
     """
 
-    list_display = ('id', 'spellbook', 'spell', 'distribution_mode', 'is_root')
-    list_filter = ('spellbook', 'spell', 'distribution_mode')
-    raw_id_fields = ('spellbook', 'spell', 'invoked_spellbook')
-    inlines = [CNSSpellBookNodeContextInline]
+    list_display = ('id', 'pathway', 'effector', 'distribution_mode', 'is_root')
+    list_filter = ('pathway', 'effector', 'distribution_mode')
+    raw_id_fields = ('pathway', 'effector', 'invoked_pathway')
+    inlines = [EffectorBookNodeContextInline]
 
     # [NEW] Add readonly field
     readonly_fields = ('resolved_command_preview',)
 
     fieldsets = (
-        ('Graph Placement', {'fields': ('spellbook', 'ui_json', 'is_root')}),
+        ('Graph Placement', {
+            'fields': ('pathway', 'ui_json', 'is_root')
+        }),
         (
             'Execution Logic',
             {
-                'fields': ('spell', 'invoked_spellbook', 'distribution_mode'),
-                'description': "If Distribution Mode is empty, Talos will use the Spell's default strategy.",
+                'fields': ('effector', 'invoked_pathway', 'distribution_mode'),
+                'description':
+                    "If Distribution Mode is empty, Talos will use the Spell's default strategy.",
             },
         ),
         # [NEW] Preview Section
@@ -204,39 +211,39 @@ class CNSSpellbookNodeAdmin(admin.ModelAdmin):
             'Context Preview',
             {
                 'fields': ('resolved_command_preview',),
-                'description': 'Shows the command as it would execute in the currently Selected Environment, applying Spell Defaults and Node Overrides.',
+                'description':
+                    'Shows the command as it would execute in the currently Selected Environment, applying Effector Defaults and Node Overrides.',
             },
         ),
     )
 
     def resolved_command_preview(self, obj):
         try:
-            if not obj.spell:
-                return 'No Spell Assigned'
+            if not obj.effector:
+                return 'No Effector Assigned'
 
             # 1. Base Env
             env = ProjectEnvironment.objects.filter(selected=True).first()
 
-            # 2. Spell Defaults (Tier 1)
-            # We use the utility to get Env + Spell vars first
-            ctx = resolve_environment_context(spell_id=obj.spell.id)
+            # 2. Effector Defaults (Tier 1)
+            # We use the utility to get Env + Effector vars first
+            ctx = resolve_environment_context(spell_id=obj.effector.id)
 
             # 3. Node Overrides (Tier 2)
             # Manually apply these since resolve_environment_context doesn't take node_id directly yet
-            node_vars = CNSSpellBookNodeContext.objects.filter(node=obj)
+            node_vars = NeuronContext.objects.filter(neuron=obj)
             for var in node_vars:
                 if var.key:
                     ctx[var.key] = var.value
 
             # 4. Render
-            full_cmd_list = obj.spell.get_full_command(
-                environment=env, extra_context=ctx
-            )
+            full_cmd_list = obj.effector.get_full_command(environment=env,
+                                                          extra_context=ctx)
             return ' '.join(full_cmd_list)
         except Exception as e:
             return f'Error generating preview: {str(e)}'
 
 
-admin.site.register(CNSHeadStatus)
-admin.site.register(CNSSpawnStatus)
-admin.site.register(CNSSpawn)
+admin.site.register(SpikeStatus)
+admin.site.register(SpikeTrainStatus)
+admin.site.register(SpikeTrain)

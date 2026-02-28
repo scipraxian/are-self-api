@@ -1,11 +1,11 @@
 import django_filters
 
-from .models import CNSHead, CNSHeadStatus, CNSSpawn, CNSSpawnStatus
+from .models import Spike, SpikeStatus, SpikeTrain, SpikeTrainStatus
 
 
-class CNSSpawnFilter(django_filters.FilterSet):
+class SpikeTrainFilter(django_filters.FilterSet):
     is_root = django_filters.BooleanFilter(
-        field_name='parent_head', lookup_expr='isnull'
+        field_name='parent_spike', lookup_expr='isnull'
     )
 
     # Delta Cursors
@@ -19,20 +19,20 @@ class CNSSpawnFilter(django_filters.FilterSet):
     is_active = django_filters.BooleanFilter(method='filter_is_active')
 
     class Meta:
-        model = CNSSpawn
-        fields = ['spellbook', 'status', 'environment', 'parent_head']
+        model = SpikeTrain
+        fields = ['pathway', 'status', 'environment', 'parent_spike']
 
     def filter_is_active(self, queryset, name, value):
         if value:
             return queryset.filter(
-                status_id__in=CNSSpawnStatus.IS_ALIVE_STATUS_LIST
+                status_id__in=SpikeTrainStatus.IS_ALIVE_STATUS_LIST
             )
         return queryset.filter(
-            status_id__in=CNSSpawnStatus.IS_TERMINAL_STATUS_LIST
+            status_id__in=SpikeTrainStatus.IS_TERMINAL_STATUS_LIST
         )
 
 
-class CNSHeadFilter(django_filters.FilterSet):
+class SpikeFilter(django_filters.FilterSet):
     spawn_id = django_filters.UUIDFilter(field_name='spawn_id')
     modified__gt = django_filters.IsoDateTimeFilter(
         field_name='modified', lookup_expr='gt'
@@ -41,14 +41,14 @@ class CNSHeadFilter(django_filters.FilterSet):
     is_active = django_filters.BooleanFilter(method='filter_is_active')
 
     class Meta:
-        model = CNSHead
-        fields = ['spawn', 'status', 'node', 'spell', 'target']
+        model = Spike
+        fields = ['spike_train', 'status', 'neuron', 'effector', 'target']
 
     def filter_is_active(self, queryset, name, value):
         if value:
             return queryset.filter(
-                status_id__in=CNSHeadStatus.IS_ALIVE_STATUS_LIST
+                status_id__in=SpikeStatus.IS_ALIVE_STATUS_LIST
             )
         return queryset.filter(
-            status_id__in=CNSHeadStatus.IS_TERMINAL_STATUS_LIST
+            status_id__in=SpikeStatus.IS_TERMINAL_STATUS_LIST
         )

@@ -35,23 +35,23 @@ class ParietalLobeTest(TransactionTestCase):
     def setUp(self):
         # Create minimal required objects
         from central_nervous_system.models import (
-            CNSHead,
-            CNSHeadStatus,
-            CNSSpawn,
-            CNSSpawnStatus,
-            CNSSpellbook,
+            Spike,
+            SpikeStatus,
+            SpikeTrain,
+            SpikeTrainStatus,
+            NeuralPathway,
         )
 
-        self.book = CNSSpellbook.objects.create(name='Test Book')
-        self.spawn = CNSSpawn.objects.create(
-            spellbook=self.book, status_id=CNSSpawnStatus.RUNNING
+        self.book = NeuralPathway.objects.create(name='Test Book')
+        self.spike_train = SpikeTrain.objects.create(
+            pathway=self.book, status_id=SpikeTrainStatus.RUNNING
         )
-        self.head = CNSHead.objects.create(
-            spawn=self.spawn, status_id=CNSHeadStatus.RUNNING, blackboard={}
+        self.spike = Spike.objects.create(
+            spike_train=self.spike_train, status_id=SpikeStatus.RUNNING, blackboard={}
         )
 
         self.session = ReasoningSession.objects.create(
-            head=self.head,
+            spike=self.spike,
             status_id=ReasoningStatusID.ACTIVE,
             max_turns=10,
             current_focus=5,
@@ -208,7 +208,7 @@ class ParietalLobeTest(TransactionTestCase):
         )
 
         mock_execute.assert_not_called()
-        self.assertIn('SYSTEM OVERRIDE: Spell Fizzled!', result['content'])
+        self.assertIn('SYSTEM OVERRIDE: Effector Fizzled!', result['content'])
 
         # Check economy unharmed
         await sync_to_async(self.session.refresh_from_db)()

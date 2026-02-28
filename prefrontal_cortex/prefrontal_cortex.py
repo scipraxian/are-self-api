@@ -7,7 +7,7 @@ from pgvector.django import CosineDistance
 from frontal_lobe.frontal_lobe import FrontalLobe
 from frontal_lobe.models import ModelRegistry
 from frontal_lobe.synapse import OllamaClient
-from central_nervous_system.models import CNSHead
+from central_nervous_system.models import Spike
 from prefrontal_cortex.models import PFCItemStatus, PFCStory, PFCTask
 
 logger = logging.getLogger(__name__)
@@ -26,12 +26,12 @@ class PrefrontalCortex:
 
     def __init__(self, head_id: str):
         self.head_id = head_id
-        self.head = None
+        self.spike = None
         self.provenance = None
         self.environment = None
 
     async def engage(self) -> Tuple[int, str]:
-        logger.info(f'[PFC] Routing evaluation started for Head {self.head_id}')
+        logger.info(f'[PFC] Routing evaluation started for Spike {self.head_id}')
 
         await self._load_context()
 
@@ -64,29 +64,29 @@ class PrefrontalCortex:
         logger.info(
             f'[PFC] Routing successful. Launching Frontal Lobe for Task {task.id}'
         )
-        lobe = FrontalLobe(self.head)
+        lobe = FrontalLobe(self.spike)
         return await lobe.run()
 
     async def _load_context(self):
-        """Loads the execution head and its hierarchical provenance."""
+        """Loads the execution spike and its hierarchical provenance."""
         # Using select_related to avoid N+1 queries when building the context string
-        self.head = await sync_to_async(
-            CNSHead.objects.select_related(
+        self.spike = await sync_to_async(
+            Spike.objects.select_related(
                 'provenance', 'provenance__spell'
             ).get
         )(id=self.head_id)
 
-        self.provenance = self.head.provenance
+        self.provenance = self.spike.provenance
 
-        # Assuming the head or provenance has an environment link based on your recent Epic change
+        # Assuming the spike or provenance has an environment link based on your recent Epic change
         # Fallback to None if the model doesn't enforce it yet.
-        self.environment = getattr(self.head, 'environment', None)
+        self.environment = getattr(self.spike, 'environment', None)
 
     def _build_routing_context(self) -> str:
         """Constructs a dense string representing the workflow intent."""
         spell_name = (
-            self.provenance.spell.name
-            if self.provenance.spell
+            self.provenance.effector.name
+            if self.provenance.effector
             else 'Unknown Spell'
         )
         env_name = self.environment.name if self.environment else 'Global'
@@ -153,7 +153,7 @@ class PrefrontalCortex:
         )
 
         spell_name = (
-            self.provenance.spell.name if self.provenance.spell else 'Workflow'
+            self.provenance.effector.name if self.provenance.effector else 'Workflow'
         )
 
         return await sync_to_async(PFCTask.objects.create)(
@@ -166,11 +166,11 @@ class PrefrontalCortex:
 
     async def _assign_task_to_blackboard(self, task: PFCTask):
         """Injects the Task ID into the graph execution state."""
-        if not isinstance(self.head.blackboard, dict):
-            self.head.blackboard = {}
+        if not isinstance(self.spike.blackboard, dict):
+            self.spike.blackboard = {}
 
-        self.head.blackboard['active_pfc_task_id'] = str(task.id)
-        await sync_to_async(self.head.save)(update_fields=['blackboard'])
+        self.spike.blackboard['active_pfc_task_id'] = str(task.id)
+        await sync_to_async(self.spike.save)(update_fields=['blackboard'])
 
 
 class PrefrontalCortexDispatcher:
@@ -182,21 +182,21 @@ class PrefrontalCortexDispatcher:
 
     def __init__(self, head_id: str):
         self.head_id = head_id
-        self.head = None
+        self.spike = None
 
     async def engage(self) -> Tuple[int, str]:
         logger.info(
-            f'[PFC] Dispatcher checking the board for Head {self.head_id}'
+            f'[PFC] Dispatcher checking the board for Spike {self.head_id}'
         )
 
-        self.head = await sync_to_async(CNSHead.objects.get)(id=self.head_id)
+        self.spike = await sync_to_async(Spike.objects.get)(id=self.head_id)
 
         # 1. Is there a Worker (Pig) ticket ready to go?
         # A Story that the Oracle (PM) has explicitly moved to 'Selected for Development'
         ready_story = await self._get_highest_priority_ready_story()
 
-        if not isinstance(self.head.blackboard, dict):
-            self.head.blackboard = {}
+        if not isinstance(self.spike.blackboard, dict):
+            self.spike.blackboard = {}
 
         if ready_story:
             logger.info(
@@ -206,20 +206,20 @@ class PrefrontalCortexDispatcher:
             ready_story.status_id = PFCItemStatus.IN_PROGRESS
             await sync_to_async(ready_story.save)(update_fields=['status_id'])
 
-            self.head.blackboard['persona'] = 'AUTOMATON'
-            self.head.blackboard['active_story_id'] = str(ready_story.id)
+            self.spike.blackboard['persona'] = 'AUTOMATON'
+            self.spike.blackboard['active_story_id'] = str(ready_story.id)
 
         else:
             logger.info(
                 '[PFC] The board is empty or lacks prioritized work. Summoning The Oracle (PM).'
             )
-            self.head.blackboard['persona'] = 'ORACLE'
+            self.spike.blackboard['persona'] = 'ORACLE'
             # The Oracle doesn't get a specific ticket; its job is the whole board.
 
-        await sync_to_async(self.head.save)(update_fields=['blackboard'])
+        await sync_to_async(self.spike.save)(update_fields=['blackboard'])
 
         # Launch the Frontal Lobe with the chosen Persona
-        lobe = FrontalLobe(self.head)
+        lobe = FrontalLobe(self.spike)
         return await lobe.run()
 
     async def _get_highest_priority_ready_story(self):

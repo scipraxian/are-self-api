@@ -31,7 +31,7 @@ Architecture:
 * **Strict Typing:** All events are emitted as strictly typed NamedTuples
     (`TalosEvent`) to eliminate ambiguity between Logs and Exit Codes.
 * **Stateless:** Does not connect to the Database. It is a "dumb" executor
-    controlled entirely by the CNS Spell Caster.
+    controlled entirely by the CNS Effector Caster.
 
 Security:
 ---------

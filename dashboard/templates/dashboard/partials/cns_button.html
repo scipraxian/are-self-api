@@ -1,9 +1,9 @@
 <div id="cns-controls" style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem;">
     {% if active_spawn %}
-        {% include "central_nervous_system/spawn_monitor.html" with spawn=active_spawn heads=heads is_active=is_active is_full_page=False %}
+        {% include "central_nervous_system/spike_train_monitor.html" with spike_train=active_spawn spikes=spikes is_active=is_active is_full_page=False %}
     {% else %}
         <h3 style="color: #94a3b8; text-transform: uppercase; font-size: 0.9rem; margin-bottom: 1rem;">CNS
-            Spellbooks</h3>
+            NeuralPathways</h3>
 
         <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
             {% for book in cns_spellbooks %}
@@ -38,7 +38,7 @@
                     {% endif %}
                 </div>
             {% empty %}
-                <div style="color: #64748b; font-style: italic;">No CNS Spellbooks found. Run fixtures.</div>
+                <div style="color: #64748b; font-style: italic;">No CNS NeuralPathways found. Run fixtures.</div>
             {% endfor %}
         </div>
     {% endif %}

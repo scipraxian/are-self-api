@@ -327,10 +327,10 @@ body {
 #svg-layer {
     z-index: 2;
     pointer-events: all;
-    /* Allow interaction with wires */
+    /* Allow interaction with axons */
 }
 
-#nodes-layer {
+#neurons-layer {
     z-index: 3;
     pointer-events: none;
     /* Allow events through to container when not on a node */
@@ -446,7 +446,7 @@ body {
 
 .node-header.root-header {
     background: #8b0000;
-    /* Dark red/maroon for event nodes */
+    /* Dark red/maroon for event neurons */
     border-bottom: 2px solid rgba(0, 0, 0, 0.2);
     display: flex;
     gap: 8px;

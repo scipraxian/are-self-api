@@ -5,7 +5,7 @@ import uuid  # <--- RESTORED
 
 from django.conf import settings
 
-from central_nervous_system.models import CNSHead
+from central_nervous_system.models import Spike
 from central_nervous_system.tasks import cast_cns_spell
 
 logger = logging.getLogger(__name__)
@@ -155,42 +155,42 @@ def ai_execute_task(head_id):
     try:
         val = uuid.UUID(str(head_id))
     except ValueError:
-        return f"Error: Invalid Head ID '{head_id}'. Must be a UUID."
+        return f"Error: Invalid Spike ID '{head_id}'. Must be a UUID."
     try:
         cast_cns_spell.delay(str(head_id))
-        return f'Successfully queued spell for Head {head_id}.'
+        return f'Successfully queued effector for Spike {head_id}.'
     except Exception as e:
-        return f'Error casting spell: {str(e)}'
+        return f'Error casting effector: {str(e)}'
 
 
 def ai_update_blackboard(head_id: str, key: str, value: str) -> str:
     """
-    Updates a value in the CNSHead blackboard, altering the state
+    Updates a value in the Spike blackboard, altering the state
     for downstream graph routing.
     """
 
     try:
         val_uuid = uuid.UUID(str(head_id))
     except ValueError:
-        return f"Error: Invalid Head ID '{head_id}'. Must be a UUID."
+        return f"Error: Invalid Spike ID '{head_id}'. Must be a UUID."
 
     try:
-        head = CNSHead.objects.get(id=val_uuid)
+        spike = Spike.objects.get(id=val_uuid)
 
         # Guard against uninitialized JSON fields
-        if not isinstance(head.blackboard, dict):
-            head.blackboard = {}
+        if not isinstance(spike.blackboard, dict):
+            spike.blackboard = {}
 
-        head.blackboard[key] = value
-        head.save(update_fields=['blackboard'])
+        spike.blackboard[key] = value
+        spike.save(update_fields=['blackboard'])
 
         logger.info(
-            f'[Parietal] Blackboard mutated for Head {head_id}: {key}={value}'
+            f'[Parietal] Blackboard mutated for Spike {head_id}: {key}={value}'
         )
         return f"Success: Blackboard updated. {key} is now '{value}'."
 
-    except CNSHead.DoesNotExist:
-        return f'Error: CNSHead {head_id} not found.'
+    except Spike.DoesNotExist:
+        return f'Error: Spike {head_id} not found.'
     except Exception as e:
         logger.error(f'[Parietal] Blackboard update failed: {e}')
         return f'Error updating blackboard: {str(e)}'

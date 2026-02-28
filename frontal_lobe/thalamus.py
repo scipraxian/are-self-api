@@ -26,7 +26,7 @@ async def relay_sensory_state(turn_record: ReasoningTurn) -> str:
 
     # 2. Hippocampus Catalog
     if current_turn == 1:
-        catalog_block = await TalosHippocampus.get_turn_1_catalog(session.head)
+        catalog_block = await TalosHippocampus.get_turn_1_catalog(session.spike)
     else:
         catalog_block = await TalosHippocampus.get_recent_catalog(session)
 
@@ -51,7 +51,7 @@ async def relay_sensory_state(turn_record: ReasoningTurn) -> str:
 
 async def _read_active_task(session: ReasoningSession) -> str:
     """Reads the assigned Task ID from the blackboard."""
-    blackboard = session.head.blackboard or {}
+    blackboard = session.spike.blackboard or {}
     task_id = blackboard.get('active_pfc_task_id')
 
     if not task_id:

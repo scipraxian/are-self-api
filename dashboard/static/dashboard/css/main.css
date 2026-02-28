@@ -562,7 +562,7 @@ endblock
     box-shadow: 0 10px 20px rgba(139, 92, 246, 0.5);
 }
 
-/* Source: cns\templates\cns\spawn_monitor.html */
+/* Source: cns\templates\cns\spike_train_monitor.html */
 
 .monitor-card {
     background: rgba(15, 23, 42, 0.8);
@@ -876,7 +876,7 @@ endblock
     stroke: #94a3b8;
 }
 
-/* Source: cns\templates\cns\partials\spawn_feedback.html */
+/* Source: cns\templates\cns\partials\spike_train_feedback.html */
 
 @keyframes slideDown {
     from {

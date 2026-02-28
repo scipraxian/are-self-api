@@ -266,7 +266,7 @@
     "pk": 12,
     "fields": {
       "created": "2026-02-18T12:00:00Z",
-      "description": "Manages your active objectives across sleep cycles. Use CREATE to spawn a sub-goal, UPDATE to modify it, and COMPLETE when you achieve it. This is your anchor.",
+      "description": "Manages your active objectives across sleep cycles. Use CREATE to spike_train a sub-goal, UPDATE to modify it, and COMPLETE when you achieve it. This is your anchor.",
       "modified": "2026-02-18T12:00:00Z",
       "name": "mcp_update_goal",
       "is_async": true,
@@ -326,7 +326,7 @@
     "pk": 17,
     "fields": {
       "created": "2026-02-23T15:09:02.523Z",
-      "description": "Parse Unreal Engine logs for a specific CNSHead and return a structural summary.",
+      "description": "Parse Unreal Engine logs for a specific Spike and return a structural summary.",
       "modified": "2026-02-23T15:09:02.523Z",
       "name": "mcp_run_unreal_diagnostic_parser",
       "is_async": true,
@@ -405,7 +405,7 @@
     "pk": 6,
     "fields": {
       "created": "2026-02-18T12:00:00Z",
-      "description": "Head UUID.",
+      "description": "Spike UUID.",
       "modified": "2026-02-18T12:00:00Z",
       "name": "head_id",
       "type": 1

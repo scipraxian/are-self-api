@@ -17,7 +17,7 @@ class TalosEngramAdmin(admin.ModelAdmin):
     search_fields = ('name', 'description')
 
     # Use filter_horizontal for the ManyToMany biological links
-    filter_horizontal = ('tags', 'heads', 'sessions', 'source_turns')
+    filter_horizontal = ('tags', 'spikes', 'sessions', 'source_turns')
 
     # Set the vector as read-only to prevent manual corruption of the embedding
     readonly_fields = ('created', 'modified', 'vector_display')
@@ -38,7 +38,7 @@ class TalosEngramAdmin(admin.ModelAdmin):
         (
             'Biological Context',
             {
-                'fields': ('tags', 'sessions', 'heads', 'source_turns'),
+                'fields': ('tags', 'sessions', 'spikes', 'source_turns'),
                 'description': 'Relational links to the sessions and turns where this memory originated.',
             },
         ),

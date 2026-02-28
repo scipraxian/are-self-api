@@ -1,5 +1,5 @@
 import re
-from central_nervous_system.models import CNSSpawn, CNSHead, CNSHeadStatus
+from central_nervous_system.models import SpikeTrain, Spike, SpikeStatus
 
 # Regex Patterns for Error Detection
 # The "Killers" (High Priority)
@@ -61,23 +61,23 @@ def read_build_log(run_id, max_token_budget=128000):
     Implements dynamic truncation based on the provided token budget.
     """
     try:
-        spawn = CNSSpawn.objects.get(id=run_id)
-    except CNSSpawn.DoesNotExist:
-        return "Spawn not found."
+        spike_train = SpikeTrain.objects.get(id=run_id)
+    except SpikeTrain.DoesNotExist:
+        return "SpikeTrain not found."
 
-    # Find the failed head(s) first, or just the last run head
-    heads = spawn.heads.filter(status_id=CNSHeadStatus.FAILED)
-    if not heads.exists():
-        heads = spawn.heads.all()
+    # Find the failed spike(s) first, or just the last run spike
+    spikes = spike_train.spikes.filter(status_id=SpikeStatus.FAILED)
+    if not spikes.exists():
+        spikes = spike_train.spikes.all()
 
-    if not heads.exists():
-        return "No execution heads found for this spawn."
+    if not spikes.exists():
+        return "No execution spikes found for this spike_train."
 
-    # Join logs from failed heads
+    # Join logs from failed spikes
     full_log_content = ""
-    for head in heads:
-        full_log_content += f"\n--- HEAD {head.id} ({head.spell.name}) ---\n"
-        full_log_content += head.application_log or ""
+    for spike in spikes:
+        full_log_content += f"\n--- HEAD {spike.id} ({spike.effector.name}) ---\n"
+        full_log_content += spike.application_log or ""
 
     # Reserve tokens for Prompt + Overheads. 1 Token ~= 4 Chars.
     safe_token_limit = max_token_budget - 2000

@@ -13,7 +13,7 @@ urlpatterns = [
         name='graph_editor',
     ),
     path(
-        'graph/spawn/<uuid:spawn_id>/',
+        'graph/spike_train/<uuid:spawn_id>/',
         views.CNSGraphMonitorView.as_view(),
         name='graph_monitor',
     ),
@@ -31,13 +31,13 @@ urlpatterns = [
         name='graph_api_action',
     ),
     # --- The War Room ---
-    path('head/<uuid:pk>/',
+    path('spike/<uuid:pk>/',
          views.HeadLogDetailView.as_view(),
          name='head_detail'),
     # --- Actions ---
     path(
         'launch/<uuid:spellbook_id>/',
-        views.LaunchSpellbookView.as_view(),
+        views.LaunchNeuralPathwayView.as_view(),
         name='cns_launch',
     ),
     path(
@@ -46,18 +46,18 @@ urlpatterns = [
         name='toggle_favorite',
     ),
     path(
-        'spawn/<uuid:pk>/terminate/',
+        'spike_train/<uuid:pk>/terminate/',
         views.TerminateSpawnView.as_view(),
         name='cns_spawn_terminate',
     ),
     path(
-        'spawn/<uuid:pk>/stop/',
+        'spike_train/<uuid:pk>/stop/',
         views.GracefulStopSpawnView.as_view(),
         name='cns_spawn_stop_graceful',
     ),
     # --- LEGACY COMPATIBILITY ---
     path(
-        'head/<uuid:pk>/logs/',
+        'spike/<uuid:pk>/logs/',
         views.HeadLogDetailView.as_view(),
         name='cns_head_logs',
     ),
@@ -84,8 +84,8 @@ urlpatterns = [
         name='cns_battle_stream',
     ),
     path(
-        'spawn/<uuid:pk>/download/',
-        views.CNSSpawnDownloadView.as_view(),
+        'spike_train/<uuid:pk>/download/',
+        views.SpikeTrainDownloadView.as_view(),
         name='cns_spawn_download',
     ),
 ]

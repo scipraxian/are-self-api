@@ -8,11 +8,11 @@ from central_nervous_system.management.commands.generate_prompt_payload import (
     BLACKBOARD_RESULT_KEY,
 )
 from central_nervous_system.models import (
-    CNSHead,
-    CNSHeadStatus,
-    CNSSpawn,
-    CNSSpawnStatus,
-    CNSSpellbook,
+    Spike,
+    SpikeStatus,
+    SpikeTrain,
+    SpikeTrainStatus,
+    NeuralPathway,
 )
 
 
@@ -26,9 +26,9 @@ class GeneratePromptPayloadTest(TestCase):
 
     def setUp(self):
         # 1. Setup minimal relational infrastructure
-        self.book = CNSSpellbook.objects.create(name='Payload Test Protocol')
-        self.spawn = CNSSpawn.objects.create(
-            spellbook=self.book, status_id=CNSSpawnStatus.CREATED
+        self.book = NeuralPathway.objects.create(name='Payload Test Protocol')
+        self.spike_train = SpikeTrain.objects.create(
+            pathway=self.book, status_id=SpikeTrainStatus.CREATED
         )
 
         # 2. Pre-load the blackboard with a raw template and a variable to resolve
@@ -37,9 +37,9 @@ class GeneratePromptPayloadTest(TestCase):
             'error_msg': 'Fatal Exception in PlayerController.cpp',
         }
 
-        self.head = CNSHead.objects.create(
-            spawn=self.spawn,
-            status_id=CNSHeadStatus.CREATED,
+        self.spike = Spike.objects.create(
+            spike_train=self.spike_train,
+            status_id=SpikeStatus.CREATED,
             blackboard=initial_blackboard,
         )
         self.generated_file_path = None
@@ -58,7 +58,7 @@ class GeneratePromptPayloadTest(TestCase):
         """
         # ACT: Execute the management command exactly as the Caster would
         with self.assertLogs(level='INFO') as log_capture:
-            call_command('generate_prompt_payload', head_id=str(self.head.id))
+            call_command('generate_prompt_payload', head_id=str(self.spike.id))
 
             # extract the path from the logs
             found_path = None
@@ -79,7 +79,7 @@ class GeneratePromptPayloadTest(TestCase):
             self.generated_file_path = found_path
 
         # Refresh is irrelevant now since command is read-only
-        self.head.refresh_from_db()
+        self.spike.refresh_from_db()
 
         # ASSERT 2: The physical file exists
         self.assertTrue(os.path.exists(self.generated_file_path))

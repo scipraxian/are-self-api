@@ -8,10 +8,10 @@ logger = logging.getLogger(__name__)
 
 
 @receiver(spawn_failed)
-def on_spawn_failed(sender, spawn, **kwargs):
+def on_spawn_failed(sender, spike_train, **kwargs):
     pass
 
 
 @receiver(spawn_success)
-def on_spawn_success(sender, spawn, **kwargs):
+def on_spawn_success(sender, spike_train, **kwargs):
     pass

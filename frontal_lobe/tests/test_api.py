@@ -4,10 +4,10 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from central_nervous_system.models import (
-    CNSHead,
-    CNSHeadStatus,
-    CNSSpawn,
-    CNSSpawnStatus,
+    Spike,
+    SpikeStatus,
+    SpikeTrain,
+    SpikeTrainStatus,
 )
 from hippocampus.models import TalosEngram
 from parietal_lobe.models import ToolCall, ToolDefinition
@@ -31,20 +31,20 @@ class ReasoningAPITest(TestCase):
             id=ReasoningStatus.PENDING, name='Pending'
         )
 
-        head_status, _ = CNSHeadStatus.objects.get_or_create(
+        spike_status, _ = SpikeStatus.objects.get_or_create(
             id=1, defaults={'name': 'Created'}
         )
-        spawn_status, _ = CNSSpawnStatus.objects.get_or_create(
+        spike_train_status, _ = SpikeTrainStatus.objects.get_or_create(
             id=1, defaults={'name': 'Created'}
         )
 
-        self.spawn = CNSSpawn.objects.create(status=spawn_status)
-        self.head = CNSHead.objects.create(
-            spawn=self.spawn, status=head_status
+        self.spike_train = SpikeTrain.objects.create(status=spike_train_status)
+        self.spike = Spike.objects.create(
+            spike_train=self.spike_train, status=spike_status
         )
 
         self.session = ReasoningSession.objects.create(
-            head=self.head, status=self.status_active
+            spike=self.spike, status=self.status_active
         )
         self.goal = ReasoningGoal.objects.create(
             session=self.session,

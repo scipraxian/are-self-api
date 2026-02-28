@@ -17,7 +17,7 @@ from frontal_lobe.models import (
     ReasoningTurn,
 )
 from frontal_lobe.thalamus import relay_sensory_state
-from central_nervous_system.models import CNSHead, CNSHeadStatus
+from central_nervous_system.models import Spike, SpikeStatus
 from central_nervous_system.utils import resolve_environment_context
 from identity.identity_prompt import build_identity_prompt
 from parietal_lobe.parietal_lobe import ParietalLobe
@@ -32,9 +32,9 @@ CONTENT = 'content'
 class FrontalLobe:
     """Async execution wrapper for the Frontal Lobe AI loop."""
 
-    def __init__(self, head: CNSHead):
-        self.head = head
-        self.head_id = head.id
+    def __init__(self, spike: Spike):
+        self.spike = spike
+        self.head_id = spike.id
         self.log_output: List[str] = []
         self.parietal_lobe: Optional[ParietalLobe] = None
 
@@ -46,9 +46,9 @@ class FrontalLobe:
     async def _log_live(self, message: str) -> None:
         """Appends to the execution log in memory and writes to the DB immediately."""
         self.log_output.append(message)
-        current_log = self.head.application_log or ''
-        self.head.application_log = current_log + message + '\n'
-        await sync_to_async(self.head.save)(update_fields=['application_log'])
+        current_log = self.spike.application_log or ''
+        self.spike.application_log = current_log + message + '\n'
+        await sync_to_async(self.spike.save)(update_fields=['application_log'])
 
     # --- Initialization ---
 
@@ -72,7 +72,7 @@ class FrontalLobe:
     ) -> None:
         """Creates the ReasoningSession and primary ReasoningGoal in the DB."""
         self.session = await sync_to_async(ReasoningSession.objects.create)(
-            head=self.head,
+            spike=self.spike,
             status_id=ReasoningStatusID.ACTIVE,
             max_turns=max_turns,
         )
@@ -196,16 +196,16 @@ class FrontalLobe:
 
     async def run(self) -> Tuple[int, str]:
         """Main asynchronous execution orchestrator."""
-        logger.info(f'[FrontalLobe] Waking up for Head {self.head_id}')
+        logger.info(f'[FrontalLobe] Waking up for Spike {self.head_id}')
 
-        self.head.application_log = ''
-        await sync_to_async(self.head.save)(update_fields=['application_log'])
+        self.spike.application_log = ''
+        await sync_to_async(self.spike.save)(update_fields=['application_log'])
         await self._log_live(FrontalLobeConstants.LOG_START)
 
         try:
             # 1. Resolve Environment & Model
             raw_context = await sync_to_async(resolve_environment_context)(
-                head_id=self.head.id
+                head_id=self.spike.id
             )
             target_id = int(
                 raw_context.get(
@@ -250,10 +250,10 @@ class FrontalLobe:
             # 5. The Loop
             previous_turn = None
             for turn in range(self.session.max_turns):
-                await sync_to_async(self.head.refresh_from_db)(
+                await sync_to_async(self.spike.refresh_from_db)(
                     fields=['status']
                 )
-                if self.head.status_id == CNSHeadStatus.STOPPING:
+                if self.spike.status_id == SpikeStatus.STOPPING:
                     await self._log_live('\n[WARNING] Stop Signal. Halting.')
                     break
 
@@ -307,12 +307,12 @@ class FrontalLobe:
 
 
 async def run_frontal_lobe(head_id: UUID) -> Tuple[int, str]:
-    """Asynchronous entry point for the generic spell caster."""
+    """Asynchronous entry point for the generic effector caster."""
     try:
-        head = await sync_to_async(
-            lambda: CNSHead.objects.select_related('spawn').get(id=head_id)
+        spike = await sync_to_async(
+            lambda: Spike.objects.select_related('spike_train').get(id=head_id)
         )()
-        lobe = FrontalLobe(head)
+        lobe = FrontalLobe(spike)
         return await lobe.run()
     except Exception as e:
         logger.exception(f'[FrontalLobe] Fatal crash on init: {e}')

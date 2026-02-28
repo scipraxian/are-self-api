@@ -476,7 +476,7 @@ body {
 }
 
 /* --- CARDS (Heads) --- */
-.head-card {
+.spike-card {
     background: #111;
     border: 1px solid #333;
     border-radius: 6px;
@@ -494,13 +494,13 @@ body {
     transition: transform 0.2s, border-color 0.2s, background 0.2s;
 }
 
-.head-header {
+.spike-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
 }
 
-.head-name {
+.spike-name {
     font-size: 0.7rem;
     font-weight: 700;
     white-space: nowrap;
@@ -508,14 +508,14 @@ body {
     text-overflow: ellipsis;
 }
 
-.head-meta {
+.spike-meta {
     display: flex;
     justify-content: space-between;
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.65rem;
 }
 
-.head-footer {
+.spike-footer {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
@@ -524,50 +524,50 @@ body {
 }
 
 /* Colorful States */
-.head-card.success {
+.spike-card.success {
     background: rgba(74, 222, 128, 0.05);
     border-color: rgba(74, 222, 128, 0.3);
     border-top: 3px solid #4ade80;
 }
 
-.head-card.success:hover {
+.spike-card.success:hover {
     background: rgba(74, 222, 128, 0.1);
     border-color: #4ade80;
     transform: translateY(-2px);
 }
 
-.head-card.failed {
+.spike-card.failed {
     background: rgba(239, 68, 68, 0.05);
     border-color: rgba(239, 68, 68, 0.3);
     border-top: 3px solid #ef4444;
 }
 
-.head-card.failed:hover {
+.spike-card.failed:hover {
     background: rgba(239, 68, 68, 0.1);
     border-color: #ef4444;
     transform: translateY(-2px);
 }
 
-.head-card.active {
+.spike-card.active {
     background: rgba(249, 159, 27, 0.05);
     border-color: var(--lcars-elbow);
     border-top: 3px solid var(--lcars-elbow);
     box-shadow: 0 0 10px rgba(249, 159, 27, 0.2);
 }
 
-.head-card.active:hover {
+.spike-card.active:hover {
     background: rgba(249, 159, 27, 0.1);
     transform: translateY(-2px);
 }
 
-.head-card.pending {
+.spike-card.pending {
     border-color: #444;
     border-style: dashed;
     background: rgba(255, 255, 255, 0.02);
     opacity: 0.8;
 }
 
-.head-card.stopped {
+.spike-card.stopped {
     background: rgba(148, 163, 184, 0.05);
     border-color: #444;
     border-top: 3px solid #94a3b8;
@@ -587,7 +587,7 @@ body {
     transition: background 0.2s, color 0.2s;
 }
 
-.head-card:hover .card-drill-btn {
+.spike-card:hover .card-drill-btn {
     background: var(--lcars-elbow);
     color: #000;
 }

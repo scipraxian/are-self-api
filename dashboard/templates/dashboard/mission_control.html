@@ -1,18 +1,18 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<spike>
     <meta charset="UTF-8">
     <title>TALOS // MISSION CONTROL</title>
     <link rel="stylesheet" href="{% static 'dashboard/css/mission_control.css' %}">
-    <link rel="stylesheet" href="{% static 'central_nervous_system/css/cns_head.css' %}">
-    <link rel="stylesheet" href="{% static 'central_nervous_system/css/cns_spawn_control_card.css' %}">
-    <link rel="stylesheet" href="{% static 'central_nervous_system/css/cns_spawn.css' %}">
-    <link rel="stylesheet" href="{% static 'central_nervous_system/css/cns_spawns.css' %}">
+    <link rel="stylesheet" href="{% static 'central_nervous_system/css/cns_spike.css' %}">
+    <link rel="stylesheet" href="{% static 'central_nervous_system/css/cns_spike_train_control_card.css' %}">
+    <link rel="stylesheet" href="{% static 'central_nervous_system/css/cns_spike_train.css' %}">
+    <link rel="stylesheet" href="{% static 'central_nervous_system/css/cns_spike_trains.css' %}">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=JetBrains+Mono&display=swap"
           rel="stylesheet">
-</head>
+</spike>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 <script>
     window.djangoContext = {csrfToken: "{{ csrf_token }}"};
@@ -91,7 +91,7 @@
             <div class="launch-group">
                 <div class="lcars-separator">
                     <div class="line" style="opacity: 0.3;"></div>
-                    <div class="label" style="opacity: 0.5;">Spellbooks</div>
+                    <div class="label" style="opacity: 0.5;">NeuralPathways</div>
                 </div>
                 {% for book in uncategorized %}
                     {% include "dashboard/partials/launch_row.html" with book=book extra_class="uncategorized" %}
@@ -99,12 +99,12 @@
             </div>
         {% endif %}
 
-        <a href="{% url 'admin:central_nervous_system_cnsspellbook_add' %}" target="_blank"
+        <a href="{% url 'admin:central_nervous_system_neuralpathway_add' %}" target="_blank"
            class="add-btn text-center"
            style="text-decoration:none; text-align:center;">+ Protocol</a>
     </div>
 
-    <main id="spawns-dispatcher-root" class="spawns-list"></main>
+    <main id="spike_trains-dispatcher-root" class="spike_trains-list"></main>
 </div>
 
 <div class="thought-bubble" onclick="toggleChat()" title="Frontal Lobe">
@@ -115,42 +115,42 @@
 
 {#{% include "dashboard/partials/chat_window.html" %}#}
 
-<template id="tpl-cns-head">
-    <a href="#" class="cns-head-card js-cns-head">
-        <div class="head-header">
-            <div class="head-name js-head-name">NODE</div>
-            <div class="js-head-status-pill status-pill-text">STATUS</div>
+<template id="tpl-cns-spike">
+    <a href="#" class="cns-spike-card js-cns-spike">
+        <div class="spike-header">
+            <div class="spike-name js-spike-name">NODE</div>
+            <div class="js-spike-status-pill status-pill-text">STATUS</div>
         </div>
 
-        <div class="head-meta">
-            <span class="js-head-time">00:00:00</span>
-            <span class="js-head-target" style="opacity: 0.5;">LOCAL</span>
+        <div class="spike-meta">
+            <span class="js-spike-time">00:00:00</span>
+            <span class="js-spike-target" style="opacity: 0.5;">LOCAL</span>
         </div>
 
-        <div class="head-telemetry">
-            <span class="js-head-trend" style="font-size: 0.6rem;"></span>
-            <span class="js-head-delta">0s</span>
-            <span class="js-head-delta-avg" style="color: #666;"></span>
+        <div class="spike-telemetry">
+            <span class="js-spike-trend" style="font-size: 0.6rem;"></span>
+            <span class="js-spike-delta">0s</span>
+            <span class="js-spike-delta-avg" style="color: #666;"></span>
         </div>
 
-        <div class="head-footer">
-            <span class="js-head-log">...</span>
-            <span class="js-head-bb-indicator" style="display:none; color: var(--lcars-blue);">[BB]</span>
+        <div class="spike-footer">
+            <span class="js-spike-log">...</span>
+            <span class="js-spike-bb-indicator" style="display:none; color: var(--lcars-blue);">[BB]</span>
         </div>
     </a>
 </template>
 
-<template id="tpl-cns-spawn">
-    <div class="cns-spawn-wrapper js-cns-spawn-wrapper">
-        <div class="cns-spawn js-cns-spawn">
+<template id="tpl-cns-spike_train">
+    <div class="cns-spike_train-wrapper js-cns-spike_train-wrapper">
+        <div class="cns-spike_train js-cns-spike_train">
 
-            <div class="spawn-header">
-                <div class="spawn-title js-spawn-title">Unknown Protocol</div>
-                <div class="spawn-status">
-                    <span class="js-spawn-id">#00000000</span>
-                    <span class="status-text js-spawn-status-text">Pending</span>
+            <div class="spike_train-header">
+                <div class="spike_train-title js-spike_train-title">Unknown Protocol</div>
+                <div class="spike_train-status">
+                    <span class="js-spike_train-id">#00000000</span>
+                    <span class="status-text js-spike_train-status-text">Pending</span>
                 </div>
-                <div class="spawn-time js-spawn-time">Just now</div>
+                <div class="spike_train-time js-spike_train-time">Just now</div>
             </div>
 
             <div class="cns-control-card js-cns-control-card">
@@ -181,21 +181,21 @@
 
             <button class="scroll-btn left js-scroll-left" style="display: none;">◄</button>
 
-            <div class="spawn-track js-spawn-track">
+            <div class="spike_train-track js-spike_train-track">
             </div>
 
             <button class="scroll-btn right js-scroll-right" style="display: none;">►</button>
         </div>
 
-        <div class="nested-spawns js-nested-spawns"></div>
+        <div class="nested-spike_trains js-nested-spike_trains"></div>
     </div>
 </template>
 
 <script src="{% static 'dashboard/js/mission_control.js' %}"></script>
-<script src="{% static 'central_nervous_system/js/cns_head.js' %}"></script>
-<script src="{% static 'central_nervous_system/js/cns_spawn_control_card.js' %}"></script>
-<script src="{% static 'central_nervous_system/js/cns_spawn.js' %}"></script>
-<script src="{% static 'central_nervous_system/js/cns_spawns.js' %}"></script>
+<script src="{% static 'central_nervous_system/js/cns_spike.js' %}"></script>
+<script src="{% static 'central_nervous_system/js/cns_spike_train_control_card.js' %}"></script>
+<script src="{% static 'central_nervous_system/js/cns_spike_train.js' %}"></script>
+<script src="{% static 'central_nervous_system/js/cns_spike_trains.js' %}"></script>
 
 </body>
 </html>

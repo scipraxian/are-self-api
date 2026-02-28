@@ -6,21 +6,21 @@ from unittest.mock import patch, MagicMock
 
 class ReadersTest(SimpleTestCase):
 
-    @patch('occipital_lobe.readers.CNSSpawn')
+    @patch('occipital_lobe.readers.SpikeTrain')
     def test_read_build_log_regex(self, mock_spawn_cls):
-        # Setup Mock Spawn and Head
+        # Setup Mock SpikeTrain and Head
         mock_spawn = MagicMock()
         mock_head = MagicMock()
         mock_head.id = 1
-        mock_head.spell.name = "TestSpell"
+        mock_head.effector.name = "TestSpell"
 
         # Mock QuerySet behavior
         mock_qs = MagicMock()
         mock_qs.exists.return_value = True
         mock_qs.__iter__.return_value = iter([mock_head])
 
-        mock_spawn.heads.filter.return_value = mock_qs
-        mock_spawn.heads.all.return_value = mock_qs
+        mock_spawn.spikes.filter.return_value = mock_qs
+        mock_spawn.spikes.all.return_value = mock_qs
         mock_spawn_cls.objects.get.return_value = mock_spawn
 
         # Log with real errors and false positives

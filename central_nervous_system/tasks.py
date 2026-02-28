@@ -3,8 +3,8 @@ import logging
 from celery import shared_task
 from django.db import transaction
 
-from .models import CNSHead, CNSHeadStatus
-from .spells.spell_casters.generic_spell_caster import GenericSpellCaster
+from .models import Spike, SpikeStatus
+from .effectors.effector_casters.generic_effector_caster import GenericSpellCaster
 
 logger = logging.getLogger(__name__)
 
@@ -12,18 +12,18 @@ logger = logging.getLogger(__name__)
 @shared_task
 def check_next_wave(spawn_id):
     """
-    Checks the status of a spawn and triggers the next batch of heads if ready.
+    Checks the status of a spike_train and triggers the next batch of spikes if ready.
     """
     from .central_nervous_system import CNS  # circular import
 
-    logger.info(f'[CELERY] Checking next wave for Spawn {spawn_id}')
+    logger.info(f'[CELERY] Checking next wave for SpikeTrain {spawn_id}')
     try:
         controller = CNS(spawn_id=spawn_id)
         # Accessing internal dispatch logic directly for task efficiency
         controller.dispatch_next_wave()
     except Exception as e:
         logger.exception(
-            f'[CELERY] Check Wave Failed for Spawn {spawn_id}: {e}'
+            f'[CELERY] Check Wave Failed for SpikeTrain {spawn_id}: {e}'
         )
         raise
 
@@ -34,7 +34,7 @@ def cast_cns_spell(self, head_id):
     The Main Execution Task.
     Instantiates the GenericSpellCaster to run the pipeline.
     """
-    logger.info(f'Task starting for Head ID: {head_id}')
+    logger.info(f'Task starting for Spike ID: {head_id}')
 
     # Store spawn_id for the finally block
     spawn_id = None
@@ -42,12 +42,12 @@ def cast_cns_spell(self, head_id):
     try:
         # 0. Pre-fetch spawn_id so we can drive the engine even if the Caster explodes
         try:
-            head = CNSHead.objects.only('spawn_id').get(id=head_id)
-            spawn_id = head.spawn_id
-            head.celery_task_id = self.request.id
-            head.save(update_fields=['celery_task_id'])
-        except CNSHead.DoesNotExist:
-            logger.error(f'Head {head_id} missing during cast!')
+            spike = Spike.objects.only('spawn_id').get(id=head_id)
+            spawn_id = spike.spike_train_id
+            spike.celery_task_id = self.request.id
+            spike.save(update_fields=['celery_task_id'])
+        except Spike.DoesNotExist:
+            logger.error(f'Spike {head_id} missing during cast!')
             return
 
         # 1. Instantiate the Caster
@@ -56,17 +56,17 @@ def cast_cns_spell(self, head_id):
         # 2. Run the Logic (Loads DB -> runs Async Pipeline)
         caster.execute()
 
-        logger.info(f'Task completed successfully for Head ID: {head_id}')
+        logger.info(f'Task completed successfully for Spike ID: {head_id}')
 
     except Exception as e:
-        logger.exception(f'GenericSpellCaster crashed for Head ID {head_id}')
+        logger.exception(f'GenericSpellCaster crashed for Spike ID {head_id}')
 
         # Emergency DB Update to prevent "Pending Forever" state
         try:
-            head = CNSHead.objects.get(id=head_id)
-            head.status_id = CNSHeadStatus.FAILED
-            head.execution_log += f'\n[CELERY FATAL] Task crashed: {e}\n'
-            head.save(update_fields=['status', 'execution_log'])
+            spike = Spike.objects.get(id=head_id)
+            spike.status_id = SpikeStatus.FAILED
+            spike.execution_log += f'\n[CELERY FATAL] Task crashed: {e}\n'
+            spike.save(update_fields=['status', 'execution_log'])
         except Exception:
             pass
 
@@ -76,7 +76,7 @@ def cast_cns_spell(self, head_id):
         # 3. SELF-DRIVING ENGINE: Trigger the next wave automatically
         if spawn_id:
             logger.info(
-                f'[CELERY] Spell finished. Triggering next wave for Spawn {spawn_id}'
+                f'[CELERY] Effector finished. Triggering next wave for SpikeTrain {spawn_id}'
             )
             # Use on_commit if in a transaction, otherwise call immediately
             transaction.on_commit(lambda: check_next_wave.delay(spawn_id))

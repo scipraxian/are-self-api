@@ -8,31 +8,31 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from .filters import CNSHeadFilter, CNSSpawnFilter
+from .filters import SpikeFilter, SpikeTrainFilter
 from .central_nervous_system import CNS
 from .models import (
-    CNSHead,
-    CNSSpawn,
-    CNSSpell,
-    CNSSpellbook,
-    CNSSpellbookConnectionWire,
-    CNSSpellbookNode,
-    CNSSpellBookNodeContext,
+    Spike,
+    SpikeTrain,
+    Effector,
+    NeuralPathway,
+    Axon,
+    Neuron,
+    NeuronContext,
 )
 from .serializers import (
     CNSGraphLayoutSerializer,
-    CNSHeadSerializer,
-    CNSNodeDetailsSerializer,
-    CNSNodeTelemetrySerializer,
-    CNSSpawnCreateSerializer,
-    CNSSpawnLightSerializer,
-    CNSSpawnSerializer,
-    CNSSpawnStatusSerializer,
-    CNSSpellbookConnectionWireSerializer,
-    CNSSpellBookNodeContextSerializer,
-    CNSSpellbookNodeSerializer,
-    CNSSpellbookSerializer,
-    CNSSpellSerializer,
+    SpikeSerializer,
+    NeuronDetailsSerializer,
+    NeuronTelemetrySerializer,
+    SpikeTrainCreateSerializer,
+    SpikeTrainLightSerializer,
+    SpikeTrainSerializer,
+    SpikeTrainStatusSerializer,
+    CNSNeuralPathwayConnectionWireSerializer,
+    EffectorBookNodeContextSerializer,
+    CNSNeuralPathwayNodeSerializer,
+    CNSNeuralPathwaySerializer,
+    EffectorSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -44,20 +44,20 @@ STATUS_OK = 'ok'
 
 
 @mcp_viewset()
-class CNSSpellViewSet(viewsets.ReadOnlyModelViewSet):
-    """Registry of all available spells."""
+class EffectorViewSet(viewsets.ReadOnlyModelViewSet):
+    """Registry of all available effectors."""
 
-    queryset = (CNSSpell.objects.all().select_related(
+    queryset = (Effector.objects.all().select_related(
         'distribution_mode', 'talos_executable').order_by('name'))
-    serializer_class = CNSSpellSerializer
+    serializer_class = EffectorSerializer
 
 
 @mcp_viewset()
-class CNSSpellbookViewSet(viewsets.ModelViewSet):
-    """Library of available Protocols (Spellbooks)."""
+class CNSNeuralPathwayViewSet(viewsets.ModelViewSet):
+    """Library of available Protocols (NeuralPathways)."""
 
-    queryset = CNSSpellbook.objects.all().order_by('name')
-    serializer_class = CNSSpellbookSerializer
+    queryset = NeuralPathway.objects.all().order_by('name')
+    serializer_class = CNSNeuralPathwaySerializer
     filterset_fields = ['is_favorite']
 
     @action(detail=True, methods=['get'])
@@ -66,9 +66,9 @@ class CNSSpellbookViewSet(viewsets.ModelViewSet):
         book = self.get_object()
 
         # Architectural Anchor: Enforce BeginPlay exists
-        CNSSpellbookNode.objects.get_or_create(
-            spellbook=book,
-            spell_id=CNSSpell.BEGIN_PLAY,
+        Neuron.objects.get_or_create(
+            pathway=book,
+            spell_id=Effector.BEGIN_PLAY,
             defaults={
                 'is_root': True,
                 'ui_json': json.dumps({
@@ -83,22 +83,22 @@ class CNSSpellbookViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def library(self, request, pk=None):
-        """Returns the combined palette of Spells and Sub-graphs."""
+        """Returns the combined palette of Effectors and Sub-graphs."""
         book = self.get_object()
 
-        spells = list(
-            CNSSpell.objects.values('id', 'name', 'distribution_mode__name'))
-        for s in spells:
+        effectors = list(
+            Effector.objects.values('id', 'name', 'distribution_mode__name'))
+        for s in effectors:
             s['category'] = CATEGORY_SPELLS
 
         # Exclude self to prevent infinite recursion
         subgraphs = list(
-            CNSSpellbook.objects.exclude(id=book.id).values('id', 'name'))
+            NeuralPathway.objects.exclude(id=book.id).values('id', 'name'))
         for b in subgraphs:
             b['category'] = CATEGORY_SUBGRAPHS
             b['is_book'] = True
 
-        return Response({'library': spells + subgraphs})
+        return Response({'library': effectors + subgraphs})
 
     @action(detail=True, methods=['post'])
     def toggle_favorite(self, request, pk=None):
@@ -110,19 +110,19 @@ class CNSSpellbookViewSet(viewsets.ModelViewSet):
 
 
 @mcp_viewset()
-class CNSSpellbookNodeViewSet(viewsets.ModelViewSet):
+class CNSNeuralPathwayNodeViewSet(viewsets.ModelViewSet):
     """Graph Nodes CRUD."""
 
-    queryset = CNSSpellbookNode.objects.all()
-    serializer_class = CNSSpellbookNodeSerializer
+    queryset = Neuron.objects.all()
+    serializer_class = CNSNeuralPathwayNodeSerializer
 
     def perform_create(self, serializer):
         """Auto-flags the Begin Play node as root if applicable."""
-        spell_id = self.request.data.get('spell')
-        invoked_book_id = self.request.data.get('invoked_spellbook')
+        spell_id = self.request.data.get('effector')
+        invoked_book_id = self.request.data.get('invoked_pathway')
 
         is_root = False
-        if not invoked_book_id and int(spell_id) == CNSSpell.BEGIN_PLAY:
+        if not invoked_book_id and int(spell_id) == Effector.BEGIN_PLAY:
             is_root = True
 
         serializer.save(is_root=is_root)
@@ -130,7 +130,7 @@ class CNSSpellbookNodeViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         """Graph Protection: Cannot delete the core anchor node."""
         is_delegated = bool(instance.invoked_spellbook_id)
-        if not is_delegated and instance.spell_id == CNSSpell.BEGIN_PLAY:
+        if not is_delegated and instance.effector_id == Effector.BEGIN_PLAY:
             raise ValidationError(
                 'Cannot delete the core BeginPlay anchor node.')
         instance.delete()
@@ -139,29 +139,29 @@ class CNSSpellbookNodeViewSet(viewsets.ModelViewSet):
     def inspector_details(self, request, pk=None):
         """Returns the fully resolved variable context matrix for a node."""
         node = self.get_object()
-        serializer = CNSNodeDetailsSerializer(node)
+        serializer = NeuronDetailsSerializer(node)
         return Response(serializer.data)
 
 
 @mcp_viewset()
-class CNSSpellbookConnectionWireViewSet(mixins.CreateModelMixin,
-                                          mixins.DestroyModelMixin,
-                                          viewsets.GenericViewSet):
+class CNSNeuralPathwayConnectionWireViewSet(mixins.CreateModelMixin,
+                                            mixins.DestroyModelMixin,
+                                            viewsets.GenericViewSet):
     """Graph Wires."""
 
-    queryset = CNSSpellbookConnectionWire.objects.all()
-    serializer_class = CNSSpellbookConnectionWireSerializer
+    queryset = Axon.objects.all()
+    serializer_class = CNSNeuralPathwayConnectionWireSerializer
 
 
-class CNSSpellBookNodeContextViewSet(viewsets.ModelViewSet):
-    """Manages variable overrides on specific nodes."""
+class EffectorBookNodeContextViewSet(viewsets.ModelViewSet):
+    """Manages variable overrides on specific neurons."""
 
-    queryset = CNSSpellBookNodeContext.objects.all()
-    serializer_class = CNSSpellBookNodeContextSerializer
-    filterset_fields = ['node']
+    queryset = NeuronContext.objects.all()
+    serializer_class = EffectorBookNodeContextSerializer
+    filterset_fields = ['neuron']
 
 
-class CNSSpawnViewSet(
+class SpikeTrainViewSet(
         mixins.CreateModelMixin,
         mixins.RetrieveModelMixin,
         mixins.ListModelMixin,
@@ -169,7 +169,7 @@ class CNSSpawnViewSet(
 ):
     """Mission Control and Spawns."""
 
-    queryset = CNSSpawn.objects.all().select_related('status', 'spellbook',
+    queryset = SpikeTrain.objects.all().select_related('status', 'pathway',
                                                        'environment')
 
     filter_backends = [
@@ -177,17 +177,17 @@ class CNSSpawnViewSet(
         filters.OrderingFilter,
         filters.SearchFilter,
     ]
-    filterset_class = CNSSpawnFilter
+    filterset_class = SpikeTrainFilter
     ordering_fields = '__all__'
     ordering = ['-created']  # Default ordering
     search_fields = ['spellbook__name', 'status__name']
 
     def get_serializer_class(self):
         if self.action == 'create':
-            return CNSSpawnCreateSerializer
+            return SpikeTrainCreateSerializer
         elif self.action == 'list':
-            return CNSSpawnLightSerializer
-        return CNSSpawnSerializer
+            return SpikeTrainLightSerializer
+        return SpikeTrainSerializer
 
     def create(self, request, *args, **kwargs):
         """Launch Protocol."""
@@ -198,11 +198,11 @@ class CNSSpawnViewSet(
         try:
             controller = CNS(spellbook_id=book_id)
             controller.start()
-            read_serializer = CNSSpawnSerializer(controller.spawn)
+            read_serializer = SpikeTrainSerializer(controller.spike_train)
             return Response(read_serializer.data,
                             status=status.HTTP_201_CREATED)
         except Exception as e:
-            logger.exception(f'Failed to launch spellbook {book_id}')
+            logger.exception(f'Failed to launch pathway {book_id}')
             return Response(
                 {'error': f'Launch Failed: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -211,16 +211,16 @@ class CNSSpawnViewSet(
     @action(detail=True, methods=['get'])
     def live_status(self, request, pk=None):
         """Fast-polling endpoint for the UI."""
-        spawn = self.get_object()
-        serializer = CNSSpawnStatusSerializer(spawn)
+        spike_train = self.get_object()
+        serializer = SpikeTrainStatusSerializer(spike_train)
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
-    def heads(self, request, pk=None):
-        """Lightweight list of heads for a spawn."""
-        spawn = self.get_object()
-        heads = spawn.heads.all().order_by('created')
-        serializer = CNSHeadSerializer(heads, many=True)
+    def spikes(self, request, pk=None):
+        """Lightweight list of spikes for a spike_train."""
+        spike_train = self.get_object()
+        spikes = spike_train.spikes.all().order_by('created')
+        serializer = SpikeSerializer(spikes, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
@@ -239,31 +239,31 @@ class CNSSpawnViewSet(
 
 
 @mcp_viewset()
-class CNSHeadViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin,
-                       viewsets.GenericViewSet):
+class SpikeViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin,
+                   viewsets.GenericViewSet):
     """Forensics Unit. Retrieves heavy telemetry/logs."""
 
-    queryset = CNSHead.objects.all().select_related('status', 'spell',
-                                                      'target')
+    queryset = Spike.objects.all().select_related('status', 'effector',
+                                                  'target')
 
     filter_backends = [
         DjangoFilterBackend,
         filters.OrderingFilter,
         filters.SearchFilter,
     ]
-    filterset_class = CNSHeadFilter
+    filterset_class = SpikeFilter
     ordering_fields = '__all__'
-    ordering = ['created']  # Default ordering for heads (chronological)
-    search_fields = ['spell__name', 'status__name', 'target__hostname']
+    ordering = ['created']  # Default ordering for spikes (chronological)
+    search_fields = ['effector__name', 'status__name', 'target__hostname']
 
     def get_serializer_class(self):
         if self.action == 'list':
-            return CNSHeadSerializer
-        return CNSNodeTelemetrySerializer
+            return SpikeSerializer
+        return NeuronTelemetrySerializer
 
     @action(detail=True, methods=['get'])
     def status(self, request, pk=None):
-        """Lightweight polling endpoint for the UI Head Cards."""
-        head = self.get_object()
-        serializer = CNSHeadSerializer(head)
+        """Lightweight polling endpoint for the UI Spike Cards."""
+        spike = self.get_object()
+        serializer = SpikeSerializer(spike)
         return Response(serializer.data)

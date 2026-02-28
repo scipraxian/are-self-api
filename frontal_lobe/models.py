@@ -90,8 +90,8 @@ class ReasoningSession(
         null=True,
         related_name=RELATED_NAME,
     )
-    head = models.ForeignKey(
-        'central_nervous_system.CNSHead',
+    spike = models.ForeignKey(
+        'central_nervous_system.Spike',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

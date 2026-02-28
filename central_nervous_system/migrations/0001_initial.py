@@ -97,7 +97,7 @@ class Migration(migrations.Migration):
                 ('delta', models.DurationField(default=datetime.timedelta)),
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('environment', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, to='environments.projectenvironment')),
-                ('parent_head', models.ForeignKey(blank=True, help_text='The Head (Node execution) in the Parent Graph that spawned this Sub-Graph.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='child_spawns', to='central_nervous_system.hydrahead')),
+                ('parent_spike', models.ForeignKey(blank=True, help_text='The Head (Node execution) in the Parent Graph that spawned this Sub-Graph.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='child_spawns', to='central_nervous_system.hydrahead')),
                 ('status', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='central_nervous_system.hydraspawnstatus')),
             ],
             options={
@@ -106,7 +106,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='hydrahead',
-            name='spawn',
+            name='spike_train',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='heads', to='central_nervous_system.hydraspawn'),
         ),
         migrations.CreateModel(
@@ -129,7 +129,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='hydrahead',
-            name='spell',
+            name='effector',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='central_nervous_system.hydraspell'),
         ),
         migrations.CreateModel(
@@ -138,7 +138,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('order', models.IntegerField(default=10)),
                 ('argument', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='environments.talosexecutableargument')),
-                ('spell', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='central_nervous_system.hydraspell')),
+                ('effector', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='central_nervous_system.hydraspell')),
             ],
             options={
                 'ordering': ['order'],
@@ -163,7 +163,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='hydraspawn',
-            name='spellbook',
+            name='pathway',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='central_nervous_system.hydraspellbook'),
         ),
         migrations.CreateModel(
@@ -175,8 +175,8 @@ class Migration(migrations.Migration):
                 ('distribution_mode', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='central_nervous_system.hydradistributionmode')),
                 ('environment', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, to='environments.projectenvironment')),
                 ('invoked_spellbook', models.ForeignKey(blank=True, help_text='If set, this Node acts as a container that executes this Spellbook.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='invoking_nodes', to='central_nervous_system.hydraspellbook')),
-                ('spell', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='central_nervous_system.hydraspell')),
-                ('spellbook', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='nodes', to='central_nervous_system.hydraspellbook')),
+                ('effector', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='central_nervous_system.hydraspell')),
+                ('pathway', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='nodes', to='central_nervous_system.hydraspellbook')),
             ],
             options={
                 'abstract': False,
@@ -184,7 +184,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='hydrahead',
-            name='node',
+            name='neuron',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='central_nervous_system.hydraspellbooknode'),
         ),
         migrations.CreateModel(
@@ -193,7 +193,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('key', models.CharField(max_length=254)),
                 ('value', models.TextField(blank=True)),
-                ('node', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='central_nervous_system.hydraspellbooknode')),
+                ('neuron', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='central_nervous_system.hydraspellbooknode')),
             ],
         ),
         migrations.CreateModel(
@@ -202,19 +202,19 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('key', models.CharField(max_length=254)),
                 ('value', models.TextField(blank=True)),
-                ('spell', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='central_nervous_system.hydraspell')),
+                ('effector', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='central_nervous_system.hydraspell')),
             ],
         ),
         migrations.CreateModel(
             name='HydraSpellTarget',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('spell', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='specific_targets', to='central_nervous_system.hydraspell')),
+                ('effector', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='specific_targets', to='central_nervous_system.hydraspell')),
                 ('target', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='talos_agent.talosagentregistry')),
             ],
             options={
                 'verbose_name': 'Hydra Spell Target',
-                'unique_together': {('spell', 'target')},
+                'unique_together': {('effector', 'target')},
             },
         ),
         migrations.CreateModel(
@@ -222,14 +222,14 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('modified', models.DateTimeField(auto_now=True, db_index=True)),
-                ('spellbook', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='wires', to='central_nervous_system.hydraspellbook')),
+                ('pathway', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='wires', to='central_nervous_system.hydraspellbook')),
                 ('source', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='outgoing_connections', to='central_nervous_system.hydraspellbooknode')),
                 ('target', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='incoming_connections', to='central_nervous_system.hydraspellbooknode')),
                 ('type', models.ForeignKey(default=1, on_delete=django.db.models.deletion.PROTECT, to='central_nervous_system.hydrawiretype')),
             ],
             options={
                 'verbose_name': 'Wire / Connection',
-                'unique_together': {('spellbook', 'source', 'target')},
+                'unique_together': {('pathway', 'source', 'target')},
             },
         ),
     ]

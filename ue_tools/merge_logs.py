@@ -33,7 +33,7 @@ def merge_logs(local_content, remote_content):
 
         # Determine strict chronological order first
         # Processing strategy:
-        # Check if head items are close enough to merge.
+        # Check if spike items are close enough to merge.
 
         matched = False
         if entry_l and entry_r:

@@ -8,7 +8,7 @@ from common.models import (
     UUIDIdMixin,
 )
 from frontal_lobe.models import ReasoningSession, ReasoningTurn
-from central_nervous_system.models import CNSHead
+from central_nervous_system.models import Spike
 from prefrontal_cortex.models import PFCTask
 
 
@@ -37,8 +37,8 @@ class TalosEngram(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     source_turns = models.ManyToManyField(
         ReasoningTurn, related_name=RELATED_NAME, blank=True
     )
-    heads = models.ManyToManyField(
-        CNSHead, related_name=RELATED_NAME, blank=True
+    spikes = models.ManyToManyField(
+        Spike, related_name=RELATED_NAME, blank=True
     )
     tags = models.ManyToManyField(
         TalosEngramTag, related_name=RELATED_NAME, blank=True

@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
+<spike>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Talos Graph Editor | Visual Logic</title>
@@ -371,17 +371,17 @@
             }
         }
     </style>
-</head>
+</spike>
 
 <body class="{% if mode == 'monitor' %}monitor-mode{% endif %}">
 <script>
     // [FIX] Robust Context Variables to avoid "VariableDoesNotExist" 500 errors
     window.djangoContext = {
-        bookId: "{% if book %}{{ book.id }}{% elif spawn %}{{ spawn.spellbook.id }}{% endif %}",
-        spawnId: "{% if spawn %}{{ spawn.id }}{% elif spawn_id %}{{ spawn_id }}{% endif %}",
+        bookId: "{% if book %}{{ book.id }}{% elif spike_train %}{{ spike_train.pathway.id }}{% endif %}",
+        spawnId: "{% if spike_train %}{{ spike_train.id }}{% elif spawn_id %}{{ spawn_id }}{% endif %}",
         mode: "{{ mode|default:'edit' }}",
         csrfToken: "{{ csrf_token }}",
-        terminateUrl: "{% if spawn %}{% url 'central_nervous_system:cns_spawn_stop_graceful' spawn.id %}{% elif spawn_id %}{% url 'central_nervous_system:cns_spawn_stop_graceful' spawn_id %}{% endif %}"
+        terminateUrl: "{% if spike_train %}{% url 'central_nervous_system:cns_spawn_stop_graceful' spike_train.id %}{% elif spawn_id %}{% url 'central_nervous_system:cns_spawn_stop_graceful' spawn_id %}{% endif %}"
     };
 </script>
 <div id="app">
@@ -393,7 +393,7 @@
             {% if mode == 'monitor' %}
                 <span class="title">{{ book.name }}</span>
             {% else %}
-                <input type="text" id="spellbook-name" class="title-input" value="{{ book.name }}" spellcheck="false">
+                <input type="text" id="pathway-name" class="title-input" value="{{ book.name }}" spellcheck="false">
 
             {% endif %}
         </div>
@@ -445,7 +445,7 @@
                                 </div>
                             </div>
 
-                            {% if s.id == spawn.id %}
+                            {% if s.id == spike_train.id %}
                                 <div style="position: absolute; right: 10px; color: #a855f7; font-size: 1.2rem;">•</div>
                             {% endif %}
                         </a>
@@ -456,7 +456,7 @@
                 </div>
             {% else %}
                 <div class="sidebar-header">
-                    <input type="text" id="node-search" placeholder="Search nodes...">
+                    <input type="text" id="node-search" placeholder="Search neurons...">
                 </div>
                 <div class="node-library" id="node-library">
                 </div>
@@ -465,7 +465,7 @@
             <div class="sidebar-footer">
                 {% if mode == 'monitor' %}
                     <div style="flex: 1;">
-                        <a href="{% url 'central_nervous_system:cns_spawn_download' spawn.id %}"
+                        <a href="{% url 'central_nervous_system:cns_spawn_download' spike_train.id %}"
                            target="_blank"
                            class="btn-done"
                            style="text-decoration: none; border-color: #60a5fa; color: #60a5fa; font-weight: 700;">
@@ -496,7 +496,7 @@
                 <path id="temp-line" class="temp-wire" d="" fill="none" style="display: none;"></path>
             </svg>
 
-            <div id="nodes-layer" class="canvas-layer"></div>
+            <div id="neurons-layer" class="canvas-layer"></div>
         </main>
 
         <aside id="inspector" class="inspector-panel hidden">

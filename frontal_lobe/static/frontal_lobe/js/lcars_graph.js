@@ -2,7 +2,7 @@ const POLL_INTERVAL_MS = 2500;
 let sessionId;
 let svg, g, simulation;
 let linkGroup, nodeGroup;
-let currentData = { nodes: [], links: [] };
+let currentData = { neurons: [], links: [] };
 let selectedNodeId = null;
 let selectedNodeHash = null;
 let pollTimer;
@@ -11,7 +11,7 @@ let currentSessionData = null;
 let globalHudTimer = null;
 
 function flattenTreeToGraph(sessionData, oldData) {
-    const nodes = [];
+    const neurons = [];
     const links = [];
 
     let firstTurnId = null;
@@ -24,7 +24,7 @@ function flattenTreeToGraph(sessionData, oldData) {
     if (sessionData.goals) {
         sessionData.goals.forEach(goal => {
             const goalNodeId = `goal-${goal.id}`;
-            nodes.push({
+            neurons.push({
                 id: goalNodeId,
                 type: 'goal',
                 label: `Goal ${goal.id}`,
@@ -48,7 +48,7 @@ function flattenTreeToGraph(sessionData, oldData) {
         sessionData.turns.forEach((turn, index) => {
             const turnNodeId = `turn-${turn.id}`;
 
-            nodes.push({
+            neurons.push({
                 id: turnNodeId,
                 type: 'turn',
                 label: `Turn ${turn.turn_number}`,
@@ -74,12 +74,12 @@ function flattenTreeToGraph(sessionData, oldData) {
 
             // --- GRAVITY FIX: Turn -> Goal links removed so it doesn't clump ---
 
-            // --- TREE FIX: Make tool nodes unique per call so they branch outward ---
+            // --- TREE FIX: Make tool neurons unique per call so they branch outward ---
             if (turn.tool_calls) {
                 turn.tool_calls.forEach((call, callIdx) => {
                     const toolNodeId = `tool-${turn.id}-${call.tool_name}-${callIdx}`;
 
-                    nodes.push({
+                    neurons.push({
                         id: toolNodeId,
                         type: 'tool',
                         label: call.tool_name,
@@ -104,7 +104,7 @@ function flattenTreeToGraph(sessionData, oldData) {
     if (sessionData.engrams) {
         sessionData.engrams.forEach(engram => {
             const engramNodeId = `engram-${engram.id}`;
-            nodes.push({
+            neurons.push({
                 id: engramNodeId,
                 type: 'engram',
                 label: `Engram ${engram.id}`,
@@ -128,7 +128,7 @@ function flattenTreeToGraph(sessionData, oldData) {
     // 4. Process Conclusion
     if (sessionData.conclusion) {
         const conclusionNodeId = `conclusion-${sessionData.conclusion.id}`;
-        nodes.push({
+        neurons.push({
             id: conclusionNodeId,
             type: 'conclusion',
             label: 'Final Report',
@@ -151,10 +151,10 @@ function flattenTreeToGraph(sessionData, oldData) {
         }
     }
 
-    // Preserve Physics & Spawn gracefully
-    if (oldData && oldData.nodes) {
-        const oldNodeMap = new Map(oldData.nodes.map(n => [n.id, n]));
-        nodes.forEach(n => {
+    // Preserve Physics & SpikeTrain gracefully
+    if (oldData && oldData.neurons) {
+        const oldNodeMap = new Map(oldData.neurons.map(n => [n.id, n]));
+        neurons.forEach(n => {
             if (oldNodeMap.has(n.id)) {
                 const old = oldNodeMap.get(n.id);
                 n.x = old.x;
@@ -162,8 +162,8 @@ function flattenTreeToGraph(sessionData, oldData) {
                 n.vx = old.vx;
                 n.vy = old.vy;
             } else if (n.type === 'turn') {
-                // If a new turn spawns, put it near the previous turn so it doesn't fly across the screen
-                const prevTurn = nodes.find(prev => prev.type === 'turn' && prev.turn_number === n.turn_number - 1);
+                // If a new turn spike_trains, put it near the previous turn so it doesn't fly across the screen
+                const prevTurn = neurons.find(prev => prev.type === 'turn' && prev.turn_number === n.turn_number - 1);
                 if (prevTurn && oldNodeMap.has(prevTurn.id)) {
                     const oldPrev = oldNodeMap.get(prevTurn.id);
                     n.x = oldPrev.x + 50;
@@ -172,7 +172,7 @@ function flattenTreeToGraph(sessionData, oldData) {
             }
         });
     }
-    return { nodes, links };
+    return { neurons, links };
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -207,7 +207,7 @@ function fetchData() {
 
             let shouldUpdateInspector = false;
             if (selectedNodeId) {
-                const rawNode = graphPayload.nodes.find(n => n.id === selectedNodeId);
+                const rawNode = graphPayload.neurons.find(n => n.id === selectedNodeId);
                 const rawLinks = graphPayload.links.filter(l => (l.target.id || l.target) === selectedNodeId || (l.source.id || l.source) === selectedNodeId);
 
                 if (rawNode) {
@@ -233,7 +233,7 @@ function fetchData() {
             updateGraph(graphPayload);
 
             if (shouldUpdateInspector) {
-                const updatedNode = graphPayload.nodes.find(n => n.id === selectedNodeId);
+                const updatedNode = graphPayload.neurons.find(n => n.id === selectedNodeId);
                 if (updatedNode) showDetails(updatedNode);
             }
 
@@ -274,7 +274,7 @@ function initGraphContainer() {
 
     g = svg.append("g");
     linkGroup = g.append("g").attr("class", "links");
-    nodeGroup = g.append("g").attr("class", "nodes");
+    nodeGroup = g.append("g").attr("class", "neurons");
 
     simulation = d3.forceSimulation()
         .force("link", d3.forceLink().id(d => d.id).distance(120))
@@ -284,22 +284,22 @@ function initGraphContainer() {
 }
 
 function updateGraph(newData) {
-    const validNodeIds = new Set(newData.nodes.map(n => n.id));
+    const validNodeIds = new Set(newData.neurons.map(n => n.id));
     newData.links = newData.links.filter(l => {
         const sourceId = l.source.id || l.source;
         const targetId = l.target.id || l.target;
         return validNodeIds.has(sourceId) && validNodeIds.has(targetId);
     });
 
-    const topologyChanged = (newData.nodes.length !== currentData.nodes.length) ||
+    const topologyChanged = (newData.neurons.length !== currentData.neurons.length) ||
         (newData.links.length !== currentData.links.length);
 
-    const oldNodeMap = new Map(currentData.nodes.map(n => [n.id, n]));
-    const mergedNodes = newData.nodes.map(n => {
+    const oldNodeMap = new Map(currentData.neurons.map(n => [n.id, n]));
+    const mergedNodes = newData.neurons.map(n => {
         return oldNodeMap.has(n.id) ? Object.assign(oldNodeMap.get(n.id), n) : n;
     });
 
-    currentData.nodes = mergedNodes;
+    currentData.neurons = mergedNodes;
     currentData.links = newData.links;
 
     const links = linkGroup.selectAll("line")
@@ -320,10 +320,10 @@ function updateGraph(newData) {
     links.exit().remove();
     const allLinks = linksEnter.merge(links);
 
-    const nodes = nodeGroup.selectAll("g")
-        .data(currentData.nodes, d => d.id);
+    const neurons = nodeGroup.selectAll("g")
+        .data(currentData.neurons, d => d.id);
 
-    const nodesEnter = nodes.enter().append("g")
+    const nodesEnter = neurons.enter().append("g")
         .call(drag(simulation))
         .on("click", (event, d) => {
             selectedNodeId = d.id;
@@ -369,8 +369,8 @@ function updateGraph(newData) {
             .style("font-weight", "bold");
     });
 
-    nodes.exit().remove();
-    const allNodes = nodesEnter.merge(nodes);
+    neurons.exit().remove();
+    const allNodes = nodesEnter.merge(neurons);
 
     // Helper to parse Django duration string (e.g. "00:00:23.456" or "1.23s") to total seconds
     function parseDurationToSeconds(str) {
@@ -403,7 +403,7 @@ function updateGraph(newData) {
 
     // Apply Dynamic Scales to All Turn Nodes (New and Existing)
     let avgDelta = 1.0;
-    let validTurns = currentData.nodes.filter(n => n.type === 'turn' && n.delta);
+    let validTurns = currentData.neurons.filter(n => n.type === 'turn' && n.delta);
     if (validTurns.length > 0) {
         let totalSeconds = validTurns.reduce((sum, n) => sum + parseDurationToSeconds(n.delta), 0);
         avgDelta = totalSeconds / validTurns.length;
@@ -434,7 +434,7 @@ function updateGraph(newData) {
 
     allNodes.classed("active-node", d => d.type === 'turn' && activeStates.includes(d.status));
 
-    simulation.nodes(currentData.nodes);
+    simulation.neurons(currentData.neurons);
     simulation.force("link").links(currentData.links);
 
     if (topologyChanged) {
@@ -696,7 +696,7 @@ function showDetails(d) {
                 }
 
                 let targetId = call.target.id || call.target;
-                let toolNode = currentData.nodes.find(n => n.id === targetId);
+                let toolNode = currentData.neurons.find(n => n.id === targetId);
                 let toolName = toolNode ? toolNode.label : "unknown_spell";
 
                 let resultClass = 'term-result';
@@ -735,7 +735,7 @@ function showDetails(d) {
 
                 spellsHtml += `
                     <div style="margin-bottom: 15px; border: 1px solid #4ade80; border-radius: 4px; padding: 10px; background-color: rgba(0,0,0,0.3);">
-                        <div class="term-spell" style="font-weight: bold; color: #4ade80; margin-bottom: 10px;">> CALL [${i + 1}]: ${toolName}</div>
+                        <div class="term-effector" style="font-weight: bold; color: #4ade80; margin-bottom: 10px;">> CALL [${i + 1}]: ${toolName}</div>
                         <details class="lcars-accordion" style="margin-bottom: 10px; border: 1px solid rgba(153,204,255,0.4);">
                             <summary class="lcars-accordion-summary" style="background-color:rgba(153,204,255,0.15); color:#99ccff; font-size: 0.9rem; padding: 6px 15px;">► Arguments</summary>
                             <div style="padding: 10px;">${argHtml}</div>
@@ -767,12 +767,12 @@ function showDetails(d) {
         }
     } else if (d.type === 'goal') {
         titleEl.textContent = `Goal ${d.id.split('-')[1]}`;
-        terminalEl.innerHTML += `<div class="term-spell">> OBJECTIVE:</div>`;
+        terminalEl.innerHTML += `<div class="term-effector">> OBJECTIVE:</div>`;
         terminalEl.innerHTML += `<div class="term-thought">"${d.rendered_goal || 'No goal text provided.'}"</div>`;
         terminalEl.innerHTML += `<div class="term-result">Status: ${d.status}</div>`;
     } else if (d.type === 'engram') {
         titleEl.textContent = `Engram ${d.id.split('-')[1]}`;
-        terminalEl.innerHTML += `<div class="term-spell">> MEMORY RECALLED:: ${d.name || 'Unnamed Hash'}</div>`;
+        terminalEl.innerHTML += `<div class="term-effector">> MEMORY RECALLED:: ${d.name || 'Unnamed Hash'}</div>`;
         terminalEl.innerHTML += `<div class="term-thought">"${d.description}"</div>`;
         terminalEl.innerHTML += `<div class="term-result">Relevance: ${d.relevance}</div>`;
     } else if (d.type === 'conclusion') {
@@ -814,7 +814,7 @@ function showDetails(d) {
         }
     } else if (d.type === 'tool') {
         titleEl.textContent = `Tool: ${d.label}`;
-        terminalEl.innerHTML += `<div class="term-spell">> INSPECTING TOOL CALL</div>`;
+        terminalEl.innerHTML += `<div class="term-effector">> INSPECTING TOOL CALL</div>`;
         const calls = currentData.links.filter(l => (l.target.id || l.target) === d.id && l.type === 'uses_tool');
         calls.forEach((call) => {
             let resultText = call.result || call.traceback || "Pending...";
@@ -913,7 +913,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rebootBtn = document.getElementById('btn-reboot');
     if (rebootBtn) {
         rebootBtn.addEventListener('click', () => {
-            if (confirm("WARNING: Rebooting the Cortex will re-cast the original spell and begin a completely new memory session. Proceed?")) {
+            if (confirm("WARNING: Rebooting the Cortex will re-cast the original effector and begin a completely new memory session. Proceed?")) {
 
                 rebootBtn.style.opacity = '0.5';
                 rebootBtn.textContent = 'REBOOTING...';
@@ -929,9 +929,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     .then(data => {
                         if (data.spawn_id) {
                             // Redirect to the CNS Monitor to watch the new process spin up
-                            window.location.href = `/central_nervous_system/graph/spawn/${data.spawn_id}/?full=True`;
+                            window.location.href = `/central_nervous_system/graph/spike_train/${data.spawn_id}/?full=True`;
                         } else {
-                            alert("Reboot triggered, but failed to find Spawn ID.");
+                            alert("Reboot triggered, but failed to find SpikeTrain ID.");
                         }
                     })
                     .catch(err => {
