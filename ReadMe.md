@@ -4,7 +4,7 @@ Talos is a premium, Django-based command center designed to manage, monitor, and
 pipelines across a distributed fleet of remote agents. It replaces legacy procedural scripts with a robust, asynchronous
 architecture and a high-fidelity dashboard.
 
----dfsfs
+---
 
 ## 💎 Core Philosophy: "Build with Confidence"
 
@@ -14,7 +14,7 @@ execution, and observability.
 
 ### ✨ Key Features
 
-#### 🚀 The Hydra Orchestrator
+#### 🚀 The Central Nervous System (CNS)
 
 * **Mission Control:** A centralized "Launch Protocol" interface to trigger complex build sequences (e.g., "Fast
   Validate", "Staging Build").
@@ -25,12 +25,13 @@ execution, and observability.
 * **Recent Missions:** Instant dashboard visibility into the last 5 orchestration runs, with color-coded status
   indicators and deep-links to mission logs.
 
-#### ⚡ Native Spell Architecture
+#### ⚡ Native Effector Architecture
 
 * **Parallel Distributor:** High-performance fleet distribution using multi-threaded Robocopy synchronization.
 * **Version Stamper:** Automated build metadata generation (Hex Hashes, Builder ID, Timestamps) that preserves static
   versioning.
-* **Context-Aware:** All spells use the `HydraContext` for robust path resolution across different project environments.
+* **Context-Aware:** All effectors use the `EffectorContext` for robust path resolution across different project
+  environments.
 
 #### 📡 Sonar & Fleet Management
 
@@ -75,7 +76,7 @@ We don't trust—we verify. Talos maintains strict testing tiers:
    payloads, and malformed command arguments.
 2. **UI & Visual Integrity:** Playwright-driven browser tests that physically verify button colors, ensure responsive
    wrapping of log actions, and validate in-place monitor refreshes.
-3. **Integration Core:** Strict TDD approach for the Hydra state machine. Tests prove that mission finalization, outcome
+3. **Integration Core:** Strict TDD approach for the CNS state machine. Tests prove that mission finalization, outcome
    processing, and wave dispatching work before code is committed.
 
 ---
@@ -130,13 +131,13 @@ pip install -r requirements.txt
 Talos doesn't just migrate; it *seeds* complex execution graphs. We explicitly use the **`C:\talos_bin`** directory
 pattern for all build artifacts, staging areas, and shader caches.
 
-* *See `initial_data.json` fixtures for the exact mapping of `talos_bin` paths to Hydra Executables.*
+* *See `initial_data.json` fixtures for the exact mapping of `talos_bin` paths to Talos Executables.*
 
 ```powershell
 # 1. Apply Schema
 python manage.py migrate
 
-# 2. Seed Hydra Protocols (Loads initial_data.json)
+# 2. Seed CNS Neural Pathways (Loads initial_data.json)
 python manage.py seed_talos
 ```
 
@@ -175,7 +176,7 @@ it is a living view of your fleet.
 
 * **Real-Time Telemetry:** The interface uses HTMX to poll for state changes without full page reloads, ensuring a "
   glitch-free" experience.
-* **Mission Control:** Initiate **Hydra Protocols** (Build, Cook, Deploy) directly from the command center.
+* **Mission Control:** Initiate **Neural Pathways** (Build, Cook, Deploy) directly from the command center.
 * **Log Streaming:** Watch logs flow in real-time with our "Matrix-style" dark mode viewer, complete with auto-scroll
   and ANSI color parsing.
 
@@ -183,7 +184,7 @@ it is a living view of your fleet.
 
 ## 🛠 Operation Guide
 
-2. **Hydra Protocols:** Select a mission (e.g., **🚀 Fast Validate**) on the dashboard to begin.
+2. **Neural Pathways:** Select a mission (e.g., **🚀 Fast Validate**) on the dashboard to begin.
 3. **Monitoring:** Watch the live mission progress in the embedded dashboard monitor. Click any protocol row to expand
    real-time log streams.
 4. **Audit History:** Scroll down to **Recent Missions** to review logs and result codes from past build sequences.
