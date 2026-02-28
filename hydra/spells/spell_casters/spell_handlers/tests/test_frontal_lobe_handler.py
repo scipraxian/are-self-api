@@ -11,13 +11,13 @@ from hydra.models import (
     HydraSpawnStatus,
     HydraSpellbook,
 )
-from talos_parietal.models import (
+from parietal_lobe.models import (
     ToolDefinition,
     ToolParameter,
     ToolParameterAssignment,
     ToolParameterType,
 )
-from talos_parietal.parietal_lobe import ParietalLobe
+from parietal_lobe.parietal_lobe import ParietalLobe
 from frontal_lobe.synapse import OllamaResponse
 from frontal_lobe.constants import FrontalLobeConstants
 from frontal_lobe.frontal_lobe import (
@@ -33,7 +33,7 @@ class FrontalLobeHandlerTest(TransactionTestCase):
         'talos_agent/fixtures/test_agents.json',
         'hydra/fixtures/initial_data.json',
         'frontal_lobe/fixtures/initial_data.json',
-        'talos_parietal/fixtures/initial_data.json',
+        'parietal_lobe/fixtures/initial_data.json',
     ]
 
     def setUp(self):
@@ -68,7 +68,7 @@ class FrontalLobeHandlerTest(TransactionTestCase):
                                                       required=True)
 
     @pytest.mark.asyncio
-    @patch('talos_parietal.parietal_lobe.OllamaClient')
+    @patch('parietal_lobe.parietal_lobe.OllamaClient')
     async def test_handler_completes_without_tools(self, mock_client_cls):
         """Verify the loop exits gracefully if the AI outputs no tool calls."""
         mock_instance = mock_client_cls.return_value
@@ -88,7 +88,7 @@ class FrontalLobeHandlerTest(TransactionTestCase):
         self.assertIn('Permanent Sleep Initiated.', log)
 
     @pytest.mark.asyncio
-    @patch('talos_parietal.parietal_lobe.OllamaClient')
+    @patch('parietal_lobe.parietal_lobe.OllamaClient')
     async def test_handler_executes_tool_and_loops(self, mock_client_cls):
         """Verify the handler can execute a tool, feed the result back, and loop."""
         mock_instance = mock_client_cls.return_value
@@ -135,7 +135,7 @@ class FrontalLobeHandlerTest(TransactionTestCase):
     @pytest.mark.asyncio
     @patch('frontal_lobe.constants.FrontalLobeConstants.DEFAULT_MAX_TURNS',
            3)
-    @patch('talos_parietal.parietal_lobe.OllamaClient')
+    @patch('parietal_lobe.parietal_lobe.OllamaClient')
     async def test_handler_max_turns_cutoff(self, mock_client_cls):
         """Verify the loop forcibly terminates if the AI gets stuck in a loop."""
         mock_instance = mock_client_cls.return_value

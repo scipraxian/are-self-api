@@ -468,11 +468,11 @@ function showDetails(d) {
     if (d.type === 'turn') adminUrl = `/admin/frontal_lobe/reasoningturn/${dbId}/change/`;
     else if (d.type === 'goal') adminUrl = `/admin/frontal_lobe/reasoninggoal/${dbId}/change/`;
     else if (d.type === 'session') adminUrl = `/admin/frontal_lobe/reasoningsession/${dbId}/change/`;
-    else if (d.type === 'engram') adminUrl = `/admin/talos_hippocampus/talosengram/${dbId}/change/`;
+    else if (d.type === 'engram') adminUrl = `/admin/hippocampus/talosengram/${dbId}/change/`;
     else if (d.type === 'conclusion') adminUrl = `/admin/frontal_lobe/sessionconclusion/${dbId}/change/`;
     else if (d.type === 'tool') {
         const toolName = d.id.split('-')[2];
-        adminUrl = `/admin/talos_parietal/tooldefinition/?q=${toolName}`;
+        adminUrl = `/admin/parietal_lobe/tooldefinition/?q=${toolName}`;
     }
 
     // Clear previous

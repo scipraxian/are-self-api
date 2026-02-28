@@ -12,8 +12,8 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('frontal_lobe', '0012_remove_sessionconclusion_name_and_more'),
-        ('talos_hippocampus', '0007_talosengram_tasks_alter_talosengram_heads_and_more'),
-        ('talos_parietal', '0005_toolusetype_tooldefinition_use_type'),
+        ('hippocampus', '0007_talosengram_tasks_alter_talosengram_heads_and_more'),
+        ('parietal_lobe', '0005_toolusetype_tooldefinition_use_type'),
     ]
 
     operations = [
@@ -57,7 +57,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(db_index=True, max_length=254, unique=True)),
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('system_prompt_template', models.TextField(help_text='The core instructions given to the Frontal Lobe.')),
-                ('enabled_tools', models.ManyToManyField(blank=True, to='talos_parietal.tooldefinition')),
+                ('enabled_tools', models.ManyToManyField(blank=True, to='parietal_lobe.tooldefinition')),
                 ('addons', models.ManyToManyField(blank=True, to='identity.identityaddon')),
                 ('tags', models.ManyToManyField(blank=True, to='identity.identitytag')),
                 ('identity_type', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, to='identity.identitytype')),
@@ -83,7 +83,7 @@ class Migration(migrations.Migration):
                 ('timeouts', models.IntegerField(default=0)),
                 ('identity', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='identity.identity')),
                 ('last_turn', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='frontal_lobe.reasoningturn')),
-                ('memories', models.ManyToManyField(blank=True, to='talos_hippocampus.talosengram')),
+                ('memories', models.ManyToManyField(blank=True, to='hippocampus.talosengram')),
             ],
             options={
                 'abstract': False,

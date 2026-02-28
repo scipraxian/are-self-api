@@ -7,8 +7,8 @@ from frontal_lobe.models import (
     ReasoningTurn,
     SessionConclusion,
 )
-from talos_hippocampus.models import TalosEngram
-from talos_parietal.models import ToolCall, ToolDefinition
+from hippocampus.models import TalosEngram
+from parietal_lobe.models import ToolCall, ToolDefinition
 
 
 class ToolDefinitionSerializer(serializers.ModelSerializer):

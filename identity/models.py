@@ -8,8 +8,8 @@ from common.models import (
     UUIDIdMixin,
 )
 from frontal_lobe.models import ReasoningTurn
-from talos_hippocampus.models import TalosEngram
-from talos_parietal.models import ToolDefinition
+from hippocampus.models import TalosEngram
+from parietal_lobe.models import ToolDefinition
 
 
 class IdentityAddon(NameMixin, DescriptionMixin):

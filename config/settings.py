@@ -20,8 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = (
-    'django-insecure-+7$m&phd0%apxr!elkkoqqxzm&t5t7t=i7o0z-&a0s^b$%t&#m'
-)
+    'django-insecure-+7$m&phd0%apxr!elkkoqqxzm&t5t7t=i7o0z-&a0s^b$%t&#m')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -48,15 +47,15 @@ INSTALLED_APPS = [
     'environments',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
-    'talos_thalamus',
-    'talos_parietal',
-    'talos_occipital',
-    'talos_temporal',
+    'thalamus',
+    'parietal_lobe',
+    'occipital_lobe',
+    'temporal_lobe',
     'frontal_lobe',
     'djangorestframework_mcp',
     'rest_framework',
     'django_filters',
-    'talos_hippocampus.apps.TalosHippocampusConfig',
+    'hippocampus.apps.HippocampusConfig',
     'prefrontal_cortex.apps.PrefrontalCortexConfig',
     'identity.apps.IdentityConfig',
 ]
@@ -112,22 +111,25 @@ DATABASES = {
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME':
+            'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME':
+            'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME':
+            'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME':
+            'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
 
@@ -165,7 +167,9 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'simple': {'format': '[%(levelname)s] %(message)s'},
+        'simple': {
+            'format': '[%(levelname)s] %(message)s'
+        },
     },
     'handlers': {
         'console': {

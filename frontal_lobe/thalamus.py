@@ -9,7 +9,7 @@ from frontal_lobe.models import (
     ReasoningTurn,
 )
 from prefrontal_cortex.models import PFCTask
-from talos_hippocampus.talos_hippocampus import TalosHippocampus
+from hippocampus.hippocampus import TalosHippocampus
 
 
 async def relay_sensory_state(turn_record: ReasoningTurn) -> str:

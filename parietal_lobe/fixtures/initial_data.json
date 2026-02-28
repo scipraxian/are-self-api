@@ -1,0 +1,1385 @@
+[
+  {
+    "model": "parietal_lobe.toolparametertype",
+    "pk": 1,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Text",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "string"
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparametertype",
+    "pk": 2,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Float",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "number"
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparametertype",
+    "pk": 3,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Int",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "integer"
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparametertype",
+    "pk": 4,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Bool",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "boolean"
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparametertype",
+    "pk": 5,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "List",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "array"
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparametertype",
+    "pk": 6,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Dict",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "object"
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparametertype",
+    "pk": 7,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Null",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "null"
+    }
+  },
+  {
+    "model": "parietal_lobe.toolusetype",
+    "pk": 1,
+    "fields": {
+      "created": "2026-02-21T16:17:59.479Z",
+      "description": "Heals focus, grants XP.",
+      "modified": "2026-02-21T16:17:59.479Z",
+      "name": "Synthesis",
+      "focus_modifier": 3,
+      "xp_reward": 15
+    }
+  },
+  {
+    "model": "parietal_lobe.toolusetype",
+    "pk": 2,
+    "fields": {
+      "created": "2026-02-21T16:17:59.483Z",
+      "description": "Standard data pull.",
+      "modified": "2026-02-21T16:17:59.483Z",
+      "name": "Extraction",
+      "focus_modifier": -2,
+      "xp_reward": 2
+    }
+  },
+  {
+    "model": "parietal_lobe.toolusetype",
+    "pk": 3,
+    "fields": {
+      "created": "2026-02-21T16:17:59.486Z",
+      "description": "Massive system load.",
+      "modified": "2026-02-21T16:17:59.486Z",
+      "name": "Heavy Extraction",
+      "focus_modifier": -5,
+      "xp_reward": 5
+    }
+  },
+  {
+    "model": "parietal_lobe.toolusetype",
+    "pk": 4,
+    "fields": {
+      "created": "2026-02-21T16:17:59.488Z",
+      "description": "No cost.",
+      "modified": "2026-02-21T16:17:59.488Z",
+      "name": "Free Action",
+      "focus_modifier": 0,
+      "xp_reward": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolusetype",
+    "pk": 5,
+    "fields": {
+      "created": "2026-02-21T16:17:59.491Z",
+      "description": "Massive XP bounty.",
+      "modified": "2026-02-21T16:17:59.491Z",
+      "name": "Completion",
+      "focus_modifier": 0,
+      "xp_reward": 200
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 1,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Reads a chunk of a local file using strict pagination. Crucial for avoiding amnesia via context overflow. Request page=1, then page=2, etc.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "mcp_read_file",
+      "is_async": true,
+      "use_type": 2
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 2,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Recursively searches files for a regex pattern. Returns file paths and line numbers. Use this to locate critical needles in the haystack before reading files.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "mcp_grep",
+      "is_async": true,
+      "use_type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 3,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Lists files and directories at a specific path. Use this to explore the project structure.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "mcp_list_files",
+      "is_async": true,
+      "use_type": 2
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 4,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Updates the Hydra Blackboard. WARNING: This does NOT save to your memory. The Blackboard is ONLY used to route the underlying Hydra execution graph.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "mcp_update_blackboard",
+      "is_async": true,
+      "use_type": 4
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 5,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Returns the database schema and field sizes of a record. Use this to determine which fields hold massive data before querying.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "mcp_inspect_record",
+      "is_async": true,
+      "use_type": 2
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 6,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Reads a specific text field from the database using strict pagination. Crucial for reading massive logs (e.g. 'application_log') without destroying your context window.",
+      "modified": "2026-02-26T17:34:43.084Z",
+      "name": "mcp_read_record_field",
+      "is_async": true,
+      "use_type": 2
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 7,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Searches a massive database field for a regex pattern to find needles in haystacks without loading the entire text.",
+      "modified": "2026-02-26T17:35:05.425Z",
+      "name": "mcp_search_record_field",
+      "is_async": true,
+      "use_type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 8,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Queries the database for records. Returns a paginated list of full record data. Massive text fields are auto-truncated to protect your memory; use mcp_read_record_field to extract their full contents.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "mcp_query_model",
+      "is_async": true,
+      "use_type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 9,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Queries your Long-Term Hippocampus. You wake up with amnesia every turn. Use this tool frequently to search your permanent Engrams by keyword or tag.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "mcp_engram_search",
+      "is_async": true,
+      "use_type": 4
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 10,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "CRYSTALLIZE A NEW FACT. If you discover a critical path or error, save it immediately to a NEW Engram or it will be lost to the void. If the Engram already exists, use mcp_engram_update instead.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "mcp_engram_save",
+      "is_async": true,
+      "use_type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 11,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "To post your name to the Leader Boards and end your run use mcp_conclude_session. Use this ONLY when the absolute root objective is complete or permanently blocked.",
+      "modified": "2026-02-23T14:23:21.136Z",
+      "name": "mcp_conclude_session",
+      "is_async": true,
+      "use_type": 5
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 12,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Manages your active objectives across sleep cycles. Use CREATE to spawn a sub-goal, UPDATE to modify it, and COMPLETE when you achieve it. This is your anchor.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "mcp_update_goal",
+      "is_async": true,
+      "use_type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 13,
+    "fields": {
+      "created": "2026-02-20T20:37:37.755Z",
+      "description": "Reads the full fact of a specific Engram from your Catalog.",
+      "modified": "2026-02-20T20:37:37.755Z",
+      "name": "mcp_engram_read",
+      "is_async": true,
+      "use_type": 4
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 14,
+    "fields": {
+      "created": "2026-02-21T10:00:00Z",
+      "description": "Appends new findings to an existing Engram in your Hippocampus. Use this to update a memory instead of creating duplicates.",
+      "modified": "2026-02-21T10:00:00Z",
+      "name": "mcp_engram_update",
+      "is_async": true,
+      "use_type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 15,
+    "fields": {
+      "created": "2026-02-23T15:09:02.506Z",
+      "description": "Search the web and return Titles, URLs, and Snippets of the top 5 results.",
+      "modified": "2026-02-23T15:09:02.506Z",
+      "name": "mcp_browser_search",
+      "is_async": true,
+      "use_type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 16,
+    "fields": {
+      "created": "2026-02-23T15:09:02.517Z",
+      "description": "Spin up headless Chromium, navigate to a URL, and return clean Markdown of the page.",
+      "modified": "2026-02-23T15:09:02.517Z",
+      "name": "mcp_browser_read",
+      "is_async": true,
+      "use_type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 17,
+    "fields": {
+      "created": "2026-02-23T15:09:02.523Z",
+      "description": "Parse Unreal Engine logs for a specific HydraHead and return a structural summary.",
+      "modified": "2026-02-23T15:09:02.523Z",
+      "name": "mcp_run_unreal_diagnostic_parser",
+      "is_async": true,
+      "use_type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 18,
+    "fields": {
+      "created": "2026-02-25T12:00:00Z",
+      "description": "Passes the turn. Focus pool fully restored.",
+      "modified": "2026-02-25T12:00:00Z",
+      "name": "mcp_pass",
+      "is_async": true,
+      "use_type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 1,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "File system path.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "path",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 2,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Line number start.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "start_line",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 3,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Line count limit.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "max_lines",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 4,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Regex pattern to match.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "pattern",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 5,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Ignore case (default True).",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "case_insensitive",
+      "type": 4
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 6,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Head UUID.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "head_id",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 7,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Variable Key.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "key",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 8,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Variable Value.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "value",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 9,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Django App Label.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "app_label",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 10,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Django Model Name.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "model_name",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 11,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Record UUID/ID.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "record_id",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 12,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "DB Field Name.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "field_name",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 13,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Filter Dict.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "filters",
+      "type": 6
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 14,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Q Object String.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "q_string",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 15,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Action type.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "action",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 16,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Search Query.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "query",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 17,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Comma tags.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "tags",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 18,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Session UUID.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "session_id",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 19,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Fact string.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "fact",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 20,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Existing ID.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "update_id",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 21,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Float 0-1.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "relevance",
+      "type": 2
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 22,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Boolean Success.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "goal_achieved",
+      "type": 4
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 23,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Enum Status.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "outcome_status",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 24,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Text Summary.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "summary",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 25,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Action String.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "recommended_action",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 26,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Page number to read (starts at 1).",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "page",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 27,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Action (CREATE, UPDATE, COMPLETE).",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "goal_action",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 28,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "The description of the goal.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "goal_text",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 29,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "The integer ID of the goal (for UPDATE or COMPLETE).",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "goal_id",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 30,
+    "fields": {
+      "created": "2026-02-20T20:37:37.764Z",
+      "description": "The ID of the Engram.",
+      "modified": "2026-02-20T20:37:37.764Z",
+      "name": "engram_id",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 31,
+    "fields": {
+      "created": "2026-02-20T20:37:37.814Z",
+      "description": "A highly descriptive, short index title (e.g. OS_SPECS).",
+      "modified": "2026-02-20T20:37:37.814Z",
+      "name": "title",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 32,
+    "fields": {
+      "created": "2026-02-21T20:53:49.883Z",
+      "description": "New data to append.",
+      "modified": "2026-02-21T20:53:49.883Z",
+      "name": "additional_fact",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 33,
+    "fields": {
+      "created": "2026-02-23T14:22:58.300Z",
+      "description": "",
+      "modified": "2026-02-23T14:22:58.300Z",
+      "name": "next_goal_suggestion",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 34,
+    "fields": {
+      "created": "2026-02-23T14:23:14.246Z",
+      "description": "",
+      "modified": "2026-02-23T14:23:14.246Z",
+      "name": "system_persona_and_prompt_feedback",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 35,
+    "fields": {
+      "created": "2026-02-23T15:09:02.498Z",
+      "description": "The target URL.",
+      "modified": "2026-02-23T15:09:02.499Z",
+      "name": "url",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 1,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 1,
+      "parameter": 1,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 2,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 1,
+      "parameter": 26,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 3,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 1,
+      "parameter": 3,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 4,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 2,
+      "parameter": 1,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 5,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 2,
+      "parameter": 4,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 6,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 2,
+      "parameter": 5,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 7,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 3,
+      "parameter": 1,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 8,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 4,
+      "parameter": 6,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 9,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 4,
+      "parameter": 7,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 10,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 4,
+      "parameter": 8,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 12,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 5,
+      "parameter": 10,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 13,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 5,
+      "parameter": 11,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 15,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 6,
+      "parameter": 10,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 16,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 6,
+      "parameter": 11,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 17,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 6,
+      "parameter": 12,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 18,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 6,
+      "parameter": 26,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 21,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 7,
+      "parameter": 10,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 22,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 7,
+      "parameter": 11,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 23,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 7,
+      "parameter": 12,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 24,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 7,
+      "parameter": 4,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 26,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 8,
+      "parameter": 10,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 27,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 8,
+      "parameter": 13,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 28,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 8,
+      "parameter": 14,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 29,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 8,
+      "parameter": 26,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 37,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 11,
+      "parameter": 18,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 38,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 11,
+      "parameter": 22,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 39,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 11,
+      "parameter": 23,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 40,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 11,
+      "parameter": 24,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 41,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 11,
+      "parameter": 25,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 42,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 12,
+      "parameter": 18,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 43,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 12,
+      "parameter": 27,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 44,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 12,
+      "parameter": 28,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 45,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": 12,
+      "parameter": 29,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 49,
+    "fields": {
+      "created": "2026-02-21T20:53:49.896Z",
+      "modified": "2026-02-21T20:53:49.896Z",
+      "tool": 10,
+      "parameter": 18,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 50,
+    "fields": {
+      "created": "2026-02-21T20:53:49.898Z",
+      "modified": "2026-02-21T20:53:49.898Z",
+      "tool": 10,
+      "parameter": 31,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 51,
+    "fields": {
+      "created": "2026-02-21T20:53:49.900Z",
+      "modified": "2026-02-21T20:53:49.900Z",
+      "tool": 10,
+      "parameter": 19,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 52,
+    "fields": {
+      "created": "2026-02-21T20:53:49.901Z",
+      "modified": "2026-02-21T20:53:49.901Z",
+      "tool": 10,
+      "parameter": 17,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 53,
+    "fields": {
+      "created": "2026-02-21T20:53:49.902Z",
+      "modified": "2026-02-21T20:53:49.902Z",
+      "tool": 14,
+      "parameter": 18,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 54,
+    "fields": {
+      "created": "2026-02-21T20:53:49.903Z",
+      "modified": "2026-02-21T20:53:49.903Z",
+      "tool": 14,
+      "parameter": 31,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 55,
+    "fields": {
+      "created": "2026-02-21T20:53:49.905Z",
+      "modified": "2026-02-21T20:53:49.905Z",
+      "tool": 14,
+      "parameter": 32,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 56,
+    "fields": {
+      "created": "2026-02-21T20:53:49.906Z",
+      "modified": "2026-02-21T20:53:49.906Z",
+      "tool": 13,
+      "parameter": 18,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 57,
+    "fields": {
+      "created": "2026-02-21T20:53:49.907Z",
+      "modified": "2026-02-21T20:53:49.907Z",
+      "tool": 13,
+      "parameter": 30,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 58,
+    "fields": {
+      "created": "2026-02-21T20:53:49.908Z",
+      "modified": "2026-02-21T20:53:49.908Z",
+      "tool": 9,
+      "parameter": 16,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 59,
+    "fields": {
+      "created": "2026-02-21T20:53:49.909Z",
+      "modified": "2026-02-21T20:53:49.909Z",
+      "tool": 9,
+      "parameter": 17,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 60,
+    "fields": {
+      "created": "2026-02-23T14:23:21.138Z",
+      "modified": "2026-02-23T14:23:21.138Z",
+      "tool": 11,
+      "parameter": 33,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 61,
+    "fields": {
+      "created": "2026-02-23T14:23:21.141Z",
+      "modified": "2026-02-23T14:23:21.141Z",
+      "tool": 11,
+      "parameter": 34,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 62,
+    "fields": {
+      "created": "2026-02-23T15:09:02.513Z",
+      "modified": "2026-02-23T15:09:02.513Z",
+      "tool": 15,
+      "parameter": 16,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 63,
+    "fields": {
+      "created": "2026-02-23T15:09:02.520Z",
+      "modified": "2026-02-23T15:09:02.520Z",
+      "tool": 16,
+      "parameter": 35,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 64,
+    "fields": {
+      "created": "2026-02-23T15:09:02.526Z",
+      "modified": "2026-02-23T15:09:02.526Z",
+      "tool": 17,
+      "parameter": 6,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 65,
+    "fields": {
+      "created": "2026-02-23T15:37:51.061Z",
+      "modified": "2026-02-23T15:37:51.061Z",
+      "tool": 2,
+      "parameter": 26,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 66,
+    "fields": {
+      "created": "2026-02-23T15:50:43.825Z",
+      "modified": "2026-02-23T15:50:43.825Z",
+      "tool": 17,
+      "parameter": 26,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 67,
+    "fields": {
+      "created": "2026-02-25T12:00:00Z",
+      "modified": "2026-02-25T12:00:00Z",
+      "tool": 18,
+      "parameter": 18,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 1,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "parameter": 15,
+      "value": "list"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 2,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "parameter": 15,
+      "value": "count"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 3,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "parameter": 23,
+      "value": "SUCCESS"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 4,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "parameter": 23,
+      "value": "FAILURE"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 5,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "parameter": 23,
+      "value": "NEEDS_CLARIFICATION"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 6,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "parameter": 27,
+      "value": "CREATE"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 7,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "parameter": 27,
+      "value": "UPDATE"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 8,
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "parameter": 27,
+      "value": "COMPLETE"
+    }
+  }
+]

@@ -9,8 +9,8 @@ from hydra.models import (
     HydraSpawn,
     HydraSpawnStatus,
 )
-from talos_hippocampus.models import TalosEngram
-from talos_parietal.models import ToolCall, ToolDefinition
+from hippocampus.models import TalosEngram
+from parietal_lobe.models import ToolCall, ToolDefinition
 from frontal_lobe import constants
 from frontal_lobe.models import (
     ReasoningGoal,

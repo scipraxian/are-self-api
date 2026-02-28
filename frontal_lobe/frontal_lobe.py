@@ -20,7 +20,7 @@ from frontal_lobe.thalamus import relay_sensory_state
 from hydra.models import HydraHead, HydraHeadStatus
 from hydra.utils import resolve_environment_context
 from identity.identity_prompt import build_identity_prompt
-from talos_parietal.parietal_lobe import ParietalLobe
+from parietal_lobe.parietal_lobe import ParietalLobe
 
 logger = logging.getLogger(__name__)
 
