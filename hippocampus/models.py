@@ -8,7 +8,7 @@ from common.models import (
     UUIDIdMixin,
 )
 from frontal_lobe.models import ReasoningSession, ReasoningTurn
-from hydra.models import HydraHead
+from central_nervous_system.models import HydraHead
 from prefrontal_cortex.models import PFCTask
 
 

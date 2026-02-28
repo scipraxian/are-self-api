@@ -2,7 +2,7 @@ import logging
 
 from django.dispatch import receiver
 
-from hydra.signals import spawn_failed, spawn_success
+from central_nervous_system.signals import spawn_failed, spawn_success
 
 logger = logging.getLogger(__name__)
 

@@ -5,8 +5,8 @@ import uuid  # <--- RESTORED
 
 from django.conf import settings
 
-from hydra.models import HydraHead
-from hydra.tasks import cast_hydra_spell
+from central_nervous_system.models import HydraHead
+from central_nervous_system.tasks import cast_hydra_spell
 
 logger = logging.getLogger(__name__)
 

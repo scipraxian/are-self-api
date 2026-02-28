@@ -1,4 +1,4 @@
-<a href="{% url 'hydra:head_detail' head.id %}"
+<a href="{% url 'central_nervous_system:head_detail' head.id %}"
    class="head-card
           {% if head.status_id == 1 or head.status_id == 2 %}pending
           {% elif head.status_id == 3 or head.status_id == 8 %}active

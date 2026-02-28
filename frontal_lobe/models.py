@@ -91,7 +91,7 @@ class ReasoningSession(
         related_name=RELATED_NAME,
     )
     head = models.ForeignKey(
-        'hydra.HydraHead',
+        'central_nervous_system.HydraHead',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

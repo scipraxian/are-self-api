@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from hydra.models import HydraHead, HydraHeadStatus, HydraSpawn, \
+from central_nervous_system.models import HydraHead, HydraHeadStatus, HydraSpawn, \
     HydraSpawnStatus
 from parietal_lobe.parietal_mcp.gateway import ParietalMCP
 
@@ -130,7 +130,7 @@ async def test_mcp_search_and_read_record(db_setup):
     # 1. Search the log
     search_result = await ParietalMCP.execute(
         "mcp_search_record_field", {
-            "app_label": "hydra",
+            "app_label": "central_nervous_system",
             "model_name": "HydraHead",
             "record_id": head_id,
             "field_name": "application_log",
@@ -143,7 +143,7 @@ async def test_mcp_search_and_read_record(db_setup):
     # 2. Read the log
     read_result = await ParietalMCP.execute(
         "mcp_read_record_field", {
-            "app_label": "hydra",
+            "app_label": "central_nervous_system",
             "model_name": "HydraHead",
             "record_id": head_id,
             "field_name": "application_log",

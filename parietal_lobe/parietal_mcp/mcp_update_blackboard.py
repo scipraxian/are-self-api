@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 @sync_to_async
 def _update_bb_sync(head_id: str, key: str, value: str) -> str:
-    from hydra.models import HydraHead
+    from central_nervous_system.models import HydraHead
     try:
         val_uuid = uuid.UUID(str(head_id))
     except ValueError:

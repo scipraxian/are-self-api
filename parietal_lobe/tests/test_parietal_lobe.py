@@ -27,14 +27,14 @@ class ParietalLobeTest(TransactionTestCase):
         'environments/fixtures/initial_data.json',
         'talos_agent/fixtures/initial_data.json',
         'talos_agent/fixtures/test_agents.json',
-        'hydra/fixtures/initial_data.json',
+        'central_nervous_system/fixtures/initial_data.json',
         'frontal_lobe/fixtures/initial_data.json',
         'parietal_lobe/fixtures/initial_data.json',
     ]
 
     def setUp(self):
         # Create minimal required objects
-        from hydra.models import (
+        from central_nervous_system.models import (
             HydraHead,
             HydraHeadStatus,
             HydraSpawn,

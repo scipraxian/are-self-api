@@ -4,8 +4,8 @@ from rest_framework import filters, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from hydra.models import HydraHeadStatus
-from hydra.tasks import cast_hydra_spell
+from central_nervous_system.models import HydraHeadStatus
+from central_nervous_system.tasks import cast_hydra_spell
 
 from . import serializers
 from .models import (

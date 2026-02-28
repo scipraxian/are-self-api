@@ -10,7 +10,7 @@ from environments.models import (
     ProjectEnvironmentStatus,
     ProjectEnvironmentType,
 )
-from hydra.models import HydraSpellbook
+from central_nervous_system.models import HydraSpellbook
 
 
 class DashboardAPITest(TestCase):
@@ -19,7 +19,7 @@ class DashboardAPITest(TestCase):
         'environments/fixtures/initial_data.json',
         'talos_agent/fixtures/initial_data.json',
         'talos_agent/fixtures/test_agents.json',
-        'hydra/fixtures/initial_data.json',
+        'central_nervous_system/fixtures/initial_data.json',
     ]
 
     def setUp(self):

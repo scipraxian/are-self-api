@@ -1,5 +1,5 @@
 import re
-from hydra.models import HydraSpawn, HydraHead, HydraHeadStatus
+from central_nervous_system.models import HydraSpawn, HydraHead, HydraHeadStatus
 
 # Regex Patterns for Error Detection
 # The "Killers" (High Priority)

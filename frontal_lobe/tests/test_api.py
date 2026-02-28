@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from hydra.models import (
+from central_nervous_system.models import (
     HydraHead,
     HydraHeadStatus,
     HydraSpawn,

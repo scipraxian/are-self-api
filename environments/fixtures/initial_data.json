@@ -872,7 +872,7 @@
       "created": "2026-01-31T16:08:51.014Z",
       "modified": "2026-01-31T16:08:51.014Z",
       "name": "dumpscripts",
-      "argument": "{{talos_root}}\\hydra\\spells\\dumpscripts.py"
+      "argument": "{{talos_root}}\\central_nervous_system\\spells\\dumpscripts.py"
     }
   },
   {

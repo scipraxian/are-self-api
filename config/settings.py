@@ -36,7 +36,7 @@ INSTALLED_APPS = [
     'dashboard',
     'talos_agent',
     'celery',
-    'hydra',
+    'central_nervous_system',
     'django_celery_results',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -179,7 +179,7 @@ LOGGING = {
         },
     },
     'loggers': {
-        'hydra': {
+        'central_nervous_system': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,

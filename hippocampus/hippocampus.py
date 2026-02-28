@@ -15,7 +15,7 @@ from pgvector.django import CosineDistance
 
 from frontal_lobe.models import ModelRegistry, ReasoningSession, ReasoningTurn
 from frontal_lobe.synapse import OllamaClient
-from hydra.models import HydraHead
+from central_nervous_system.models import HydraHead
 from hippocampus.models import TalosEngram, TalosEngramTag
 
 logger = logging.getLogger(__name__)

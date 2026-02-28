@@ -7,7 +7,7 @@ from pgvector.django import CosineDistance
 from frontal_lobe.frontal_lobe import FrontalLobe
 from frontal_lobe.models import ModelRegistry
 from frontal_lobe.synapse import OllamaClient
-from hydra.models import HydraHead
+from central_nervous_system.models import HydraHead
 from prefrontal_cortex.models import PFCItemStatus, PFCStory, PFCTask
 
 logger = logging.getLogger(__name__)

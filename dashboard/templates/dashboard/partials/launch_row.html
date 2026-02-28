@@ -1,16 +1,16 @@
 <div class="launch-row {{ extra_class }}">
     <button class="star-btn {% if book.is_favorite %}active{% endif %}"
-            hx-post="{% url 'hydra:toggle_favorite' book.id %}"
+            hx-post="{% url 'central_nervous_system:toggle_favorite' book.id %}"
             hx-swap="outerHTML"
             title="Toggle Favorite">
         {% if book.is_favorite %}★{% else %}☆{% endif %}
     </button>
 
     <button class="launch-btn"
-            hx-post="{% url 'hydra:hydra_launch' book.id %}?no_redirect=true"
+            hx-post="{% url 'central_nervous_system:hydra_launch' book.id %}?no_redirect=true"
             hx-swap="none">
         {{ book.name }}
     </button>
 
-    <a href="{% url 'hydra:graph_editor' book.id %}" class="edit-btn" title="Edit">✎</a>
+    <a href="{% url 'central_nervous_system:graph_editor' book.id %}" class="edit-btn" title="Edit">✎</a>
 </div>

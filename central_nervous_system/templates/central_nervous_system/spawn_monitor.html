@@ -1,0 +1,225 @@
+<div id="spawn-monitor-{{ spawn.id }}" class="monitor-card" style="margin-top: 1rem;">
+    <div class="monitor-header"
+            {% if is_active %}
+         hx-get="{% url 'central_nervous_system:hydra_spawn_monitor_partial' spawn.id %}?full={{ is_full_page|default:'False' }}"
+         hx-select=".monitor-header"
+         hx-trigger="every 2s"
+         hx-swap="outerHTML"
+            {% endif %}>
+        <div class="status-info">
+            <h3>OPERATION: {{ spawn.spellbook.name }}</h3>
+            <div class="status-line">
+                <span class="run-id">Spawn {{ spawn.id|stringformat:"s"|slice:":8" }}</span>
+                <span class="separator">|</span>
+
+                {% with thought=spawn.thoughts.last %}
+                    {% if spawn.status.name == 'Success' and thought and thought.status.name == 'Thinking' %}
+                        <span class="status-text status-running"
+                              style="color: #eab308; animation: pulse 1.5s infinite;">
+                             ANALYZING
+                         </span>
+                    {% else %}
+                        <span class="status-text status-{{ spawn.status.name|lower }}">{{ spawn.status.name }}</span>
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+        <div class="actions" style="display: flex; gap: 10px; align-items: center;">
+            <a href="{% url 'central_nervous_system:hydra_spawn_download' spawn.id %}"
+               target="_blank"
+               class="btn-done"
+               style="text-decoration: none; border-color: #60a5fa; color: #60a5fa; font-weight: 700;">
+                ↓ EXPORT DATA
+            </a>
+
+
+            {% if is_full_page %}
+                <a href="{% url 'central_nervous_system:graph_monitor' spawn.id %}"
+                   class="btn-done"
+                   style="text-decoration: none; border-color: #475569; color: #94a3b8;">
+                    GRAPH
+                </a>
+            {% endif %}
+
+            {% if not is_active %}
+                {% if is_full_page %}
+                    <a href="/" class="btn-done" style="text-decoration: none;">DISMISS</a>
+                {% else %}
+                    <button hx-get="{% url 'central_nervous_system:hydra_controls' %}"
+                            hx-target="#hydra-controls"
+                            hx-swap="outerHTML"
+                            class="btn-done">DISMISS
+                    </button>
+                {% endif %}
+            {% else %}
+                {% if spawn.status.name == 'Stopping' %}
+                    <button class="btn-done" disabled
+                            style="border-color: #f97316; color: #f97316; opacity: 0.8; cursor: wait;">
+                        <span class="spinner-small"
+                              style="display: inline-block; vertical-align: middle; margin-right: 5px;"></span>
+                        STOPPING...
+                    </button>
+                    <button hx-post="{% url 'central_nervous_system:hydra_spawn_stop_graceful' spawn.id %}"
+                            hx-confirm="Force Kill? Logs will be cut."
+                            class="btn-done"
+                            style="border-color: #ef4444; color: #ef4444; font-size: 0.7rem; margin-left: 5px;">
+                        FORCE
+                    </button>
+                {% else %}
+                    <button hx-post="{% url 'central_nervous_system:hydra_spawn_stop_graceful' spawn.id %}"
+                            class="btn-done"
+                            style="border-color: #fb923c; color: #fb923c; font-weight: 800;">
+                        STOP
+                    </button>
+
+                    <button hx-post="{% url 'central_nervous_system:hydra_spawn_stop_graceful' spawn.id %}"
+                            hx-confirm="KILL IMMEDIATELY? This may corrupt logs."
+                            class="btn-done"
+                            style="border-color: #ef4444; color: #ef4444; font-size: 0.7rem; margin-left: 10px;">
+                        KILL
+                    </button>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    {% if spawn.spellbook.name == "Multiplayer Debug" or is_battle_mode %}
+        <div class="multiplayer-battle-station">
+            <div class="battle-station-header">
+                <div class="header-col"
+                     title="{{ head_1.spell.talos_executable.executable }} - {{ head_1.id }}">{{ head_1.spell.name|default:"HEAD 1" }}</div>
+                <div class="header-col center">TIMESTAMP</div>
+                <div class="header-col"
+                     title="{{ head_2.spell.talos_executable.executable }} - {{ head_2.id }}">{{ head_2.spell.name|default:"HEAD 2" }}</div>
+
+                <div class="header-controls">
+                    <input type="text" id="battle-filter" placeholder="Filter logs..." autocomplete="off">
+                    <span class="toggle-label">Autoscroll</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="battle-autoscroll" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="battle-station-cursors" data-local="0" data-remote="0" style="display: none;"></div>
+
+            <div id="battle-stream-container"
+                 class="log-wrapper battle-stream"
+                 hx-get="{% url 'central_nervous_system:hydra_battle_stream' spawn.id %}?h1={{ head_1.id }}&h2={{ head_2.id }}"
+                 hx-trigger="load{% if is_active %}, every 1s{% endif %}"
+                 hx-vals='js:{
+                    local_cursor: document.getElementById("battle-station-cursors")?.dataset.local || 0,
+                    remote_cursor: document.getElementById("battle-station-cursors")?.dataset.remote || 0
+                 }'
+                 hx-swap="beforeend"
+                 hx-on:htmx:after-settle="document.getElementById('initial-loader')?.remove();">
+
+                <div id="initial-loader" style="padding: 2rem; text-align: center; color: #94a3b8;">
+                    <div class="spinner-small" style="margin: 0 auto 10px;"></div>
+                    Synchronizing Log Streams...
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="table-wrapper">
+            <table class="monitor-table">
+                <thead>
+                <tr>
+                    <th class="col-ord">#</th>
+                    <th class="col-step">Spell Protocol</th>
+                    <th class="col-status">Status</th>
+                    <th class="col-time">Result</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for head in heads %}
+                    <tr id="row-{{ head.id }}" class="step-row" onclick="toggleHydraLogs('{{ head.id }}');">
+                        <td class="col-ord"></td>
+                        <td class="col-step">
+                            <span style="font-weight: 700; color: #e2e8f0;">{{ head.spell.name }}</span>
+                            <div style="font-size: 0.75rem; color: #64748b; font-family: monospace;">{{ head.spell.executable.slug }}</div>
+                        </td>
+                        <td class="col-status">
+                        <span id="status-badge-{{ head.id }}"
+                              class="status-badge status-{{ head.status.name|lower }}"
+                                {% if is_active %}
+                              hx-get="{% url 'central_nervous_system:hydra_spawn_monitor_partial' spawn.id %}?full={{ is_full_page|default:'False' }}"
+                              hx-select="#status-badge-{{ head.id }}"
+                              hx-trigger="every 2s"
+                              hx-swap="outerHTML"
+                                {% endif %}>
+                             {{ head.status.name }}
+                        </span>
+                        </td>
+                        <td class="col-time">
+                        <span id="result-code-{{ head.id }}"
+                              style="font-family: monospace; color: {% if head.result_code == 0 %}#4ade80{% elif head.result_code %}#f87171{% else %}#64748b{% endif %};"
+                                {% if is_active %}
+                              hx-get="{% url 'central_nervous_system:hydra_spawn_monitor_partial' spawn.id %}?full={{ is_full_page|default:'False' }}"
+                              hx-select="#result-code-{{ head.id }}"
+                              hx-trigger="every 2s"
+                              hx-swap="outerHTML"
+                                {% endif %}>
+                             {% if head.result_code is not None %}RC: {{ head.result_code }}{% else %}--{% endif %}
+                        </span>
+                        </td>
+                    </tr>
+                    <tr id="logs-{{ head.id }}" class="log-container" style="display: none;" hx-preserve>
+                        <td colspan="4" style="padding: 0; border: none;">
+                            <div id="log-wrapper-{{ head.id }}"
+                                 class="log-wrapper"
+                                 hx-get="{% url 'central_nervous_system:hydra_head_logs' head.id %}?type=tool"
+                                 hx-trigger="load_now"
+                                 hx-swap="innerHTML">
+                                <div style="padding: 2rem; text-align: center; color: #94a3b8;">
+                                    <div class="spinner-small" style="margin: 0 auto 10px;"></div>
+                                    Loading Protocol Stream...
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    function toggleHydraLogs(id) {
+        var row = document.getElementById('logs-' + id);
+        if (!row) return;
+        if (row.style.display === 'none') {
+            row.style.display = 'table-row';
+            var wrapper = document.getElementById('log-wrapper-' + id);
+            if (wrapper && !wrapper.classList.contains('loaded') && typeof htmx !== 'undefined') {
+                htmx.trigger(wrapper, 'load_now');
+                wrapper.classList.add('loaded');
+            }
+        } else {
+            row.style.display = 'none';
+        }
+    }
+
+    document.addEventListener('htmx:afterSettle', function (evt) {
+        if (evt.detail.target.id === 'battle-stream-container') {
+            const toggle = document.getElementById('battle-autoscroll');
+            if (toggle && toggle.checked) {
+                evt.detail.target.scrollTop = evt.detail.target.scrollHeight;
+            }
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggle = document.getElementById('battle-autoscroll');
+        if (toggle) {
+            toggle.addEventListener('change', function () {
+                if (this.checked) {
+                    const container = document.getElementById('battle-stream-container');
+                    if (container) container.scrollTop = container.scrollHeight;
+                }
+            });
+        }
+    });
+</script>

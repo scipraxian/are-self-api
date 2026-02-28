@@ -2,7 +2,7 @@ import pytest
 from django.test import Client
 from django.urls import reverse
 
-from hydra.models import HydraSpawn, HydraSpawnStatus, HydraSpellbook
+from central_nervous_system.models import HydraSpawn, HydraSpawnStatus, HydraSpellbook
 
 
 @pytest.mark.django_db

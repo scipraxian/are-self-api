@@ -29,24 +29,24 @@ class FrontendMigrationTests(TestCase):
 
         # 2. Check for new JS assets
         self.assertContains(response,
-                            '/hydra/js/hydra_head.js',
+                            '/central_nervous_system/js/hydra_head.js',
                             msg_prefix="Missing hydra_head.js")
         self.assertContains(response,
-                            '/hydra/js/hydra_spawns.js',
+                            '/central_nervous_system/js/hydra_spawns.js',
                             msg_prefix="Missing hydra_spawns.js")
         self.assertContains(response,
-                            '/hydra/js/hydra_spawn.js',
+                            '/central_nervous_system/js/hydra_spawn.js',
                             msg_prefix="Missing hydra_spawn.js")
         self.assertContains(response,
-                            '/hydra/js/hydra_spawn_control_card.js',
+                            '/central_nervous_system/js/hydra_spawn_control_card.js',
                             msg_prefix="Missing hydra_spawn_control_card.js")
 
         # 3. Check for new CSS assets
         self.assertContains(response,
-                            '/hydra/css/hydra_head.css',
+                            '/central_nervous_system/css/hydra_head.css',
                             msg_prefix="Missing hydra_head.css")
         self.assertContains(response,
-                            '/hydra/css/hydra_spawns.css',
+                            '/central_nervous_system/css/hydra_spawns.css',
                             msg_prefix="Missing hydra_spawns.css")
 
         # 4. Check for removal of legacy assets

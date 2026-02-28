@@ -68,7 +68,7 @@ function buildHeadDOM(head) {
     const clone = template.content.cloneNode(true);
     const card = clone.querySelector('.head-card');
 
-    card.href = `/hydra/head/${head.id}/`;
+    card.href = `/central_nervous_system/head/${head.id}/`;
 
     const nameEl = card.querySelector('.head-name');
     const targetEl = card.querySelector('.head-target');
@@ -162,8 +162,8 @@ function buildSwimlaneDOM(mission, isSubgraph = false) {
     clone.querySelector('.lane-time').textContent = `${timeSince(mission.modified)} ago`;
 
     // Controls
-    clone.querySelector('.btn-monitor').href = `/hydra/graph/spawn/${mission.id}/?full=True`;
-    clone.querySelector('.btn-edit').href = `/hydra/graph/editor/${mission.spellbook}/`;
+    clone.querySelector('.btn-monitor').href = `/central_nervous_system/graph/spawn/${mission.id}/?full=True`;
+    clone.querySelector('.btn-edit').href = `/central_nervous_system/graph/editor/${mission.spellbook}/`;
 
     if (mission.is_alive) {
         clone.querySelector('.control-card').classList.add('active-state');

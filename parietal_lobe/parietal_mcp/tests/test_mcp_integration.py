@@ -4,7 +4,7 @@ import uuid
 
 import pytest
 
-from hydra.models import (
+from central_nervous_system.models import (
     HydraHead,
     HydraHeadStatus,
     HydraSpawn,
@@ -154,7 +154,7 @@ async def test_mcp_record_operations():
     result = await ParietalMCP.execute(
         'mcp_read_record_field',
         {
-            'app_label': 'hydra',
+            'app_label': 'central_nervous_system',
             'model_name': 'HydraHead',
             'record_id': str(head_id),
             'field_name': 'blackboard',
@@ -169,7 +169,7 @@ async def test_mcp_record_operations():
     result = await ParietalMCP.execute(
         'mcp_search_record_field',
         {
-            'app_label': 'hydra',
+            'app_label': 'central_nervous_system',
             'model_name': 'HydraHead',
             'record_id': str(head_id),
             'field_name': 'blackboard',

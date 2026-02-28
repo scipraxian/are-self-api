@@ -4,7 +4,7 @@ from rest_framework import routers
 
 from dashboard.api_urls import DASHBOARD_ROUTER
 from environments.api_urls import ENVIRONMENTS_ROUTER
-from hydra.api_urls import HYDRA_ROUTER
+from central_nervous_system.api_urls import HYDRA_ROUTER
 from frontal_lobe.api_urls import REASONING_ROUTER
 
 v1_router = routers.DefaultRouter()
@@ -14,7 +14,7 @@ v1_router.registry.extend(DASHBOARD_ROUTER.registry)
 v1_router.registry.extend(REASONING_ROUTER.registry)
 urlpatterns = [
     path('', include('dashboard.urls')),
-    path('hydra/', include('hydra.urls')),
+    path('central_nervous_system/', include('central_nervous_system.urls')),
     path('environments/', include('environments.urls')),
     path('reasoning/', include('frontal_lobe.urls')),
     path('api/v1/', include(v1_router.urls)),

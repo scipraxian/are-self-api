@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <title>TALOS // MISSION CONTROL</title>
     <link rel="stylesheet" href="{% static 'dashboard/css/mission_control.css' %}">
-    <link rel="stylesheet" href="{% static 'hydra/css/hydra_head.css' %}">
-    <link rel="stylesheet" href="{% static 'hydra/css/hydra_spawn_control_card.css' %}">
-    <link rel="stylesheet" href="{% static 'hydra/css/hydra_spawn.css' %}">
-    <link rel="stylesheet" href="{% static 'hydra/css/hydra_spawns.css' %}">
+    <link rel="stylesheet" href="{% static 'central_nervous_system/css/hydra_head.css' %}">
+    <link rel="stylesheet" href="{% static 'central_nervous_system/css/hydra_spawn_control_card.css' %}">
+    <link rel="stylesheet" href="{% static 'central_nervous_system/css/hydra_spawn.css' %}">
+    <link rel="stylesheet" href="{% static 'central_nervous_system/css/hydra_spawns.css' %}">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=JetBrains+Mono&display=swap"
           rel="stylesheet">
@@ -99,7 +99,8 @@
             </div>
         {% endif %}
 
-        <a href="{% url 'admin:hydra_hydraspellbook_add' %}" target="_blank" class="add-btn text-center"
+        <a href="{% url 'admin:central_nervous_system_hydraspellbook_add' %}" target="_blank"
+           class="add-btn text-center"
            style="text-decoration:none; text-align:center;">+ Protocol</a>
     </div>
 
@@ -191,10 +192,10 @@
 </template>
 
 <script src="{% static 'dashboard/js/mission_control.js' %}"></script>
-<script src="{% static 'hydra/js/hydra_head.js' %}"></script>
-<script src="{% static 'hydra/js/hydra_spawn_control_card.js' %}"></script>
-<script src="{% static 'hydra/js/hydra_spawn.js' %}"></script>
-<script src="{% static 'hydra/js/hydra_spawns.js' %}"></script>
+<script src="{% static 'central_nervous_system/js/hydra_head.js' %}"></script>
+<script src="{% static 'central_nervous_system/js/hydra_spawn_control_card.js' %}"></script>
+<script src="{% static 'central_nervous_system/js/hydra_spawn.js' %}"></script>
+<script src="{% static 'central_nervous_system/js/hydra_spawns.js' %}"></script>
 
 </body>
 </html>

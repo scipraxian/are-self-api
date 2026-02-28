@@ -929,7 +929,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     .then(data => {
                         if (data.spawn_id) {
                             // Redirect to the Hydra Monitor to watch the new process spin up
-                            window.location.href = `/hydra/graph/spawn/${data.spawn_id}/?full=True`;
+                            window.location.href = `/central_nervous_system/graph/spawn/${data.spawn_id}/?full=True`;
                         } else {
                             alert("Reboot triggered, but failed to find Spawn ID.");
                         }

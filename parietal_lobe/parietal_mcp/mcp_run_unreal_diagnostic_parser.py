@@ -3,7 +3,7 @@ import os
 import math
 
 from asgiref.sync import sync_to_async
-from hydra.models import HydraHead
+from central_nervous_system.models import HydraHead
 
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))

@@ -14,8 +14,8 @@ from rest_framework.response import Response
 from config.celery import app as celery_app
 from environments.models import ProjectEnvironment
 from environments.serializers import ProjectEnvironmentSerializer
-from hydra.models import HydraSpawn, HydraSpellbook
-from hydra.serializers import HydraSpellbookSerializer, HydraSwimlaneSerializer
+from central_nervous_system.models import HydraSpawn, HydraSpellbook
+from central_nervous_system.serializers import HydraSpellbookSerializer, HydraSwimlaneSerializer
 
 
 def delayed_shutdown():

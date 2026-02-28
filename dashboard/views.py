@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.views.generic import TemplateView
 
 from environments.models import ProjectEnvironment
-from hydra.models import HydraSpellbook
+from central_nervous_system.models import HydraSpellbook
 from frontal_lobe.models import ReasoningSession, ReasoningStatusID
 
 logger = logging.getLogger(__name__)

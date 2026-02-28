@@ -17,8 +17,8 @@ from frontal_lobe.models import (
     ReasoningTurn,
 )
 from frontal_lobe.thalamus import relay_sensory_state
-from hydra.models import HydraHead, HydraHeadStatus
-from hydra.utils import resolve_environment_context
+from central_nervous_system.models import HydraHead, HydraHeadStatus
+from central_nervous_system.utils import resolve_environment_context
 from identity.identity_prompt import build_identity_prompt
 from parietal_lobe.parietal_lobe import ParietalLobe
 
