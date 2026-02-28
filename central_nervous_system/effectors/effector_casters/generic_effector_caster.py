@@ -76,6 +76,8 @@ class AsyncLogManager:
         self._flush_interval = flush_interval
 
     async def append(self, text: str):
+        if text:
+            text = text.replace('\x00', '')
         async with self._lock:
             self.exec_buffer.append(text)
             if self._should_flush():
@@ -83,6 +85,8 @@ class AsyncLogManager:
 
     async def append_spell(self, text: str):
         """Appends to Effector Log (Game Logs/File)."""
+        if text:
+            text = text.replace('\x00', '')
         async with self._lock:
             self.spell_buffer.append(text)
             if self._should_flush():
@@ -90,6 +94,8 @@ class AsyncLogManager:
 
     async def write_immediate(self, text: str):
         """Writes to Execution Log immediately and logs to system."""
+        if text:
+            text = text.replace('\x00', '')
         # Double Log: Ensures we see it in the Server Console (Celery) AND the DB
         logger.info(f'[HEAD {self.spike.id}] {text.strip()}')
         async with self._lock:

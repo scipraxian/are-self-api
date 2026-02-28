@@ -199,7 +199,7 @@ class Effector(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
         # We need to render them using the FULL context
         executable_args = (
             self.talos_executable.talosexecutableargumentassignment_set.all())
-        spell_args = self.cnsspellargumentassignment_set.all()
+        spell_args = self.effectorargumentassignment_set.all()
 
         # Combine arguments, preserving order is tricky because they are separate querysets
         # But typically executable args come first in logic, though the model has 'order'
@@ -443,14 +443,14 @@ class SpikeTrain(UUIDIdMixin, CreatedAndModifiedWithDelta,
     @property
     def live_spike_trains(self):
         return SpikeTrain.objects.filter(
-            parent_head__spike_train=self,
+            parent_spike__spike_train=self,
             status__in=SpikeTrainStatus.IS_ALIVE_STATUS_LIST,
         )
 
     @property
     def finished_spike_trains(self):
         return SpikeTrain.objects.filter(
-            parent_head__spike_train=self,
+            parent_spike__spike_train=self,
             status__in=SpikeTrainStatus.IS_TERMINAL_STATUS_LIST,
         )
 

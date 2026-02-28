@@ -267,9 +267,8 @@ def handle_move_node(book: NeuralPathway, data: dict) -> JsonResponse:
 def handle_disconnect(book: NeuralPathway, data: dict) -> JsonResponse:
     source_id = data.get('source_node_id')
     target_id = data.get('target_node_id')
-    Axon.objects.filter(pathway=book,
-                                                source_id=source_id,
-                                                target_id=target_id).delete()
+    Axon.objects.filter(pathway=book, source_id=source_id,
+                        target_id=target_id).delete()
     return JsonResponse({KEY_STATUS: STATUS_DISCONNECTED})
 
 
@@ -365,9 +364,7 @@ def get_library(pathway: NeuralPathway) -> JsonResponse:
 def get_node_details(pathway: NeuralPathway,
                      request: HttpRequest) -> JsonResponse:
     node_id = request.GET.get('node_id')
-    node = get_object_or_404(Neuron,
-                             id=node_id,
-                             pathway=pathway)
+    node = get_object_or_404(Neuron, id=node_id, pathway=pathway)
 
     # 1. Inspect the Effector to find variables
     # We look at all arguments and switches
@@ -375,7 +372,7 @@ def get_node_details(pathway: NeuralPathway,
 
     if node.effector:
         # Check Args
-        args = node.effector.cnsspellargumentassignment_set.all()
+        args = node.effector.effectorargumentassignment_set.all()
         for a in args:
             raw = a.argument.argument
             found = re.findall(r'\{\{\s*(\w+)\s*\}\}', raw)
@@ -406,9 +403,7 @@ def get_node_details(pathway: NeuralPathway,
     # The model name is NeuronContext in models.py
     from .models import NeuronContext
 
-    overrides = {
-        c.key: c.value for c in node.neuroncontext_set.all()
-    }
+    overrides = {c.key: c.value for c in node.neuroncontext_set.all()}
 
     # [FIX] Ensure overridden variables are included even if not in the effector definition
     variables.update(overrides.keys())
@@ -456,9 +451,7 @@ def handle_save_node_context(pathway: NeuralPathway,
     node_id = payload.get('node_id')
     updates = payload.get('updates', [])  # List of {key, value}
 
-    node = get_object_or_404(Neuron,
-                             id=node_id,
-                             pathway=pathway)
+    node = get_object_or_404(Neuron, id=node_id, pathway=pathway)
 
     from .models import NeuronContext
 
@@ -471,11 +464,11 @@ def handle_save_node_context(pathway: NeuralPathway,
 
         if not value:
             # Remove override if empty
-            NeuronContext.objects.filter(neuron=node,
-                                                     key=key).delete()
+            NeuronContext.objects.filter(neuron=node, key=key).delete()
         else:
-            NeuronContext.objects.update_or_create(
-                neuron=node, key=key, defaults={'value': value})
+            NeuronContext.objects.update_or_create(neuron=node,
+                                                   key=key,
+                                                   defaults={'value': value})
 
     # Also handle distribution mode update
     dist_mode = payload.get('distribution_mode_id')
@@ -500,8 +493,8 @@ def get_node_telemetry(pathway: NeuralPathway,
 
     # We need the spike belonging to the spike_train.
     # The spike_train might have multiple spikes if looped, but usually we want the latest.
-    spike = (Spike.objects.filter(
-        spawn_id=spawn_id, node_id=node_id).order_by('-created').first())
+    spike = (Spike.objects.filter(spawn_id=spawn_id,
+                                  node_id=node_id).order_by('-created').first())
 
     if not spike:
         return JsonResponse({'status': 'pending', 'logs': ''})
@@ -538,10 +531,7 @@ def get_node_telemetry(pathway: NeuralPathway,
             # The model name is NeuronContext in models.py
             from .models import NeuronContext
 
-            overrides = {
-                c.key: c.value
-                for c in node.neuroncontext_set.all()
-            }
+            overrides = {c.key: c.value for c in node.neuroncontext_set.all()}
 
             # We can't easily get the EXACT full command without the full context resolution
             # (including environment) which might have changed.
@@ -565,7 +555,7 @@ def get_node_telemetry(pathway: NeuralPathway,
     variables = set()
     if spike.effector:
         # Args
-        for a in spike.effector.cnsspellargumentassignment_set.all():
+        for a in spike.effector.effectorargumentassignment_set.all():
             found = re.findall(r'\{\{\s*(\w+)\s*\}\}', a.argument.argument)
             variables.update(found)
         # Switches
@@ -587,8 +577,7 @@ def get_node_telemetry(pathway: NeuralPathway,
         from .models import NeuronContext
 
         overrides = {
-            c.key: c.value
-            for c in spike.neuron.neuroncontext_set.all()
+            c.key: c.value for c in spike.neuron.neuroncontext_set.all()
         }
 
     matrix = []
@@ -628,7 +617,8 @@ def get_execution_status(pathway: NeuralPathway,
 
     try:
         # [FIX]: Fetch the actual spike_train to get the real status (Success/Failed/Running)
-        spike_train = SpikeTrain.objects.select_related('status').get(id=spawn_id)
+        spike_train = SpikeTrain.objects.select_related('status').get(
+            id=spawn_id)
 
         node_status_map = {}
         # [FIX] Order by created so latest spike overwrites previous ones for the same node

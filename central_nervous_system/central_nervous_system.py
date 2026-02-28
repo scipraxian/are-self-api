@@ -13,17 +13,17 @@ from environments.models import ProjectEnvironment
 from talos_agent.models import TalosAgentRegistry, TalosAgentStatus
 
 from .models import (
+    Axon,
+    AxonType,
     CNSDistributionModeID,
+    CNSStatusID,
+    NeuralPathway,
+    Neuron,
+    NeuronContext,
     Spike,
     SpikeStatus,
     SpikeTrain,
     SpikeTrainStatus,
-    NeuralPathway,
-    Axon,
-    Neuron,
-    NeuronContext,
-    CNSStatusID,
-    AxonType,
 )
 from .tasks import cast_cns_spell
 
@@ -61,10 +61,14 @@ class CNS:
     def start(self) -> None:
         """Ignites the spike_train idempotently."""
         with transaction.atomic():
-            spike_train = SpikeTrain.objects.select_for_update().get(id=self.spike_train.id)
+            spike_train = SpikeTrain.objects.select_for_update().get(
+                id=self.spike_train.id
+            )
 
             if spike_train.status_id != SpikeTrainStatus.CREATED:
-                logger.warning(f'[CNS] SpikeTrain {spike_train.id} already started.')
+                logger.warning(
+                    f'[CNS] SpikeTrain {spike_train.id} already started.'
+                )
                 return
 
             spike_train.status_id = SpikeTrainStatus.RUNNING
@@ -77,7 +81,9 @@ class CNS:
         task_ids_to_revoke = []
 
         with transaction.atomic():
-            spike_train = SpikeTrain.objects.select_for_update().get(id=self.spike_train.id)
+            spike_train = SpikeTrain.objects.select_for_update().get(
+                id=self.spike_train.id
+            )
 
             if spike_train.status_id in [
                 SpikeTrainStatus.SUCCESS,
@@ -122,7 +128,9 @@ class CNS:
         """
 
         with transaction.atomic():
-            spike_train = SpikeTrain.objects.select_for_update().get(id=self.spike_train.id)
+            spike_train = SpikeTrain.objects.select_for_update().get(
+                id=self.spike_train.id
+            )
 
             active_heads = spike_train.spikes.select_for_update().filter(
                 status_id__in=[
@@ -304,14 +312,16 @@ class CNS:
             )
 
     def _create_head_from_node(
-        self, node: Neuron, provenance: Optional[Spike]
+        self, neuron: Neuron, provenance: Optional[Spike]
     ):
         starting_blackboard = {}
 
         if provenance:
             starting_blackboard = provenance.blackboard.copy()
         elif self.spike_train.parent_spike:
-            starting_blackboard = self.spike_train.parent_spike.blackboard.copy()
+            starting_blackboard = (
+                self.spike_train.parent_spike.blackboard.copy()
+            )
             node_args = NeuronContext.objects.filter(
                 neuron=self.spike_train.parent_spike.neuron
             )
@@ -321,25 +331,25 @@ class CNS:
 
         seed_head = Spike.objects.create(
             spike_train=self.spike_train,
-            neuron=node,
-            effector=node.effector,
+            neuron=neuron,
+            effector=neuron.effector,
             provenance=provenance,
             target=None,
             status_id=SpikeStatus.CREATED,
             blackboard=starting_blackboard,
         )
 
-        if node.invoked_pathway:
+        if getattr(neuron, 'invoked_pathway', None):
             from .engine.graph_walker import GraphWalker
 
             walker = GraphWalker(spawn_id=self.spike_train.id)
             walker.process_node(seed_head)
             return
 
-        if node.distribution_mode:
-            mode = node.distribution_mode_id
+        if getattr(neuron, 'distribution_mode', None):
+            mode = neuron.distribution_mode_id
         else:
-            mode = node.effector.distribution_mode_id
+            mode = neuron.effector.distribution_mode_id
 
         if mode == CNSDistributionModeID.ALL_ONLINE_AGENTS:
             self._dispatch_fleet_wave(seed_head)
@@ -390,9 +400,7 @@ class CNS:
         self._clone_and_dispatch_head(seed_head, agent)
         seed_head.delete()
 
-    def _clone_and_dispatch_head(
-        self, seed: Spike, agent: TalosAgentRegistry
-    ):
+    def _clone_and_dispatch_head(self, seed: Spike, agent: TalosAgentRegistry):
         new_head = Spike.objects.create(
             spike_train=seed.spike_train,
             neuron=seed.neuron,

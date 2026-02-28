@@ -6,26 +6,29 @@ from typing import Any, Dict, List, Optional
 from django.db.models import Avg
 from rest_framework import serializers
 
+from central_nervous_system import constants
+from central_nervous_system.utils import (
+    get_active_environment,
+    resolve_environment_context,
+)
 from common.constants import ALL_FIELDS
 from environments.variable_renderer import VariableRenderer
-from central_nervous_system import constants
-from central_nervous_system.utils import get_active_environment, resolve_environment_context
 
 from .models import (
-    CNSDistributionMode,
-    Spike,
-    SpikeTrain,
-    Effector,
-    EffectorArgumentAssignment,
-    NeuralPathway,
     Axon,
-    Neuron,
-    NeuronContext,
-    EffectorContext,
-    EffectorTarget,
+    AxonType,
+    CNSDistributionMode,
     CNSStatusID,
     CNSTag,
-    AxonType,
+    Effector,
+    EffectorArgumentAssignment,
+    EffectorContext,
+    EffectorTarget,
+    NeuralPathway,
+    Neuron,
+    NeuronContext,
+    Spike,
+    SpikeTrain,
 )
 
 # ==========================================
@@ -95,14 +98,16 @@ def _extract_variables_from_spell(effector: Optional[Effector]) -> set:
     variables = set()
     if not effector:
         return variables
-    for a in effector.cnsspellargumentassignment_set.all():
+    for a in effector.effectorargumentassignment_set.all():
         found = re.findall(r'\{\{\s*(\w+)\s*\}\}', a.argument.argument)
         variables.update(found)
     for s in effector.switches.all():
         raw = s.flag + (s.value or '')
         found = re.findall(r'\{\{\s*(\w+)\s*\}\}', raw)
         variables.update(found)
-    for a in effector.talos_executable.talosexecutableargumentassignment_set.all():
+    for (
+        a
+    ) in effector.talos_executable.talosexecutableargumentassignment_set.all():
         found = re.findall(r'\{\{\s*(\w+)\s*\}\}', a.argument.argument)
         variables.update(found)
     return variables
@@ -293,7 +298,7 @@ class EffectorSerializer(serializers.ModelSerializer):
     )
     rendered_command = serializers.SerializerMethodField()
     args = EffectorArgumentAssignmentSerializer(
-        source='cnsspellargumentassignment_set', many=True, read_only=True
+        source='effectorargumentassignment_set', many=True, read_only=True
     )
     targets = EffectorTargetSerializer(
         source='specific_targets', many=True, read_only=True
@@ -377,7 +382,9 @@ class CNSNeuralPathwaySerializer(serializers.ModelSerializer):
     environment_name = serializers.CharField(
         source='environment.name', read_only=True
     )
-    node_count = serializers.IntegerField(source='neurons.count', read_only=True)
+    node_count = serializers.IntegerField(
+        source='neurons.count', read_only=True
+    )
     tags = CNSTagSerializer(many=True, read_only=True)
 
     class Meta:
@@ -403,7 +410,9 @@ class CNSGraphLayoutSerializer(serializers.ModelSerializer):
         for n in neurons:
             ui = _get_ui_data(n.ui_json)
             is_delegated = bool(n.invoked_spellbook_id)
-            is_root = (n.effector_id == Effector.BEGIN_PLAY) and not is_delegated
+            is_root = (
+                n.effector_id == Effector.BEGIN_PLAY
+            ) and not is_delegated
             title = (
                 n.invoked_pathway.name
                 if is_delegated
@@ -462,11 +471,11 @@ class NeuronDetailsSerializer(serializers.ModelSerializer):
     def get_context_matrix(self, obj):
         env = obj.pathway.environment if obj.pathway else None
         global_context = VariableRenderer.extract_variables(env)
-        overrides = {
-            c.key: c.value for c in obj.neuroncontext_set.all()
-        }
+        overrides = {c.key: c.value for c in obj.neuroncontext_set.all()}
 
-        dtos = _build_context_matrix_data(obj.effector, global_context, overrides)
+        dtos = _build_context_matrix_data(
+            obj.effector, global_context, overrides
+        )
         return ContextMatrixRowSerializer(dtos, many=True).data
 
 
@@ -606,12 +615,13 @@ class NeuronTelemetrySerializer(serializers.ModelSerializer):
         overrides = {}
         if obj.neuron:
             overrides = {
-                c.key: c.value
-                for c in obj.neuron.neuroncontext_set.all()
+                c.key: c.value for c in obj.neuron.neuroncontext_set.all()
             }
 
         # 4. Build Matrix using helper
-        dtos = _build_context_matrix_data(obj.effector, global_context, overrides)
+        dtos = _build_context_matrix_data(
+            obj.effector, global_context, overrides
+        )
         return ContextMatrixRowSerializer(dtos, many=True).data
 
     def get_reasoning_session_id(self, obj):

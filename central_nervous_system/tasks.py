@@ -23,8 +23,7 @@ def check_next_wave(spawn_id):
         controller.dispatch_next_wave()
     except Exception as e:
         logger.exception(
-            f'[CELERY] Check Wave Failed for SpikeTrain {spawn_id}: {e}'
-        )
+            f'[CELERY] Check Wave Failed for SpikeTrain {spawn_id}: {e}')
         raise
 
 
@@ -42,7 +41,7 @@ def cast_cns_spell(self, head_id):
     try:
         # 0. Pre-fetch spawn_id so we can drive the engine even if the Caster explodes
         try:
-            spike = Spike.objects.only('spawn_id').get(id=head_id)
+            spike = Spike.objects.only('spike_train_id').get(id=head_id)
             spawn_id = spike.spike_train_id
             spike.celery_task_id = self.request.id
             spike.save(update_fields=['celery_task_id'])

@@ -47,6 +47,35 @@ class PFCTagsMixin(models.Model):
         abstract = True
 
 
+class PFCTicketMixin(models.Model):
+    # Priority & Complexity (The Bid)
+    priority = models.IntegerField(
+        default=3, help_text='1=Critical, 2=High, 3=Normal, 4=Low'
+    )
+    # The EM Definition of Ready (DoR) Fields
+    perspective = models.TextField(blank=True, default='')
+    assertions = models.TextField(
+        blank=True,
+        default='',
+        help_text="Testable steps starting with 'Assert'",
+    )
+    outside = models.TextField(
+        blank=True, default='', help_text='What NOT to do'
+    )
+    dod_exceptions = models.TextField(blank=True, default='')
+    dependencies = models.TextField(blank=True, default='')
+    demo_specifics = models.TextField(blank=True, default='')
+
+    source_engrams = models.ManyToManyField(
+        'talos_hippocampus.TalosEngram',
+        blank=True,
+        related_name='linked_stories',
+    )
+
+    class Meta:
+        abstract = True
+
+
 class PFCEpic(
     UUIDIdMixin,
     NameMixin,
@@ -71,6 +100,8 @@ class PFCEpic(
         null=True,
         related_name=RELATED_NAME,
     )
+    # complexity = models.IntegerField(default=0,
+    #                                  help_text="The Bid (Focus cost/weight)")
 
 
 class PFCStory(
