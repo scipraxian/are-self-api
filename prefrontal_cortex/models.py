@@ -21,6 +21,30 @@ class PFCItemStatus(NameMixin):
     IN_PROGRESS = 3
     BLOCKED_BY_USER = 4
     DONE = 5
+    NEEDS_REFINEMENT = 6  # The story's complexity was not high enough.
+    WILL_NOT_DO = 7  # The story is not worth the effort.
+
+    class Meta:
+        verbose_name = 'Status'
+        verbose_name_plural = 'Statuses'
+
+
+class PFCTag(NameMixin):
+    """
+    Native tagging system to avoid external dependency conflicts.
+    """
+
+    class Meta:
+        verbose_name = 'Tag'
+        verbose_name_plural = 'Tags'
+        ordering = ['name']
+
+
+class PFCTagsMixin(models.Model):
+    tags = models.ManyToManyField(PFCTag, blank=True)
+
+    class Meta:
+        abstract = True
 
 
 class PFCEpic(
@@ -29,6 +53,7 @@ class PFCEpic(
     DescriptionMixin,
     CreatedAndModifiedWithDelta,
     VectorMixin,
+    PFCTagsMixin,
 ):
     """The High-Level Directives (Written by Humans).
     If the environment is set, the epic is scoped to that environment.
@@ -54,6 +79,7 @@ class PFCStory(
     DescriptionMixin,
     CreatedAndModifiedWithDelta,
     VectorMixin,
+    PFCTagsMixin,
 ):
     """The Strategies (Written by Humans or Talos)."""
 
@@ -73,6 +99,7 @@ class PFCTask(
     DescriptionMixin,
     CreatedAndModifiedWithDelta,
     VectorMixin,
+    PFCTagsMixin,
 ):
     """The Tactics (Written strictly by Talos). Replaces ReasoningGoal."""
 
@@ -84,7 +111,7 @@ class PFCTask(
     )
 
 
-class PFCComment(UUIDIdMixin, CreatedMixin, ModifiedMixin):
+class PFCComment(UUIDIdMixin, CreatedMixin, ModifiedMixin, PFCTagsMixin):
     """A Comment on an Item. If user is None, the comment is made by Talos."""
 
     RELATED_NAME = 'comments'

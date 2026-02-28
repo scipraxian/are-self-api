@@ -57,7 +57,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'talos_hippocampus.apps.TalosHippocampusConfig',
-    'prefrontal_cortex.apps.PrefrontalCortexConfig'
+    'prefrontal_cortex.apps.PrefrontalCortexConfig',
+    'identity.apps.IdentityConfig',
 ]
 
 MIDDLEWARE = [

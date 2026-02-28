@@ -9,6 +9,19 @@ echo ========================================================
 :: Ensure we are in the right directory
 cd /d "%~dp0"
 
+:: Launch Docker Desktop in the background
+start "" "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+
+:: Loop to check if the Docker engine is running
+:check_docker
+docker info >nul 2>&1
+if %errorlevel% neq 0 (
+    echo Waiting for Docker Engine to start...
+    :: Wait 3 seconds before checking again
+    timeout /t 3 >nul
+    goto check_docker
+)
+
 :: Start Docker Containers
 docker compose up -d
 

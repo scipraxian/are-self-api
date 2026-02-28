@@ -62,7 +62,6 @@ class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
     LLAMA3 = 4
     NOMIC_EMBED_TEXT = 5
 
-
     api_variant = models.CharField(max_length=50, default='ollama')
     context_window_size = models.IntegerField(default=32768)
     cost_per_1k_input = models.DecimalField(
@@ -84,7 +83,13 @@ class ReasoningSession(
     """
 
     RELATED_NAME = 'reasoning_session'
-
+    identity = models.ForeignKey(
+        'identity.IdentityDisc',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name=RELATED_NAME,
+    )
     head = models.ForeignKey(
         'hydra.HydraHead',
         on_delete=models.SET_NULL,

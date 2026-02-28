@@ -33,5 +33,19 @@
     "fields": {
       "name": "Done"
     }
+  },
+  {
+    "model": "prefrontal_cortex.pfcitemstatus",
+    "pk": 6,
+    "fields": {
+      "name": "Needs Refinement"
+    }
+  },
+  {
+    "model": "prefrontal_cortex.pfcitemstatus",
+    "pk": 7,
+    "fields": {
+      "name": "Will not do."
+    }
   }
 ]
