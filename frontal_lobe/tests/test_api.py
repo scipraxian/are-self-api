@@ -4,10 +4,10 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from central_nervous_system.models import (
-    HydraHead,
-    HydraHeadStatus,
-    HydraSpawn,
-    HydraSpawnStatus,
+    CNSHead,
+    CNSHeadStatus,
+    CNSSpawn,
+    CNSSpawnStatus,
 )
 from hippocampus.models import TalosEngram
 from parietal_lobe.models import ToolCall, ToolDefinition
@@ -31,15 +31,15 @@ class ReasoningAPITest(TestCase):
             id=ReasoningStatus.PENDING, name='Pending'
         )
 
-        head_status, _ = HydraHeadStatus.objects.get_or_create(
+        head_status, _ = CNSHeadStatus.objects.get_or_create(
             id=1, defaults={'name': 'Created'}
         )
-        spawn_status, _ = HydraSpawnStatus.objects.get_or_create(
+        spawn_status, _ = CNSSpawnStatus.objects.get_or_create(
             id=1, defaults={'name': 'Created'}
         )
 
-        self.spawn = HydraSpawn.objects.create(status=spawn_status)
-        self.head = HydraHead.objects.create(
+        self.spawn = CNSSpawn.objects.create(status=spawn_status)
+        self.head = CNSHead.objects.create(
             spawn=self.spawn, status=head_status
         )
 

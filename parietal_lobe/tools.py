@@ -5,7 +5,7 @@ import uuid  # <--- RESTORED
 
 from django.conf import settings
 
-from central_nervous_system.models import HydraHead
+from central_nervous_system.models import CNSHead
 from central_nervous_system.tasks import cast_hydra_spell
 
 logger = logging.getLogger(__name__)
@@ -165,7 +165,7 @@ def ai_execute_task(head_id):
 
 def ai_update_blackboard(head_id: str, key: str, value: str) -> str:
     """
-    Updates a value in the HydraHead blackboard, altering the state
+    Updates a value in the CNSHead blackboard, altering the state
     for downstream graph routing.
     """
 
@@ -175,7 +175,7 @@ def ai_update_blackboard(head_id: str, key: str, value: str) -> str:
         return f"Error: Invalid Head ID '{head_id}'. Must be a UUID."
 
     try:
-        head = HydraHead.objects.get(id=val_uuid)
+        head = CNSHead.objects.get(id=val_uuid)
 
         # Guard against uninitialized JSON fields
         if not isinstance(head.blackboard, dict):
@@ -189,8 +189,8 @@ def ai_update_blackboard(head_id: str, key: str, value: str) -> str:
         )
         return f"Success: Blackboard updated. {key} is now '{value}'."
 
-    except HydraHead.DoesNotExist:
-        return f'Error: HydraHead {head_id} not found.'
+    except CNSHead.DoesNotExist:
+        return f'Error: CNSHead {head_id} not found.'
     except Exception as e:
         logger.error(f'[Parietal] Blackboard update failed: {e}')
         return f'Error updating blackboard: {str(e)}'

@@ -1,146 +1,146 @@
 [
   {
-    "model": "central_nervous_system.hydratag",
+    "model": "central_nervous_system.cnstag",
     "pk": 1,
     "fields": {
       "name": "Agent"
     }
   },
   {
-    "model": "central_nervous_system.hydratag",
+    "model": "central_nervous_system.cnstag",
     "pk": 2,
     "fields": {
       "name": "Pre-Release"
     }
   },
   {
-    "model": "central_nervous_system.HydraSpawnstatus",
+    "model": "central_nervous_system.CNSSpawnstatus",
     "pk": 1,
     "fields": {
       "name": "Created"
     }
   },
   {
-    "model": "central_nervous_system.HydraSpawnstatus",
+    "model": "central_nervous_system.CNSSpawnstatus",
     "pk": 2,
     "fields": {
       "name": "Pending"
     }
   },
   {
-    "model": "central_nervous_system.HydraSpawnstatus",
+    "model": "central_nervous_system.CNSSpawnstatus",
     "pk": 3,
     "fields": {
       "name": "Running"
     }
   },
   {
-    "model": "central_nervous_system.HydraSpawnstatus",
+    "model": "central_nervous_system.CNSSpawnstatus",
     "pk": 4,
     "fields": {
       "name": "Success"
     }
   },
   {
-    "model": "central_nervous_system.HydraSpawnstatus",
+    "model": "central_nervous_system.CNSSpawnstatus",
     "pk": 5,
     "fields": {
       "name": "Failed"
     }
   },
   {
-    "model": "central_nervous_system.HydraSpawnstatus",
+    "model": "central_nervous_system.CNSSpawnstatus",
     "pk": 6,
     "fields": {
       "name": "Aborted"
     }
   },
   {
-    "model": "central_nervous_system.HydraSpawnstatus",
+    "model": "central_nervous_system.CNSSpawnstatus",
     "pk": 7,
     "fields": {
       "name": "Delegated"
     }
   },
   {
-    "model": "central_nervous_system.HydraSpawnstatus",
+    "model": "central_nervous_system.CNSSpawnstatus",
     "pk": 8,
     "fields": {
       "name": "Stopping"
     }
   },
   {
-    "model": "central_nervous_system.HydraSpawnstatus",
+    "model": "central_nervous_system.CNSSpawnstatus",
     "pk": 9,
     "fields": {
       "name": "Stopped"
     }
   },
   {
-    "model": "central_nervous_system.HydraHeadstatus",
+    "model": "central_nervous_system.CNSHeadstatus",
     "pk": 1,
     "fields": {
       "name": "Created"
     }
   },
   {
-    "model": "central_nervous_system.HydraHeadstatus",
+    "model": "central_nervous_system.CNSHeadstatus",
     "pk": 2,
     "fields": {
       "name": "Pending"
     }
   },
   {
-    "model": "central_nervous_system.HydraHeadstatus",
+    "model": "central_nervous_system.CNSHeadstatus",
     "pk": 3,
     "fields": {
       "name": "Running"
     }
   },
   {
-    "model": "central_nervous_system.HydraHeadstatus",
+    "model": "central_nervous_system.CNSHeadstatus",
     "pk": 4,
     "fields": {
       "name": "Success"
     }
   },
   {
-    "model": "central_nervous_system.HydraHeadstatus",
+    "model": "central_nervous_system.CNSHeadstatus",
     "pk": 5,
     "fields": {
       "name": "Failed"
     }
   },
   {
-    "model": "central_nervous_system.HydraHeadstatus",
+    "model": "central_nervous_system.CNSHeadstatus",
     "pk": 6,
     "fields": {
       "name": "Aborted"
     }
   },
   {
-    "model": "central_nervous_system.HydraHeadstatus",
+    "model": "central_nervous_system.CNSHeadstatus",
     "pk": 7,
     "fields": {
       "name": "Delegated"
     }
   },
   {
-    "model": "central_nervous_system.HydraHeadstatus",
+    "model": "central_nervous_system.CNSHeadstatus",
     "pk": 8,
     "fields": {
       "name": "Stopping"
     }
   },
   {
-    "model": "central_nervous_system.HydraHeadstatus",
+    "model": "central_nervous_system.CNSHeadstatus",
     "pk": 9,
     "fields": {
       "name": "Stopped"
     }
   },
   {
-    "model": "central_nervous_system.hydradistributionmode",
+    "model": "central_nervous_system.cnsdistributionmode",
     "pk": 1,
     "fields": {
       "description": "Executes strictly on the local Talos Server (e.g. Compiling).",
@@ -148,7 +148,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydradistributionmode",
+    "model": "central_nervous_system.cnsdistributionmode",
     "pk": 2,
     "fields": {
       "description": "Broadcasts execution to every ONLINE agent (e.g. Deployment).",
@@ -156,7 +156,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydradistributionmode",
+    "model": "central_nervous_system.cnsdistributionmode",
     "pk": 3,
     "fields": {
       "description": "Executes on the first available ONLINE agent (e.g. Distributed Testing).",
@@ -164,15 +164,15 @@
     }
   },
   {
-    "model": "central_nervous_system.hydradistributionmode",
+    "model": "central_nervous_system.cnsdistributionmode",
     "pk": 4,
     "fields": {
-      "description": "Executes only on targets explicitly linked via HydraSpellTarget.",
+      "description": "Executes only on targets explicitly linked via CNSSpellTarget.",
       "name": "Specific Targets"
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 1,
     "fields": {
       "created": "2026-01-01T00:00:00Z",
@@ -187,7 +187,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 2,
     "fields": {
       "created": "2026-01-01T00:00:00Z",
@@ -210,7 +210,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 3,
     "fields": {
       "created": "2026-01-01T00:00:00Z",
@@ -233,7 +233,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 4,
     "fields": {
       "created": "2026-01-01T00:00:00Z",
@@ -254,7 +254,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 100,
     "fields": {
       "created": "2026-01-07T22:58:23.399Z",
@@ -275,7 +275,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 110,
     "fields": {
       "created": "2026-01-08T15:50:00Z",
@@ -307,7 +307,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 120,
     "fields": {
       "created": "2026-01-08T12:00:00Z",
@@ -322,7 +322,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 130,
     "fields": {
       "created": "2026-01-08T18:00:00Z",
@@ -345,7 +345,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 140,
     "fields": {
       "created": "2026-01-09T12:00:00Z",
@@ -360,7 +360,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 142,
     "fields": {
       "created": "2026-01-17T02:00:50.152Z",
@@ -375,7 +375,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 143,
     "fields": {
       "created": "2026-01-17T02:00:50.156Z",
@@ -395,7 +395,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 144,
     "fields": {
       "created": "2026-01-27T17:25:34.483Z",
@@ -410,7 +410,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 145,
     "fields": {
       "created": "2026-01-27T19:19:00.155Z",
@@ -425,7 +425,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 146,
     "fields": {
       "created": "2026-01-27T23:22:10.133Z",
@@ -446,7 +446,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 147,
     "fields": {
       "created": "2026-01-28T16:17:19.220Z",
@@ -464,7 +464,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 148,
     "fields": {
       "created": "2026-01-01T00:00:00Z",
@@ -488,7 +488,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 149,
     "fields": {
       "created": "2026-01-30T16:34:23.839Z",
@@ -503,7 +503,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 150,
     "fields": {
       "created": "2026-01-30T18:37:12.059Z",
@@ -518,7 +518,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 151,
     "fields": {
       "created": "2026-01-31T14:37:51.784Z",
@@ -541,7 +541,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 152,
     "fields": {
       "created": "2026-01-31T14:39:35.355Z",
@@ -564,7 +564,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 153,
     "fields": {
       "created": "2026-01-31T15:17:41.419Z",
@@ -582,7 +582,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 154,
     "fields": {
       "created": "2026-01-31T15:51:56.896Z",
@@ -597,7 +597,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 155,
     "fields": {
       "created": "2026-01-31T16:09:07.810Z",
@@ -612,7 +612,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 156,
     "fields": {
       "created": "2026-01-31T20:25:05.728Z",
@@ -627,7 +627,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 157,
     "fields": {
       "created": "2026-02-02T14:43:47.917Z",
@@ -647,7 +647,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 158,
     "fields": {
       "created": "2026-02-08T17:47:11.756Z",
@@ -665,7 +665,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 159,
     "fields": {
       "created": "2026-02-08T17:51:13.962Z",
@@ -683,7 +683,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 160,
     "fields": {
       "created": "2026-02-08T17:55:00.040Z",
@@ -706,7 +706,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 161,
     "fields": {
       "created": "2026-02-08T17:56:39.786Z",
@@ -729,7 +729,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 162,
     "fields": {
       "created": "2026-02-08T19:00:18.699Z",
@@ -752,7 +752,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 163,
     "fields": {
       "created": "2026-02-08T19:02:16.111Z",
@@ -775,7 +775,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 164,
     "fields": {
       "created": "2026-02-08T19:33:00.839Z",
@@ -798,7 +798,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 165,
     "fields": {
       "created": "2026-02-08T19:34:47.032Z",
@@ -821,7 +821,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 166,
     "fields": {
       "created": "2026-02-10T18:44:05.324Z",
@@ -836,7 +836,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 167,
     "fields": {
       "created": "2026-02-11T16:30:50.618Z",
@@ -851,7 +851,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 168,
     "fields": {
       "created": "2026-02-12T22:07:16.774Z",
@@ -866,7 +866,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 169,
     "fields": {
       "created": "2026-02-16T18:40:09.814Z",
@@ -881,7 +881,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 170,
     "fields": {
       "created": "2026-02-16T21:53:52.610Z",
@@ -896,7 +896,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspell",
+    "model": "central_nervous_system.cnsspell",
     "pk": 171,
     "fields": {
       "created": "2026-02-17T18:23:16.500Z",
@@ -911,7 +911,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellcontext",
+    "model": "central_nervous_system.cnsspellcontext",
     "pk": 2,
     "fields": {
       "spell": 169,
@@ -920,7 +920,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellcontext",
+    "model": "central_nervous_system.cnsspellcontext",
     "pk": 3,
     "fields": {
       "spell": 171,
@@ -929,7 +929,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 1,
     "fields": {
       "spell": 2,
@@ -938,7 +938,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 2,
     "fields": {
       "spell": 1,
@@ -947,7 +947,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 3,
     "fields": {
       "spell": 100,
@@ -956,7 +956,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 4,
     "fields": {
       "spell": 100,
@@ -965,7 +965,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 5,
     "fields": {
       "spell": 100,
@@ -974,7 +974,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 6,
     "fields": {
       "spell": 100,
@@ -983,7 +983,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 7,
     "fields": {
       "spell": 100,
@@ -992,7 +992,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 8,
     "fields": {
       "spell": 110,
@@ -1001,7 +1001,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 9,
     "fields": {
       "spell": 144,
@@ -1010,7 +1010,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 10,
     "fields": {
       "spell": 130,
@@ -1019,7 +1019,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 11,
     "fields": {
       "spell": 130,
@@ -1028,7 +1028,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 12,
     "fields": {
       "spell": 149,
@@ -1037,7 +1037,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 13,
     "fields": {
       "spell": 149,
@@ -1046,7 +1046,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 14,
     "fields": {
       "spell": 149,
@@ -1055,7 +1055,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 15,
     "fields": {
       "spell": 150,
@@ -1064,7 +1064,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 16,
     "fields": {
       "spell": 150,
@@ -1073,7 +1073,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 17,
     "fields": {
       "spell": 150,
@@ -1082,7 +1082,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 18,
     "fields": {
       "spell": 151,
@@ -1091,7 +1091,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 19,
     "fields": {
       "spell": 151,
@@ -1100,7 +1100,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 20,
     "fields": {
       "spell": 152,
@@ -1109,7 +1109,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 21,
     "fields": {
       "spell": 152,
@@ -1118,7 +1118,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 22,
     "fields": {
       "spell": 153,
@@ -1127,7 +1127,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 23,
     "fields": {
       "spell": 153,
@@ -1136,7 +1136,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 24,
     "fields": {
       "spell": 154,
@@ -1145,7 +1145,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 25,
     "fields": {
       "spell": 154,
@@ -1154,7 +1154,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 26,
     "fields": {
       "spell": 155,
@@ -1163,7 +1163,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 27,
     "fields": {
       "spell": 155,
@@ -1172,7 +1172,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 29,
     "fields": {
       "spell": 158,
@@ -1181,7 +1181,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 30,
     "fields": {
       "spell": 158,
@@ -1190,7 +1190,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 31,
     "fields": {
       "spell": 159,
@@ -1199,7 +1199,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 32,
     "fields": {
       "spell": 159,
@@ -1208,7 +1208,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 33,
     "fields": {
       "spell": 160,
@@ -1217,7 +1217,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 34,
     "fields": {
       "spell": 160,
@@ -1226,7 +1226,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 35,
     "fields": {
       "spell": 161,
@@ -1235,7 +1235,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 36,
     "fields": {
       "spell": 161,
@@ -1244,7 +1244,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 37,
     "fields": {
       "spell": 162,
@@ -1253,7 +1253,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 38,
     "fields": {
       "spell": 162,
@@ -1262,7 +1262,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 39,
     "fields": {
       "spell": 163,
@@ -1271,7 +1271,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 40,
     "fields": {
       "spell": 163,
@@ -1280,7 +1280,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 41,
     "fields": {
       "spell": 164,
@@ -1289,7 +1289,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 42,
     "fields": {
       "spell": 164,
@@ -1298,7 +1298,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 43,
     "fields": {
       "spell": 165,
@@ -1307,7 +1307,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 44,
     "fields": {
       "spell": 165,
@@ -1316,7 +1316,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 45,
     "fields": {
       "spell": 148,
@@ -1325,7 +1325,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 46,
     "fields": {
       "spell": 166,
@@ -1334,7 +1334,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 47,
     "fields": {
       "spell": 167,
@@ -1343,7 +1343,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 48,
     "fields": {
       "spell": 168,
@@ -1352,7 +1352,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 49,
     "fields": {
       "spell": 168,
@@ -1361,7 +1361,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 50,
     "fields": {
       "spell": 169,
@@ -1370,7 +1370,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 51,
     "fields": {
       "spell": 169,
@@ -1379,7 +1379,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 52,
     "fields": {
       "spell": 156,
@@ -1388,7 +1388,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 53,
     "fields": {
       "spell": 156,
@@ -1397,7 +1397,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 54,
     "fields": {
       "spell": 169,
@@ -1406,7 +1406,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 55,
     "fields": {
       "spell": 156,
@@ -1415,7 +1415,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 56,
     "fields": {
       "spell": 156,
@@ -1424,7 +1424,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 57,
     "fields": {
       "spell": 156,
@@ -1433,7 +1433,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 58,
     "fields": {
       "spell": 170,
@@ -1442,7 +1442,7 @@
     }
   },
   {
-    "model": "central_nervous_system.hydraspellargumentassignment",
+    "model": "central_nervous_system.cnsspellargumentassignment",
     "pk": 59,
     "fields": {
       "spell": 170,
@@ -1451,7 +1451,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
     "fields": {
       "created": "2026-01-08T16:10:00Z",
@@ -1465,7 +1465,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "0245b699-5b9a-43ec-9391-b788b578d25f",
     "fields": {
       "created": "2026-01-09T20:16:00.695Z",
@@ -1479,7 +1479,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "123bc9f0-5c8f-4410-a6e5-a49725fbb375",
     "fields": {
       "created": "2026-02-10T18:43:05.690Z",
@@ -1493,7 +1493,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "22334455-6677-8899-0011-aabbccddeeff",
     "fields": {
       "created": "2026-01-08T16:40:00Z",
@@ -1507,7 +1507,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "2a2a2425-08ff-46d2-b652-adb4153554bf",
     "fields": {
       "created": "2026-01-08T21:58:00.568Z",
@@ -1521,7 +1521,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
     "fields": {
       "created": "2026-01-27T19:19:26.787Z",
@@ -1537,7 +1537,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "4e52e554-f7b3-4adc-96f2-f80da0329774",
     "fields": {
       "created": "2026-02-04T22:04:12.822Z",
@@ -1551,7 +1551,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "52b62ed2-7752-4d16-ba29-4810a54815d0",
     "fields": {
       "created": "2026-01-31T14:40:15.233Z",
@@ -1567,7 +1567,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "559cecbd-2128-478a-be50-436ba30b7396",
     "fields": {
       "created": "2026-01-20T00:54:46.432Z",
@@ -1583,7 +1583,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "596804db-1566-4388-a7e7-dafa7ab2f4fb",
     "fields": {
       "created": "2026-02-06T17:31:36.055Z",
@@ -1597,7 +1597,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "5aedec3f-df9d-4149-b62b-6bd17c8ca8a3",
     "fields": {
       "created": "2026-01-31T16:07:02.726Z",
@@ -1611,7 +1611,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "5b5bebe0-be34-4614-b40f-b78bd3a1c269",
     "fields": {
       "created": "2026-01-31T15:50:39.700Z",
@@ -1625,7 +1625,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "8686149a-8b56-4a47-b5df-7d8cf7635dbc",
     "fields": {
       "created": "2026-01-27T23:23:20.836Z",
@@ -1639,7 +1639,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "925c871c-618e-4de8-a9d2-6978aed216e8",
     "fields": {
       "created": "2026-02-04T20:51:27.826Z",
@@ -1653,7 +1653,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "94a67ded-0d4b-4060-b79a-6f895b2373a3",
     "fields": {
       "created": "2026-02-12T22:39:57.776Z",
@@ -1667,7 +1667,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
     "fields": {
       "created": "2026-02-01T16:37:12.246Z",
@@ -1681,7 +1681,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
     "fields": {
       "created": "2026-01-01T00:00:00Z",
@@ -1695,7 +1695,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "b7b1017e-0e5f-4e3d-b91a-13270b41b4b3",
     "fields": {
       "created": "2026-01-23T22:01:37.231Z",
@@ -1709,7 +1709,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "b8e9f0a1-2c3d-4e5f-6a7b-8c9d0e1f2b3c",
     "fields": {
       "created": "2026-01-01T00:00:00Z",
@@ -1723,7 +1723,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
     "fields": {
       "created": "2026-01-01T00:00:00Z",
@@ -1737,7 +1737,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "e94a9c50-5baa-4cae-808e-b17367c11fc6",
     "fields": {
       "created": "2026-01-31T20:25:45.813Z",
@@ -1751,7 +1751,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
     "fields": {
       "created": "2026-01-17T02:00:50.162Z",
@@ -1767,7 +1767,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbook",
+    "model": "central_nervous_system.CNSSpellbook",
     "pk": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
     "fields": {
       "created": "2026-01-08T16:00:00Z",
@@ -1783,7 +1783,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 1,
     "fields": {
       "environment": null,
@@ -1796,7 +1796,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 2,
     "fields": {
       "environment": null,
@@ -1809,7 +1809,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 4,
     "fields": {
       "environment": null,
@@ -1822,7 +1822,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 5,
     "fields": {
       "environment": null,
@@ -1835,7 +1835,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 6,
     "fields": {
       "environment": null,
@@ -1848,7 +1848,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 7,
     "fields": {
       "environment": null,
@@ -1861,7 +1861,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 9,
     "fields": {
       "environment": null,
@@ -1874,7 +1874,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 10,
     "fields": {
       "environment": null,
@@ -1887,7 +1887,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 11,
     "fields": {
       "environment": null,
@@ -1900,7 +1900,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 13,
     "fields": {
       "environment": null,
@@ -1913,7 +1913,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 14,
     "fields": {
       "environment": null,
@@ -1926,7 +1926,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 15,
     "fields": {
       "environment": null,
@@ -1939,7 +1939,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 16,
     "fields": {
       "environment": null,
@@ -1952,7 +1952,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 17,
     "fields": {
       "environment": null,
@@ -1965,7 +1965,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 18,
     "fields": {
       "environment": null,
@@ -1978,7 +1978,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 20,
     "fields": {
       "environment": null,
@@ -1991,7 +1991,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 21,
     "fields": {
       "environment": null,
@@ -2004,7 +2004,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 22,
     "fields": {
       "environment": null,
@@ -2017,7 +2017,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 23,
     "fields": {
       "environment": null,
@@ -2030,7 +2030,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 24,
     "fields": {
       "environment": null,
@@ -2043,7 +2043,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 25,
     "fields": {
       "environment": null,
@@ -2056,7 +2056,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 27,
     "fields": {
       "environment": null,
@@ -2069,7 +2069,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 28,
     "fields": {
       "environment": null,
@@ -2082,7 +2082,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 29,
     "fields": {
       "environment": null,
@@ -2095,7 +2095,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 32,
     "fields": {
       "environment": null,
@@ -2108,7 +2108,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 33,
     "fields": {
       "environment": null,
@@ -2121,7 +2121,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 34,
     "fields": {
       "environment": null,
@@ -2134,7 +2134,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 35,
     "fields": {
       "environment": null,
@@ -2147,7 +2147,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 37,
     "fields": {
       "environment": null,
@@ -2160,7 +2160,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 48,
     "fields": {
       "environment": null,
@@ -2173,7 +2173,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 49,
     "fields": {
       "environment": null,
@@ -2186,7 +2186,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 50,
     "fields": {
       "environment": null,
@@ -2199,7 +2199,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 51,
     "fields": {
       "environment": null,
@@ -2212,7 +2212,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 52,
     "fields": {
       "environment": null,
@@ -2225,7 +2225,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 53,
     "fields": {
       "environment": null,
@@ -2238,7 +2238,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 54,
     "fields": {
       "environment": null,
@@ -2251,7 +2251,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 55,
     "fields": {
       "environment": null,
@@ -2264,7 +2264,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 56,
     "fields": {
       "environment": null,
@@ -2277,7 +2277,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 58,
     "fields": {
       "environment": null,
@@ -2290,7 +2290,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 60,
     "fields": {
       "environment": null,
@@ -2303,7 +2303,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 61,
     "fields": {
       "environment": null,
@@ -2316,7 +2316,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 63,
     "fields": {
       "environment": null,
@@ -2329,7 +2329,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 64,
     "fields": {
       "environment": null,
@@ -2342,7 +2342,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 65,
     "fields": {
       "environment": null,
@@ -2355,7 +2355,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 70,
     "fields": {
       "environment": null,
@@ -2368,7 +2368,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 73,
     "fields": {
       "environment": null,
@@ -2381,7 +2381,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 74,
     "fields": {
       "environment": null,
@@ -2394,7 +2394,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 76,
     "fields": {
       "environment": null,
@@ -2407,7 +2407,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 77,
     "fields": {
       "environment": null,
@@ -2420,7 +2420,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 78,
     "fields": {
       "environment": null,
@@ -2433,7 +2433,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 79,
     "fields": {
       "environment": null,
@@ -2446,7 +2446,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 82,
     "fields": {
       "environment": null,
@@ -2459,7 +2459,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 83,
     "fields": {
       "environment": null,
@@ -2472,7 +2472,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 84,
     "fields": {
       "environment": null,
@@ -2485,7 +2485,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 89,
     "fields": {
       "environment": null,
@@ -2498,7 +2498,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 90,
     "fields": {
       "environment": null,
@@ -2511,7 +2511,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 91,
     "fields": {
       "environment": null,
@@ -2524,7 +2524,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 92,
     "fields": {
       "environment": null,
@@ -2537,7 +2537,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 93,
     "fields": {
       "environment": null,
@@ -2550,7 +2550,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 94,
     "fields": {
       "environment": null,
@@ -2563,7 +2563,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 95,
     "fields": {
       "environment": null,
@@ -2576,7 +2576,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 96,
     "fields": {
       "environment": null,
@@ -2589,7 +2589,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 97,
     "fields": {
       "environment": null,
@@ -2602,7 +2602,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 98,
     "fields": {
       "environment": null,
@@ -2615,7 +2615,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 99,
     "fields": {
       "environment": null,
@@ -2628,7 +2628,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 100,
     "fields": {
       "environment": null,
@@ -2641,7 +2641,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 101,
     "fields": {
       "environment": null,
@@ -2654,7 +2654,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 102,
     "fields": {
       "environment": null,
@@ -2667,7 +2667,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 105,
     "fields": {
       "environment": null,
@@ -2680,7 +2680,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 106,
     "fields": {
       "environment": null,
@@ -2693,7 +2693,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 107,
     "fields": {
       "environment": null,
@@ -2706,7 +2706,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 108,
     "fields": {
       "environment": null,
@@ -2719,7 +2719,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 109,
     "fields": {
       "environment": null,
@@ -2732,7 +2732,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 113,
     "fields": {
       "environment": null,
@@ -2745,7 +2745,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 116,
     "fields": {
       "environment": null,
@@ -2758,7 +2758,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 117,
     "fields": {
       "environment": null,
@@ -2771,7 +2771,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 118,
     "fields": {
       "environment": null,
@@ -2784,7 +2784,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 119,
     "fields": {
       "environment": null,
@@ -2797,7 +2797,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 120,
     "fields": {
       "environment": null,
@@ -2810,7 +2810,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 121,
     "fields": {
       "environment": null,
@@ -2823,7 +2823,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 122,
     "fields": {
       "environment": null,
@@ -2836,7 +2836,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 123,
     "fields": {
       "environment": null,
@@ -2849,7 +2849,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 124,
     "fields": {
       "environment": null,
@@ -2862,7 +2862,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 125,
     "fields": {
       "environment": null,
@@ -2875,7 +2875,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 127,
     "fields": {
       "environment": null,
@@ -2888,7 +2888,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknode",
+    "model": "central_nervous_system.CNSSpellbooknode",
     "pk": 128,
     "fields": {
       "environment": null,
@@ -2901,7 +2901,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknodecontext",
+    "model": "central_nervous_system.CNSSpellbooknodecontext",
     "pk": 5,
     "fields": {
       "node": 122,
@@ -2910,7 +2910,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknodecontext",
+    "model": "central_nervous_system.CNSSpellbooknodecontext",
     "pk": 6,
     "fields": {
       "node": 125,
@@ -2919,37 +2919,37 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbooknodecontext",
+    "model": "central_nervous_system.CNSSpellbooknodecontext",
     "pk": 7,
     "fields": {
       "node": 127,
       "key": "prompt",
-      "value": "use the unreal parsing tool mcp_run_unreal_diagnostic_parser\non the provenance head\n{{head.provenance.id}}\n\nwhich is the output of our Unreal 5.6.1 application.\n\nyou should also inspect the record\n\nmcp_inspect_record hydra HydraHead {{head.provenance.id}}\n\nEach turn enhance the Engrams of known issues, as well as create Engrams for new issues.\nOnce you think you have tagged all issues, use mcp_conclude_session to file a report and end."
+      "value": "use the unreal parsing tool mcp_run_unreal_diagnostic_parser\non the provenance head\n{{head.provenance.id}}\n\nwhich is the output of our Unreal 5.6.1 application.\n\nyou should also inspect the record\n\nmcp_inspect_record hydra CNSHead {{head.provenance.id}}\n\nEach turn enhance the Engrams of known issues, as well as create Engrams for new issues.\nOnce you think you have tagged all issues, use mcp_conclude_session to file a report and end."
     }
   },
   {
-    "model": "central_nervous_system.hydrawiretype",
+    "model": "central_nervous_system.cnswiretype",
     "pk": 1,
     "fields": {
       "name": "Flow"
     }
   },
   {
-    "model": "central_nervous_system.hydrawiretype",
+    "model": "central_nervous_system.cnswiretype",
     "pk": 2,
     "fields": {
       "name": "Success"
     }
   },
   {
-    "model": "central_nervous_system.hydrawiretype",
+    "model": "central_nervous_system.cnswiretype",
     "pk": 3,
     "fields": {
       "name": "Failure"
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 2,
     "fields": {
       "modified": "2026-01-28T23:21:26.029Z",
@@ -2960,7 +2960,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 13,
     "fields": {
       "modified": "2026-01-30T15:30:57.936Z",
@@ -2971,7 +2971,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 16,
     "fields": {
       "modified": "2026-01-30T16:06:52.977Z",
@@ -2982,7 +2982,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 18,
     "fields": {
       "modified": "2026-01-30T16:38:50.108Z",
@@ -2993,7 +2993,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 20,
     "fields": {
       "modified": "2026-01-30T16:39:09.204Z",
@@ -3004,7 +3004,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 24,
     "fields": {
       "modified": "2026-01-31T14:40:38.352Z",
@@ -3015,7 +3015,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 27,
     "fields": {
       "modified": "2026-01-31T20:26:04.533Z",
@@ -3026,7 +3026,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 37,
     "fields": {
       "modified": "2026-02-01T18:15:36.464Z",
@@ -3037,7 +3037,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 38,
     "fields": {
       "modified": "2026-02-01T18:53:40.638Z",
@@ -3048,7 +3048,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 39,
     "fields": {
       "modified": "2026-02-02T02:17:56.315Z",
@@ -3059,7 +3059,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 40,
     "fields": {
       "modified": "2026-02-02T02:18:00.651Z",
@@ -3070,7 +3070,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 41,
     "fields": {
       "modified": "2026-02-02T02:18:56.725Z",
@@ -3081,7 +3081,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 42,
     "fields": {
       "modified": "2026-02-02T14:16:14.679Z",
@@ -3092,7 +3092,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 43,
     "fields": {
       "modified": "2026-02-02T14:16:17.684Z",
@@ -3103,7 +3103,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 49,
     "fields": {
       "modified": "2026-02-02T15:58:31.820Z",
@@ -3114,7 +3114,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 50,
     "fields": {
       "modified": "2026-02-02T15:58:34.533Z",
@@ -3125,7 +3125,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 51,
     "fields": {
       "modified": "2026-02-02T15:58:38.712Z",
@@ -3136,7 +3136,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 55,
     "fields": {
       "modified": "2026-02-03T15:50:24.531Z",
@@ -3147,7 +3147,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 57,
     "fields": {
       "modified": "2026-02-03T15:54:33.608Z",
@@ -3158,7 +3158,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 62,
     "fields": {
       "modified": "2026-02-03T16:02:23.648Z",
@@ -3169,7 +3169,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 63,
     "fields": {
       "modified": "2026-02-03T16:02:26.746Z",
@@ -3180,7 +3180,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 64,
     "fields": {
       "modified": "2026-02-03T16:02:32.752Z",
@@ -3191,7 +3191,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 65,
     "fields": {
       "modified": "2026-02-03T16:03:20.650Z",
@@ -3202,7 +3202,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 67,
     "fields": {
       "modified": "2026-02-03T16:24:31.489Z",
@@ -3213,7 +3213,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 68,
     "fields": {
       "modified": "2026-02-03T16:24:37.058Z",
@@ -3224,7 +3224,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 69,
     "fields": {
       "modified": "2026-02-03T16:25:05.489Z",
@@ -3235,7 +3235,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 70,
     "fields": {
       "modified": "2026-02-03T16:26:11.380Z",
@@ -3246,7 +3246,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 71,
     "fields": {
       "modified": "2026-02-03T16:45:13.985Z",
@@ -3257,7 +3257,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 72,
     "fields": {
       "modified": "2026-02-03T16:45:17.281Z",
@@ -3268,7 +3268,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 76,
     "fields": {
       "modified": "2026-02-04T16:20:27.635Z",
@@ -3279,7 +3279,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 78,
     "fields": {
       "modified": "2026-02-04T16:20:39.813Z",
@@ -3290,7 +3290,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 79,
     "fields": {
       "modified": "2026-02-04T16:20:42.423Z",
@@ -3301,7 +3301,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 80,
     "fields": {
       "modified": "2026-02-04T16:20:47.805Z",
@@ -3312,7 +3312,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 81,
     "fields": {
       "modified": "2026-02-04T16:20:53.226Z",
@@ -3323,7 +3323,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 86,
     "fields": {
       "modified": "2026-02-04T22:04:45.242Z",
@@ -3334,7 +3334,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 87,
     "fields": {
       "modified": "2026-02-04T22:04:48.170Z",
@@ -3345,7 +3345,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 89,
     "fields": {
       "modified": "2026-02-08T16:51:52.152Z",
@@ -3356,7 +3356,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 94,
     "fields": {
       "modified": "2026-02-08T16:59:06.071Z",
@@ -3367,7 +3367,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 103,
     "fields": {
       "modified": "2026-02-08T19:37:00.755Z",
@@ -3378,7 +3378,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 114,
     "fields": {
       "modified": "2026-02-08T20:10:54.643Z",
@@ -3389,7 +3389,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 115,
     "fields": {
       "modified": "2026-02-08T20:10:57.977Z",
@@ -3400,7 +3400,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 116,
     "fields": {
       "modified": "2026-02-08T20:22:51.649Z",
@@ -3411,7 +3411,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 117,
     "fields": {
       "modified": "2026-02-08T20:22:54.581Z",
@@ -3422,7 +3422,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 118,
     "fields": {
       "modified": "2026-02-08T20:22:56.485Z",
@@ -3433,7 +3433,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 119,
     "fields": {
       "modified": "2026-02-08T20:22:58.396Z",
@@ -3444,7 +3444,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 120,
     "fields": {
       "modified": "2026-02-08T20:23:00.837Z",
@@ -3455,7 +3455,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 121,
     "fields": {
       "modified": "2026-02-08T20:23:33.968Z",
@@ -3466,7 +3466,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 122,
     "fields": {
       "modified": "2026-02-08T20:23:39.902Z",
@@ -3477,7 +3477,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 123,
     "fields": {
       "modified": "2026-02-08T20:23:51.248Z",
@@ -3488,7 +3488,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 124,
     "fields": {
       "modified": "2026-02-08T20:23:55.848Z",
@@ -3499,7 +3499,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 125,
     "fields": {
       "modified": "2026-02-08T20:32:22.140Z",
@@ -3510,7 +3510,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 126,
     "fields": {
       "modified": "2026-02-08T20:32:41.980Z",
@@ -3521,7 +3521,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 128,
     "fields": {
       "modified": "2026-02-10T18:47:03.088Z",
@@ -3532,7 +3532,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 129,
     "fields": {
       "modified": "2026-02-10T18:47:06.150Z",
@@ -3543,7 +3543,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 137,
     "fields": {
       "modified": "2026-02-12T22:39:06.961Z",
@@ -3554,7 +3554,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 138,
     "fields": {
       "modified": "2026-02-12T22:40:25.021Z",
@@ -3565,7 +3565,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 139,
     "fields": {
       "modified": "2026-02-14T13:36:05.076Z",
@@ -3576,7 +3576,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 140,
     "fields": {
       "modified": "2026-02-14T13:43:26.881Z",
@@ -3587,7 +3587,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 141,
     "fields": {
       "modified": "2026-02-14T13:43:33.234Z",
@@ -3598,7 +3598,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 143,
     "fields": {
       "modified": "2026-02-16T18:52:31.213Z",
@@ -3609,7 +3609,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 144,
     "fields": {
       "modified": "2026-02-16T20:37:41.377Z",
@@ -3620,7 +3620,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 145,
     "fields": {
       "modified": "2026-02-16T20:38:13.963Z",
@@ -3631,7 +3631,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 146,
     "fields": {
       "modified": "2026-02-16T21:54:32.244Z",
@@ -3642,7 +3642,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 152,
     "fields": {
       "modified": "2026-02-18T15:16:41.739Z",
@@ -3653,7 +3653,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 153,
     "fields": {
       "modified": "2026-02-19T15:45:50.142Z",
@@ -3664,7 +3664,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 154,
     "fields": {
       "modified": "2026-02-19T15:45:57.373Z",
@@ -3675,7 +3675,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 155,
     "fields": {
       "modified": "2026-02-19T15:46:52.464Z",
@@ -3686,7 +3686,7 @@
     }
   },
   {
-    "model": "central_nervous_system.HydraSpellbookconnectionwire",
+    "model": "central_nervous_system.CNSSpellbookconnectionwire",
     "pk": 159,
     "fields": {
       "modified": "2026-02-24T05:00:17.385Z",

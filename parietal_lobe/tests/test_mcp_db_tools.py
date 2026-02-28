@@ -3,8 +3,8 @@ import json
 
 import pytest
 
-from central_nervous_system.models import HydraHead, HydraHeadStatus, HydraSpawn, \
-    HydraSpawnStatus
+from central_nervous_system.models import CNSHead, CNSHeadStatus, CNSSpawn, \
+    CNSSpawnStatus
 from parietal_lobe.parietal_mcp.gateway import ParietalMCP
 
 
@@ -12,21 +12,21 @@ from parietal_lobe.parietal_mcp.gateway import ParietalMCP
 def db_setup():
     """Sets up base database records for the tools to query."""
     # Create required statuses
-    spawn_status, _ = HydraSpawnStatus.objects.get_or_create(
+    spawn_status, _ = CNSSpawnStatus.objects.get_or_create(
         id=1, defaults={'name': 'Created'})
-    head_status_active, _ = HydraHeadStatus.objects.get_or_create(
+    head_status_active, _ = CNSHeadStatus.objects.get_or_create(
         id=2, defaults={'name': 'Active'})
-    head_status_error, _ = HydraHeadStatus.objects.get_or_create(
+    head_status_error, _ = CNSHeadStatus.objects.get_or_create(
         id=6, defaults={'name': 'Error'})
 
     # Create a Spawn
-    spawn = HydraSpawn.objects.create(status=spawn_status)
+    spawn = CNSSpawn.objects.create(status=spawn_status)
 
     # Create Heads
-    head_1 = HydraHead.objects.create(spawn=spawn,
+    head_1 = CNSHead.objects.create(spawn=spawn,
                                       status=head_status_active,
                                       blackboard={"var": "alpha"})
-    head_2 = HydraHead.objects.create(spawn=spawn,
+    head_2 = CNSHead.objects.create(spawn=spawn,
                                       status=head_status_error,
                                       application_log="Fatal error on line 42")
 
@@ -62,7 +62,7 @@ async def test_mcp_query_model_basic_filters(db_setup):
     """Ensures basic kwargs filtering works."""
     result = await ParietalMCP.execute(
         "mcp_query_model", {
-            "model_name": "HydraHead",
+            "model_name": "CNSHead",
             "filters": {
                 "status_id": db_setup["status_error_id"]
             }
@@ -82,7 +82,7 @@ async def test_mcp_query_model_q_string_logic(db_setup):
                 f"blackboard__var='alpha')")
 
     result = await ParietalMCP.execute("mcp_query_model", {
-        "model_name": "HydraHead",
+        "model_name": "CNSHead",
         "q_string": q_string
     })
 
@@ -95,7 +95,7 @@ async def test_mcp_query_model_q_string_logic(db_setup):
 async def test_mcp_query_model_count_action(db_setup):
     """Ensures the AI can request a raw integer count instead of heavy data."""
     result = await ParietalMCP.execute("mcp_query_model",
-                                       {"model_name": "HydraHead"})
+                                       {"model_name": "CNSHead"})
 
     data = json.loads(result)
     assert "Total Records:" in data["meta"]
@@ -109,7 +109,7 @@ async def test_mcp_inspect_record(db_setup):
     head_id = str(db_setup["head_2"].id)
 
     result = await ParietalMCP.execute("mcp_inspect_record", {
-        "model_name": "HydraHead",
+        "model_name": "CNSHead",
         "record_id": head_id
     })
 
@@ -131,7 +131,7 @@ async def test_mcp_search_and_read_record(db_setup):
     search_result = await ParietalMCP.execute(
         "mcp_search_record_field", {
             "app_label": "central_nervous_system",
-            "model_name": "HydraHead",
+            "model_name": "CNSHead",
             "record_id": head_id,
             "field_name": "application_log",
             "pattern": "Fatal"
@@ -144,7 +144,7 @@ async def test_mcp_search_and_read_record(db_setup):
     read_result = await ParietalMCP.execute(
         "mcp_read_record_field", {
             "app_label": "central_nervous_system",
-            "model_name": "HydraHead",
+            "model_name": "CNSHead",
             "record_id": head_id,
             "field_name": "application_log",
             "start_line": 1,

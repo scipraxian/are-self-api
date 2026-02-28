@@ -40,7 +40,7 @@ from .constants import (
 # --- DEFINITIONS (The Library) ---
 
 
-class HydraTag(NameMixin):
+class CNSTag(NameMixin):
     """
     Native tagging system to avoid external dependency conflicts.
     """
@@ -53,7 +53,7 @@ class HydraTag(NameMixin):
 
 class TagsAndFavoriteMixin(models.Model):
     is_favorite = models.BooleanField(default=False, db_index=True)
-    tags = models.ManyToManyField(HydraTag, blank=True)
+    tags = models.ManyToManyField(CNSTag, blank=True)
 
     class Meta:
         abstract = True
@@ -117,19 +117,19 @@ class HydraStatusTypeMixin(NameMixin):
         abstract = True
 
 
-class HydraSpawnStatus(HydraStatusTypeMixin):
+class CNSSpawnStatus(HydraStatusTypeMixin):
     """Status lookups for Spawns."""
 
     pass
 
 
-class HydraHeadStatus(HydraStatusTypeMixin):
+class CNSHeadStatus(HydraStatusTypeMixin):
     """Status lookups for Heads."""
 
     pass
 
 
-class HydraDistributionModeID(object):
+class CNSDistributionModeID(object):
     """
     Centralized Integer IDs for Distribution Modes.
     """
@@ -140,18 +140,18 @@ class HydraDistributionModeID(object):
     SPECIFIC_TARGETS = 4
 
 
-class HydraDistributionMode(NameMixin, DescriptionMixin):
+class CNSDistributionMode(NameMixin, DescriptionMixin):
     """
     Lookup table for Distribution Modes.
     """
 
-    IDs = HydraDistributionModeID
+    IDs = CNSDistributionModeID
 
     class Meta:
         verbose_name = 'Hydra Distribution Mode'
 
 
-class HydraSpell(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
+class CNSSpell(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
     """
     A configured action (Tool + specific Switches).
     """
@@ -163,9 +163,9 @@ class HydraSpell(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
     )
     switches = models.ManyToManyField(TalosExecutableSwitch, blank=True)
     distribution_mode = models.ForeignKey(
-        HydraDistributionMode,
+        CNSDistributionMode,
         on_delete=models.PROTECT,
-        default=HydraDistributionModeID.LOCAL_SERVER,
+        default=CNSDistributionModeID.LOCAL_SERVER,
     )
 
     def get_full_command(
@@ -201,7 +201,7 @@ class HydraSpell(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
         executable_args = (
             self.talos_executable.talosexecutableargumentassignment_set.all()
         )
-        spell_args = self.hydraspellargumentassignment_set.all()
+        spell_args = self.cnsspellargumentassignment_set.all()
 
         # Combine arguments, preserving order is tricky because they are separate querysets
         # But typically executable args come first in logic, though the model has 'order'
@@ -228,20 +228,20 @@ class HydraSpell(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
         return command_list
 
 
-class HydraSpellContext(models.Model):
-    spell = models.ForeignKey(HydraSpell, on_delete=models.CASCADE)
+class CNSSpellContext(models.Model):
+    spell = models.ForeignKey(CNSSpell, on_delete=models.CASCADE)
     key = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
     value = models.TextField(blank=True)
 
 
-class HydraSpellTarget(models.Model):
+class CNSSpellTarget(models.Model):
     """
     Connecting table for Mode 4 (SPECIFIC_TARGETS).
     Links a Spell to specific 'Pinned' Agents.
     """
 
     spell = models.ForeignKey(
-        HydraSpell, on_delete=models.CASCADE, related_name='specific_targets'
+        CNSSpell, on_delete=models.CASCADE, related_name='specific_targets'
     )
     target = models.ForeignKey(
         'talos_agent.TalosAgentRegistry', on_delete=models.CASCADE
@@ -255,8 +255,8 @@ class HydraSpellTarget(models.Model):
         return f'{self.spell.name} -> {self.target}'
 
 
-class HydraSpellArgumentAssignment(models.Model):
-    spell = models.ForeignKey(HydraSpell, on_delete=models.CASCADE)
+class CNSSpellArgumentAssignment(models.Model):
+    spell = models.ForeignKey(CNSSpell, on_delete=models.CASCADE)
     order = models.IntegerField(default=10)
     argument = models.ForeignKey(
         TalosExecutableArgument, on_delete=models.CASCADE
@@ -269,7 +269,7 @@ class HydraSpellArgumentAssignment(models.Model):
         return f'{self.spell.name} -> {self.argument.argument}'
 
 
-class HydraSpellbook(
+class CNSSpellbook(
     UUIDIdMixin,
     DefaultFieldsMixin,
     DescriptionMixin,
@@ -286,7 +286,7 @@ class HydraSpellbook(
         return self.name
 
 
-class HydraSpellbookNode(ProjectEnvironmentMixin):
+class CNSSpellbookNode(ProjectEnvironmentMixin):
     """
     A visual instance of a Spell on the Graph.
     Allows the same Spell (e.g., 'Wait') to be used
@@ -295,13 +295,13 @@ class HydraSpellbookNode(ProjectEnvironmentMixin):
 
     is_root = models.BooleanField(default=False, db_index=True)
     spellbook = models.ForeignKey(
-        HydraSpellbook, on_delete=models.CASCADE, related_name='nodes'
+        CNSSpellbook, on_delete=models.CASCADE, related_name='nodes'
     )
-    spell = models.ForeignKey(HydraSpell, on_delete=models.CASCADE)
+    spell = models.ForeignKey(CNSSpell, on_delete=models.CASCADE)
     ui_json = models.TextField(blank=True, default='{}')
 
     invoked_spellbook = models.ForeignKey(
-        HydraSpellbook,
+        CNSSpellbook,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -313,20 +313,20 @@ class HydraSpellbookNode(ProjectEnvironmentMixin):
     )
 
     distribution_mode = models.ForeignKey(
-        HydraDistributionMode, on_delete=models.SET_NULL, null=True, blank=True
+        CNSDistributionMode, on_delete=models.SET_NULL, null=True, blank=True
     )
 
     def __str__(self):
         return f'Node {self.id}: {self.spell.name}'
 
 
-class HydraSpellBookNodeContext(models.Model):
-    node = models.ForeignKey(HydraSpellbookNode, on_delete=models.CASCADE)
+class CNSSpellBookNodeContext(models.Model):
+    node = models.ForeignKey(CNSSpellbookNode, on_delete=models.CASCADE)
     key = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
     value = models.TextField(blank=True)
 
 
-class HydraWireType(NameMixin):
+class CNSWireType(NameMixin):
     """Status lookups for Wires."""
 
     TYPE_FLOW = 1
@@ -335,25 +335,25 @@ class HydraWireType(NameMixin):
     pass
 
 
-class HydraSpellbookConnectionWire(ModifiedMixin):
+class CNSSpellbookConnectionWire(ModifiedMixin):
     """
     The Wire. Connects two NODES (not spells).
     Trigger Condition: Fires when 'source' finishes with 'status'.
     """
 
     type = models.ForeignKey(
-        HydraWireType, on_delete=models.PROTECT, default=HydraWireType.TYPE_FLOW
+        CNSWireType, on_delete=models.PROTECT, default=CNSWireType.TYPE_FLOW
     )
     spellbook = models.ForeignKey(
-        HydraSpellbook, on_delete=models.CASCADE, related_name='wires'
+        CNSSpellbook, on_delete=models.CASCADE, related_name='wires'
     )
     source = models.ForeignKey(
-        HydraSpellbookNode,
+        CNSSpellbookNode,
         on_delete=models.CASCADE,
         related_name='outgoing_connections',
     )
     target = models.ForeignKey(
-        HydraSpellbookNode,
+        CNSSpellbookNode,
         on_delete=models.CASCADE,
         related_name='incoming_connections',
     )
@@ -372,18 +372,18 @@ class HydraSpellbookConnectionWire(ModifiedMixin):
 # --- EXECUTION STATE (The Runtime) ---
 
 
-class HydraSpawn(
+class CNSSpawn(
     UUIDIdMixin, CreatedAndModifiedWithDelta, ProjectEnvironmentMixin
 ):
     """Spellbook Instance."""
 
     spellbook = models.ForeignKey(
-        HydraSpellbook, on_delete=models.SET_NULL, null=True, blank=True
+        CNSSpellbook, on_delete=models.SET_NULL, null=True, blank=True
     )
-    status = models.ForeignKey(HydraSpawnStatus, on_delete=models.PROTECT)
+    status = models.ForeignKey(CNSSpawnStatus, on_delete=models.PROTECT)
 
     parent_head = models.ForeignKey(
-        'HydraHead',
+        'CNSHead',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -395,69 +395,69 @@ class HydraSpawn(
     def is_active(self):  # legacy
         """Returns True if the spawn is in a non-terminal state."""
         return self.status_id in [
-            HydraSpawnStatus.CREATED,
-            HydraSpawnStatus.PENDING,
-            HydraSpawnStatus.RUNNING,
+            CNSSpawnStatus.CREATED,
+            CNSSpawnStatus.PENDING,
+            CNSSpawnStatus.RUNNING,
         ]
 
     @property
     def is_alive(self):
         """Returns True if the spawn is in a non-terminal state."""
-        return self.status_id in HydraSpawnStatus.IS_ALIVE_STATUS_LIST
+        return self.status_id in CNSSpawnStatus.IS_ALIVE_STATUS_LIST
 
     @property
     def is_dead(self):
-        return self.status_id in HydraSpawnStatus.IS_TERMINAL_STATUS_LIST
+        return self.status_id in CNSSpawnStatus.IS_TERMINAL_STATUS_LIST
 
     @property
     def is_queued(self):
         return self.status_id in [
-            HydraSpawnStatus.PENDING,
-            HydraSpawnStatus.CREATED,
+            CNSSpawnStatus.PENDING,
+            CNSSpawnStatus.CREATED,
         ]
 
     @property
     def is_stopping(self):
-        return self.status_id == HydraSpawnStatus.STOPPING
+        return self.status_id == CNSSpawnStatus.STOPPING
 
     @property
     def ended_badly(self):
         return self.status_id in [
-            HydraSpawnStatus.ABORTED,
-            HydraSpawnStatus.FAILED,
+            CNSSpawnStatus.ABORTED,
+            CNSSpawnStatus.FAILED,
         ]
 
     @property
     def ended_successfully(self):
         return self.status_id in [
-            HydraSpawnStatus.SUCCESS,
-            HydraSpawnStatus.STOPPED,
+            CNSSpawnStatus.SUCCESS,
+            CNSSpawnStatus.STOPPED,
         ]
 
     @property
     def live_heads(self):
         return self.heads.filter(
-            status__in=HydraHeadStatus.IS_ALIVE_STATUS_LIST
-        ).exclude(spell_id=HydraSpell.BEGIN_PLAY)
+            status__in=CNSHeadStatus.IS_ALIVE_STATUS_LIST
+        ).exclude(spell_id=CNSSpell.BEGIN_PLAY)
 
     @property
     def finished_heads(self):
         return self.heads.filter(
-            status__in=HydraHeadStatus.IS_TERMINAL_STATUS_LIST
-        ).exclude(spell_id=HydraSpell.BEGIN_PLAY)
+            status__in=CNSHeadStatus.IS_TERMINAL_STATUS_LIST
+        ).exclude(spell_id=CNSSpell.BEGIN_PLAY)
 
     @property
     def live_head_spawns(self):
-        return HydraSpawn.objects.filter(
+        return CNSSpawn.objects.filter(
             parent_head__spawn=self,
-            status__in=HydraSpawnStatus.IS_ALIVE_STATUS_LIST,
+            status__in=CNSSpawnStatus.IS_ALIVE_STATUS_LIST,
         )
 
     @property
     def finished_head_spawns(self):
-        return HydraSpawn.objects.filter(
+        return CNSSpawn.objects.filter(
             parent_head__spawn=self,
-            status__in=HydraSpawnStatus.IS_TERMINAL_STATUS_LIST,
+            status__in=CNSSpawnStatus.IS_TERMINAL_STATUS_LIST,
         )
 
     def __str__(self):
@@ -468,18 +468,18 @@ class HydraSpawn(
         return f'Spawn {self.id} ({book_name})'
 
 
-class HydraHead(UUIDIdMixin, CreatedAndModifiedWithDelta):
+class CNSHead(UUIDIdMixin, CreatedAndModifiedWithDelta):
     """A single execution head (Process)."""
 
-    status = models.ForeignKey(HydraHeadStatus, on_delete=models.PROTECT)
+    status = models.ForeignKey(CNSHeadStatus, on_delete=models.PROTECT)
     spawn = models.ForeignKey(
-        HydraSpawn, related_name='heads', on_delete=models.CASCADE
+        CNSSpawn, related_name='heads', on_delete=models.CASCADE
     )
     node = models.ForeignKey(
-        HydraSpellbookNode, on_delete=models.SET_NULL, null=True, blank=True
+        CNSSpellbookNode, on_delete=models.SET_NULL, null=True, blank=True
     )
     spell = models.ForeignKey(
-        HydraSpell, on_delete=models.SET_NULL, null=True, blank=True
+        CNSSpell, on_delete=models.SET_NULL, null=True, blank=True
     )
     provenance = models.ForeignKey(
         'self',
@@ -507,42 +507,42 @@ class HydraHead(UUIDIdMixin, CreatedAndModifiedWithDelta):
     @property
     def is_active(self):  # TODO: DEPRECIATED LEGACY REMOVE, use is_alive.
         return self.status_id in [
-            HydraHeadStatus.RUNNING,
-            HydraHeadStatus.PENDING,
-            HydraHeadStatus.STOPPING,
+            CNSHeadStatus.RUNNING,
+            CNSHeadStatus.PENDING,
+            CNSHeadStatus.STOPPING,
         ]
 
     @property
     def is_alive(self):
-        return self.status_id in HydraHeadStatus.IS_ALIVE_STATUS_LIST
+        return self.status_id in CNSHeadStatus.IS_ALIVE_STATUS_LIST
 
     @property
     def is_dead(self):
-        return self.status_id in HydraHeadStatus.IS_TERMINAL_STATUS_LIST
+        return self.status_id in CNSHeadStatus.IS_TERMINAL_STATUS_LIST
 
     @property
     def is_queued(self):
         return self.status_id in [
-            HydraHeadStatus.PENDING,
-            HydraHeadStatus.CREATED,
+            CNSHeadStatus.PENDING,
+            CNSHeadStatus.CREATED,
         ]
 
     @property
     def is_stopping(self):
-        return self.status_id == HydraHeadStatus.STOPPING
+        return self.status_id == CNSHeadStatus.STOPPING
 
     @property
     def ended_badly(self):
         return self.status_id in [
-            HydraHeadStatus.ABORTED,
-            HydraHeadStatus.FAILED,
+            CNSHeadStatus.ABORTED,
+            CNSHeadStatus.FAILED,
         ]
 
     @property
     def ended_successfully(self):
         return self.status_id in [
-            HydraHeadStatus.SUCCESS,
-            HydraHeadStatus.STOPPED,
+            CNSHeadStatus.SUCCESS,
+            CNSHeadStatus.STOPPED,
         ]
 
     @property

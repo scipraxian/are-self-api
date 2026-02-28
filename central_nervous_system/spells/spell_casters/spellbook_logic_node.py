@@ -2,7 +2,7 @@ import asyncio
 
 from asgiref.sync import sync_to_async
 
-from central_nervous_system.models import HydraHead
+from central_nervous_system.models import CNSHead
 from central_nervous_system.utils import (
     get_active_environment,
     resolve_environment_context,
@@ -16,7 +16,7 @@ async def spellbook_logic_node(head_id: str) -> tuple[int, str]:
     """
 
     # 1. Fetch Head with Provenance
-    head = await sync_to_async(lambda: HydraHead.objects.select_related(
+    head = await sync_to_async(lambda: CNSHead.objects.select_related(
         'spell', 'provenance').get(id=head_id))()
 
     # 2. Parse Arguments (retry=N, delay=N)

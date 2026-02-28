@@ -7,7 +7,7 @@ from pgvector.django import CosineDistance
 from frontal_lobe.frontal_lobe import FrontalLobe
 from frontal_lobe.models import ModelRegistry
 from frontal_lobe.synapse import OllamaClient
-from central_nervous_system.models import HydraHead
+from central_nervous_system.models import CNSHead
 from prefrontal_cortex.models import PFCItemStatus, PFCStory, PFCTask
 
 logger = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ class PrefrontalCortex:
         """Loads the execution head and its hierarchical provenance."""
         # Using select_related to avoid N+1 queries when building the context string
         self.head = await sync_to_async(
-            HydraHead.objects.select_related(
+            CNSHead.objects.select_related(
                 'provenance', 'provenance__spell'
             ).get
         )(id=self.head_id)
@@ -189,7 +189,7 @@ class PrefrontalCortexDispatcher:
             f'[PFC] Dispatcher checking the board for Head {self.head_id}'
         )
 
-        self.head = await sync_to_async(HydraHead.objects.get)(id=self.head_id)
+        self.head = await sync_to_async(CNSHead.objects.get)(id=self.head_id)
 
         # 1. Is there a Worker (Pig) ticket ready to go?
         # A Story that the Oracle (PM) has explicitly moved to 'Selected for Development'

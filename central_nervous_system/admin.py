@@ -7,96 +7,96 @@ from central_nervous_system.utils import (
 )
 
 from .models import (
-    HydraDistributionMode,
-    HydraHead,
-    HydraHeadStatus,
-    HydraSpawn,
-    HydraSpawnStatus,
-    HydraSpell,
-    HydraSpellArgumentAssignment,
-    HydraSpellbook,
-    HydraSpellbookConnectionWire,
-    HydraSpellbookNode,
-    HydraSpellBookNodeContext,
-    HydraSpellContext,
-    HydraSpellTarget,
-    HydraTag,
+    CNSDistributionMode,
+    CNSHead,
+    CNSHeadStatus,
+    CNSSpawn,
+    CNSSpawnStatus,
+    CNSSpell,
+    CNSSpellArgumentAssignment,
+    CNSSpellbook,
+    CNSSpellbookConnectionWire,
+    CNSSpellbookNode,
+    CNSSpellBookNodeContext,
+    CNSSpellContext,
+    CNSSpellTarget,
+    CNSTag,
 )
 
 
-class HydraSpellContextInline(admin.TabularInline):
+class CNSSpellContextInline(admin.TabularInline):
     """Configuration: Default variables for this Spell."""
 
-    model = HydraSpellContext
+    model = CNSSpellContext
     extra = 1
     verbose_name = 'Default Variable'
     verbose_name_plural = 'Default Variables (Tier 1)'
 
 
-class HydraSpellBookNodeContextInline(admin.TabularInline):
+class CNSSpellBookNodeContextInline(admin.TabularInline):
     """Configuration: Overrides for this specific Node instance."""
 
-    model = HydraSpellBookNodeContext
+    model = CNSSpellBookNodeContext
     extra = 1
     verbose_name = 'Override Variable'
     verbose_name_plural = 'Override Variables (Tier 2)'
 
 
-@admin.register(HydraDistributionMode)
-class HydraDistributionModeAdmin(admin.ModelAdmin):
+@admin.register(CNSDistributionMode)
+class CNSDistributionModeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
 
 
-class HydraSpellbookNodeInline(admin.TabularInline):
+class CNSSpellbookNodeInline(admin.TabularInline):
     """Shows the nodes contained in this book."""
 
-    model = HydraSpellbookNode
+    model = CNSSpellbookNode
     extra = 0
     verbose_name = 'Graph Node'
     readonly_fields = ('ui_json', 'is_root')
     fk_name = 'spellbook'
 
 
-class HydraSpellbookWireInline(admin.TabularInline):
+class CNSSpellbookWireInline(admin.TabularInline):
     """Shows the wires."""
 
-    model = HydraSpellbookConnectionWire
+    model = CNSSpellbookConnectionWire
     extra = 0
     fk_name = 'spellbook'
     verbose_name = 'Wire'
 
 
-@admin.register(HydraTag)
-class HydraTagAdmin(admin.ModelAdmin):
+@admin.register(CNSTag)
+class CNSTagAdmin(admin.ModelAdmin):
     list_display = ('name',)
     search_fields = ('name',)
 
 
-@admin.register(HydraSpellbook)
-class HydraSpellbookAdmin(admin.ModelAdmin):
+@admin.register(CNSSpellbook)
+class CNSSpellbookAdmin(admin.ModelAdmin):
     list_display = ('name', 'id', 'is_favorite', 'created', 'node_count')
     list_filter = ('is_favorite', 'tags')
     filter_horizontal = ('tags',)
     # Use the new Inlines to visualize graph data in Admin
-    inlines = [HydraSpellbookNodeInline, HydraSpellbookWireInline]
+    inlines = [CNSSpellbookNodeInline, CNSSpellbookWireInline]
 
     def node_count(self, obj):
         return obj.nodes.count()
 
 
-class HydraSpellArgumentInline(admin.TabularInline):
-    model = HydraSpellArgumentAssignment
+class CNSSpellArgumentInline(admin.TabularInline):
+    model = CNSSpellArgumentAssignment
     extra = 1
 
 
-class HydraSpellTargetInline(admin.TabularInline):
-    model = HydraSpellTarget
+class CNSSpellTargetInline(admin.TabularInline):
+    model = CNSSpellTarget
     extra = 0
     verbose_name = 'Pinned Target'
 
 
-@admin.register(HydraSpell)
-class HydraSpellAdmin(admin.ModelAdmin):
+@admin.register(CNSSpell)
+class CNSSpellAdmin(admin.ModelAdmin):
     # FIXED: Removed 'order' from list_display
     list_display = (
         'name',
@@ -107,9 +107,9 @@ class HydraSpellAdmin(admin.ModelAdmin):
     list_filter = ('distribution_mode', 'talos_executable')
     filter_horizontal = ('switches',)
     inlines = [
-        HydraSpellArgumentInline,
-        HydraSpellTargetInline,
-        HydraSpellContextInline,
+        CNSSpellArgumentInline,
+        CNSSpellTargetInline,
+        CNSSpellContextInline,
     ]
     readonly_fields = ('resolved_command_preview',)
 
@@ -125,7 +125,7 @@ class HydraSpellAdmin(admin.ModelAdmin):
             env = ProjectEnvironment.objects.filter(selected=True).first()
 
             # [FIX] Resolve Tier 1 Defaults (Spell Context)
-            # This fetches the variables defined in HydraSpellContextInline
+            # This fetches the variables defined in CNSSpellContextInline
             ctx = resolve_environment_context(spell_id=obj.id)
 
             # Pass BOTH the environment and the context to the renderer
@@ -138,8 +138,8 @@ class HydraSpellAdmin(admin.ModelAdmin):
             return f'Error: {str(e)}'
 
 
-@admin.register(HydraHead)
-class HydraHeadAdmin(admin.ModelAdmin):
+@admin.register(CNSHead)
+class CNSHeadAdmin(admin.ModelAdmin):
     # Added 'node' and 'provenance' to list for debugging
     list_display = (
         'id',
@@ -176,8 +176,8 @@ class HydraHeadAdmin(admin.ModelAdmin):
             return f'Error: {str(e)}'
 
 
-@admin.register(HydraSpellbookNode)
-class HydraSpellbookNodeAdmin(admin.ModelAdmin):
+@admin.register(CNSSpellbookNode)
+class CNSSpellbookNodeAdmin(admin.ModelAdmin):
     """
     Instance-level configuration for Spells on a Graph.
     """
@@ -185,7 +185,7 @@ class HydraSpellbookNodeAdmin(admin.ModelAdmin):
     list_display = ('id', 'spellbook', 'spell', 'distribution_mode', 'is_root')
     list_filter = ('spellbook', 'spell', 'distribution_mode')
     raw_id_fields = ('spellbook', 'spell', 'invoked_spellbook')
-    inlines = [HydraSpellBookNodeContextInline]
+    inlines = [CNSSpellBookNodeContextInline]
 
     # [NEW] Add readonly field
     readonly_fields = ('resolved_command_preview',)
@@ -223,7 +223,7 @@ class HydraSpellbookNodeAdmin(admin.ModelAdmin):
 
             # 3. Node Overrides (Tier 2)
             # Manually apply these since resolve_environment_context doesn't take node_id directly yet
-            node_vars = HydraSpellBookNodeContext.objects.filter(node=obj)
+            node_vars = CNSSpellBookNodeContext.objects.filter(node=obj)
             for var in node_vars:
                 if var.key:
                     ctx[var.key] = var.value
@@ -237,6 +237,6 @@ class HydraSpellbookNodeAdmin(admin.ModelAdmin):
             return f'Error generating preview: {str(e)}'
 
 
-admin.site.register(HydraHeadStatus)
-admin.site.register(HydraSpawnStatus)
-admin.site.register(HydraSpawn)
+admin.site.register(CNSHeadStatus)
+admin.site.register(CNSSpawnStatus)
+admin.site.register(CNSSpawn)

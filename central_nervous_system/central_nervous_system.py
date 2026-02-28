@@ -13,17 +13,17 @@ from environments.models import ProjectEnvironment
 from talos_agent.models import TalosAgentRegistry, TalosAgentStatus
 
 from .models import (
-    HydraDistributionModeID,
-    HydraHead,
-    HydraHeadStatus,
-    HydraSpawn,
-    HydraSpawnStatus,
-    HydraSpellbook,
-    HydraSpellbookConnectionWire,
-    HydraSpellbookNode,
-    HydraSpellBookNodeContext,
+    CNSDistributionModeID,
+    CNSHead,
+    CNSHeadStatus,
+    CNSSpawn,
+    CNSSpawnStatus,
+    CNSSpellbook,
+    CNSSpellbookConnectionWire,
+    CNSSpellbookNode,
+    CNSSpellBookNodeContext,
     HydraStatusID,
-    HydraWireType,
+    CNSWireType,
 )
 from .tasks import cast_hydra_spell
 
@@ -40,7 +40,7 @@ class Hydra:
 
     Graph Logic:
     1. Roots: Spells with no incoming wires start first.
-    2. Triggers: When a Head finishes, we check 'HydraSpellbookConnectionWire'.
+    2. Triggers: When a Head finishes, we check 'CNSSpellbookConnectionWire'.
     3. Provenance: We track the execution history to prevent infinite loops (mostly).
     """
 
@@ -52,7 +52,7 @@ class Hydra:
         spawn_id: Optional[uuid.UUID] = None,
     ):
         if spawn_id:
-            self.spawn = HydraSpawn.objects.get(id=spawn_id)
+            self.spawn = CNSSpawn.objects.get(id=spawn_id)
         elif spellbook_id:
             self.spawn = self._create_spawn(spellbook_id)
         else:
@@ -61,13 +61,13 @@ class Hydra:
     def start(self) -> None:
         """Ignites the spawn idempotently."""
         with transaction.atomic():
-            spawn = HydraSpawn.objects.select_for_update().get(id=self.spawn.id)
+            spawn = CNSSpawn.objects.select_for_update().get(id=self.spawn.id)
 
-            if spawn.status_id != HydraSpawnStatus.CREATED:
+            if spawn.status_id != CNSSpawnStatus.CREATED:
                 logger.warning(f'[HYDRA] Spawn {spawn.id} already started.')
                 return
 
-            spawn.status_id = HydraSpawnStatus.RUNNING
+            spawn.status_id = CNSSpawnStatus.RUNNING
             spawn.save(update_fields=['status'])
 
         self.dispatch_next_wave()
@@ -77,19 +77,19 @@ class Hydra:
         task_ids_to_revoke = []
 
         with transaction.atomic():
-            spawn = HydraSpawn.objects.select_for_update().get(id=self.spawn.id)
+            spawn = CNSSpawn.objects.select_for_update().get(id=self.spawn.id)
 
             if spawn.status_id in [
-                HydraSpawnStatus.SUCCESS,
-                HydraSpawnStatus.FAILED,
+                CNSSpawnStatus.SUCCESS,
+                CNSSpawnStatus.FAILED,
             ]:
                 return
 
             running_heads = list(
                 spawn.heads.select_for_update().filter(
                     status_id__in=[
-                        HydraHeadStatus.RUNNING,
-                        HydraHeadStatus.PENDING,
+                        CNSHeadStatus.RUNNING,
+                        CNSHeadStatus.PENDING,
                     ]
                 )
             )
@@ -98,13 +98,13 @@ class Hydra:
                 if head.celery_task_id:
                     task_ids_to_revoke.append(str(head.celery_task_id))
 
-                head.status_id = HydraHeadStatus.ABORTED
+                head.status_id = CNSHeadStatus.ABORTED
                 head.execution_log += (
                     '\n[HYDRA] Terminated by User (Signal Sent).\n'
                 )
                 head.save(update_fields=['status', 'execution_log'])
 
-            spawn.status_id = HydraSpawnStatus.FAILED
+            spawn.status_id = CNSSpawnStatus.FAILED
             spawn.save(update_fields=['status'])
 
         for task_id in task_ids_to_revoke:
@@ -122,21 +122,21 @@ class Hydra:
         """
 
         with transaction.atomic():
-            spawn = HydraSpawn.objects.select_for_update().get(id=self.spawn.id)
+            spawn = CNSSpawn.objects.select_for_update().get(id=self.spawn.id)
 
             active_heads = spawn.heads.select_for_update().filter(
                 status_id__in=[
-                    HydraHeadStatus.RUNNING,
-                    HydraHeadStatus.PENDING,
+                    CNSHeadStatus.RUNNING,
+                    CNSHeadStatus.PENDING,
                 ]
             )
 
             count = active_heads.update(
-                status_id=HydraHeadStatus.STOPPING, modified=timezone.now()
+                status_id=CNSHeadStatus.STOPPING, modified=timezone.now()
             )
 
             if count > 0:
-                spawn.status_id = HydraSpawnStatus.STOPPING
+                spawn.status_id = CNSSpawnStatus.STOPPING
                 spawn.save(update_fields=['status'])
 
             logger.info(
@@ -149,7 +149,7 @@ class Hydra:
         with transaction.atomic():
             # 1. Ghost Detection
             active_heads = self.spawn.heads.select_for_update().filter(
-                status_id=HydraHeadStatus.RUNNING
+                status_id=CNSHeadStatus.RUNNING
             )
             for head in active_heads:
                 if not head.celery_task_id:
@@ -157,7 +157,7 @@ class Hydra:
                 res = AsyncResult(str(head.celery_task_id))
                 if res.ready() and res.state in ['FAILURE', 'REVOKED']:
                     logger.warning(f'[HYDRA] Ghost Task {head.id}')
-                    head.status_id = HydraHeadStatus.FAILED
+                    head.status_id = CNSHeadStatus.FAILED
                     head.execution_log += (
                         f'\n[HYDRA POLL] Task Crash: {res.info}\n'
                     )
@@ -166,11 +166,11 @@ class Hydra:
             # 2. Stale Pending Detection
             stale_threshold = timezone.now() - self.STALE_PENDING_TIMEOUT
             stale_heads = self.spawn.heads.select_for_update().filter(
-                status_id=HydraHeadStatus.PENDING,
+                status_id=CNSHeadStatus.PENDING,
                 modified__lt=stale_threshold,
             )
             for head in stale_heads:
-                head.status_id = HydraHeadStatus.FAILED
+                head.status_id = CNSHeadStatus.FAILED
                 head.execution_log += '\n[HYDRA POLL] Timeout.\n'
                 head.save(update_fields=['status', 'execution_log'])
 
@@ -203,12 +203,12 @@ class Hydra:
     # Internal Logic
     # =========================================================================
 
-    def _create_spawn(self, spellbook_id: uuid.UUID) -> HydraSpawn:
-        book = HydraSpellbook.objects.get(id=spellbook_id)
+    def _create_spawn(self, spellbook_id: uuid.UUID) -> CNSSpawn:
+        book = CNSSpellbook.objects.get(id=spellbook_id)
         active_env = ProjectEnvironment.objects.filter(selected=True).first()
-        spawn = HydraSpawn.objects.create(
+        spawn = CNSSpawn.objects.create(
             spellbook=book,
-            status_id=HydraSpawnStatus.CREATED,
+            status_id=CNSSpawnStatus.CREATED,
             environment=active_env,
         )
         self.spawn = spawn
@@ -224,7 +224,7 @@ class Hydra:
             # Refresh to ensure we catch STOPPING state updates
             self.spawn.refresh_from_db()
 
-            if self.spawn.status_id == HydraSpawnStatus.STOPPING:
+            if self.spawn.status_id == CNSSpawnStatus.STOPPING:
                 logger.info(
                     f'[HYDRA] Spawn {self.spawn.id} is STOPPING. Halting graph traversal.'
                 )
@@ -241,10 +241,10 @@ class Hydra:
             # Depending on desired logic, STOPPED might trigger 'Failure' wires or just end the graph.
             # For now, we treat STOPPED as a terminal state that halts flow.
             finished_heads = heads.filter(
-                status_id__in=[HydraHeadStatus.SUCCESS, HydraHeadStatus.FAILED]
+                status_id__in=[CNSHeadStatus.SUCCESS, CNSHeadStatus.FAILED]
             )
 
-            parents_with_children = HydraHead.objects.filter(
+            parents_with_children = CNSHead.objects.filter(
                 spawn=self.spawn, provenance__isnull=False
             ).values_list('provenance_id', flat=True)
 
@@ -271,20 +271,20 @@ class Hydra:
         for node in root_nodes:
             self._create_head_from_node(node, provenance=None)
 
-    def _process_graph_triggers(self, finished_head: HydraHead) -> None:
+    def _process_graph_triggers(self, finished_head: CNSHead) -> None:
         """Follows the wires from a finished head based on Status Logic."""
         if not finished_head.node:
             return
 
         valid_wire_types = []
-        valid_wire_types.append(HydraWireType.TYPE_FLOW)
+        valid_wire_types.append(CNSWireType.TYPE_FLOW)
 
-        if finished_head.status_id == HydraHeadStatus.SUCCESS:
-            valid_wire_types.append(HydraWireType.TYPE_SUCCESS)
-        elif finished_head.status_id == HydraHeadStatus.FAILED:
-            valid_wire_types.append(HydraWireType.TYPE_FAILURE)
+        if finished_head.status_id == CNSHeadStatus.SUCCESS:
+            valid_wire_types.append(CNSWireType.TYPE_SUCCESS)
+        elif finished_head.status_id == CNSHeadStatus.FAILED:
+            valid_wire_types.append(CNSWireType.TYPE_FAILURE)
 
-        wires = HydraSpellbookConnectionWire.objects.filter(
+        wires = CNSSpellbookConnectionWire.objects.filter(
             spellbook=self.spawn.spellbook,
             source=finished_head.node,
             type_id__in=valid_wire_types,
@@ -304,7 +304,7 @@ class Hydra:
             )
 
     def _create_head_from_node(
-        self, node: HydraSpellbookNode, provenance: Optional[HydraHead]
+        self, node: CNSSpellbookNode, provenance: Optional[CNSHead]
     ):
         starting_blackboard = {}
 
@@ -312,20 +312,20 @@ class Hydra:
             starting_blackboard = provenance.blackboard.copy()
         elif self.spawn.parent_head:
             starting_blackboard = self.spawn.parent_head.blackboard.copy()
-            node_args = HydraSpellBookNodeContext.objects.filter(
+            node_args = CNSSpellBookNodeContext.objects.filter(
                 node=self.spawn.parent_head.node
             )
             for arg in node_args:
                 if arg.key:
                     starting_blackboard[arg.key] = arg.value
 
-        seed_head = HydraHead.objects.create(
+        seed_head = CNSHead.objects.create(
             spawn=self.spawn,
             node=node,
             spell=node.spell,
             provenance=provenance,
             target=None,
-            status_id=HydraHeadStatus.CREATED,
+            status_id=CNSHeadStatus.CREATED,
             blackboard=starting_blackboard,
         )
 
@@ -341,16 +341,16 @@ class Hydra:
         else:
             mode = node.spell.distribution_mode_id
 
-        if mode == HydraDistributionModeID.ALL_ONLINE_AGENTS:
+        if mode == CNSDistributionModeID.ALL_ONLINE_AGENTS:
             self._dispatch_fleet_wave(seed_head)
-        elif mode == HydraDistributionModeID.SPECIFIC_TARGETS:
+        elif mode == CNSDistributionModeID.SPECIFIC_TARGETS:
             self._dispatch_pinned_wave(seed_head)
-        elif mode == HydraDistributionModeID.ONE_AVAILABLE_AGENT:
+        elif mode == CNSDistributionModeID.ONE_AVAILABLE_AGENT:
             self._dispatch_first_responder(seed_head)
         else:
             self._prepare_and_dispatch(seed_head)
 
-    def _dispatch_fleet_wave(self, seed_head: HydraHead) -> None:
+    def _dispatch_fleet_wave(self, seed_head: CNSHead) -> None:
         agents = TalosAgentRegistry.objects.filter(
             status_id=TalosAgentStatus.ONLINE
         )
@@ -368,13 +368,13 @@ class Hydra:
 
         seed_head.delete()
 
-    def _dispatch_pinned_wave(self, seed_head: HydraHead) -> None:
+    def _dispatch_pinned_wave(self, seed_head: CNSHead) -> None:
         targets = seed_head.spell.specific_targets.all()
         for t in targets:
             self._clone_and_dispatch_head(seed_head, t.target)
         seed_head.delete()
 
-    def _dispatch_first_responder(self, seed_head: HydraHead) -> None:
+    def _dispatch_first_responder(self, seed_head: CNSHead) -> None:
         agent = (
             TalosAgentRegistry.objects.filter(status_id=TalosAgentStatus.ONLINE)
             .order_by('last_seen')
@@ -391,21 +391,21 @@ class Hydra:
         seed_head.delete()
 
     def _clone_and_dispatch_head(
-        self, seed: HydraHead, agent: TalosAgentRegistry
+        self, seed: CNSHead, agent: TalosAgentRegistry
     ):
-        new_head = HydraHead.objects.create(
+        new_head = CNSHead.objects.create(
             spawn=seed.spawn,
             node=seed.node,
             spell=seed.spell,
             provenance=seed.provenance,
             target=agent,
-            status_id=HydraHeadStatus.PENDING,
+            status_id=CNSHeadStatus.PENDING,
             blackboard=seed.blackboard.copy(),
         )
         transaction.on_commit(lambda: cast_hydra_spell.delay(new_head.id))
 
-    def _prepare_and_dispatch(self, head: HydraHead) -> None:
-        head.status_id = HydraHeadStatus.PENDING
+    def _prepare_and_dispatch(self, head: CNSHead) -> None:
+        head.status_id = CNSHeadStatus.PENDING
         head.save()
         transaction.on_commit(lambda: cast_hydra_spell.delay(head.id))
 
@@ -413,20 +413,20 @@ class Hydra:
         """Determines final status."""
         active = self.spawn.heads.filter(
             status_id__in=[
-                HydraHeadStatus.CREATED,
-                HydraHeadStatus.PENDING,
-                HydraHeadStatus.RUNNING,
-                HydraHeadStatus.DELEGATED,
-                HydraHeadStatus.STOPPING,
+                CNSHeadStatus.CREATED,
+                CNSHeadStatus.PENDING,
+                CNSHeadStatus.RUNNING,
+                CNSHeadStatus.DELEGATED,
+                CNSHeadStatus.STOPPING,
             ]
         )
         if active.exists():
             return
 
-        if self.spawn.status_id == HydraSpawnStatus.STOPPING:
-            new_status = HydraSpawnStatus.STOPPED
+        if self.spawn.status_id == CNSSpawnStatus.STOPPING:
+            new_status = CNSSpawnStatus.STOPPED
         else:
-            new_status = HydraSpawnStatus.SUCCESS
+            new_status = CNSSpawnStatus.SUCCESS
 
         if self.spawn.status_id != new_status:
             self.spawn.status_id = new_status
@@ -439,9 +439,9 @@ class Hydra:
         from .signals import spawn_failed, spawn_success
 
         sender = self.spawn.__class__
-        if status_id == HydraSpawnStatus.FAILED:
+        if status_id == CNSSpawnStatus.FAILED:
             spawn_failed.send(sender=sender, spawn=self.spawn)
-        elif status_id == HydraSpawnStatus.SUCCESS:
+        elif status_id == CNSSpawnStatus.SUCCESS:
             spawn_success.send(sender=sender, spawn=self.spawn)
 
     def _calculate_progress(self) -> float:

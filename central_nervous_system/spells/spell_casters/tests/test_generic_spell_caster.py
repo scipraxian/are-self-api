@@ -11,12 +11,12 @@ from environments.models import (
     TalosExecutable,
 )
 from central_nervous_system.models import (
-    HydraHead,
-    HydraHeadStatus,
-    HydraSpawn,
-    HydraSpell,
-    HydraSpellbook,
-    HydraSpellbookNode,
+    CNSHead,
+    CNSHeadStatus,
+    CNSSpawn,
+    CNSSpell,
+    CNSSpellbook,
+    CNSSpellbookNode,
 )
 from central_nervous_system.spells.spell_casters.generic_spell_caster import GenericSpellCaster
 from talos_agent.talos_agent import TalosAgentConstants, TalosEvent
@@ -32,10 +32,10 @@ async def mock_event_stream(events):
 class TestGenericSpellCaster:
     @pytest.fixture
     def mock_head(self):
-        """Creates a mock HydraHead with necessary attributes."""
+        """Creates a mock CNSHead with necessary attributes."""
         head = MagicMock()
         head.id = 1
-        head.status_id = HydraHeadStatus.CREATED
+        head.status_id = CNSHeadStatus.CREATED
         head.target = None  # Default to Local
         head.spell.talos_executable.internal = False
         head.spell.talos_executable.executable = 'TestExe.exe'
@@ -46,9 +46,9 @@ class TestGenericSpellCaster:
         head.refresh_from_db = MagicMock()
 
         # Mock the manager get() to return this head
-        with patch('central_nervous_system.models.HydraHead.objects.get', return_value=head):
+        with patch('central_nervous_system.models.CNSHead.objects.get', return_value=head):
             with patch(
-                'central_nervous_system.models.HydraHead.objects.select_related',
+                'central_nervous_system.models.CNSHead.objects.select_related',
                 return_value=MagicMock(get=lambda id: head),
             ):
                 # Setup default get_full_command return
@@ -120,7 +120,7 @@ class TestGenericSpellCaster:
             caster.execute()
 
             # Check status update
-            assert mock_head.status_id == HydraHeadStatus.SUCCESS
+            assert mock_head.status_id == CNSHeadStatus.SUCCESS
 
     def test_async_pipeline_failure(self, mock_head, mock_env_utils):
         """Test a non-zero exit code updates status to FAILED."""
@@ -138,7 +138,7 @@ class TestGenericSpellCaster:
 
             caster.execute()
 
-            assert mock_head.status_id == HydraHeadStatus.FAILED
+            assert mock_head.status_id == CNSHeadStatus.FAILED
 
     def test_remote_execution_routing(self, mock_head, mock_env_utils):
         """Test that if target is present, we call execute_remote instead."""
@@ -235,7 +235,7 @@ class TestGenericSpellCaster:
         # 2. Mock a native Python Tool (e.g., an AI Parser)
         async def mock_ai_handler(head_id):
             # Native tools interact with the DB directly
-            h = await sync_to_async(HydraHead.objects.get)(id=head_id)
+            h = await sync_to_async(CNSHead.objects.get)(id=head_id)
             h.blackboard['state'] = 'mutated'
             await sync_to_async(h.save)(update_fields=['blackboard'])
             return 200, 'AI Analysis Complete'
@@ -376,19 +376,19 @@ class GenericSpellCasterQueryTest(TestCase):
         self.exe = TalosExecutable.objects.create(
             name='TestExe', executable='cmd.exe'
         )
-        self.spell = HydraSpell.objects.create(
+        self.spell = CNSSpell.objects.create(
             name='TestSpell', talos_executable=self.exe
         )
-        self.book = HydraSpellbook.objects.create(name='Test Book')
-        self.node = HydraSpellbookNode.objects.create(
+        self.book = CNSSpellbook.objects.create(name='Test Book')
+        self.node = CNSSpellbookNode.objects.create(
             spellbook=self.book, spell=self.spell, environment=self.env
         )
 
         # Execution
-        self.spawn = HydraSpawn.objects.create(
+        self.spawn = CNSSpawn.objects.create(
             spellbook=self.book, environment=self.env, status_id=1
         )
-        self.head = HydraHead.objects.create(
+        self.head = CNSHead.objects.create(
             spawn=self.spawn, node=self.node, spell=self.spell, status_id=1
         )
 

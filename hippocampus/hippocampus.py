@@ -15,7 +15,7 @@ from pgvector.django import CosineDistance
 
 from frontal_lobe.models import ModelRegistry, ReasoningSession, ReasoningTurn
 from frontal_lobe.synapse import OllamaClient
-from central_nervous_system.models import HydraHead
+from central_nervous_system.models import CNSHead
 from hippocampus.models import TalosEngram, TalosEngramTag
 
 logger = logging.getLogger(__name__)
@@ -55,9 +55,9 @@ class TalosHippocampus(object):
     """
 
     @classmethod
-    async def get_turn_1_catalog(cls, head: HydraHead, limit: int = 15) -> str:
+    async def get_turn_1_catalog(cls, head: CNSHead, limit: int = 15) -> str:
         """
-        Retrieves the indexed catalog of active engrams linked to a specific HydraHead,
+        Retrieves the indexed catalog of active engrams linked to a specific CNSHead,
         formatted as a context block for the L1 cache.
         """
 
@@ -96,7 +96,7 @@ class TalosHippocampus(object):
         return (
             f'[YOUR CARD CATALOG (ENGRAM INDEX)]\n'
             f'[SYSTEM BOOT: RELEVANT ENGRAM INDEX INJECTED]\n'
-            f'The following historical memory cards are explicitly linked to this HydraHead:\n\n'
+            f'The following historical memory cards are explicitly linked to this CNSHead:\n\n'
             f'{catalog_body}\n\n'
             f'(Action: The data payloads are currently evicted. Use mcp_engram_read as a Free Action (0 Focus) to retrieve the full facts into your L1 Cache before proceeding.)\n\n'
         )

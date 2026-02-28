@@ -3,7 +3,7 @@ import logging
 from celery import shared_task
 from django.db import transaction
 
-from .models import HydraHead, HydraHeadStatus
+from .models import CNSHead, CNSHeadStatus
 from .spells.spell_casters.generic_spell_caster import GenericSpellCaster
 
 logger = logging.getLogger(__name__)
@@ -42,11 +42,11 @@ def cast_hydra_spell(self, head_id):
     try:
         # 0. Pre-fetch spawn_id so we can drive the engine even if the Caster explodes
         try:
-            head = HydraHead.objects.only('spawn_id').get(id=head_id)
+            head = CNSHead.objects.only('spawn_id').get(id=head_id)
             spawn_id = head.spawn_id
             head.celery_task_id = self.request.id
             head.save(update_fields=['celery_task_id'])
-        except HydraHead.DoesNotExist:
+        except CNSHead.DoesNotExist:
             logger.error(f'Head {head_id} missing during cast!')
             return
 
@@ -63,8 +63,8 @@ def cast_hydra_spell(self, head_id):
 
         # Emergency DB Update to prevent "Pending Forever" state
         try:
-            head = HydraHead.objects.get(id=head_id)
-            head.status_id = HydraHeadStatus.FAILED
+            head = CNSHead.objects.get(id=head_id)
+            head.status_id = CNSHeadStatus.FAILED
             head.execution_log += f'\n[CELERY FATAL] Task crashed: {e}\n'
             head.save(update_fields=['status', 'execution_log'])
         except Exception:

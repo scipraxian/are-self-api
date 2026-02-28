@@ -8,31 +8,31 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from .filters import HydraHeadFilter, HydraSpawnFilter
+from .filters import CNSHeadFilter, CNSSpawnFilter
 from .central_nervous_system import Hydra
 from .models import (
-    HydraHead,
-    HydraSpawn,
-    HydraSpell,
-    HydraSpellbook,
-    HydraSpellbookConnectionWire,
-    HydraSpellbookNode,
-    HydraSpellBookNodeContext,
+    CNSHead,
+    CNSSpawn,
+    CNSSpell,
+    CNSSpellbook,
+    CNSSpellbookConnectionWire,
+    CNSSpellbookNode,
+    CNSSpellBookNodeContext,
 )
 from .serializers import (
     HydraGraphLayoutSerializer,
-    HydraHeadSerializer,
+    CNSHeadSerializer,
     HydraNodeDetailsSerializer,
     HydraNodeTelemetrySerializer,
-    HydraSpawnCreateSerializer,
-    HydraSpawnLightSerializer,
-    HydraSpawnSerializer,
-    HydraSpawnStatusSerializer,
-    HydraSpellbookConnectionWireSerializer,
-    HydraSpellBookNodeContextSerializer,
-    HydraSpellbookNodeSerializer,
-    HydraSpellbookSerializer,
-    HydraSpellSerializer,
+    CNSSpawnCreateSerializer,
+    CNSSpawnLightSerializer,
+    CNSSpawnSerializer,
+    CNSSpawnStatusSerializer,
+    CNSSpellbookConnectionWireSerializer,
+    CNSSpellBookNodeContextSerializer,
+    CNSSpellbookNodeSerializer,
+    CNSSpellbookSerializer,
+    CNSSpellSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -44,20 +44,20 @@ STATUS_OK = 'ok'
 
 
 @mcp_viewset()
-class HydraSpellViewSet(viewsets.ReadOnlyModelViewSet):
+class CNSSpellViewSet(viewsets.ReadOnlyModelViewSet):
     """Registry of all available spells."""
 
-    queryset = (HydraSpell.objects.all().select_related(
+    queryset = (CNSSpell.objects.all().select_related(
         'distribution_mode', 'talos_executable').order_by('name'))
-    serializer_class = HydraSpellSerializer
+    serializer_class = CNSSpellSerializer
 
 
 @mcp_viewset()
-class HydraSpellbookViewSet(viewsets.ModelViewSet):
+class CNSSpellbookViewSet(viewsets.ModelViewSet):
     """Library of available Protocols (Spellbooks)."""
 
-    queryset = HydraSpellbook.objects.all().order_by('name')
-    serializer_class = HydraSpellbookSerializer
+    queryset = CNSSpellbook.objects.all().order_by('name')
+    serializer_class = CNSSpellbookSerializer
     filterset_fields = ['is_favorite']
 
     @action(detail=True, methods=['get'])
@@ -66,9 +66,9 @@ class HydraSpellbookViewSet(viewsets.ModelViewSet):
         book = self.get_object()
 
         # Architectural Anchor: Enforce BeginPlay exists
-        HydraSpellbookNode.objects.get_or_create(
+        CNSSpellbookNode.objects.get_or_create(
             spellbook=book,
-            spell_id=HydraSpell.BEGIN_PLAY,
+            spell_id=CNSSpell.BEGIN_PLAY,
             defaults={
                 'is_root': True,
                 'ui_json': json.dumps({
@@ -87,13 +87,13 @@ class HydraSpellbookViewSet(viewsets.ModelViewSet):
         book = self.get_object()
 
         spells = list(
-            HydraSpell.objects.values('id', 'name', 'distribution_mode__name'))
+            CNSSpell.objects.values('id', 'name', 'distribution_mode__name'))
         for s in spells:
             s['category'] = CATEGORY_SPELLS
 
         # Exclude self to prevent infinite recursion
         subgraphs = list(
-            HydraSpellbook.objects.exclude(id=book.id).values('id', 'name'))
+            CNSSpellbook.objects.exclude(id=book.id).values('id', 'name'))
         for b in subgraphs:
             b['category'] = CATEGORY_SUBGRAPHS
             b['is_book'] = True
@@ -110,11 +110,11 @@ class HydraSpellbookViewSet(viewsets.ModelViewSet):
 
 
 @mcp_viewset()
-class HydraSpellbookNodeViewSet(viewsets.ModelViewSet):
+class CNSSpellbookNodeViewSet(viewsets.ModelViewSet):
     """Graph Nodes CRUD."""
 
-    queryset = HydraSpellbookNode.objects.all()
-    serializer_class = HydraSpellbookNodeSerializer
+    queryset = CNSSpellbookNode.objects.all()
+    serializer_class = CNSSpellbookNodeSerializer
 
     def perform_create(self, serializer):
         """Auto-flags the Begin Play node as root if applicable."""
@@ -122,7 +122,7 @@ class HydraSpellbookNodeViewSet(viewsets.ModelViewSet):
         invoked_book_id = self.request.data.get('invoked_spellbook')
 
         is_root = False
-        if not invoked_book_id and int(spell_id) == HydraSpell.BEGIN_PLAY:
+        if not invoked_book_id and int(spell_id) == CNSSpell.BEGIN_PLAY:
             is_root = True
 
         serializer.save(is_root=is_root)
@@ -130,7 +130,7 @@ class HydraSpellbookNodeViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         """Graph Protection: Cannot delete the core anchor node."""
         is_delegated = bool(instance.invoked_spellbook_id)
-        if not is_delegated and instance.spell_id == HydraSpell.BEGIN_PLAY:
+        if not is_delegated and instance.spell_id == CNSSpell.BEGIN_PLAY:
             raise ValidationError(
                 'Cannot delete the core BeginPlay anchor node.')
         instance.delete()
@@ -144,24 +144,24 @@ class HydraSpellbookNodeViewSet(viewsets.ModelViewSet):
 
 
 @mcp_viewset()
-class HydraSpellbookConnectionWireViewSet(mixins.CreateModelMixin,
+class CNSSpellbookConnectionWireViewSet(mixins.CreateModelMixin,
                                           mixins.DestroyModelMixin,
                                           viewsets.GenericViewSet):
     """Graph Wires."""
 
-    queryset = HydraSpellbookConnectionWire.objects.all()
-    serializer_class = HydraSpellbookConnectionWireSerializer
+    queryset = CNSSpellbookConnectionWire.objects.all()
+    serializer_class = CNSSpellbookConnectionWireSerializer
 
 
-class HydraSpellBookNodeContextViewSet(viewsets.ModelViewSet):
+class CNSSpellBookNodeContextViewSet(viewsets.ModelViewSet):
     """Manages variable overrides on specific nodes."""
 
-    queryset = HydraSpellBookNodeContext.objects.all()
-    serializer_class = HydraSpellBookNodeContextSerializer
+    queryset = CNSSpellBookNodeContext.objects.all()
+    serializer_class = CNSSpellBookNodeContextSerializer
     filterset_fields = ['node']
 
 
-class HydraSpawnViewSet(
+class CNSSpawnViewSet(
         mixins.CreateModelMixin,
         mixins.RetrieveModelMixin,
         mixins.ListModelMixin,
@@ -169,7 +169,7 @@ class HydraSpawnViewSet(
 ):
     """Mission Control and Spawns."""
 
-    queryset = HydraSpawn.objects.all().select_related('status', 'spellbook',
+    queryset = CNSSpawn.objects.all().select_related('status', 'spellbook',
                                                        'environment')
 
     filter_backends = [
@@ -177,17 +177,17 @@ class HydraSpawnViewSet(
         filters.OrderingFilter,
         filters.SearchFilter,
     ]
-    filterset_class = HydraSpawnFilter
+    filterset_class = CNSSpawnFilter
     ordering_fields = '__all__'
     ordering = ['-created']  # Default ordering
     search_fields = ['spellbook__name', 'status__name']
 
     def get_serializer_class(self):
         if self.action == 'create':
-            return HydraSpawnCreateSerializer
+            return CNSSpawnCreateSerializer
         elif self.action == 'list':
-            return HydraSpawnLightSerializer
-        return HydraSpawnSerializer
+            return CNSSpawnLightSerializer
+        return CNSSpawnSerializer
 
     def create(self, request, *args, **kwargs):
         """Launch Protocol."""
@@ -198,7 +198,7 @@ class HydraSpawnViewSet(
         try:
             controller = Hydra(spellbook_id=book_id)
             controller.start()
-            read_serializer = HydraSpawnSerializer(controller.spawn)
+            read_serializer = CNSSpawnSerializer(controller.spawn)
             return Response(read_serializer.data,
                             status=status.HTTP_201_CREATED)
         except Exception as e:
@@ -212,7 +212,7 @@ class HydraSpawnViewSet(
     def live_status(self, request, pk=None):
         """Fast-polling endpoint for the UI."""
         spawn = self.get_object()
-        serializer = HydraSpawnStatusSerializer(spawn)
+        serializer = CNSSpawnStatusSerializer(spawn)
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
@@ -220,7 +220,7 @@ class HydraSpawnViewSet(
         """Lightweight list of heads for a spawn."""
         spawn = self.get_object()
         heads = spawn.heads.all().order_by('created')
-        serializer = HydraHeadSerializer(heads, many=True)
+        serializer = CNSHeadSerializer(heads, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
@@ -239,11 +239,11 @@ class HydraSpawnViewSet(
 
 
 @mcp_viewset()
-class HydraHeadViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin,
+class CNSHeadViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin,
                        viewsets.GenericViewSet):
     """Forensics Unit. Retrieves heavy telemetry/logs."""
 
-    queryset = HydraHead.objects.all().select_related('status', 'spell',
+    queryset = CNSHead.objects.all().select_related('status', 'spell',
                                                       'target')
 
     filter_backends = [
@@ -251,19 +251,19 @@ class HydraHeadViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin,
         filters.OrderingFilter,
         filters.SearchFilter,
     ]
-    filterset_class = HydraHeadFilter
+    filterset_class = CNSHeadFilter
     ordering_fields = '__all__'
     ordering = ['created']  # Default ordering for heads (chronological)
     search_fields = ['spell__name', 'status__name', 'target__hostname']
 
     def get_serializer_class(self):
         if self.action == 'list':
-            return HydraHeadSerializer
+            return CNSHeadSerializer
         return HydraNodeTelemetrySerializer
 
     @action(detail=True, methods=['get'])
     def status(self, request, pk=None):
         """Lightweight polling endpoint for the UI Head Cards."""
         head = self.get_object()
-        serializer = HydraHeadSerializer(head)
+        serializer = CNSHeadSerializer(head)
         return Response(serializer.data)

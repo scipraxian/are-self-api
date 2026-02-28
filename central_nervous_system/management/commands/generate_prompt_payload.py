@@ -5,7 +5,7 @@ import tempfile
 from django.core.management.base import BaseCommand
 
 from environments.variable_renderer import VariableRenderer
-from central_nervous_system.models import HydraHead
+from central_nervous_system.models import CNSHead
 from central_nervous_system.utils import resolve_environment_context
 
 logger = logging.getLogger(__name__)
@@ -36,8 +36,8 @@ class Command(BaseCommand):
         head_id = options[HEAD_ID]
         target_key = options[KEY]
         try:
-            head = HydraHead.objects.get(id=head_id)
-        except HydraHead.DoesNotExist:
+            head = CNSHead.objects.get(id=head_id)
+        except CNSHead.DoesNotExist:
             logger.error(f'Error: Head {head_id} not found.')
             return
         head_context = resolve_environment_context(head_id=head.id)

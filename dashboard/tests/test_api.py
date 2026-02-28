@@ -10,7 +10,7 @@ from environments.models import (
     ProjectEnvironmentStatus,
     ProjectEnvironmentType,
 )
-from central_nervous_system.models import HydraSpellbook
+from central_nervous_system.models import CNSSpellbook
 
 
 class DashboardAPITest(TestCase):
@@ -38,7 +38,7 @@ class DashboardAPITest(TestCase):
         ProjectEnvironment.objects.create(
             name='Test Env API', type=type_ue, status=status_ok
         )
-        HydraSpellbook.objects.create(name='Test Protocol API')
+        CNSSpellbook.objects.create(name='Test Protocol API')
 
         url = '/api/v1/dashboard/summary/'
         response = self.client.get(url)

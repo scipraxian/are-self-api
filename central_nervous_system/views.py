@@ -10,13 +10,13 @@ from central_nervous_system.utils import get_active_environment, resolve_environ
 from ue_tools.merge_logs import merge_logs
 
 from .central_nervous_system import Hydra
-from .models import HydraHead, HydraSpawn, HydraSpellbook
+from .models import CNSHead, CNSSpawn, CNSSpellbook
 
 # --- GRAPH VIEWS ---
 
 
 class HydraGraphEditorView(DetailView):
-    model = HydraSpellbook
+    model = CNSSpellbook
     template_name = 'central_nervous_system/graph_editor.html'
     context_object_name = 'book'
     pk_url_kwarg = 'book_id'
@@ -29,7 +29,7 @@ class HydraGraphEditorView(DetailView):
 
 
 class HydraGraphMonitorView(DetailView):
-    model = HydraSpawn
+    model = CNSSpawn
     template_name = 'central_nervous_system/graph_editor.html'
     context_object_name = 'spawn'
     pk_url_kwarg = 'spawn_id'
@@ -39,7 +39,7 @@ class HydraGraphMonitorView(DetailView):
         context['book'] = self.object.spellbook
         context['mode'] = 'monitor'
         context['spawn_id'] = str(self.object.id)
-        context['spawn_history'] = HydraSpawn.objects.filter(
+        context['spawn_history'] = CNSSpawn.objects.filter(
             spellbook=self.object.spellbook
         ).order_by('-created')[:20]
         return context
@@ -89,7 +89,7 @@ class ToggleFavoriteView(View):
     """
 
     def post(self, request, pk):
-        book = get_object_or_404(HydraSpellbook, pk=pk)
+        book = get_object_or_404(CNSSpellbook, pk=pk)
         book.is_favorite = not book.is_favorite
         book.save(update_fields=['is_favorite'])
 
@@ -164,7 +164,7 @@ class GracefulStopSpawnView(View):
 
 
 class HeadLogDetailView(DetailView):
-    model = HydraHead
+    model = CNSHead
     template_name = 'central_nervous_system/head_detail.html'
     context_object_name = 'head'
 
@@ -240,7 +240,7 @@ class HydraBattleStationView(DetailView):
     Renders the Side-by-Side 'Battle Station' view for two selected heads.
     """
 
-    model = HydraSpawn
+    model = CNSSpawn
     template_name = 'central_nervous_system/spawn_monitor_page.html'
     context_object_name = 'spawn'
     pk_url_kwarg = 'spawn_id'
@@ -253,9 +253,9 @@ class HydraBattleStationView(DetailView):
         h2_id = self.request.GET.get('h2')
         if h1_id and h2_id:
             try:
-                context['head_1'] = HydraHead.objects.get(id=h1_id)
-                context['head_2'] = HydraHead.objects.get(id=h2_id)
-            except HydraHead.DoesNotExist:
+                context['head_1'] = CNSHead.objects.get(id=h1_id)
+                context['head_2'] = CNSHead.objects.get(id=h2_id)
+            except CNSHead.DoesNotExist:
                 pass
         return context
 
@@ -268,8 +268,8 @@ class HydraBattleStreamView(View):
 
     def get(self, request, spawn_id):
         try:
-            spawn = HydraSpawn.objects.get(id=spawn_id)
-        except HydraSpawn.DoesNotExist:
+            spawn = CNSSpawn.objects.get(id=spawn_id)
+        except CNSSpawn.DoesNotExist:
             return HttpResponse('Spawn not found', status=404)
 
         h1_id = request.GET.get('h1')
@@ -284,9 +284,9 @@ class HydraBattleStreamView(View):
             cursor_2 = 0
 
         try:
-            h1 = HydraHead.objects.get(id=h1_id)
-            h2 = HydraHead.objects.get(id=h2_id)
-        except HydraHead.DoesNotExist:
+            h1 = CNSHead.objects.get(id=h1_id)
+            h2 = CNSHead.objects.get(id=h2_id)
+        except CNSHead.DoesNotExist:
             return HttpResponse('Invalid Head IDs', status=404)
 
         full_log1 = h1.application_log or h1.execution_log or ''
@@ -322,7 +322,7 @@ class HydraControlsView(TemplateView):
 
 
 class SpawnMonitorDetailView(DetailView):
-    model = HydraSpawn
+    model = CNSSpawn
     template_name = 'central_nervous_system/spawn_monitor.html'
     context_object_name = 'spawn'
 
@@ -405,11 +405,11 @@ def generate_spawn_dump(spawn, depth=0):
             yield from generate_spawn_dump(child, depth + 1)
 
 
-class HydraSpawnDownloadView(View):
+class CNSSpawnDownloadView(View):
     """Streams all data from a spawn into a single .log file download."""
 
     def get(self, request, pk):
-        spawn = get_object_or_404(HydraSpawn, pk=pk)
+        spawn = get_object_or_404(CNSSpawn, pk=pk)
 
         response = StreamingHttpResponse(
             generate_spawn_dump(spawn), content_type='text/plain'

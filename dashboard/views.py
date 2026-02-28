@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.views.generic import TemplateView
 
 from environments.models import ProjectEnvironment
-from central_nervous_system.models import HydraSpellbook
+from central_nervous_system.models import CNSSpellbook
 from frontal_lobe.models import ReasoningSession, ReasoningStatusID
 
 logger = logging.getLogger(__name__)
@@ -24,14 +24,14 @@ class DashboardHomeView(TemplateView):
 
         if active_env:
             all_books = (
-                HydraSpellbook.objects.filter(
+                CNSSpellbook.objects.filter(
                     Q(environment=active_env) | Q(environment__isnull=True)
                 )
                 .prefetch_related('tags')
                 .order_by('name')
             )
         else:
-            all_books = HydraSpellbook.objects.prefetch_related(
+            all_books = CNSSpellbook.objects.prefetch_related(
                 'tags'
             ).order_by('name')
 

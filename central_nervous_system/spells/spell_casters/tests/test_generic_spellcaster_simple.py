@@ -4,12 +4,12 @@ from django.test import TestCase
 
 from environments.models import TalosExecutable
 from central_nervous_system.models import (
-    HydraHead,
-    HydraHeadStatus,
-    HydraSpawn,
-    HydraSpawnStatus,
-    HydraSpell,
-    HydraSpellbook,
+    CNSHead,
+    CNSHeadStatus,
+    CNSSpawn,
+    CNSSpawnStatus,
+    CNSSpell,
+    CNSSpellbook,
 )
 from central_nervous_system.spells.spell_casters.generic_spell_caster import GenericSpellCaster
 
@@ -26,13 +26,13 @@ class GenericSpellcasterTest(TestCase):
 
     def setUp(self):
         # 1. Setup Data Hierarchy using Fixtures
-        self.spellbook = HydraSpellbook.objects.first()
+        self.spellbook = CNSSpellbook.objects.first()
         from environments.models import ProjectEnvironment
 
         self.proj_env = ProjectEnvironment.objects.first()
 
-        self.spawn = HydraSpawn.objects.create(
-            status_id=HydraSpawnStatus.CREATED,
+        self.spawn = CNSSpawn.objects.create(
+            status_id=CNSSpawnStatus.CREATED,
             spellbook=self.spellbook,
             environment=self.proj_env,
         )
@@ -40,14 +40,14 @@ class GenericSpellcasterTest(TestCase):
         # 2. Use a standard executable (PYTHON) for default state
         self.python_exe = TalosExecutable.objects.get(id=TalosExecutable.PYTHON)
 
-        self.spell = HydraSpell.objects.create(
+        self.spell = CNSSpell.objects.create(
             name='Unit Test Spell',
             talos_executable=self.python_exe,
         )
 
-        self.head = HydraHead.objects.create(spell=self.spell,
+        self.head = CNSHead.objects.create(spell=self.spell,
                                              spawn=self.spawn,
-                                             status_id=HydraHeadStatus.CREATED)
+                                             status_id=CNSHeadStatus.CREATED)
 
     def test_generic_spellcaster_instantiates(self):
         """Asserts that the GenericSpellCaster can be instantiated."""

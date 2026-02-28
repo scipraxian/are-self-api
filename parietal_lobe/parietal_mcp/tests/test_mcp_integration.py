@@ -5,10 +5,10 @@ import uuid
 import pytest
 
 from central_nervous_system.models import (
-    HydraHead,
-    HydraHeadStatus,
-    HydraSpawn,
-    HydraSpawnStatus,
+    CNSHead,
+    CNSHeadStatus,
+    CNSSpawn,
+    CNSSpawnStatus,
 )
 from parietal_lobe.parietal_mcp.gateway import ParietalMCP
 
@@ -60,25 +60,25 @@ async def test_mcp_record_operations():
 
     # Create Statuses if they don't exist
     head_status, _ = await asyncio.to_thread(
-        HydraHeadStatus.objects.get_or_create,
+        CNSHeadStatus.objects.get_or_create,
         id=1,
         defaults={'name': 'Created'},
     )
     spawn_status, _ = await asyncio.to_thread(
-        HydraSpawnStatus.objects.get_or_create,
+        CNSSpawnStatus.objects.get_or_create,
         id=1,
         defaults={'name': 'Created'},
     )
 
     # Create Spawn
-    spawn = await asyncio.to_thread(HydraSpawn.objects.create,
+    spawn = await asyncio.to_thread(CNSSpawn.objects.create,
                                     status=spawn_status)
 
-    # Setup: Create a HydraHead
+    # Setup: Create a CNSHead
     head_id = uuid.uuid4()
 
     head = await asyncio.to_thread(
-        HydraHead.objects.create,
+        CNSHead.objects.create,
         id=head_id,
         spawn=spawn,
         status=head_status,
@@ -90,7 +90,7 @@ async def test_mcp_record_operations():
     result = await ParietalMCP.execute(
         'mcp_inspect_record',
         {
-            'model_name': 'HydraHead',
+            'model_name': 'CNSHead',
             'record_id': str(head_id),
         },
     )
@@ -101,11 +101,11 @@ async def test_mcp_record_operations():
     assert 'value' in data['blackboard']
 
     # 5. Test mcp_query_model (Basic Filters)
-    print(f'Testing mcp_query_model for HydraHead')
+    print(f'Testing mcp_query_model for CNSHead')
     result = await ParietalMCP.execute(
         'mcp_query_model',
         {
-            'model_name': 'HydraHead',
+            'model_name': 'CNSHead',
             'filters': {
                 'id': str(head_id)
             },
@@ -122,7 +122,7 @@ async def test_mcp_record_operations():
     result = await ParietalMCP.execute(
         'mcp_query_model',
         {
-            'model_name': 'HydraHead',
+            'model_name': 'CNSHead',
             'q_string': q_string,
         },
     )
@@ -155,7 +155,7 @@ async def test_mcp_record_operations():
         'mcp_read_record_field',
         {
             'app_label': 'central_nervous_system',
-            'model_name': 'HydraHead',
+            'model_name': 'CNSHead',
             'record_id': str(head_id),
             'field_name': 'blackboard',
         },
@@ -170,7 +170,7 @@ async def test_mcp_record_operations():
         'mcp_search_record_field',
         {
             'app_label': 'central_nervous_system',
-            'model_name': 'HydraHead',
+            'model_name': 'CNSHead',
             'record_id': str(head_id),
             'field_name': 'blackboard',
             'pattern': 'active',

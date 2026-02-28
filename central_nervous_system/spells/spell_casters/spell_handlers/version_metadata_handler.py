@@ -9,7 +9,7 @@ import time
 from typing import Any, Dict, Tuple
 from uuid import UUID
 
-from central_nervous_system.models import HydraHead
+from central_nervous_system.models import CNSHead
 from central_nervous_system.spells.spell_casters.spell_handlers.spell_handler_codes import (
     HANDLER_FILE_NOT_FOUND_CODE,
     HANDLER_INTERNAL_ERROR_CODE,
@@ -34,14 +34,14 @@ def update_version_metadata(head_id: UUID) -> Tuple[int, str]:
     """Updates the application version JSON file with build metadata.
 
     Args:
-        head_id: int: The HydraHead execution context.
+        head_id: int: The CNSHead execution context.
 
     Returns:
         Tuple[int, str]: (exit_code, log_output)
             exit_code = 0 for success, 1 for failure
     """
     logging.info(f'Updating version metadata for head {head_id}...')
-    head = HydraHead.objects.get(id=head_id)
+    head = CNSHead.objects.get(id=head_id)
     spell = head.spell
 
     env = get_active_environment(head)

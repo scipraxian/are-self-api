@@ -8,11 +8,11 @@ from central_nervous_system.management.commands.generate_prompt_payload import (
     BLACKBOARD_RESULT_KEY,
 )
 from central_nervous_system.models import (
-    HydraHead,
-    HydraHeadStatus,
-    HydraSpawn,
-    HydraSpawnStatus,
-    HydraSpellbook,
+    CNSHead,
+    CNSHeadStatus,
+    CNSSpawn,
+    CNSSpawnStatus,
+    CNSSpellbook,
 )
 
 
@@ -26,9 +26,9 @@ class GeneratePromptPayloadTest(TestCase):
 
     def setUp(self):
         # 1. Setup minimal relational infrastructure
-        self.book = HydraSpellbook.objects.create(name='Payload Test Protocol')
-        self.spawn = HydraSpawn.objects.create(
-            spellbook=self.book, status_id=HydraSpawnStatus.CREATED
+        self.book = CNSSpellbook.objects.create(name='Payload Test Protocol')
+        self.spawn = CNSSpawn.objects.create(
+            spellbook=self.book, status_id=CNSSpawnStatus.CREATED
         )
 
         # 2. Pre-load the blackboard with a raw template and a variable to resolve
@@ -37,9 +37,9 @@ class GeneratePromptPayloadTest(TestCase):
             'error_msg': 'Fatal Exception in PlayerController.cpp',
         }
 
-        self.head = HydraHead.objects.create(
+        self.head = CNSHead.objects.create(
             spawn=self.spawn,
-            status_id=HydraHeadStatus.CREATED,
+            status_id=CNSHeadStatus.CREATED,
             blackboard=initial_blackboard,
         )
         self.generated_file_path = None

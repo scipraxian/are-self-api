@@ -1,5 +1,5 @@
 import re
-from central_nervous_system.models import HydraSpawn, HydraHead, HydraHeadStatus
+from central_nervous_system.models import CNSSpawn, CNSHead, CNSHeadStatus
 
 # Regex Patterns for Error Detection
 # The "Killers" (High Priority)
@@ -61,12 +61,12 @@ def read_build_log(run_id, max_token_budget=128000):
     Implements dynamic truncation based on the provided token budget.
     """
     try:
-        spawn = HydraSpawn.objects.get(id=run_id)
-    except HydraSpawn.DoesNotExist:
+        spawn = CNSSpawn.objects.get(id=run_id)
+    except CNSSpawn.DoesNotExist:
         return "Spawn not found."
 
     # Find the failed head(s) first, or just the last run head
-    heads = spawn.heads.filter(status_id=HydraHeadStatus.FAILED)
+    heads = spawn.heads.filter(status_id=CNSHeadStatus.FAILED)
     if not heads.exists():
         heads = spawn.heads.all()
 

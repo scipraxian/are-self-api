@@ -17,7 +17,7 @@ from frontal_lobe.models import (
     ReasoningTurn,
 )
 from frontal_lobe.thalamus import relay_sensory_state
-from central_nervous_system.models import HydraHead, HydraHeadStatus
+from central_nervous_system.models import CNSHead, CNSHeadStatus
 from central_nervous_system.utils import resolve_environment_context
 from identity.identity_prompt import build_identity_prompt
 from parietal_lobe.parietal_lobe import ParietalLobe
@@ -32,7 +32,7 @@ CONTENT = 'content'
 class FrontalLobe:
     """Async execution wrapper for the Frontal Lobe AI loop."""
 
-    def __init__(self, head: HydraHead):
+    def __init__(self, head: CNSHead):
         self.head = head
         self.head_id = head.id
         self.log_output: List[str] = []
@@ -253,7 +253,7 @@ class FrontalLobe:
                 await sync_to_async(self.head.refresh_from_db)(
                     fields=['status']
                 )
-                if self.head.status_id == HydraHeadStatus.STOPPING:
+                if self.head.status_id == CNSHeadStatus.STOPPING:
                     await self._log_live('\n[WARNING] Stop Signal. Halting.')
                     break
 
@@ -310,7 +310,7 @@ async def run_frontal_lobe(head_id: UUID) -> Tuple[int, str]:
     """Asynchronous entry point for the generic spell caster."""
     try:
         head = await sync_to_async(
-            lambda: HydraHead.objects.select_related('spawn').get(id=head_id)
+            lambda: CNSHead.objects.select_related('spawn').get(id=head_id)
         )()
         lobe = FrontalLobe(head)
         return await lobe.run()

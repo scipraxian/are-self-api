@@ -35,19 +35,19 @@ class ParietalLobeTest(TransactionTestCase):
     def setUp(self):
         # Create minimal required objects
         from central_nervous_system.models import (
-            HydraHead,
-            HydraHeadStatus,
-            HydraSpawn,
-            HydraSpawnStatus,
-            HydraSpellbook,
+            CNSHead,
+            CNSHeadStatus,
+            CNSSpawn,
+            CNSSpawnStatus,
+            CNSSpellbook,
         )
 
-        self.book = HydraSpellbook.objects.create(name='Test Book')
-        self.spawn = HydraSpawn.objects.create(
-            spellbook=self.book, status_id=HydraSpawnStatus.RUNNING
+        self.book = CNSSpellbook.objects.create(name='Test Book')
+        self.spawn = CNSSpawn.objects.create(
+            spellbook=self.book, status_id=CNSSpawnStatus.RUNNING
         )
-        self.head = HydraHead.objects.create(
-            spawn=self.spawn, status_id=HydraHeadStatus.RUNNING, blackboard={}
+        self.head = CNSHead.objects.create(
+            spawn=self.spawn, status_id=CNSHeadStatus.RUNNING, blackboard={}
         )
 
         self.session = ReasoningSession.objects.create(

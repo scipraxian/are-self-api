@@ -2,7 +2,7 @@ from django.db import transaction  # Added transaction import
 from django.db.models.signals import post_save
 from django.dispatch import Signal, receiver
 
-from .models import HydraSpawn, HydraStatusID
+from .models import CNSSpawn, HydraStatusID
 
 # Delayed import of GraphWalker to avoid circularity if any,
 # though signals.py is usually safe.
@@ -11,7 +11,7 @@ spawn_failed = Signal()
 spawn_success = Signal()
 
 
-@receiver(post_save, sender=HydraSpawn)
+@receiver(post_save, sender=CNSSpawn)
 def on_spawn_update(sender, instance, created, **kwargs):
     """
     Reactive Event Loop:

@@ -6,11 +6,11 @@
 # from django.test import TransactionTestCase
 #
 # from central_nervous_system.models import (
-#     HydraHead,
-#     HydraHeadStatus,
-#     HydraSpawn,
-#     HydraSpawnStatus,
-#     HydraSpellbook,
+#     CNSHead,
+#     CNSHeadStatus,
+#     CNSSpawn,
+#     CNSSpawnStatus,
+#     CNSSpellbook,
 # )
 # from parietal_lobe.models import (
 #     ToolDefinition,
@@ -39,11 +39,11 @@
 #
 #     def setUp(self):
 #         # Base Data
-#         self.book = HydraSpellbook.objects.create(name='Test Protocol')
-#         self.spawn = HydraSpawn.objects.create(
-#             spellbook=self.book, status_id=HydraSpawnStatus.RUNNING)
-#         self.head = HydraHead.objects.create(spawn=self.spawn,
-#                                              status_id=HydraHeadStatus.RUNNING,
+#         self.book = CNSSpellbook.objects.create(name='Test Protocol')
+#         self.spawn = CNSSpawn.objects.create(
+#             spellbook=self.book, status_id=CNSSpawnStatus.RUNNING)
+#         self.head = CNSHead.objects.create(spawn=self.spawn,
+#                                              status_id=CNSHeadStatus.RUNNING,
 #                                              blackboard={})
 #
 #         # FIX 2: Setup an MCP Tool with the strict 'mcp_' nomenclature

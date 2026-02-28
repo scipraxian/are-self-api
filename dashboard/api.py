@@ -14,8 +14,8 @@ from rest_framework.response import Response
 from config.celery import app as celery_app
 from environments.models import ProjectEnvironment
 from environments.serializers import ProjectEnvironmentSerializer
-from central_nervous_system.models import HydraSpawn, HydraSpellbook
-from central_nervous_system.serializers import HydraSpellbookSerializer, HydraSwimlaneSerializer
+from central_nervous_system.models import CNSSpawn, CNSSpellbook
+from central_nervous_system.serializers import CNSSpellbookSerializer, HydraSwimlaneSerializer
 
 
 def delayed_shutdown():
@@ -48,22 +48,22 @@ class DashboardViewSet(viewsets.ViewSet):
             ).data
 
             books = (
-                HydraSpellbook.objects.all()
+                CNSSpellbook.objects.all()
                 .prefetch_related('tags')
                 .order_by('name')
             )
-            response_data['spellbooks'] = HydraSpellbookSerializer(
+            response_data['spellbooks'] = CNSSpellbookSerializer(
                 books, many=True
             ).data
 
-        root_spawns = HydraSpawn.objects.filter(
+        root_spawns = CNSSpawn.objects.filter(
             parent_head__isnull=True, environment__selected=True
         )
 
         if not is_first_load and client_sync_time:
             safe_sync_time = client_sync_time - timedelta(seconds=2.5)
             has_changes = (
-                HydraSpawn.objects.filter(environment__selected=True)
+                CNSSpawn.objects.filter(environment__selected=True)
                 .filter(
                     Q(modified__gt=safe_sync_time)
                     | Q(heads__modified__gt=safe_sync_time)

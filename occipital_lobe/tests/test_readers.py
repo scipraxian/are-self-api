@@ -6,7 +6,7 @@ from unittest.mock import patch, MagicMock
 
 class ReadersTest(SimpleTestCase):
 
-    @patch('occipital_lobe.readers.HydraSpawn')
+    @patch('occipital_lobe.readers.CNSSpawn')
     def test_read_build_log_regex(self, mock_spawn_cls):
         # Setup Mock Spawn and Head
         mock_spawn = MagicMock()

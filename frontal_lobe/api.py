@@ -4,7 +4,7 @@ from rest_framework import filters, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from central_nervous_system.models import HydraHeadStatus
+from central_nervous_system.models import CNSHeadStatus
 from central_nervous_system.tasks import cast_hydra_spell
 
 from . import serializers
@@ -63,17 +63,17 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def rerun(self, request, pk=None):
-        """Reboots the Cortex by restarting the originating HydraHead."""
+        """Reboots the Cortex by restarting the originating CNSHead."""
         session = self.get_object()
         head = session.head
 
         if not head:
             return Response(
-                {'error': 'No associated HydraHead found.'}, status=400
+                {'error': 'No associated CNSHead found.'}, status=400
             )
 
         # 1. Reset the head state
-        head.status_id = HydraHeadStatus.PENDING
+        head.status_id = CNSHeadStatus.PENDING
         head.save(update_fields=['status'])
 
         # 2. Fire the Celery task to run the AI loop again
@@ -95,10 +95,10 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
 
         if not head:
             return Response(
-                {'error': 'No associated HydraHead found.'}, status=400
+                {'error': 'No associated CNSHead found.'}, status=400
             )
 
-        head.status_id = HydraHeadStatus.STOPPING
+        head.status_id = CNSHeadStatus.STOPPING
         head.save(update_fields=['status'])
 
         return Response(

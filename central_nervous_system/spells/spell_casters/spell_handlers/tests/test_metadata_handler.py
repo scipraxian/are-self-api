@@ -6,12 +6,12 @@ from django.test import TestCase
 
 from environments.models import TalosExecutable
 from central_nervous_system.models import (
-    HydraHead,
-    HydraHeadStatus,
-    HydraSpawn,
-    HydraSpawnStatus,
-    HydraSpell,
-    HydraSpellbook,
+    CNSHead,
+    CNSHeadStatus,
+    CNSSpawn,
+    CNSSpawnStatus,
+    CNSSpell,
+    CNSSpellbook,
 )
 from central_nervous_system.spells.spell_casters.spell_handlers.spell_handler_codes import (
     HANDLER_INTERNAL_ERROR_CODE,
@@ -34,27 +34,27 @@ class VersionMetadataHandlerTest(TestCase):
     ]
 
     def setUp(self):
-        self.status_running = HydraHeadStatus.objects.get(
-            id=HydraHeadStatus.RUNNING)
-        self.spawn_running = HydraSpawnStatus.objects.get(
-            id=HydraSpawnStatus.RUNNING)
+        self.status_running = CNSHeadStatus.objects.get(
+            id=CNSHeadStatus.RUNNING)
+        self.spawn_running = CNSSpawnStatus.objects.get(
+            id=CNSSpawnStatus.RUNNING)
 
-        self.spell = HydraSpell.objects.create(
+        self.spell = CNSSpell.objects.create(
             name='Version Spell',
             talos_executable_id=TalosExecutable.VERSION_HANDLER,
         )
-        self.book = HydraSpellbook.objects.create(name='Test Book')
+        self.book = CNSSpellbook.objects.create(name='Test Book')
 
-        self.spawn = HydraSpawn.objects.create(
-            spellbook=self.book, status_id=HydraSpawnStatus.RUNNING)
+        self.spawn = CNSSpawn.objects.create(
+            spellbook=self.book, status_id=CNSSpawnStatus.RUNNING)
 
-        self.head = HydraHead.objects.create(
+        self.head = CNSHead.objects.create(
             spawn=self.spawn,
             spell=self.spell,
-            status_id=HydraHeadStatus.RUNNING,
+            status_id=CNSHeadStatus.RUNNING,
         )
 
-    @patch('central_nervous_system.models.HydraSpell.get_full_command')
+    @patch('central_nervous_system.models.CNSSpell.get_full_command')
     @patch(f'{MODULE_PATH}.log_system')  # Mute DB logging for speed
     def test_creates_new_file_if_missing(self, mock_log, mock_command):
         """Verify it creates a fresh JSON file if one doesn't exist."""
@@ -97,7 +97,7 @@ class VersionMetadataHandlerTest(TestCase):
             self.assertEqual(written_data['Build']['Builder'], 'TestBuilder')
             self.assertEqual(written_data['Game']['Name'], 'HSH: Vacancy')
 
-    @patch('central_nervous_system.models.HydraSpell.get_full_command')
+    @patch('central_nervous_system.models.CNSSpell.get_full_command')
     @patch(f'{MODULE_PATH}.log_system')
     def test_updates_existing_file_preserving_data(self, mock_log,
                                                    mock_command):
@@ -139,7 +139,7 @@ class VersionMetadataHandlerTest(TestCase):
             self.assertIn('Build', data, 'Should inject Build block')
             self.assertIn('OldBuild', data, 'Should preserve unrelated keys')
 
-    @patch('central_nervous_system.models.HydraSpell.get_full_command')
+    @patch('central_nervous_system.models.CNSSpell.get_full_command')
     @patch(f'{MODULE_PATH}.log_system')
     def test_recovers_from_corrupt_json(self, mock_log, mock_command):
         """Verify it handles broken JSON by re-initializing the file."""
@@ -166,7 +166,7 @@ class VersionMetadataHandlerTest(TestCase):
             data = json.loads(written_content)
             self.assertEqual(data['Game']['Name'], 'HSH: Vacancy')
 
-    @patch('central_nervous_system.models.HydraSpell.get_full_command')
+    @patch('central_nervous_system.models.CNSSpell.get_full_command')
     @patch(f'{MODULE_PATH}.log_system')
     def test_handles_directory_creation_failure(self, mock_log, mock_command):
         """Verify it returns specific error code if directory creation fails."""
@@ -184,7 +184,7 @@ class VersionMetadataHandlerTest(TestCase):
             self.assertEqual(code, HANDLER_WRITE_ERROR_CODE)
             self.assertIn('Could not create directory', log)
 
-    @patch('central_nervous_system.models.HydraSpell.get_full_command')
+    @patch('central_nervous_system.models.CNSSpell.get_full_command')
     @patch(f'{MODULE_PATH}.log_system')
     def test_handles_file_write_failure(self, mock_log, mock_command):
         """Verify it returns internal error code if file write fails."""

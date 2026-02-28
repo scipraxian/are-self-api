@@ -23,7 +23,7 @@ from central_nervous_system.constants import (
     APPLICATION_LOG_FIELD_NAME,
     SPELLBOOK_FIELD_NAME,
 )
-from central_nervous_system.models import HydraHead, HydraSpellBookNodeContext, HydraSpellContext
+from central_nervous_system.models import CNSHead, CNSSpellBookNodeContext, CNSSpellContext
 
 logger = logging.getLogger(__name__)
 
@@ -73,9 +73,9 @@ def resolve_environment_context(
 
     Hierarchy of Variable Precedence (Lowest to Highest):
     1. Global Environment (ProjectEnvironment context)
-    2. Spell Defaults (HydraSpellContext)
-    3. Node Overrides (HydraSpellBookNodeContext)
-    4. Runtime Injection (HydraSpawn.context_data)
+    2. Spell Defaults (CNSSpellContext)
+    3. Node Overrides (CNSSpellBookNodeContext)
+    4. Runtime Injection (CNSSpawn.context_data)
     """
     metadata: Dict[str, Any] = {}
     head = None
@@ -91,7 +91,7 @@ def resolve_environment_context(
         }
     elif head_id:
         try:
-            head = HydraHead.objects.select_related(
+            head = CNSHead.objects.select_related(
                 'spell',
                 'node',
                 'node__environment',
@@ -101,7 +101,7 @@ def resolve_environment_context(
                 'spawn__spellbook__environment',
                 PROVENANCE_FIELD_NAME,
             ).get(id=head_id)
-        except HydraHead.DoesNotExist:
+        except CNSHead.DoesNotExist:
             return {}
 
         env = get_active_environment(head)
@@ -148,7 +148,7 @@ def resolve_environment_context(
 
     if not head:
         if spell_id:
-            spell_vars = HydraSpellContext.objects.filter(spell_id=spell_id)
+            spell_vars = CNSSpellContext.objects.filter(spell_id=spell_id)
             for var in spell_vars:
                 if var.key:
                     context_data[var.key] = var.value
@@ -158,12 +158,12 @@ def resolve_environment_context(
         context_data.update(head.blackboard)
 
     if head.spell:
-        spell_vars = HydraSpellContext.objects.filter(spell=head.spell)
+        spell_vars = CNSSpellContext.objects.filter(spell=head.spell)
         for var in spell_vars:
             if var.key:
                 context_data[var.key] = var.value
     if head.node:
-        node_vars = HydraSpellBookNodeContext.objects.filter(node=head.node)
+        node_vars = CNSSpellBookNodeContext.objects.filter(node=head.node)
         for var in node_vars:
             if var.key:
                 context_data[var.key] = var.value

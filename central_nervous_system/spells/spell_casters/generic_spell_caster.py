@@ -10,7 +10,7 @@ from typing import List, Optional
 from asgiref.sync import sync_to_async
 
 from environments.variable_renderer import VariableRenderer
-from central_nervous_system.models import HydraHead, HydraHeadStatus
+from central_nervous_system.models import CNSHead, CNSHeadStatus
 from central_nervous_system.spells.spell_casters.begin_play_node import begin_play
 from central_nervous_system.spells.spell_casters.spell_handlers.version_metadata_handler import (
     update_version_metadata,
@@ -71,7 +71,7 @@ class AsyncLogManager:
     Separates System Output (Execution Log) from Game Output (Spell Log).
     """
 
-    def __init__(self, head: HydraHead, flush_size=50, flush_interval=1.0):
+    def __init__(self, head: CNSHead, flush_size=50, flush_interval=1.0):
         self.head = head
         self.exec_buffer: List[str] = []
         self.spell_buffer: List[str] = []
@@ -134,7 +134,7 @@ class AsyncLogManager:
         """
         try:
             await sync_to_async(self.head.refresh_from_db)(fields=['status'])
-            if self.head.status_id == HydraHeadStatus.ABORTED:
+            if self.head.status_id == CNSHeadStatus.ABORTED:
                 raise ConnectionAbortedError('Hydra Head Aborted by User')
             await sync_to_async(self.head.save)(
                 update_fields=['execution_log', 'application_log']
@@ -154,10 +154,10 @@ class GenericSpellCaster:
     STATUS_STREAMING_LOGS = 100
 
     STATUSES_WHICH_HALT = [
-        HydraHeadStatus.FAILED,
-        HydraHeadStatus.ABORTED,
-        HydraHeadStatus.STOPPING,
-        HydraHeadStatus.STOPPED,
+        CNSHeadStatus.FAILED,
+        CNSHeadStatus.ABORTED,
+        CNSHeadStatus.STOPPING,
+        CNSHeadStatus.STOPPED,
     ]
 
     EXECUTION_LOG_FIELD = 'execution_log'
@@ -168,9 +168,9 @@ class GenericSpellCaster:
     def __init__(self, head_id: uuid.UUID):
         self.head_id = head_id
         self.verbose_logging = True
-        self.head: Optional[HydraHead] = None
+        self.head: Optional[CNSHead] = None
         self.spell = None
-        self.status = HydraHeadStatus.CREATED
+        self.status = CNSHeadStatus.CREATED
         self.logger: Optional[AsyncLogManager] = None
         self.stop_event = asyncio.Event()
 
@@ -180,7 +180,7 @@ class GenericSpellCaster:
         try:
             self._load_head_sync()
         except Exception as e:
-            logger.error(f'FATAL: Could not load HydraHead {self.head_id}: {e}')
+            logger.error(f'FATAL: Could not load CNSHead {self.head_id}: {e}')
             return
 
         if sys.platform == 'win32':
@@ -247,7 +247,7 @@ class GenericSpellCaster:
             await asyncio.sleep(check_interval)
             await sync_to_async(self.head.refresh_from_db)(fields=['status'])
 
-            if self.head.status_id == HydraHeadStatus.ABORTED:
+            if self.head.status_id == CNSHeadStatus.ABORTED:
                 if self.logger:
                     await self.logger.write_immediate(
                         '\n[ABORT] Received Kill Signal.\n'
@@ -255,7 +255,7 @@ class GenericSpellCaster:
                 raise ConnectionAbortedError('Aborted by User')
 
             # Graceful Stop Signal Check
-            if self.head.status_id == HydraHeadStatus.STOPPING:
+            if self.head.status_id == CNSHeadStatus.STOPPING:
                 if not self.stop_event.is_set():
                     # Signal the pipeline loop
                     self.stop_event.set()
@@ -265,13 +265,13 @@ class GenericSpellCaster:
 
     async def _cast_spell(self):
         self._log_info(f'Launching {self.spell.name}')
-        await self._update_status(HydraHeadStatus.RUNNING)
+        await self._update_status(CNSHeadStatus.RUNNING)
 
         await self._executable_router()
 
         if self.status not in self.STATUSES_WHICH_HALT:
-            self.status = HydraHeadStatus.SUCCESS
-            await self._update_status(HydraHeadStatus.SUCCESS)
+            self.status = CNSHeadStatus.SUCCESS
+            await self._update_status(CNSHeadStatus.SUCCESS)
 
     async def _executable_router(self):
         """
@@ -354,14 +354,14 @@ class GenericSpellCaster:
                     exit_code = event.code
         except Exception as e:
             await self.logger.write_immediate(f'\n[STREAM ERROR] {e}\n')
-            self.status = HydraHeadStatus.FAILED
-            await self._update_status(HydraHeadStatus.FAILED)
+            self.status = CNSHeadStatus.FAILED
+            await self._update_status(CNSHeadStatus.FAILED)
             return
 
         # Check for Graceful Stop Outcome
         await sync_to_async(self.head.refresh_from_db)(fields=['status'])
 
-        if self.head.status_id == HydraHeadStatus.STOPPING:
+        if self.head.status_id == CNSHeadStatus.STOPPING:
             await self.logger.write_immediate(
                 '\n[STOP] Process finished. Draining log buffer (3s)...\n'
             )
@@ -369,7 +369,7 @@ class GenericSpellCaster:
             await asyncio.sleep(3.0)
             await self.logger.flush()
 
-            new_status = HydraHeadStatus.STOPPED
+            new_status = CNSHeadStatus.STOPPED
             await self.logger.write_immediate(
                 '[STOP] Buffer Drained. Stopped.\n'
             )
@@ -382,12 +382,12 @@ class GenericSpellCaster:
                 await self.logger.write_immediate(
                     f'\n[EXIT] Success (Code {exit_code}).\n'
                 )
-                new_status = HydraHeadStatus.SUCCESS
+                new_status = CNSHeadStatus.SUCCESS
             else:
                 await self.logger.write_immediate(
                     f'\n[EXIT] Process failed with code {exit_code}\n'
                 )
-                new_status = HydraHeadStatus.FAILED
+                new_status = CNSHeadStatus.FAILED
 
         await self._save_head(fields=[self.BLACKBOARD_FIELD])
 
@@ -414,21 +414,21 @@ class GenericSpellCaster:
         except Exception as e:
             self.head.application_log = f'Native Handler Exception: {str(e)}'
             await self._save_head(fields=[self.APPLICATION_LOG_FIELD])
-            self.status = HydraHeadStatus.FAILED
+            self.status = CNSHeadStatus.FAILED
             return
 
         self.head.application_log = output_log
         await self._save_head(fields=[self.APPLICATION_LOG_FIELD])
 
         new_status = (
-            HydraHeadStatus.SUCCESS
+            CNSHeadStatus.SUCCESS
             if return_code == 200
-            else HydraHeadStatus.FAILED
+            else CNSHeadStatus.FAILED
         )
         await self._update_status(new_status)
 
     def _load_head_sync(self):
-        self.head = HydraHead.objects.select_related(
+        self.head = CNSHead.objects.select_related(
             'spell',
             'spell__talos_executable',
             'target',
@@ -469,7 +469,7 @@ class GenericSpellCaster:
                 self.head.execution_log += (
                     f'\n[FATAL SYSTEM ERROR]\n{str(e)}\n{trace}\n'
                 )
-                self.head.status_id = HydraHeadStatus.FAILED
+                self.head.status_id = CNSHeadStatus.FAILED
                 self.head.save(update_fields=['execution_log', 'status'])
             except Exception as db_err:
                 logger.error(
@@ -487,7 +487,7 @@ class GenericSpellCaster:
                 pass
         if self.head:
             try:
-                await self._update_status(HydraHeadStatus.FAILED)
+                await self._update_status(CNSHeadStatus.FAILED)
             except Exception:
                 pass
-        self.status = HydraHeadStatus.FAILED
+        self.status = CNSHeadStatus.FAILED

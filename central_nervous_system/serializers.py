@@ -12,20 +12,20 @@ from central_nervous_system import constants
 from central_nervous_system.utils import get_active_environment, resolve_environment_context
 
 from .models import (
-    HydraDistributionMode,
-    HydraHead,
-    HydraSpawn,
-    HydraSpell,
-    HydraSpellArgumentAssignment,
-    HydraSpellbook,
-    HydraSpellbookConnectionWire,
-    HydraSpellbookNode,
-    HydraSpellBookNodeContext,
-    HydraSpellContext,
-    HydraSpellTarget,
+    CNSDistributionMode,
+    CNSHead,
+    CNSSpawn,
+    CNSSpell,
+    CNSSpellArgumentAssignment,
+    CNSSpellbook,
+    CNSSpellbookConnectionWire,
+    CNSSpellbookNode,
+    CNSSpellBookNodeContext,
+    CNSSpellContext,
+    CNSSpellTarget,
     HydraStatusID,
-    HydraTag,
-    HydraWireType,
+    CNSTag,
+    CNSWireType,
 )
 
 # ==========================================
@@ -69,9 +69,9 @@ class GraphWireLayout:
 
 def _get_wire_status_label(type_id: int) -> str:
     mapping = {
-        HydraWireType.TYPE_FLOW: constants.TYPE_FLOW_STR,
-        HydraWireType.TYPE_SUCCESS: constants.TYPE_SUCCESS_STR,
-        HydraWireType.TYPE_FAILURE: constants.TYPE_FAIL_STR,
+        CNSWireType.TYPE_FLOW: constants.TYPE_FLOW_STR,
+        CNSWireType.TYPE_SUCCESS: constants.TYPE_SUCCESS_STR,
+        CNSWireType.TYPE_FAILURE: constants.TYPE_FAIL_STR,
     }
     return mapping.get(type_id, constants.TYPE_FLOW_STR)
 
@@ -91,11 +91,11 @@ def _get_ui_data(json_str: str) -> Dict[str, int]:
         return {constants.KEY_X: 100, constants.KEY_Y: 100}
 
 
-def _extract_variables_from_spell(spell: Optional[HydraSpell]) -> set:
+def _extract_variables_from_spell(spell: Optional[CNSSpell]) -> set:
     variables = set()
     if not spell:
         return variables
-    for a in spell.hydraspellargumentassignment_set.all():
+    for a in spell.cnsspellargumentassignment_set.all():
         found = re.findall(r'\{\{\s*(\w+)\s*\}\}', a.argument.argument)
         variables.update(found)
     for s in spell.switches.all():
@@ -109,7 +109,7 @@ def _extract_variables_from_spell(spell: Optional[HydraSpell]) -> set:
 
 
 def _build_context_matrix_data(
-    spell: Optional[HydraSpell],
+    spell: Optional[CNSSpell],
     global_context: Dict[str, Any],
     node_overrides: Dict[str, Any],
 ) -> List[ContextMatrixRow]:
@@ -208,7 +208,7 @@ class DynamicFieldsModelSerializer(serializers.ModelSerializer):
                     self.fields.pop(field_name)
 
 
-class HydraSpawnLightSerializer(DynamicFieldsModelSerializer):
+class CNSSpawnLightSerializer(DynamicFieldsModelSerializer):
     """
     Ultra-lightweight serializer for list views.
     Drops massive context_data blocks.
@@ -221,7 +221,7 @@ class HydraSpawnLightSerializer(DynamicFieldsModelSerializer):
     is_active = serializers.BooleanField(read_only=True)
 
     class Meta:
-        model = HydraSpawn
+        model = CNSSpawn
         fields = [
             'id',
             'status_name',
@@ -234,7 +234,7 @@ class HydraSpawnLightSerializer(DynamicFieldsModelSerializer):
         ]
 
 
-class HydraSpawnSerializer(DynamicFieldsModelSerializer):
+class CNSSpawnSerializer(DynamicFieldsModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     spellbook_name = serializers.CharField(
         source='spellbook.name', read_only=True
@@ -244,63 +244,63 @@ class HydraSpawnSerializer(DynamicFieldsModelSerializer):
     )
 
     class Meta:
-        model = HydraSpawn
+        model = CNSSpawn
         fields = ALL_FIELDS
 
 
-class HydraTagSerializer(serializers.ModelSerializer):
+class CNSTagSerializer(serializers.ModelSerializer):
     class Meta:
-        model = HydraTag
+        model = CNSTag
         fields = ALL_FIELDS
 
 
-class HydraDistributionModeSerializer(serializers.ModelSerializer):
+class CNSDistributionModeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = HydraDistributionMode
+        model = CNSDistributionMode
         fields = ALL_FIELDS
 
 
-class HydraSpellContextSerializer(serializers.ModelSerializer):
+class CNSSpellContextSerializer(serializers.ModelSerializer):
     class Meta:
-        model = HydraSpellContext
+        model = CNSSpellContext
         fields = ALL_FIELDS
 
 
-class HydraSpellTargetSerializer(serializers.ModelSerializer):
+class CNSSpellTargetSerializer(serializers.ModelSerializer):
     target_name = serializers.CharField(
         source='target.hostname', read_only=True
     )
 
     class Meta:
-        model = HydraSpellTarget
+        model = CNSSpellTarget
         fields = ALL_FIELDS
 
 
-class HydraSpellArgumentAssignmentSerializer(serializers.ModelSerializer):
+class CNSSpellArgumentAssignmentSerializer(serializers.ModelSerializer):
     argument_name = serializers.CharField(
         source='argument.argument', read_only=True
     )
 
     class Meta:
-        model = HydraSpellArgumentAssignment
+        model = CNSSpellArgumentAssignment
         fields = ALL_FIELDS
 
 
-class HydraSpellSerializer(serializers.ModelSerializer):
-    tags = HydraTagSerializer(many=True, read_only=True)
+class CNSSpellSerializer(serializers.ModelSerializer):
+    tags = CNSTagSerializer(many=True, read_only=True)
     executable_name = serializers.CharField(
         source='talos_executable.name', read_only=True
     )
     rendered_command = serializers.SerializerMethodField()
-    args = HydraSpellArgumentAssignmentSerializer(
-        source='hydraspellargumentassignment_set', many=True, read_only=True
+    args = CNSSpellArgumentAssignmentSerializer(
+        source='cnsspellargumentassignment_set', many=True, read_only=True
     )
-    targets = HydraSpellTargetSerializer(
+    targets = CNSSpellTargetSerializer(
         source='specific_targets', many=True, read_only=True
     )
 
     class Meta:
-        model = HydraSpell
+        model = CNSSpell
         fields = ALL_FIELDS
 
     def get_rendered_command(self, obj) -> str:
@@ -309,18 +309,18 @@ class HydraSpellSerializer(serializers.ModelSerializer):
         return ' '.join(cmd_list)
 
 
-class HydraSpellBookNodeContextSerializer(serializers.ModelSerializer):
+class CNSSpellBookNodeContextSerializer(serializers.ModelSerializer):
     class Meta:
-        model = HydraSpellBookNodeContext
+        model = CNSSpellBookNodeContext
         fields = ALL_FIELDS
 
 
-class HydraSpellbookConnectionWireSerializer(serializers.ModelSerializer):
+class CNSSpellbookConnectionWireSerializer(serializers.ModelSerializer):
     type_name = serializers.CharField(source='type.name', read_only=True)
     status_id = serializers.SerializerMethodField()
 
     class Meta:
-        model = HydraSpellbookConnectionWire
+        model = CNSSpellbookConnectionWire
         fields = ALL_FIELDS
 
     def get_status_id(self, obj):
@@ -341,19 +341,19 @@ class HydraSpellbookConnectionWireSerializer(serializers.ModelSerializer):
         return data
 
 
-class HydraSpellbookNodeSerializer(serializers.ModelSerializer):
+class CNSSpellbookNodeSerializer(serializers.ModelSerializer):
     spell_name = serializers.CharField(source='spell.name', read_only=True)
     invoked_spellbook_name = serializers.CharField(
         source='invoked_spellbook.name', read_only=True
     )
     ui_json = serializers.JSONField(initial=dict)
     has_override = serializers.SerializerMethodField()
-    context_overrides = HydraSpellBookNodeContextSerializer(
-        source='hydraspellbooknodecontext_set', many=True, read_only=True
+    context_overrides = CNSSpellBookNodeContextSerializer(
+        source='cnsspellbooknodecontext_set', many=True, read_only=True
     )
 
     class Meta:
-        model = HydraSpellbookNode
+        model = CNSSpellbookNode
         fields = ALL_FIELDS
 
     def get_has_override(self, obj):
@@ -373,15 +373,15 @@ class HydraSpellbookNodeSerializer(serializers.ModelSerializer):
         return ret
 
 
-class HydraSpellbookSerializer(serializers.ModelSerializer):
+class CNSSpellbookSerializer(serializers.ModelSerializer):
     environment_name = serializers.CharField(
         source='environment.name', read_only=True
     )
     node_count = serializers.IntegerField(source='nodes.count', read_only=True)
-    tags = HydraTagSerializer(many=True, read_only=True)
+    tags = CNSTagSerializer(many=True, read_only=True)
 
     class Meta:
-        model = HydraSpellbook
+        model = CNSSpellbook
         fields = ALL_FIELDS
 
 
@@ -392,7 +392,7 @@ class HydraGraphLayoutSerializer(serializers.ModelSerializer):
     connections = serializers.SerializerMethodField()
 
     class Meta:
-        model = HydraSpellbook
+        model = CNSSpellbook
         fields = [constants.KEY_ID, 'nodes', 'connections']
 
     def get_nodes(self, obj):
@@ -403,7 +403,7 @@ class HydraGraphLayoutSerializer(serializers.ModelSerializer):
         for n in nodes:
             ui = _get_ui_data(n.ui_json)
             is_delegated = bool(n.invoked_spellbook_id)
-            is_root = (n.spell_id == HydraSpell.BEGIN_PLAY) and not is_delegated
+            is_root = (n.spell_id == CNSSpell.BEGIN_PLAY) and not is_delegated
             title = (
                 n.invoked_spellbook.name
                 if is_delegated
@@ -450,7 +450,7 @@ class HydraNodeDetailsSerializer(serializers.ModelSerializer):
     node_id = serializers.UUIDField(source='id', read_only=True)
 
     class Meta:
-        model = HydraSpellbookNode
+        model = CNSSpellbookNode
         fields = [
             'node_id',
             'name',
@@ -463,27 +463,27 @@ class HydraNodeDetailsSerializer(serializers.ModelSerializer):
         env = obj.spellbook.environment if obj.spellbook else None
         global_context = VariableRenderer.extract_variables(env)
         overrides = {
-            c.key: c.value for c in obj.hydraspellbooknodecontext_set.all()
+            c.key: c.value for c in obj.cnsspellbooknodecontext_set.all()
         }
 
         dtos = _build_context_matrix_data(obj.spell, global_context, overrides)
         return ContextMatrixRowSerializer(dtos, many=True).data
 
 
-class HydraSpawnStatusSerializer(serializers.ModelSerializer):
+class CNSSpawnStatusSerializer(serializers.ModelSerializer):
     status_label = serializers.CharField(source='status.name', read_only=True)
     nodes = serializers.SerializerMethodField()
     is_active = serializers.BooleanField(read_only=True)
 
     class Meta:
-        model = HydraSpawn
+        model = CNSSpawn
         fields = ['status', 'status_label', 'is_active', 'nodes']
 
     def get_nodes(self, obj):
         node_status_map = {}
         if obj.spellbook:
             begin_play_node = obj.spellbook.nodes.filter(
-                spell_id=HydraSpell.BEGIN_PLAY
+                spell_id=CNSSpell.BEGIN_PLAY
             ).first()
             if begin_play_node:
                 node_status_map[str(begin_play_node.id)] = {
@@ -508,17 +508,17 @@ class HydraSpawnStatusSerializer(serializers.ModelSerializer):
         return node_status_map
 
 
-class HydraSpawnCreateSerializer(serializers.Serializer):
+class CNSSpawnCreateSerializer(serializers.Serializer):
     spellbook_id = serializers.UUIDField()
     environment_id = serializers.UUIDField(required=False, allow_null=True)
 
     def validate_spellbook_id(self, value):
-        if not HydraSpellbook.objects.filter(id=value).exists():
+        if not CNSSpellbook.objects.filter(id=value).exists():
             raise serializers.ValidationError('Spellbook not found.')
         return value
 
 
-class HydraHeadSerializer(serializers.ModelSerializer):
+class CNSHeadSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     target_name = serializers.CharField(
         source='target.hostname', read_only=True
@@ -527,11 +527,11 @@ class HydraHeadSerializer(serializers.ModelSerializer):
     average_delta = serializers.SerializerMethodField()
 
     class Meta:
-        model = HydraHead
+        model = CNSHead
         exclude = ['application_log', 'execution_log']
 
     def get_average_delta(self, obj):
-        return HydraHead.objects.filter(spell=obj.spell).aggregate(
+        return CNSHead.objects.filter(spell=obj.spell).aggregate(
             Avg('delta')
         )['delta__avg']
 
@@ -548,7 +548,7 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
     reasoning_session_id = serializers.SerializerMethodField()
 
     class Meta:
-        model = HydraHead
+        model = CNSHead
         fields = [
             constants.KEY_ID,
             'status',
@@ -588,7 +588,7 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
             return f'Error resolving command: {str(e)}'
 
     def get_average_delta(self, obj):
-        return HydraHead.objects.filter(spell=obj.spell).aggregate(
+        return CNSHead.objects.filter(spell=obj.spell).aggregate(
             Avg('delta')
         )['delta__avg']
 
@@ -607,7 +607,7 @@ class HydraNodeTelemetrySerializer(serializers.ModelSerializer):
         if obj.node:
             overrides = {
                 c.key: c.value
-                for c in obj.node.hydraspellbooknodecontext_set.all()
+                for c in obj.node.cnsspellbooknodecontext_set.all()
             }
 
         # 4. Build Matrix using helper
@@ -629,7 +629,7 @@ class HydraSwimlaneSerializer(serializers.ModelSerializer):
     history = serializers.SerializerMethodField()
     subgraphs = serializers.SerializerMethodField()
 
-    # Expose ALL properties defined on the HydraSpawn model
+    # Expose ALL properties defined on the CNSSpawn model
     is_active = serializers.BooleanField(read_only=True)  # legacy
     is_alive = serializers.BooleanField(read_only=True)
     is_dead = serializers.BooleanField(read_only=True)
@@ -642,7 +642,7 @@ class HydraSwimlaneSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = HydraSpawn
+        model = CNSSpawn
         fields = [
             'id',
             'status',
@@ -664,11 +664,11 @@ class HydraSwimlaneSerializer(serializers.ModelSerializer):
 
     def get_live_children(self, obj):
         heads = obj.live_heads.all().order_by('created')
-        return HydraHeadSerializer(heads, many=True).data
+        return CNSHeadSerializer(heads, many=True).data
 
     def get_history(self, obj):
         heads = obj.finished_heads.all().order_by('created')
-        return HydraHeadSerializer(heads, many=True).data
+        return CNSHeadSerializer(heads, many=True).data
 
     def get_subgraphs(self, obj):
         # Fetch children spawns

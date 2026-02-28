@@ -2,7 +2,7 @@ import pytest
 from django.test import Client
 from django.urls import reverse
 
-from central_nervous_system.models import HydraSpawn, HydraSpawnStatus, HydraSpellbook
+from central_nervous_system.models import CNSSpawn, CNSSpawnStatus, CNSSpellbook
 
 
 @pytest.mark.django_db
@@ -15,13 +15,13 @@ class TestUIPersistence:
     def setup_method(self):
         self.client = Client()
         # Setup minimal DB state for valid rendering
-        self.status_active = HydraSpawnStatus.objects.get_or_create(
+        self.status_active = CNSSpawnStatus.objects.get_or_create(
             id=3, defaults={'name': 'Running'}
         )[0]
-        self.book = HydraSpellbook.objects.create(
+        self.book = CNSSpellbook.objects.create(
             name='Persistence Test Protocol'
         )
-        self.spawn = HydraSpawn.objects.create(
+        self.spawn = CNSSpawn.objects.create(
             spellbook=self.book, status=self.status_active
         )
 

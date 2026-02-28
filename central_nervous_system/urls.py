@@ -85,7 +85,7 @@ urlpatterns = [
     ),
     path(
         'spawn/<uuid:pk>/download/',
-        views.HydraSpawnDownloadView.as_view(),
+        views.CNSSpawnDownloadView.as_view(),
         name='hydra_spawn_download',
     ),
 ]

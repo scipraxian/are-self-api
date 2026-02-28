@@ -326,7 +326,7 @@
     "pk": 17,
     "fields": {
       "created": "2026-02-23T15:09:02.523Z",
-      "description": "Parse Unreal Engine logs for a specific HydraHead and return a structural summary.",
+      "description": "Parse Unreal Engine logs for a specific CNSHead and return a structural summary.",
       "modified": "2026-02-23T15:09:02.523Z",
       "name": "mcp_run_unreal_diagnostic_parser",
       "is_async": true,
