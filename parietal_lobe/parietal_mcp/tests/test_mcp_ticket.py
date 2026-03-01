@@ -1,189 +1,308 @@
-import asyncio
-
 import pytest
 from asgiref.sync import sync_to_async
+from django.test import TransactionTestCase
 
+from central_nervous_system.models import Spike, SpikeTrain
+from frontal_lobe.models import ReasoningSession, ReasoningStatusID
 from parietal_lobe.parietal_mcp.gateway import ParietalMCP
+from parietal_lobe.parietal_mcp.mcp_ticket import TicketConstants
 from prefrontal_cortex.models import (
-    PFCComment,
     PFCEpic,
-    PFCItemStatus,
     PFCStory,
     PFCTask,
 )
 
 
-@pytest.fixture
-def pfc_setup():
-    """Seeds the test database with required Agile statuses."""
-    backlog, _ = PFCItemStatus.objects.get_or_create(
-        id=1, defaults={'name': 'Backlog'}
-    )
-    in_progress, _ = PFCItemStatus.objects.get_or_create(
-        id=3, defaults={'name': 'In Progress'}
-    )
-    return {'backlog': backlog, 'in_progress': in_progress}
+class MCPTicketTest(TransactionTestCase):
+    """
+    Integration tests for the Agile Board MCP Tool.
+    Utilizes the canonical production fixtures to ensure status mappings and constraints are accurate.
+    """
 
+    fixtures = [
+        'environments/fixtures/initial_data.json',
+        'talos_agent/fixtures/initial_data.json',
+        'talos_agent/fixtures/test_agents.json',
+        'central_nervous_system/fixtures/initial_data.json',
+        'frontal_lobe/fixtures/initial_data.json',
+        'parietal_lobe/fixtures/initial_data.json',
+        'prefrontal_cortex/fixtures/initial_data.json',
+    ]
 
-@pytest.mark.django_db(transaction=True)
-@pytest.mark.asyncio
-async def test_mcp_ticket_create_hierarchy(pfc_setup):
-    """Verifies the AI can create a full Epic -> Story -> Task chain."""
+    def setUp(self):
+        """Synchronous DB setup that runs before each async test method."""
+        self.spike_train = SpikeTrain.objects.create(status_id=1)
 
-    # 1. Create Epic
-    epic_res = await ParietalMCP.execute(
-        'mcp_ticket',
-        {
-            'action': 'CREATE',
-            'item_type': 'EPIC',
-            'name': 'Multiplayer Overhaul',
-            'description': 'Fix the sync issues.',
-        },
-    )
-    assert 'Success: Created EPIC' in epic_res
+        self.spike = Spike.objects.create(
+            spike_train=self.spike_train,
+            status_id=1,
+            blackboard={'persona': 'ORACLE'},
+        )
 
-    # Extract UUID (e.g., "Success: Created EPIC '...' with ID: 1234-...")
-    epic_id = epic_res.split('ID: ')[1].strip()
+        self.session = ReasoningSession.objects.create(
+            spike=self.spike, status_id=ReasoningStatusID.ACTIVE
+        )
+        self.session_id = str(self.session.id)
 
-    # 2. Create Story (With DoR Fields)
-    story_res = await ParietalMCP.execute(
-        'mcp_ticket',
-        {
-            'action': 'CREATE',
-            'item_type': 'STORY',
-            'parent_id': epic_id,
-            'name': 'Sync Player Transform',
-            'perspective': 'As a client...',
-            'assertions': 'Assert X, Y, Z match.',
-        },
-    )
-    assert 'Success: Created STORY' in story_res
-    story_id = story_res.split('ID: ')[1].strip()
+    @pytest.mark.asyncio
+    async def test_validation_rule_1_pao_enforcer(self):
+        """Rule 1: Rejects Story creation/updates missing Perspective, Assertions, or Outside."""
+        res1 = await ParietalMCP.execute(
+            'mcp_ticket',
+            {
+                'action': 'CREATE',
+                'item_type': 'STORY',
+                'parent_id': '00000000-0000-0000-0000-000000000000',
+                'name': 'Lazy Story',
+            },
+        )
+        self.assertIn(TicketConstants.ERR_PAO, res1)
 
-    # 3. Create Task
-    task_res = await ParietalMCP.execute(
-        'mcp_ticket',
-        {
-            'action': 'CREATE',
-            'item_type': 'TASK',
-            'parent_id': story_id,
-            'name': 'Write RPCs',
-            'status': 'In Progress',
-        },
-    )
-    assert 'Success: Created TASK' in task_res
-    task_id = task_res.split('ID: ')[1].strip()
+        res2 = await ParietalMCP.execute(
+            'mcp_ticket',
+            {
+                'action': 'CREATE',
+                'item_type': 'STORY',
+                'parent_id': '00000000-0000-0000-0000-000000000000',
+                'name': 'Almost Story',
+                'perspective': 'As a user...',
+                'assertions': 'Assert True',
+            },
+        )
+        self.assertIn(TicketConstants.ERR_PAO, res2)
 
-    # --- VERIFY DATABASE INTEGRITY ---
-    epic = await sync_to_async(PFCEpic.objects.get)(id=epic_id)
-    assert epic.name == 'Multiplayer Overhaul'
-    assert epic.status.name == 'Backlog'
+    @pytest.mark.asyncio
+    async def test_validation_rule_2_dor_gatekeeper(self):
+        """Rule 2: Rejects Status promotion to SELECTED without Dependencies/Demo Specs."""
+        epic = await sync_to_async(PFCEpic.objects.create)(
+            name='Epic 1', status_id=1
+        )
 
-    story = await sync_to_async(PFCStory.objects.get)(id=story_id)
-    assert str(story.epic_id) == epic_id
-    assert story.assertions == 'Assert X, Y, Z match.'
+        story_res = await ParietalMCP.execute(
+            'mcp_ticket',
+            {
+                'action': 'CREATE',
+                'item_type': 'STORY',
+                'parent_id': str(epic.id),
+                'name': 'Valid Story',
+                'perspective': 'P',
+                'assertions': 'A',
+                'outside': 'O',
+            },
+        )
+        story_id = story_res.split('ID: ')[1].strip()
 
-    task = await sync_to_async(PFCTask.objects.get)(id=task_id)
-    assert str(task.story_id) == story_id
-    assert task.status.name == 'In Progress'
+        update_res = await ParietalMCP.execute(
+            'mcp_ticket',
+            {
+                'action': 'UPDATE',
+                'item_type': 'STORY',
+                'item_id': story_id,
+                'status': 'SELECTED_FOR_DEVELOPMENT',
+            },
+        )
+        self.assertIn(TicketConstants.ERR_DOR_DEMO, update_res)
 
+    @pytest.mark.asyncio
+    async def test_validation_rule_3_complexity_shield(self):
+        """Rule 3: Prevents the Oracle PM from assigning complexity points."""
+        epic = await sync_to_async(PFCEpic.objects.create)(
+            name='Epic 1', status_id=1
+        )
 
-@pytest.mark.django_db(transaction=True)
-@pytest.mark.asyncio
-async def test_mcp_ticket_read_and_comment(pfc_setup):
-    """Verifies the AI can leave comments and read the full context window of a ticket."""
-    epic = await sync_to_async(PFCEpic.objects.create)(
-        name='Context Epic',
-        description='Testing comments',
-        status=pfc_setup['backlog'],
-    )
-    epic_id = str(epic.id)
+        res = await ParietalMCP.execute(
+            'mcp_ticket',
+            {
+                'action': 'CREATE',
+                'item_type': 'STORY',
+                'parent_id': str(epic.id),
+                'name': 'Bidding Story',
+                'perspective': 'P',
+                'assertions': 'A',
+                'outside': 'O',
+                'complexity': 5,
+                'session_id': self.session_id,
+            },
+        )
+        self.assertIn(TicketConstants.ERR_COMPLEXITY, res)
 
-    # Add Comment via MCP
-    comment_res = await ParietalMCP.execute(
-        'mcp_ticket',
-        {
-            'action': 'COMMENT',
-            'item_type': 'EPIC',
-            'item_id': epic_id,
-            'text': 'This is a neural analysis comment.',
-        },
-    )
-    assert 'Success: Added comment' in comment_res
+    @pytest.mark.asyncio
+    async def test_validation_rule_4_breadcrumb_reward(self):
+        """Rule 4: Grants silent +XP and +Focus for commenting."""
+        epic = await sync_to_async(PFCEpic.objects.create)(
+            name='Epic 1', status_id=1
+        )
 
-    # Read via MCP
-    read_res = await ParietalMCP.execute(
-        'mcp_ticket',
-        {
-            'action': 'READ',
-            'item_type': 'EPIC',
-            'item_id': epic_id,
-        },
-    )
+        from parietal_lobe.parietal_mcp.mcp_ticket import mcp_ticket
 
-    # Assertions
-    assert '--- EPIC: Context Epic [Backlog] ---' in read_res
-    assert 'Description:\nTesting comments' in read_res
-    assert 'This is a neural analysis comment.' in read_res
+        yield_obj = await mcp_ticket(
+            action='COMMENT',
+            item_type='EPIC',
+            item_id=str(epic.id),
+            text='A highly analytical thought.',
+        )
 
+        self.assertIn('Success: Added comment', yield_obj.message)
+        self.assertEqual(yield_obj.focus_yield, 3)
+        self.assertEqual(yield_obj.xp_yield, 15)
 
-@pytest.mark.django_db(transaction=True)
-@pytest.mark.asyncio
-async def test_mcp_ticket_update(pfc_setup):
-    """Verifies the AI can mutate existing tickets."""
-    # Create a dummy task
-    epic = await sync_to_async(PFCEpic.objects.create)(name='Dummy Epic')
-    story = await sync_to_async(PFCStory.objects.create)(
-        name='Dummy Story', epic=epic
-    )
-    task = await sync_to_async(PFCTask.objects.create)(
-        name='Old Task', status=pfc_setup['backlog'], story=story
-    )
-    task_id = str(task.id)
+    @pytest.mark.asyncio
+    async def test_mcp_ticket_create_hierarchy(self):
+        """Verifies the AI can create a full Epic -> Story -> Task chain."""
+        epic_res = await ParietalMCP.execute(
+            'mcp_ticket',
+            {
+                'action': 'CREATE',
+                'item_type': 'EPIC',
+                'name': 'Multiplayer Overhaul',
+                'description': 'Fix the sync issues.',
+            },
+        )
+        self.assertIn('Success: Created EPIC', epic_res)
+        epic_id = epic_res.split('ID: ')[1].strip()
 
-    update_res = await ParietalMCP.execute(
-        'mcp_ticket',
-        {
-            'action': 'UPDATE',
-            'item_type': 'TASK',
-            'item_id': task_id,
-            'name': 'New Task Name',
-            'status': 'In Progress',
-        },
-    )
-    assert 'Success: Updated TASK' in update_res
+        story_res = await ParietalMCP.execute(
+            'mcp_ticket',
+            {
+                'action': 'CREATE',
+                'item_type': 'STORY',
+                'parent_id': epic_id,
+                'name': 'Sync Player Transform',
+                'perspective': 'As a client...',
+                'assertions': 'Assert X, Y, Z match.',
+                'outside': 'Must not break Z.',
+            },
+        )
+        self.assertIn('Success: Created STORY', story_res)
+        story_id = story_res.split('ID: ')[1].strip()
 
-    # Verify DB
-    await sync_to_async(task.refresh_from_db)()
-    assert task.name == 'New Task Name'
-    assert task.status.name == 'In Progress'
+        task_res = await ParietalMCP.execute(
+            'mcp_ticket',
+            {
+                'action': 'CREATE',
+                'item_type': 'TASK',
+                'parent_id': story_id,
+                'name': 'Write RPCs',
+                'status': 'IN_PROGRESS',
+            },
+        )
+        self.assertIn('Success: Created TASK', task_res)
+        task_id = task_res.split('ID: ')[1].strip()
 
+        # FIX: Explicitly eager-load the status relations using select_related
+        epic = await sync_to_async(
+            PFCEpic.objects.select_related('status').get
+        )(id=epic_id)
+        self.assertEqual(epic.name, 'Multiplayer Overhaul')
+        self.assertEqual(epic.status.name, 'Backlog')
 
-@pytest.mark.django_db(transaction=True)
-@pytest.mark.asyncio
-async def test_mcp_ticket_error_handling(pfc_setup):
-    """Verifies edge cases and invalid parameters are caught gracefully."""
+        story = await sync_to_async(
+            PFCStory.objects.select_related('status').get
+        )(id=story_id)
+        self.assertEqual(str(story.epic_id), epic_id)
+        self.assertEqual(story.assertions, 'Assert X, Y, Z match.')
 
-    # 1. Invalid Action
-    res1 = await ParietalMCP.execute(
-        'mcp_ticket', {'action': 'DESTROY', 'item_type': 'EPIC'}
-    )
-    assert 'Error: Invalid action' in res1
+        task = await sync_to_async(
+            PFCTask.objects.select_related('status').get
+        )(id=task_id)
+        self.assertEqual(str(task.story_id), story_id)
+        self.assertEqual(task.status.name, 'In Progress')
 
-    # 2. Create Story without Parent
-    res2 = await ParietalMCP.execute(
-        'mcp_ticket',
-        {'action': 'CREATE', 'item_type': 'STORY', 'name': 'Orphan Story'},
-    )
-    assert "Error: 'parent_id' (Epic UUID) is required" in res2
+    @pytest.mark.asyncio
+    async def test_mcp_ticket_read_and_comment(self):
+        """Verifies the AI can leave comments and read the full context window of a ticket."""
+        epic = await sync_to_async(PFCEpic.objects.create)(
+            name='Context Epic',
+            description='Testing comments',
+            status_id=1,
+        )
+        epic_id = str(epic.id)
 
-    # 3. Read missing item
-    res3 = await ParietalMCP.execute(
-        'mcp_ticket',
-        {
-            'action': 'READ',
-            'item_type': 'TASK',
-            'item_id': '00000000-0000-0000-0000-000000000000',
-        },
-    )
-    assert 'Error: Referenced object not found.' in res3
+        comment_res = await ParietalMCP.execute(
+            'mcp_ticket',
+            {
+                'action': 'COMMENT',
+                'item_type': 'EPIC',
+                'item_id': epic_id,
+                'text': 'This is a neural analysis comment.',
+            },
+        )
+        self.assertIn('Success: Added comment', comment_res)
+
+        read_res = await ParietalMCP.execute(
+            'mcp_ticket',
+            {
+                'action': 'READ',
+                'item_type': 'EPIC',
+                'item_id': epic_id,
+            },
+        )
+
+        self.assertIn('--- EPIC: Context Epic [Backlog] ---', read_res)
+        self.assertIn('Description:\nTesting comments', read_res)
+        self.assertIn('This is a neural analysis comment.', read_res)
+
+    @pytest.mark.asyncio
+    async def test_mcp_ticket_update(self):
+        """Verifies the AI can mutate existing tickets."""
+        epic = await sync_to_async(PFCEpic.objects.create)(
+            name='Dummy Epic', status_id=1
+        )
+        story = await sync_to_async(PFCStory.objects.create)(
+            name='Dummy Story', epic=epic, status_id=1
+        )
+        task = await sync_to_async(PFCTask.objects.create)(
+            name='Old Task', status_id=1, story=story
+        )
+        task_id = str(task.id)
+
+        update_res = await ParietalMCP.execute(
+            'mcp_ticket',
+            {
+                'action': 'UPDATE',
+                'item_type': 'TASK',
+                'item_id': task_id,
+                'name': 'New Task Name',
+                'status': 'IN_PROGRESS',
+            },
+        )
+        self.assertIn('Success: Updated TASK', update_res)
+
+        # FIX: Re-fetch with select_related instead of calling refresh_from_db()
+        fresh_task = await sync_to_async(
+            PFCTask.objects.select_related('status').get
+        )(id=task_id)
+        self.assertEqual(fresh_task.name, 'New Task Name')
+        self.assertEqual(fresh_task.status.name, 'In Progress')
+
+    @pytest.mark.asyncio
+    async def test_mcp_ticket_error_handling(self):
+        """Verifies edge cases and invalid parameters are caught gracefully."""
+        res1 = await ParietalMCP.execute(
+            'mcp_ticket', {'action': 'DESTROY', 'item_type': 'EPIC'}
+        )
+        self.assertIn('Error: Invalid action', res1)
+
+        # FIX: Provide dummy PAO fields so the bouncer lets it through to the missing parent check
+        res2 = await ParietalMCP.execute(
+            'mcp_ticket',
+            {
+                'action': 'CREATE',
+                'item_type': 'STORY',
+                'name': 'Orphan Story',
+                'perspective': 'P',
+                'assertions': 'A',
+                'outside': 'O',
+            },
+        )
+        self.assertIn("Error: 'parent_id' (Epic UUID) is required", res2)
+
+        res3 = await ParietalMCP.execute(
+            'mcp_ticket',
+            {
+                'action': 'READ',
+                'item_type': 'TASK',
+                'item_id': '00000000-0000-0000-0000-000000000000',
+            },
+        )
+        self.assertIn('Error: Referenced object not found.', res3)
