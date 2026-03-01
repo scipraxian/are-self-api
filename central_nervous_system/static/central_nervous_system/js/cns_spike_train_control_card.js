@@ -1,8 +1,8 @@
 class SpikeTrainControlCardController {
-    constructor(element, spawnId, spellbookId) {
+    constructor(element, spikeTrainId, pathwayId) {
         this.el = element;
-        this.spawnId = spawnId;
-        this.spellbookId = spellbookId;
+        this.spikeTrainId = spikeTrainId;
+        this.pathwayId = pathwayId;
         this.csrfToken = window.djangoContext?.csrfToken;
 
         this.stopBtn = this.el.querySelector('.js-btn-stop');
@@ -23,7 +23,7 @@ class SpikeTrainControlCardController {
         this.stopBtn.style.pointerEvents = 'none';
 
         try {
-            await fetch(`/api/v1/spike_trains/${this.spawnId}/stop/`, {
+            await fetch(`/api/v1/spike_trains/${this.spikeTrainId}/stop/`, {
                 method: 'POST',
                 headers: {'X-CSRFToken': this.csrfToken}
             });
@@ -34,7 +34,7 @@ class SpikeTrainControlCardController {
 
     async handleRerun() {
         try {
-            await fetch(`/central_nervous_system/launch/${this.spellbookId}/?no_redirect=true`, {
+            await fetch(`/central_nervous_system/launch/${this.pathwayId}/?no_redirect=true`, {
                 method: 'POST',
                 headers: {'X-CSRFToken': this.csrfToken}
             });

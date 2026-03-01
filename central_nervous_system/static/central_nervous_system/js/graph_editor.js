@@ -1,8 +1,8 @@
 /**
  * Talos Graph Editor Logic
  * Built by Antigravity - Senior Frontend Engineer Refactor
+ * 100% DDD Compliant (Neuron, Axon, SpikeTrain)
  */
-
 
 class GraphEditor {
     constructor() {
@@ -10,41 +10,39 @@ class GraphEditor {
         this.connections = [];
 
         // Context from Django
-        this.bookId = window.djangoContext?.bookId;
-        this.spawnId = window.djangoContext?.spawnId;
+        this.pathwayId = window.djangoContext?.pathwayId;
+        this.spikeTrainId = window.djangoContext?.spikeTrainId;
         this.mode = window.djangoContext?.mode || 'edit';
         this.csrfToken =
             window.djangoContext?.csrfToken ||
             document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-        this.apiUrl = `/central_nervous_system/graph/${this.bookId}/`;
+        this.apiUrl = `/central_nervous_system/graph/${this.pathwayId}/`;
 
         // Monitor Mode State
-        this.isMonitorMode = !!this.spawnId;
-        this.nodeHeadMap = {}; // node_id -> head_id
+        this.isMonitorMode = !!this.spikeTrainId;
 
         // DOM Elements
         this.container = document.getElementById('editor-container');
-        this.nodesLayer = document.getElementById('neurons-layer');
+        this.neuronsLayer = document.getElementById('neurons-layer');
         this.svgLayer = document.getElementById('svg-layer');
         this.connGroup = document.getElementById('connections-group');
         this.grid = document.getElementById('canvas-grid');
         this.tempLine = document.getElementById('temp-line');
-        this.libraryContainer = document.getElementById('node-library');
+        this.libraryContainer = document.getElementById('node-library'); // DOM id remains node-library
         this.searchInput = document.getElementById('node-search');
 
         // Inspector
         this.inspector = document.getElementById('inspector');
         this.inspectorHeaderSub = this.inspector ? this.inspector.querySelector('.sub-id') : null;
         this.inspectorContent = this.inspector ? this.inspector.querySelector('.inspector-content') : null;
-        this.activeNodeId = null;
-        this.contextSaveTimer = null;
+        this.activeNeuronId = null;
 
         // State
         this.panX = 0;
         this.panY = 0;
         this.zoom = 1;
         this.isPanning = false;
-        this.isDraggingNode = null;
+        this.isDraggingNeuron = null;
         this.activeWire = null;
 
         this.dragOffset = {x: 0, y: 0};
@@ -58,9 +56,8 @@ class GraphEditor {
     }
 
     async init() {
-        // Safety Check
-        if (!this.bookId) {
-            console.error("GraphEditor: Missing Book ID.");
+        if (!this.pathwayId) {
+            console.error("GraphEditor: Missing Pathway ID.");
             return;
         }
 
@@ -84,15 +81,13 @@ class GraphEditor {
 
     // --- API Interactions ---
 
-    async updateBookName(name) {
-        const result = await this.apiFetch('update_book', {
+    async updatePathwayName(name) {
+        const result = await this.apiFetch('update_pathway', {
             method: 'POST',
             body: JSON.stringify({name: name})
         });
         if (result && result.status === 'updated') {
             document.title = `${result.name} | Talos Graph Editor`;
-        } else {
-            console.error("Failed to update name");
         }
     }
 
@@ -171,7 +166,7 @@ class GraphEditor {
                         return;
                     }
                     if (effector.is_book) {
-                        e.dataTransfer.setData('invoked-book-id', effector.id);
+                        e.dataTransfer.setData('invoked-pathway-id', effector.id);
                         e.dataTransfer.setData('type', 'subgraph');
                     } else {
                         e.dataTransfer.setData('effector-id', effector.id);
@@ -192,33 +187,33 @@ class GraphEditor {
         // Clear existing
         this.neurons = [];
         this.connections = [];
-        this.nodesLayer.innerHTML = '';
+        this.neuronsLayer.innerHTML = '';
         this.connGroup.innerHTML = '';
 
-        // Add Nodes
+        // Add Neurons
         if (data.neurons) {
             data.neurons.forEach(n => {
-                this.addNode(n.title, n.x, n.y, {
+                this.addNeuron(n.title, n.x, n.y, {
                     id: n.id,
-                    spell_id: n.spell_id,
-                    invoked_spellbook_id: n.invoked_spellbook_id,
-                    isRoot: n.is_root, // Trust Server Logic
-                    skipApi: true // IMPORTANT: This flag allows bypassing the monitor lock
+                    effector_id: n.effector_id,
+                    invoked_pathway_id: n.invoked_pathway_id,
+                    isRoot: n.is_root,
+                    skipApi: true
                 });
             });
         }
 
-        // Add Connections
-        if (data.connections) {
-            data.connections.forEach(c => {
+        // Add Axons (Connections)
+        if (data.axons) {
+            data.axons.forEach(c => {
                 let color = 'rgba(255, 255, 255, 0.8)';
                 if (c.status_id === 'success') color = 'rgba(76, 175, 80, 0.8)';
                 if (c.status_id === 'fail') color = 'rgba(244, 67, 54, 0.8)';
 
                 this.connections.push({
-                    fromNode: c.from_node_id,
+                    fromNeuron: c.source_neuron_id,
                     fromPort: this.getPortIndexFromStatus(c.status_id),
-                    toNode: c.to_node_id,
+                    toNeuron: c.target_neuron_id,
                     toPort: 0,
                     color: color
                 });
@@ -241,7 +236,7 @@ class GraphEditor {
         return 'flow';
     }
 
-    getSelectedNodes() {
+    getSelectedNeurons() {
         return this.neurons.filter(n => {
             const el = document.getElementById(n.id);
             return el && el.classList.contains('selected');
@@ -250,13 +245,13 @@ class GraphEditor {
 
     updateEyeballState() {
         const btn = document.getElementById('view-toggle');
-        const selected = this.getSelectedNodes();
+        const selected = this.getSelectedNeurons();
         if (this.isMonitorMode && selected.length === 2) {
-            btn.style.color = '#a855f7'; // Purple for Battle Mode
+            btn.style.color = '#a855f7';
             btn.title = "Open Multihead Comparison";
             btn.style.transform = "scale(1.2)";
         } else {
-            btn.style.color = ''; // Default
+            btn.style.color = '';
             btn.title = "Toggle View Mode";
             btn.style.transform = "";
         }
@@ -265,16 +260,10 @@ class GraphEditor {
     setupEventListeners() {
         // Panning logic
         this.container.addEventListener('mousedown', (e) => {
-            // Allow panning in monitor mode
             if (e.button === 1 || (e.button === 0 && e.target === this.container)) {
                 this.isPanning = true;
                 this.container.style.cursor = 'grabbing';
-                // Clear selection if clicking on empty space
                 if (e.target === this.container) {
-                    this.neurons.forEach(n => {
-                        const el = document.getElementById(n.id);
-                        if (el) el.classList.remove('selected');
-                    });
                     this.neurons.forEach(n => {
                         const el = document.getElementById(n.id);
                         if (el) el.classList.remove('selected');
@@ -309,14 +298,13 @@ class GraphEditor {
                 this.updateCanvasTransform();
             }
 
-            // [FIX] Disable Dragging in Monitor Mode
-            if (this.isDraggingNode && !this.isMonitorMode) {
-                const node = this.isDraggingNode;
+            if (this.isDraggingNeuron && !this.isMonitorMode) {
+                const neuron = this.isDraggingNeuron;
                 const coords = this.toCanvasCoords(e.clientX, e.clientY);
-                node.x = coords.x - (this.dragOffset.x / this.zoom);
-                node.y = coords.y - (this.dragOffset.y / this.zoom);
-                this.updateNodeDOM(node);
-                this.updateWiresForNode(node.id);
+                neuron.x = coords.x - (this.dragOffset.x / this.zoom);
+                neuron.y = coords.y - (this.dragOffset.y / this.zoom);
+                this.updateNeuronDOM(neuron);
+                this.updateWiresForNeuron(neuron.id);
             }
 
             if (this.activeWire) {
@@ -336,23 +324,23 @@ class GraphEditor {
                 this.completeWire(e.target);
             }
 
-            if (this.isDraggingNode) {
-                const node = this.isDraggingNode;
-                const el = document.getElementById(node.id);
+            if (this.isDraggingNeuron) {
+                const neuron = this.isDraggingNeuron;
+                const el = document.getElementById(neuron.id);
                 if (el) el.style.zIndex = 'auto';
 
-                if (!this.isMonitorMode && !node.id.toString().startsWith('temp_')) {
-                    await this.apiFetch('move_node', {
+                if (!this.isMonitorMode && !neuron.id.toString().startsWith('temp_')) {
+                    await this.apiFetch('move_neuron', {
                         method: 'POST',
                         body: JSON.stringify({
-                            node_id: node.id,
-                            x: Math.round(node.x),
-                            y: Math.round(node.y)
+                            neuron_id: neuron.id,
+                            x: Math.round(neuron.x),
+                            y: Math.round(neuron.y)
                         })
                     });
                 }
             }
-            this.isDraggingNode = null;
+            this.isDraggingNeuron = null;
         });
 
 
@@ -367,13 +355,12 @@ class GraphEditor {
             });
         }
 
-        // Title Edit Logic
         const titleInput = document.getElementById('pathway-name');
         if (titleInput && !this.isMonitorMode) {
             titleInput.addEventListener('change', (e) => {
                 const newName = e.target.value.trim();
                 if (newName) {
-                    this.updateBookName(newName);
+                    this.updatePathwayName(newName);
                     titleInput.blur();
                 }
             });
@@ -387,7 +374,6 @@ class GraphEditor {
             startBtn.addEventListener('click', () => this.startExecution());
         }
 
-        // Stop Button Logic
         const stopBtn = document.getElementById('stop-btn');
         if (stopBtn) {
             stopBtn.addEventListener('click', () => {
@@ -407,15 +393,15 @@ class GraphEditor {
         }
 
         document.getElementById('view-toggle').addEventListener('click', () => {
-            const selected = this.getSelectedNodes();
+            const selected = this.getSelectedNeurons();
 
             if (this.isMonitorMode && selected.length === 2) {
                 // BATTLE MODE
-                const h1 = selected[0].head_id;
-                const h2 = selected[1].head_id;
+                const s1 = selected[0].spike_id;
+                const s2 = selected[1].spike_id;
 
-                if (h1 && h2) {
-                    const url = `/central_nervous_system/battle/${this.spawnId}/?h1=${h1}&h2=${h2}`;
+                if (s1 && s2) {
+                    const url = `/central_nervous_system/battle/${this.spikeTrainId}/?s1=${s1}&s2=${s2}`;
                     window.location.href = url;
                 } else {
                     alert("One or more selected neurons have not run yet (No Spike ID).");
@@ -434,15 +420,15 @@ class GraphEditor {
         this.container.addEventListener('drop', (e) => {
             if (this.isMonitorMode) return;
             e.preventDefault();
-            const spellId = e.dataTransfer.getData('effector-id');
-            const invokedBookId = e.dataTransfer.getData('invoked-book-id');
-            const spellName = e.dataTransfer.getData('effector-name');
+            const effectorId = e.dataTransfer.getData('effector-id');
+            const invokedPathwayId = e.dataTransfer.getData('invoked-pathway-id');
+            const effectorName = e.dataTransfer.getData('effector-name');
 
-            if (spellId || invokedBookId) {
+            if (effectorId || invokedPathwayId) {
                 const coords = this.toCanvasCoords(e.clientX, e.clientY);
-                this.addNode(spellName, coords.x - 100, coords.y - 40, {
-                    spell_id: spellId,
-                    invoked_spellbook_id: invokedBookId || null
+                this.addNeuron(effectorName, coords.x - 100, coords.y - 40, {
+                    effector_id: effectorId,
+                    invoked_pathway_id: invokedPathwayId || null
                 });
             }
         });
@@ -451,105 +437,106 @@ class GraphEditor {
     updateCanvasTransform() {
         const transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.zoom})`;
         this.grid.style.transform = transform;
-        this.nodesLayer.style.transform = transform;
+        this.neuronsLayer.style.transform = transform;
         this.svgLayer.style.transform = transform;
     }
 
-    async addNode(title, x, y, options = {}) {
-        // [FIX] Allow neurons if skipApi is true (loading from server), otherwise block user actions
+    async addNeuron(title, x, y, options = {}) {
         if (this.isMonitorMode && !options.skipApi) return;
 
         const tempId = options.id || 'temp_' + Math.random().toString(36).substr(2, 9);
-        const isDelegated = !!options.invoked_spellbook_id;
-        const isRoot = options.isRoot || (options.spell_id === 1 && !isDelegated);
+        const isDelegated = !!options.invoked_pathway_id;
+        const isRoot = options.isRoot || (options.effector_id === 1 && !isDelegated);
 
-        const node = {
+        const neuron = {
             id: tempId,
             title,
             x,
             y,
-            spell_id: options.spell_id,
-            invoked_spellbook_id: options.invoked_spellbook_id,
-            head_id: null,
-            child_spawn_id: null,
+            effector_id: options.effector_id,
+            invoked_pathway_id: options.invoked_pathway_id,
+            spike_id: null,
+            child_spike_train_id: null,
             inputs: isRoot ? 0 : (options.inputs !== undefined ? options.inputs : 1),
             outputs: options.outputs !== undefined ? options.outputs : 3,
             canDelete: options.canDelete !== undefined ? options.canDelete : true,
             isRoot: options.isRoot || false
         };
 
-        this.neurons.push(node);
-        this.createNodeDOM(node);
+        this.neurons.push(neuron);
+        this.createNeuronDOM(neuron);
         this.updateCounts();
 
-        if (!options.skipApi && (options.spell_id || options.invoked_spellbook_id)) {
-            const nodeEl = document.getElementById(tempId);
-            nodeEl.classList.add('pending');
+        if (!options.skipApi && (options.effector_id || options.invoked_pathway_id)) {
+            const neuronEl = document.getElementById(tempId);
+            neuronEl.classList.add('pending');
 
-            const result = await this.apiFetch('add_node', {
+            const result = await this.apiFetch('add_neuron', {
                 method: 'POST',
                 body: JSON.stringify({
-                    spell_id: options.spell_id,
-                    invoked_spellbook_id: options.invoked_spellbook_id,
+                    effector_id: options.effector_id,
+                    invoked_pathway_id: options.invoked_pathway_id,
                     x: Math.round(x),
                     y: Math.round(y)
                 })
             });
 
             if (result && result.id) {
-                nodeEl.id = result.id;
-                node.id = result.id;
-                nodeEl.querySelectorAll('.pin').forEach(pin => {
-                    pin.dataset.nodeId = result.id;
+                neuronEl.id = result.id;
+                neuron.id = result.id;
+                neuronEl.querySelectorAll('.pin').forEach(pin => {
+                    pin.dataset.neuronId = result.id;
                 });
-                nodeEl.classList.remove('pending');
+                neuronEl.classList.remove('pending');
             } else {
-                this.deleteNode(tempId, true);
+                this.deleteNeuron(tempId, true);
             }
         }
-        return node;
+        return neuron;
     }
 
-    createNodeDOM(node) {
-        const nodeEl = document.createElement('div');
-        nodeEl.className = 'neuron';
-        nodeEl.id = node.id;
-        nodeEl.style.left = `${node.x}px`;
-        nodeEl.style.top = `${node.y}px`;
+    createNeuronDOM(neuron) {
+        const neuronEl = document.createElement('div');
+        // VITAL: Kept 'node' for CSS styling compatibility
+        neuronEl.className = 'node';
+        neuronEl.id = neuron.id;
+        neuronEl.style.left = `${neuron.x}px`;
+        neuronEl.style.top = `${neuron.y}px`;
 
         const eyeTitle = this.mode === 'monitor' ? 'Flight Recorder' : 'Edit Spell';
-        const isDelegated = !!node.invoked_spellbook_id;
-        nodeEl.innerHTML = `
-            <div class="node-header ${node.isRoot ? 'root-header' : ''} ${isDelegated ? 'delegated-gradient' : ''}">
-                <h4>${isDelegated ? '🌀 ' + node.title : node.title}</h4>
+        const isDelegated = !!neuron.invoked_pathway_id;
+
+        neuronEl.innerHTML = `
+            <div class="node-header ${neuron.isRoot ? 'root-header' : ''} ${isDelegated ? 'delegated-gradient' : ''}">
+                <h4>${isDelegated ? '🌀 ' + neuron.title : neuron.title}</h4>
                 <div class="node-controls">
                     <button class="mini-btn view" title="${eyeTitle}">👁️</button>
-                    ${node.isRoot && !this.isMonitorMode ? `
+                    ${neuron.isRoot && !this.isMonitorMode ? `
                         <button class="mini-btn play" title="Start from here">▶️</button>
                     ` : ''}
-                    ${node.canDelete && !this.isMonitorMode ? '<button class="delete-btn">&times;</button>' : ''}
+                    ${neuron.canDelete && !this.isMonitorMode ? '<button class="delete-btn">&times;</button>' : ''}
                 </div>
             </div>
             <div class="node-body">
                 <div class="ports-column port-input-wrapper">
-                    ${node.inputs > 0 ? `
+                    ${neuron.inputs > 0 ? `
                     <div class="port-item">
-                        <div class="pin input" data-node-id="${node.id}" data-port-index="0" data-port-type="input"></div>
+                        <div class="pin input" data-neuron-id="${neuron.id}" data-port-index="0" data-port-type="input"></div>
                         <span>Input</span>
                     </div>` : ''}
                 </div>
                 <div class="ports-column port-output-wrapper">
                     <div class="port-item">
-                        <div class="pin output-white" data-node-id="${node.id}" data-port-index="0" data-port-type="output"></div>
-                        <span>${node.isRoot ? '' : 'Flow'}</span>
+                        <div class="pin output-white" data-neuron-id="${neuron.id}" data-port-index="0" data-port-type="output"></div>
+                        <span>${neuron.isRoot ? '' : 'Flow'}</span>
                     </div>
-                    ${!node.isRoot ? `
+                    ${!neuron.isRoot ? `
                     <div class="port-item">
-                        <div class="pin output-success" data-node-id="${node.id}" data-port-index="1" data-port-type="output"></div>
+                        <div class="pin output-success" data-neuron-id="${neuron.id}" data-port-index="1" data-port-type="output"></div>
                         <span>Success</span>
                     </div>
                     <div class="port-item">
-                        <div class="pin output-error" data-node-id="${node.id}" data-port-index="2" data-port-type="output"></div>
+                        <div class="pin output-error" data-neuron-id="${neuron.id}" data-port-index="2" data-port-type="output"></div>
                         <span>Fail</span>
                     </div>` : ''}
                 </div>
@@ -557,48 +544,44 @@ class GraphEditor {
         `;
 
         // Selection
-        nodeEl.addEventListener('mousedown', (e) => {
-            e.stopPropagation(); // Prevent container click
+        neuronEl.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
 
-            // Multi-Select Logic
             if (e.shiftKey) {
-                if (nodeEl.classList.contains('selected')) {
-                    nodeEl.classList.remove('selected');
+                if (neuronEl.classList.contains('selected')) {
+                    neuronEl.classList.remove('selected');
                 } else {
-                    nodeEl.classList.add('selected');
+                    neuronEl.classList.add('selected');
                 }
             } else {
-                // Standard Single Select
                 this.neurons.forEach(n => {
                     const el = document.getElementById(n.id);
                     if (el) el.classList.remove('selected');
                 });
-                nodeEl.classList.add('selected');
+                neuronEl.classList.add('selected');
             }
 
-            // Update "Big Eyeball" State
             this.updateEyeballState();
 
-            // Inspector Logic
             if (!e.shiftKey) {
-                this.openInspector(node);
+                this.openInspector(neuron);
             }
         });
 
-        // Dragging (Disable in Monitor Mode)
-        const header = nodeEl.querySelector('.node-header');
+        // Dragging
+        const header = neuronEl.querySelector('.node-header');
         header.addEventListener('mousedown', (e) => {
             if (this.isMonitorMode) return;
             if (e.target.closest('.node-controls') || e.target.closest('.mini-btn') || e.target.closest('.delete-btn')) return;
-            if (nodeEl.classList.contains('pending')) return;
+            if (neuronEl.classList.contains('pending')) return;
             e.stopPropagation();
 
-            nodeEl.style.zIndex = 1000;
-            this.nodesLayer.appendChild(nodeEl);
-            this.isDraggingNode = node;
+            neuronEl.style.zIndex = 1000;
+            this.neuronsLayer.appendChild(neuronEl);
+            this.isDraggingNeuron = neuron;
             this.lastMousePos = {x: e.clientX, y: e.clientY};
 
-            const rect = nodeEl.getBoundingClientRect();
+            const rect = neuronEl.getBoundingClientRect();
             this.dragOffset = {
                 x: e.clientX - rect.left,
                 y: e.clientY - rect.top
@@ -606,28 +589,28 @@ class GraphEditor {
         });
 
         // Eye Button
-        nodeEl.querySelector('.mini-btn.view').addEventListener('mousedown', (e) => e.stopPropagation());
-        nodeEl.querySelector('.mini-btn.view').addEventListener('click', (e) => {
+        neuronEl.querySelector('.mini-btn.view').addEventListener('mousedown', (e) => e.stopPropagation());
+        neuronEl.querySelector('.mini-btn.view').addEventListener('click', (e) => {
             e.stopPropagation();
             if (this.mode === 'monitor') {
-                if (node.child_spawn_id) {
-                    window.location.href = `/central_nervous_system/monitor/${node.child_spawn_id}/?full=True`;
-                } else if (node.head_id) {
-                    window.open(`/central_nervous_system/spike/${node.head_id}/`, '_self');
+                if (neuron.child_spike_train_id) {
+                    window.location.href = `/central_nervous_system/monitor/${neuron.child_spike_train_id}/?full=True`;
+                } else if (neuron.spike_id) {
+                    window.open(`/central_nervous_system/spike/${neuron.spike_id}/`, '_self');
                 } else {
                     alert('Has not run yet');
                 }
             } else {
-                if (node.invoked_spellbook_id) {
-                    window.open(`/central_nervous_system/graph/editor/${node.invoked_spellbook_id}/`, '_self');
+                if (neuron.invoked_pathway_id) {
+                    window.open(`/central_nervous_system/graph/editor/${neuron.invoked_pathway_id}/`, '_self');
                 } else {
-                    window.open(`/admin/central_nervous_system/cnsspellbooknode/${node.id}/change/`);
+                    window.open(`/admin/central_nervous_system/neuron/${neuron.id}/change/`);
                 }
             }
         });
 
         // Play Button
-        const playBtn = nodeEl.querySelector('.mini-btn.play');
+        const playBtn = neuronEl.querySelector('.mini-btn.play');
         if (playBtn) {
             playBtn.addEventListener('mousedown', (e) => e.stopPropagation());
             playBtn.addEventListener('click', (e) => {
@@ -637,55 +620,53 @@ class GraphEditor {
         }
 
         // Delete Button
-        const delBtn = nodeEl.querySelector('.delete-btn');
+        const delBtn = neuronEl.querySelector('.delete-btn');
         if (delBtn) {
             delBtn.addEventListener('mousedown', (e) => e.stopPropagation());
             delBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.deleteNode(node.id);
+                this.deleteNeuron(neuron.id);
             });
         }
 
-        // Wire Creation (Disable in Monitor Mode)
-        nodeEl.querySelectorAll('.pin.output-white, .pin.output-success, .pin.output-error').forEach(pin => {
+        // Wire Creation
+        neuronEl.querySelectorAll('.pin.output-white, .pin.output-success, .pin.output-error').forEach(pin => {
             pin.addEventListener('mousedown', (e) => {
                 if (this.isMonitorMode) return;
-                if (nodeEl.classList.contains('pending')) return;
+                if (neuronEl.classList.contains('pending')) return;
                 e.stopPropagation();
                 this.startWire(pin);
             });
         });
 
         if (this.isMonitorMode) {
-            const viewBtn = nodeEl.querySelector('.mini-btn.view');
+            const viewBtn = neuronEl.querySelector('.mini-btn.view');
             if (viewBtn) {
                 viewBtn.disabled = true;
                 viewBtn.style.opacity = '0.3';
             }
         }
 
-        this.nodesLayer.appendChild(nodeEl);
+        this.neuronsLayer.appendChild(neuronEl);
     }
 
-    updateNodeDOM(node) {
-        const el = document.getElementById(node.id);
+    updateNeuronDOM(neuron) {
+        const el = document.getElementById(neuron.id);
         if (el) {
-            el.style.left = `${node.x}px`;
-            el.style.top = `${node.y}px`;
+            el.style.left = `${neuron.x}px`;
+            el.style.top = `${neuron.y}px`;
         }
     }
 
-    async deleteNode(nodeId, localOnly = false) {
-        // [FIX] Allow deleting if localOnly (used during redraw), otherwise block
+    async deleteNeuron(neuronId, localOnly = false) {
         if (this.isMonitorMode && !localOnly) return;
 
-        // Ensure stricter string comparison just in case
-        const targetId = String(nodeId);
-        const node = this.neurons.find(n => String(n.id) === targetId);
-        if (!node) return;
+        const targetId = String(neuronId);
+        const neuron = this.neurons.find(n => String(n.id) === targetId);
+        if (!neuron) return;
 
         this.neurons = this.neurons.filter(n => String(n.id) !== targetId);
-        this.connections = this.connections.filter(c => String(c.fromNode) !== targetId && String(c.toNode) !== targetId);
+        this.connections = this.connections.filter(c => String(c.fromNeuron) !== targetId && String(c.toNeuron) !== targetId);
 
         const el = document.getElementById(targetId);
         if (el) el.remove();
@@ -694,14 +675,14 @@ class GraphEditor {
         this.updateCounts();
 
         if (!localOnly && !targetId.startsWith('temp_')) {
-            await this.apiFetch('delete_node', {
+            await this.apiFetch('delete_neuron', {
                 method: 'POST',
-                body: JSON.stringify({node_id: targetId})
+                body: JSON.stringify({neuron_id: targetId})
             });
         }
     }
 
-    // --- Wire Logic ---
+    // --- Axon (Wire) Logic ---
     toCanvasCoords(clientX, clientY) {
         const rect = this.container.getBoundingClientRect();
         return {
@@ -714,7 +695,7 @@ class GraphEditor {
         const rect = pin.getBoundingClientRect();
         const coords = this.toCanvasCoords(rect.left + rect.width / 2, rect.top + rect.height / 2);
         this.activeWire = {
-            fromNode: pin.dataset.nodeId,
+            fromNeuron: pin.dataset.neuronId,
             fromPort: parseInt(pin.dataset.portIndex),
             color: window.getComputedStyle(pin).backgroundColor,
             startX: coords.x,
@@ -733,22 +714,21 @@ class GraphEditor {
     async completeWire(target) {
         this.tempLine.style.display = 'none';
         if (target && target.classList.contains('pin') && target.dataset.portType === 'input') {
-            const toNodeId = target.dataset.nodeId;
+            const toNeuronId = target.dataset.neuronId;
             const toPortIdx = parseInt(target.dataset.portIndex);
-
             const exists = this.connections.some(c =>
-                c.fromNode === this.activeWire.fromNode &&
+                c.fromNeuron === this.activeWire.fromNeuron &&
                 c.fromPort === this.activeWire.fromPort &&
-                c.toNode === toNodeId &&
+                c.toNeuron === toNeuronId &&
                 c.toPort === toPortIdx
             );
 
-            if (!exists && toNodeId !== this.activeWire.fromNode) {
+            if (!exists && toNeuronId !== this.activeWire.fromNeuron) {
                 const type = this.getStatusFromColor(this.activeWire.color);
                 const connection = {
-                    fromNode: this.activeWire.fromNode,
+                    fromNeuron: this.activeWire.fromNeuron,
                     fromPort: this.activeWire.fromPort,
-                    toNode: toNodeId,
+                    toNeuron: toNeuronId,
                     toPort: toPortIdx,
                     color: this.activeWire.color
                 };
@@ -760,8 +740,8 @@ class GraphEditor {
                 await this.apiFetch('connect', {
                     method: 'POST',
                     body: JSON.stringify({
-                        source_node_id: connection.fromNode,
-                        target_node_id: connection.toNode,
+                        source_neuron_id: connection.fromNeuron,
+                        target_neuron_id: connection.toNeuron,
                         type: type
                     })
                 });
@@ -773,8 +753,8 @@ class GraphEditor {
     renderConnections() {
         this.connGroup.innerHTML = '';
         this.connections.forEach((conn, index) => {
-            const startPin = this.getPinElement(conn.fromNode, 'output', conn.fromPort);
-            const endPin = this.getPinElement(conn.toNode, 'input', conn.toPort);
+            const startPin = this.getPinElement(conn.fromNeuron, 'output', conn.fromPort);
+            const endPin = this.getPinElement(conn.toNeuron, 'input', conn.toPort);
 
             if (startPin && endPin) {
                 const sRect = startPin.getBoundingClientRect();
@@ -787,28 +767,22 @@ class GraphEditor {
                 path.setAttribute('d', this.calculateBezierPath(start.x, start.y, end.x, end.y));
                 path.setAttribute('stroke', conn.color);
 
-                // [VISUAL] Highlight active axons
                 let strokeWidth = 2;
                 if (this.isMonitorMode) {
-                    const srcNode = this.neurons.find(n => n.id === conn.fromNode);
-                    if (srcNode && srcNode.status_id) {
-                        // Flow (0) or Success (1) -> Thick if Success (4)
-                        if ((conn.fromPort === 0 || conn.fromPort === 1) && srcNode.status_id === 4) strokeWidth = 5;
-                        // Failure (2) -> Thick if Failed (5)
-                        if (conn.fromPort === 2 && srcNode.status_id === 5) strokeWidth = 5;
-                        // Running (2/3) -> Medium thickness for Flow
-                        if (conn.fromPort === 0 && (srcNode.status_id === 2 || srcNode.status_id === 3)) strokeWidth = 3;
+                    const srcNeuron = this.neurons.find(n => n.id === conn.fromNeuron);
+                    if (srcNeuron && srcNeuron.status_id) {
+                        if ((conn.fromPort === 0 || conn.fromPort === 1) && srcNeuron.status_id === 4) strokeWidth = 5;
+                        if (conn.fromPort === 2 && srcNeuron.status_id === 5) strokeWidth = 5;
+                        if (conn.fromPort === 0 && (srcNeuron.status_id === 2 || srcNeuron.status_id === 3)) strokeWidth = 3;
                     }
                 }
                 path.setAttribute('stroke-width', strokeWidth);
 
                 path.setAttribute('class', 'wire');
 
-                // Allow deleting axons only in edit mode
                 if (!this.isMonitorMode) {
-                    // [FIX] Listen for 'contextmenu' instead of 'dblclick'
                     path.addEventListener('contextmenu', (e) => {
-                        e.preventDefault(); // Stop Browser Menu
+                        e.preventDefault();
                         this.removeConnection(index);
                     });
                 }
@@ -817,10 +791,9 @@ class GraphEditor {
         });
     }
 
-    updateWiresForNode(nodeId) {
-        // [FIX] Coerce to string to ensure matching works even if data types differ (Int vs String)
-        const targetStr = String(nodeId);
-        const involved = this.connections.some(c => String(c.fromNode) === targetStr || String(c.toNode) === targetStr);
+    updateWiresForNeuron(neuronId) {
+        const targetStr = String(neuronId);
+        const involved = this.connections.some(c => String(c.fromNeuron) === targetStr || String(c.toNeuron) === targetStr);
         if (involved) this.renderConnections();
     }
 
@@ -836,17 +809,17 @@ class GraphEditor {
         await this.apiFetch('disconnect', {
             method: 'POST',
             body: JSON.stringify({
-                source_node_id: conn.fromNode,
-                target_node_id: conn.toNode
+                source_neuron_id: conn.fromNeuron,
+                target_neuron_id: conn.toNeuron
             })
         });
     }
 
-    getPinElement(nodeId, type, index) {
-        const nodeEl = document.getElementById(nodeId);
-        if (!nodeEl) return null;
+    getPinElement(neuronId, type, index) {
+        const neuronEl = document.getElementById(neuronId);
+        if (!neuronEl) return null;
         let selector = `.pin[data-port-type="${type}"][data-port-index="${index}"]`;
-        return nodeEl.querySelector(selector);
+        return neuronEl.querySelector(selector);
     }
 
     calculateBezierPath(x1, y1, x2, y2) {
@@ -889,11 +862,10 @@ class GraphEditor {
         this.setExecutionStatus('running', 'Spawning Process...');
         const result = await this.apiFetch('launch/', {
             method: 'POST',
-            body: JSON.stringify({book_id: this.bookId})
+            body: JSON.stringify({pathway_id: this.pathwayId})
         });
         if (result && result.status === 'started') {
-            // this.setExecutionStatus('running', 'Process Active');
-            window.location.href = `/central_nervous_system/monitor/${result.spawn_id}/?full=True`;
+            window.location.href = `/central_nervous_system/monitor/${result.spike_train_id}/?full=True`;
         } else {
             this.setExecutionStatus('error', 'SpikeTrain Failed');
         }
@@ -912,28 +884,28 @@ class GraphEditor {
             if (el) el.classList.add('node-auto-layout');
         });
 
-        const startNode = this.neurons.find(n => n.isRoot) || this.neurons[0];
+        const startNeuron = this.neurons.find(n => n.isRoot) || this.neurons[0];
         const levels = new Map();
         const visited = new Set();
-        const queue = [{id: startNode.id, level: 0}];
+        const queue = [{id: startNeuron.id, level: 0}];
 
         while (queue.length > 0) {
             const {id, level} = queue.shift();
             if (visited.has(id)) continue;
             visited.add(id);
             levels.set(id, Math.max(levels.get(id) || 0, level));
-            const children = this.connections.filter(c => c.fromNode === id).map(c => c.toNode);
+            const children = this.connections.filter(c => c.fromNeuron === id).map(c => c.toNeuron);
             children.forEach(childId => queue.push({id: childId, level: level + 1}));
         }
 
-        this.neurons.forEach(node => {
-            if (!levels.has(node.id)) levels.set(node.id, 0);
+        this.neurons.forEach(neuron => {
+            if (!levels.has(neuron.id)) levels.set(neuron.id, 0);
         });
 
         const columnMap = new Map();
-        levels.forEach((level, nodeId) => {
+        levels.forEach((level, neuronId) => {
             if (!columnMap.has(level)) columnMap.set(level, []);
-            columnMap.get(level).push(nodeId);
+            columnMap.get(level).push(neuronId);
         });
 
         const COL_SPACING = 350;
@@ -941,17 +913,17 @@ class GraphEditor {
         const OFFSET_X = 100;
         const OFFSET_Y = 100;
 
-        columnMap.forEach((nodeIds, level) => {
-            nodeIds.forEach((nodeId, index) => {
-                const node = this.neurons.find(n => n.id === nodeId);
-                if (node) {
-                    node.x = OFFSET_X + level * COL_SPACING;
-                    node.y = OFFSET_Y + index * ROW_SPACING;
-                    this.updateNodeDOM(node);
+        columnMap.forEach((neuronIds, level) => {
+            neuronIds.forEach((neuronId, index) => {
+                const neuron = this.neurons.find(n => n.id === neuronId);
+                if (neuron) {
+                    neuron.x = OFFSET_X + level * COL_SPACING;
+                    neuron.y = OFFSET_Y + index * ROW_SPACING;
+                    this.updateNeuronDOM(neuron);
                     if (!this.isMonitorMode) {
-                        this.apiFetch('move_node', {
+                        this.apiFetch('move_neuron', {
                             method: 'POST',
-                            body: JSON.stringify({node_id: node.id, x: node.x, y: node.y})
+                            body: JSON.stringify({neuron_id: neuron.id, x: neuron.x, y: neuron.y})
                         });
                     }
                 }
@@ -974,13 +946,11 @@ class GraphEditor {
 
     // --- MONITORING LOGIC ---
     startPolling() {
-        // Store the interval ID so we can kill it later
         this.pollingInterval = setInterval(async () => {
-            const data = await this.apiFetch(`status?spawn_id=${this.spawnId}&t=${Date.now()}`);
+            const data = await this.apiFetch(`status?spike_train_id=${this.spikeTrainId}&t=${Date.now()}`);
             if (data) {
-                this.updateNodeStatuses(data.neurons || {});
+                this.updateNeuronStatuses(data.neurons || {});
 
-                // [FIX]: Stop polling if the overall spike_train is no longer active
                 if (data.status === 'Success' || data.status === 'Failed' || data.status === 'Aborted') {
                     console.log(`[MONITOR] SpikeTrain reached terminal state (${data.status}). Stopping poll.`);
                     clearInterval(this.pollingInterval);
@@ -990,25 +960,23 @@ class GraphEditor {
         }, 1000);
     }
 
-    updateNodeStatuses(statusMap) {
+    updateNeuronStatuses(statusMap) {
         let isAnyRunning = false;
-        this.neurons.forEach(node => {
-            const status = statusMap[node.id];
-            const dom = document.getElementById(node.id);
+        this.neurons.forEach(neuron => {
+            const status = statusMap[neuron.id];
+            const dom = document.getElementById(neuron.id);
             if (!dom || !status) return;
 
-            node.head_id = status.head_id;
-            node.child_spawn_id = status.child_spawn_id; // Capture Child SpikeTrain ID
-
-            node.status_id = status.status_id; // Store for wire logic
+            neuron.spike_id = status.spike_id;
+            neuron.child_spike_train_id = status.child_spike_train_id;
+            neuron.status_id = status.status_id;
 
             const header = dom.querySelector('.node-header');
             if (header) {
                 header.classList.remove('running', 'success', 'failed');
-                // CLEANUP: Reset ALL visual states
                 dom.classList.remove('status-delegated');
-                header.classList.remove('delegated-gradient'); // Remove initial delegated look
-                header.style.background = ''; // Clear inline if any
+                header.classList.remove('delegated-gradient');
+                header.style.background = '';
 
                 if (status.status_id === 2 || status.status_id === 3) {
                     header.classList.add('running');
@@ -1017,18 +985,16 @@ class GraphEditor {
                 if (status.status_id === 4) header.classList.add('success');
                 if (status.status_id === 5) header.classList.add('failed');
 
-                // DELEGATED STATUS (7)
                 if (status.status_id === 7) {
                     dom.classList.add('status-delegated');
-                    header.classList.add('delegated-gradient'); // Re-apply if still delegated
-                    // Ensure view button is active
+                    header.classList.add('delegated-gradient');
                     isAnyRunning = true;
                 }
             }
 
             const viewBtn = dom.querySelector('.mini-btn.view');
             if (viewBtn && this.isMonitorMode) {
-                if (node.head_id) {
+                if (neuron.spike_id) {
                     viewBtn.disabled = false;
                     viewBtn.style.opacity = '1';
                     viewBtn.style.cursor = 'pointer';
@@ -1040,7 +1006,6 @@ class GraphEditor {
             }
         });
 
-        // [FIX] Ensure axons update color based on node status changes (e.g. Success -> Green Wire)
         this.renderConnections();
 
         const stopBtn = document.getElementById('stop-btn');
@@ -1064,25 +1029,25 @@ class GraphEditor {
 
     // --- Inspector Logic ---
 
-    async openInspector(node) {
+    async openInspector(neuron) {
         if (!this.inspector) return;
 
-        this.activeNodeId = node.id;
+        this.activeNeuronId = neuron.id;
         this.inspector.classList.remove('hidden');
 
         // Set Header
-        const isDelegated = !!node.invoked_spellbook_id;
+        const isDelegated = !!neuron.invoked_pathway_id;
         const inspectorTitle = this.inspector.querySelector('h2');
         if (inspectorTitle) {
             inspectorTitle.innerHTML = `
                 <span style="color: ${isDelegated ? '#a855f7' : '#f8fafc'}">
-                    ${isDelegated ? '🌀 ' : ''}${node.title}
+                    ${isDelegated ? '🌀 ' : ''}${neuron.title}
                 </span>
             `;
         }
 
         if (this.inspectorHeaderSub) {
-            this.inspectorHeaderSub.innerText = `ID: ${node.id}`;
+            this.inspectorHeaderSub.innerText = `ID: ${neuron.id}`;
         }
 
         if (this.inspectorContent) {
@@ -1090,20 +1055,20 @@ class GraphEditor {
         }
 
         if (this.isMonitorMode) {
-            await this.fetchNodeTelemetry(node.id);
+            await this.fetchNeuronTelemetry(neuron.id);
         } else {
-            await this.fetchNodeDetails(node.id);
+            await this.fetchNeuronDetails(neuron.id);
         }
     }
 
     closeInspector() {
         if (!this.inspector) return;
         this.inspector.classList.add('hidden');
-        this.activeNodeId = null;
+        this.activeNeuronId = null;
     }
 
-    async fetchNodeDetails(nodeId) {
-        const data = await this.apiFetch(`node_details?node_id=${nodeId}`);
+    async fetchNeuronDetails(neuronId) {
+        const data = await this.apiFetch(`neuron_details?neuron_id=${neuronId}`);
         if (data) {
             this.renderInspectorEdit(data);
         }
@@ -1126,7 +1091,7 @@ class GraphEditor {
         html += `<div class="section-title" style="display: flex; align-items: center; justify-content: space-between;">
             <span>Context Variables</span>
             <button class="mini-btn" style="padding: 2px 8px; font-size: 1rem; color: #cbd5e1; border: 1px solid #334155; background: #1e293b; cursor: pointer; border-radius: 4px;" 
-                onclick="window.app.promptAddVariable('${data.node_id}')" title="Add Override">+</button>
+                onclick="window.app.promptAddVariable('${data.neuron_id}')" title="Add Override">+</button>
         </div>`;
 
         if (data.context_matrix && data.context_matrix.length > 0) {
@@ -1138,9 +1103,8 @@ class GraphEditor {
                 const sourceClass = `source-${item.source}`;
                 const inputClass = item.source === 'override' ? 'input-override' : (item.source === 'global' ? 'input-global' : '');
 
-                // Determine if we need a textarea
                 const isLong = item.display_value.length > 50 || item.key.toLowerCase().includes('prompt') || item.key.toLowerCase().includes('script');
-                const uniqueId = `ctx-${item.key}-${data.node_id}`;
+                const uniqueId = `ctx-${item.key}-${data.neuron_id}`;
 
                 let inputHtml = '';
                 if (isLong) {
@@ -1151,7 +1115,7 @@ class GraphEditor {
                         ${item.is_readonly ? 'readonly' : ''}
                         rows="3"
                         style="resize: vertical; min-height: 60px;"
-                        onblur="window.app.handleContextChange('${data.node_id}', '${item.key}', this.value)"
+                        onblur="window.app.handleContextChange('${data.neuron_id}', '${item.key}', this.value)"
                     >${item.value}</textarea>`;
                 } else {
                     inputHtml = `<input type="text" 
@@ -1160,20 +1124,18 @@ class GraphEditor {
                         value="${item.value}" 
                         placeholder="${item.source === 'global' ? 'Global Value' : 'Default'}"
                         ${item.is_readonly ? 'readonly' : ''}
-                        onchange="window.app.handleContextChange('${data.node_id}', '${item.key}', this.value)"
+                        onchange="window.app.handleContextChange('${data.neuron_id}', '${item.key}', this.value)"
                     >`;
                 }
 
-                // add clear button if override
                 let actionsHtml = '';
                 if (item.source === 'override') {
-                    // X button to clear override
                     actionsHtml = `<div style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #ef4444; opacity: 0.7;" 
-                        onclick="window.app.handleContextChange('${data.node_id}', '${item.key}', '')" title="Reset to Default">✕</div>`;
+                        onclick="window.app.handleContextChange('${data.neuron_id}', '${item.key}', '')" title="Reset to Default">✕</div>`;
 
                     if (isLong) {
                         actionsHtml = `<div style="position: absolute; right: 8px; top: 12px; cursor: pointer; color: #ef4444; opacity: 0.7;" 
-                        onclick="window.app.handleContextChange('${data.node_id}', '${item.key}', '')" title="Reset to Default">✕</div>`;
+                        onclick="window.app.handleContextChange('${data.neuron_id}', '${item.key}', '')" title="Reset to Default">✕</div>`;
                     }
                 }
 
@@ -1202,10 +1164,10 @@ class GraphEditor {
         // Action Bar
         html += `
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #1e293b; display: flex; gap: 10px;">
-             <a href="/admin/central_nervous_system/cnsspellbooknode/${data.node_id}/change/" target="_blank" class="action-btn" style="text-decoration: none; justify-content: center;">
+             <a href="/admin/central_nervous_system/neuron/${data.neuron_id}/change/" target="_blank" class="action-btn" style="text-decoration: none; justify-content: center;">
                 ⚙️ Advanced Edit
             </a>
-            <button class="action-btn" style="color: #ef4444; border-color: #ef4444;" onclick="window.app.deleteNode('${data.node_id}')">
+            <button class="action-btn" style="color: #ef4444; border-color: #ef4444;" onclick="window.app.deleteNeuron('${data.neuron_id}')">
                 🗑 Delete Node
             </button>
         </div>`;
@@ -1222,40 +1184,29 @@ class GraphEditor {
         this.inspectorContent.innerHTML = html;
     }
 
-    async fetchNodeTelemetry(nodeId) {
-        // Only fetch if this is still the active node (avoid race conditions)
-        if (this.activeNodeId !== nodeId) return;
+    async fetchNeuronTelemetry(neuronId) {
+        if (this.activeNeuronId !== neuronId) return;
 
-        // Try to find the Spike ID from the local model (updated by polling)
-        const node = this.neurons.find(n => n.id === nodeId);
-        if (!node) return;
+        const neuron = this.neurons.find(n => n.id === neuronId);
+        if (!neuron) return;
 
-        if (node.head_id) {
-            const data = await this.apiFetch(`/api/v1/spikes/${node.head_id}/`);
+        if (neuron.spike_id) {
+            const data = await this.apiFetch(`neuron_telemetry?neuron_id=${neuronId}&spike_train_id=${this.spikeTrainId}`);
             if (data) {
-                // Ensure we pass the node ID for reference, although data has spike ID
-                this.renderInspectorMonitor(nodeId, data);
+                this.renderInspectorMonitor(neuronId, data);
             }
         } else {
             this.inspectorContent.innerHTML = '<div style="text-align: center; color: #64748b; margin-top: 40px;">Waiting for execution...</div>';
 
-            // Keep polling if monitor mode
-            if (this.isMonitorMode && !document.hidden && this.activeNodeId === nodeId) {
-                setTimeout(() => this.fetchNodeTelemetry(nodeId), 1000);
+            if (this.isMonitorMode && !document.hidden && this.activeNeuronId === neuronId) {
+                setTimeout(() => this.fetchNeuronTelemetry(neuronId), 1000);
             }
         }
     }
 
-    renderInspectorMonitor(nodeId, data) {
+    renderInspectorMonitor(neuronId, data) {
         if (!this.inspectorContent) return;
-        const getStatusClass = (s) => {
-            // Map data.status or data.status_name to CSS class
-            // The serializer returns 'status' as ID/PK or string?
-            // SpikeSerializer: status is ID. NeuronTelemetrySerializer: fields include 'status' (ID) and 'status_name'
-            // Let's use status_name for display, status (ID) for logic if needed. 
-            // The serializer uses `status` field which is relation -> ID by default in DRF unless nested.
-            // Wait, ModelSerializer default for ForeignKey is ID.
-            // Let's rely on status_name if available string.
+        const getStatusClass = () => {
             const sName = data.status_name ? data.status_name.toLowerCase() : '';
             if (sName === 'success') return 'status-success';
             if (sName === 'failed') return 'status-failed';
@@ -1263,19 +1214,16 @@ class GraphEditor {
             return 'status-pending';
         };
 
-        const statusClass = getStatusClass(data.status_id); // Fallback logic or use status_name mapping
+        const statusClass = getStatusClass();
         const isRunning = data.status_name === 'Running';
 
-        // --- UNIFIED CONFIGURATION LIST ---
         let configHtml = '';
 
-        // 1. Command
         configHtml += `<div style="margin-bottom: 12px;">
             <div class="var-key" style="color: #a5b4fc; margin-bottom: 4px;">Executed Command</div>
             <div class="var-input" style="font-size: 0.7rem; color: #cbd5e1; user-select: text; white-space: pre-wrap; word-break: break-all;">${data.command || 'N/A'}</div>
         </div>`;
 
-        // 2. Context Matrix
         if (data.context_matrix && data.context_matrix.length > 0) {
             configHtml += `<table class="smart-table" style="margin-bottom: 12px;">`;
             data.context_matrix.forEach(item => {
@@ -1299,17 +1247,15 @@ class GraphEditor {
             configHtml += `</table>`;
         }
 
-        // 3. Blackboard
         if (data.blackboard && Object.keys(data.blackboard).length > 0) {
             configHtml += `<div class="section-title" style="margin-top: 12px;">Blackboard (Runtime)</div>`;
             configHtml += `<div class="peep-hole" style="max-height: 150px;">${JSON.stringify(data.blackboard, null, 2)}</div>`;
         }
 
-        // --- HTML ASSEMBLY ---
         let html = `
         <div class="telemetry-card">
             <div class="monitor-header">
-                <div class="pulse-status ${getStatusClass()}">
+                <div class="pulse-status ${statusClass}">
                     <div class="pulse-dot"></div>
                     ${data.status_name || 'Unknown'}
                 </div>
@@ -1336,10 +1282,10 @@ class GraphEditor {
             </div>
 
             <div style="display: flex; gap: 8px; margin-top: 12px;">
-                 <a href="/admin/central_nervous_system/cnsspellbooknode/${nodeId}/change/" target="_blank" class="action-btn" style="text-decoration: none; flex: 1; justify-content: center;">
+                 <a href="/admin/central_nervous_system/neuron/${neuronId}/change/" target="_blank" class="action-btn" style="text-decoration: none; flex: 1; justify-content: center;">
                     ⚙️ Edit Node
                 </a>
-                <a href="/central_nervous_system/spike/${data.id}/" target="_blank" class="action-btn primary" style="text-decoration: none; flex: 1; justify-content: center;">
+                <a href="/central_nervous_system/spike/${data.spike_id}/" target="_blank" class="action-btn primary" style="text-decoration: none; flex: 1; justify-content: center;">
                     🚀 War Room
                 </a>
                 ${data.reasoning_session_id ? `
@@ -1364,18 +1310,16 @@ class GraphEditor {
 
         this.inspectorContent.innerHTML = html;
 
-        // --- XTERM INITIALIZATION ---
         this.initXterm('inspector-term-tool', data.logs);
         this.initXterm('inspector-term-system', data.exec_logs);
 
-        // Auto-refresh if running
         if (
             isRunning &&
-            this.activeNodeId === nodeId &&
+            this.activeNeuronId === neuronId &&
             !document.hidden &&
             this.isMonitorMode
         ) {
-            setTimeout(() => this.fetchNodeTelemetry(nodeId), 2000);
+            setTimeout(() => this.fetchNeuronTelemetry(neuronId), 2000);
         }
     }
 
@@ -1383,8 +1327,6 @@ class GraphEditor {
         const container = document.getElementById(containerId);
         if (!container) return;
 
-        // Cleanup existing if any (simplistic approach: clear innerHTML handled by render)
-        // Check if Terminal is defined
         if (typeof Terminal === 'undefined') {
             container.innerHTML = `<pre style="color: #fff; font-size: 0.7rem; white-space: pre-wrap;">${content || ''}</pre>`;
             return;
@@ -1414,35 +1356,25 @@ class GraphEditor {
         }
 
         term.write(content || '\x1b[38;5;240m[No Output]\x1b[0m');
-
-        // Handle Resize Observer to refit
-        // Optional for now as sidebar width is fixed/transitioned
     }
 
-    async promptAddVariable(nodeId) {
+    async promptAddVariable(neuronId) {
         const key = prompt("Enter variable name (e.g. MY_VAR):");
         if (key && key.trim()) {
-            await this.handleContextChange(nodeId, key.trim().toUpperCase(), '');
+            await this.handleContextChange(neuronId, key.trim().toUpperCase(), '');
         }
     }
 
-    async handleContextChange(nodeId, key, value) {
-        // Debounce or immediate? Immediate for now, usually user stops typing when clicking away.
-        // Actually, onchange fires on blur.
-
-        // Optimistic UI Update
-        // Re-render handled by full refresh? No, let's just send API request.
-
-        await this.apiFetch('save_node_context', {
+    async handleContextChange(neuronId, key, value) {
+        await this.apiFetch('save_neuron_context', {
             method: 'POST',
             body: JSON.stringify({
-                node_id: nodeId,
+                neuron_id: neuronId,
                 updates: [{key: key, value: value}]
             })
         });
 
-        // Refresh to get correct colors/states
-        this.fetchNodeDetails(nodeId);
+        this.fetchNeuronDetails(neuronId);
     }
 }
 

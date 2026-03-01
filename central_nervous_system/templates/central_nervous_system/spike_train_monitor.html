@@ -11,17 +11,7 @@
             <div class="status-line">
                 <span class="run-id">SpikeTrain {{ spike_train.id|stringformat:"s"|slice:":8" }}</span>
                 <span class="separator">|</span>
-
-                {% with thought=spike_train.thoughts.last %}
-                    {% if spike_train.status.name == 'Success' and thought and thought.status.name == 'Thinking' %}
-                        <span class="status-text status-running"
-                              style="color: #eab308; animation: pulse 1.5s infinite;">
-                             ANALYZING
-                         </span>
-                    {% else %}
-                        <span class="status-text status-{{ spike_train.status.name|lower }}">{{ spike_train.status.name }}</span>
-                    {% endif %}
-                {% endwith %}
+                <span class="status-text status-{{ spike_train.status.name|lower }}">{{ spike_train.status.name }}</span>
             </div>
         </div>
         <div class="actions" style="display: flex; gap: 10px; align-items: center;">
@@ -55,8 +45,8 @@
                 {% if spike_train.status.name == 'Stopping' %}
                     <button class="btn-done" disabled
                             style="border-color: #f97316; color: #f97316; opacity: 0.8; cursor: wait;">
-                        <span class="spinner-small"
-                              style="display: inline-block; vertical-align: middle; margin-right: 5px;"></span>
+                         <span class="spinner-small"
+                               style="display: inline-block; vertical-align: middle; margin-right: 5px;"></span>
                         STOPPING...
                     </button>
                     <button hx-post="{% url 'central_nervous_system:cns_spawn_stop_graceful' spike_train.id %}"
@@ -87,10 +77,10 @@
         <div class="multiplayer-battle-station">
             <div class="battle-station-header">
                 <div class="header-col"
-                     title="{{ head_1.effector.talos_executable.executable }} - {{ head_1.id }}">{{ head_1.effector.name|default:"HEAD 1" }}</div>
+                     title="{{ spike_1.effector.talos_executable.executable }} - {{ spike_1.id }}">{{ spike_1.effector.name|default:"SPIKE 1" }}</div>
                 <div class="header-col center">TIMESTAMP</div>
                 <div class="header-col"
-                     title="{{ head_2.effector.talos_executable.executable }} - {{ head_2.id }}">{{ head_2.effector.name|default:"HEAD 2" }}</div>
+                     title="{{ spike_2.effector.talos_executable.executable }} - {{ spike_2.id }}">{{ spike_2.effector.name|default:"SPIKE 2" }}</div>
 
                 <div class="header-controls">
                     <input type="text" id="battle-filter" placeholder="Filter logs..." autocomplete="off">
@@ -106,7 +96,7 @@
 
             <div id="battle-stream-container"
                  class="log-wrapper battle-stream"
-                 hx-get="{% url 'central_nervous_system:cns_battle_stream' spike_train.id %}?h1={{ head_1.id }}&h2={{ head_2.id }}"
+                 hx-get="{% url 'central_nervous_system:cns_battle_stream' spike_train.id %}?s1={{ spike_1.id }}&s2={{ spike_2.id }}"
                  hx-trigger="load{% if is_active %}, every 1s{% endif %}"
                  hx-vals='js:{
                     local_cursor: document.getElementById("battle-station-cursors")?.dataset.local || 0,

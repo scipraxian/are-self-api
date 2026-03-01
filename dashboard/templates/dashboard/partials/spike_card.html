@@ -2,13 +2,13 @@
    class="spike-card
           {% if spike.status_id == 1 or spike.status_id == 2 %}pending
           {% elif spike.status_id == 3 or spike.status_id == 8 %}active
-          {% elif spike.status_id == 4 %}success
+           {% elif spike.status_id == 4 %}success
           {% elif spike.status_id == 5 or spike.status_id == 6 %}failed
           {% else %}stopped{% endif %}">
 
     <div class="spike-header">
         <div class="spike-name" style="color:{% if spike.status_id <= 2 %}#888{% else %}#fff{% endif %};">
-            {{ spike.spell_name|default:spike.effector.name }}
+            {{ spike.effector_name|default:spike.effector.name }}
         </div>
         <div class="card-drill-btn" title="View Logs">☍</div>
     </div>
@@ -29,7 +29,8 @@
     </div>
 
     <div class="spike-footer">
-        <span class="spike-log" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px;">
+         <span class="spike-log"
+               style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px;">
             {% if spike.status_id == 1 or spike.status_id == 2 %}
                 Waiting...
             {% else %}

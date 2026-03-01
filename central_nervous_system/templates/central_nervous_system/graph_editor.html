@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap"
-    rel="stylesheet">
+          rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css"/>
     <style>
         /* MONITOR MODE OVERRIDES */
@@ -377,11 +377,11 @@
 <script>
     // [FIX] Robust Context Variables to avoid "VariableDoesNotExist" 500 errors
     window.djangoContext = {
-        bookId: "{% if book %}{{ book.id }}{% elif spike_train %}{{ spike_train.pathway.id }}{% endif %}",
-        spawnId: "{% if spike_train %}{{ spike_train.id }}{% elif spawn_id %}{{ spawn_id }}{% endif %}",
+        pathwayId: "{% if book %}{{ book.id }}{% elif spike_train %}{{ spike_train.pathway.id }}{% endif %}",
+        spikeTrainId: "{% if spike_train %}{{ spike_train.id }}{% elif spike_train_id %}{{ spike_train_id }}{% endif %}",
         mode: "{{ mode|default:'edit' }}",
         csrfToken: "{{ csrf_token }}",
-        terminateUrl: "{% if spike_train %}{% url 'central_nervous_system:cns_spawn_stop_graceful' spike_train.id %}{% elif spawn_id %}{% url 'central_nervous_system:cns_spawn_stop_graceful' spawn_id %}{% endif %}"
+        terminateUrl: "{% if spike_train %}{% url 'central_nervous_system:cns_spawn_stop_graceful' spike_train.id %}{% elif spike_train_id %}{% url 'central_nervous_system:cns_spawn_stop_graceful' spike_train_id %}{% endif %}"
     };
 </script>
 <div id="app">
@@ -423,7 +423,7 @@
                         MISSIONS</h3>
                 </div>
                 <div class="node-library" style="padding: 0; overflow-y: auto; flex: 1;">
-                    {% for s in spawn_history %}
+                    {% for s in spike_train_history %}
                         <a href="{% url 'central_nervous_system:graph_monitor' s.id %}?full=True"
                            style="display: flex; gap: 10px; padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; align-items: center; transition: background 0.2s; position: relative;"
                            onmouseover="this.style.background='rgba(255,255,255,0.05)'"

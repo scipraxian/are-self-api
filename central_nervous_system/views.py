@@ -19,12 +19,12 @@ class CNSGraphEditorView(DetailView):
     model = NeuralPathway
     template_name = 'central_nervous_system/graph_editor.html'
     context_object_name = 'book'
-    pk_url_kwarg = 'book_id'
+    pk_url_kwarg = 'pathway_id'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['mode'] = 'edit'
-        context['spawn_id'] = ''
+        context['spike_train_id'] = ''
         return context
 
 
@@ -32,14 +32,14 @@ class CNSGraphMonitorView(DetailView):
     model = SpikeTrain
     template_name = 'central_nervous_system/graph_editor.html'
     context_object_name = 'spike_train'
-    pk_url_kwarg = 'spawn_id'
+    pk_url_kwarg = 'spike_train_id'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['book'] = self.object.pathway
         context['mode'] = 'monitor'
-        context['spawn_id'] = str(self.object.id)
-        context['spawn_history'] = SpikeTrain.objects.filter(
+        context['spike_train_id'] = str(self.object.id)
+        context['spike_train_history'] = SpikeTrain.objects.filter(
             pathway=self.object.pathway
         ).order_by('-created')[:20]
         return context
@@ -50,12 +50,12 @@ class LaunchNeuralPathwayView(View):
     Launches the graph and forces a hard browser redirect.
     """
 
-    def dispatch_launch(self, spellbook_id):
-        controller = CNS(spellbook_id=spellbook_id)
+    def dispatch_launch(self, pathway_id):
+        controller = CNS(pathway_id=pathway_id)
         controller.start()
 
         target_url = reverse(
-            'central_nervous_system:graph_monitor', kwargs={'spawn_id': controller.spike_train.id}
+            'central_nervous_system:graph_monitor', kwargs={'spike_train_id': controller.spike_train.id}
         )
 
         # Check for suppression flag in query params
@@ -75,11 +75,11 @@ class LaunchNeuralPathwayView(View):
 
         return redirect(target_url)
 
-    def get(self, request, spellbook_id):
-        return self.dispatch_launch(spellbook_id)
+    def get(self, request, pathway_id):
+        return self.dispatch_launch(pathway_id)
 
-    def post(self, request, spellbook_id):
-        return self.dispatch_launch(spellbook_id)
+    def post(self, request, pathway_id):
+        return self.dispatch_launch(pathway_id)
 
 
 class ToggleFavoriteView(View):
@@ -103,10 +103,10 @@ class TerminateSpawnView(View):
     """Aborts a running SpikeTrain (Nuclear Option)."""
 
     def post(self, request, pk):
-        cns = CNS(spawn_id=pk)
+        cns = CNS(spike_train_id=pk)
         cns.terminate()
 
-        target_url = reverse('central_nervous_system:graph_monitor', kwargs={'spawn_id': pk})
+        target_url = reverse('central_nervous_system:graph_monitor', kwargs={'spike_train_id': pk})
 
         if request.headers.get('HX-Request'):
             response = HttpResponse()
@@ -120,7 +120,7 @@ class GracefulStopSpawnView(View):
     """Asks the spikes to stop gracefully (Gentle Tap)."""
 
     def post(self, request, pk):
-        cns = CNS(spawn_id=pk)
+        cns = CNS(spike_train_id=pk)
         cns.stop_gracefully()
 
         if request.GET.get('silent') == 'true':
@@ -156,7 +156,7 @@ class GracefulStopSpawnView(View):
                 # Just return the disabled button. The main swimlane poll will pick up the 'Stopping' state naturally.
                 return HttpResponse(stopping_btn)
 
-        target_url = reverse('central_nervous_system:graph_monitor', kwargs={'spawn_id': pk})
+        target_url = reverse('central_nervous_system:graph_monitor', kwargs={'spike_train_id': pk})
         return redirect(target_url)
 
 
@@ -243,18 +243,18 @@ class CNSBattleStationView(DetailView):
     model = SpikeTrain
     template_name = 'central_nervous_system/spike_train_monitor_page.html'
     context_object_name = 'spike_train'
-    pk_url_kwarg = 'spawn_id'
+    pk_url_kwarg = 'spike_train_id'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['is_battle_mode'] = True
         context['is_active'] = self.object.is_active
-        h1_id = self.request.GET.get('h1')
-        h2_id = self.request.GET.get('h2')
-        if h1_id and h2_id:
+        s1_id = self.request.GET.get('s1')
+        s2_id = self.request.GET.get('s2')
+        if s1_id and s2_id:
             try:
-                context['head_1'] = Spike.objects.get(id=h1_id)
-                context['head_2'] = Spike.objects.get(id=h2_id)
+                context['spike_1'] = Spike.objects.get(id=s1_id)
+                context['spike_2'] = Spike.objects.get(id=s2_id)
             except Spike.DoesNotExist:
                 pass
         return context
@@ -266,14 +266,14 @@ class CNSBattleStreamView(View):
     Supports incremental updates via cursors.
     """
 
-    def get(self, request, spawn_id):
+    def get(self, request, spike_train_id):
         try:
-            spike_train = SpikeTrain.objects.get(id=spawn_id)
+            spike_train = SpikeTrain.objects.get(id=spike_train_id)
         except SpikeTrain.DoesNotExist:
             return HttpResponse('SpikeTrain not found', status=404)
 
-        h1_id = request.GET.get('h1')
-        h2_id = request.GET.get('h2')
+        s1_id = request.GET.get('s1')
+        s2_id = request.GET.get('s2')
 
         # Cursor Handling
         try:
@@ -284,13 +284,13 @@ class CNSBattleStreamView(View):
             cursor_2 = 0
 
         try:
-            h1 = Spike.objects.get(id=h1_id)
-            h2 = Spike.objects.get(id=h2_id)
+            s1 = Spike.objects.get(id=s1_id)
+            s2 = Spike.objects.get(id=s2_id)
         except Spike.DoesNotExist:
             return HttpResponse('Invalid Spike IDs', status=404)
 
-        full_log1 = h1.application_log or h1.execution_log or ''
-        full_log2 = h2.application_log or h2.execution_log or ''
+        full_log1 = s1.application_log or s1.execution_log or ''
+        full_log2 = s2.application_log or s2.execution_log or ''
 
         # Calculate Deltas
         delta_log1 = full_log1[cursor_1:]
@@ -365,7 +365,7 @@ def generate_spawn_dump(spike_train, depth=0):
         cmd_str = 'Command resolution failed'
         try:
             env = get_active_environment(spike)
-            ctx = resolve_environment_context(head_id=spike.id)
+            ctx = resolve_environment_context(spike_id=spike.id)
             if spike.effector:
                 full_cmd = spike.effector.get_full_command(
                     environment=env, extra_context=ctx

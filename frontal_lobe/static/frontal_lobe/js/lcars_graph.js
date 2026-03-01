@@ -2,7 +2,7 @@ const POLL_INTERVAL_MS = 2500;
 let sessionId;
 let svg, g, simulation;
 let linkGroup, nodeGroup;
-let currentData = { neurons: [], links: [] };
+let currentData = {neurons: [], links: []};
 let selectedNodeId = null;
 let selectedNodeHash = null;
 let pollTimer;
@@ -71,8 +71,6 @@ function flattenTreeToGraph(sessionData, oldData) {
                     type: 'sequence'
                 });
             }
-
-            // --- GRAVITY FIX: Turn -> Goal links removed so it doesn't clump ---
 
             // --- TREE FIX: Make tool neurons unique per call so they branch outward ---
             if (turn.tool_calls) {
@@ -151,7 +149,7 @@ function flattenTreeToGraph(sessionData, oldData) {
         }
     }
 
-    // Preserve Physics & SpikeTrain gracefully
+    // Preserve Physics & State gracefully
     if (oldData && oldData.neurons) {
         const oldNodeMap = new Map(oldData.neurons.map(n => [n.id, n]));
         neurons.forEach(n => {
@@ -162,7 +160,7 @@ function flattenTreeToGraph(sessionData, oldData) {
                 n.vx = old.vx;
                 n.vy = old.vy;
             } else if (n.type === 'turn') {
-                // If a new turn spike_trains, put it near the previous turn so it doesn't fly across the screen
+                // If a new turn spawns, put it near the previous turn so it doesn't fly across the screen
                 const prevTurn = neurons.find(prev => prev.type === 'turn' && prev.turn_number === n.turn_number - 1);
                 if (prevTurn && oldNodeMap.has(prevTurn.id)) {
                     const oldPrev = oldNodeMap.get(prevTurn.id);
@@ -172,7 +170,7 @@ function flattenTreeToGraph(sessionData, oldData) {
             }
         });
     }
-    return { neurons, links };
+    return {neurons, links};
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -212,7 +210,7 @@ function fetchData() {
 
                 if (rawNode) {
                     // --- SCROLL/JITTER FIX: Create a clean hash without timers or physics ---
-                    const cleanNode = { ...rawNode };
+                    const cleanNode = {...rawNode};
                     delete cleanNode.x;
                     delete cleanNode.y;
                     delete cleanNode.vx;
@@ -221,7 +219,7 @@ function fetchData() {
                     delete cleanNode.delta;
                     delete cleanNode.inference_time;
 
-                    const currentStateHash = JSON.stringify({ node: cleanNode, linkCount: rawLinks.length });
+                    const currentStateHash = JSON.stringify({node: cleanNode, linkCount: rawLinks.length});
 
                     if (selectedNodeHash !== currentStateHash) {
                         shouldUpdateInspector = true;
@@ -434,7 +432,8 @@ function updateGraph(newData) {
 
     allNodes.classed("active-node", d => d.type === 'turn' && activeStates.includes(d.status));
 
-    simulation.neurons(currentData.neurons);
+    // FIX: Restored native D3 logic. D3 forces act on .nodes(), not .neurons()
+    simulation.nodes(currentData.neurons);
     simulation.force("link").links(currentData.links);
 
     if (topologyChanged) {
@@ -533,7 +532,8 @@ function showDetails(d) {
                 if (typeof reqObj === 'string') {
                     reqObj = JSON.parse(reqObj);
                 }
-            } catch (e) { }
+            } catch (e) {
+            }
 
             if (reqObj && typeof reqObj === 'object' && reqObj.messages && Array.isArray(reqObj.messages)) {
                 payloadHtml += `<div class="term-result" style="margin-top: 15px;">
@@ -664,7 +664,6 @@ function showDetails(d) {
         }
 
 
-
         // 2. Render the Tool Calls
         const calls = currentData.links.filter(l => (l.source.id || l.source) === d.id && l.type === 'uses_tool');
         if (calls && calls.length > 0) {
@@ -700,7 +699,7 @@ function showDetails(d) {
                 let toolName = toolNode ? toolNode.label : "unknown_spell";
 
                 let resultClass = 'term-result';
-                let resultText = call.result || call.traceback || "No result.";
+                let resultText = call.result || call.traceback || "Pending...";
                 let resObj = null;
                 let resHtml = "";
 
@@ -927,9 +926,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
                     .then(response => response.json())
                     .then(data => {
-                        if (data.spawn_id) {
+                        if (data.spike_train_id) {
                             // Redirect to the CNS Monitor to watch the new process spin up
-                            window.location.href = `/central_nervous_system/graph/spike_train/${data.spawn_id}/?full=True`;
+                            window.location.href = `/central_nervous_system/graph/spike_train/${data.spike_train_id}/?full=True`;
                         } else {
                             alert("Reboot triggered, but failed to find SpikeTrain ID.");
                         }
@@ -1078,4 +1077,3 @@ function updateTalosHUD(sessionData, latestTurnData) {
         if (elThought) elThought.textContent = `"${thoughtText}"`;
     }
 }
-

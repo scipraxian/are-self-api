@@ -35,10 +35,10 @@ function timeSince(dateString) {
     return Math.floor(seconds) + " seconds";
 }
 
-async function stopSpawn(spawnId) {
+async function stopSpawn(spikeTrainId) {
     if (confirm("Signal Graceful Stop for this operation?")) {
         try {
-            await fetch(`/api/v1/spike_trains/${spawnId}/stop/`, {
+            await fetch(`/api/v1/spike_trains/${spikeTrainId}/stop/`, {
                 method: 'POST',
                 headers: {'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json'}
             });
@@ -50,12 +50,12 @@ async function stopSpawn(spawnId) {
     }
 }
 
-async function rerunSpawn(spellbookId) {
+async function rerunSpawn(pathwayId) {
     try {
         await fetch(`/api/v1/spike_trains/`, {
             method: 'POST',
             headers: {'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json'},
-            body: JSON.stringify({spellbook_id: spellbookId})
+            body: JSON.stringify({pathway_id: pathwayId})
         });
         triggerInstantSync();
     } catch (e) {
@@ -64,19 +64,20 @@ async function rerunSpawn(spellbookId) {
 }
 
 function buildHeadDOM(spike) {
-    const template = document.getElementById('tpl-spike-card');
+    // FIX: Using the correct updated template ID
+    const template = document.getElementById('tpl-cns-spike');
     const clone = template.content.cloneNode(true);
-    const card = clone.querySelector('.spike-card');
+    const card = clone.querySelector('.cns-spike-card');
 
     card.href = `/central_nervous_system/spike/${spike.id}/`;
 
-    const nameEl = card.querySelector('.spike-name');
-    const targetEl = card.querySelector('.spike-target');
-    const logEl = card.querySelector('.spike-log');
-    const timeEl = card.querySelector('.spike-time');
-    const durationEl = card.querySelector('.spike-duration');
+    const nameEl = card.querySelector('.js-spike-name');
+    const targetEl = card.querySelector('.js-spike-target');
+    const logEl = card.querySelector('.js-spike-log');
+    const timeEl = card.querySelector('.js-spike-time');
+    const durationEl = card.querySelector('.js-spike-duration');
 
-    if (nameEl) nameEl.textContent = spike.spell_name || 'Node';
+    if (nameEl) nameEl.textContent = spike.effector_name || 'Node';
     if (timeEl) timeEl.textContent = spike.timestamp_str || '--:--:--';
     if (durationEl) durationEl.textContent = `⏱ ${spike.duration || '0s'}`;
 
@@ -84,7 +85,7 @@ function buildHeadDOM(spike) {
 
     // State Machine
     if (statusId === 1 || statusId === 2) {
-        card.classList.add('pending');
+        card.classList.add('status-pending');
         if (nameEl) nameEl.style.color = '#888';
         if (targetEl) {
             targetEl.style.color = '#666';
@@ -96,7 +97,7 @@ function buildHeadDOM(spike) {
             logEl.style.display = 'block';
         }
     } else if (statusId === 3 || statusId === 8) {
-        card.classList.add('active');
+        card.classList.add('status-running');
         if (nameEl) nameEl.style.color = '#fff';
         if (targetEl) {
             targetEl.style.color = 'var(--lcars-elbow)';
@@ -112,13 +113,13 @@ function buildHeadDOM(spike) {
         if (logEl) logEl.style.display = 'none';
 
         if (statusId === 4) {
-            card.classList.add('success');
+            card.classList.add('status-success');
             if (targetEl) targetEl.style.color = '#4ade80';
         } else if (statusId === 5 || statusId === 6) {
-            card.classList.add('failed');
+            card.classList.add('status-failed');
             if (targetEl) targetEl.style.color = '#ef4444';
         } else {
-            card.classList.add('stopped');
+            card.classList.add('status-stopped');
             if (targetEl) targetEl.style.color = '#888';
         }
 
@@ -129,10 +130,11 @@ function buildHeadDOM(spike) {
 }
 
 function buildSwimlaneDOM(mission, isSubgraph = false) {
-    const template = document.getElementById('tpl-swimlane');
+    // FIX: Using the correct updated template ID
+    const template = document.getElementById('tpl-cns-spike_train');
     const clone = template.content.cloneNode(true);
-    const wrapper = clone.querySelector('.lane-wrapper');
-    const swimlane = clone.querySelector('.swimlane');
+    const wrapper = clone.querySelector('.js-cns-spike_train-wrapper');
+    const swimlane = clone.querySelector('.js-cns-spike_train');
 
     wrapper.id = `lane-wrapper-${mission.id}`;
 
@@ -148,36 +150,35 @@ function buildSwimlaneDOM(mission, isSubgraph = false) {
     else if (mission.ended_badly) statusColor = '#ef4444';
 
     // Header
-    const titleEl = clone.querySelector('.lane-title');
-    titleEl.textContent = mission.spellbook_name || 'Unknown Protocol';
-    titleEl.title = mission.spellbook_name || '';
+    const titleEl = clone.querySelector('.js-spike_train-title');
+    titleEl.textContent = mission.pathway_name || 'Unknown Protocol';
+    titleEl.title = mission.pathway_name || '';
 
-    clone.querySelector('.spike_train-id').textContent = `#${mission.id.substring(0, 8)}`;
+    clone.querySelector('.js-spike_train-id').textContent = `#${mission.id.substring(0, 8)}`;
 
-    const statusEl = clone.querySelector('.lane-status-text');
+    const statusEl = clone.querySelector('.js-spike_train-status-text');
     statusEl.textContent = mission.status_name;
     statusEl.style.color = statusColor;
-    // statusEl.classList.add(`status-${mission.status_name.toLowerCase()}`);
 
-    clone.querySelector('.lane-time').textContent = `${timeSince(mission.modified)} ago`;
+    clone.querySelector('.js-spike_train-time').textContent = `${timeSince(mission.modified)} ago`;
 
     // Controls
-    clone.querySelector('.btn-monitor').href = `/central_nervous_system/graph/spike_train/${mission.id}/?full=True`;
-    clone.querySelector('.btn-edit').href = `/central_nervous_system/graph/editor/${mission.pathway}/`;
+    clone.querySelector('.js-btn-monitor').href = `/central_nervous_system/graph/spike_train/${mission.id}/?full=True`;
+    clone.querySelector('.js-btn-edit').href = `/central_nervous_system/graph/editor/${mission.pathway}/`;
 
     if (mission.is_alive) {
-        clone.querySelector('.control-card').classList.add('active-state');
-        const stopBtn = clone.querySelector('.btn-stop');
+        clone.querySelector('.js-cns-control-card').classList.add('active-state');
+        const stopBtn = clone.querySelector('.js-btn-stop');
         stopBtn.style.display = 'flex';
         stopBtn.onclick = () => stopSpawn(mission.id);
     } else {
-        const rerunBtn = clone.querySelector('.btn-rerun');
+        const rerunBtn = clone.querySelector('.js-btn-rerun');
         rerunBtn.style.display = 'flex';
         rerunBtn.onclick = () => rerunSpawn(mission.pathway);
     }
 
     // Scroll Area (Heads)
-    const scrollArea = clone.querySelector('.lane-scroll-area');
+    const scrollArea = clone.querySelector('.js-spike_train-track');
     if (mission.live_children) {
         mission.live_children.forEach(h => scrollArea.appendChild(buildHeadDOM(h)));
     }
@@ -186,15 +187,15 @@ function buildSwimlaneDOM(mission, isSubgraph = false) {
     }
 
     // Scroll Buttons
-    clone.querySelector('.left').onclick = function () {
+    clone.querySelector('.js-scroll-left').onclick = function () {
         this.nextElementSibling.scrollBy({left: -300, behavior: 'smooth'});
     };
-    clone.querySelector('.right').onclick = function () {
+    clone.querySelector('.js-scroll-right').onclick = function () {
         this.previousElementSibling.scrollBy({left: 300, behavior: 'smooth'});
     };
 
     // Subgraphs
-    const subContainer = clone.querySelector('.subgraphs-container');
+    const subContainer = clone.querySelector('.js-nested-spike_trains');
     if (mission.subgraphs && mission.subgraphs.length > 0) {
         mission.subgraphs.forEach(sub => subContainer.appendChild(buildSwimlaneDOM(sub, true)));
     }
@@ -271,7 +272,7 @@ function triggerInstantSync() {
     pollMissionControl();
 }
 
-// [FIX] Listen for the exact event your Launch buttons broadcast!
+// Listen for the exact event your Launch buttons broadcast!
 document.body.addEventListener('monitor-update', triggerInstantSync);
 
 document.addEventListener('DOMContentLoaded', pollMissionControl);

@@ -9,19 +9,19 @@ class SpikeController {
     }
 
     static populateTemplate(clone, data) {
-        const headEl = clone.querySelector('.js-cns-spike');
-        if (!headEl) return;
+        const spikeEl = clone.querySelector('.js-cns-spike');
+        if (!spikeEl) return;
 
-        headEl.dataset.headId = data.id;
+        spikeEl.dataset.spikeId = data.id;
         const statusStr = data.status_name || 'Pending';
         const isAlive = ['Created', 'Pending', 'Running', 'Delegated', 'Stopping'].includes(statusStr);
 
-        headEl.href = `/central_nervous_system/spike/${data.id}/`;
+        spikeEl.href = `/central_nervous_system/spike/${data.id}/`;
 
         // Visual State Reset
-        headEl.className = 'cns-spike-card js-cns-spike';
-        headEl.classList.add(`status-${statusStr.toLowerCase()}`);
-        if (data.effector === 1) headEl.classList.add('is-begin-play');
+        spikeEl.className = 'cns-spike-card js-cns-spike';
+        spikeEl.classList.add(`status-${statusStr.toLowerCase()}`);
+        if (data.effector === 1) spikeEl.classList.add('is-begin-play');
 
         // 1. Repair Timestamp (Parse ISO from "created")
         const timeEl = clone.querySelector('.js-spike-time');
@@ -70,7 +70,7 @@ class SpikeController {
         }
 
         // 3. Status & Identity
-        clone.querySelector('.js-spike-name').textContent = data.spell_name || "NODE";
+        clone.querySelector('.js-spike-name').textContent = data.effector_name || "NODE";
         clone.querySelector('.js-spike-target').textContent = data.target_name || "LOCAL";
         clone.querySelector('.js-spike-status-pill').textContent = statusStr.toUpperCase();
 

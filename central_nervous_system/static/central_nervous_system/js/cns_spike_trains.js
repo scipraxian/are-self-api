@@ -52,11 +52,11 @@ class DispatcherController {
 
                 // Double check root status locally just in case, then cap to 15
                 const rootSpikeTrains = spike_trains.filter(s => s.parent_spike === null);
-                const displaySpikeTrains = rootSpawns.slice(0, 15);
+                const displaySpikeTrains = rootSpikeTrains.slice(0, 15);
 
                 // Render backwards for top-down insertion
-                for (let i = displaySpawns.length - 1; i >= 0; i--) {
-                    this.ensureSpawnExists(displaySpawns[i], this.root);
+                for (let i = displaySpikeTrains.length - 1; i >= 0; i--) {
+                    this.ensureSpawnExists(displaySpikeTrains[i], this.root);
                 }
             }
         } catch (error) {
@@ -65,7 +65,8 @@ class DispatcherController {
     }
 
     ensureSpawnExists(spawnData, container) {
-        if (container.querySelector(`.js-cns-spike_train-wrapper > .js-cns-spike_train[data-spike_train-id="${spawnData.id}"]`)) return;
+        // FIX: Matched standard CSS selector binding to data-spike-train-id
+        if (container.querySelector(`.js-cns-spike_train-wrapper > .js-cns-spike_train[data-spike-train-id="${spawnData.id}"]`)) return;
 
         const tpl = document.getElementById('tpl-cns-spike_train');
         const clone = tpl.content.cloneNode(true);
