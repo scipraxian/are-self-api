@@ -67,9 +67,7 @@ class PFCTicketMixin(models.Model):
     demo_specifics = models.TextField(blank=True, default='')
 
     source_engrams = models.ManyToManyField(
-        'talos_hippocampus.TalosEngram',
-        blank=True,
-        related_name='linked_stories',
+        'hippocampus.TalosEngram', blank=True
     )
 
     class Meta:
@@ -83,6 +81,7 @@ class PFCEpic(
     CreatedAndModifiedWithDelta,
     VectorMixin,
     PFCTagsMixin,
+    PFCTicketMixin,
 ):
     """The High-Level Directives (Written by Humans).
     If the environment is set, the epic is scoped to that environment.
@@ -100,8 +99,9 @@ class PFCEpic(
         null=True,
         related_name=RELATED_NAME,
     )
-    # complexity = models.IntegerField(default=0,
-    #                                  help_text="The Bid (Focus cost/weight)")
+    complexity = models.IntegerField(
+        default=0, help_text='Read Only - Calculated Value'
+    )
 
 
 class PFCStory(
@@ -111,6 +111,7 @@ class PFCStory(
     CreatedAndModifiedWithDelta,
     VectorMixin,
     PFCTagsMixin,
+    PFCTicketMixin,
 ):
     """The Strategies (Written by Humans or Talos)."""
 
@@ -122,6 +123,7 @@ class PFCStory(
     status = models.ForeignKey(
         PFCItemStatus, on_delete=models.PROTECT, default=PFCItemStatus.BACKLOG
     )
+    complexity = models.IntegerField(default=0, help_text='Worker Calculated.')
 
 
 class PFCTask(
