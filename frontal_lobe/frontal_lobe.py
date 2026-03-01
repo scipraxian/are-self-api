@@ -7,6 +7,8 @@ from uuid import UUID
 
 from asgiref.sync import sync_to_async
 
+from central_nervous_system.models import Spike, SpikeStatus
+from central_nervous_system.utils import resolve_environment_context
 from environments.variable_renderer import VariableRenderer
 from frontal_lobe.constants import FrontalLobeConstants
 from frontal_lobe.models import (
@@ -17,8 +19,6 @@ from frontal_lobe.models import (
     ReasoningTurn,
 )
 from frontal_lobe.thalamus import relay_sensory_state
-from central_nervous_system.models import Spike, SpikeStatus
-from central_nervous_system.utils import resolve_environment_context
 from identity.identity_prompt import build_identity_prompt
 from parietal_lobe.parietal_lobe import ParietalLobe
 
@@ -118,12 +118,12 @@ class FrontalLobe:
         await sync_to_async(turn_record.save)()
 
     async def _build_turn_payload(
-        self, turn_record: ReasoningTurn
+            self, turn_record: ReasoningTurn
     ) -> list[dict]:
         """Assembles the Turn payload by integrating Identity and Sensory data."""
 
         system_instruction = await sync_to_async(build_identity_prompt)(
-            self.session, turn_record.turn_number
+            self.session.identity, turn_record.turn_number
         )
 
         user_content = await relay_sensory_state(turn_record)
