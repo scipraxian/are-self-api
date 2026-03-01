@@ -1,0 +1,161 @@
+[
+  {
+    "model": "temporal_lobe.iterationstatus",
+    "pk": 1,
+    "fields": {
+      "name": "Waiting"
+    }
+  },
+  {
+    "model": "temporal_lobe.iterationstatus",
+    "pk": 2,
+    "fields": {
+      "name": "Running"
+    }
+  },
+  {
+    "model": "temporal_lobe.iterationstatus",
+    "pk": 3,
+    "fields": {
+      "name": "Finished"
+    }
+  },
+  {
+    "model": "temporal_lobe.iterationstatus",
+    "pk": 4,
+    "fields": {
+      "name": "Cancelled"
+    }
+  },
+  {
+    "model": "temporal_lobe.iterationstatus",
+    "pk": 5,
+    "fields": {
+      "name": "Blocked By User"
+    }
+  },
+  {
+    "model": "temporal_lobe.iterationstatus",
+    "pk": 6,
+    "fields": {
+      "name": "Error"
+    }
+  },
+  {
+    "model": "temporal_lobe.shift",
+    "pk": 1,
+    "fields": {
+      "name": "Grooming",
+      "turn_limit": 15
+    }
+  },
+  {
+    "model": "temporal_lobe.shift",
+    "pk": 2,
+    "fields": {
+      "name": "Pre-Planning",
+      "turn_limit": 5
+    }
+  },
+  {
+    "model": "temporal_lobe.shift",
+    "pk": 3,
+    "fields": {
+      "name": "Planning",
+      "turn_limit": 10
+    }
+  },
+  {
+    "model": "temporal_lobe.shift",
+    "pk": 4,
+    "fields": {
+      "name": "Executing",
+      "turn_limit": 50
+    }
+  },
+  {
+    "model": "temporal_lobe.shift",
+    "pk": 5,
+    "fields": {
+      "name": "Post-Execution",
+      "turn_limit": 10
+    }
+  },
+  {
+    "model": "temporal_lobe.iterationdefinition",
+    "pk": 1,
+    "fields": {
+      "name": "Standard Agile Sprint"
+    }
+  },
+  {
+    "model": "temporal_lobe.iterationdefinition",
+    "pk": 2,
+    "fields": {
+      "name": "Emergency Hotfix Cycle"
+    }
+  },
+  {
+    "model": "temporal_lobe.iterationshift",
+    "pk": 1,
+    "fields": {
+      "definition": 1,
+      "shift": 1,
+      "order": 1
+    }
+  },
+  {
+    "model": "temporal_lobe.iterationshift",
+    "pk": 2,
+    "fields": {
+      "definition": 1,
+      "shift": 2,
+      "order": 2
+    }
+  },
+  {
+    "model": "temporal_lobe.iterationshift",
+    "pk": 3,
+    "fields": {
+      "definition": 1,
+      "shift": 3,
+      "order": 3
+    }
+  },
+  {
+    "model": "temporal_lobe.iterationshift",
+    "pk": 4,
+    "fields": {
+      "definition": 1,
+      "shift": 4,
+      "order": 4
+    }
+  },
+  {
+    "model": "temporal_lobe.iterationshift",
+    "pk": 5,
+    "fields": {
+      "definition": 1,
+      "shift": 5,
+      "order": 5
+    }
+  },
+  {
+    "model": "temporal_lobe.iterationshift",
+    "pk": 6,
+    "fields": {
+      "definition": 2,
+      "shift": 3,
+      "order": 1
+    }
+  },
+  {
+    "model": "temporal_lobe.iterationshift",
+    "pk": 7,
+    "fields": {
+      "definition": 2,
+      "shift": 4,
+      "order": 2
+    }
+  }
+]

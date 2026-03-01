@@ -59,7 +59,7 @@ INSTALLED_APPS = [
     'hippocampus.apps.HippocampusConfig',
     'prefrontal_cortex.apps.PrefrontalCortexConfig',
     'identity.apps.IdentityConfig',
-    'temporal.apps.TemporalConfig',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
