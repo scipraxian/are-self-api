@@ -1381,5 +1381,428 @@
       "parameter": 27,
       "value": "COMPLETE"
     }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 19,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "The master interface for the Agile Board. Use this to CREATE, READ, UPDATE, or COMMENT on Epics, Stories, and Tasks. Note: STORIES require strict adherence to the Definition of Ready (DoR) framework (Perspective, Assertions, Outside). TASKS only require a basic description.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "mcp_ticket",
+      "is_async": true,
+      "use_type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 36,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Item type: EPIC, STORY, TASK",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "item_type",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 37,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "The UUID of the item.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "item_id",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 38,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "The parent Epic or Story UUID.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "parent_id",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 39,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "The short 2-3 word title.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "name",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 40,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Status string.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "status",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 41,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Priority 1-4.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "priority",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 42,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Complexity (Focus bid).",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "complexity",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 43,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "The Why and the Who.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "perspective",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 44,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Bulleted list starting with Assert.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "assertions",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 45,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Bulleted list of negative assertions.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "outside",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 46,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Exceptions to the DoD.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "dod_exceptions",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 47,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Dependencies required to complete.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "dependencies",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 48,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Demo specifics.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "demo_specifics",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 49,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "General description.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "description",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 50,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Comment text.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "text",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 68,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "tool": 19,
+      "parameter": 15,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 69,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "tool": 19,
+      "parameter": 36,
+      "required": true
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 70,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "tool": 19,
+      "parameter": 37,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 71,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "tool": 19,
+      "parameter": 38,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 72,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "tool": 19,
+      "parameter": 39,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 73,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "tool": 19,
+      "parameter": 40,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 74,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "tool": 19,
+      "parameter": 41,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 75,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "tool": 19,
+      "parameter": 42,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 76,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "tool": 19,
+      "parameter": 43,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 77,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "tool": 19,
+      "parameter": 44,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 78,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "tool": 19,
+      "parameter": 45,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 79,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "tool": 19,
+      "parameter": 46,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 80,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "tool": 19,
+      "parameter": 47,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 81,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "tool": 19,
+      "parameter": 48,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 82,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "tool": 19,
+      "parameter": 49,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 83,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "tool": 19,
+      "parameter": 50,
+      "required": false
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 9,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "parameter": 15,
+      "value": "CREATE"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 10,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "parameter": 15,
+      "value": "READ"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 11,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "parameter": 15,
+      "value": "UPDATE"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 12,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "parameter": 15,
+      "value": "COMMENT"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 13,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "parameter": 36,
+      "value": "EPIC"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 14,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "parameter": 36,
+      "value": "STORY"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 15,
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "parameter": 36,
+      "value": "TASK"
+    }
   }
 ]
