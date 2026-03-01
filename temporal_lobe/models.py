@@ -48,7 +48,15 @@ class IterationStatus(NameMixin):
 
 
 class Iteration(CreatedAndModifiedWithDelta):
-    name = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
+    name = models.CharField(
+        max_length=STANDARD_CHARFIELD_LENGTH, blank=True, null=True
+    )
+    environment = models.ForeignKey(
+        'environments.ProjectEnvironment',
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+    )
     status = models.ForeignKey(IterationStatus, on_delete=models.CASCADE)
     definition = models.ForeignKey(
         IterationDefinition, on_delete=models.PROTECT

@@ -2,7 +2,6 @@ import uuid
 
 from django.db import models, transaction
 
-from common.constants import STANDARD_CHARFIELD_LENGTH
 from common.models import (
     DefaultFieldsMixin,
     DescriptionMixin,
@@ -137,6 +136,12 @@ class ProjectEnvironment(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     selected = models.BooleanField(
         default=False,
         help_text='Only one environment can be selected at a time.',
+    )
+    default_iteration_definition = models.ForeignKey(
+        'temporal_lobe.IterationDefinition',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
     )
 
     def __str__(self):
