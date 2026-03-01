@@ -11,7 +11,7 @@ from central_nervous_system.models import (
     Effector,
     NeuralPathway,
 )
-from central_nervous_system.effectors.effector_casters.generic_effector_caster import GenericSpellCaster
+from central_nervous_system.effectors.effector_casters.generic_effector_caster import GenericEffectorCaster
 
 MODULE_PATH = 'central_nervous_system.effectors.effector_casters.generic_effector_caster'
 
@@ -50,11 +50,11 @@ class GenericSpellcasterTest(TestCase):
                                              status_id=SpikeStatus.CREATED)
 
     def test_generic_spellcaster_instantiates(self):
-        """Asserts that the GenericSpellCaster can be instantiated."""
+        """Asserts that the GenericEffectorCaster can be instantiated."""
         try:
-            GenericSpellCaster(self.spike.id)
+            GenericEffectorCaster(self.spike.id)
         except Exception as e:
-            self.fail(f'Failed to instantiate GenericSpellCaster: {e}')
+            self.fail(f'Failed to instantiate GenericEffectorCaster: {e}')
 
     async def _mock_executable_router(self, caster):
         # Helper to simulate calling the router since it is async
@@ -62,7 +62,7 @@ class GenericSpellcasterTest(TestCase):
 
     def test_generic_spellcaster_executable_router(self):
         """Assert executable router selects the correct executable logic."""
-        caster = GenericSpellCaster(self.spike.id)
+        caster = GenericEffectorCaster(self.spike.id)
         caster.spike = self.spike
         caster.effector = self.spike.effector
 

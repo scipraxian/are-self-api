@@ -34,7 +34,7 @@ class FrontalLobe:
 
     def __init__(self, spike: Spike):
         self.spike = spike
-        self.head_id = spike.id
+        self.spike_id = spike.id
         self.log_output: List[str] = []
         self.parietal_lobe: Optional[ParietalLobe] = None
 
@@ -64,7 +64,7 @@ class FrontalLobe:
             str(raw_prompt), raw_context
         )
         if not rendered_prompt.strip():
-            rendered_prompt = f'{FrontalLobeConstants.DEFAULT_PROMPT} Context Head: {self.head_id}'
+            rendered_prompt = f'{FrontalLobeConstants.DEFAULT_PROMPT} Context Head: {self.spike_id}'
         return rendered_prompt
 
     async def _initialize_session(
@@ -196,7 +196,7 @@ class FrontalLobe:
 
     async def run(self) -> Tuple[int, str]:
         """Main asynchronous execution orchestrator."""
-        logger.info(f'[FrontalLobe] Waking up for Spike {self.head_id}')
+        logger.info(f'[FrontalLobe] Waking up for Spike {self.spike_id}')
 
         self.spike.application_log = ''
         await sync_to_async(self.spike.save)(update_fields=['application_log'])
@@ -205,7 +205,7 @@ class FrontalLobe:
         try:
             # 1. Resolve Environment & Model
             raw_context = await sync_to_async(resolve_environment_context)(
-                head_id=self.spike.id
+                spike_id=self.spike.id
             )
             target_id = int(
                 raw_context.get(
@@ -306,11 +306,11 @@ class FrontalLobe:
         return 200, '\n'.join(self.log_output)
 
 
-async def run_frontal_lobe(head_id: UUID) -> Tuple[int, str]:
+async def run_frontal_lobe(spike_id: UUID) -> Tuple[int, str]:
     """Asynchronous entry point for the generic effector caster."""
     try:
         spike = await sync_to_async(
-            lambda: Spike.objects.select_related('spike_train').get(id=head_id)
+            lambda: Spike.objects.select_related('spike_train').get(id=spike_id)
         )()
         lobe = FrontalLobe(spike)
         return await lobe.run()

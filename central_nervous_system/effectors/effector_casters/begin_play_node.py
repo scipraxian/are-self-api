@@ -1,4 +1,4 @@
-async def begin_play(head_id: str) -> tuple[int, str]:
+async def begin_play(spike_id: str) -> tuple[int, str]:
     """
     The Big Bang.
     Instantly returns Success (200) to fire the first wire.

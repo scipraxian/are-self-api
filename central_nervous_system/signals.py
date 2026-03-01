@@ -46,7 +46,7 @@ def on_spawn_update(sender, instance, created, **kwargs):
 
         # RESUME PARENT GRAPH
         # We instantiate the walker on the PARENT's SpikeTrain (the spike_train that owns the parent node)
-        walker = GraphWalker(spawn_id=parent_spike.spike_train.id)
+        walker = GraphWalker(spike_train_id=parent_spike.spike_train.id)
         walker.process_node(parent_spike)
 
         # CRITICAL FIX: Force the Parent SpikeTrain to check if it is now finished.

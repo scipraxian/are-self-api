@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 BLACKBOARD_FIELD_NAME = 'blackboard'
 BLACKBOARD_RESULT_KEY = 'local_prompt_path'
 DEFAULT_TARGET_KEY = 'prompt'
-HEAD_ARGUMENT = '--head_id'
-HEAD_ID = 'head_id'
+HEAD_ARGUMENT = '--spike_id'
+SPIKE_ID = 'spike_id'
 KEY = 'key'
 KEY_ARGUMENT = '--key'
 TEMP_FILE_PREFIX = 'talos_payload_'
@@ -28,19 +28,19 @@ class Command(BaseCommand):
     )
 
     def add_arguments(self, parser):
-        parser.add_argument(HEAD_ARGUMENT, type=str, required=True)
-        parser.add_argument(KEY_ARGUMENT, type=str, default=DEFAULT_TARGET_KEY)
+        parser.add_argument(HEAD_ARGUMENT, type=str, required=True, dest=SPIKE_ID)
+        parser.add_argument(KEY_ARGUMENT, type=str, default=DEFAULT_TARGET_KEY, dest=KEY)
 
     def handle(self, *args, **options):
         """This method is DB READ ONLY."""
-        head_id = options[HEAD_ID]
+        spike_id = options[SPIKE_ID]
         target_key = options[KEY]
         try:
-            spike = Spike.objects.get(id=head_id)
+            spike = Spike.objects.get(id=spike_id)
         except Spike.DoesNotExist:
-            logger.error(f'Error: Spike {head_id} not found.')
+            logger.error(f'Error: Spike {spike_id} not found.')
             return
-        head_context = resolve_environment_context(head_id=spike.id)
+        head_context = resolve_environment_context(spike_id=spike.id)
         raw_template = head_context.get(target_key, '')
         if not raw_template:
             logger.warning(

@@ -1011,8 +1011,8 @@
     "fields": {
       "created": "2026-02-16T18:42:01.725Z",
       "modified": "2026-02-16T18:42:01.725Z",
-      "name": "--head_id={{head_id}}",
-      "argument": "--head_id={{head_id}}"
+      "name": "--spike_id={{spike_id}}",
+      "argument": "--spike_id={{spike_id}}"
     }
   },
   {

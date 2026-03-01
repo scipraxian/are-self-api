@@ -68,7 +68,7 @@ class CNSNeuralPathwayViewSet(viewsets.ModelViewSet):
         # Architectural Anchor: Enforce BeginPlay exists
         Neuron.objects.get_or_create(
             pathway=book,
-            spell_id=Effector.BEGIN_PLAY,
+            effector_id=Effector.BEGIN_PLAY,
             defaults={
                 'is_root': True,
                 'ui_json': json.dumps({
@@ -118,18 +118,18 @@ class CNSNeuralPathwayNodeViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Auto-flags the Begin Play node as root if applicable."""
-        spell_id = self.request.data.get('effector')
-        invoked_book_id = self.request.data.get('invoked_pathway')
+        effector_id = self.request.data.get('effector')
+        invoked_pathway_id = self.request.data.get('invoked_pathway')
 
         is_root = False
-        if not invoked_book_id and int(spell_id) == Effector.BEGIN_PLAY:
+        if not invoked_pathway_id and int(effector_id) == Effector.BEGIN_PLAY:
             is_root = True
 
         serializer.save(is_root=is_root)
 
     def perform_destroy(self, instance):
         """Graph Protection: Cannot delete the core anchor node."""
-        is_delegated = bool(instance.invoked_spellbook_id)
+        is_delegated = bool(instance.invoked_pathway_id)
         if not is_delegated and instance.effector_id == Effector.BEGIN_PLAY:
             raise ValidationError(
                 'Cannot delete the core BeginPlay anchor node.')
@@ -180,7 +180,7 @@ class SpikeTrainViewSet(
     filterset_class = SpikeTrainFilter
     ordering_fields = '__all__'
     ordering = ['-created']  # Default ordering
-    search_fields = ['spellbook__name', 'status__name']
+    search_fields = ['pathway__name', 'status__name']
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -193,16 +193,16 @@ class SpikeTrainViewSet(
         """Launch Protocol."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        book_id = serializer.validated_data['spellbook_id']
+        pathway_id = serializer.validated_data['pathway_id']
 
         try:
-            controller = CNS(spellbook_id=book_id)
+            controller = CNS(pathway_id=pathway_id)
             controller.start()
             read_serializer = SpikeTrainSerializer(controller.spike_train)
             return Response(read_serializer.data,
                             status=status.HTTP_201_CREATED)
         except Exception as e:
-            logger.exception(f'Failed to launch pathway {book_id}')
+            logger.exception(f'Failed to launch pathway {pathway_id}')
             return Response(
                 {'error': f'Launch Failed: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -226,14 +226,14 @@ class SpikeTrainViewSet(
     @action(detail=True, methods=['post'])
     def stop(self, request, pk=None):
         """Graceful stop."""
-        controller = CNS(spawn_id=self.get_object().id)
+        controller = CNS(spike_train_id=self.get_object().id)
         controller.stop_gracefully()
         return Response({'status': 'Stopping signaled.'})
 
     @action(detail=True, methods=['post'])
     def terminate(self, request, pk=None):
         """Hard Kill."""
-        controller = CNS(spawn_id=self.get_object().id)
+        controller = CNS(spike_train_id=self.get_object().id)
         controller.terminate()
         return Response({'status': 'Termination complete.'})
 

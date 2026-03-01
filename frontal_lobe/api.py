@@ -83,7 +83,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         return Response(
             {
                 'status': 'Rebooting',
-                'spawn_id': str(spike.spike_train.id) if spike.spike_train else None,
+                'spike_train_id': str(spike.spike_train.id) if spike.spike_train else None,
             }
         )
 

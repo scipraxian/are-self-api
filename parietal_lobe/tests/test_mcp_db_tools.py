@@ -22,18 +22,18 @@ def db_setup():
     # Create a Spawn
     spike_train = SpikeTrain.objects.create(status=spike_train_status)
 
-    # Create Heads
-    head_1 = Spike.objects.create(spike_train=spike_train,
+    # Create Spikes
+    spike_1 = Spike.objects.create(spike_train=spike_train,
                                       status=head_status_active,
                                       blackboard={"var": "alpha"})
-    head_2 = Spike.objects.create(spike_train=spike_train,
+    spike_2 = Spike.objects.create(spike_train=spike_train,
                                       status=head_status_error,
                                       application_log="Fatal error on line 42")
 
     return {
         "spike_train": spike_train,
-        "head_1": head_1,
-        "head_2": head_2,
+        "spike_1": spike_1,
+        "spike_2": spike_2,
         "status_error_id": head_status_error.id
     }
 
@@ -42,18 +42,18 @@ def db_setup():
 @pytest.mark.asyncio
 async def test_gateway_dynamic_routing(db_setup):
     """Ensures the ParietalMCP gateway actually routes to the correct file."""
-    head_id = str(db_setup["head_1"].id)
+    spike_id = str(db_setup["spike_1"].id)
 
     result = await ParietalMCP.execute("mcp_update_blackboard", {
-        "head_id": head_id,
+        "spike_id": spike_id,
         "key": "test_gateway",
         "value": "routed"
     })
 
     assert "Success" in result
 
-    await asyncio.to_thread(db_setup["head_1"].refresh_from_db)
-    assert db_setup["head_1"].blackboard.get("test_gateway") == "routed"
+    await asyncio.to_thread(db_setup["spike_1"].refresh_from_db)
+    assert db_setup["spike_1"].blackboard.get("test_gateway") == "routed"
 
 
 @pytest.mark.django_db(transaction=True)
@@ -70,7 +70,7 @@ async def test_mcp_query_model_basic_filters(db_setup):
 
     data = json.loads(result)
     assert len(data["records"]) == 1
-    assert data["records"][0]["id"] == str(db_setup["head_2"].id)
+    assert data["records"][0]["id"] == str(db_setup["spike_2"].id)
 
 
 @pytest.mark.django_db(transaction=True)
@@ -106,11 +106,11 @@ async def test_mcp_query_model_count_action(db_setup):
 async def test_mcp_inspect_record(db_setup):
     """Ensures the radar/stat checker correctly maps the schema and field
     sizes."""
-    head_id = str(db_setup["head_2"].id)
+    spike_id = str(db_setup["spike_2"].id)
 
     result = await ParietalMCP.execute("mcp_inspect_record", {
         "model_name": "Spike",
-        "record_id": head_id
+        "record_id": spike_id
     })
 
     data = json.loads(result)
@@ -125,14 +125,14 @@ async def test_mcp_inspect_record(db_setup):
 async def test_mcp_search_and_read_record(db_setup):
     """Simulates the AI's 1-2 punch of searching a log, then reading the
     chunk."""
-    head_id = str(db_setup["head_2"].id)
+    spike_id = str(db_setup["spike_2"].id)
 
     # 1. Search the log
     search_result = await ParietalMCP.execute(
         "mcp_search_record_field", {
             "app_label": "central_nervous_system",
             "model_name": "Spike",
-            "record_id": head_id,
+            "record_id": spike_id,
             "field_name": "application_log",
             "pattern": "Fatal"
         })
@@ -145,7 +145,7 @@ async def test_mcp_search_and_read_record(db_setup):
         "mcp_read_record_field", {
             "app_label": "central_nervous_system",
             "model_name": "Spike",
-            "record_id": head_id,
+            "record_id": spike_id,
             "field_name": "application_log",
             "start_line": 1,
             "max_lines": 5

@@ -8,20 +8,20 @@ from common.constants import ID
 from environments.models import ProjectEnvironment
 from environments.variable_renderer import VariableRenderer
 from central_nervous_system.constants import (
+    APPLICATION_LOG_FIELD_NAME,
     EXECUTION_LOG_FIELD_NAME,
     HEAD_FIELD_NAME,
-    KEY_BOOK_ID,
     KEY_ENVIRONMENT_ID,
-    KEY_HEAD_ID,
+    KEY_EFFECTOR_ID,
+    KEY_PATHWAY_ID,
     KEY_PROVENANCE_ID,
-    KEY_SPAWN_ID,
-    KEY_SPELL_ID,
+    KEY_SPIKE_ID,
+    KEY_SPIKE_TRAIN_ID,
     NEURON_FIELD_NAME,
     PROVENANCE_FIELD_NAME,
     RESULT_CODE_FIELD_NAME,
-    SPAWN_FIELD_NAME,
-    APPLICATION_LOG_FIELD_NAME,
     SPELLBOOK_FIELD_NAME,
+    SPAWN_FIELD_NAME,
 )
 from central_nervous_system.models import Spike, NeuronContext, EffectorContext
 
@@ -66,8 +66,8 @@ def get_active_environment(spike) -> Any:
 
 
 def resolve_environment_context(
-    head_id: uuid.UUID = None,
-    spell_id: uuid.UUID = None,
+    spike_id: uuid.UUID = None,
+    effector_id: uuid.UUID = None,
 ) -> Dict[str, Any]:
     """Resolves the active ProjectEnvironment and builds the context dictionary.
 
@@ -81,15 +81,15 @@ def resolve_environment_context(
     spike = None
 
     # 1. Resolve Spike and Base IDs
-    if spell_id and not head_id:
+    if effector_id and not spike_id:
         env = ProjectEnvironment.objects.get(
             id=ProjectEnvironment.DEFAULT_ENVIRONMENT
         )
         metadata = {
-            KEY_SPELL_ID: spell_id if spell_id else None,
+            KEY_EFFECTOR_ID: effector_id if effector_id else None,
             KEY_ENVIRONMENT_ID: str(env.id) if env else None,
         }
-    elif head_id:
+    elif spike_id:
         try:
             spike = Spike.objects.select_related(
                 'effector',
@@ -100,17 +100,17 @@ def resolve_environment_context(
                 'spike_train__pathway',
                 'spike_train__pathway__environment',
                 PROVENANCE_FIELD_NAME,
-            ).get(id=head_id)
+            ).get(id=spike_id)
         except Spike.DoesNotExist:
             return {}
 
         env = get_active_environment(spike)
 
         metadata = {
-            KEY_HEAD_ID: str(spike.id),
-            KEY_SPAWN_ID: str(spike.spike_train.id),
-            KEY_SPELL_ID: spike.effector.id if spike.effector else None,
-            KEY_BOOK_ID: str(spike.spike_train.pathway.id)
+            KEY_SPIKE_ID: str(spike.id),
+            KEY_SPIKE_TRAIN_ID: str(spike.spike_train.id),
+            KEY_EFFECTOR_ID: spike.effector.id if spike.effector else None,
+            KEY_PATHWAY_ID: str(spike.spike_train.pathway.id)
             if spike.spike_train.pathway
             else None,
             KEY_PROVENANCE_ID: str(spike.provenance.id)
@@ -133,7 +133,7 @@ def resolve_environment_context(
                 RESULT_CODE_FIELD_NAME: '',
             }
     else:
-        raise ValueError('Must provide either head_id or (env_id and spell_id)')
+        raise ValueError('Must provide either spike_id or (env_id and effector_id)')
 
     context_data = metadata.copy()
     if spike:
@@ -147,9 +147,9 @@ def resolve_environment_context(
         context_data.update(VariableRenderer.extract_variables(env))
 
     if not spike:
-        if spell_id:
-            spell_vars = EffectorContext.objects.filter(spell_id=spell_id)
-            for var in spell_vars:
+        if effector_id:
+            effector_vars = EffectorContext.objects.filter(effector_id=effector_id)
+            for var in effector_vars:
                 if var.key:
                     context_data[var.key] = var.value
         return context_data
@@ -158,8 +158,8 @@ def resolve_environment_context(
         context_data.update(spike.blackboard)
 
     if spike.effector:
-        spell_vars = EffectorContext.objects.filter(effector=spike.effector)
-        for var in spell_vars:
+        effector_vars = EffectorContext.objects.filter(effector=spike.effector)
+        for var in effector_vars:
             if var.key:
                 context_data[var.key] = var.value
     if spike.neuron:

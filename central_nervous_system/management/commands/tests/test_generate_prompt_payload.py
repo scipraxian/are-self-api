@@ -58,7 +58,7 @@ class GeneratePromptPayloadTest(TestCase):
         """
         # ACT: Execute the management command exactly as the Caster would
         with self.assertLogs(level='INFO') as log_capture:
-            call_command('generate_prompt_payload', head_id=str(self.spike.id))
+            call_command('generate_prompt_payload', spike_id=str(self.spike.id))
 
             # extract the path from the logs
             found_path = None
@@ -95,4 +95,4 @@ class GeneratePromptPayloadTest(TestCase):
 
     def test_missing_head_graceful_exit(self):
         """Verify the command doesn't crash the worker if given a bad UUID."""
-        call_command('generate_prompt_payload', head_id=str(uuid.uuid4()))
+        call_command('generate_prompt_payload', spike_id=str(uuid.uuid4()))

@@ -48,7 +48,7 @@ class AgentIdentity(NamedTuple):
 
 # --- 2. CORE FUNCTIONS ---
 async def scan_and_register(
-    head_id: str,
+    spike_id: str,
     subnet_prefix: str = TalosDiscoveryConstants.DEFAULT_SUBNET_PREFIX,
     port: int = TalosDiscoveryConstants.DEFAULT_PORT,
 ) -> Tuple[int, str]:
@@ -61,7 +61,7 @@ async def scan_and_register(
     if registered_names:
         log_output += f' Registered/Updated: {", ".join(registered_names)}'
 
-    # Return (Success Code 200, Log String) for GenericSpellCaster [cite: 391]
+    # Return (Success Code 200, Log String) for GenericEffectorCaster
     return 200, log_output
 
 

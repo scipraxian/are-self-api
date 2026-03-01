@@ -158,9 +158,9 @@ class Effector(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
 
     BEGIN_PLAY = 1
 
-    talos_executable = models.ForeignKey(TalosExecutable,
-                                         on_delete=models.PROTECT,
-                                         default=1)
+    talos_executable = models.ForeignKey(
+        TalosExecutable, on_delete=models.PROTECT, default=1
+    )
     switches = models.ManyToManyField(TalosExecutableSwitch, blank=True)
     distribution_mode = models.ForeignKey(
         CNSDistributionMode,
@@ -186,19 +186,21 @@ class Effector(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
             env_vars = VariableRenderer.extract_variables(environment)
             context.update(env_vars)
 
-        # Apply runtime overrides (e.g. spawn_id, head_id)
+        # Apply runtime overrides (e.g. spike_train_id, spike_id)
         if extra_context:
             context.update(extra_context)
 
         # 2. Render Executable
         executable_path = self.talos_executable.get_rendered_executable(
-            environment)
+            environment
+        )
         command_list = [executable_path]
 
         # 3. Gather and Render Arguments & Switches
         # We need to render them using the FULL context
         executable_args = (
-            self.talos_executable.talosexecutableargumentassignment_set.all())
+            self.talos_executable.talosexecutableargumentassignment_set.all()
+        )
         spell_args = self.effectorargumentassignment_set.all()
 
         # Combine arguments, preserving order is tricky because they are separate querysets
@@ -238,11 +240,12 @@ class EffectorTarget(models.Model):
     Links a Effector to specific 'Pinned' Agents.
     """
 
-    effector = models.ForeignKey(Effector,
-                                 on_delete=models.CASCADE,
-                                 related_name='specific_targets')
-    target = models.ForeignKey('talos_agent.TalosAgentRegistry',
-                               on_delete=models.CASCADE)
+    effector = models.ForeignKey(
+        Effector, on_delete=models.CASCADE, related_name='specific_targets'
+    )
+    target = models.ForeignKey(
+        'talos_agent.TalosAgentRegistry', on_delete=models.CASCADE
+    )
 
     class Meta:
         unique_together = ('effector', 'target')
@@ -255,8 +258,9 @@ class EffectorTarget(models.Model):
 class EffectorArgumentAssignment(models.Model):
     effector = models.ForeignKey(Effector, on_delete=models.CASCADE)
     order = models.IntegerField(default=10)
-    argument = models.ForeignKey(TalosExecutableArgument,
-                                 on_delete=models.CASCADE)
+    argument = models.ForeignKey(
+        TalosExecutableArgument, on_delete=models.CASCADE
+    )
 
     class Meta(object):
         ordering = ['order']
@@ -266,11 +270,11 @@ class EffectorArgumentAssignment(models.Model):
 
 
 class NeuralPathway(
-        UUIDIdMixin,
-        DefaultFieldsMixin,
-        DescriptionMixin,
-        TagsAndFavoriteMixin,
-        ProjectEnvironmentMixin,
+    UUIDIdMixin,
+    DefaultFieldsMixin,
+    DescriptionMixin,
+    TagsAndFavoriteMixin,
+    ProjectEnvironmentMixin,
 ):
     """
     The Container. Now supports a visual JSON layout, Tags, and Favorites.
@@ -290,9 +294,9 @@ class Neuron(ProjectEnvironmentMixin):
     """
 
     is_root = models.BooleanField(default=False, db_index=True)
-    pathway = models.ForeignKey(NeuralPathway,
-                                on_delete=models.CASCADE,
-                                related_name='neurons')
+    pathway = models.ForeignKey(
+        NeuralPathway, on_delete=models.CASCADE, related_name='neurons'
+    )
     effector = models.ForeignKey(Effector, on_delete=models.CASCADE)
     ui_json = models.TextField(blank=True, default='{}')
 
@@ -302,14 +306,15 @@ class Neuron(ProjectEnvironmentMixin):
         null=True,
         blank=True,
         related_name='invoking_nodes',
-        help_text=('If set, this Node acts as a container '
-                   'that executes this NeuralPathway.'),
+        help_text=(
+            'If set, this Node acts as a container '
+            'that executes this NeuralPathway.'
+        ),
     )
 
-    distribution_mode = models.ForeignKey(CNSDistributionMode,
-                                          on_delete=models.SET_NULL,
-                                          null=True,
-                                          blank=True)
+    distribution_mode = models.ForeignKey(
+        CNSDistributionMode, on_delete=models.SET_NULL, null=True, blank=True
+    )
 
     def __str__(self):
         return f'Neuron {self.id}: {self.effector.name}'
@@ -336,12 +341,12 @@ class Axon(ModifiedMixin):
     Trigger Condition: Fires when 'source' finishes with 'status'.
     """
 
-    type = models.ForeignKey(AxonType,
-                             on_delete=models.PROTECT,
-                             default=AxonType.TYPE_FLOW)
-    pathway = models.ForeignKey(NeuralPathway,
-                                on_delete=models.CASCADE,
-                                related_name='axons')
+    type = models.ForeignKey(
+        AxonType, on_delete=models.PROTECT, default=AxonType.TYPE_FLOW
+    )
+    pathway = models.ForeignKey(
+        NeuralPathway, on_delete=models.CASCADE, related_name='axons'
+    )
     source = models.ForeignKey(
         Neuron,
         on_delete=models.CASCADE,
@@ -358,21 +363,23 @@ class Axon(ModifiedMixin):
         verbose_name = 'Wire / Connection'
 
     def __str__(self):
-        return (f'{self.source.effector.name} '
-                f'--[{self.type.name}]--> {self.target.effector.name}')
+        return (
+            f'{self.source.effector.name} '
+            f'--[{self.type.name}]--> {self.target.effector.name}'
+        )
 
 
 # --- EXECUTION STATE (The Runtime) ---
 
 
-class SpikeTrain(UUIDIdMixin, CreatedAndModifiedWithDelta,
-                 ProjectEnvironmentMixin):
+class SpikeTrain(
+    UUIDIdMixin, CreatedAndModifiedWithDelta, ProjectEnvironmentMixin
+):
     """NeuralPathway Instance."""
 
-    pathway = models.ForeignKey(NeuralPathway,
-                                on_delete=models.SET_NULL,
-                                null=True,
-                                blank=True)
+    pathway = models.ForeignKey(
+        NeuralPathway, on_delete=models.SET_NULL, null=True, blank=True
+    )
     status = models.ForeignKey(SpikeTrainStatus, on_delete=models.PROTECT)
 
     parent_spike = models.ForeignKey(
@@ -381,8 +388,7 @@ class SpikeTrain(UUIDIdMixin, CreatedAndModifiedWithDelta,
         null=True,
         blank=True,
         related_name='child_trains',
-        help_text=
-        'The Spike (Node execution) in the Parent Graph that spawned this Sub-Graph.',
+        help_text='The Spike (Node execution) in the Parent Graph that spawned this Sub-Graph.',
     )
 
     @property
@@ -431,14 +437,14 @@ class SpikeTrain(UUIDIdMixin, CreatedAndModifiedWithDelta,
     @property
     def live_spikes(self):
         return self.spikes.filter(
-            status__in=SpikeStatus.IS_ALIVE_STATUS_LIST).exclude(
-                spell_id=Effector.BEGIN_PLAY)
+            status__in=SpikeStatus.IS_ALIVE_STATUS_LIST
+        ).exclude(effector_id=Effector.BEGIN_PLAY)
 
     @property
     def finished_spikes(self):
         return self.spikes.filter(
-            status__in=SpikeStatus.IS_TERMINAL_STATUS_LIST).exclude(
-                spell_id=Effector.BEGIN_PLAY)
+            status__in=SpikeStatus.IS_TERMINAL_STATUS_LIST
+        ).exclude(effector_id=Effector.BEGIN_PLAY)
 
     @property
     def live_spike_trains(self):
@@ -456,8 +462,9 @@ class SpikeTrain(UUIDIdMixin, CreatedAndModifiedWithDelta,
 
     def __str__(self):
         # Handle case where pathway was deleted
-        book_name = (self.pathway.name
-                     if self.pathway else 'Deleted NeuralPathway')
+        book_name = (
+            self.pathway.name if self.pathway else 'Deleted NeuralPathway'
+        )
         return f'SpikeTrain {self.id} ({book_name})'
 
 
@@ -465,17 +472,15 @@ class Spike(UUIDIdMixin, CreatedAndModifiedWithDelta):
     """A single execution spike (Process)."""
 
     status = models.ForeignKey(SpikeStatus, on_delete=models.PROTECT)
-    spike_train = models.ForeignKey(SpikeTrain,
-                                    related_name='spikes',
-                                    on_delete=models.CASCADE)
-    neuron = models.ForeignKey(Neuron,
-                               on_delete=models.SET_NULL,
-                               null=True,
-                               blank=True)
-    effector = models.ForeignKey(Effector,
-                                 on_delete=models.SET_NULL,
-                                 null=True,
-                                 blank=True)
+    spike_train = models.ForeignKey(
+        SpikeTrain, related_name='spikes', on_delete=models.CASCADE
+    )
+    neuron = models.ForeignKey(
+        Neuron, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    effector = models.ForeignKey(
+        Effector, on_delete=models.SET_NULL, null=True, blank=True
+    )
     provenance = models.ForeignKey(
         'self',
         on_delete=models.CASCADE,

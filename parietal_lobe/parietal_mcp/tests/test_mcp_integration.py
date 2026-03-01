@@ -75,28 +75,28 @@ async def test_mcp_record_operations():
                                     status=spike_train_status)
 
     # Setup: Create a Spike
-    head_id = uuid.uuid4()
+    spike_id = uuid.uuid4()
 
     spike = await asyncio.to_thread(
         Spike.objects.create,
-        id=head_id,
+        id=spike_id,
         spike_train=spike_train,
         status=spike_status,
         blackboard={'initial': 'value'},
     )
 
     # 4. Test mcp_inspect_record
-    print(f'Testing mcp_inspect_record for {head_id}')
+    print(f'Testing mcp_inspect_record for {spike_id}')
     result = await ParietalMCP.execute(
         'mcp_inspect_record',
         {
             'model_name': 'Spike',
-            'record_id': str(head_id),
+            'record_id': str(spike_id),
         },
     )
 
     data = json.loads(result)
-    assert data['id']['value'] == str(head_id)
+    assert data['id']['value'] == str(spike_id)
     assert 'blackboard' in data
     assert 'value' in data['blackboard']
 
@@ -107,18 +107,18 @@ async def test_mcp_record_operations():
         {
             'model_name': 'Spike',
             'filters': {
-                'id': str(head_id)
+                'id': str(spike_id)
             },
         },
     )
 
     data = json.loads(result)
     assert len(data['records']) == 1
-    assert data['records'][0]['id'] == str(head_id)
+    assert data['records'][0]['id'] == str(spike_id)
 
     # 5b. Test mcp_query_model (Q Objects & Count Action)
     print(f'Testing mcp_query_model Q() string and Count')
-    q_string = f"Q(id='{str(head_id)}') | Q(status__name='NonExistent')"
+    q_string = f"Q(id='{str(spike_id)}') | Q(status__name='NonExistent')"
     result = await ParietalMCP.execute(
         'mcp_query_model',
         {
@@ -131,13 +131,13 @@ async def test_mcp_record_operations():
     assert 'Total Records:' in data['meta']
 
     # 6. Test mcp_update_blackboard
-    print(f'Testing mcp_update_blackboard for {head_id}')
+    print(f'Testing mcp_update_blackboard for {spike_id}')
     new_key = 'status'
     new_value = 'active'
     result = await ParietalMCP.execute(
         'mcp_update_blackboard',
         {
-            'head_id': str(head_id),
+            'spike_id': str(spike_id),
             'key': new_key,
             'value': new_value
         },
@@ -150,13 +150,13 @@ async def test_mcp_record_operations():
     assert spike.blackboard.get(new_key) == new_value
 
     # 7. Test mcp_read_record_field
-    print(f'Testing mcp_read_record_field for {head_id}')
+    print(f'Testing mcp_read_record_field for {spike_id}')
     result = await ParietalMCP.execute(
         'mcp_read_record_field',
         {
             'app_label': 'central_nervous_system',
             'model_name': 'Spike',
-            'record_id': str(head_id),
+            'record_id': str(spike_id),
             'field_name': 'blackboard',
         },
     )
@@ -165,13 +165,13 @@ async def test_mcp_record_operations():
     assert 'active' in result
 
     # 8. Test mcp_search_record_field
-    print(f'Testing mcp_search_record_field for {head_id}')
+    print(f'Testing mcp_search_record_field for {spike_id}')
     result = await ParietalMCP.execute(
         'mcp_search_record_field',
         {
             'app_label': 'central_nervous_system',
             'model_name': 'Spike',
-            'record_id': str(head_id),
+            'record_id': str(spike_id),
             'field_name': 'blackboard',
             'pattern': 'active',
         },

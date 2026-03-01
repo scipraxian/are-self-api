@@ -9,7 +9,7 @@ from central_nervous_system.utils import (
 )
 
 
-async def pathway_logic_node(head_id: str) -> tuple[int, str]:
+async def pathway_logic_node(spike_id: str) -> tuple[int, str]:
     """
     Executes flow control (Retry/Wait).
     Uses Provenance to count retries without needing state storage.
@@ -17,13 +17,13 @@ async def pathway_logic_node(head_id: str) -> tuple[int, str]:
 
     # 1. Fetch Spike with Provenance
     spike = await sync_to_async(lambda: Spike.objects.select_related(
-        'effector', 'provenance').get(id=head_id))()
+        'effector', 'provenance').get(id=spike_id))()
 
     # 2. Parse Arguments (retry=N, delay=N)
 
     env = await sync_to_async(get_active_environment)(spike)
     full_context = await sync_to_async(resolve_environment_context)(
-        head_id=spike.id)
+        spike_id=spike.id)
 
     full_cmd = await sync_to_async(spike.effector.get_full_command
                                   )(environment=env, extra_context=full_context)

@@ -18,7 +18,7 @@ from central_nervous_system.models import (
     NeuralPathway,
     Neuron,
 )
-from central_nervous_system.effectors.effector_casters.generic_effector_caster import GenericSpellCaster
+from central_nervous_system.effectors.effector_casters.generic_effector_caster import GenericEffectorCaster
 from talos_agent.talos_agent import TalosAgentConstants, TalosEvent
 
 
@@ -75,7 +75,7 @@ class TestGenericSpellCaster:
 
     def test_init_starts_execution(self, mock_head, mock_env_utils):
         """Test that execute() kicks off the process."""
-        caster = GenericSpellCaster(mock_head.id)
+        caster = GenericEffectorCaster(mock_head.id)
 
         # Mock TalosAgent.execute_local to return an empty stream then exit
         events = [
@@ -98,7 +98,7 @@ class TestGenericSpellCaster:
 
     def test_async_pipeline_success(self, mock_head, mock_env_utils):
         """Test a successful run updates status to SUCCESS."""
-        caster = GenericSpellCaster(mock_head.id)
+        caster = GenericEffectorCaster(mock_head.id)
 
         events = [
             TalosEvent(
@@ -124,7 +124,7 @@ class TestGenericSpellCaster:
 
     def test_async_pipeline_failure(self, mock_head, mock_env_utils):
         """Test a non-zero exit code updates status to FAILED."""
-        caster = GenericSpellCaster(mock_head.id)
+        caster = GenericEffectorCaster(mock_head.id)
 
         events = [
             TalosEvent(type=TalosAgentConstants.T_LOG, text='Crashing...'),
@@ -146,7 +146,7 @@ class TestGenericSpellCaster:
         mock_head.target = MagicMock()
         mock_head.target.hostname = '192.168.1.50'
 
-        caster = GenericSpellCaster(mock_head.id)
+        caster = GenericEffectorCaster(mock_head.id)
 
         events = [TalosEvent(type=TalosAgentConstants.T_EXIT, code=0)]
 
@@ -169,7 +169,7 @@ class TestGenericSpellCaster:
             '-project="C:\\My Files\\Proj.uproject"',
         ]
 
-        caster = GenericSpellCaster(mock_head.id)
+        caster = GenericEffectorCaster(mock_head.id)
 
         events = [TalosEvent(type=TalosAgentConstants.T_EXIT, code=0)]
 
@@ -200,7 +200,7 @@ class TestGenericSpellCaster:
         _, mock_ctx = mock_env_utils
         mock_ctx.return_value = {'project_name': 'HSHVacancy'}
 
-        caster = GenericSpellCaster(mock_head.id)
+        caster = GenericEffectorCaster(mock_head.id)
         events = [TalosEvent(type=TalosAgentConstants.T_EXIT, code=0)]
 
         with patch(
@@ -233,9 +233,9 @@ class TestGenericSpellCaster:
         mock_head.save()
 
         # 2. Mock a native Python Tool (e.g., an AI Parser)
-        async def mock_ai_handler(head_id):
+        async def mock_ai_handler(spike_id):
             # Native tools interact with the DB directly
-            h = await sync_to_async(Spike.objects.get)(id=head_id)
+            h = await sync_to_async(Spike.objects.get)(id=spike_id)
             h.blackboard['state'] = 'mutated'
             await sync_to_async(h.save)(update_fields=['blackboard'])
             return 200, 'AI Analysis Complete'
@@ -248,7 +248,7 @@ class TestGenericSpellCaster:
             mock_head.effector.talos_executable.internal = True
             mock_head.effector.talos_executable.executable = 'ai_parser'
 
-            caster = GenericSpellCaster(mock_head.id)
+            caster = GenericEffectorCaster(mock_head.id)
             caster.spike = mock_head
             caster.effector = mock_head.effector
 
@@ -270,7 +270,7 @@ class TestGenericSpellCaster:
         mock_head.execution_log = ''
         mock_head.application_log = ''
 
-        caster = GenericSpellCaster(mock_head.id)
+        caster = GenericEffectorCaster(mock_head.id)
 
         # Mixed log output mimicking a CLI tool sending secret commands
         log_payload = (
@@ -314,7 +314,7 @@ class TestGenericSpellCaster:
         mock_head.blackboard = None  # Simulate an uninitialized JSONField
         mock_head.execution_log = ''
 
-        caster = GenericSpellCaster(mock_head.id)
+        caster = GenericEffectorCaster(mock_head.id)
 
         # Edge cases
         log_payload = (
@@ -394,7 +394,7 @@ class GenericSpellCasterQueryTest(TestCase):
 
     def test_load_head_sync_prefetches_environment(self):
         """Verify _load_head_sync loads the environment in the initial query to prevent async ORM crashes."""
-        caster = GenericSpellCaster(head_id=self.spike.id)
+        caster = GenericEffectorCaster(spike_id=self.spike.id)
 
         # 1. Load the spike (Should take exactly 1 query due to select_related)
         with self.assertNumQueries(1):

@@ -33,7 +33,7 @@ class SpikeTrainFilter(django_filters.FilterSet):
 
 
 class SpikeFilter(django_filters.FilterSet):
-    spawn_id = django_filters.UUIDFilter(field_name='spawn_id')
+    spike_train_id = django_filters.UUIDFilter(field_name='spike_train')
     modified__gt = django_filters.IsoDateTimeFilter(
         field_name='modified', lookup_expr='gt'
     )

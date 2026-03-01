@@ -11,9 +11,9 @@ from ue_tools.log_parser import LogParserFactory, LogConstants
 
 
 @sync_to_async
-def _parse_head_log(head_id: str, page: int = 1) -> str:
+def _parse_spike_log(spike_id: str, page: int = 1) -> str:
     try:
-        spike = Spike.objects.get(id=head_id)
+        spike = Spike.objects.get(id=spike_id)
         content = spike.application_log or ""
 
         import io
@@ -85,6 +85,6 @@ def _parse_head_log(head_id: str, page: int = 1) -> str:
         return f"Failed to parse log: {str(e)}"
 
 
-async def mcp_run_unreal_diagnostic_parser(head_id: str, page: int = 1) -> str:
+async def mcp_run_unreal_diagnostic_parser(spike_id: str, page: int = 1) -> str:
     """MCP Tool: Parse Unreal Engine logs for a specific Spike and return a structural summary."""
-    return await _parse_head_log(head_id, page)
+    return await _parse_spike_log(spike_id, page)

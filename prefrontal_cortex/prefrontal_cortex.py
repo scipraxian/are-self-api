@@ -24,14 +24,14 @@ class PrefrontalCortex:
     # A distance of 0.2 means 80% similarity.
     MAX_ALLOWED_DISTANCE = 0.25
 
-    def __init__(self, head_id: str):
-        self.head_id = head_id
+    def __init__(self, spike_id: str):
+        self.spike_id = spike_id
         self.spike = None
         self.provenance = None
         self.environment = None
 
     async def engage(self) -> Tuple[int, str]:
-        logger.info(f'[PFC] Routing evaluation started for Spike {self.head_id}')
+        logger.info(f'[PFC] Routing evaluation started for Spike {self.spike_id}')
 
         await self._load_context()
 
@@ -74,7 +74,7 @@ class PrefrontalCortex:
             Spike.objects.select_related(
                 'provenance', 'provenance__spell'
             ).get
-        )(id=self.head_id)
+        )(id=self.spike_id)
 
         self.provenance = self.spike.provenance
 
@@ -84,7 +84,7 @@ class PrefrontalCortex:
 
     def _build_routing_context(self) -> str:
         """Constructs a dense string representing the workflow intent."""
-        spell_name = (
+        effector_name = (
             self.provenance.effector.name
             if self.provenance.effector
             else 'Unknown Spell'
@@ -101,7 +101,7 @@ class PrefrontalCortex:
 
         context_parts = [
             f'Environment: {env_name}',
-            f'Executed Action: {spell_name}',
+            f'Executed Action: {effector_name}',
             f'Execution Result: {status_name}',
         ]
         return ' | '.join(context_parts)
@@ -152,12 +152,12 @@ class PrefrontalCortex:
             id=PFCItemStatus.IN_PROGRESS
         )
 
-        spell_name = (
+        effector_name = (
             self.provenance.effector.name if self.provenance.effector else 'Workflow'
         )
 
         return await sync_to_async(PFCTask.objects.create)(
-            name=f'Review: {spell_name}',
+            name=f'Review: {effector_name}',
             description=f'Triggered by workflow completion.\nContext: {context}',
             story=story,
             status=in_progress,
@@ -180,16 +180,16 @@ class PrefrontalCortexDispatcher:
     to handle the current state of the studio.
     """
 
-    def __init__(self, head_id: str):
-        self.head_id = head_id
+    def __init__(self, spike_id: str):
+        self.spike_id = spike_id
         self.spike = None
 
     async def engage(self) -> Tuple[int, str]:
         logger.info(
-            f'[PFC] Dispatcher checking the board for Spike {self.head_id}'
+            f'[PFC] Dispatcher checking the board for Spike {self.spike_id}'
         )
 
-        self.spike = await sync_to_async(Spike.objects.get)(id=self.head_id)
+        self.spike = await sync_to_async(Spike.objects.get)(id=self.spike_id)
 
         # 1. Is there a Worker (Pig) ticket ready to go?
         # A Story that the Oracle (PM) has explicitly moved to 'Selected for Development'
@@ -237,7 +237,7 @@ class PrefrontalCortexDispatcher:
         return await sync_to_async(_query)()
 
 
-async def dispatch_pfc(head_id: str) -> tuple[int, str]:
+async def dispatch_pfc(spike_id: str) -> tuple[int, str]:
     """Native execution handler for the CNS Graph."""
-    dispatcher = PrefrontalCortexDispatcher(head_id)
+    dispatcher = PrefrontalCortexDispatcher(spike_id)
     return await dispatcher.engage()

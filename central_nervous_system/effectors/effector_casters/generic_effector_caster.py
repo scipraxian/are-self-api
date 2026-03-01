@@ -9,23 +9,29 @@ from typing import List, Optional
 
 from asgiref.sync import sync_to_async
 
-from environments.variable_renderer import VariableRenderer
-from central_nervous_system.models import Spike, SpikeStatus
-from central_nervous_system.effectors.effector_casters.begin_play_node import begin_play
+from central_nervous_system.effectors.effector_casters.begin_play_node import (
+    begin_play,
+)
 from central_nervous_system.effectors.effector_casters.effector_handlers.version_metadata_handler import (
-    update_version_metadata,)
-from central_nervous_system.effectors.effector_casters.pathway_logic_node import pathway_logic_node
+    update_version_metadata,
+)
+from central_nervous_system.effectors.effector_casters.pathway_logic_node import (
+    pathway_logic_node,
+)
+from central_nervous_system.models import Spike, SpikeStatus
 from central_nervous_system.utils import (
     get_active_environment,
     resolve_environment_context,
+)
+from environments.variable_renderer import VariableRenderer
+from frontal_lobe.frontal_lobe import (
+    run_frontal_lobe,
 )
 from talos_agent.talos_agent import (
     TalosAgent,
     TalosAgentConstants,
 )
 from talos_agent.talos_agent_finder import scan_and_register
-from frontal_lobe.frontal_lobe import (
-    run_frontal_lobe,)
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +151,7 @@ class AsyncLogManager:
                 f'Failed to save execution log for Spike {self.spike.id}: {e}')
 
 
-class GenericSpellCaster:
+class GenericEffectorCaster:
     """The Orchestrator for Talos Spells."""
 
     LOG_START_MESSAGE = 'Starting effector execution.\n'
@@ -163,8 +169,8 @@ class GenericSpellCaster:
     STATUS_FIELD = 'status'
     BLACKBOARD_FIELD = 'blackboard'
 
-    def __init__(self, head_id: uuid.UUID):
-        self.head_id = head_id
+    def __init__(self, spike_id: uuid.UUID):
+        self.spike_id = spike_id
         self.verbose_logging = True
         self.spike: Optional[Spike] = None
         self.effector = None
@@ -174,11 +180,11 @@ class GenericSpellCaster:
 
     def execute(self):
         """Public Synchronous Entry Point."""
-        logger.info(f'Initializing execution for Spike ID: {self.head_id}')
+        logger.info(f'Initializing execution for Spike ID: {self.spike_id}')
         try:
             self._load_head_sync()
         except Exception as e:
-            logger.error(f'FATAL: Could not load Spike {self.head_id}: {e}')
+            logger.error(f'FATAL: Could not load Spike {self.spike_id}: {e}')
             return
 
         if sys.platform == 'win32':
@@ -218,7 +224,7 @@ class GenericSpellCaster:
                         raise exc
                 except ConnectionAbortedError:
                     logger.warning(
-                        f'Spike {self.head_id} execution aborted by user.')
+                        f'Spike {self.spike_id} execution aborted by user.')
                     return
 
             if spell_task in done:
@@ -285,7 +291,7 @@ class GenericSpellCaster:
         # 1. Prepare Arguments
         env = await sync_to_async(get_active_environment)(self.spike)
         full_context = await sync_to_async(resolve_environment_context)(
-            head_id=self.head_id)
+            spike_id=self.spike_id)
 
         full_cmd = await sync_to_async(self.effector.get_full_command
                                       )(environment=env,
@@ -392,10 +398,10 @@ class GenericSpellCaster:
 
         try:
             if asyncio.iscoroutinefunction(handler_func):
-                return_code, output_log = await handler_func(self.head_id)
+                return_code, output_log = await handler_func(self.spike_id)
             else:
                 return_code, output_log = await sync_to_async(handler_func)(
-                    self.head_id)
+                    self.spike_id)
         except Exception as e:
             self.spike.application_log = f'Native Handler Exception: {str(e)}'
             await self._save_head(fields=[self.APPLICATION_LOG_FIELD])
@@ -418,7 +424,7 @@ class GenericSpellCaster:
             'spike_train__environment',
             'neuron',
             'neuron__environment',
-        ).get(id=self.head_id)
+        ).get(id=self.spike_id)
         self.effector = self.spike.effector
 
     def _log_info(self, message: str):

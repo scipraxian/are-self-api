@@ -30,22 +30,22 @@ _ENCODING = 'utf-8'
 _DEFAULT_GAME_NAME = 'HSH: Vacancy'
 
 
-def update_version_metadata(head_id: UUID) -> Tuple[int, str]:
+def update_version_metadata(spike_id: UUID) -> Tuple[int, str]:
     """Updates the application version JSON file with build metadata.
 
     Args:
-        head_id: int: The Spike execution context.
+        spike_id: UUID: The Spike execution context.
 
     Returns:
         Tuple[int, str]: (exit_code, log_output)
             exit_code = 0 for success, 1 for failure
     """
-    logging.info(f'Updating version metadata for spike {head_id}...')
-    spike = Spike.objects.get(id=head_id)
+    logging.info(f'Updating version metadata for spike {spike_id}...')
+    spike = Spike.objects.get(id=spike_id)
     effector = spike.effector
 
     env = get_active_environment(spike)
-    full_context = resolve_environment_context(head_id=spike.id)
+    full_context = resolve_environment_context(spike_id=spike.id)
 
     full_cmd = effector.get_full_command(environment=env,
                                       extra_context=full_context)

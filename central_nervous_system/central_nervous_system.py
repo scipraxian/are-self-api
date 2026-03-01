@@ -48,15 +48,15 @@ class CNS:
 
     def __init__(
         self,
-        spellbook_id: Optional[uuid.UUID] = None,
-        spawn_id: Optional[uuid.UUID] = None,
+        pathway_id: Optional[uuid.UUID] = None,
+        spike_train_id: Optional[uuid.UUID] = None,
     ):
-        if spawn_id:
-            self.spike_train = SpikeTrain.objects.get(id=spawn_id)
-        elif spellbook_id:
-            self.spike_train = self._create_spawn(spellbook_id)
+        if spike_train_id:
+            self.spike_train = SpikeTrain.objects.get(id=spike_train_id)
+        elif pathway_id:
+            self.spike_train = self._create_spawn(pathway_id)
         else:
-            raise ValueError('Must provide either spawn_id or spellbook_id')
+            raise ValueError('Must provide either spike_train_id or pathway_id')
 
     def start(self) -> None:
         """Ignites the spike_train idempotently."""
@@ -211,8 +211,8 @@ class CNS:
     # Internal Logic
     # =========================================================================
 
-    def _create_spawn(self, spellbook_id: uuid.UUID) -> SpikeTrain:
-        book = NeuralPathway.objects.get(id=spellbook_id)
+    def _create_spawn(self, pathway_id: uuid.UUID) -> SpikeTrain:
+        book = NeuralPathway.objects.get(id=pathway_id)
         active_env = ProjectEnvironment.objects.filter(selected=True).first()
         spike_train = SpikeTrain.objects.create(
             pathway=book,
@@ -277,24 +277,24 @@ class CNS:
             return
 
         for node in root_nodes:
-            self._create_head_from_node(node, provenance=None)
+            self._create_spike_from_node(node, provenance=None)
 
-    def _process_graph_triggers(self, finished_head: Spike) -> None:
+    def _process_graph_triggers(self, finished_spike: Spike) -> None:
         """Follows the axons from a finished spike based on Status Logic."""
-        if not finished_head.neuron:
+        if not finished_spike.neuron:
             return
 
         valid_wire_types = []
         valid_wire_types.append(AxonType.TYPE_FLOW)
 
-        if finished_head.status_id == SpikeStatus.SUCCESS:
+        if finished_spike.status_id == SpikeStatus.SUCCESS:
             valid_wire_types.append(AxonType.TYPE_SUCCESS)
-        elif finished_head.status_id == SpikeStatus.FAILED:
+        elif finished_spike.status_id == SpikeStatus.FAILED:
             valid_wire_types.append(AxonType.TYPE_FAILURE)
 
         axons = Axon.objects.filter(
             pathway=self.spike_train.pathway,
-            source=finished_head.neuron,
+            source=finished_spike.neuron,
             type_id__in=valid_wire_types,
         )
 
@@ -303,15 +303,15 @@ class CNS:
 
         logger.info(
             f'[CNS] Triggering {axons.count()} '
-            f'axons from Spike {finished_head.id}'
+            f'axons from Spike {finished_spike.id}'
         )
 
         for wire in axons:
-            self._create_head_from_node(
-                neuron=wire.target, provenance=finished_head
+            self._create_spike_from_node(
+                neuron=wire.target, provenance=finished_spike
             )
 
-    def _create_head_from_node(
+    def _create_spike_from_node(
         self, neuron: Neuron, provenance: Optional[Spike]
     ):
         starting_blackboard = {}
@@ -329,7 +329,7 @@ class CNS:
                 if arg.key:
                     starting_blackboard[arg.key] = arg.value
 
-        seed_head = Spike.objects.create(
+        seed_spike = Spike.objects.create(
             spike_train=self.spike_train,
             neuron=neuron,
             effector=neuron.effector,
@@ -342,8 +342,8 @@ class CNS:
         if getattr(neuron, 'invoked_pathway', None):
             from .engine.graph_walker import GraphWalker
 
-            walker = GraphWalker(spawn_id=self.spike_train.id)
-            walker.process_node(seed_head)
+            walker = GraphWalker(spike_train_id=self.spike_train.id)
+            walker.process_node(seed_spike)
             return
 
         if getattr(neuron, 'distribution_mode', None):
@@ -352,39 +352,39 @@ class CNS:
             mode = neuron.effector.distribution_mode_id
 
         if mode == CNSDistributionModeID.ALL_ONLINE_AGENTS:
-            self._dispatch_fleet_wave(seed_head)
+            self._dispatch_fleet_wave(seed_spike)
         elif mode == CNSDistributionModeID.SPECIFIC_TARGETS:
-            self._dispatch_pinned_wave(seed_head)
+            self._dispatch_pinned_wave(seed_spike)
         elif mode == CNSDistributionModeID.ONE_AVAILABLE_AGENT:
-            self._dispatch_first_responder(seed_head)
+            self._dispatch_first_responder(seed_spike)
         else:
-            self._prepare_and_dispatch(seed_head)
+            self._prepare_and_dispatch(seed_spike)
 
-    def _dispatch_fleet_wave(self, seed_head: Spike) -> None:
+    def _dispatch_fleet_wave(self, seed_spike: Spike) -> None:
         agents = TalosAgentRegistry.objects.filter(
             status_id=TalosAgentStatus.ONLINE
         )
 
         if not agents.exists():
-            seed_head.status_id = CNSStatusID.FAILED
-            seed_head.execution_log = (
+            seed_spike.status_id = CNSStatusID.FAILED
+            seed_spike.execution_log = (
                 '[CNS] No agents online for fleet broadcast.'
             )
-            seed_head.save()
+            seed_spike.save()
             return
 
         for agent in agents:
-            self._clone_and_dispatch_head(seed_head, agent)
+            self._clone_and_dispatch_spike(seed_spike, agent)
 
-        seed_head.delete()
+        seed_spike.delete()
 
-    def _dispatch_pinned_wave(self, seed_head: Spike) -> None:
-        targets = seed_head.effector.specific_targets.all()
+    def _dispatch_pinned_wave(self, seed_spike: Spike) -> None:
+        targets = seed_spike.effector.specific_targets.all()
         for t in targets:
-            self._clone_and_dispatch_head(seed_head, t.target)
-        seed_head.delete()
+            self._clone_and_dispatch_spike(seed_spike, t.target)
+        seed_spike.delete()
 
-    def _dispatch_first_responder(self, seed_head: Spike) -> None:
+    def _dispatch_first_responder(self, seed_spike: Spike) -> None:
         agent = (
             TalosAgentRegistry.objects.filter(status_id=TalosAgentStatus.ONLINE)
             .order_by('last_seen')
@@ -392,16 +392,16 @@ class CNS:
         )
 
         if not agent:
-            seed_head.status_id = CNSStatusID.FAILED
-            seed_head.execution_log = '[CNS] No agents available.'
-            seed_head.save()
+            seed_spike.status_id = CNSStatusID.FAILED
+            seed_spike.execution_log = '[CNS] No agents available.'
+            seed_spike.save()
             return
 
-        self._clone_and_dispatch_head(seed_head, agent)
-        seed_head.delete()
+        self._clone_and_dispatch_spike(seed_spike, agent)
+        seed_spike.delete()
 
-    def _clone_and_dispatch_head(self, seed: Spike, agent: TalosAgentRegistry):
-        new_head = Spike.objects.create(
+    def _clone_and_dispatch_spike(self, seed: Spike, agent: TalosAgentRegistry):
+        new_spike = Spike.objects.create(
             spike_train=seed.spike_train,
             neuron=seed.neuron,
             effector=seed.effector,
@@ -410,7 +410,7 @@ class CNS:
             status_id=SpikeStatus.PENDING,
             blackboard=seed.blackboard.copy(),
         )
-        transaction.on_commit(lambda: cast_cns_spell.delay(new_head.id))
+        transaction.on_commit(lambda: cast_cns_spell.delay(new_spike.id))
 
     def _prepare_and_dispatch(self, spike: Spike) -> None:
         spike.status_id = SpikeStatus.PENDING

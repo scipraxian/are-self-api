@@ -8,25 +8,25 @@ app_name = 'central_nervous_system'
 urlpatterns = [
     # --- The Graph App ---
     path(
-        'graph/editor/<str:book_id>/',
+        'graph/editor/<str:pathway_id>/',
         views.CNSGraphEditorView.as_view(),
         name='graph_editor',
     ),
     path(
-        'graph/spike_train/<uuid:spawn_id>/',
+        'graph/spike_train/<uuid:spike_train_id>/',
         views.CNSGraphMonitorView.as_view(),
         name='graph_monitor',
     ),
     # API endpoints
     path(
-        'graph/<str:book_id>/launch/',
+        'graph/<str:pathway_id>/launch/',
         CNSGraphLaunchAPI.as_view(),
         name='graph_launch_api',
     ),
-    path('graph/<str:book_id>/', CNSGraphAPI.as_view(),
+    path('graph/<str:pathway_id>/', CNSGraphAPI.as_view(),
          name='graph_api_root'),
     path(
-        'graph/<str:book_id>/<str:action>',
+        'graph/<str:pathway_id>/<str:action>',
         CNSGraphAPI.as_view(),
         name='graph_api_action',
     ),
@@ -36,7 +36,7 @@ urlpatterns = [
          name='head_detail'),
     # --- Actions ---
     path(
-        'launch/<uuid:spellbook_id>/',
+        'launch/<uuid:pathway_id>/',
         views.LaunchNeuralPathwayView.as_view(),
         name='cns_launch',
     ),
@@ -62,7 +62,7 @@ urlpatterns = [
         name='cns_head_logs',
     ),
     path(
-        'monitor/<uuid:spawn_id>/',
+        'monitor/<uuid:spike_train_id>/',
         views.CNSGraphMonitorView.as_view(),
         name='cns_spawn_monitor',
     ),
@@ -74,12 +74,12 @@ urlpatterns = [
     # Misc
     path('controls/', views.CNSControlsView.as_view(), name='cns_controls'),
     path(
-        'battle/<uuid:spawn_id>/',
+        'battle/<uuid:spike_train_id>/',
         views.CNSBattleStationView.as_view(),
         name='cns_battle_station',
     ),
     path(
-        'battle/stream/<uuid:spawn_id>/',
+        'battle/stream/<uuid:spike_train_id>/',
         views.CNSBattleStreamView.as_view(),
         name='cns_battle_stream',
     ),

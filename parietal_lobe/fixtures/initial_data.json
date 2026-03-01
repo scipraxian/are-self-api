@@ -407,7 +407,7 @@
       "created": "2026-02-18T12:00:00Z",
       "description": "Spike UUID.",
       "modified": "2026-02-18T12:00:00Z",
-      "name": "head_id",
+      "name": "spike_id",
       "type": 1
     }
   },

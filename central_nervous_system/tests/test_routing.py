@@ -64,7 +64,7 @@ class CNSGraphRoutingTest(TestCase):
     def test_creates_head_from_node_on_success(self, mock_cast_delay):
         """Verify CNS._process_graph_triggers successfully traverses wires to spawn child Spikes."""
 
-        cns = CNS(spellbook_id=self.book.id)
+        cns = CNS(pathway_id=self.book.id)
 
         # 1. Dispatch Root
         with self.captureOnCommitCallbacks(execute=True):

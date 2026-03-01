@@ -132,7 +132,7 @@ class EffectorAdmin(admin.ModelAdmin):
 
             # [FIX] Resolve Tier 1 Defaults (Effector Context)
             # This fetches the variables defined in EffectorContextInline
-            ctx = resolve_environment_context(spell_id=obj.id)
+            ctx = resolve_environment_context(effector_id=obj.id)
 
             # Pass BOTH the environment and the context to the renderer
             full_cmd_list = obj.get_full_command(environment=env,
@@ -148,7 +148,7 @@ class SpikeAdmin(admin.ModelAdmin):
     # Added 'neuron' and 'provenance' to list for debugging
     list_display = (
         'id',
-        'spell_name',
+        'effector_name',
         'status',
         'created',
         'neuron',
@@ -162,7 +162,7 @@ class SpikeAdmin(admin.ModelAdmin):
         'resolved_command_preview',
     )
 
-    def spell_name(self, obj):
+    def effector_name(self, obj):
         return obj.effector.name
 
     def resolved_command_preview(self, obj):
@@ -171,7 +171,7 @@ class SpikeAdmin(admin.ModelAdmin):
                 return '-'
 
             env = get_active_environment(obj)
-            ctx = resolve_environment_context(head_id=obj.id)
+            ctx = resolve_environment_context(spike_id=obj.id)
 
             full_cmd_list = obj.effector.get_full_command(environment=env,
                                                           extra_context=ctx)
@@ -227,7 +227,7 @@ class CNSNeuralPathwayNodeAdmin(admin.ModelAdmin):
 
             # 2. Effector Defaults (Tier 1)
             # We use the utility to get Env + Effector vars first
-            ctx = resolve_environment_context(spell_id=obj.effector.id)
+            ctx = resolve_environment_context(effector_id=obj.effector.id)
 
             # 3. Node Overrides (Tier 2)
             # Manually apply these since resolve_environment_context doesn't take node_id directly yet

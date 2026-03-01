@@ -151,28 +151,28 @@ def ai_list_files(path, root_path=None):
         return f'Error listing directory: {str(e)}'
 
 
-def ai_execute_task(head_id):
+def ai_execute_task(spike_id):
     try:
-        val = uuid.UUID(str(head_id))
+        val = uuid.UUID(str(spike_id))
     except ValueError:
-        return f"Error: Invalid Spike ID '{head_id}'. Must be a UUID."
+        return f"Error: Invalid Spike ID '{spike_id}'. Must be a UUID."
     try:
-        cast_cns_spell.delay(str(head_id))
-        return f'Successfully queued effector for Spike {head_id}.'
+        cast_cns_spell.delay(str(spike_id))
+        return f'Successfully queued effector for Spike {spike_id}.'
     except Exception as e:
         return f'Error casting effector: {str(e)}'
 
 
-def ai_update_blackboard(head_id: str, key: str, value: str) -> str:
+def ai_update_blackboard(spike_id: str, key: str, value: str) -> str:
     """
     Updates a value in the Spike blackboard, altering the state
     for downstream graph routing.
     """
 
     try:
-        val_uuid = uuid.UUID(str(head_id))
+        val_uuid = uuid.UUID(str(spike_id))
     except ValueError:
-        return f"Error: Invalid Spike ID '{head_id}'. Must be a UUID."
+        return f"Error: Invalid Spike ID '{spike_id}'. Must be a UUID."
 
     try:
         spike = Spike.objects.get(id=val_uuid)
@@ -185,12 +185,12 @@ def ai_update_blackboard(head_id: str, key: str, value: str) -> str:
         spike.save(update_fields=['blackboard'])
 
         logger.info(
-            f'[Parietal] Blackboard mutated for Spike {head_id}: {key}={value}'
+            f'[Parietal] Blackboard mutated for Spike {spike_id}: {key}={value}'
         )
         return f"Success: Blackboard updated. {key} is now '{value}'."
 
     except Spike.DoesNotExist:
-        return f'Error: Spike {head_id} not found.'
+        return f'Error: Spike {spike_id} not found.'
     except Exception as e:
         logger.error(f'[Parietal] Blackboard update failed: {e}')
         return f'Error updating blackboard: {str(e)}'

@@ -52,10 +52,10 @@ class GraphNodeLayout:
     title: str
     x: float
     y: float
-    spell_id: Optional[int]
+    effector_id: Optional[int]
     is_root: bool
     has_override: bool
-    invoked_spellbook_id: Optional[str] = None
+    invoked_pathway_id: Optional[str] = None
 
 
 @dataclass
@@ -172,12 +172,10 @@ class GraphNodeLayoutSerializer(serializers.Serializer):
     title = serializers.CharField()
     x = serializers.FloatField()
     y = serializers.FloatField()
-    spell_id = serializers.IntegerField(allow_null=True, required=False)
+    effector_id = serializers.IntegerField(allow_null=True, required=False)
     is_root = serializers.BooleanField()
     has_override = serializers.BooleanField()
-    invoked_spellbook_id = serializers.UUIDField(
-        allow_null=True, required=False
-    )
+    invoked_pathway_id = serializers.UUIDField(allow_null=True, required=False)
 
 
 class GraphWireLayoutSerializer(serializers.Serializer):
@@ -220,7 +218,7 @@ class SpikeTrainLightSerializer(DynamicFieldsModelSerializer):
     """
 
     status_name = serializers.CharField(source='status.name', read_only=True)
-    spellbook_name = serializers.CharField(
+    pathway_name = serializers.CharField(
         source='pathway.name', read_only=True
     )
     is_active = serializers.BooleanField(read_only=True)
@@ -231,7 +229,7 @@ class SpikeTrainLightSerializer(DynamicFieldsModelSerializer):
             'id',
             'status_name',
             'pathway',
-            'spellbook_name',
+            'pathway_name',
             'parent_spike',
             'created',
             'modified',
@@ -241,7 +239,7 @@ class SpikeTrainLightSerializer(DynamicFieldsModelSerializer):
 
 class SpikeTrainSerializer(DynamicFieldsModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
-    spellbook_name = serializers.CharField(
+    pathway_name = serializers.CharField(
         source='pathway.name', read_only=True
     )
     environment_name = serializers.CharField(
@@ -347,8 +345,8 @@ class CNSNeuralPathwayConnectionWireSerializer(serializers.ModelSerializer):
 
 
 class CNSNeuralPathwayNodeSerializer(serializers.ModelSerializer):
-    spell_name = serializers.CharField(source='effector.name', read_only=True)
-    invoked_spellbook_name = serializers.CharField(
+    effector_name = serializers.CharField(source='effector.name', read_only=True)
+    invoked_pathway_name = serializers.CharField(
         source='invoked_pathway.name', read_only=True
     )
     ui_json = serializers.JSONField(initial=dict)
@@ -409,7 +407,7 @@ class CNSGraphLayoutSerializer(serializers.ModelSerializer):
         ).all()
         for n in neurons:
             ui = _get_ui_data(n.ui_json)
-            is_delegated = bool(n.invoked_spellbook_id)
+            is_delegated = bool(n.invoked_pathway_id)
             is_root = (
                 n.effector_id == Effector.BEGIN_PLAY
             ) and not is_delegated
@@ -425,10 +423,10 @@ class CNSGraphLayoutSerializer(serializers.ModelSerializer):
                     title=title,
                     x=ui.get(constants.KEY_X, 0.0),
                     y=ui.get(constants.KEY_Y, 0.0),
-                    spell_id=n.effector_id,
+                    effector_id=n.effector_id,
                     is_root=is_root,
                     has_override=n.distribution_mode_id is not None,
-                    invoked_spellbook_id=str(n.invoked_spellbook_id)
+                    invoked_pathway_id=str(n.invoked_pathway_id)
                     if is_delegated
                     else None,
                 )
@@ -488,16 +486,16 @@ class SpikeTrainStatusSerializer(serializers.ModelSerializer):
         model = SpikeTrain
         fields = ['status', 'status_label', 'is_active', 'neurons']
 
-    def get_nodes(self, obj):
+    def get_neurons(self, obj):
         node_status_map = {}
         if obj.pathway:
             begin_play_node = obj.pathway.neurons.filter(
-                spell_id=Effector.BEGIN_PLAY
+                effector_id=Effector.BEGIN_PLAY
             ).first()
             if begin_play_node:
                 node_status_map[str(begin_play_node.id)] = {
                     'status_id': CNSStatusID.SUCCESS,
-                    'head_id': None,
+                    'spike_id': None,
                 }
         spikes = (
             obj.spikes.select_related('status')
@@ -511,17 +509,17 @@ class SpikeTrainStatusSerializer(serializers.ModelSerializer):
                 child_id = str(child.id) if child else None
                 node_status_map[str(spike.neuron_id)] = {
                     'status_id': spike.status_id,
-                    'head_id': str(spike.id),
-                    'child_spawn_id': child_id,
+                    'spike_id': str(spike.id),
+                    'child_spike_train_id': child_id,
                 }
         return node_status_map
 
 
 class SpikeTrainCreateSerializer(serializers.Serializer):
-    spellbook_id = serializers.UUIDField()
+    pathway_id = serializers.UUIDField()
     environment_id = serializers.UUIDField(required=False, allow_null=True)
 
-    def validate_spellbook_id(self, value):
+    def validate_pathway_id(self, value):
         if not NeuralPathway.objects.filter(id=value).exists():
             raise serializers.ValidationError('NeuralPathway not found.')
         return value
@@ -532,7 +530,7 @@ class SpikeSerializer(serializers.ModelSerializer):
     target_name = serializers.CharField(
         source='target.hostname', read_only=True
     )
-    spell_name = serializers.CharField(source='effector.name', read_only=True)
+    effector_name = serializers.CharField(source='effector.name', read_only=True)
     average_delta = serializers.SerializerMethodField()
 
     class Meta:
@@ -588,7 +586,7 @@ class NeuronTelemetrySerializer(serializers.ModelSerializer):
             if not obj.effector:
                 return constants.VAL_CMD_NOT_CAPTURED
             env = get_active_environment(obj)
-            full_context = resolve_environment_context(head_id=obj.id)
+            full_context = resolve_environment_context(spike_id=obj.id)
             cmd_list = obj.effector.get_full_command(
                 environment=env, extra_context=full_context
             )
@@ -647,7 +645,7 @@ class CNSSwimlaneSerializer(serializers.ModelSerializer):
     is_stopping = serializers.BooleanField(read_only=True)
     ended_badly = serializers.BooleanField(read_only=True)
     ended_successfully = serializers.BooleanField(read_only=True)
-    spellbook_name = serializers.CharField(
+    pathway_name = serializers.CharField(
         source='pathway.name', read_only=True
     )
 
@@ -657,7 +655,7 @@ class CNSSwimlaneSerializer(serializers.ModelSerializer):
             'id',
             'status',
             'pathway',
-            'spellbook_name',
+            'pathway_name',
             'created',
             'modified',
             'is_active',
