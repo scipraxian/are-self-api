@@ -5,10 +5,10 @@
     --grid-color: rgba(255, 255, 255, 0.05);
     --grid-major-color: rgba(255, 255, 255, 0.1);
 
-    --node-bg: rgba(35, 35, 35, 0.95);
-    --node-border: #3a3a3a;
-    --node-header: #2d2d2d;
-    --node-selected: #f7941d;
+    --neuron-bg: rgba(35, 35, 35, 0.95);
+    --neuron-border: #3a3a3a;
+    --neuron-header: #2d2d2d;
+    --neuron-selected: #f7941d;
 
     --text-main: #e0e0e0;
     --text-dim: #999;
@@ -34,7 +34,6 @@ body {
     color: var(--text-main);
     font-family: var(--font-main);
     overflow: hidden;
-    /* Prevent body scroll */
     height: 100vh;
     width: 100vw;
 }
@@ -66,7 +65,7 @@ body {
     border-bottom: 1px solid #333;
 }
 
-#node-search {
+#neuron-search {
     width: 100%;
     background: #1a1a1a;
     border: 1px solid #444;
@@ -77,11 +76,11 @@ body {
     outline: none;
 }
 
-#node-search:focus {
-    border-color: var(--node-selected);
+#neuron-search:focus {
+    border-color: var(--neuron-selected);
 }
 
-.node-library {
+.neuron-library {
     flex: 1;
     overflow-y: auto;
     padding: 10px 0;
@@ -147,7 +146,7 @@ body {
 
 .logo .icon {
     font-size: 1.5rem;
-    color: var(--node-selected);
+    color: var(--neuron-selected);
 }
 
 .title-input {
@@ -246,12 +245,10 @@ body {
 }
 
 @keyframes blink {
-
     0%,
     100% {
         opacity: 1;
     }
-
     50% {
         opacity: 0.3;
     }
@@ -275,7 +272,7 @@ body {
 }
 
 .btn.primary {
-    background: var(--node-selected);
+    background: var(--neuron-selected);
     color: #000;
 }
 
@@ -311,7 +308,6 @@ body {
     top: 0;
     left: 0;
     width: 10000px;
-    /* Effectively "infinite" */
     height: 10000px;
     pointer-events: none;
 }
@@ -319,7 +315,7 @@ body {
 /* Grid Background */
 #canvas-grid {
     background-image: radial-gradient(var(--grid-major-color) 1px, transparent 1px),
-        radial-gradient(var(--grid-color) 1px, transparent 1px);
+    radial-gradient(var(--grid-color) 1px, transparent 1px);
     background-size: 100px 100px, 20px 20px;
     z-index: 1;
 }
@@ -327,19 +323,16 @@ body {
 #svg-layer {
     z-index: 2;
     pointer-events: all;
-    /* Allow interaction with axons */
 }
 
 #neurons-layer {
     z-index: 3;
     pointer-events: none;
-    /* Allow events through to container when not on a node */
 }
 
 .sidebar-footer {
     padding: 15px;
     background: #1e1e1e;
-    /* Slightly darker than sidebar */
     border-top: 1px solid #333;
     display: flex;
     justify-content: center;
@@ -350,7 +343,6 @@ body {
     background: #333;
     border: 1px solid #444;
     color: #0078d4;
-    /* Distinct blue for the active look */
     font-size: 22px;
     cursor: pointer;
     width: 44px;
@@ -365,75 +357,71 @@ body {
 
 .icon-btn:hover {
     color: white;
-    background: var(--node-selected);
+    background: var(--neuron-selected);
     transform: scale(1.1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
-/* Node Styling */
-.node {
+/* Neuron Styling */
+.neuron {
     position: absolute;
     width: 220px;
-    background: var(--node-bg);
-    border: 1px solid var(--node-border);
+    background: var(--neuron-bg);
+    border: 1px solid var(--neuron-border);
     border-radius: 8px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     pointer-events: all;
     user-select: none;
-    /* Removed transition from base class to fix drag responsiveness */
 }
 
-.node-auto-layout {
+.neuron-auto-layout {
     transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1), top 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.node.running {
+.neuron.running {
     border-color: #2196f3;
     box-shadow: 0 0 20px rgba(33, 150, 243, 0.4);
-    animation: node-pulse 1.5s infinite;
+    animation: neuron-pulse 1.5s infinite;
 }
 
-@keyframes node-pulse {
+@keyframes neuron-pulse {
     0% {
         box-shadow: 0 0 0px rgba(33, 150, 243, 0.4);
     }
-
     50% {
         box-shadow: 0 0 25px rgba(33, 150, 243, 0.6);
     }
-
     100% {
         box-shadow: 0 0 0px rgba(33, 150, 243, 0.4);
     }
 }
 
-.node.selected {
-    border-color: var(--node-selected);
+.neuron.selected {
+    border-color: var(--neuron-selected);
     box-shadow: 0 0 15px rgba(247, 148, 29, 0.3);
 }
 
-.node.pending {
+.neuron.pending {
     opacity: 0.6;
     pointer-events: none;
     cursor: wait;
     filter: grayscale(0.5);
-    animation: node-pending-pulse 1s infinite alternate;
+    animation: neuron-pending-pulse 1s infinite alternate;
 }
 
-@keyframes node-pending-pulse {
+@keyframes neuron-pending-pulse {
     from {
         opacity: 0.4;
     }
-
     to {
         opacity: 0.7;
     }
 }
 
-.node-header {
-    background: var(--node-header);
+.neuron-header {
+    background: var(--neuron-header);
     padding: 8px 12px;
     border-top-left-radius: 7px;
     border-top-right-radius: 7px;
@@ -444,15 +432,14 @@ body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.node-header.root-header {
+.neuron-header.root-header {
     background: #8b0000;
-    /* Dark red/maroon for event neurons */
     border-bottom: 2px solid rgba(0, 0, 0, 0.2);
     display: flex;
     gap: 8px;
 }
 
-.node-controls {
+.neuron-controls {
     display: flex;
     gap: 4px;
     margin-left: auto;
@@ -485,11 +472,11 @@ body {
 }
 
 .mini-btn.view:hover {
-    background: var(--node-selected);
+    background: var(--neuron-selected);
     transform: scale(1.1);
 }
 
-.node-header.root-header h4 {
+.neuron-header.root-header h4 {
     color: #fff;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
@@ -507,7 +494,7 @@ body {
     color: var(--port-output-error);
 }
 
-.node-body {
+.neuron-body {
     padding: 12px;
     display: flex;
     justify-content: space-between;
@@ -586,7 +573,7 @@ body {
 }
 
 .temp-wire {
-    stroke: var(--node-selected);
+    stroke: var(--neuron-selected);
     stroke-width: 2;
     stroke-dasharray: 8, 4;
 }
@@ -606,7 +593,7 @@ body {
 
 .status-item span {
     font-weight: 600;
-    color: var(--node-selected);
+    color: var(--neuron-selected);
 }
 
 .hint {
@@ -657,7 +644,6 @@ body {
     font-family: var(--font-mono);
     font-size: 13px;
     color: #1ed760;
-    /* Matrix-like green for code */
     background: #111;
     padding: 15px;
     border-radius: 4px;
@@ -679,22 +665,19 @@ body {
     cursor: pointer;
 }
 
-/* Status Colors for Node Headers */
-.node-header.status-running {
+/* Status Colors for Neuron Headers */
+.neuron-header.status-running {
     background: #f7941d !important;
-    /* Orange */
     border-bottom: 2px solid rgba(0, 0, 0, 0.2);
 }
 
-.node-header.status-success {
+.neuron-header.status-success {
     background: #4caf50 !important;
-    /* Green */
     border-bottom: 2px solid rgba(0, 0, 0, 0.2);
 }
 
-.node-header.status-failed {
+.neuron-header.status-failed {
     background: #f44336 !important;
-    /* Red */
     border-bottom: 2px solid rgba(0, 0, 0, 0.2);
 }
 
@@ -704,15 +687,14 @@ body {
 }
 
 /* DELEGATED */
-.node.status-delegated {
+.neuron.status-delegated {
     border-color: #ffd700;
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-    animation: portal-pulse 2s infinite ease-in-out;
     animation: portal-pulse 2s infinite ease-in-out;
     cursor: pointer;
 }
 
-.node-header.delegated-gradient {
+.neuron-header.delegated-gradient {
     background: linear-gradient(135deg, #b45309 0%, #78350f 100%) !important;
 }
 
@@ -721,19 +703,17 @@ body {
         box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4);
         transform: scale(1);
     }
-
     50% {
         box-shadow: 0 0 0 10px rgba(255, 215, 0, 0);
         transform: scale(1.02);
     }
-
     100% {
         box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
         transform: scale(1);
     }
 }
 
-.node.status-delegated::after {
+.neuron.status-delegated::after {
     content: "\1F300";
     position: absolute;
     top: -10px;

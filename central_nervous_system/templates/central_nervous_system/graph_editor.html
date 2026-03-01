@@ -14,20 +14,16 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css"/>
     <style>
         /* MONITOR MODE OVERRIDES */
-        /* Note: Sidebar is now VISIBLE in monitor mode (for history) */
-
         body.monitor-mode #start-btn,
         body.monitor-mode #auto-layout-btn,
         body.monitor-mode .delete-btn {
             display: none !important;
         }
 
-        /* [FIX] Use Grid to maintain structure */
         body.monitor-mode .main-layout {
             display: flex !important;
         }
 
-        /* Make Stop button obvious */
         body.monitor-mode #stop-btn {
             background-color: #ef4444 !important;
             opacity: 1 !important;
@@ -46,12 +42,12 @@
 
         /* INSPECTOR MODIFICATIONS */
         .inspector-panel {
-            width: 380px; /* Slight increase for better log viewing */
+            width: 380px;
             background: #0f172a;
             border-left: 1px solid #1e293b;
             display: flex;
             flex-direction: column;
-            overflow-y: hidden; /* Main panel doesn't scroll, content does */
+            overflow-y: hidden;
             flex-shrink: 0;
             font-family: 'Inter', sans-serif;
             color: #f1f5f9;
@@ -64,7 +60,7 @@
         .inspector-content {
             padding: 20px;
             flex: 1;
-            overflow-y: auto; /* Content scrolls independently */
+            overflow-y: auto;
         }
 
         /* Context Matrix */
@@ -115,7 +111,7 @@
             border: 1px solid #334155;
             color: #cbd5e1;
             padding: 8px 10px;
-            padding-left: 24px; /* Space for traffic light */
+            padding-left: 24px;
             border-radius: 6px;
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.8rem;
@@ -259,7 +255,7 @@
         }
 
         .peep-hole {
-            background: #000; /* True black for terminal feel */
+            background: #000;
             border: 1px solid #334155;
             border-radius: 6px;
             padding: 12px;
@@ -375,7 +371,6 @@
 
 <body class="{% if mode == 'monitor' %}monitor-mode{% endif %}">
 <script>
-    // [FIX] Robust Context Variables to avoid "VariableDoesNotExist" 500 errors
     window.djangoContext = {
         pathwayId: "{% if book %}{{ book.id }}{% elif spike_train %}{{ spike_train.pathway.id }}{% endif %}",
         spikeTrainId: "{% if spike_train %}{{ spike_train.id }}{% elif spike_train_id %}{{ spike_train_id }}{% endif %}",
@@ -394,7 +389,6 @@
                 <span class="title">{{ book.name }}</span>
             {% else %}
                 <input type="text" id="pathway-name" class="title-input" value="{{ book.name }}" spellcheck="false">
-
             {% endif %}
         </div>
         <div class="execution-controls">
@@ -422,7 +416,7 @@
                     <h3 style="color: #94a3b8; font-size: 0.8rem; letter-spacing: 0.1em; margin: 0;">PREVIOUS
                         MISSIONS</h3>
                 </div>
-                <div class="node-library" style="padding: 0; overflow-y: auto; flex: 1;">
+                <div class="neuron-library" style="padding: 0; overflow-y: auto; flex: 1;">
                     {% for s in spike_train_history %}
                         <a href="{% url 'central_nervous_system:graph_monitor' s.id %}?full=True"
                            style="display: flex; gap: 10px; padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; align-items: center; transition: background 0.2s; position: relative;"
@@ -456,9 +450,9 @@
                 </div>
             {% else %}
                 <div class="sidebar-header">
-                    <input type="text" id="node-search" placeholder="Search neurons...">
+                    <input type="text" id="neuron-search" placeholder="Search neurons...">
                 </div>
-                <div class="node-library" id="node-library">
+                <div class="neuron-library" id="neuron-library">
                 </div>
             {% endif %}
 
@@ -506,15 +500,15 @@
             </div>
             <div class="inspector-content">
                 <div style="text-align: center; color: #64748b; margin-top: 40px;">
-                    Select a node to inspect its properties or telemetry.
+                    Select a neuron to inspect its properties or telemetry.
                 </div>
             </div>
         </aside>
     </div>
 
     <footer class="status-bar">
-        <div class="status-item">Nodes: <span id="node-count">0</span></div>
-        <div class="status-item">Connections: <span id="conn-count">0</span></div>
+        <div class="status-item">Neurons: <span id="neuron-count">0</span></div>
+        <div class="status-item">Axons: <span id="conn-count">0</span></div>
         <div class="status-item hint">
             {% if mode == 'monitor' %}
                 Monitor Mode: Read Only
@@ -524,7 +518,6 @@
         </div>
     </footer>
 </div>
-
 
 <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>

@@ -28,8 +28,8 @@ class GraphEditor {
         this.connGroup = document.getElementById('connections-group');
         this.grid = document.getElementById('canvas-grid');
         this.tempLine = document.getElementById('temp-line');
-        this.libraryContainer = document.getElementById('node-library'); // DOM id remains node-library
-        this.searchInput = document.getElementById('node-search');
+        this.libraryContainer = document.getElementById('neuron-library');
+        this.searchInput = document.getElementById('neuron-search');
 
         // Inspector
         this.inspector = document.getElementById('inspector');
@@ -497,8 +497,7 @@ class GraphEditor {
 
     createNeuronDOM(neuron) {
         const neuronEl = document.createElement('div');
-        // VITAL: Kept 'node' for CSS styling compatibility
-        neuronEl.className = 'node';
+        neuronEl.className = 'neuron';
         neuronEl.id = neuron.id;
         neuronEl.style.left = `${neuron.x}px`;
         neuronEl.style.top = `${neuron.y}px`;
@@ -507,9 +506,9 @@ class GraphEditor {
         const isDelegated = !!neuron.invoked_pathway_id;
 
         neuronEl.innerHTML = `
-            <div class="node-header ${neuron.isRoot ? 'root-header' : ''} ${isDelegated ? 'delegated-gradient' : ''}">
+            <div class="neuron-header ${neuron.isRoot ? 'root-header' : ''} ${isDelegated ? 'delegated-gradient' : ''}">
                 <h4>${isDelegated ? '🌀 ' + neuron.title : neuron.title}</h4>
-                <div class="node-controls">
+                <div class="neuron-controls">
                     <button class="mini-btn view" title="${eyeTitle}">👁️</button>
                     ${neuron.isRoot && !this.isMonitorMode ? `
                         <button class="mini-btn play" title="Start from here">▶️</button>
@@ -517,7 +516,7 @@ class GraphEditor {
                     ${neuron.canDelete && !this.isMonitorMode ? '<button class="delete-btn">&times;</button>' : ''}
                 </div>
             </div>
-            <div class="node-body">
+            <div class="neuron-body">
                 <div class="ports-column port-input-wrapper">
                     ${neuron.inputs > 0 ? `
                     <div class="port-item">
@@ -569,10 +568,10 @@ class GraphEditor {
         });
 
         // Dragging
-        const header = neuronEl.querySelector('.node-header');
+        const header = neuronEl.querySelector('.neuron-header');
         header.addEventListener('mousedown', (e) => {
             if (this.isMonitorMode) return;
-            if (e.target.closest('.node-controls') || e.target.closest('.mini-btn') || e.target.closest('.delete-btn')) return;
+            if (e.target.closest('.neuron-controls') || e.target.closest('.mini-btn') || e.target.closest('.delete-btn')) return;
             if (neuronEl.classList.contains('pending')) return;
             e.stopPropagation();
 
@@ -834,7 +833,7 @@ class GraphEditor {
     }
 
     updateCounts() {
-        document.getElementById('node-count').innerText = this.neurons.length;
+        document.getElementById('neuron-count').innerText = this.neurons.length;
         document.getElementById('conn-count').innerText = this.connections.length;
     }
 
@@ -881,7 +880,7 @@ class GraphEditor {
         if (this.neurons.length === 0) return;
         this.neurons.forEach(n => {
             const el = document.getElementById(n.id);
-            if (el) el.classList.add('node-auto-layout');
+            if (el) el.classList.add('neuron-auto-layout');
         });
 
         const startNeuron = this.neurons.find(n => n.isRoot) || this.neurons[0];
@@ -937,7 +936,7 @@ class GraphEditor {
             else {
                 this.neurons.forEach(n => {
                     const el = document.getElementById(n.id);
-                    if (el) el.classList.remove('node-auto-layout');
+                    if (el) el.classList.remove('neuron-auto-layout');
                 });
             }
         };
@@ -971,7 +970,7 @@ class GraphEditor {
             neuron.child_spike_train_id = status.child_spike_train_id;
             neuron.status_id = status.status_id;
 
-            const header = dom.querySelector('.node-header');
+            const header = dom.querySelector('.neuron-header');
             if (header) {
                 header.classList.remove('running', 'success', 'failed');
                 dom.classList.remove('status-delegated');
@@ -1168,7 +1167,7 @@ class GraphEditor {
                 ⚙️ Advanced Edit
             </a>
             <button class="action-btn" style="color: #ef4444; border-color: #ef4444;" onclick="window.app.deleteNeuron('${data.neuron_id}')">
-                🗑 Delete Node
+                🗑 Delete Neuron
             </button>
         </div>`;
 
@@ -1177,7 +1176,7 @@ class GraphEditor {
          <div style="margin-top: 20px; font-size: 0.7rem; color: #475569; line-height: 1.4; background: #0f172a; padding: 10px; border-radius: 4px;">
             <div style="margin-bottom: 4px; font-weight: 600; color: #64748b;">COLOR LEGEND</div>
             <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;"><span style="color: #4ade80">●</span> Default (Spell)</div>
-            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;"><span style="color: #facc15">●</span> Override (Node)</div>
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;"><span style="color: #facc15">●</span> Override (Neuron)</div>
             <div style="display: flex; align-items: center; gap: 6px;"><span style="color: #3b82f6">●</span> Global (Env)</div>
         </div>`;
 
@@ -1283,7 +1282,7 @@ class GraphEditor {
 
             <div style="display: flex; gap: 8px; margin-top: 12px;">
                  <a href="/admin/central_nervous_system/neuron/${neuronId}/change/" target="_blank" class="action-btn" style="text-decoration: none; flex: 1; justify-content: center;">
-                    ⚙️ Edit Node
+                    ⚙️ Edit Neuron
                 </a>
                 <a href="/central_nervous_system/spike/${data.spike_id}/" target="_blank" class="action-btn primary" style="text-decoration: none; flex: 1; justify-content: center;">
                     🚀 War Room

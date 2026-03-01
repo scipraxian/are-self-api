@@ -21,6 +21,7 @@ from .models import (
     Effector,
     NeuralPathway,
     Neuron,
+    Spike,
     SpikeTrain,
 )
 
@@ -481,9 +482,6 @@ def get_neuron_telemetry(
     if not spike_train_id:
         return JsonResponse({'error': 'No spike_train_id'}, status=400)
 
-    # Get the latest Spike for this neuron in this spike_train
-    from .models import Neuron, Spike, SpikeTrain
-
     spike = (
         Spike.objects.filter(spike_train_id=spike_train_id, neuron_id=neuron_id)
         .order_by('-created')
@@ -510,7 +508,6 @@ def get_neuron_telemetry(
     if spike.effector:
         try:
             neuron = Neuron.objects.get(id=neuron_id)
-
             from .models import NeuronContext
 
             overrides = {c.key: c.value for c in neuron.neuroncontext_set.all()}
@@ -561,10 +558,10 @@ def get_neuron_telemetry(
 
     return JsonResponse(
         {
-            'status': spike.status.name,
+            'status_name': spike.status.name,
             'status_id': spike.status_id,
             'agent': str(spike.target) if spike.target else 'Pending...',
-            'exit_code': spike.result_code,
+            'result_code': spike.result_code,
             'logs': '\n'.join(effector_tail),
             'exec_logs': '\n'.join(exec_tail),
             'command': command,
