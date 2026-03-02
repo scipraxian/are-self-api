@@ -13,9 +13,9 @@ from django.contrib.postgres.search import SearchQuery, SearchVector
 from django.db.models import Count
 from pgvector.django import CosineDistance
 
+from central_nervous_system.models import Spike
 from frontal_lobe.models import ModelRegistry, ReasoningSession, ReasoningTurn
 from frontal_lobe.synapse import OllamaClient
-from central_nervous_system.models import Spike
 from hippocampus.models import TalosEngram, TalosEngramTag
 
 logger = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ class TalosHippocampus(object):
         def _get_catalog_sync() -> str:
             qs = (
                 TalosEngram.objects.filter(
-                    heads__node=spike.node, is_active=True
+                    heads__neuron=spike.neuron, is_active=True
                 )
                 .exclude(spikes=spike)
                 .annotate(
