@@ -17,6 +17,7 @@ v1_router.registry.extend(REASONING_ROUTER.registry)
 
 V2_ROUTER = routers.DefaultRouter()
 V2_ROUTER.registry.extend(V2_CNS_ROUTER.registry)
+V2_ROUTER.registry.extend(DASHBOARD_ROUTER.registry)
 
 urlpatterns = [
     path('', include('dashboard.urls')),
