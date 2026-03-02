@@ -1,4 +1,3 @@
-import json
 import logging
 import uuid
 from datetime import timedelta
@@ -340,10 +339,7 @@ class CNS:
         )
 
         if getattr(neuron, 'invoked_pathway', None):
-            from .engine.graph_walker import GraphWalker
-
-            walker = GraphWalker(spike_train_id=self.spike_train.id)
-            walker.process_node(seed_spike)
+            self._spawn_subgraph(seed_spike)
             return
 
         if getattr(neuron, 'distribution_mode', None):
@@ -454,3 +450,33 @@ class CNS:
 
     def _calculate_progress(self) -> float:
         return 0.0
+
+    def _spawn_subgraph(self, spike: Spike) -> None:
+        """
+        Creates the Child SpikeTrain and puts the Parent Spike to sleep (DELEGATED).
+        """
+        target_pathway = spike.neuron.invoked_pathway
+        logger.info(
+            f'[CNS] Spike {spike.id} spawning subgraph {target_pathway.name}'
+        )
+
+        # A. Create the Child SpikeTrain
+        child_train = SpikeTrain.objects.create(
+            pathway=target_pathway,
+            parent_spike=spike,
+            environment=self.spike_train.environment,
+            status_id=SpikeTrainStatus.CREATED,
+        )
+
+        # B. Update Parent Spike Status
+        spike.status_id = SpikeStatus.DELEGATED
+        spike.save(update_fields=['status'])
+
+        # C. Kickoff the Child directly
+        def start_child():
+            CNS(spike_train_id=child_train.id).start()
+
+        transaction.on_commit(start_child)
+        logger.info(
+            f'[CNS] Spike {spike.id} delegated execution to SpikeTrain {child_train.id}'
+        )

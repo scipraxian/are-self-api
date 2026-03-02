@@ -64,7 +64,7 @@ class TalosHippocampus(object):
         def _get_catalog_sync() -> str:
             qs = (
                 TalosEngram.objects.filter(
-                    heads__neuron=spike.neuron, is_active=True
+                    spikes__neuron=spike.neuron, is_active=True
                 )
                 .exclude(spikes=spike)
                 .annotate(
