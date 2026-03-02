@@ -108,7 +108,7 @@ class TemporalLobeTest(TransactionTestCase):
 
         # FIX: Pass shift_id directly to avoid object instantiation
         mock_pfc_class.assert_called_once_with(
-            self.spike,
+            self.spike.id,
             iteration.id,
             self.shift_link_1.shift_id,
             str(self.identity.id),

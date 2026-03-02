@@ -1,13 +1,13 @@
 from rest_framework import routers
 
-from .api import (
-    SpikeViewSet,
-    SpikeTrainViewSet,
+from central_nervous_system.api import (
     CNSNeuralPathwayConnectionWireViewSet,
-    EffectorBookNodeContextViewSet,
     CNSNeuralPathwayNodeViewSet,
     CNSNeuralPathwayViewSet,
+    EffectorBookNodeContextViewSet,
     EffectorViewSet,
+    SpikeTrainViewSet,
+    SpikeViewSet,
 )
 
 CNS_ROUTER = routers.SimpleRouter()

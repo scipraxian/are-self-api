@@ -1,7 +1,7 @@
 from django.urls import path
 
-from . import views
-from .cns_graph import CNSGraphAPI, CNSGraphLaunchAPI
+from central_nervous_system.cns_graph import CNSGraphAPI, CNSGraphLaunchAPI
+from central_nervous_system.views import views
 
 app_name = 'central_nervous_system'
 
@@ -23,17 +23,20 @@ urlpatterns = [
         CNSGraphLaunchAPI.as_view(),
         name='graph_launch_api',
     ),
-    path('graph/<str:pathway_id>/', CNSGraphAPI.as_view(),
-         name='graph_api_root'),
+    path(
+        'graph/<str:pathway_id>/', CNSGraphAPI.as_view(), name='graph_api_root'
+    ),
     path(
         'graph/<str:pathway_id>/<str:action>',
         CNSGraphAPI.as_view(),
         name='graph_api_action',
     ),
     # --- The War Room ---
-    path('spike/<uuid:pk>/',
-         views.HeadLogDetailView.as_view(),
-         name='head_detail'),
+    path(
+        'spike/<uuid:pk>/',
+        views.HeadLogDetailView.as_view(),
+        name='head_detail',
+    ),
     # --- Actions ---
     path(
         'launch/<uuid:pathway_id>/',

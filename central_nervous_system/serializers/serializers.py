@@ -7,14 +7,7 @@ from django.db.models import Avg
 from rest_framework import serializers
 
 from central_nervous_system import constants
-from central_nervous_system.utils import (
-    get_active_environment,
-    resolve_environment_context,
-)
-from common.constants import ALL_FIELDS
-from environments.variable_renderer import VariableRenderer
-
-from .models import (
+from central_nervous_system.models import (
     Axon,
     AxonType,
     CNSDistributionMode,
@@ -30,6 +23,12 @@ from .models import (
     Spike,
     SpikeTrain,
 )
+from central_nervous_system.utils import (
+    get_active_environment,
+    resolve_environment_context,
+)
+from common.constants import ALL_FIELDS
+from environments.variable_renderer import VariableRenderer
 
 # ==========================================
 # PART 1: DTOs (Data Transfer Objects)

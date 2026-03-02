@@ -6,11 +6,13 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, TemplateView
 
-from central_nervous_system.utils import get_active_environment, resolve_environment_context
+from central_nervous_system.central_nervous_system import CNS
+from central_nervous_system.models import NeuralPathway, Spike, SpikeTrain
+from central_nervous_system.utils import (
+    get_active_environment,
+    resolve_environment_context,
+)
 from ue_tools.merge_logs import merge_logs
-
-from .central_nervous_system import CNS
-from .models import Spike, SpikeTrain, NeuralPathway
 
 # --- GRAPH VIEWS ---
 
