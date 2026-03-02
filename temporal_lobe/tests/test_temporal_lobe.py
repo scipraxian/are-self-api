@@ -1,0 +1,179 @@
+from unittest.mock import AsyncMock, patch
+
+import pytest
+from asgiref.sync import sync_to_async
+from django.test import TransactionTestCase
+
+from central_nervous_system.models import Spike, SpikeTrain
+from environments.models import ProjectEnvironment
+from identity.models import Identity
+from temporal_lobe.constants import TemporalConstants
+from temporal_lobe.models import (
+    Iteration,
+    IterationDefinition,
+    IterationShift,
+    IterationStatus,
+    ShiftParticipant,
+)
+from temporal_lobe.temporal_lobe import TemporalLobe
+
+
+class TemporalLobeTest(TransactionTestCase):
+    fixtures = [
+        'environments/fixtures/initial_data.json',
+        'central_nervous_system/fixtures/initial_data.json',
+        'temporal_lobe/fixtures/initial_data.json',
+    ]
+
+    def setUp(self):
+        self.env = ProjectEnvironment.objects.first()
+        self.spike_train = SpikeTrain.objects.create(
+            environment=self.env, status_id=1
+        )
+        self.spike = Spike.objects.create(
+            spike_train=self.spike_train, status_id=1
+        )
+
+        self.status_waiting = IterationStatus.objects.get(name='Waiting')
+        self.status_running = IterationStatus.objects.get(name='Running')
+        self.status_finished = IterationStatus.objects.get(name='Finished')
+
+        self.definition = IterationDefinition.objects.first()
+
+        # FIX: Eager load the shift so it's fully populated in memory
+        shifts = list(
+            IterationShift.objects.filter(definition=self.definition)
+            .select_related('shift')
+            .order_by('order')
+        )
+        self.shift_link_1 = shifts[0]
+        self.shift_link_2 = shifts[1]
+
+        self.identity = Identity.objects.create(name='Test Persona')
+        ShiftParticipant.objects.create(
+            shift=self.shift_link_1.shift, participant=self.identity
+        )
+
+    @pytest.mark.asyncio
+    async def test_engage_no_environment(self):
+        orphan_spike_train = await sync_to_async(SpikeTrain.objects.create)(
+            status_id=1
+        )
+        orphan_spike = await sync_to_async(Spike.objects.create)(
+            spike_train=orphan_spike_train, status_id=1
+        )
+
+        lobe = TemporalLobe(str(orphan_spike.id))
+        code, msg = await lobe.engage()
+
+        self.assertEqual(code, 500)
+        self.assertEqual(msg, TemporalConstants.ERR_NO_ENV)
+
+    @pytest.mark.asyncio
+    async def test_engage_no_active_iteration(self):
+        lobe = TemporalLobe(str(self.spike.id))
+        code, msg = await lobe.engage()
+
+        self.assertEqual(code, 200)
+        self.assertEqual(msg, TemporalConstants.MSG_CYCLE_COMPLETE)
+
+    @pytest.mark.asyncio
+    @patch('prefrontal_cortex.prefrontal_cortex.PrefrontalCortex')
+    async def test_engage_wakes_up_waiting_iteration(self, mock_pfc_class):
+        mock_compiler = AsyncMock()
+        mock_compiler.compile_and_dispatch.return_value = (
+            200,
+            'Mock Dispatched',
+        )
+        mock_pfc_class.return_value = mock_compiler
+
+        iteration = await sync_to_async(Iteration.objects.create)(
+            name='Test Cycle',
+            environment=self.env,
+            definition=self.definition,
+            current_shift=self.shift_link_1,
+            status=self.status_waiting,
+            turns_consumed_in_shift=0,
+        )
+
+        lobe = TemporalLobe(str(self.spike.id))
+        code, msg = await lobe.engage()
+
+        self.assertEqual(code, 200)
+
+        await sync_to_async(iteration.refresh_from_db)()
+
+        # FIX: Check ID to avoid lazy loading the object in async
+        self.assertEqual(iteration.status_id, self.status_running.id)
+
+        # FIX: Pass shift_id directly to avoid object instantiation
+        mock_pfc_class.assert_called_once_with(
+            self.spike,
+            iteration.id,
+            self.shift_link_1.shift_id,
+            str(self.identity.id),
+        )
+
+    @pytest.mark.asyncio
+    @patch('prefrontal_cortex.prefrontal_cortex.PrefrontalCortex')
+    async def test_engage_advances_shift_on_limit(self, mock_pfc_class):
+        mock_compiler = AsyncMock()
+        mock_compiler.compile_and_dispatch.return_value = (
+            200,
+            'Mock Dispatched',
+        )
+        mock_pfc_class.return_value = mock_compiler
+
+        limit = self.shift_link_1.shift.turn_limit
+
+        iteration = await sync_to_async(Iteration.objects.create)(
+            name='Test Cycle 2',
+            environment=self.env,
+            definition=self.definition,
+            current_shift=self.shift_link_1,
+            status=self.status_running,
+            turns_consumed_in_shift=limit,
+        )
+
+        lobe = TemporalLobe(str(self.spike.id))
+        await lobe.engage()
+
+        await sync_to_async(iteration.refresh_from_db)()
+
+        # FIX: Check IDs to avoid lazy loading the objects in async
+        self.assertEqual(iteration.current_shift_id, self.shift_link_2.id)
+        self.assertEqual(iteration.turns_consumed_in_shift, 0)
+        self.assertEqual(iteration.status_id, self.status_running.id)
+
+    @pytest.mark.asyncio
+    @patch('prefrontal_cortex.prefrontal_cortex.PrefrontalCortex')
+    async def test_engage_finishes_iteration(self, mock_pfc_class):
+        # FIX: Add select_related to this async lambda to prevent lazy crash on .shift
+        last_shift_link = await sync_to_async(
+            lambda: (
+                self.definition.iterationshift_set.select_related('shift')
+                .order_by('-order')
+                .first()
+            )
+        )()
+        limit = last_shift_link.shift.turn_limit
+
+        iteration = await sync_to_async(Iteration.objects.create)(
+            name='Test Cycle Final',
+            environment=self.env,
+            definition=self.definition,
+            current_shift=last_shift_link,
+            status=self.status_running,
+            turns_consumed_in_shift=limit,
+        )
+
+        lobe = TemporalLobe(str(self.spike.id))
+        code, msg = await lobe.engage()
+
+        await sync_to_async(iteration.refresh_from_db)()
+
+        # FIX: Check ID to avoid lazy loading the object in async
+        self.assertEqual(iteration.status_id, self.status_finished.id)
+        self.assertEqual(msg, TemporalConstants.MSG_CYCLE_COMPLETE)
+
+        mock_pfc_class.assert_not_called()

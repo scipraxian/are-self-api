@@ -1,0 +1,36 @@
+<div class="cns-spike_train-wrapper js-cns-spike_train-wrapper">
+    <div class="cns-spike_train js-cns-spike_train {% if spike_train.is_alive %}active-lane{% endif %} {% if spike_train.ended_badly %}failed-lane{% endif %}"
+         data-spike_train-id="{{ spike_train.id }}"
+         data-is-active="{{ spike_train.is_alive|yesno:'true,false' }}">
+
+        <div class="spike_train-header">
+            <div class="spike_train-title" title="{{ spike_train.pathway.name }}">{{ spike_train.pathway.name }}</div>
+            <div class="spike_train-status">
+                <span>#{{ spike_train.id|stringformat:"s"|slice:":8" }}</span>
+                <span class="status-text js-spike_train-status status-{{ spike_train.status.name|lower }}">{{ spike_train.status.name }}</span>
+            </div>
+            <div class="spike_train-time">{{ spike_train.modified|timesince }} ago</div>
+        </div>
+
+        {% include "central_nervous_system/components/cns_spike_train_control_card.html" with spike_train=spike_train %}
+
+        <button class="scroll-btn left" onclick="this.nextElementSibling.scrollBy({left: -300, behavior: 'smooth'})">◄
+        </button>
+
+        <div class="spike_train-track js-spike_train-track">
+            {% for spike in spike_train.spikes.all %}
+                {% include "central_nervous_system/components/cns_spike.html" with spike=spike %}
+            {% endfor %}
+        </div>
+
+        <button class="scroll-btn right"
+                onclick="this.previousElementSibling.scrollBy({left: 300, behavior: 'smooth'})">►
+        </button>
+    </div>
+
+    <div class="nested-spike_trains js-nested-spike_trains">
+        {% for child_spawn in spike_train.child_trains.all %}
+            {% include "central_nervous_system/components/cns_spike_train.html" with spike_train=child_spawn %}
+        {% endfor %}
+    </div>
+</div>

@@ -10,16 +10,16 @@ from environments.models import (
     ProjectEnvironmentStatus,
     ProjectEnvironmentType,
 )
-from hydra.models import HydraSpellbook
+from central_nervous_system.models import NeuralPathway
 
 
 class DashboardAPITest(TestCase):
-    # CRITICAL: Order matters. Environments -> Agent Statuses -> Agents -> Hydra
+    # CRITICAL: Order matters. Environments -> Agent Statuses -> Agents -> CNS
     fixtures = [
         'environments/fixtures/initial_data.json',
         'talos_agent/fixtures/initial_data.json',
         'talos_agent/fixtures/test_agents.json',
-        'hydra/fixtures/initial_data.json',
+        'central_nervous_system/fixtures/initial_data.json',
     ]
 
     def setUp(self):
@@ -38,17 +38,17 @@ class DashboardAPITest(TestCase):
         ProjectEnvironment.objects.create(
             name='Test Env API', type=type_ue, status=status_ok
         )
-        HydraSpellbook.objects.create(name='Test Protocol API')
+        NeuralPathway.objects.create(name='Test Protocol API')
 
         url = '/api/v1/dashboard/summary/'
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('environments', response.data)
-        self.assertIn('spellbooks', response.data)
+        self.assertIn('pathways', response.data)
         self.assertIn('recent_missions', response.data)
         self.assertTrue(len(response.data['environments']) > 0)
-        self.assertTrue(len(response.data['spellbooks']) > 0)
+        self.assertTrue(len(response.data['pathways']) > 0)
 
     @patch('dashboard.api.threading.Thread.start')
     @patch('dashboard.api.celery_app.control.shutdown')

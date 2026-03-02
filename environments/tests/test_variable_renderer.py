@@ -11,7 +11,7 @@ from environments.models import (
     ProjectEnvironmentType,
 )
 from environments.variable_renderer import VariableRenderer
-from hydra.constants import KEY_SERVER
+from central_nervous_system.constants import KEY_SERVER
 
 
 class VariableRendererTest(TestCase):

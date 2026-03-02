@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'dashboard',
     'talos_agent',
     'celery',
-    'hydra',
+    'central_nervous_system',
     'django_celery_results',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -49,15 +49,18 @@ INSTALLED_APPS = [
     'environments',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
-    'talos_thalamus',
-    'talos_parietal',
-    'talos_occipital',
-    'talos_temporal',
+    'thalamus',
+    'parietal_lobe',
+    'occipital_lobe',
+    'temporal_lobe',
     'frontal_lobe',
     'djangorestframework_mcp',
     'rest_framework',
     'django_filters',
-    'talos_hippocampus.apps.TalosHippocampusConfig',
+    'hippocampus.apps.HippocampusConfig',
+    'prefrontal_cortex.apps.PrefrontalCortexConfig',
+    'identity.apps.IdentityConfig',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -110,7 +113,6 @@ DATABASES = {
         'PORT': '5432',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -175,7 +177,7 @@ LOGGING = {
         },
     },
     'loggers': {
-        'hydra': {
+        'central_nervous_system': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,

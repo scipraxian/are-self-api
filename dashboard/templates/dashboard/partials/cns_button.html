@@ -1,0 +1,47 @@
+<div id="cns-controls" style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem;">
+    {% if active_spawn %}
+        {% include "central_nervous_system/spike_train_monitor.html" with spike_train=active_spawn spikes=spikes is_active=is_active is_full_page=False %}
+    {% else %}
+        <h3 style="color: #94a3b8; text-transform: uppercase; font-size: 0.9rem; margin-bottom: 1rem;">CNS
+            NeuralPathways</h3>
+
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            {% for book in cns_spellbooks %}
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; group;">
+
+                    <a href="{% url 'central_nervous_system:graph_editor' book.id %}"
+                       title="Open Visual Editor"
+                       style="position: absolute; top: -8px; right: -8px; background: #334155; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 10;">
+                        ✏️
+                    </a>
+
+                    <button hx-post="{% url 'central_nervous_system:cns_launch' book.id %}"
+                            hx-swap="outerHTML"
+                            hx-target="#cns-controls"
+                            class="cns-btn {% if 'Fast' in book.name %}btn-validate{% else %}btn-staging{% endif %}">
+                    <span style="font-size: 1.2rem; margin-right: 8px;">
+                        {% if 'Fast' in book.name %}🧪{% else %}🏗️{% endif %}
+                    </span>
+                        {{ book.name }}
+                    </button>
+
+                    {% if 'Fast' not in book.name %}
+                        {% if 'Stage' in book.name and latest_stage %}
+                            <div style="font-size: 0.7rem; color: #64748b;">Last
+                                Run: {{ latest_stage.created|timesince }} ago
+                            </div>
+                        {% elif 'UAT' in book.name and latest_uat %}
+                            <div style="font-size: 0.7rem; color: #64748b;">Last Run: {{ latest_uat.created|timesince }}
+                                ago
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% empty %}
+                <div style="color: #64748b; font-style: italic;">No CNS NeuralPathways found. Run fixtures.</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% include "central_nervous_system/partials/history_list.html" %}
+</div>

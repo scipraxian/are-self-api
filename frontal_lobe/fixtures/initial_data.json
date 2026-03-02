@@ -1,106 +1,128 @@
 [
-  {
-    "model": "frontal_lobe.reasoningstatus",
-    "pk": 1,
-    "fields": {
-      "name": "Pending"
-    }
-  },
-  {
-    "model": "frontal_lobe.reasoningstatus",
-    "pk": 2,
-    "fields": {
-      "name": "Active"
-    }
-  },
-  {
-    "model": "frontal_lobe.reasoningstatus",
-    "pk": 3,
-    "fields": {
-      "name": "Paused"
-    }
-  },
-  {
-    "model": "frontal_lobe.reasoningstatus",
-    "pk": 4,
-    "fields": {
-      "name": "Completed"
-    }
-  },
-  {
-    "model": "frontal_lobe.reasoningstatus",
-    "pk": 5,
-    "fields": {
-      "name": "Maxed Out"
-    }
-  },
-  {
-    "model": "frontal_lobe.reasoningstatus",
-    "pk": 6,
-    "fields": {
-      "name": "Error"
-    }
-  },
-  {
-    "model": "frontal_lobe.reasoningstatus",
-    "pk": 7,
-    "fields": {
-      "name": "Attention Required"
-    }
-  },
-  {
-    "model": "frontal_lobe.reasoningstatus",
-    "pk": 8,
-    "fields": {
-      "name": "Stopped"
-    }
-  },
-  {
-    "model": "frontal_lobe.modelregistry",
-    "pk": 1,
-    "fields": {
-      "name": "qwen3-coder:30b",
-      "description": "Default Coder Model via Ollama",
-      "api_variant": "ollama",
-      "context_window_size": 262144,
-      "created": "2026-02-17T12:00:00Z",
-      "modified": "2026-02-17T12:00:00Z"
-    }
-  },
-  {
-    "model": "frontal_lobe.modelregistry",
-    "pk": 2,
-    "fields": {
-      "name": "gemma3:27b",
-      "description": "High-Intelligence General Reasoning",
-      "api_variant": "ollama",
-      "context_window_size": 131072,
-      "created": "2026-02-17T12:00:00Z",
-      "modified": "2026-02-17T12:00:00Z"
-    }
-  },
-  {
-    "model": "frontal_lobe.modelregistry",
-    "pk": 3,
-    "fields": {
-      "name": "llama3:latest",
-      "description": "Lightweight Llama 3 Model. Recommended for low-resource environments.",
-      "api_variant": "ollama",
-      "context_window_size": 8192,
-      "created": "2026-02-17T12:00:00Z",
-      "modified": "2026-02-17T12:00:00Z"
-    }
-  },
-  {
-    "model": "frontal_lobe.modelregistry",
-    "pk": 4,
-    "fields": {
-      "name": "llama3.2:3b",
-      "description": "Flyweight Llama 3 Model. Recommended for medium-resource environments.",
-      "api_variant": "ollama",
-      "context_window_size": 131072,
-      "created": "2026-02-17T12:00:00Z",
-      "modified": "2026-02-17T12:00:00Z"
-    }
+{
+  "model": "frontal_lobe.reasoningstatus",
+  "pk": 1,
+  "fields": {
+    "name": "Pending"
   }
+},
+{
+  "model": "frontal_lobe.reasoningstatus",
+  "pk": 2,
+  "fields": {
+    "name": "Active"
+  }
+},
+{
+  "model": "frontal_lobe.reasoningstatus",
+  "pk": 3,
+  "fields": {
+    "name": "Paused"
+  }
+},
+{
+  "model": "frontal_lobe.reasoningstatus",
+  "pk": 4,
+  "fields": {
+    "name": "Completed"
+  }
+},
+{
+  "model": "frontal_lobe.reasoningstatus",
+  "pk": 5,
+  "fields": {
+    "name": "Maxed Out"
+  }
+},
+{
+  "model": "frontal_lobe.reasoningstatus",
+  "pk": 6,
+  "fields": {
+    "name": "Error"
+  }
+},
+{
+  "model": "frontal_lobe.reasoningstatus",
+  "pk": 7,
+  "fields": {
+    "name": "Attention Required"
+  }
+},
+{
+  "model": "frontal_lobe.reasoningstatus",
+  "pk": 8,
+  "fields": {
+    "name": "Stopped"
+  }
+},
+{
+  "model": "frontal_lobe.modelregistry",
+  "pk": 1,
+  "fields": {
+    "created": "2026-02-17T12:00:00Z",
+    "description": "Default Coder Model via Ollama",
+    "modified": "2026-02-17T12:00:00Z",
+    "name": "qwen3-coder:30b",
+    "api_variant": "ollama",
+    "context_window_size": 262144,
+    "cost_per_1k_input": "0.000000",
+    "cost_per_1k_output": "0.000000"
+  }
+},
+{
+  "model": "frontal_lobe.modelregistry",
+  "pk": 2,
+  "fields": {
+    "created": "2026-02-17T12:00:00Z",
+    "description": "High-Intelligence General Reasoning",
+    "modified": "2026-02-17T12:00:00Z",
+    "name": "gemma3:27b",
+    "api_variant": "ollama",
+    "context_window_size": 131072,
+    "cost_per_1k_input": "0.000000",
+    "cost_per_1k_output": "0.000000"
+  }
+},
+{
+  "model": "frontal_lobe.modelregistry",
+  "pk": 3,
+  "fields": {
+    "created": "2026-02-17T12:00:00Z",
+    "description": "Lightweight Llama 3 Model. Recommended for low-resource environments.",
+    "modified": "2026-02-17T12:00:00Z",
+    "name": "llama3:latest",
+    "api_variant": "ollama",
+    "context_window_size": 8192,
+    "cost_per_1k_input": "0.000000",
+    "cost_per_1k_output": "0.000000"
+  }
+},
+{
+  "model": "frontal_lobe.modelregistry",
+  "pk": 4,
+  "fields": {
+    "created": "2026-02-17T12:00:00Z",
+    "description": "Flyweight Llama 3 Model. Recommended for medium-resource environments.",
+    "modified": "2026-02-17T12:00:00Z",
+    "name": "llama3.2:3b",
+    "api_variant": "ollama",
+    "context_window_size": 131072,
+    "cost_per_1k_input": "0.000000",
+    "cost_per_1k_output": "0.000000"
+  }
+},
+{
+  "model": "frontal_lobe.modelregistry",
+  "pk": 5,
+  "fields": {
+    "created": "2026-02-26T12:00:00Z",
+    "description": "Nomic Embedding Model for vectorized memory similarity.",
+    "modified": "2026-02-26T12:00:00Z",
+    "name": "nomic-embed-text",
+    "api_variant": "ollama",
+    "context_window_size": 8192,
+    "cost_per_1k_input": "0.000000",
+    "cost_per_1k_output": "0.000000"
+  }
+}
 ]

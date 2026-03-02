@@ -2,7 +2,7 @@ import pytest
 from django.test import Client
 from django.urls import reverse
 
-from hydra.models import HydraSpawn, HydraSpawnStatus, HydraSpellbook
+from central_nervous_system.models import SpikeTrain, SpikeTrainStatus, NeuralPathway
 
 
 @pytest.mark.django_db
@@ -15,19 +15,19 @@ class TestUIPersistence:
     def setup_method(self):
         self.client = Client()
         # Setup minimal DB state for valid rendering
-        self.status_active = HydraSpawnStatus.objects.get_or_create(
+        self.status_active = SpikeTrainStatus.objects.get_or_create(
             id=3, defaults={'name': 'Running'}
         )[0]
-        self.book = HydraSpellbook.objects.create(
+        self.book = NeuralPathway.objects.create(
             name='Persistence Test Protocol'
         )
-        self.spawn = HydraSpawn.objects.create(
-            spellbook=self.book, status=self.status_active
+        self.spike_train = SpikeTrain.objects.create(
+            pathway=self.book, status=self.status_active
         )
 
     def test_view_handles_missing_spawn_gracefully(self):
         """
-        Ensures that even if the spawn vanishes (race condition), the UI doesn't implode.
+        Ensures that even if the spike_train vanishes (race condition), the UI doesn't implode.
         It should return a 404 (handled by HTMX default) or a 200 with error block.
         """
         # Force a failure by passing a non-existent UUID

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
-from hydra.constants import ENVIRONMENT_KEY
+from central_nervous_system.constants import ENVIRONMENT_KEY
 
 from .models import (
     ContextVariable,

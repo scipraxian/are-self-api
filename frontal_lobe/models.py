@@ -57,6 +57,10 @@ class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
 
     DEFAULT_MODEL_ID = 1
     QUEN3_CODER = 1
+    GEMMA3 = 2
+    LLAMA3_LATEST = 3
+    LLAMA3 = 4
+    NOMIC_EMBED_TEXT = 5
 
     api_variant = models.CharField(max_length=50, default='ollama')
     context_window_size = models.IntegerField(default=32768)
@@ -79,9 +83,15 @@ class ReasoningSession(
     """
 
     RELATED_NAME = 'reasoning_session'
-
-    head = models.ForeignKey(
-        'hydra.HydraHead',
+    identity = models.ForeignKey(
+        'identity.IdentityDisc',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name=RELATED_NAME,
+    )
+    spike = models.ForeignKey(
+        'central_nervous_system.Spike',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
