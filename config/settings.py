@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -146,7 +147,8 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 # Celery
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# Override with CELERY_BROKER_URL env var if Redis is elsewhere (e.g. Docker, WSL).
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/')
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
