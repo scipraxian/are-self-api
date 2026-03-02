@@ -15,7 +15,7 @@ from parietal_lobe.models import ToolDefinition
 class IdentityAddon(NameMixin, DescriptionMixin):
     """These are the different addons that can be applied to a persona."""
 
-    pass
+    function_slug = models.CharField(max_length=255, blank=True, null=True)
 
 
 class IdentityTag(NameMixin):

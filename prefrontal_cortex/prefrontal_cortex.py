@@ -1,243 +1,95 @@
 import logging
+import uuid
 from typing import Tuple
 
 from asgiref.sync import sync_to_async
-from pgvector.django import CosineDistance
 
-from frontal_lobe.frontal_lobe import FrontalLobe
-from frontal_lobe.models import ModelRegistry
-from frontal_lobe.synapse import OllamaClient
-from central_nervous_system.models import Spike
+from central_nervous_system.central_nervous_system import CNS
+from central_nervous_system.models import NeuralPathway, Spike
+from central_nervous_system.utils import get_active_environment
+from prefrontal_cortex.constants import PFCConstants
 from prefrontal_cortex.models import PFCItemStatus, PFCStory, PFCTask
 
 logger = logging.getLogger(__name__)
 
 
 class PrefrontalCortex:
-    """
-    The Strategic Router.
-    Maps upstream workflow provenance to the Agile Board to determine
-    if Talos should be dispatched to work on a specific Story.
-    """
+    """The Compiler: Translates Time into Context and dispatches the execution graph."""
 
-    # 0.0 is an exact match, 1.0 is completely orthogonal.
-    # A distance of 0.2 means 80% similarity.
-    MAX_ALLOWED_DISTANCE = 0.25
+    def __init__(
+        self,
+        spike_id: uuid.UUID,
+        iteration_id: int,
+        shift_id: int,
+        identity_id: str,
+    ):
+        self.spike = Spike.objects.get(id=spike_id)
+        self.iteration_id = iteration_id
+        self.shift_id = shift_id
+        self.identity_id = identity_id
 
-    def __init__(self, spike_id: str):
-        self.spike_id = spike_id
-        self.spike = None
-        self.provenance = None
-        self.environment = None
+    async def compile_and_dispatch(self) -> Tuple[int, str]:
+        """Compiles Agile Board context and fires the CNS Non-Blocking drop."""
 
-    async def engage(self) -> Tuple[int, str]:
-        logger.info(f'[PFC] Routing evaluation started for Spike {self.spike_id}')
+        # 1. Compile Domain Context
+        board_context = await self._query_agile_board()
 
-        await self._load_context()
+        # 2. Package the Blackboard
+        await self._inject_blackboard(board_context)
 
-        if not self.provenance:
-            return 200, '[PFC] No provenance found. Skipping routing.'
+        # 3. The Drop (Launch the Frontal Lobe loop)
+        return await self._launch_cns_pathway()
 
-        # 1. Define the Meta-Context (What just happened?)
-        # We don't read the logs. We read the graph's intent.
-        routing_context = self._build_routing_context()
+    @sync_to_async
+    def _query_agile_board(self) -> str:
+        """Queries the Agile Board based on the current shift's focus."""
+        # Example dynamic compilation based on shift identity
+        # In a real implementation, check shift.name (e.g., 'Grooming' vs 'Executing')
+        backlog_status = PFCItemStatus.objects.get(id=PFCItemStatus.BACKLOG)
+        stories = PFCStory.objects.filter(status=backlog_status)[:5]
 
-        # 2. Vectorize the Meta-Context
-        embedding = await self._generate_vector(routing_context)
-        if not embedding:
-            return 500, '[PFC] Failed to generate routing vector from Synapse.'
+        context_lines = ['[AGILE BOARD CONTEXT]']
+        for s in stories:
+            context_lines.append(f'- Story {s.id}: {s.name}')
 
-        # 3. Consult the Agile Board
-        story = await self._find_matching_story(embedding)
-        if not story:
-            return (
-                200,
-                '[PFC] No relevant Epics/Stories found for this workflow. Standing down.',
-            )
+        return '\n'.join(context_lines)
 
-        # 4. Create the Tactical Ticket
-        task = await self._create_task(story, routing_context, embedding)
-
-        # 5. Hand off to the Frontal Lobe
-        await self._assign_task_to_blackboard(task)
-
-        logger.info(
-            f'[PFC] Routing successful. Launching Frontal Lobe for Task {task.id}'
-        )
-        lobe = FrontalLobe(self.spike)
-        return await lobe.run()
-
-    async def _load_context(self):
-        """Loads the execution spike and its hierarchical provenance."""
-        # Using select_related to avoid N+1 queries when building the context string
-        self.spike = await sync_to_async(
-            Spike.objects.select_related(
-                'provenance', 'provenance__spell'
-            ).get
-        )(id=self.spike_id)
-
-        self.provenance = self.spike.provenance
-
-        # Assuming the spike or provenance has an environment link based on your recent Epic change
-        # Fallback to None if the model doesn't enforce it yet.
-        self.environment = getattr(self.spike, 'environment', None)
-
-    def _build_routing_context(self) -> str:
-        """Constructs a dense string representing the workflow intent."""
-        effector_name = (
-            self.provenance.effector.name
-            if self.provenance.effector
-            else 'Unknown Spell'
-        )
-        env_name = self.environment.name if self.environment else 'Global'
-
-        # We include the Node status (e.g., 'Failed', 'Completed') to inform the vector
-        # whether it should look for 'Error Triage' stories or 'Statistic Gathering' stories.
-        status_name = (
-            self.provenance.status.name
-            if self.provenance.status
-            else 'Unknown Status'
-        )
-
-        context_parts = [
-            f'Environment: {env_name}',
-            f'Executed Action: {effector_name}',
-            f'Execution Result: {status_name}',
-        ]
-        return ' | '.join(context_parts)
-
-    async def _generate_vector(self, text: str) -> list:
-        """Fetches the 768-dim embedding from Ollama."""
-        registry = await sync_to_async(ModelRegistry.objects.get)(
-            id=ModelRegistry.NOMIC_EMBED_TEXT
-        )
-        client = OllamaClient(registry.name)
-        return await sync_to_async(client.embed)(text)
-
-    async def _find_matching_story(self, embedding: list) -> PFCStory | None:
-        """
-        Finds the closest Agile Story mathematically.
-        Strictly scopes the search to the current Environment.
-        """
-
-        def _query():
-            # Filter by Environment (or Global Epics where environment is null)
-            qs = PFCStory.objects.filter(epic__environment=self.environment)
-
-            # Annotate distance and filter out legacy nulls
-            qs = (
-                qs.exclude(vector__isnull=True)
-                .annotate(distance=CosineDistance('vector', embedding))
-                .order_by('distance')
-            )
-
-            return qs.first()
-
-        best_match = await sync_to_async(_query)()
-
-        if (
-            best_match
-            and getattr(best_match, 'distance', 1.0)
-            <= self.MAX_ALLOWED_DISTANCE
-        ):
-            return best_match
-
-        return None
-
-    async def _create_task(
-        self, story: PFCStory, context: str, embedding: list
-    ) -> PFCTask:
-        """Creates the executable ticket for Talos."""
-        in_progress = await sync_to_async(PFCItemStatus.objects.get)(
-            id=PFCItemStatus.IN_PROGRESS
-        )
-
-        effector_name = (
-            self.provenance.effector.name if self.provenance.effector else 'Workflow'
-        )
-
-        return await sync_to_async(PFCTask.objects.create)(
-            name=f'Review: {effector_name}',
-            description=f'Triggered by workflow completion.\nContext: {context}',
-            story=story,
-            status=in_progress,
-            vector=embedding,
-        )
-
-    async def _assign_task_to_blackboard(self, task: PFCTask):
-        """Injects the Task ID into the graph execution state."""
+    @sync_to_async
+    def _inject_blackboard(self, board_context: str) -> None:
+        """Injects the compiled routing package into the runtime state."""
         if not isinstance(self.spike.blackboard, dict):
             self.spike.blackboard = {}
 
-        self.spike.blackboard['active_pfc_task_id'] = str(task.id)
-        await sync_to_async(self.spike.save)(update_fields=['blackboard'])
-
-
-class PrefrontalCortexDispatcher:
-    """
-    The Summoning Circle.
-    Evaluates the Agile Board and summons the correct Character (Persona)
-    to handle the current state of the studio.
-    """
-
-    def __init__(self, spike_id: str):
-        self.spike_id = spike_id
-        self.spike = None
-
-    async def engage(self) -> Tuple[int, str]:
-        logger.info(
-            f'[PFC] Dispatcher checking the board for Spike {self.spike_id}'
+        self.spike.blackboard.update(
+            {
+                'active_iteration_id': self.iteration_id,
+                'active_shift_id': self.shift_id,
+                'identity_id': self.identity_id,
+                'agile_context': board_context,
+            }
         )
+        self.spike.save(update_fields=['blackboard'])
 
-        self.spike = await sync_to_async(Spike.objects.get)(id=self.spike_id)
+    @sync_to_async
+    def _launch_cns_pathway(self) -> Tuple[int, str]:
+        """Finds the Frontal Lobe graph and spins up the asynchronous SpikeTrain."""
+        env = get_active_environment(self.spike)
 
-        # 1. Is there a Worker (Pig) ticket ready to go?
-        # A Story that the Oracle (PM) has explicitly moved to 'Selected for Development'
-        ready_story = await self._get_highest_priority_ready_story()
+        pathway = NeuralPathway.objects.filter(
+            name__icontains=PFCConstants.TARGET_PATHWAY_NAME, environment=env
+        ).first()
 
-        if not isinstance(self.spike.blackboard, dict):
-            self.spike.blackboard = {}
+        if not pathway:
+            return 500, PFCConstants.ERR_NO_PATHWAY
 
-        if ready_story:
-            logger.info(
-                f"[PFC] Found active Story '{ready_story.name}'. Summoning The Automaton (Worker)."
-            )
-            # Lock it so another worker doesn't grab it
-            ready_story.status_id = PFCItemStatus.IN_PROGRESS
-            await sync_to_async(ready_story.save)(update_fields=['status_id'])
+        # Initialize the CNS execution
+        cns = CNS(pathway_id=pathway.id)
 
-            self.spike.blackboard['persona'] = 'AUTOMATON'
-            self.spike.blackboard['active_story_id'] = str(ready_story.id)
+        # VITAL: Link the new SpikeTrain to the current Spike.
+        # This acts as the "bridge" carrying the Blackboard context forward.
+        cns.spike_train.parent_spike = self.spike
+        cns.spike_train.save(update_fields=['parent_spike'])
 
-        else:
-            logger.info(
-                '[PFC] The board is empty or lacks prioritized work. Summoning The Oracle (PM).'
-            )
-            self.spike.blackboard['persona'] = 'ORACLE'
-            # The Oracle doesn't get a specific ticket; its job is the whole board.
+        cns.start()
 
-        await sync_to_async(self.spike.save)(update_fields=['blackboard'])
-
-        # Launch the Frontal Lobe with the chosen Persona
-        lobe = FrontalLobe(self.spike)
-        return await lobe.run()
-
-    async def _get_highest_priority_ready_story(self):
-        """Returns the oldest Story marked as 'Selected for Development'."""
-
-        def _query():
-            return (
-                PFCStory.objects.filter(
-                    status_id=PFCItemStatus.SELECTED_FOR_DEVELOPMENT
-                )
-                .order_by('modified')
-                .first()
-            )
-
-        return await sync_to_async(_query)()
-
-
-async def dispatch_pfc(spike_id: str) -> tuple[int, str]:
-    """Native execution handler for the CNS Graph."""
-    dispatcher = PrefrontalCortexDispatcher(spike_id)
-    return await dispatcher.engage()
+        return 200, f'{PFCConstants.MSG_DISPATCHED} {cns.spike_train.id}'

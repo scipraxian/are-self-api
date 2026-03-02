@@ -32,14 +32,17 @@ from talos_agent.talos_agent import (
     TalosAgentConstants,
 )
 from talos_agent.talos_agent_finder import scan_and_register
+from temporal_lobe.temporal_lobe import temporal_lobe_engage
 
 logger = logging.getLogger(__name__)
 
 BLACKBOARD_SET_KEY = '::blackboard_set '
-BLACKBOARD_SET_KEY_REGEX = re.compile(r'^.*?::blackboard_set\s+(.+?)::(.*)$',
-                                      flags=re.MULTILINE)
-BLACKBOARD_SET_STRIPPER = re.compile(r'^.*?::blackboard_set\s+.*?::.*$\n?',
-                                     flags=re.MULTILINE)
+BLACKBOARD_SET_KEY_REGEX = re.compile(
+    r'^.*?::blackboard_set\s+(.+?)::(.*)$', flags=re.MULTILINE
+)
+BLACKBOARD_SET_STRIPPER = re.compile(
+    r'^.*?::blackboard_set\s+.*?::.*$\n?', flags=re.MULTILINE
+)
 
 # Native Python Handlers
 # TODO: these should only be internal neurons like begin_play,logic_node,sequence.
@@ -51,6 +54,7 @@ NATIVE_HANDLERS = dict(
     scan_and_register=scan_and_register,  # TODO: move to management
     pathway_logic_neuron=pathway_logic_node,
     run_frontal_lobe=run_frontal_lobe,
+    temporal_lobe_engage=temporal_lobe_engage,
 )
 
 
@@ -115,8 +119,10 @@ class AsyncLogManager:
 
     def _should_flush(self) -> bool:
         total_size = len(self.exec_buffer) + len(self.spell_buffer)
-        return (total_size > self._flush_size or
-                (time.time() - self._last_flush_time) > self._flush_interval)
+        return (
+            total_size > self._flush_size
+            or (time.time() - self._last_flush_time) > self._flush_interval
+        )
 
     async def _flush_unsafe(self):
         if not self.exec_buffer and not self.spell_buffer:
@@ -141,14 +147,15 @@ class AsyncLogManager:
             await sync_to_async(self.spike.refresh_from_db)(fields=['status'])
             if self.spike.status_id == SpikeStatus.ABORTED:
                 raise ConnectionAbortedError('CNS Spike Aborted by User')
-            await sync_to_async(
-                self.spike.save
-            )(update_fields=['execution_log', 'application_log'])
+            await sync_to_async(self.spike.save)(
+                update_fields=['execution_log', 'application_log']
+            )
         except ConnectionAbortedError:
             raise
         except Exception as e:
             logger.error(
-                f'Failed to save execution log for Spike {self.spike.id}: {e}')
+                f'Failed to save execution log for Spike {self.spike.id}: {e}'
+            )
 
 
 class GenericEffectorCaster:
@@ -189,7 +196,8 @@ class GenericEffectorCaster:
 
         if sys.platform == 'win32':
             asyncio.set_event_loop_policy(
-                asyncio.WindowsProactorEventLoopPolicy())
+                asyncio.WindowsProactorEventLoopPolicy()
+            )
 
         try:
             asyncio.run(self._execute_async())
@@ -224,7 +232,8 @@ class GenericEffectorCaster:
                         raise exc
                 except ConnectionAbortedError:
                     logger.warning(
-                        f'Spike {self.spike_id} execution aborted by user.')
+                        f'Spike {self.spike_id} execution aborted by user.'
+                    )
                     return
 
             if spell_task in done:
@@ -252,7 +261,8 @@ class GenericEffectorCaster:
             if self.spike.status_id == SpikeStatus.ABORTED:
                 if self.logger:
                     await self.logger.write_immediate(
-                        '\n[ABORT] Received Kill Signal.\n')
+                        '\n[ABORT] Received Kill Signal.\n'
+                    )
                 raise ConnectionAbortedError('Aborted by User')
 
             # Graceful Stop Signal Check
@@ -291,11 +301,12 @@ class GenericEffectorCaster:
         # 1. Prepare Arguments
         env = await sync_to_async(get_active_environment)(self.spike)
         full_context = await sync_to_async(resolve_environment_context)(
-            spike_id=self.spike_id)
+            spike_id=self.spike_id
+        )
 
-        full_cmd = await sync_to_async(self.effector.get_full_command
-                                      )(environment=env,
-                                        extra_context=full_context)
+        full_cmd = await sync_to_async(self.effector.get_full_command)(
+            environment=env, extra_context=full_context
+        )
 
         executable = full_cmd[0]
         params = full_cmd[1:]
@@ -304,10 +315,13 @@ class GenericEffectorCaster:
         log_path = VariableRenderer.render_string(raw_log_path, full_context)
 
         is_remote = self.spike.target is not None
-        target_name = self.spike.target.hostname if is_remote else 'Local Server'
+        target_name = (
+            self.spike.target.hostname if is_remote else 'Local Server'
+        )
 
         await self.logger.write_immediate(
-            f'[ROUTER] Target: {target_name}\n[CMD] {" ".join(full_cmd)}\n')
+            f'[ROUTER] Target: {target_name}\n[CMD] {" ".join(full_cmd)}\n'
+        )
         self.status = self.STATUS_STREAMING_LOGS
 
         if is_remote:
@@ -333,7 +347,8 @@ class GenericEffectorCaster:
                     if BLACKBOARD_SET_KEY in text_to_log:
                         self._log_info('Blackboard update detected.')
                         matches = list(
-                            BLACKBOARD_SET_KEY_REGEX.finditer(text_to_log))
+                            BLACKBOARD_SET_KEY_REGEX.finditer(text_to_log)
+                        )
                         for match in matches:
                             key = match.group(1).strip()
                             val = match.group(2).strip()
@@ -341,9 +356,11 @@ class GenericEffectorCaster:
                                 self.spike.blackboard = {}
                             self.spike.blackboard[key] = val
                             self._log_info(
-                                f'Blackboard updated with {key}={val}.')
+                                f'Blackboard updated with {key}={val}.'
+                            )
                         text_to_log = BLACKBOARD_SET_STRIPPER.sub(
-                            '', text_to_log)
+                            '', text_to_log
+                        )
                     if text_to_log:
                         await self.logger.append_spell(text_to_log)
                 elif event.type == TalosAgentConstants.T_EXIT:
@@ -359,14 +376,16 @@ class GenericEffectorCaster:
 
         if self.spike.status_id == SpikeStatus.STOPPING:
             await self.logger.write_immediate(
-                '\n[STOP] Process finished. Draining log buffer (3s)...\n')
+                '\n[STOP] Process finished. Draining log buffer (3s)...\n'
+            )
             # The "Post-Mortem" Delay to catch file flush
             await asyncio.sleep(3.0)
             await self.logger.flush()
 
             new_status = SpikeStatus.STOPPED
             await self.logger.write_immediate(
-                '[STOP] Buffer Drained. Stopped.\n')
+                '[STOP] Buffer Drained. Stopped.\n'
+            )
         else:
             # Normal completion
             await self.logger.flush()
@@ -374,11 +393,13 @@ class GenericEffectorCaster:
 
             if is_success:
                 await self.logger.write_immediate(
-                    f'\n[EXIT] Success (Code {exit_code}).\n')
+                    f'\n[EXIT] Success (Code {exit_code}).\n'
+                )
                 new_status = SpikeStatus.SUCCESS
             else:
                 await self.logger.write_immediate(
-                    f'\n[EXIT] Process failed with code {exit_code}\n')
+                    f'\n[EXIT] Process failed with code {exit_code}\n'
+                )
                 new_status = SpikeStatus.FAILED
 
         await self._save_head(fields=[self.BLACKBOARD_FIELD])
@@ -401,7 +422,8 @@ class GenericEffectorCaster:
                 return_code, output_log = await handler_func(self.spike_id)
             else:
                 return_code, output_log = await sync_to_async(handler_func)(
-                    self.spike_id)
+                    self.spike_id
+                )
         except Exception as e:
             self.spike.application_log = f'Native Handler Exception: {str(e)}'
             await self._save_head(fields=[self.APPLICATION_LOG_FIELD])
@@ -411,8 +433,9 @@ class GenericEffectorCaster:
         self.spike.application_log = output_log
         await self._save_head(fields=[self.APPLICATION_LOG_FIELD])
 
-        new_status = (SpikeStatus.SUCCESS
-                      if return_code == 200 else SpikeStatus.FAILED)
+        new_status = (
+            SpikeStatus.SUCCESS if return_code == 200 else SpikeStatus.FAILED
+        )
         await self._update_status(new_status)
 
     def _load_head_sync(self):
@@ -437,7 +460,8 @@ class GenericEffectorCaster:
             await sync_to_async(self.spike.save)(update_fields=fields)
         except Exception as e:
             logger.error(
-                f'Failed to save Spike {self.spike.id} fields {fields}: {e}')
+                f'Failed to save Spike {self.spike.id} fields {fields}: {e}'
+            )
 
     async def _update_status(self, status_id: int):
         self.spike.status_id = status_id
@@ -454,12 +478,14 @@ class GenericEffectorCaster:
         if self.spike:
             try:
                 self.spike.execution_log += (
-                    f'\n[FATAL SYSTEM ERROR]\n{str(e)}\n{trace}\n')
+                    f'\n[FATAL SYSTEM ERROR]\n{str(e)}\n{trace}\n'
+                )
                 self.spike.status_id = SpikeStatus.FAILED
                 self.spike.save(update_fields=['execution_log', 'status'])
             except Exception as db_err:
                 logger.error(
-                    f'Double Fault: Failed to write error to DB: {db_err}')
+                    f'Double Fault: Failed to write error to DB: {db_err}'
+                )
 
     async def _handle_fatal_error(self, e: Exception):
         """Async error handler for pipeline logic."""

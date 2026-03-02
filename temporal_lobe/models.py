@@ -6,6 +6,8 @@ from identity.models import Identity
 
 
 class Shift(NameMixin):
+    """Execute N number of turns."""
+
     GROOMING = 1
     PRE_PLANNING = 2
     PLANNING = 3
