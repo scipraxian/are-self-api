@@ -24,6 +24,9 @@ EXTENSIONS_TO_PROCESS: Set[str] = {
     '.html',
     '.js',
     '.md',
+    '.ts',
+    '.tsx',
+    '.sh',
 }
 
 DIRECTORIES_TO_IGNORE: Set[str] = {
