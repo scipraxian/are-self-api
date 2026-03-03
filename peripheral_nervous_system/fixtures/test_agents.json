@@ -1,6 +1,6 @@
 [
     {
-        "model": "talos_agent.talosagentregistry",
+        "model": "peripheral_nervous_system.nerveterminalregistry",
         "pk": "a7898945-d404-1fc4-ead1-04d4c41fead0",
         "fields": {
             "status": 2,

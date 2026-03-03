@@ -1,4 +1,4 @@
-"""Models for the Talos Agent application, tracking remote agent telemetry."""
+"""Models for the Peripheral Nervous System application, tracking remote agent telemetry."""
 
 import uuid
 
@@ -12,14 +12,14 @@ from common.models import (
 )
 
 
-class TalosAgentStatus(DefaultFieldsMixin):
+class NerveTerminalStatus(DefaultFieldsMixin):
     OFFLINE = 1
     ONLINE = 2
     IN_USE = 3
 
 
-class TalosAgentRegistry(UUIDIdMixin, CreatedMixin, ModifiedMixin):
-    status = models.ForeignKey(TalosAgentStatus, on_delete=models.PROTECT)
+class NerveTerminalRegistry(UUIDIdMixin, CreatedMixin, ModifiedMixin):
+    status = models.ForeignKey(NerveTerminalStatus, on_delete=models.PROTECT)
     hostname = models.CharField(max_length=100, unique=True)
     ip_address = models.GenericIPAddressField(blank=True, null=True)
     port = models.PositiveIntegerField(default=5005)
@@ -32,12 +32,12 @@ class TalosAgentRegistry(UUIDIdMixin, CreatedMixin, ModifiedMixin):
         return self.hostname
 
 
-class TalosAgentTelemetry(models.Model):
+class NerveTerminalTelemetry(models.Model):
     """Stores periodic snapshots of agent health and performance."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     target = models.ForeignKey(
-        TalosAgentRegistry, on_delete=models.CASCADE, related_name='telemetry'
+        NerveTerminalRegistry, on_delete=models.CASCADE, related_name='telemetry'
     )
     timestamp = models.DateTimeField(auto_now_add=True)
 
@@ -59,7 +59,7 @@ class TalosAgentTelemetry(models.Model):
 
 
 # TODO: not sure we are using this, and not sure we want to.
-class TalosAgentEvent(models.Model):  # NOT CURRENTLY USED
+class NerveTerminalEvent(models.Model):  # NOT CURRENTLY USED
     """Records significant lifecycle events for an agent."""
 
     EVENT_TYPES = [
@@ -73,7 +73,7 @@ class TalosAgentEvent(models.Model):  # NOT CURRENTLY USED
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     target = models.ForeignKey(
-        TalosAgentRegistry, on_delete=models.CASCADE, related_name='events'
+        NerveTerminalRegistry, on_delete=models.CASCADE, related_name='events'
     )
     timestamp = models.DateTimeField(auto_now_add=True)
     event_type = models.CharField(max_length=20, choices=EVENT_TYPES)

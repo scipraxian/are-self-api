@@ -4,22 +4,27 @@ import pytest
 from asgiref.sync import sync_to_async
 from django.test import TestCase
 
+from central_nervous_system.effectors.effector_casters.generic_effector_caster import (
+    GenericEffectorCaster,
+)
+from central_nervous_system.models import (
+    Effector,
+    NeuralPathway,
+    Neuron,
+    Spike,
+    SpikeStatus,
+    SpikeTrain,
+)
 from environments.models import (
     ProjectEnvironment,
     ProjectEnvironmentStatus,
     ProjectEnvironmentType,
     TalosExecutable,
 )
-from central_nervous_system.models import (
-    Spike,
-    SpikeStatus,
-    SpikeTrain,
-    Effector,
-    NeuralPathway,
-    Neuron,
+from peripheral_nervous_system.nerve_terminal import (
+    NerveTerminalConstants,
+    NerveTerminalEvent,
 )
-from central_nervous_system.effectors.effector_casters.generic_effector_caster import GenericEffectorCaster
-from talos_agent.talos_agent import TalosAgentConstants, TalosEvent
 
 
 # Helper to mock async generators (since MagicMock doesn't do __aiter__ by default)
@@ -77,14 +82,14 @@ class TestGenericSpellCaster:
         """Test that execute() kicks off the process."""
         caster = GenericEffectorCaster(mock_head.id)
 
-        # Mock TalosAgent.execute_local to return an empty stream then exit
+        # Mock NerveTerminal.execute_local to return an empty stream then exit
         events = [
-            TalosEvent(type=TalosAgentConstants.T_LOG, text='Starting...'),
-            TalosEvent(type=TalosAgentConstants.T_EXIT, code=0),
+            NerveTerminalEvent(type=NerveTerminalConstants.T_LOG, text='Starting...'),
+            NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0),
         ]
 
         with patch(
-            'talos_agent.talos_agent.TalosAgent.execute_local'
+            'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
         ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
@@ -101,19 +106,19 @@ class TestGenericSpellCaster:
         caster = GenericEffectorCaster(mock_head.id)
 
         events = [
-            TalosEvent(
-                type=TalosAgentConstants.T_LOG,
+            NerveTerminalEvent(
+                type=NerveTerminalConstants.T_LOG,
                 text='Working...',
                 source='stdout',
             ),
-            TalosEvent(
-                type=TalosAgentConstants.T_LOG, text='File log', source='file'
+            NerveTerminalEvent(
+                type=NerveTerminalConstants.T_LOG, text='File log', source='file'
             ),
-            TalosEvent(type=TalosAgentConstants.T_EXIT, code=0),
+            NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0),
         ]
 
         with patch(
-            'talos_agent.talos_agent.TalosAgent.execute_local'
+            'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
         ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
@@ -127,12 +132,12 @@ class TestGenericSpellCaster:
         caster = GenericEffectorCaster(mock_head.id)
 
         events = [
-            TalosEvent(type=TalosAgentConstants.T_LOG, text='Crashing...'),
-            TalosEvent(type=TalosAgentConstants.T_EXIT, code=1),
+            NerveTerminalEvent(type=NerveTerminalConstants.T_LOG, text='Crashing...'),
+            NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=1),
         ]
 
         with patch(
-            'talos_agent.talos_agent.TalosAgent.execute_local'
+            'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
         ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
@@ -148,10 +153,10 @@ class TestGenericSpellCaster:
 
         caster = GenericEffectorCaster(mock_head.id)
 
-        events = [TalosEvent(type=TalosAgentConstants.T_EXIT, code=0)]
+        events = [NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0)]
 
         with patch(
-            'talos_agent.talos_agent.TalosAgent.execute_remote'
+            'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_remote'
         ) as mock_remote:
             mock_remote.return_value = mock_event_stream(events)
 
@@ -171,10 +176,10 @@ class TestGenericSpellCaster:
 
         caster = GenericEffectorCaster(mock_head.id)
 
-        events = [TalosEvent(type=TalosAgentConstants.T_EXIT, code=0)]
+        events = [NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0)]
 
         with patch(
-            'talos_agent.talos_agent.TalosAgent.execute_local'
+            'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
         ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
@@ -201,10 +206,10 @@ class TestGenericSpellCaster:
         mock_ctx.return_value = {'project_name': 'HSHVacancy'}
 
         caster = GenericEffectorCaster(mock_head.id)
-        events = [TalosEvent(type=TalosAgentConstants.T_EXIT, code=0)]
+        events = [NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0)]
 
         with patch(
-            'talos_agent.talos_agent.TalosAgent.execute_local'
+            'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
         ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
@@ -281,16 +286,16 @@ class TestGenericSpellCaster:
         )
 
         events = [
-            TalosEvent(
-                type=TalosAgentConstants.T_LOG,
+            NerveTerminalEvent(
+                type=NerveTerminalConstants.T_LOG,
                 text=log_payload,
                 source='stdout',
             ),
-            TalosEvent(type=TalosAgentConstants.T_EXIT, code=0),
+            NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0),
         ]
 
         with patch(
-            'talos_agent.talos_agent.TalosAgent.execute_local'
+            'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
         ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
@@ -324,16 +329,16 @@ class TestGenericSpellCaster:
         )
 
         events = [
-            TalosEvent(
-                type=TalosAgentConstants.T_LOG,
+            NerveTerminalEvent(
+                type=NerveTerminalConstants.T_LOG,
                 text=log_payload,
                 source='stdout',
             ),
-            TalosEvent(type=TalosAgentConstants.T_EXIT, code=0),
+            NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0),
         ]
 
         with patch(
-            'talos_agent.talos_agent.TalosAgent.execute_local'
+            'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
         ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
             caster.execute()
@@ -357,8 +362,8 @@ class TestGenericSpellCaster:
 class GenericSpellCasterQueryTest(TestCase):
     fixtures = [
         'environments/fixtures/initial_data.json',
-        'talos_agent/fixtures/initial_data.json',
-        'talos_agent/fixtures/test_agents.json',
+        'peripheral_nervous_system/fixtures/initial_data.json',
+        'peripheral_nervous_system/fixtures/test_agents.json',
         'central_nervous_system/fixtures/initial_data.json',
     ]
 

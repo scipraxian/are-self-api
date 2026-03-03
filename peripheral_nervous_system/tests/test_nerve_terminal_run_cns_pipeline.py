@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from talos_agent.talos_agent import run_cns_pipeline
+from peripheral_nervous_system.nerve_terminal import run_cns_pipeline
 
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())

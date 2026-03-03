@@ -1,27 +1,27 @@
 from django.contrib import admin
 
 from .models import (
-    TalosAgentEvent,
-    TalosAgentRegistry,
-    TalosAgentStatus,
-    TalosAgentTelemetry,
+    NerveTerminalEvent,
+    NerveTerminalRegistry,
+    NerveTerminalStatus,
+    NerveTerminalTelemetry,
 )
 
 
-@admin.register(TalosAgentStatus)
-class TalosAgentStatusAdmin(admin.ModelAdmin):
+@admin.register(NerveTerminalStatus)
+class NerveTerminalStatusAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
 
 
-@admin.register(TalosAgentRegistry)
-class TalosAgentRegistryAdmin(admin.ModelAdmin):
+@admin.register(NerveTerminalRegistry)
+class NerveTerminalRegistryAdmin(admin.ModelAdmin):
     list_display = ('hostname', 'ip_address', 'version', 'status', 'last_seen')
     list_filter = ('status', 'version')
     search_fields = ('hostname', 'ip_address')
 
 
-@admin.register(TalosAgentTelemetry)
-class TalosAgentTelemetryAdmin(admin.ModelAdmin):
+@admin.register(NerveTerminalTelemetry)
+class NerveTerminalTelemetryAdmin(admin.ModelAdmin):
     list_display = (
         'target',
         'timestamp',
@@ -33,7 +33,7 @@ class TalosAgentTelemetryAdmin(admin.ModelAdmin):
     list_filter = ('target', 'timestamp')
 
 
-@admin.register(TalosAgentEvent)
-class TalosAgentEventAdmin(admin.ModelAdmin):
+@admin.register(NerveTerminalEvent)
+class NerveTerminalEventAdmin(admin.ModelAdmin):
     list_display = ('target', 'event_type', 'timestamp', 'message')
     list_filter = ('event_type', 'target')

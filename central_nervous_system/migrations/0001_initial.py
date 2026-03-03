@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('environments', '0001_initial'),
-        ('talos_agent', '0001_initial'),
+        ('peripheral_nervous_system', '0001_initial'),
     ]
 
     operations = [
@@ -82,7 +82,7 @@ class Migration(migrations.Migration):
                 ('result_code', models.IntegerField(blank=True, null=True)),
                 ('blackboard', models.JSONField(blank=True, default=dict)),
                 ('provenance', models.ForeignKey(blank=True, help_text='The Head that triggered this execution.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='successors', to='central_nervous_system.hydrahead')),
-                ('target', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='talos_agent.talosagentregistry')),
+                ('target', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='peripheral_nervous_system.nerveterminalregistry')),
                 ('status', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='central_nervous_system.hydraheadstatus')),
             ],
             options={
@@ -210,7 +210,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('effector', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='specific_targets', to='central_nervous_system.hydraspell')),
-                ('target', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='talos_agent.talosagentregistry')),
+                ('target', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='peripheral_nervous_system.nerveterminalregistry')),
             ],
             options={
                 'verbose_name': 'Hydra Spell Target',

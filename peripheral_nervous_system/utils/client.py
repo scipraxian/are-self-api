@@ -1,11 +1,11 @@
-'''Talos Agent Client: Interface for communicating with remote Talos Agents.'''
+'''Peripheral Nervous System Client: Interface for communicating with remote Peripheral Nervous Systems.'''
 
 import json
 import socket
 import logging
 
-class TalosAgentClient:
-  '''Handles the protocol-level communication with a remote Talos Agent.'''
+class NerveTerminalClient:
+  '''Handles the protocol-level communication with a remote Peripheral Nervous System.'''
 
   def __init__(self, host: str, port: int = 5005, timeout: float = 2.0):
     self.host = host

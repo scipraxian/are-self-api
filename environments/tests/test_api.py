@@ -15,8 +15,8 @@ class EnvironmentAPITest(TestCase):
     # Load fixtures to ensure IDs and Foreign Keys are valid
     fixtures = [
         'environments/fixtures/initial_data.json',
-        'talos_agent/fixtures/initial_data.json',
-        'talos_agent/fixtures/test_agents.json',
+        'peripheral_nervous_system/fixtures/initial_data.json',
+        'peripheral_nervous_system/fixtures/test_agents.json',
         'central_nervous_system/fixtures/initial_data.json',
     ]
 

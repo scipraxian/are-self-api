@@ -7,7 +7,7 @@ from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.utils import timezone
 
-from talos_agent.models import TalosAgentRegistry, TalosAgentStatus
+from peripheral_nervous_system.models import NerveTerminalRegistry, NerveTerminalStatus
 
 logger = logging.getLogger(__name__)
 
@@ -188,14 +188,14 @@ def _register_agent_in_db(identity: AgentIdentity) -> str:
         logger.error(f'Invalid identity object: {identity}')
         return 'Unknown'
 
-    target, created = TalosAgentRegistry.objects.update_or_create(
+    target, created = NerveTerminalRegistry.objects.update_or_create(
         id=identity.unique_id,
         defaults=dict(
             hostname=identity.hostname.upper().split('.')[0],
             ip_address=identity.ip_address,
             version=identity.version,
             last_seen=timezone.now(),
-            status_id=TalosAgentStatus.ONLINE,
+            status_id=NerveTerminalStatus.ONLINE,
         ),
     )
 

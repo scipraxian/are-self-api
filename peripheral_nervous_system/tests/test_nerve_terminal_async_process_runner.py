@@ -3,7 +3,7 @@ import sys
 
 import pytest
 
-from talos_agent.talos_agent import AsyncProcessRunner
+from peripheral_nervous_system.nerve_terminal import AsyncProcessRunner
 
 # Apply Windows Proactor loop policy for subprocess support
 if sys.platform == 'win32':

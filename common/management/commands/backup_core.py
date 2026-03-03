@@ -49,7 +49,7 @@ CANONICAL_MODELS = {
         'IterationShift',
     ],
     'identity': ['IdentityType', 'IdentityTag', 'IdentityAddon', 'Identity'],
-    'talos_agent': ['TalosAgentStatus'],
+    'peripheral_nervous_system': ['NerveTerminalStatus'],
 }
 
 

@@ -32,7 +32,7 @@
         <div class="metrics-dashboard" style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
             <div id="live-metrics" hx-get="{% url 'agent_metrics' agent.pk %}" hx-trigger="every 5s"
                  class="metrics-grid">
-                {% include "talos_agent/partials/metrics_card.html" with metrics=latest_telemetry %}
+                {% include "peripheral_nervous_system/partials/metrics_card.html" with metrics=latest_telemetry %}
             </div>
             <div
                     style="background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 1.5rem;">

@@ -32,7 +32,7 @@ from environments.variable_renderer import VariableRenderer
 
 # ==========================================
 # PART 1: DTOs (Data Transfer Objects)
-# Strict typing mimicking the talos_agent pattern
+# Strict typing mimicking the peripheral_nervous_system pattern
 # ==========================================
 
 

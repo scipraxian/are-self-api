@@ -17,8 +17,8 @@ class DashboardAPITest(TestCase):
     # CRITICAL: Order matters. Environments -> Agent Statuses -> Agents -> CNS
     fixtures = [
         'environments/fixtures/initial_data.json',
-        'talos_agent/fixtures/initial_data.json',
-        'talos_agent/fixtures/test_agents.json',
+        'peripheral_nervous_system/fixtures/initial_data.json',
+        'peripheral_nervous_system/fixtures/test_agents.json',
         'central_nervous_system/fixtures/initial_data.json',
     ]
 

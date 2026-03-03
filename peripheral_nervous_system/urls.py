@@ -1,4 +1,4 @@
-'''URL configuration for the Talos Agent application.'''
+'''URL configuration for the Peripheral Nervous System application.'''
 
 from django.urls import path
 from . import views

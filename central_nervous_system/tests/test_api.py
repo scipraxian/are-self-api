@@ -7,8 +7,8 @@ from central_nervous_system.models import NeuralPathway, SpikeTrain, Spike, Effe
 class CNSApiTest(TestCase):
     fixtures = [
         'environments/fixtures/initial_data.json',
-        'talos_agent/fixtures/initial_data.json',
-        'talos_agent/fixtures/test_agents.json',
+        'peripheral_nervous_system/fixtures/initial_data.json',
+        'peripheral_nervous_system/fixtures/test_agents.json',
         'central_nervous_system/fixtures/initial_data.json',
     ]
 

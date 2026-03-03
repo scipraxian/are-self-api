@@ -4,7 +4,7 @@ import sys
 
 import pytest
 
-from talos_agent.talos_agent import TalosAgent, TalosAgentConstants
+from peripheral_nervous_system.nerve_terminal import NerveTerminal, NerveTerminalConstants
 
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
@@ -13,9 +13,9 @@ if sys.platform == 'win32':
 @pytest.fixture
 async def agent_server(unused_tcp_port):
     """
-    Async fixture that starts the TalosAgent server in a background task.
+    Async fixture that starts the NerveTerminal server in a background task.
     """
-    agent = TalosAgent(port=unused_tcp_port)
+    agent = NerveTerminal(port=unused_tcp_port)
 
     # Run server in background task
     server_task = asyncio.create_task(agent.run_server())
@@ -38,12 +38,12 @@ async def send_command_async(port, cmd, args=None):
     reader, writer = await asyncio.open_connection('127.0.0.1', port)
 
     payload = {
-        TalosAgentConstants.K_CMD: cmd,
-        TalosAgentConstants.K_ARGS: args or {},
+        NerveTerminalConstants.K_CMD: cmd,
+        NerveTerminalConstants.K_ARGS: args or {},
     }
 
     writer.write(
-        (json.dumps(payload) + '\n').encode(TalosAgentConstants.ENCODING)
+        (json.dumps(payload) + '\n').encode(NerveTerminalConstants.ENCODING)
     )
     await writer.drain()
 
@@ -69,11 +69,11 @@ async def send_command_async(port, cmd, args=None):
 @pytest.mark.asyncio
 async def test_ping(agent_server):
     responses = await send_command_async(
-        agent_server.port, TalosAgentConstants.CMD_PING
+        agent_server.port, NerveTerminalConstants.CMD_PING
     )
     assert len(responses) == 1
     assert (
-        responses[0][TalosAgentConstants.K_STATUS] == TalosAgentConstants.S_PONG
+        responses[0][NerveTerminalConstants.K_STATUS] == NerveTerminalConstants.S_PONG
     )
 
 
@@ -88,7 +88,7 @@ async def test_execute_basic(agent_server):
 
     responses = await send_command_async(
         agent_server.port,
-        TalosAgentConstants.CMD_EXECUTE,
+        NerveTerminalConstants.CMD_EXECUTE,
         {'executable': exe, 'params': params},
     )
 
@@ -96,19 +96,19 @@ async def test_execute_basic(agent_server):
     logs = [
         r
         for r in responses
-        if r.get(TalosAgentConstants.K_TYPE) == TalosAgentConstants.T_LOG
+        if r.get(NerveTerminalConstants.K_TYPE) == NerveTerminalConstants.T_LOG
     ]
     exits = [
         r
         for r in responses
-        if r.get(TalosAgentConstants.K_TYPE) == TalosAgentConstants.T_EXIT
+        if r.get(NerveTerminalConstants.K_TYPE) == NerveTerminalConstants.T_EXIT
     ]
 
-    assert any('Launching' in r[TalosAgentConstants.K_CONTENT] for r in logs)
-    assert any('hello agent' in r[TalosAgentConstants.K_CONTENT] for r in logs)
+    assert any('Launching' in r[NerveTerminalConstants.K_CONTENT] for r in logs)
+    assert any('hello agent' in r[NerveTerminalConstants.K_CONTENT] for r in logs)
 
     assert len(exits) == 1
-    assert exits[0][TalosAgentConstants.K_CODE] == 0
+    assert exits[0][NerveTerminalConstants.K_CODE] == 0
 
 
 @pytest.mark.asyncio
@@ -116,6 +116,6 @@ async def test_unknown_command(agent_server):
     responses = await send_command_async(agent_server.port, 'BOGUS_CMD')
     assert len(responses) >= 1
     assert (
-        responses[0][TalosAgentConstants.K_STATUS]
-        == TalosAgentConstants.S_ERROR
+        responses[0][NerveTerminalConstants.K_STATUS]
+        == NerveTerminalConstants.S_ERROR
     )

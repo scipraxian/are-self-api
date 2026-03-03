@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='TalosAgentRegistry',
+            name='NerveTerminalRegistry',
             fields=[
                 ('created', models.DateTimeField(auto_now_add=True, db_index=True)),
                 ('modified', models.DateTimeField(auto_now=True, db_index=True)),
@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='TalosAgentStatus',
+            name='NerveTerminalStatus',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', models.DateTimeField(auto_now_add=True, db_index=True)),
@@ -42,25 +42,25 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='TalosAgentEvent',
+            name='NerveTerminalEvent',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('timestamp', models.DateTimeField(auto_now_add=True)),
                 ('event_type', models.CharField(choices=[('LAUNCH', 'Started Process'), ('KILL', 'Stopped Process'), ('CRASH', 'Detected Crash'), ('DISCONNECT', 'Lost Connection'), ('RECONNECT', 'Restored Connection'), ('UPDATE', 'Agent Code Updated')], max_length=20)),
                 ('message', models.TextField(blank=True)),
-                ('target', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='events', to='talos_agent.talosagentregistry')),
+                ('target', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='events', to='peripheral_nervous_system.nerveterminalregistry')),
             ],
             options={
                 'ordering': ['-timestamp'],
             },
         ),
         migrations.AddField(
-            model_name='talosagentregistry',
+            model_name='nerveterminalregistry',
             name='status',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='talos_agent.talosagentstatus'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='peripheral_nervous_system.nerveterminalstatus'),
         ),
         migrations.CreateModel(
-            name='TalosAgentTelemetry',
+            name='NerveTerminalTelemetry',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('timestamp', models.DateTimeField(auto_now_add=True)),
@@ -71,7 +71,7 @@ class Migration(migrations.Migration):
                 ('storage_ok', models.BooleanField(default=False)),
                 ('storage_info', models.CharField(blank=True, max_length=500)),
                 ('raw_payload', models.JSONField(blank=True, null=True)),
-                ('target', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='telemetry', to='talos_agent.talosagentregistry')),
+                ('target', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='telemetry', to='peripheral_nervous_system.nerveterminalregistry')),
             ],
             options={
                 'verbose_name_plural': 'Agent Telemetry',

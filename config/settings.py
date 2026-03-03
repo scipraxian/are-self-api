@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     'channels',
     'common',
     'dashboard',
-    'talos_agent',
+    'peripheral_nervous_system',
     'celery',
     'central_nervous_system',
     'django_celery_results',

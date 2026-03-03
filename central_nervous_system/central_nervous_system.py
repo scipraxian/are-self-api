@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from config.celery import app as celery_app
 from environments.models import ProjectEnvironment
-from talos_agent.models import TalosAgentRegistry, TalosAgentStatus
+from peripheral_nervous_system.models import NerveTerminalRegistry, NerveTerminalStatus
 
 from .models import (
     Axon,
@@ -357,8 +357,8 @@ class CNS:
             self._prepare_and_dispatch(seed_spike)
 
     def _dispatch_fleet_wave(self, seed_spike: Spike) -> None:
-        agents = TalosAgentRegistry.objects.filter(
-            status_id=TalosAgentStatus.ONLINE
+        agents = NerveTerminalRegistry.objects.filter(
+            status_id=NerveTerminalStatus.ONLINE
         )
 
         if not agents.exists():
@@ -382,7 +382,7 @@ class CNS:
 
     def _dispatch_first_responder(self, seed_spike: Spike) -> None:
         agent = (
-            TalosAgentRegistry.objects.filter(status_id=TalosAgentStatus.ONLINE)
+            NerveTerminalRegistry.objects.filter(status_id=NerveTerminalStatus.ONLINE)
             .order_by('last_seen')
             .first()
         )
@@ -396,7 +396,7 @@ class CNS:
         self._clone_and_dispatch_spike(seed_spike, agent)
         seed_spike.delete()
 
-    def _clone_and_dispatch_spike(self, seed: Spike, agent: TalosAgentRegistry):
+    def _clone_and_dispatch_spike(self, seed: Spike, agent: NerveTerminalRegistry):
         new_spike = Spike.objects.create(
             spike_train=seed.spike_train,
             neuron=seed.neuron,

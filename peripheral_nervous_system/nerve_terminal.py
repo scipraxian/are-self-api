@@ -1,8 +1,8 @@
 """
-Talos Remote Agent
+Are-Self remote Nerve Terminal
 ==================
 
-A lightweight, asynchronous execution node designed for the Talos Build Farm.
+A lightweight, asynchronous execution node designed for the Are-Self Build Farm.
 This agent transforms any machine (Windows/Linux) into a "Smart Worker" capable
 of receiving complex build instructions and streaming real-time telemetry back
 to the central server.
@@ -29,7 +29,7 @@ Architecture:
     exact same execution logic (`execute_local`) for internal tasks as it
     exposes to remote clients.
 * **Strict Typing:** All events are emitted as strictly typed NamedTuples
-    (`TalosEvent`) to eliminate ambiguity between Logs and Exit Codes.
+    to eliminate ambiguity between Logs and Exit Codes.
 * **Stateless:** Does not connect to the Database. It is a "dumb" executor
     controlled entirely by the CNS Effector Caster.
 
@@ -53,7 +53,7 @@ Dependencies:
 
 Usage:
 ------
-    python talos_agent.py
+    python peripheral_nervous_system.py
 """
 
 import asyncio
@@ -88,7 +88,7 @@ logging.getLogger('watchfiles').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-class TalosAgentConstants:
+class NerveTerminalConstants:
     """Protocol Constants."""
 
     # Meta
@@ -140,7 +140,7 @@ class TalosAgentConstants:
     TAG_AGENT = '[AGENT]'
 
 
-class TalosEvent(NamedTuple):
+class NerveTerminalEvent(NamedTuple):
     """
     Strictly typed event structure.
     Removes ambiguity: 'text' is always for logs, 'code' is always for status.
@@ -181,7 +181,7 @@ class AsyncProcessRunner:
             cwd=self.cwd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
-            limit=TalosAgentConstants.BUFFER_SIZE,
+            limit=NerveTerminalConstants.BUFFER_SIZE,
         )
 
     async def stream_output(self) -> AsyncGenerator[str, None]:
@@ -192,8 +192,8 @@ class AsyncProcessRunner:
         async for line in self.process.stdout:
             if line:
                 yield line.decode(
-                    TalosAgentConstants.ENCODING,
-                    errors=TalosAgentConstants.ERR_HANDLER,
+                    NerveTerminalConstants.ENCODING,
+                    errors=NerveTerminalConstants.ERR_HANDLER,
                 )
 
     async def wait(self) -> Optional[int]:
@@ -345,7 +345,7 @@ class AsyncLogMonitor:
         # Report if file never appeared
         if not self._file_found:
             msg = (
-                f'\n{TalosAgentConstants.TAG_MONITOR} '
+                f'\n{NerveTerminalConstants.TAG_MONITOR} '
                 f"Warn: Log file '{self.file_path}' never appeared.\n"
             )
             logger.info(msg.strip())
@@ -376,7 +376,9 @@ class AsyncLogMonitor:
         # 1. Patience Phase
         start_time = time.time()
         logger.info('[MONITOR] Waiting for file to appear...')
-        while time.time() - start_time < TalosAgentConstants.TIMEOUT_LOG_APPEAR:
+        while (
+            time.time() - start_time < NerveTerminalConstants.TIMEOUT_LOG_APPEAR
+        ):
             if os.path.exists(self.file_path):
                 # Attempt read, but strictly enforce mtime check
                 self._read_file(force_check=True)
@@ -418,8 +420,8 @@ class AsyncLogMonitor:
             with open(
                 self.file_path,
                 'r',
-                encoding=TalosAgentConstants.ENCODING,
-                errors=TalosAgentConstants.ERR_HANDLER,
+                encoding=NerveTerminalConstants.ENCODING,
+                errors=NerveTerminalConstants.ERR_HANDLER,
             ) as f:
                 # FIRST READ INITIALIZATION
                 if not self._file_found:
@@ -592,8 +594,8 @@ async def run_cns_pipeline(
 # ==========================================
 
 
-class TalosAgent:
-    def __init__(self, port: int = TalosAgentConstants.BIND_PORT):
+class NerveTerminal:
+    def __init__(self, port: int = NerveTerminalConstants.BIND_PORT):
         self.port = port
         self.logger = self._setup_logging()
         self.active_tasks = set()
@@ -603,17 +605,17 @@ class TalosAgent:
             level=logging.INFO,
             format='%(asctime)s [%(levelname)s] %(message)s',
         )
-        return logging.getLogger('TalosAgent')
+        return logging.getLogger('NerveTerminal')
 
     async def run_server(self) -> None:
         """Starts the AsyncIO TCP Server."""
         server = await asyncio.start_server(
-            self.handle_client, TalosAgentConstants.BIND_ADDRESS, self.port
+            self.handle_client, NerveTerminalConstants.BIND_ADDRESS, self.port
         )
 
         addr = server.sockets[0].getsockname()
         self.logger.info(
-            f'Talos Agent v{TalosAgentConstants.VERSION} listening on {addr}'
+            f'Peripheral Nervous System v{NerveTerminalConstants.VERSION} listening on {addr}'
         )
 
         async with server:
@@ -632,11 +634,11 @@ class TalosAgent:
         try:
             # Read Request
             try:
-                data = await reader.read(TalosAgentConstants.TCP_CHUNK)
+                data = await reader.read(NerveTerminalConstants.TCP_CHUNK)
             except OSError:
                 return  # Connection dead
 
-            message = data.decode(TalosAgentConstants.ENCODING).strip()
+            message = data.decode(NerveTerminalConstants.ENCODING).strip()
             if not message:
                 return
 
@@ -646,33 +648,33 @@ class TalosAgent:
                 self.logger.error(f'Invalid JSON from {addr}')
                 return
 
-            command = request.get(TalosAgentConstants.K_CMD, '').upper()
-            args = request.get(TalosAgentConstants.K_ARGS, dict())
+            command = request.get(NerveTerminalConstants.K_CMD, '').upper()
+            args = request.get(NerveTerminalConstants.K_ARGS, dict())
             self.logger.debug(f'CMD: {command} from {addr}')
 
             # Route Command
-            if command == TalosAgentConstants.CMD_PING:
+            if command == NerveTerminalConstants.CMD_PING:
                 await self._send_json(
                     writer,
                     dict(
-                        status=TalosAgentConstants.S_PONG,
+                        status=NerveTerminalConstants.S_PONG,
                         hostname=socket.gethostname(),
-                        version=TalosAgentConstants.VERSION,
+                        version=NerveTerminalConstants.VERSION,
                         uuid=_get_agent_id(),
                     ),
                 )
 
-            elif command == TalosAgentConstants.CMD_EXECUTE:
+            elif command == NerveTerminalConstants.CMD_EXECUTE:
                 await self._handle_execute(reader, writer, args)
 
-            elif command == TalosAgentConstants.CMD_UPDATE:
+            elif command == NerveTerminalConstants.CMD_UPDATE:
                 await self._handle_update(writer, args)
 
             else:
                 await self._send_json(
                     writer,
                     dict(
-                        status=TalosAgentConstants.S_ERROR,
+                        status=NerveTerminalConstants.S_ERROR,
                         msg=f'Unknown command: {command}',
                     ),
                 )
@@ -683,7 +685,7 @@ class TalosAgent:
                 with contextlib.suppress(Exception):
                     await self._send_json(
                         writer,
-                        dict(status=TalosAgentConstants.S_ERROR, msg=str(e)),
+                        dict(status=NerveTerminalConstants.S_ERROR, msg=str(e)),
                     )
         finally:
             self.active_tasks.discard(current_task)
@@ -704,8 +706,10 @@ class TalosAgent:
                 data = await reader.readline()
                 if not data:
                     break
-                msg = data.decode(TalosAgentConstants.ENCODING).strip().upper()
-                if msg == TalosAgentConstants.CMD_STOP:
+                msg = (
+                    data.decode(NerveTerminalConstants.ENCODING).strip().upper()
+                )
+                if msg == NerveTerminalConstants.CMD_STOP:
                     logger.info(
                         '[AGENT] Graceful STOP signal received from client.'
                     )
@@ -726,14 +730,16 @@ class TalosAgent:
         local callers. This "eat your own dog food" pattern guarantees
         consistency and reduces code duplication.
         """
-        executable = args.get(TalosAgentConstants.K_EXE)
-        params = args.get(TalosAgentConstants.K_PARAMS, [])
-        log_path = args.get(TalosAgentConstants.K_LOG)
+        executable = args.get(NerveTerminalConstants.K_EXE)
+        params = args.get(NerveTerminalConstants.K_PARAMS, [])
+        log_path = args.get(NerveTerminalConstants.K_LOG)
 
         if not executable:
             await self._send_json(
                 writer,
-                dict(status=TalosAgentConstants.S_ERROR, msg='No executable'),
+                dict(
+                    status=NerveTerminalConstants.S_ERROR, msg='No executable'
+                ),
             )
             return
 
@@ -750,16 +756,18 @@ class TalosAgent:
                 cmd_list, log_path, stop_event=stop_event
             ):
                 response_payload: dict = {
-                    TalosAgentConstants.K_TYPE: event.type
+                    NerveTerminalConstants.K_TYPE: event.type
                 }
 
-                if event.type == TalosAgentConstants.T_LOG:
-                    response_payload[TalosAgentConstants.K_CONTENT] = event.text
-                    response_payload[TalosAgentConstants.K_SOURCE] = (
+                if event.type == NerveTerminalConstants.T_LOG:
+                    response_payload[NerveTerminalConstants.K_CONTENT] = (
+                        event.text
+                    )
+                    response_payload[NerveTerminalConstants.K_SOURCE] = (
                         event.source
                     )
-                elif event.type == TalosAgentConstants.T_EXIT:
-                    response_payload[TalosAgentConstants.K_CODE] = event.code
+                elif event.type == NerveTerminalConstants.T_EXIT:
+                    response_payload[NerveTerminalConstants.K_CODE] = event.code
                 await self._send_json(writer, response_payload)
 
         except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
@@ -775,7 +783,8 @@ class TalosAgent:
             if not writer.is_closing():
                 with contextlib.suppress(Exception):
                     await self._send_json(
-                        writer, dict(type=TalosAgentConstants.T_EXIT, code=-1)
+                        writer,
+                        dict(type=NerveTerminalConstants.T_EXIT, code=-1),
                     )
         finally:
             listener_task.cancel()
@@ -786,11 +795,11 @@ class TalosAgent:
         self, writer: asyncio.StreamWriter, args: dict
     ) -> None:
         """Writes new file content and triggers a restart."""
-        content = args.get(TalosAgentConstants.K_CONTENT)
+        content = args.get(NerveTerminalConstants.K_CONTENT)
         if not content:
             await self._send_json(
                 writer,
-                dict(status=TalosAgentConstants.S_ERROR, msg='No content'),
+                dict(status=NerveTerminalConstants.S_ERROR, msg='No content'),
             )
             return
 
@@ -798,17 +807,17 @@ class TalosAgent:
         try:
             # Sync write (acceptable for update operation)
             with open(
-                target_file, 'w', encoding=TalosAgentConstants.ENCODING
+                target_file, 'w', encoding=NerveTerminalConstants.ENCODING
             ) as f:
                 f.write(content)
         except OSError as e:
             await self._send_json(
-                writer, dict(status=TalosAgentConstants.S_ERROR, msg=str(e))
+                writer, dict(status=NerveTerminalConstants.S_ERROR, msg=str(e))
             )
             return
 
         await self._send_json(
-            writer, dict(status=TalosAgentConstants.S_UPDATING)
+            writer, dict(status=NerveTerminalConstants.S_UPDATING)
         )
 
         # Trigger Restart
@@ -839,7 +848,7 @@ class TalosAgent:
     ) -> None:
         """Helper to write a JSON line."""
         payload = json.dumps(data) + '\n'
-        writer.write(payload.encode(TalosAgentConstants.ENCODING))
+        writer.write(payload.encode(NerveTerminalConstants.ENCODING))
         await writer.drain()
 
     # Execution Modules
@@ -849,27 +858,31 @@ class TalosAgent:
         command: List[str],
         log_path: Optional[str] = None,
         stop_event: Optional[asyncio.Event] = None,
-    ) -> AsyncGenerator[TalosEvent, None]:
+    ) -> AsyncGenerator[NerveTerminalEvent, None]:
         """
         Executes a command LOCALLY using run_cns_pipeline.
         Adapts the callback-based pipeline to an AsyncGenerator.
-        Yields: TalosEvent(type, text, code, source)
+        Yields: NerveTerminalEvent(type, text, code, source)
         """
-        event_queue: asyncio.Queue[Optional[TalosEvent]] = asyncio.Queue()
+        event_queue: asyncio.Queue[Optional[NerveTerminalEvent]] = (
+            asyncio.Queue()
+        )
 
         # 1. Stdout Callback (Source = stdout)
         async def stdout_callback(text: str) -> None:
             await event_queue.put(
-                TalosEvent(
-                    type=TalosAgentConstants.T_LOG, text=text, source='stdout'
+                NerveTerminalEvent(
+                    type=NerveTerminalConstants.T_LOG,
+                    text=text,
+                    source='stdout',
                 )
             )
 
         # 2. File Callback (Source = file)
         async def file_callback(text: str) -> None:
             await event_queue.put(
-                TalosEvent(
-                    type=TalosAgentConstants.T_LOG, text=text, source='file'
+                NerveTerminalEvent(
+                    type=NerveTerminalConstants.T_LOG, text=text, source='file'
                 )
             )
 
@@ -885,17 +898,21 @@ class TalosAgent:
                     stop_event=stop_event,
                 )
                 await event_queue.put(
-                    TalosEvent(type=TalosAgentConstants.T_EXIT, code=exit_code)
+                    NerveTerminalEvent(
+                        type=NerveTerminalConstants.T_EXIT, code=exit_code
+                    )
                 )
             except Exception as e:
                 await event_queue.put(
-                    TalosEvent(
-                        type=TalosAgentConstants.T_LOG,
-                        text=f'{TalosAgentConstants.TAG_AGENT} CRASH: {e}\n',
+                    NerveTerminalEvent(
+                        type=NerveTerminalConstants.T_LOG,
+                        text=f'{NerveTerminalConstants.TAG_AGENT} CRASH: {e}\n',
                     )
                 )
                 await event_queue.put(
-                    TalosEvent(type=TalosAgentConstants.T_EXIT, code=-1)
+                    NerveTerminalEvent(
+                        type=NerveTerminalConstants.T_EXIT, code=-1
+                    )
                 )
             finally:
                 await event_queue.put(None)  # Sentinel
@@ -903,9 +920,9 @@ class TalosAgent:
         task = asyncio.create_task(worker())
 
         try:
-            yield TalosEvent(
-                type=TalosAgentConstants.T_LOG,
-                text=f'{TalosAgentConstants.TAG_AGENT} '
+            yield NerveTerminalEvent(
+                type=NerveTerminalConstants.T_LOG,
+                text=f'{NerveTerminalConstants.TAG_AGENT} '
                 f'Launching Local: {" ".join(command)}\n',
             )
 
@@ -941,8 +958,8 @@ class TalosAgent:
         await stop_event.wait()
         try:
             # Send the out-of-band STOP message with explicit NEWLINES
-            payload = '\n' + TalosAgentConstants.CMD_STOP + '\n'
-            writer.write(payload.encode(TalosAgentConstants.ENCODING))
+            payload = '\n' + NerveTerminalConstants.CMD_STOP + '\n'
+            writer.write(payload.encode(NerveTerminalConstants.ENCODING))
 
             await asyncio.wait_for(writer.drain(), timeout=timeout)
             logger.info('[AGENT] STOP signal flushed to remote.')
@@ -967,37 +984,39 @@ class TalosAgent:
         params: List[str],
         log_path: str = '',
         stop_event: Optional[asyncio.Event] = None,
-    ) -> AsyncGenerator[TalosEvent, None]:
+    ) -> AsyncGenerator[NerveTerminalEvent, None]:
         """
         Executes a command REMOTELY via TCP.
-        Yields: TalosEvent(type, text, code)
+        Yields: NerveTerminalEvent(type, text, code)
         """
         payload = {
-            TalosAgentConstants.K_CMD: TalosAgentConstants.CMD_EXECUTE,
-            TalosAgentConstants.K_ARGS: {
-                TalosAgentConstants.K_EXE: executable,
-                TalosAgentConstants.K_PARAMS: params,
-                TalosAgentConstants.K_LOG: log_path,
+            NerveTerminalConstants.K_CMD: NerveTerminalConstants.CMD_EXECUTE,
+            NerveTerminalConstants.K_ARGS: {
+                NerveTerminalConstants.K_EXE: executable,
+                NerveTerminalConstants.K_PARAMS: params,
+                NerveTerminalConstants.K_LOG: log_path,
             },
         }
 
         writer = None
         try:
             reader, writer = await asyncio.open_connection(
-                target_hostname, TalosAgentConstants.BIND_PORT
+                target_hostname, NerveTerminalConstants.BIND_PORT
             )
         except Exception as e:
             logger.info(f'[AGENT] Remote Connection Failed: {e}')
-            yield TalosEvent(
-                type=TalosAgentConstants.T_LOG,
+            yield NerveTerminalEvent(
+                type=NerveTerminalConstants.T_LOG,
                 text=f'[FATAL] Connection Failed: {e}\n',
             )
-            yield TalosEvent(type=TalosAgentConstants.T_EXIT, code=-1)
+            yield NerveTerminalEvent(
+                type=NerveTerminalConstants.T_EXIT, code=-1
+            )
             return
 
         try:
             msg = json.dumps(payload) + '\n'
-            writer.write(msg.encode(TalosAgentConstants.ENCODING))
+            writer.write(msg.encode(NerveTerminalConstants.ENCODING))
             await writer.drain()
 
             stopper_task = asyncio.create_task(
@@ -1007,7 +1026,7 @@ class TalosAgent:
             buffer = ''
             while True:
                 try:
-                    chunk = await reader.read(TalosAgentConstants.TCP_CHUNK)
+                    chunk = await reader.read(NerveTerminalConstants.TCP_CHUNK)
                 except Exception:
                     break
 
@@ -1015,8 +1034,8 @@ class TalosAgent:
                     break
 
                 buffer += chunk.decode(
-                    TalosAgentConstants.ENCODING,
-                    errors=TalosAgentConstants.ERR_HANDLER,
+                    NerveTerminalConstants.ENCODING,
+                    errors=NerveTerminalConstants.ERR_HANDLER,
                 )
 
                 while '\n' in buffer:
@@ -1026,35 +1045,39 @@ class TalosAgent:
 
                     try:
                         data = json.loads(line)
-                        msg_type = data.get(TalosAgentConstants.K_TYPE)
+                        msg_type = data.get(NerveTerminalConstants.K_TYPE)
 
-                        if msg_type == TalosAgentConstants.T_LOG:
-                            yield TalosEvent(
+                        if msg_type == NerveTerminalConstants.T_LOG:
+                            yield NerveTerminalEvent(
                                 type=msg_type,
                                 text=data.get(
-                                    TalosAgentConstants.K_CONTENT, ''
+                                    NerveTerminalConstants.K_CONTENT, ''
                                 ),
                                 source=data.get(
-                                    TalosAgentConstants.K_SOURCE, 'stdout'
+                                    NerveTerminalConstants.K_SOURCE, 'stdout'
                                 ),
                             )
-                        elif msg_type == TalosAgentConstants.T_EXIT:
-                            raw_code = data.get(TalosAgentConstants.K_CODE)
+                        elif msg_type == NerveTerminalConstants.T_EXIT:
+                            raw_code = data.get(NerveTerminalConstants.K_CODE)
                             safe_code = (
                                 int(raw_code) if raw_code is not None else -1
                             )
-                            yield TalosEvent(type=msg_type, code=safe_code)
+                            yield NerveTerminalEvent(
+                                type=msg_type, code=safe_code
+                            )
                             return
                     except (json.JSONDecodeError, ValueError):
                         logger.info(f'[AGENT] Decode Error: {line}')
 
         except Exception as e:
             logger.info(f'[AGENT] Remote Stream Error: {e}')
-            yield TalosEvent(
-                type=TalosAgentConstants.T_LOG,
+            yield NerveTerminalEvent(
+                type=NerveTerminalConstants.T_LOG,
                 text=f'\n[FATAL] Stream Error: {e}\n',
             )
-            yield TalosEvent(type=TalosAgentConstants.T_EXIT, code=-1)
+            yield NerveTerminalEvent(
+                type=NerveTerminalConstants.T_EXIT, code=-1
+            )
         finally:
             if 'stopper_task' in locals():
                 stopper_task.cancel()
@@ -1089,7 +1112,7 @@ def _get_agent_id():
 
 
 if __name__ == '__main__':
-    agent = TalosAgent()
+    agent = NerveTerminal()
     try:
         if sys.platform == 'win32':
             asyncio.set_event_loop_policy(

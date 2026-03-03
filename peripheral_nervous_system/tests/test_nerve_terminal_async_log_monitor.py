@@ -4,7 +4,7 @@ import time
 
 import pytest
 
-from talos_agent.talos_agent import AsyncLogMonitor, TalosAgentConstants
+from peripheral_nervous_system.nerve_terminal import AsyncLogMonitor, NerveTerminalConstants
 
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
@@ -120,8 +120,8 @@ async def test_log_monitor_patience(tmp_path):
 async def test_log_monitor_never_appears(tmp_path):
     """Test that it reports failure if file never shows up."""
     # 1. Reduce timeout for test speed (temporarily modify constant)
-    original_timeout = TalosAgentConstants.TIMEOUT_LOG_APPEAR
-    TalosAgentConstants.TIMEOUT_LOG_APPEAR = 1.0
+    original_timeout = NerveTerminalConstants.TIMEOUT_LOG_APPEAR
+    NerveTerminalConstants.TIMEOUT_LOG_APPEAR = 1.0
 
     log_file = tmp_path / 'ghost.log'
     monitor = AsyncLogMonitor(str(log_file), launch_time=time.time())
@@ -141,7 +141,7 @@ async def test_log_monitor_never_appears(tmp_path):
         collected.append(line)
 
     # Restore constant
-    TalosAgentConstants.TIMEOUT_LOG_APPEAR = original_timeout
+    NerveTerminalConstants.TIMEOUT_LOG_APPEAR = original_timeout
     await stopper
 
     # Should contain the error message

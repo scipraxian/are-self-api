@@ -19,8 +19,8 @@ MODULE_PATH = 'central_nervous_system.effectors.effector_casters.generic_effecto
 class GenericSpellcasterTest(TestCase):
     fixtures = [
         'environments/fixtures/initial_data.json',
-        'talos_agent/fixtures/initial_data.json',
-        'talos_agent/fixtures/test_agents.json',
+        'peripheral_nervous_system/fixtures/initial_data.json',
+        'peripheral_nervous_system/fixtures/test_agents.json',
         'central_nervous_system/fixtures/initial_data.json',
     ]
 
