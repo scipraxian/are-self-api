@@ -10,8 +10,9 @@ from temporal_lobe.constants import TemporalConstants
 from temporal_lobe.models import (
     Iteration,
     IterationShift,
+    IterationShiftDefinition,
+    IterationShiftParticipant,
     IterationStatus,
-    ShiftParticipant,
 )
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,7 @@ class TemporalLobe:
 
     async def engage(self) -> Tuple[int, str]:
         """Native entry point for the CNS Graph."""
+
         spike = await sync_to_async(Spike.objects.get)(id=self.spike_id)
         env = await sync_to_async(get_active_environment)(spike)
 
@@ -42,9 +44,8 @@ class TemporalLobe:
 
         from prefrontal_cortex.prefrontal_cortex import PrefrontalCortex
 
-        compiler = PrefrontalCortex(
-            spike.id, iteration.id, active_shift.id, identity_id
-        )
+        compiler = PrefrontalCortex(spike.id, iteration.id, active_shift.id,
+                                    identity_id)
         return await compiler.compile_and_dispatch()
 
     @sync_to_async
@@ -52,20 +53,13 @@ class TemporalLobe:
         self, env_id: str
     ) -> Tuple[Optional[Iteration], Optional[Any], Optional[str]]:
         with transaction.atomic():
-            # FIX: Eager load current_shift and its phase/shift to prevent lazy evaluation crashes
-            iteration = (
-                Iteration.objects.select_for_update()
-                .select_related('current_shift__shift')
-                .filter(
-                    environment_id=env_id,
-                    status_id__in=[
-                        IterationStatus.WAITING,
-                        IterationStatus.RUNNING,
-                    ],
-                )
-                .order_by('created')
-                .first()
-            )
+            iteration = (Iteration.objects.select_for_update().filter(
+                environment_id=env_id,
+                status_id__in=[
+                    IterationStatus.WAITING,
+                    IterationStatus.RUNNING,
+                ],
+            ).order_by('created').first())
 
             if not iteration:
                 return None, None, None
@@ -74,51 +68,62 @@ class TemporalLobe:
                 iteration.status_id = IterationStatus.RUNNING
                 iteration.save(update_fields=['status'])
 
-            current_shift_link = iteration.current_shift
-            active_shift = current_shift_link.shift
+            current_shift_instance = (IterationShift.objects.select_related(
+                'shift',
+                'definition').filter(id=iteration.current_shift_id).first())
 
-            if iteration.turns_consumed_in_shift >= active_shift.turn_limit:
-                current_shift_link, active_shift = self._advance_shift(
-                    iteration, current_shift_link
-                )
-                if not current_shift_link:
+            # Catch initialization edge case if current_shift is null
+            if not current_shift_instance:
+                # We need to build the runtime shifts or grab the first definition
+                return None, None, None
+
+            active_shift = current_shift_instance.shift
+            turn_limit = current_shift_instance.definition.turn_limit
+
+            if iteration.turns_consumed_in_shift >= turn_limit:
+                current_shift_instance, active_shift = self._advance_shift(
+                    iteration, current_shift_instance)
+                if not current_shift_instance:
                     return None, None, None
 
-            participant = ShiftParticipant.objects.filter(
-                shift=active_shift
-            ).first()
-            identity_id = (
-                str(participant.participant.id) if participant else None
-            )
+            # Pull the active participant (Disc) from the runtime instance
+            participant = IterationShiftParticipant.objects.filter(
+                iteration_shift=current_shift_instance).first()
+
+            identity_id = (str(participant.iteration_participant.identity.id)
+                           if participant else None)
 
             return iteration, active_shift, identity_id
 
     def _advance_shift(
-        self, iteration: Iteration, current_shift_link: IterationShift
+        self, iteration: Iteration, current_shift_instance: IterationShift
     ) -> Tuple[Optional[IterationShift], Optional[Any]]:
-        # FIX: Eager load the shift
-        next_shift_link = (
-            IterationShift.objects.select_related('shift')
-            .filter(
-                definition=iteration.definition,
-                order__gt=current_shift_link.order,
-            )
-            .order_by('order')
-            .first()
-        )
 
-        if not next_shift_link:
+        # We need the next definition based on order
+        next_def = (
+            IterationShiftDefinition.objects.select_related('shift').filter(
+                definition=iteration.definition,
+                order__gt=current_shift_instance.definition.order,
+            ).order_by('order').first())
+
+        if not next_def:
             iteration.status_id = IterationStatus.FINISHED
             iteration.save(update_fields=['status'])
             return None, None
 
-        iteration.current_shift = next_shift_link
-        iteration.turns_consumed_in_shift = 0
-        iteration.save(
-            update_fields=['current_shift', 'turns_consumed_in_shift']
+        # Find or create the runtime instance for the next shift
+        next_shift_instance, _ = IterationShift.objects.get_or_create(
+            shift_iteration=iteration,
+            definition=next_def,
+            defaults={'shift': next_def.shift},
         )
 
-        return next_shift_link, next_shift_link.shift
+        iteration.current_shift = next_shift_instance
+        iteration.turns_consumed_in_shift = 0
+        iteration.save(
+            update_fields=['current_shift', 'turns_consumed_in_shift'])
+
+        return next_shift_instance, next_shift_instance.shift
 
 
 async def temporal_lobe_engage(spike_id: str) -> tuple[int, str]:

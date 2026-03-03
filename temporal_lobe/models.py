@@ -2,7 +2,7 @@ from django.db import models
 
 from common.constants import STANDARD_CHARFIELD_LENGTH
 from common.models import CreatedAndModifiedWithDelta, NameMixin
-from identity.models import Identity
+from identity.models import Identity, IdentityDisc
 
 
 class Shift(NameMixin):
@@ -13,10 +13,10 @@ class Shift(NameMixin):
     PLANNING = 3
     EXECUTING = 4
     POST_EXECUTION = 5
-    turn_limit = models.IntegerField(default=1)
+    default_turn_limit = models.IntegerField(default=1)
 
 
-class ShiftParticipant(models.Model):
+class ShiftDefaultParticipant(models.Model):
     shift = models.ForeignKey(Shift, on_delete=models.CASCADE)
     participant = models.ForeignKey(Identity, on_delete=models.CASCADE)
 
@@ -28,16 +28,24 @@ class IterationDefinition(NameMixin):
     pass
 
 
-class IterationShift(models.Model):
+class IterationShiftDefinition(models.Model):
     definition = models.ForeignKey(
         IterationDefinition, on_delete=models.CASCADE
     )
     shift = models.ForeignKey(Shift, on_delete=models.CASCADE)
     order = models.IntegerField(default=0)
+    turn_limit = models.IntegerField(default=1)
 
     class Meta:
         ordering = ['order']
         unique_together = ('definition', 'order')
+
+
+class IterationShiftDefinitionParticipant(models.Model):
+    shift_definition = models.ForeignKey(
+        IterationShiftDefinition, on_delete=models.CASCADE
+    )
+    participant = models.ForeignKey(Identity, on_delete=models.CASCADE)
 
 
 class IterationStatus(NameMixin):
@@ -63,5 +71,24 @@ class Iteration(CreatedAndModifiedWithDelta):
     definition = models.ForeignKey(
         IterationDefinition, on_delete=models.PROTECT
     )
-    current_shift = models.ForeignKey(IterationShift, on_delete=models.PROTECT)
+    current_shift = models.ForeignKey(
+        'IterationShift', on_delete=models.PROTECT, blank=True, null=True
+    )
     turns_consumed_in_shift = models.IntegerField(default=0)
+
+
+class IterationShift(CreatedAndModifiedWithDelta):
+    definition = models.ForeignKey(
+        IterationShiftDefinition, on_delete=models.CASCADE
+    )
+    shift_iteration = models.ForeignKey(Iteration, on_delete=models.CASCADE)
+    shift = models.ForeignKey(Shift, on_delete=models.CASCADE)
+
+
+class IterationShiftParticipant(models.Model):
+    iteration_shift = models.ForeignKey(
+        IterationShift, on_delete=models.CASCADE
+    )
+    iteration_participant = models.ForeignKey(
+        IdentityDisc, on_delete=models.CASCADE
+    )

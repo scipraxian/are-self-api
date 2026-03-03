@@ -6,9 +6,12 @@ from .models import (
     Iteration,
     IterationDefinition,
     IterationShift,
+    IterationShiftDefinition,
+    IterationShiftDefinitionParticipant,
+    IterationShiftParticipant,
     IterationStatus,
     Shift,
-    ShiftParticipant,
+    ShiftDefaultParticipant,
 )
 
 
@@ -19,81 +22,61 @@ class IterationStatusAdmin(admin.ModelAdmin):
 
 
 # ==========================================
-# SHIFT CONFIGURATION
+# 1. MASTER TEMPLATES (SHIFTS)
 # ==========================================
-
-
-class ShiftParticipantInline(admin.TabularInline):
-    """Binds an Identity (Persona) to a specific Agile Shift inside the Shift view."""
-
-    model = ShiftParticipant
+class ShiftDefaultParticipantInline(admin.TabularInline):
+    model = ShiftDefaultParticipant
     extra = 1
     raw_id_fields = ('participant',)
 
 
-@admin.register(ShiftParticipant)
-class ShiftParticipantAdmin(admin.ModelAdmin):
-    """Standalone access to the Shift Participant link table."""
-
-    list_display = ('id', 'shift', 'participant')
-    list_filter = ('shift',)
-    search_fields = ('participant__name', 'shift__name')
-
-
 @admin.register(Shift)
 class ShiftAdmin(admin.ModelAdmin):
-    list_display = ('name', 'turn_limit', 'participant_count')
+    list_display = ('name', 'default_turn_limit')
     search_fields = ('name',)
-    inlines = [ShiftParticipantInline]
-
-    def participant_count(self, obj):
-        count = obj.shiftparticipant_set.count()
-        return format_html('<b>{}</b> Personas', count)
-
-    participant_count.short_description = 'Assigned Identities'
+    inlines = [ShiftDefaultParticipantInline]
 
 
 # ==========================================
-# ITERATION DEFINITION (THE LOOP BUILDER)
+# 2. BLUEPRINTS (DEFINITIONS)
 # ==========================================
-
-
-class IterationShiftInline(admin.TabularInline):
-    """Builds the sequence of the Agile Loop inside the Definition view."""
-
-    model = IterationShift
+class IterationShiftDefinitionParticipantInline(admin.TabularInline):
+    model = IterationShiftDefinitionParticipant
     extra = 1
-    ordering = ('order',)
-    fields = ('order', 'shift')
+    raw_id_fields = ('participant',)
 
 
-@admin.register(IterationShift)
-class IterationShiftAdmin(admin.ModelAdmin):
-    """Standalone access to the Iteration Sequence link table."""
-
-    list_display = ('id', 'definition', 'order', 'shift')
+@admin.register(IterationShiftDefinition)
+class IterationShiftDefinitionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'definition', 'order', 'shift', 'turn_limit')
     list_filter = ('definition', 'shift')
     ordering = ('definition', 'order')
+    inlines = [IterationShiftDefinitionParticipantInline]
+
+
+class IterationShiftDefinitionInline(admin.TabularInline):
+    model = IterationShiftDefinition
+    extra = 1
+    ordering = ('order',)
+    fields = ('order', 'shift', 'turn_limit')
+    show_change_link = True
 
 
 @admin.register(IterationDefinition)
 class IterationDefinitionAdmin(admin.ModelAdmin):
     list_display = ('name', 'shift_sequence')
     search_fields = ('name',)
-    inlines = [IterationShiftInline]
+    inlines = [IterationShiftDefinitionInline]
 
     def shift_sequence(self, obj):
-        """Visualizes the entire flow of the loop directly in the list view."""
-        shifts = obj.iterationshift_set.select_related('shift').order_by(
-            'order'
-        )
+        shifts = obj.iterationshiftdefinition_set.select_related(
+            'shift'
+        ).order_by('order')
         if not shifts:
-            # FIX: format_html requires an arg/kwarg to be secure
             return format_html(
                 '<span style="color: #ef4444;">{}</span>', 'No shifts defined'
             )
 
-        # FIX: Use format_html_join to safely assemble the breadcrumb trail
         separator = mark_safe(' <span style="color: #64748b;">➔</span> ')
         return format_html_join(
             separator,
@@ -105,8 +88,19 @@ class IterationDefinitionAdmin(admin.ModelAdmin):
 
 
 # ==========================================
-# ACTIVE ITERATIONS (MISSION CONTROL)
+# 3. RUNTIME (INSTANCES)
 # ==========================================
+class IterationShiftParticipantInline(admin.TabularInline):
+    model = IterationShiftParticipant
+    extra = 1
+    raw_id_fields = ('iteration_participant',)
+
+
+@admin.register(IterationShift)
+class IterationShiftAdmin(admin.ModelAdmin):
+    list_display = ('id', 'shift_iteration', 'shift', 'definition')
+    list_filter = ('iteration',)
+    inlines = [IterationShiftParticipantInline]
 
 
 @admin.register(Iteration)
@@ -123,7 +117,6 @@ class IterationAdmin(admin.ModelAdmin):
     search_fields = ('name', 'definition__name')
     readonly_fields = ('created', 'modified', 'delta', 'turn_progress_ui')
 
-    # Eager load relationships to prevent N+1 query explosions
     list_select_related = (
         'status',
         'definition',
@@ -169,22 +162,21 @@ class IterationAdmin(admin.ModelAdmin):
     current_shift_ui.short_description = 'Active Shift'
 
     def status_badge(self, obj):
-        """Color-codes the execution state."""
-        color = '#94a3b8'  # Default Grey
+        color = '#94a3b8'
         name = obj.status.name.upper()
 
         if name == 'RUNNING':
-            color = '#3b82f6'  # Blue
+            color = '#3b82f6'
         elif name == 'FINISHED':
-            color = '#22c55e'  # Green
+            color = '#22c55e'
         elif name == 'WAITING':
-            color = '#eab308'  # Yellow
+            color = '#eab308'
         elif name == 'ERROR':
-            color = '#ef4444'  # Red
+            color = '#ef4444'
         elif name == 'CANCELLED':
-            color = '#f97316'  # Orange
+            color = '#f97316'
         elif name == 'BLOCKED BY USER':
-            color = '#d946ef'  # Purple
+            color = '#d946ef'
 
         return format_html(
             '<span style="background: rgba(0,0,0,0.2); border-left: 3px solid {}; '
@@ -197,11 +189,11 @@ class IterationAdmin(admin.ModelAdmin):
     status_badge.short_description = 'State'
 
     def turn_progress(self, obj):
-        """Draws a mini-progress bar showing how close the shift is to timing out."""
-        if not obj.current_shift or not obj.current_shift.shift:
+        if not obj.current_shift or not obj.current_shift.definition:
             return '-'
 
-        limit = obj.current_shift.shift.turn_limit
+        # Note: Limit now pulls from the Definition Blueprint, not the base Shift
+        limit = obj.current_shift.definition.turn_limit
         consumed = obj.turns_consumed_in_shift
         pct = 0
 
@@ -209,7 +201,6 @@ class IterationAdmin(admin.ModelAdmin):
             pct = int((consumed / limit) * 100)
             pct = min(100, pct)
 
-        # Turns green if doing fine, orange if getting close, red if maxed out
         bar_color = '#4ade80'
         if pct >= 80:
             bar_color = '#f97316'
