@@ -1,5 +1,4 @@
 from django.db import models
-from djangorestframework_mcp.types import MCPTool
 
 from common.models import (
     CreatedAndModifiedWithDelta,
