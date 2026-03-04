@@ -9,10 +9,21 @@ from .models import (
     IterationShiftDefinition,
     IterationShiftDefinitionParticipant,
     IterationShiftParticipant,
+    IterationShiftParticipantStatus,
     IterationStatus,
     Shift,
     ShiftDefaultParticipant,
 )
+
+
+@admin.register(IterationShiftParticipantStatus)
+class IterationShiftParticipantStatusAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(IterationShiftParticipant)
+class IterationShiftParticipantAdmin(admin.ModelAdmin):
+    pass
 
 
 @admin.register(IterationStatus)

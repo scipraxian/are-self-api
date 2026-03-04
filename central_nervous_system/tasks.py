@@ -4,7 +4,6 @@ from celery import shared_task
 from django.db import transaction
 
 from .models import Spike, SpikeStatus
-from .effectors.effector_casters.generic_effector_caster import GenericEffectorCaster
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,8 @@ def check_next_wave(spike_train_id):
         controller.dispatch_next_wave()
     except Exception as e:
         logger.exception(
-            f'[CELERY] Check Wave Failed for SpikeTrain {spike_train_id}: {e}')
+            f'[CELERY] Check Wave Failed for SpikeTrain {spike_train_id}: {e}'
+        )
         raise
 
 
@@ -49,7 +49,11 @@ def cast_cns_spell(self, spike_id):
             logger.error(f'Spike {spike_id} missing during cast!')
             return
 
-        # 1. Instantiate the Caster
+        # 1. Instantiate the Caster (forced local)
+        from .effectors.effector_casters.generic_effector_caster import (
+            GenericEffectorCaster,
+        )
+
         caster = GenericEffectorCaster(spike_id=spike_id)
 
         # 2. Run the Logic (Loads DB -> runs Async Pipeline)
@@ -58,7 +62,9 @@ def cast_cns_spell(self, spike_id):
         logger.info(f'Task completed successfully for Spike ID: {spike_id}')
 
     except Exception as e:
-        logger.exception(f'GenericEffectorCaster crashed for Spike ID {spike_id}')
+        logger.exception(
+            f'GenericEffectorCaster crashed for Spike ID {spike_id}'
+        )
 
         # Emergency DB Update to prevent "Pending Forever" state
         try:

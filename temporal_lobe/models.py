@@ -97,12 +97,30 @@ class IterationShift(CreatedAndModifiedWithDelta):
         return f'{self.shift_iteration} - {self.shift}'
 
 
+class IterationShiftParticipantStatus(NameMixin):
+    SELECTED = 1
+    ACTIVATED = 2
+    COMPLETED = 3
+    PAUSED = 4
+    ERROR = 5
+
+    class Meta:
+        verbose_name = 'Iteration Shift Participant Status'
+        verbose_name_plural = 'Iteration Shift Participant Statuses'
+
+
 class IterationShiftParticipant(models.Model):
     iteration_shift = models.ForeignKey(
         IterationShift, on_delete=models.CASCADE
     )
     iteration_participant = models.ForeignKey(
         IdentityDisc, on_delete=models.CASCADE
+    )
+    status = models.ForeignKey(
+        IterationShiftParticipantStatus,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
     )
 
     def __str__(self):
