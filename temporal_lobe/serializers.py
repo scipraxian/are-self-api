@@ -2,41 +2,112 @@ from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
 from identity.models import IdentityDisc
-from temporal_lobe.models import IterationShift
+from temporal_lobe.models import (
+    Iteration,
+    IterationDefinition,
+    IterationShift,
+    IterationShiftDefinition,
+    IterationShiftDefinitionParticipant,
+    IterationShiftParticipant,
+    IterationStatus,
+    Shift,
+    ShiftDefaultParticipant,
+)
 
 
 class IdentityDiscLightSerializer(serializers.ModelSerializer):
     """Lightweight representation of an Identity Disc for the Inspector."""
-
-    identity_name = serializers.CharField(
-        source='identity.name', read_only=True
-    )
 
     class Meta:
         model = IdentityDisc
         fields = ALL_FIELDS
 
 
-class IterationShiftDetailSerializer(serializers.ModelSerializer):
-    """The full state payload for the right-hand panel when a node is clicked."""
+class ShiftSerializer(serializers.ModelSerializer):
+    """Serializer for the Shift model."""
 
-    shift_name = serializers.CharField(source='shift.name', read_only=True)
+    class Meta:
+        model = Shift
+        fields = ALL_FIELDS
+
+
+class ShiftDefaultParticipantSerializer(serializers.ModelSerializer):
+    """Serializer for the ShiftDefaultParticipant model."""
+
+    class Meta:
+        model = ShiftDefaultParticipant
+        fields = ALL_FIELDS
+
+
+class IterationDefinitionSerializer(serializers.ModelSerializer):
+    """Serializer for the IterationDefinition model."""
+
+    class Meta:
+        model = IterationDefinition
+        fields = ALL_FIELDS
+
+
+class IterationShiftDefinitionSerializer(serializers.ModelSerializer):
+    """Serializer for the IterationShiftDefinition model."""
+
+    class Meta:
+        model = IterationShiftDefinition
+        fields = ALL_FIELDS
+
+
+class IterationShiftDefinitionParticipantSerializer(
+    serializers.ModelSerializer
+):
+    """Serializer for the IterationShiftDefinitionParticipant model."""
+
+    class Meta:
+        model = IterationShiftDefinitionParticipant
+        fields = ALL_FIELDS
+
+
+class IterationStatusSerializer(serializers.ModelSerializer):
+    """Serializer for the IterationStatus model."""
+
+    class Meta:
+        model = IterationStatus
+        fields = ALL_FIELDS
+
+
+class IterationShiftParticipantSerializer(serializers.ModelSerializer):
+    disc = IdentityDiscLightSerializer(
+        source='iteration_participant', read_only=True
+    )
+
+    class Meta:
+        model = IterationShiftParticipant
+        fields = ALL_FIELDS
+
+
+class IterationShiftDetailSerializer(serializers.ModelSerializer):
+    """The full state payload for a single column/shift."""
+
+    name = serializers.CharField(source='shift.name', read_only=True)
     turn_limit = serializers.IntegerField(
         source='definition.turn_limit', read_only=True
     )
-    order = serializers.IntegerField(source='definition.order', read_only=True)
-    iteration_name = serializers.CharField(
-        source='shift_iteration.name', read_only=True
+    participants = IterationShiftParticipantSerializer(
+        source='iterationshiftparticipant_set', many=True, read_only=True
     )
-    participants = serializers.SerializerMethodField()
 
     class Meta:
         model = IterationShift
         fields = ALL_FIELDS
 
-    def get_participants(self, obj):
-        parts = obj.iterationshiftparticipant_set.select_related(
-            'iteration_participant', 'iteration_participant__identity'
-        ).all()
-        discs = [p.iteration_participant for p in parts]
-        return IdentityDiscLightSerializer(discs, many=True).data
+
+class IterationSerializer(serializers.ModelSerializer):
+    status_name = serializers.CharField(source='status.name', read_only=True)
+    definition_name = serializers.CharField(
+        source='definition.name', read_only=True
+    )
+    shifts = IterationShiftDetailSerializer(
+        source='iterationshift_set', many=True, read_only=True
+    )
+
+    class Meta:
+        model = Iteration
+        fields = ALL_FIELDS

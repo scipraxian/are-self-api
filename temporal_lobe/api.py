@@ -1,15 +1,21 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from identity.models import IdentityDisc
 from temporal_lobe.models import (
     Iteration,
+    IterationDefinition,
     IterationShift,
     IterationShiftParticipant,
 )
-from temporal_lobe.serializers import IterationShiftDetailSerializer
+from temporal_lobe.serializers import (
+    IterationDefinitionSerializer,
+    IterationSerializer,
+    IterationShiftDetailSerializer,
+)
 
 
 class TemporalViewSet(viewsets.ViewSet):
@@ -131,3 +137,143 @@ class TemporalViewSet(viewsets.ViewSet):
 
         serializer = IterationShiftDetailSerializer(shift)
         return Response(serializer.data)
+
+
+class IterationViewSet(viewsets.ModelViewSet):
+    """
+    Command Center API for the Temporal Lobe Iterations.
+    """
+
+    queryset = (
+        Iteration.objects.prefetch_related(
+            'iterationshift_set__shift',
+            'iterationshift_set__definition',
+            'iterationshift_set__iterationshiftparticipant_set__iteration_participant',
+        )
+        .all()
+        .order_by('-created')
+    )
+
+    serializer_class = IterationSerializer
+    permission_classes = [AllowAny]
+
+    @action(detail=False, methods=['post'], url_path='incept')
+    def incept(self, request):
+        """
+        Triggers the IterationInceptionManager to build a new cycle from a blueprint.
+        Expected payload: {"definition_id": 1, "environment_id": "optional-uuid"}
+        """
+        definition_id = request.data.get('definition_id')
+        environment_id = request.data.get('environment_id')
+
+        if not definition_id:
+            return Response(
+                {'error': 'definition_id is required for inception.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        from temporal_lobe.inception import IterationInceptionManager
+
+        try:
+            # Trigger the biological engine
+            iteration = IterationInceptionManager.incept_iteration(
+                definition_id=definition_id, environment_id=environment_id
+            )
+
+            # Use your existing serializer to return the fully hydrated board
+            serializer = self.get_serializer(iteration)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response(
+                {'error': f'Inception failed: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    @action(detail=True, methods=['post'], url_path='slot_disc')
+    def slot_disc(self, request, pk=None):
+        iteration = self.get_object()
+        shift_id = request.data.get('shift_id')
+        disc_id = request.data.get('disc_id')
+        base_id = request.data.get('base_id')
+
+        if not shift_id:
+            return Response(
+                {'error': 'shift_id required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        shift = get_object_or_404(
+            IterationShift, id=shift_id, shift_iteration=iteration
+        )
+
+        if base_id:
+            from identity.models import Identity
+            from temporal_lobe.inception import IterationInceptionManager
+
+            base_identity = get_object_or_404(Identity, id=base_id)
+            # Using your updated public method
+            disc = IterationInceptionManager.gestate_disc(base_identity)
+        elif disc_id:
+            disc = get_object_or_404(IdentityDisc, id=disc_id)
+            if not disc.available:
+                return Response(
+                    {'error': 'Disc is offline.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            disc.available = False
+            disc.save(update_fields=['available'])
+        else:
+            return Response(
+                {'error': 'disc_id or base_id required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        IterationShiftParticipant.objects.get_or_create(
+            iteration_shift=shift, iteration_participant=disc
+        )
+
+        # CRITICAL FIX: Re-fetch the Iteration to bust the stale prefetch cache!
+        fresh_iteration = self.get_queryset().get(pk=iteration.pk)
+        return Response(
+            self.get_serializer(fresh_iteration).data, status=status.HTTP_200_OK
+        )
+
+    @action(detail=True, methods=['post'], url_path='remove_disc')
+    def remove_disc(self, request, pk=None):
+        """Fires a worker from a shift and returns them to the Barracks."""
+        iteration = self.get_object()
+        shift_id = request.data.get('shift_id')
+        disc_id = request.data.get('disc_id')
+
+        if not shift_id or not disc_id:
+            return Response(
+                {'error': 'shift_id and disc_id required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        shift = get_object_or_404(
+            IterationShift, id=shift_id, shift_iteration=iteration
+        )
+        disc = get_object_or_404(IdentityDisc, id=disc_id)
+
+        IterationShiftParticipant.objects.filter(
+            iteration_shift=shift, iteration_participant=disc
+        ).delete()
+
+        disc.available = True
+        disc.save(update_fields=['available'])
+
+        # CRITICAL FIX: Re-fetch the Iteration to bust the stale prefetch cache!
+        fresh_iteration = self.get_queryset().get(pk=iteration.pk)
+        return Response(
+            self.get_serializer(fresh_iteration).data, status=status.HTTP_200_OK
+        )
+
+
+class IterationDefinitionViewSet(viewsets.ReadOnlyModelViewSet):
+    """Provides the UI with the available blueprints for Inception."""
+
+    permission_classes = [AllowAny]
+    queryset = IterationDefinition.objects.all()
+    serializer_class = IterationDefinitionSerializer

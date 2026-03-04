@@ -40,12 +40,18 @@ class IterationShiftDefinition(models.Model):
         ordering = ['order']
         unique_together = ('definition', 'order')
 
+    def __str__(self):
+        return f'{self.definition} - {self.shift} ({self.order})'
+
 
 class IterationShiftDefinitionParticipant(models.Model):
     shift_definition = models.ForeignKey(
         IterationShiftDefinition, on_delete=models.CASCADE
     )
     participant = models.ForeignKey(Identity, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.shift_definition} - {self.participant}'
 
 
 class IterationStatus(NameMixin):
@@ -76,6 +82,9 @@ class Iteration(CreatedAndModifiedWithDelta):
     )
     turns_consumed_in_shift = models.IntegerField(default=0)
 
+    def __str__(self):
+        return self.name if self.name else f'Iteration {self.id}'
+
 
 class IterationShift(CreatedAndModifiedWithDelta):
     definition = models.ForeignKey(
@@ -83,6 +92,9 @@ class IterationShift(CreatedAndModifiedWithDelta):
     )
     shift_iteration = models.ForeignKey(Iteration, on_delete=models.CASCADE)
     shift = models.ForeignKey(Shift, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.shift_iteration} - {self.shift}'
 
 
 class IterationShiftParticipant(models.Model):
@@ -92,3 +104,6 @@ class IterationShiftParticipant(models.Model):
     iteration_participant = models.ForeignKey(
         IdentityDisc, on_delete=models.CASCADE
     )
+
+    def __str__(self):
+        return f'{self.iteration_shift} - {self.iteration_participant}'
