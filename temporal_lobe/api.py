@@ -10,6 +10,7 @@ from temporal_lobe.models import (
     IterationDefinition,
     IterationShift,
     IterationShiftParticipant,
+    IterationShiftParticipantStatus,
 )
 from temporal_lobe.serializers import (
     IterationDefinitionSerializer,
@@ -229,8 +230,16 @@ class IterationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        status_selected, _ = (
+            IterationShiftParticipantStatus.objects.get_or_create(
+                id=1, defaults={'name': 'Selected'}
+            )
+        )
+
         IterationShiftParticipant.objects.get_or_create(
-            iteration_shift=shift, iteration_participant=disc
+            iteration_shift=shift,
+            iteration_participant=disc,
+            defaults={'status': status_selected},
         )
 
         # CRITICAL FIX: Re-fetch the Iteration to bust the stale prefetch cache!
@@ -265,6 +274,30 @@ class IterationViewSet(viewsets.ModelViewSet):
         disc.save(update_fields=['available'])
 
         # CRITICAL FIX: Re-fetch the Iteration to bust the stale prefetch cache!
+        fresh_iteration = self.get_queryset().get(pk=iteration.pk)
+        return Response(
+            self.get_serializer(fresh_iteration).data, status=status.HTTP_200_OK
+        )
+
+    @action(detail=True, methods=['post'], url_path='initiate')
+    def initiate(self, request, pk=None):
+        """
+        Flips the Iteration to RUNNING and wakes up the Temporal Metronome.
+        """
+        iteration = self.get_object()
+
+        if iteration.status.name != 'Waiting':
+            return Response(
+                {'error': 'Already running or finished.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Hit the Ignition Switch!
+        from temporal_lobe.temporal_lobe import TemporalLobe
+
+        TemporalLobe.initiate_iteration(iteration)
+
+        # Re-fetch cache and return updated board
         fresh_iteration = self.get_queryset().get(pk=iteration.pk)
         return Response(
             self.get_serializer(fresh_iteration).data, status=status.HTTP_200_OK
