@@ -34,6 +34,7 @@ from peripheral_nervous_system.nerve_terminal import (
 from peripheral_nervous_system.peripheral_nervous_system import (
     scan_and_register,
 )
+from temporal_lobe.temporal_lobe import run_temporal_lobe
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +56,7 @@ NATIVE_HANDLERS = dict(
     scan_and_register=scan_and_register,  # TODO: move to management
     pathway_logic_neuron=pathway_logic_node,
     run_frontal_lobe=run_frontal_lobe,
+    run_temporal_lobe=run_temporal_lobe,
 )
 
 

@@ -118,12 +118,13 @@ class FrontalLobe:
         await sync_to_async(turn_record.save)()
 
     async def _build_turn_payload(
-            self, turn_record: ReasoningTurn
+        self, turn_record: ReasoningTurn
     ) -> list[dict]:
         """Assembles the Turn payload by integrating Identity and Sensory data."""
 
         system_instruction = await sync_to_async(build_identity_prompt)(
-            self.session.identity, turn_record.turn_number
+            identity_disc=self.session.identity_disc,
+            turn_number=turn_record.turn_number,
         )
 
         user_content = await relay_sensory_state(turn_record)
