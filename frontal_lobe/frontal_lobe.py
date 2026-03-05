@@ -125,6 +125,7 @@ class FrontalLobe:
         system_instruction = await sync_to_async(build_identity_prompt)(
             identity_disc=self.session.identity_disc,
             turn_number=turn_record.turn_number,
+            reasoning_turn_id=turn_record.id,
         )
 
         user_content = await relay_sensory_state(turn_record)
@@ -308,7 +309,10 @@ class FrontalLobe:
 
 
 async def run_frontal_lobe(spike_id: UUID) -> Tuple[int, str]:
-    """Asynchronous entry point for the generic effector caster."""
+    """Asynchronous entry point for the generic effector caster.
+
+    # Used by GEC.
+    """
     try:
         spike = await sync_to_async(
             lambda: Spike.objects.select_related('spike_train').get(id=spike_id)

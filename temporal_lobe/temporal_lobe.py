@@ -148,6 +148,10 @@ class TemporalLobe:
 
     @sync_to_async
     def _dispatch_pending_workers(self, shift, slots, parent_spike) -> int:
+        # Not sure about circular. Check and move if possible.
+        from prefrontal_cortex.prefrontal_cortex import PrefrontalCortex
+
+        pfc = PrefrontalCortex(parent_spike.id)
         dispatched = 0
         with transaction.atomic():
             pending_workers = (
@@ -159,25 +163,17 @@ class TemporalLobe:
                 .order_by('id')[:slots]
             )
 
-            for worker in pending_workers:
-                worker.status_id = IterationShiftParticipantStatus.ACTIVATED
-                worker.save(update_fields=['status'])
-
-                from prefrontal_cortex.prefrontal_cortex import PrefrontalCortex
-
-                pfc = PrefrontalCortex(
-                    parent_spike.id,
-                    shift.shift_iteration.id,
-                    shift.id,
-                    str(worker.iteration_participant.identity.id),
+            for iteration_shift_participant in pending_workers:
+                iteration_shift_participant.status_id = (
+                    IterationShiftParticipantStatus.ACTIVATED
                 )
+                iteration_shift_participant.save(update_fields=['status'])
 
-                # This must be implemented in your PFC to actually launch the worker graph!
-                pfc.compile_and_dispatch_worker(worker)  # TODO: DOES NOT EXIST
+                pfc.dispatch(iteration_shift_participant.id)
 
                 dispatched += 1
                 logger.info(
-                    f'[TemporalLobe] Dispatched {worker.iteration_participant.name} to the PFC.'
+                    f'[TemporalLobe] Dispatched {iteration_shift_participant.iteration_participant.name} to the PFC.'
                 )
 
         return dispatched

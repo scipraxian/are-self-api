@@ -1,14 +1,14 @@
 import logging
 import uuid
-from typing import Tuple
 
 from asgiref.sync import sync_to_async
 
-from central_nervous_system.central_nervous_system import CNS
-from central_nervous_system.models import NeuralPathway, Spike
-from central_nervous_system.utils import get_active_environment
-from prefrontal_cortex.constants import PFCConstants
-from prefrontal_cortex.models import PFCItemStatus, PFCStory, PFCTask
+from central_nervous_system.models import Spike
+from frontal_lobe.frontal_lobe import FrontalLobe
+from frontal_lobe.models import ReasoningSession, ReasoningStatusID
+from identity.models import IdentityType
+from prefrontal_cortex.models import PFCEpic, PFCItemStatus, PFCStory, PFCTask
+from temporal_lobe.models import IterationShiftParticipant, Shift
 
 logger = logging.getLogger(__name__)
 
@@ -16,80 +16,126 @@ logger = logging.getLogger(__name__)
 class PrefrontalCortex:
     """The Compiler: Translates Time into Context and dispatches the execution graph."""
 
-    def __init__(
-        self,
-        spike_id: uuid.UUID,
-        iteration_id: int,
-        shift_id: int,
-        identity_id: str,
-    ):
+    def __init__(self, spike_id: uuid.UUID):
         self.spike = Spike.objects.get(id=spike_id)
-        self.iteration_id = iteration_id
-        self.shift_id = shift_id
-        self.identity_id = identity_id
 
-    async def compile_and_dispatch(self) -> Tuple[int, str]:
-        """Compiles Agile Board context and fires the CNS Non-Blocking drop."""
+    async def dispatch(self, iteration_shift_participant_id: int):
+        iteration_shift_participant = await sync_to_async(
+            IterationShiftParticipant.objects.select_related(
+                'iteration_shift__shift', 'iteration_participant__identity'
+            ).get
+        )(id=iteration_shift_participant_id)
 
-        # 1. Compile Domain Context
-        board_context = await self._query_agile_board()
+        iteration_shift = iteration_shift_participant.iteration_shift
+        identity_disc = iteration_shift_participant.iteration_participant
 
-        # 2. Package the Blackboard
-        await self._inject_blackboard(board_context)
-
-        # 3. The Drop (Launch the Frontal Lobe loop)
-        return await self._launch_cns_pathway()
-
-    @sync_to_async
-    def _query_agile_board(self) -> str:
-        """Queries the Agile Board based on the current shift's focus."""
-        # Example dynamic compilation based on shift identity
-        # In a real implementation, check shift.name (e.g., 'Grooming' vs 'Executing')
-        backlog_status = PFCItemStatus.objects.get(id=PFCItemStatus.BACKLOG)
-        stories = PFCStory.objects.filter(status=backlog_status)[:5]
-
-        context_lines = ['[AGILE BOARD CONTEXT]']
-        for s in stories:
-            context_lines.append(f'- Story {s.id}: {s.name}')
-
-        return '\n'.join(context_lines)
-
-    @sync_to_async
-    def _inject_blackboard(self, board_context: str) -> None:
-        """Injects the compiled routing package into the runtime state."""
-        if not isinstance(self.spike.blackboard, dict):
-            self.spike.blackboard = {}
-
-        self.spike.blackboard.update(
-            {
-                'active_iteration_id': self.iteration_id,
-                'active_shift_id': self.shift_id,
-                'identity_id': self.identity_id,
-                'agile_context': board_context,
-            }
+        return await self._create_session_and_run(
+            iteration_shift, identity_disc, iteration_shift_participant
         )
-        self.spike.save(update_fields=['blackboard'])
+
+    async def _create_session_and_run(
+        self, iteration_shift, identity_disc, iteration_shift_participant
+    ):
+        """Finds the Frontal Lobe graph, locks a ticket, and spins up the asynchronous SpikeTrain."""
+
+        # 1. Pick and assign the ticket
+        assigned_item = await self._assign_ticket(
+            shift_id=iteration_shift.shift.id,
+            identity_type_id=identity_disc.identity.identity_type_id,
+            identity_disc=identity_disc,
+        )
+
+        # 2. Setup the Frontal Lobe
+        lobe = FrontalLobe(self.spike)
+        lobe.session = await sync_to_async(
+            ReasoningSession.objects.create
+        )(
+            spike=self.spike,
+            status_id=ReasoningStatusID.ACTIVE,
+            max_turns=iteration_shift.definition.turn_limit,  # Note: using turn_limit from your models
+            identity_disc=identity_disc,
+            participant=iteration_shift_participant,
+        )
+
+        # 3. Run the session (The AI is now awake and will read the assigned ticket via the Addon)
+        await lobe.run()
+
+        # 4. Cleanup: Remove the owning disc and push to previous owners
+        if assigned_item:
+            await self._release_ticket(assigned_item, identity_disc)
+
+        return lobe.session.id
 
     @sync_to_async
-    def _launch_cns_pathway(self) -> Tuple[int, str]:
-        """Finds the Frontal Lobe graph and spins up the asynchronous SpikeTrain."""
-        env = get_active_environment(self.spike)
+    def _assign_ticket(
+        self, shift_id: int, identity_type_id: int, identity_disc
+    ):
+        """Finds the highest priority ticket, preferring ones this disc previously owned."""
+        model_class = None
+        valid_statuses = []
 
-        pathway = NeuralPathway.objects.filter(
-            name__icontains=PFCConstants.TARGET_PATHWAY_NAME, environment=env
-        ).first()
+        # Determine the target pool
+        if identity_type_id == IdentityType.PM:
+            if shift_id == Shift.GROOMING:
+                model_class = PFCEpic
+                valid_statuses = [
+                    PFCItemStatus.NEEDS_REFINEMENT,
+                    PFCItemStatus.BACKLOG,
+                ]
+            elif shift_id in [Shift.PRE_PLANNING, Shift.PLANNING]:
+                model_class = PFCStory
+                valid_statuses = [
+                    PFCItemStatus.NEEDS_REFINEMENT,
+                    PFCItemStatus.BACKLOG,
+                ]
+        elif identity_type_id == IdentityType.WORKER:
+            if shift_id == Shift.EXECUTING:
+                model_class = PFCTask
+                valid_statuses = [
+                    PFCItemStatus.BACKLOG,
+                    PFCItemStatus.SELECTED_FOR_DEVELOPMENT,
+                ]
 
-        if not pathway:
-            return 500, PFCConstants.ERR_NO_PATHWAY
+        if not model_class:
+            return None
 
-        # Initialize the CNS execution
-        cns = CNS(pathway_id=pathway.id)
+        # Strategy 1: Reclaim a previously owned ticket that is currently unassigned
+        item = (
+            model_class.objects.filter(
+                previous_owners=identity_disc,
+                owning_disc__isnull=True,
+                status_id__in=valid_statuses,
+            )
+            .order_by('-priority')
+            .first()
+        )
 
-        # VITAL: Link the new SpikeTrain to the current Spike.
-        # This acts as the "bridge" carrying the Blackboard context forward.
-        cns.spike_train.parent_spike = self.spike
-        cns.spike_train.save(update_fields=['parent_spike'])
+        # Strategy 2: Grab the highest priority unassigned ticket
+        if not item:
+            item = (
+                model_class.objects.filter(
+                    owning_disc__isnull=True, status_id__in=valid_statuses
+                )
+                .order_by('-priority')
+                .first()
+            )
 
-        cns.start()
+        # Lock it in!
+        if item:
+            item.owning_disc = identity_disc
+            item.save(update_fields=['owning_disc'])
+            logger.info(
+                f'[PFC] Locked {item.__class__.__name__} {item.id} to {identity_disc.name}'
+            )
 
-        return 200, f'{PFCConstants.MSG_DISPATCHED} {cns.spike_train.id}'
+        return item
+
+    @sync_to_async
+    def _release_ticket(self, item, identity_disc):
+        """Removes the active lock and logs the historical touch."""
+        item.owning_disc = None
+        item.save(update_fields=['owning_disc'])
+        item.previous_owners.add(identity_disc)
+        logger.info(
+            f'[PFC] Released {item.__class__.__name__} {item.id} from {identity_disc.name}'
+        )

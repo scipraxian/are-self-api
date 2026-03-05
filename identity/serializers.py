@@ -3,7 +3,6 @@ from rest_framework import serializers
 from common.constants import ALL_FIELDS
 from parietal_lobe.models import ToolDefinition
 
-from .identity_prompt import build_identity_prompt, render_base_identity
 from .models import (
     Identity,
     IdentityAddon,
@@ -50,6 +49,7 @@ class IdentitySerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
     def get_rendered(self, obj):
+        from .identity_prompt import render_base_identity
         return render_base_identity(obj, None, 1)
 
 
@@ -62,4 +62,5 @@ class IdentityDiscSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
     def get_rendered(self, obj):
+        from .identity_prompt import build_identity_prompt
         return build_identity_prompt(obj, None, 1)

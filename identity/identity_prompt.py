@@ -15,6 +15,7 @@ def render_base_identity(
     iteration_id: Optional[int] = None,
     turn_number: int = 1,
     identity_disc: Optional['IdentityDisc'] = None,
+    reasoning_turn_id: Optional[int] = None,
 ) -> str:
     """
     Compiles the static persona, tags, and dynamically executes Addons.
@@ -40,6 +41,7 @@ def render_base_identity(
                     identity_disc.id,
                     iteration_id,
                     turn_number,
+                    reasoning_turn_id,
                 )
                 prompt_blocks.append(block_text)
 
@@ -52,6 +54,7 @@ def _resolve_addon_content(
     identity_disc_id: Optional[UUID],
     iteration_id: Optional[int],
     turn_number: int,
+    reasoning_turn_id: Optional[int],
 ) -> str:
     """Safely executes the dynamic addon function or falls back to static text."""
     slug = addon.function_slug
@@ -62,6 +65,7 @@ def _resolve_addon_content(
             identity=identity_id,
             identity_disc=identity_disc_id,
             turn_number=turn_number,
+            reasoning_turn_id=reasoning_turn_id,
         )
         try:
             dynamic_text = ADDON_REGISTRY[slug](package)
@@ -78,6 +82,7 @@ def build_identity_prompt(
     identity_disc: Optional['IdentityDisc'],
     iteration_id: Optional[int] = None,
     turn_number: int = 1,
+    reasoning_turn_id: Optional[int] = None,
 ) -> str:
     """
     Dynamically compiles the system prompt based on the mounted IdentityDisc.
@@ -92,6 +97,7 @@ def build_identity_prompt(
             identity_disc=identity_disc,
             iteration_id=iteration_id,
             turn_number=turn_number,
+            reasoning_turn_id=reasoning_turn_id,
         )
     ]
 

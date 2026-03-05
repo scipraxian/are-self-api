@@ -9,3 +9,4 @@ class AddonPackage:
     identity: UUID
     identity_disc: Optional[UUID]
     turn_number: int
+    reasoning_turn_id: Optional[int]

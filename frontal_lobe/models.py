@@ -90,6 +90,13 @@ class ReasoningSession(
         null=True,
         related_name=RELATED_NAME,
     )
+    participant = models.ForeignKey(
+        'temporal_lobe.IterationShiftParticipant',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name=RELATED_NAME,
+    )
     spike = models.ForeignKey(
         'central_nervous_system.Spike',
         on_delete=models.SET_NULL,

@@ -8,7 +8,7 @@ from identity.models import Identity, IdentityDisc
 class Shift(NameMixin):
     """Execute N number of turns."""
 
-    GROOMING = 1
+    GROOMING = 1  # sifting
     PRE_PLANNING = 2
     PLANNING = 3
     EXECUTING = 4
