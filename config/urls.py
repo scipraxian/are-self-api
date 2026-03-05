@@ -8,6 +8,7 @@ from dashboard.api_urls import DASHBOARD_ROUTER
 from environments.api_urls import ENVIRONMENTS_ROUTER
 from frontal_lobe.api_urls import REASONING_ROUTER
 from identity.urls import V2_IDENTITY_ROUTER
+from prefrontal_cortex.urls import V2_PREFRONTAL_CORTEX_ROUTER
 from temporal_lobe.urls import V2_TEMPORAL_LOBE_ROUTER
 
 v1_router = routers.DefaultRouter()
@@ -22,6 +23,7 @@ V2_ROUTER.registry.extend(V2_CNS_ROUTER.registry)
 V2_ROUTER.registry.extend(DASHBOARD_ROUTER.registry)
 V2_ROUTER.registry.extend(V2_TEMPORAL_LOBE_ROUTER.registry)
 V2_ROUTER.registry.extend(V2_IDENTITY_ROUTER.registry)
+V2_ROUTER.registry.extend(V2_PREFRONTAL_CORTEX_ROUTER.registry)
 
 urlpatterns = [
     path('', include('dashboard.urls')),
