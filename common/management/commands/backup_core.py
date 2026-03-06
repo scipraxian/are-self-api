@@ -23,6 +23,8 @@ class Command(BaseCommand):
             'reasoningsession',
             'reasoningengram',
             'reasoningspiketrainmap',
+            'reasoninggoal',
+            'reasoningturn',
         ],
         'parietal_lobe': [],  # All tools/parameters are structural
         'prefrontal_cortex': ['pfcepic', 'pfcstory', 'pfctask', 'pfccomment'],

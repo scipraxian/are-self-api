@@ -124,49 +124,5 @@
     "cost_per_1k_input": "0.000000",
     "cost_per_1k_output": "0.000000"
   }
-},
-{
-  "model": "frontal_lobe.reasoninggoal",
-  "pk": 1,
-  "fields": {
-    "created": "2026-03-06T15:15:11.752Z",
-    "modified": "2026-03-06T15:15:11.752Z",
-    "status": 2,
-    "session": "bdf16f5b-0778-4faf-82f5-0a2f7f6c0c91",
-    "achieved": false,
-    "rendered_goal": "Analyze the current state and execute necessary tools to resolve issues."
-  }
-},
-{
-  "model": "frontal_lobe.reasoningturn",
-  "pk": 1,
-  "fields": {
-    "created": "2026-03-06T15:15:11.779Z",
-    "modified": "2026-03-06T15:18:30.837Z",
-    "delta": "00:03:19.058226",
-    "status": 4,
-    "session": "bdf16f5b-0778-4faf-82f5-0a2f7f6c0c91",
-    "turn_number": 1,
-    "request_payload": {
-      "messages": [
-        {
-          "role": "system",
-          "content": "No Identity mounted. Operating with blank slate."
-        },
-        {
-          "role": "user",
-          "content": "SESSION ID: bdf16f5b-0778-4faf-82f5-0a2f7f6c0c91\n\n[SYSTEM DIAGNOSTICS]\n[CYCLE 1 / 100] | Speedrun Bounty: 99000 XP\nLevel: 1 | XP: 5 | Focus Pool: 6 / 10\nOutput Footprint (Prev Turn): 0 / 1000 chars -> Efficiency Bonus: N/A\nL1 Input Payload: 0 chars pulled.\n\n[WAKING STATE: ACTIVE TASK]\nNO ACTIVE TASK ASSIGNED. You must query the Agile Board or consult the PM.\n\n[YOUR CARD CATALOG (ENGRAM INDEX)]\nYour memory banks are completely empty.\n(Use mcp_engram_read to read full facts)\n\n[HISTORICAL LOG (RIVER OF 6)]\nNo recent internal monologue.\n\n[YOUR MOVE]\nWrite your reasoning starting with 'THOUGHT: '. Stop writing text immediately after your thought and invoke your tools natively. DO NOT generate fake system diagnostics."
-        }
-      ]
-    },
-    "tokens_input": 0,
-    "inference_time": "00:03:19.033751",
-    "thought_process": "Error communicating with local LLM: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-    "tokens_output": 0,
-    "last_turn": null,
-    "turn_goals": [
-      1
-    ]
-  }
 }
 ]
