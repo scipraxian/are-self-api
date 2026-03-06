@@ -24,9 +24,22 @@ class CommonTestCase(APITestCase):
         self.test_user.is_active = True
         self.test_user.save()
         self.test_user_login = self.client.login(
-            username=self.test_user_name, password=self.test_user_password
-        )
+            username=self.test_user_name, password=self.test_user_password)
         self.test_client = APIClient()
         self.test_client.force_authenticate(user=self.test_user)
 
         return super(CommonTestCase, self).setUp()
+
+
+class CommonFixturesAPITestCase(CommonTestCase):
+    fixtures = [
+        'parietal_lobe/fixtures/initial_data.json',
+        'identity/fixtures/initial_data.json',
+        'temporal_lobe/fixtures/initial_data.json',
+        'prefrontal_cortex/fixtures/initial_data.json',
+        'environments/fixtures/initial_data.json',
+        'peripheral_nervous_system/fixtures/initial_data.json',
+        'peripheral_nervous_system/fixtures/test_agents.json',
+        'central_nervous_system/fixtures/initial_data.json',
+        'frontal_lobe/fixtures/initial_data.json',
+    ]

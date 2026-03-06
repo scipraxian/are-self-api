@@ -2,7 +2,7 @@ import json
 import os
 from unittest.mock import mock_open, patch
 
-from django.test import TestCase
+from common.tests.common_test_case import CommonFixturesAPITestCase
 
 from environments.models import TalosExecutable
 from central_nervous_system.models import (
@@ -22,20 +22,14 @@ from central_nervous_system.effectors.effector_casters.effector_handlers.version
     update_version_metadata,)
 
 MODULE_PATH = (
-    'central_nervous_system.effectors.effector_casters.effector_handlers.version_metadata_handler')
+    'central_nervous_system.effectors.effector_casters.effector_handlers.version_metadata_handler'
+)
 
 
-class VersionMetadataHandlerTest(TestCase):
-    fixtures = [
-        'environments/fixtures/initial_data.json',
-        'peripheral_nervous_system/fixtures/initial_data.json',
-        'peripheral_nervous_system/fixtures/test_agents.json',
-        'central_nervous_system/fixtures/initial_data.json',
-    ]
+class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
 
     def setUp(self):
-        self.status_running = SpikeStatus.objects.get(
-            id=SpikeStatus.RUNNING)
+        self.status_running = SpikeStatus.objects.get(id=SpikeStatus.RUNNING)
         self.spawn_running = SpikeTrainStatus.objects.get(
             id=SpikeTrainStatus.RUNNING)
 

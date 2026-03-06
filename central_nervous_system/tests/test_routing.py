@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from django.test import TestCase
+from common.tests.common_test_case import CommonFixturesAPITestCase
 
 from environments.models import (
     ProjectEnvironment,
@@ -20,13 +20,7 @@ from central_nervous_system.models import (
 from central_nervous_system.central_nervous_system import CNS
 
 
-class CNSGraphRoutingTest(TestCase):
-    fixtures = [
-        'environments/fixtures/initial_data.json',
-        'peripheral_nervous_system/fixtures/initial_data.json',
-        'peripheral_nervous_system/fixtures/test_agents.json',
-        'central_nervous_system/fixtures/initial_data.json',
-    ]
+class CNSGraphRoutingTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         # Environment

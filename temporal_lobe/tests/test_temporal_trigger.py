@@ -1,7 +1,7 @@
 import uuid
 from unittest.mock import MagicMock, patch
 
-from django.test import TestCase
+from common.tests.common_test_case import CommonFixturesAPITestCase
 
 from central_nervous_system.models import (
     Spike,
@@ -17,18 +17,7 @@ from temporal_lobe.temporal_lobe import (
 )
 
 
-class TestTemporalMetronomeIgnition(TestCase):
-    fixtures = [
-        'environments/fixtures/initial_data.json',
-        'peripheral_nervous_system/fixtures/initial_data.json',
-        'peripheral_nervous_system/fixtures/test_agents.json',
-        'central_nervous_system/fixtures/initial_data.json',
-        'frontal_lobe/fixtures/initial_data.json',
-        'identity/fixtures/initial_data.json',
-        'parietal_lobe/fixtures/initial_data.json',
-        'prefrontal_cortex/fixtures/initial_data.json',
-        'temporal_lobe/fixtures/initial_data.json',
-    ]
+class TestTemporalMetronomeIgnition(CommonFixturesAPITestCase):
 
     def setUp(self):
         # Fetch the baseline records provided by the fixture
@@ -50,9 +39,8 @@ class TestTemporalMetronomeIgnition(TestCase):
 
         self.assertEqual(len(spawned_ids), 1)
         self.assertEqual(SpikeTrain.objects.count(), 1)
-        self.assertEqual(
-            SpikeTrain.objects.first().status_id, SpikeTrainStatus.RUNNING
-        )
+        self.assertEqual(SpikeTrain.objects.first().status_id,
+                         SpikeTrainStatus.RUNNING)
 
     @patch('temporal_lobe.temporal_lobe.AsyncResult')
     def test_healthy_celery_worker_skips_spawn(self, mock_async_result):
@@ -77,17 +65,16 @@ class TestTemporalMetronomeIgnition(TestCase):
 
         spawned_ids = trigger_temporal_metronomes()
 
-        # It should skip spawning entirely
-        self.assertEqual(len(spawned_ids), 0)
-        self.assertEqual(
-            SpikeTrain.objects.count(), 1
-        )  # Only the original remains
+        # It should skip spawning and return the list of existing ones
+        self.assertEqual(len(spawned_ids), 1)
+        self.assertEqual(spawned_ids[0], train.id)
+        self.assertEqual(SpikeTrain.objects.count(),
+                         1)  # Only the original remains
 
     @patch('temporal_lobe.temporal_lobe.CNS')
     @patch('temporal_lobe.temporal_lobe.AsyncResult')
-    def test_ghost_worker_triggers_gc_and_respawns(
-        self, mock_async_result, mock_cns
-    ):
+    def test_ghost_worker_triggers_gc_and_respawns(self, mock_async_result,
+                                                   mock_cns):
         """SCENARIO 3: DB says RUNNING, but Celery says FAILURE. It should GC and respawn."""
 
         # Fake a ghost train
@@ -126,6 +113,5 @@ class TestTemporalMetronomeIgnition(TestCase):
 
         # 2. Did it spawn a replacement metronome?
         self.assertEqual(len(spawned_ids), 1)
-        self.assertEqual(
-            SpikeTrain.objects.count(), 2
-        )  # The ghost (now failed) + The fresh spawn
+        self.assertEqual(SpikeTrain.objects.count(),
+                         2)  # The ghost (now failed) + The fresh spawn

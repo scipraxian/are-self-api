@@ -2,11 +2,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from asgiref.sync import sync_to_async
-from django.test import TestCase
+
+from common.tests.common_test_case import CommonFixturesAPITestCase
 
 from central_nervous_system.effectors.effector_casters.generic_effector_caster import (
-    GenericEffectorCaster,
-)
+    GenericEffectorCaster,)
 from central_nervous_system.models import (
     Effector,
     NeuralPathway,
@@ -35,6 +35,7 @@ async def mock_event_stream(events):
 
 @pytest.mark.django_db
 class TestGenericSpellCaster:
+
     @pytest.fixture
     def mock_head(self):
         """Creates a mock Spike with necessary attributes."""
@@ -51,10 +52,11 @@ class TestGenericSpellCaster:
         spike.refresh_from_db = MagicMock()
 
         # Mock the manager get() to return this spike
-        with patch('central_nervous_system.models.Spike.objects.get', return_value=spike):
+        with patch('central_nervous_system.models.Spike.objects.get',
+                   return_value=spike):
             with patch(
-                'central_nervous_system.models.Spike.objects.select_related',
-                return_value=MagicMock(get=lambda id: spike),
+                    'central_nervous_system.models.Spike.objects.select_related',
+                    return_value=MagicMock(get=lambda id: spike),
             ):
                 # Setup default get_full_command return
                 spike.effector.get_full_command.return_value = [
@@ -67,12 +69,12 @@ class TestGenericSpellCaster:
     @pytest.fixture
     def mock_env_utils(self):
         with (
-            patch(
-                'central_nervous_system.effectors.effector_casters.generic_effector_caster.get_active_environment'
-            ) as mock_env,
-            patch(
-                'central_nervous_system.effectors.effector_casters.generic_effector_caster.resolve_environment_context'
-            ) as mock_ctx,
+                patch(
+                    'central_nervous_system.effectors.effector_casters.generic_effector_caster.get_active_environment'
+                ) as mock_env,
+                patch(
+                    'central_nervous_system.effectors.effector_casters.generic_effector_caster.resolve_environment_context'
+                ) as mock_ctx,
         ):
             mock_env.return_value = None
             mock_ctx.return_value = {}
@@ -84,12 +86,13 @@ class TestGenericSpellCaster:
 
         # Mock NerveTerminal.execute_local to return an empty stream then exit
         events = [
-            NerveTerminalEvent(type=NerveTerminalConstants.T_LOG, text='Starting...'),
+            NerveTerminalEvent(type=NerveTerminalConstants.T_LOG,
+                               text='Starting...'),
             NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0),
         ]
 
         with patch(
-            'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
+                'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
         ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
@@ -111,14 +114,14 @@ class TestGenericSpellCaster:
                 text='Working...',
                 source='stdout',
             ),
-            NerveTerminalEvent(
-                type=NerveTerminalConstants.T_LOG, text='File log', source='file'
-            ),
+            NerveTerminalEvent(type=NerveTerminalConstants.T_LOG,
+                               text='File log',
+                               source='file'),
             NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0),
         ]
 
         with patch(
-            'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
+                'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
         ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
@@ -132,12 +135,13 @@ class TestGenericSpellCaster:
         caster = GenericEffectorCaster(mock_head.id)
 
         events = [
-            NerveTerminalEvent(type=NerveTerminalConstants.T_LOG, text='Crashing...'),
+            NerveTerminalEvent(type=NerveTerminalConstants.T_LOG,
+                               text='Crashing...'),
             NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=1),
         ]
 
         with patch(
-            'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
+                'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
         ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
@@ -153,10 +157,12 @@ class TestGenericSpellCaster:
 
         caster = GenericEffectorCaster(mock_head.id)
 
-        events = [NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0)]
+        events = [
+            NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0)
+        ]
 
         with patch(
-            'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_remote'
+                'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_remote'
         ) as mock_remote:
             mock_remote.return_value = mock_event_stream(events)
 
@@ -176,10 +182,12 @@ class TestGenericSpellCaster:
 
         caster = GenericEffectorCaster(mock_head.id)
 
-        events = [NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0)]
+        events = [
+            NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0)
+        ]
 
         with patch(
-            'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
+                'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
         ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
@@ -198,18 +206,19 @@ class TestGenericSpellCaster:
         """Verify that templated log paths are resolved before pipeline execution."""
         # 1. Setup a templated log path
         mock_head.effector.talos_executable.log = (
-            'C:\\{{project_name}}\\Saved\\Logs\\{{project_name}}.log'
-        )
+            'C:\\{{project_name}}\\Saved\\Logs\\{{project_name}}.log')
 
         # 2. Inject context into mock_env_utils (mock_ctx is the 2nd item in fixture)
         _, mock_ctx = mock_env_utils
         mock_ctx.return_value = {'project_name': 'HSHVacancy'}
 
         caster = GenericEffectorCaster(mock_head.id)
-        events = [NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0)]
+        events = [
+            NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0)
+        ]
 
         with patch(
-            'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
+                'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
         ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
@@ -217,20 +226,17 @@ class TestGenericSpellCaster:
 
             # 3. Assertions
             expected_resolved_log = (
-                'C:\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log'
-            )
+                'C:\\HSHVacancy\\Saved\\Logs\\HSHVacancy.log')
 
             mock_exec.assert_called_once()
             _, kwargs = mock_exec.call_args
 
             assert kwargs['log_path'] == expected_resolved_log, (
-                f'Log path was not resolved! Got: {kwargs["log_path"]}'
-            )
+                f'Log path was not resolved! Got: {kwargs["log_path"]}')
 
     @pytest.mark.asyncio
-    async def test_blackboard_exhale_persistence(
-        self, mock_head, mock_env_utils
-    ):
+    async def test_blackboard_exhale_persistence(self, mock_head,
+                                                 mock_env_utils):
         """Verify native python tools can mutate memory and the Caster preserves it."""
 
         # 1. Setup Initial Memory
@@ -247,7 +253,7 @@ class TestGenericSpellCaster:
 
         # 3. Hijack the Caster's Native Handler routing
         with patch.dict(
-            'central_nervous_system.effectors.effector_casters.generic_effector_caster.NATIVE_HANDLERS',
+                'central_nervous_system.effectors.effector_casters.generic_effector_caster.NATIVE_HANDLERS',
             {'ai_parser': mock_ai_handler},
         ):
             mock_head.effector.talos_executable.internal = True
@@ -267,9 +273,8 @@ class TestGenericSpellCaster:
             mock_head.refresh_from_db()
             assert mock_head.blackboard.get('state') == 'mutated'
 
-    def test_unified_pipeline_blackboard_interception(
-        self, mock_head, mock_env_utils
-    ):
+    def test_unified_pipeline_blackboard_interception(self, mock_head,
+                                                      mock_env_utils):
         """Verify the Caster intercepts ::blackboard_set, mutates memory, and strips the log."""
         mock_head.blackboard = {}
         mock_head.execution_log = ''
@@ -278,12 +283,10 @@ class TestGenericSpellCaster:
         caster = GenericEffectorCaster(mock_head.id)
 
         # Mixed log output mimicking a CLI tool sending secret commands
-        log_payload = (
-            'Standard log line 1\n'
-            '::blackboard_set status_msg::All systems nominal\n'
-            'Standard log line 2\n'
-            '::blackboard_set error_count::0\n'
-        )
+        log_payload = ('Standard log line 1\n'
+                       '::blackboard_set status_msg::All systems nominal\n'
+                       'Standard log line 2\n'
+                       '::blackboard_set error_count::0\n')
 
         events = [
             NerveTerminalEvent(
@@ -295,7 +298,7 @@ class TestGenericSpellCaster:
         ]
 
         with patch(
-            'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
+                'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
         ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
 
@@ -303,8 +306,7 @@ class TestGenericSpellCaster:
 
             # 1. Assert Blackboard Mutations
             assert (
-                mock_head.blackboard.get('status_msg') == 'All systems nominal'
-            )
+                mock_head.blackboard.get('status_msg') == 'All systems nominal')
             assert mock_head.blackboard.get('error_count') == '0'
 
             # 2. Assert Log Stripping
@@ -312,9 +314,8 @@ class TestGenericSpellCaster:
             assert 'Standard log line 1' in mock_head.application_log
             assert 'Standard log line 2' in mock_head.application_log
 
-    def test_blackboard_interception_edge_cases(
-        self, mock_head, mock_env_utils
-    ):
+    def test_blackboard_interception_edge_cases(self, mock_head,
+                                                mock_env_utils):
         """Verify robust parsing of ::blackboard_set with weird spacing, empty DB fields, and JSON."""
         mock_head.blackboard = None  # Simulate an uninitialized JSONField
         mock_head.execution_log = ''
@@ -325,8 +326,7 @@ class TestGenericSpellCaster:
         log_payload = (
             '::blackboard_set   weird_spacing  ::  value with spaces  \n'
             '::blackboard_set empty_val::\n'
-            '::blackboard_set json_data::{"key": "val", "nested": "data"}\n'
-        )
+            '::blackboard_set json_data::{"key": "val", "nested": "data"}\n')
 
         events = [
             NerveTerminalEvent(
@@ -338,64 +338,53 @@ class TestGenericSpellCaster:
         ]
 
         with patch(
-            'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
+                'peripheral_nervous_system.nerve_terminal.NerveTerminal.execute_local'
         ) as mock_exec:
             mock_exec.return_value = mock_event_stream(events)
             caster.execute()
 
             # Assert Initialization and Extraction
             assert isinstance(mock_head.blackboard, dict)
-            assert (
-                mock_head.blackboard.get('weird_spacing') == 'value with spaces'
-            )
+            assert (mock_head.blackboard.get('weird_spacing') ==
+                    'value with spaces')
             assert mock_head.blackboard.get('empty_val') == ''
-            assert (
-                mock_head.blackboard.get('json_data')
-                == '{"key": "val", "nested": "data"}'
-            )
+            assert (mock_head.blackboard.get('json_data') ==
+                    '{"key": "val", "nested": "data"}')
 
             # Assert Scrubbing
             assert '::blackboard_set' not in mock_head.execution_log
 
 
 @pytest.mark.django_db
-class GenericSpellCasterQueryTest(TestCase):
-    fixtures = [
-        'environments/fixtures/initial_data.json',
-        'peripheral_nervous_system/fixtures/initial_data.json',
-        'peripheral_nervous_system/fixtures/test_agents.json',
-        'central_nervous_system/fixtures/initial_data.json',
-    ]
+class GenericSpellCasterQueryTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         # Environment
         env_type = ProjectEnvironmentType.objects.get_or_create(name='UE5')[0]
         env_status = ProjectEnvironmentStatus.objects.get_or_create(
-            name='Ready'
-        )[0]
-        self.env = ProjectEnvironment.objects.create(
-            name='Test Env', type=env_type, status=env_status
-        )
+            name='Ready')[0]
+        self.env = ProjectEnvironment.objects.create(name='Test Env',
+                                                     type=env_type,
+                                                     status=env_status)
 
         # Effector & Node
-        self.exe = TalosExecutable.objects.create(
-            name='TestExe', executable='cmd.exe'
-        )
-        self.effector = Effector.objects.create(
-            name='TestSpell', talos_executable=self.exe
-        )
+        self.exe = TalosExecutable.objects.create(name='TestExe',
+                                                  executable='cmd.exe')
+        self.effector = Effector.objects.create(name='TestSpell',
+                                                talos_executable=self.exe)
         self.book = NeuralPathway.objects.create(name='Test Book')
-        self.neuron = Neuron.objects.create(
-            pathway=self.book, effector=self.effector, environment=self.env
-        )
+        self.neuron = Neuron.objects.create(pathway=self.book,
+                                            effector=self.effector,
+                                            environment=self.env)
 
         # Execution
-        self.spike_train = SpikeTrain.objects.create(
-            pathway=self.book, environment=self.env, status_id=1
-        )
-        self.spike = Spike.objects.create(
-            spike_train=self.spike_train, neuron=self.neuron, effector=self.effector, status_id=1
-        )
+        self.spike_train = SpikeTrain.objects.create(pathway=self.book,
+                                                     environment=self.env,
+                                                     status_id=1)
+        self.spike = Spike.objects.create(spike_train=self.spike_train,
+                                          neuron=self.neuron,
+                                          effector=self.effector,
+                                          status_id=1)
 
     def test_load_head_sync_prefetches_environment(self):
         """Verify _load_head_sync loads the environment in the initial query to prevent async ORM crashes."""

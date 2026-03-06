@@ -5,31 +5,16 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from central_nervous_system.models import NeuralPathway
+from common.tests.common_test_case import CommonFixturesAPITestCase
 from environments.models import (
     ProjectEnvironment,
     ProjectEnvironmentStatus,
     ProjectEnvironmentType,
 )
-from central_nervous_system.models import NeuralPathway
 
 
-class DashboardAPITest(TestCase):
-    # CRITICAL: Order matters. Environments -> Agent Statuses -> Agents -> CNS
-    fixtures = [
-        'environments/fixtures/initial_data.json',
-        'peripheral_nervous_system/fixtures/initial_data.json',
-        'peripheral_nervous_system/fixtures/test_agents.json',
-        'central_nervous_system/fixtures/initial_data.json',
-    ]
-
-    def setUp(self):
-        # Setup Auth
-        self.user = User.objects.create_superuser(
-            'testadmin', 'admin@talos.dev', 'password'
-        )
-        self.client = APIClient()
-        self.client.force_authenticate(user=self.user)
-
+class DashboardAPITest(CommonFixturesAPITestCase):
     def test_summary_endpoint(self):
         """Verify the summary endpoint aggregates the required UI data."""
         type_ue = ProjectEnvironmentType.objects.first()

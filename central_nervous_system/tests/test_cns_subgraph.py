@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from django.test import TransactionTestCase
+from common.tests.common_test_case import CommonFixturesAPITestCase
 
 from central_nervous_system.central_nervous_system import CNS
 from central_nervous_system.models import (
@@ -15,13 +15,7 @@ from central_nervous_system.models import (
 from environments.models import ProjectEnvironment
 
 
-class CNSSubGraphTests(TransactionTestCase):
-    fixtures = [
-        'environments/fixtures/initial_data.json',
-        'peripheral_nervous_system/fixtures/initial_data.json',
-        'peripheral_nervous_system/fixtures/test_agents.json',
-        'central_nervous_system/fixtures/initial_data.json',
-    ]
+class CNSSubGraphTests(CommonFixturesAPITestCase):
 
     def setUp(self):
         # 1. Base Environment
@@ -29,8 +23,7 @@ class CNSSubGraphTests(TransactionTestCase):
 
         # 2. Pathways
         self.parent_pathway = NeuralPathway.objects.create(
-            name='Parent Pathway'
-        )
+            name='Parent Pathway')
         self.child_pathway = NeuralPathway.objects.create(name='Child Pathway')
 
         # 3. Base dummy effector
@@ -67,7 +60,8 @@ class CNSSubGraphTests(TransactionTestCase):
         """
 
         # Execute the brain surgery
-        self.cns._spawn_subgraph(self.parent_spike)
+        with self.captureOnCommitCallbacks(execute=True):
+            self.cns._spawn_subgraph(self.parent_spike)
 
         # 1. Verify Parent Spike is put to sleep
         self.parent_spike.refresh_from_db()
@@ -79,8 +73,7 @@ class CNSSubGraphTests(TransactionTestCase):
 
         # 2. Verify Child SpikeTrain was created correctly
         child_train = SpikeTrain.objects.filter(
-            parent_spike=self.parent_spike
-        ).first()
+            parent_spike=self.parent_spike).first()
         self.assertIsNotNone(child_train, 'Child SpikeTrain was not created.')
         self.assertEqual(child_train.pathway, self.child_pathway)
         self.assertEqual(child_train.environment, self.env)
@@ -97,9 +90,8 @@ class CNSSubGraphTests(TransactionTestCase):
         actually detects the invoked_pathway and fires the new method.
         """
         # Call the higher level router
-        self.cns._create_spike_from_node(
-            neuron=self.delegation_neuron, provenance=None
-        )
+        self.cns._create_spike_from_node(neuron=self.delegation_neuron,
+                                         provenance=None)
 
         # Verify it intercepted the node and routed it to our new logic
         mock_spawn.assert_called_once()

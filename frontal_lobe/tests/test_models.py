@@ -1,20 +1,9 @@
 import pytest
-from django.test import TransactionTestCase
+from common.tests.common_test_case import CommonFixturesAPITestCase
 from frontal_lobe.models import ReasoningSession, ReasoningTurn, ReasoningGoal, ReasoningStatus, ReasoningStatusID
 
 
-class FrontalLobeTest(TransactionTestCase):
-    fixtures = [
-        'environments/fixtures/initial_data.json',
-        'peripheral_nervous_system/fixtures/initial_data.json',
-        'peripheral_nervous_system/fixtures/test_agents.json',
-        'central_nervous_system/fixtures/initial_data.json',
-        'frontal_lobe/fixtures/initial_data.json',
-        'identity/fixtures/initial_data.json',
-        'parietal_lobe/fixtures/initial_data.json',
-        'prefrontal_cortex/fixtures/initial_data.json',
-        'temporal_lobe/fixtures/initial_data.json',
-    ]
+class FrontalLobeTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         # Initializing objects for test coverage

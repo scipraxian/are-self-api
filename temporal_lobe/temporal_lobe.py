@@ -1,10 +1,11 @@
 import logging
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
+from uuid import UUID
 
 from asgiref.sync import sync_to_async
 from celery.result import AsyncResult
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 
 from central_nervous_system.central_nervous_system import CNS
 from central_nervous_system.models import (
@@ -14,6 +15,7 @@ from central_nervous_system.models import (
     SpikeTrain,
     SpikeTrainStatus,
 )
+from frontal_lobe.models import ReasoningSession, ReasoningStatusID
 from identity.models import IdentityDisc
 from temporal_lobe.models import (
     Iteration,
@@ -35,7 +37,7 @@ class TemporalLobe:
         logger.info(f'[TemporalLobe] Temporal Lobe engaged for {spike_id}.')
 
     async def tick(self) -> Tuple[int, str]:
-        """The heartbeat. Cleans up, checks capacity, and dispatches workers."""
+        """The TemporalLobe. Cleans up, checks capacity, and dispatches workers."""
         logger.info(
             f'[TemporalLobe] Ticking Temporal Lobe for {self.spike_id}.'
         )
@@ -204,31 +206,130 @@ class TemporalLobe:
             await self._lock_and_get_pending_participants(shift.id, slots)
         )
 
-        logger.info(
-            f'[TemporalLobe] Locked IDs: {len(iteration_shift_participant_ids)}'
-        )
-
         if not iteration_shift_participant_ids:
             return 0
 
-        # Not sure about circular. Check and move if possible.
         from prefrontal_cortex.prefrontal_cortex import PrefrontalCortex
 
         pfc = PrefrontalCortex(parent_spike.id)
 
-        # 2. Execute the async dispatches in the event loop!
-        for worker_id in iteration_shift_participant_ids:
-            await pfc.dispatch(worker_id)
-            logger.info(
-                f'[TemporalLobe] Dispatched disc {worker_id} to the PFC.'
-            )
+        dispatched_count = 0
+        env_id = parent_spike.spike_train.environment_id
 
-        return len(iteration_shift_participant_ids)
+        # 2. Execute the async dispatches
+        for worker_id in iteration_shift_participant_ids:
+            # We pass the environment ID through to the PFC!
+            session_id = await pfc.dispatch(worker_id, env_id)
+
+            if session_id:
+                logger.info(
+                    f'[TemporalLobe] Dispatched disc {worker_id} to the PFC.'
+                )
+                dispatched_count += 1
+            else:
+                # The Bouncer hit. No work available. Revert the worker status.
+                logger.info(
+                    f'[TemporalLobe] Worker {worker_id} stood down (No tasks available).'
+                )
+                await self._stand_down_worker(worker_id)
+
+        return dispatched_count
+
+    @sync_to_async
+    def _stand_down_worker(self, participant_id: int):
+        """Reverts an ACTIVATED worker back to SELECTED if the PFC rejected the dispatch."""
+        try:
+            participant = IterationShiftParticipant.objects.get(
+                id=participant_id
+            )
+            participant.status_id = IterationShiftParticipantStatus.SELECTED
+            participant.save(update_fields=['status'])
+        except IterationShiftParticipant.DoesNotExist:
+            pass
 
     @sync_to_async
     def _cleanup_ghost_workers(self, shift):
-        """Placeholder for future cleanup logic."""
-        pass
+        """Cleans up workers that are marked ACTIVATED but have no TRULY running ReasoningSession."""
+        active_participants = IterationShiftParticipant.objects.filter(
+            iteration_shift=shift,
+            status_id=IterationShiftParticipantStatus.ACTIVATED,
+        )
+
+        for p in active_participants:
+            is_running = False
+
+            # Find any sessions that claim to be active
+            active_sessions = ReasoningSession.objects.filter(
+                participant=p,
+                status_id__in=[
+                    ReasoningStatusID.PENDING,
+                    ReasoningStatusID.ACTIVE,
+                ],
+            ).select_related('spike', 'spike__status')
+
+            for session in active_sessions:
+                # TRUTH VERIFICATION: Check the underlying Spike and Celery Task
+                if session.spike:
+                    # 1. Did the Orchestrator already declare this spike dead?
+                    if session.spike.status_id in [
+                        SpikeStatus.FAILED,
+                        SpikeStatus.ABORTED,
+                        SpikeStatus.STOPPED,
+                    ]:
+                        logger.warning(
+                            f'[TemporalLobe] Ghost Session {session.id}: Parent spike is {session.spike.status.name}.'
+                        )
+                        session.status_id = ReasoningStatusID.ERROR
+                        session.save(update_fields=['status'])
+                        continue  # Check next session, this one is dead
+
+                    # 2. Does Celery actually know about this task?
+                    if session.spike.celery_task_id:
+                        res = AsyncResult(str(session.spike.celery_task_id))
+                        if res.state not in [
+                            'PENDING',
+                            'STARTED',
+                            'RECEIVED',
+                            'RETRY',
+                        ]:
+                            logger.warning(
+                                f'[TemporalLobe] Ghost Session {session.id}: Celery task is dead ({res.state}).'
+                            )
+                            session.status_id = ReasoningStatusID.ERROR
+                            session.save(update_fields=['status'])
+                            continue  # Dead!
+
+                # If we passed the gauntlet, it's genuinely running
+                is_running = True
+                break
+
+            if is_running:
+                continue  # All good, leave them alone
+
+            # If we get here, no sessions are actively running in reality.
+            # Did they finish successfully in a past run?
+            is_done = ReasoningSession.objects.filter(
+                participant=p,
+                status_id__in=[
+                    ReasoningStatusID.COMPLETED,
+                    ReasoningStatusID.MAXED_OUT,
+                    ReasoningStatusID.STOPPED,
+                ],
+            ).exists()
+
+            if is_done:
+                p.status_id = IterationShiftParticipantStatus.COMPLETED
+                p.save(update_fields=['status'])
+                logger.info(
+                    f'[TemporalLobe] Worker {p.id} verified finished. Marked COMPLETED.'
+                )
+            else:
+                # They crashed or ghosted without completing. Demote them so the queue can grab them again!
+                p.status_id = IterationShiftParticipantStatus.SELECTED
+                p.save(update_fields=['status'])
+                logger.info(
+                    f'[TemporalLobe] Ghost Worker {p.id} fully cleaned up and reverted to SELECTED.'
+                )
 
 
 def fetch_canonical_temporal_pathway():
@@ -243,23 +344,96 @@ async def run_temporal_lobe(spike_id: str) -> Tuple[int, str]:
 
 
 def trigger_temporal_metronomes() -> list:
+    lobe_garbage_collection()
+    # =========================================================================
+    # STEP 2: SPAWN MISSING METRONOMES
+    # =========================================================================
+    active_iteration_environments = (
+        Iteration.objects.filter(
+            status_id__in=[IterationStatus.WAITING, IterationStatus.RUNNING]
+        )
+        .values_list('environment_id', flat=True)
+        .distinct()
+    )
+    logger.info(
+        f'[TemporalLobe] Found {len(active_iteration_environments)} environments with iterations.'
+    )
+    if not active_iteration_environments:
+        logger.info(
+            f'[TemporalLobe] No active iterations found, skipping metronome spawning.'
+        )
+        return []
+
+    return get_or_create_environment_trains(active_iteration_environments)
+
+
+def get_or_create_environment_trains(
+    active_iteration_environments: list[UUID],
+) -> list[UUID]:
+    train_list = []
     pathway = fetch_canonical_temporal_pathway()
-    spawned_trains = []
+    for env_id in active_iteration_environments:
+        # THE BOUNCER: Is there already a Metronome running for this project?
+        # (It might have just been cleared by the ghost protocol above!)
+        trains = SpikeTrain.objects.filter(
+            pathway=pathway,
+            environment_id=env_id,
+            status_id__in=[SpikeTrainStatus.CREATED, SpikeTrainStatus.RUNNING],
+        )
+        is_already_running = trains.exists()
+        if is_already_running:
+            logger.info(
+                f'[TemporalLobe] SpikeTrain for Environment {env_id} is already running.'
+            )
+            train_list.extend(trains.values_list('id', flat=True))
+            continue
+
+        # Safe to spawn!
+        spike_train = SpikeTrain.objects.create(
+            pathway=pathway,
+            environment_id=env_id,
+            status_id=SpikeTrainStatus.CREATED,
+        )
+        logger.info(
+            f'[TemporalLobe] Created new SpikeTrain {spike_train.id} for Environment {env_id}'
+        )
+
+        cns = CNS(spike_train_id=spike_train.id)
+        logger.info(
+            f'[TemporalLobe] Starting CNS for SpikeTrain {spike_train.id}'
+        )
+        cns.start()
+
+        train_list.append(spike_train.id)
+        logger.info(
+            f'[TemporalLobe] Fired for Environment {env_id}: SpikeTrain {spike_train.id}'
+        )
+
+    return train_list
+
+
+def lobe_garbage_collection() -> NeuralPathway:
+    pathway = fetch_canonical_temporal_pathway()
 
     # =========================================================================
     # STEP 1: CELERY-FIRST GARBAGE COLLECTION
     # =========================================================================
     active_metronomes = SpikeTrain.objects.filter(
         pathway=pathway,
-        status_id__in=[SpikeTrainStatus.CREATED, SpikeTrainStatus.RUNNING]
+        status_id__in=[SpikeTrainStatus.CREATED, SpikeTrainStatus.RUNNING],
     )
-
+    logger.info(
+        f'[TemporalLobe] Found {active_metronomes.count()} active metronomes.'
+    )
     for train in active_metronomes:
+        logger.info(f'[TemporalLobe] Processing metronome {train.id}')
         # Get the active execution nodes for this train
         active_spikes = train.spikes.filter(
             status_id__in=[SpikeStatus.RUNNING, SpikeStatus.PENDING]
         )
-
+        logger.info(
+            f'[TemporalLobe] Found {active_spikes.count()} active spikes for metronome {train.id}'
+        )
         is_truly_alive = False
 
         for spike in active_spikes:
@@ -268,57 +442,26 @@ def trigger_temporal_metronomes() -> list:
                 # Ask Celery for the absolute truth
                 if res.state in ['PENDING', 'STARTED', 'RECEIVED', 'RETRY']:
                     is_truly_alive = True
+                    logger.info(
+                        f'[TemporalLobe] Celery task {spike.celery_task_id} is alive.'
+                    )
                     break  # We found a healthy pulse, no need to check other spikes
 
         if is_truly_alive:
-            # Hands completely off. It's doing its job.
+            logger.info(f'[TemporalLobe] SpikeTrain {train.id} is truly alive.')
             continue
 
         # If we get here, the DB says RUNNING, but Celery has absolutely no idea what we are talking about.
         # It's a system crash ghost. NOW we wake up the Orchestrator to clean up the DB.
         logger.warning(
-            f"[HEARTBEAT] System Crash Ghost detected for SpikeTrain {train.id}. Triggering GC.")
+            f'[TemporalLobe] System Crash Ghost detected for SpikeTrain {train.id}. Triggering GC.'
+        )
         try:
             cns = CNS(spike_train_id=train.id)
+            logger.info(f'[TemporalLobe] Cleaning ghost SpikeTrain {train.id}')
             cns.poll()  # This will mark the spikes FAILED and cascade the train to a stopped state
         except Exception as e:
             logger.error(
-                f"[HEARTBEAT] Error cleaning ghost SpikeTrain {train.id}: {e}")
-
-    # =========================================================================
-    # STEP 2: SPAWN MISSING METRONOMES
-    # =========================================================================
-    active_environments = Iteration.objects.filter(
-        status_id__in=[IterationStatus.WAITING, IterationStatus.RUNNING]
-    ).values_list('environment_id', flat=True).distinct()
-
-    if not active_environments:
-        return []
-
-    for env_id in active_environments:
-        # THE BOUNCER: Is there already a Metronome running for this project?
-        # (It might have just been cleared by the ghost protocol above!)
-        is_already_running = SpikeTrain.objects.filter(
-            pathway=pathway,
-            environment_id=env_id,
-            status_id__in=[SpikeTrainStatus.CREATED, SpikeTrainStatus.RUNNING]
-        ).exists()
-
-        if is_already_running:
-            continue
-
-        # Safe to spawn!
-        spike_train = SpikeTrain.objects.create(
-            pathway=pathway,
-            environment_id=env_id,
-            status_id=SpikeTrainStatus.CREATED
-        )
-
-        cns = CNS(spike_train_id=spike_train.id)
-        cns.start()
-
-        spawned_trains.append(spike_train.id)
-        logger.info(
-            f"[HEARTBEAT] Fired for Environment {env_id}: SpikeTrain {spike_train.id}")
-
-    return spawned_trains
+                f'[TemporalLobe] Error cleaning ghost SpikeTrain {train.id}: {e}'
+            )
+    return pathway
