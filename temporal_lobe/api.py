@@ -12,13 +12,17 @@ from temporal_lobe.models import (
     IterationShift,
     IterationShiftParticipant,
     IterationShiftParticipantStatus,
+    IterationStatus,
 )
 from temporal_lobe.serializers import (
     IterationDefinitionSerializer,
     IterationSerializer,
     IterationShiftDetailSerializer,
 )
-from temporal_lobe.temporal_lobe import fetch_canonical_temporal_pathway
+from temporal_lobe.temporal_lobe import (
+    fetch_canonical_temporal_pathway,
+    trigger_temporal_metronomes,
+)
 
 
 class TemporalViewSet(viewsets.ViewSet):
@@ -143,20 +147,20 @@ class TemporalViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'])
     def trigger_tick(self, request):
-        """
-        The Ignition Switch: Manually fires the Temporal Lobe metronome graph.
-        """
         try:
-            pathway = fetch_canonical_temporal_pathway()
+            spawned_ids = trigger_temporal_metronomes()
 
-            # Fire the Master Graph!
-            cns = CNS(pathway_id=pathway.id)
-            cns.start()
+            if not spawned_ids:
+                return Response(
+                    {'status': 'Standby', 'message': 'No active iterations.'},
+                    status=status.HTTP_200_OK,
+                )
 
             return Response(
                 {
                     'status': 'Temporal Metronome Engaged',
-                    'spike_train_id': str(cns.spike_train.id),
+                    'environments_triggered': len(spawned_ids),
+                    'spike_train_ids': [str(uid) for uid in spawned_ids],
                 },
                 status=status.HTTP_200_OK,
             )
