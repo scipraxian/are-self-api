@@ -2,10 +2,18 @@ import logging
 from typing import Optional, Tuple
 
 from asgiref.sync import sync_to_async
+from celery.result import AsyncResult
 from django.db import transaction
 from django.db.models import Q
 
-from central_nervous_system.models import NeuralPathway, Spike
+from central_nervous_system.central_nervous_system import CNS
+from central_nervous_system.models import (
+    NeuralPathway,
+    Spike,
+    SpikeStatus,
+    SpikeTrain,
+    SpikeTrainStatus,
+)
 from identity.models import IdentityDisc
 from temporal_lobe.models import (
     Iteration,
@@ -232,3 +240,85 @@ async def run_temporal_lobe(spike_id: str) -> Tuple[int, str]:
     """Engage the Temporal Lobe to process a spike."""
     lobe = TemporalLobe(spike_id)
     return await lobe.tick()
+
+
+def trigger_temporal_metronomes() -> list:
+    pathway = fetch_canonical_temporal_pathway()
+    spawned_trains = []
+
+    # =========================================================================
+    # STEP 1: CELERY-FIRST GARBAGE COLLECTION
+    # =========================================================================
+    active_metronomes = SpikeTrain.objects.filter(
+        pathway=pathway,
+        status_id__in=[SpikeTrainStatus.CREATED, SpikeTrainStatus.RUNNING]
+    )
+
+    for train in active_metronomes:
+        # Get the active execution nodes for this train
+        active_spikes = train.spikes.filter(
+            status_id__in=[SpikeStatus.RUNNING, SpikeStatus.PENDING]
+        )
+
+        is_truly_alive = False
+
+        for spike in active_spikes:
+            if spike.celery_task_id:
+                res = AsyncResult(str(spike.celery_task_id))
+                # Ask Celery for the absolute truth
+                if res.state in ['PENDING', 'STARTED', 'RECEIVED', 'RETRY']:
+                    is_truly_alive = True
+                    break  # We found a healthy pulse, no need to check other spikes
+
+        if is_truly_alive:
+            # Hands completely off. It's doing its job.
+            continue
+
+        # If we get here, the DB says RUNNING, but Celery has absolutely no idea what we are talking about.
+        # It's a system crash ghost. NOW we wake up the Orchestrator to clean up the DB.
+        logger.warning(
+            f"[HEARTBEAT] System Crash Ghost detected for SpikeTrain {train.id}. Triggering GC.")
+        try:
+            cns = CNS(spike_train_id=train.id)
+            cns.poll()  # This will mark the spikes FAILED and cascade the train to a stopped state
+        except Exception as e:
+            logger.error(
+                f"[HEARTBEAT] Error cleaning ghost SpikeTrain {train.id}: {e}")
+
+    # =========================================================================
+    # STEP 2: SPAWN MISSING METRONOMES
+    # =========================================================================
+    active_environments = Iteration.objects.filter(
+        status_id__in=[IterationStatus.WAITING, IterationStatus.RUNNING]
+    ).values_list('environment_id', flat=True).distinct()
+
+    if not active_environments:
+        return []
+
+    for env_id in active_environments:
+        # THE BOUNCER: Is there already a Metronome running for this project?
+        # (It might have just been cleared by the ghost protocol above!)
+        is_already_running = SpikeTrain.objects.filter(
+            pathway=pathway,
+            environment_id=env_id,
+            status_id__in=[SpikeTrainStatus.CREATED, SpikeTrainStatus.RUNNING]
+        ).exists()
+
+        if is_already_running:
+            continue
+
+        # Safe to spawn!
+        spike_train = SpikeTrain.objects.create(
+            pathway=pathway,
+            environment_id=env_id,
+            status_id=SpikeTrainStatus.CREATED
+        )
+
+        cns = CNS(spike_train_id=spike_train.id)
+        cns.start()
+
+        spawned_trains.append(spike_train.id)
+        logger.info(
+            f"[HEARTBEAT] Fired for Environment {env_id}: SpikeTrain {spike_train.id}")
+
+    return spawned_trains
