@@ -32,9 +32,10 @@ class AgilePromptBuilder:
         self.iteration_id = self.package.iteration
         if not self.iteration_id:
             raise ValueError('No active iteration.')
-        self.identity_disc = IdentityDisc.objects.get(
-            id=self.package.identity_disc
-        )
+        if self.package.identity_disc:
+            self.identity_disc = IdentityDisc.objects.get(
+                id=self.package.identity_disc
+            )
         self.turn_number = self.package.turn_number
         if self.package.reasoning_turn_id is None:
             raise ValueError('No reasoning turn provided.')
@@ -48,6 +49,8 @@ class AgilePromptBuilder:
         self.shift = self.iteration_shift.shift
 
     def build_prompt(self) -> str:
+        if not self.identity_disc:
+            return '[AGILE BOARD CONTEXT: UI Preview Mode - No Active Disc Assigned]'
         self.context_lines = [
             '=========================================',
             f' AGILE BOARD CONTEXT | SHIFT: {self.shift.name}',

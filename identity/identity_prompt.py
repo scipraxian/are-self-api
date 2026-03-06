@@ -38,7 +38,7 @@ def render_base_identity(
                 block_text = _resolve_addon_content(
                     addon,
                     identity.id,
-                    identity_disc.id,
+                    identity_disc.id if identity_disc else None,
                     iteration_id,
                     turn_number,
                     reasoning_turn_id,
