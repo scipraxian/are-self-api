@@ -136,7 +136,10 @@ class IterationAdmin(admin.ModelAdmin):
     )
 
     fieldsets = (
-        ('Temporal Identity', {'fields': ('name', 'definition', 'status')}),
+        (
+            'Temporal Identity',
+            {'fields': ('name', 'definition', 'status', 'environment')},
+        ),
         (
             'Execution State',
             {

@@ -176,7 +176,7 @@ class IterationViewSet(viewsets.ModelViewSet):
         Iteration.objects.prefetch_related(
             'iterationshift_set__shift',
             'iterationshift_set__definition',
-            'iterationshift_set__iterationshiftparticipant_set__iteration_participant',
+            'iterationshift_set__iterationshiftparticipant__iteration_participant',
         )
         .all()
         .order_by('-created')

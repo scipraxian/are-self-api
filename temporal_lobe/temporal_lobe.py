@@ -3,6 +3,7 @@ from typing import Optional, Tuple
 
 from asgiref.sync import sync_to_async
 from django.db import transaction
+from django.db.models import Q
 
 from central_nervous_system.models import NeuralPathway, Spike
 from identity.models import IdentityDisc
@@ -141,7 +142,7 @@ class TemporalLobe:
                 # Release the clone army back to the barracks
 
                 participants = iteration.iterationshift_set.values_list(
-                    'iterationshiftparticipant_set__iteration_participant',
+                    'iterationshiftparticipant__iteration_participant',
                     flat=True,
                 )
                 IdentityDisc.objects.filter(
@@ -159,8 +160,11 @@ class TemporalLobe:
             pending_workers = (
                 IterationShiftParticipant.objects.select_for_update()
                 .filter(
-                    iteration_shift_id=shift_id,
-                    status_id=IterationShiftParticipantStatus.SELECTED,
+                    Q(iteration_shift_id=shift_id),
+                    (
+                        Q(status_id=IterationShiftParticipantStatus.SELECTED)
+                        | Q(status__isnull=True)
+                    ),
                 )
                 .order_by('id')[:slots]
             )
@@ -190,6 +194,10 @@ class TemporalLobe:
         # 1. Grab the locked IDs safely from the synchronous DB thread
         iteration_shift_participant_ids = (
             await self._lock_and_get_pending_participants(shift.id, slots)
+        )
+
+        logger.info(
+            f'[TemporalLobe] Locked IDs: {len(iteration_shift_participant_ids)}'
         )
 
         if not iteration_shift_participant_ids:
