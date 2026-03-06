@@ -15,6 +15,7 @@ class Command(BaseCommand):
     # 100% Correct Approach: We only define the EXCLUSIONS (The Transactional "Buildings").
     # Everything else in the app is safely assumed to be a structural "Blueprint" and dumped.
     TRANSACTIONAL_MODELS = {
+        'django_celery_beat': [],
         'environments': [],
         'peripheral_nervous_system': ['nerveterminalregistry'],
         'central_nervous_system': ['spiketrain', 'spike'],
@@ -26,7 +27,7 @@ class Command(BaseCommand):
             'reasoninggoal',
             'reasoningturn',
         ],
-        'parietal_lobe': [],  # All tools/parameters are structural
+        'parietal_lobe': ['toolcall'],
         'prefrontal_cortex': ['pfcepic', 'pfcstory', 'pfctask', 'pfccomment'],
         'temporal_lobe': [
             'iteration',
