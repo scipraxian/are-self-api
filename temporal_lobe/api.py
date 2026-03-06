@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from central_nervous_system.central_nervous_system import CNS
 from identity.models import IdentityDisc
 from temporal_lobe.models import (
     Iteration,
@@ -17,6 +18,7 @@ from temporal_lobe.serializers import (
     IterationSerializer,
     IterationShiftDetailSerializer,
 )
+from temporal_lobe.temporal_lobe import fetch_canonical_temporal_pathway
 
 
 class TemporalViewSet(viewsets.ViewSet):
@@ -138,6 +140,31 @@ class TemporalViewSet(viewsets.ViewSet):
 
         serializer = IterationShiftDetailSerializer(shift)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def trigger_tick(self, request):
+        """
+        The Ignition Switch: Manually fires the Temporal Lobe metronome graph.
+        """
+        try:
+            pathway = fetch_canonical_temporal_pathway()
+
+            # Fire the Master Graph!
+            cns = CNS(pathway_id=pathway.id)
+            cns.start()
+
+            return Response(
+                {
+                    'status': 'Temporal Metronome Engaged',
+                    'spike_train_id': str(cns.spike_train.id),
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class IterationViewSet(viewsets.ModelViewSet):

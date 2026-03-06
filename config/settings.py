@@ -182,6 +182,16 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+        'prefrontal_cortex': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'temporal_lobe': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
     },
 }
 

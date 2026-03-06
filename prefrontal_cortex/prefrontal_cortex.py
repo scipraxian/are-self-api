@@ -14,15 +14,27 @@ logger = logging.getLogger(__name__)
 
 
 class PrefrontalCortex:
-    """The Compiler: Translates Time into Context and dispatches the execution graph."""
+    """The Watcher: Translates Time into Context and dispatches the execution graph."""
 
     def __init__(self, spike_id: uuid.UUID):
-        self.spike = Spike.objects.get(id=spike_id)
+        logger.info(f'[PFC] Compiling for {spike_id}.')
+        self.spike_id = spike_id
+        self.spike = None
 
     async def dispatch(self, iteration_shift_participant_id: int):
+        logger.info(
+            f'[PFC] Dispatching for {iteration_shift_participant_id} in spike {
+                self.spike_id
+            }.'
+        )
+        self.spike = await sync_to_async(
+            Spike.objects.select_related('spike_train').get
+        )(id=self.spike_id)
         iteration_shift_participant = await sync_to_async(
             IterationShiftParticipant.objects.select_related(
-                'iteration_shift__shift', 'iteration_participant__identity'
+                'iteration_shift__shift',
+                'iteration_shift__definition',
+                'iteration_participant__identity',
             ).get
         )(id=iteration_shift_participant_id)
 

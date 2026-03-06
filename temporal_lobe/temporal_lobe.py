@@ -23,13 +23,21 @@ class TemporalLobe:
     def __init__(self, spike_id: str):
         self.spike_id = spike_id
         self.max_concurrent_workers = 1
+        logger.info(f'[TemporalLobe] Temporal Lobe engaged for {spike_id}.')
 
     async def tick(self) -> Tuple[int, str]:
         """The heartbeat. Cleans up, checks capacity, and dispatches workers."""
-        spike = await sync_to_async(Spike.objects.get)(id=self.spike_id)
+        logger.info(
+            f'[TemporalLobe] Ticking Temporal Lobe for {self.spike_id}.'
+        )
+        spike = await sync_to_async(
+            Spike.objects.select_related('spike_train').get
+        )(id=self.spike_id)
 
         # 1. Get the active Iteration
-        iteration = await self._get_active_iteration(spike.environment_id)
+        iteration = await self._get_active_iteration(
+            spike.spike_train.environment_id
+        )
         if not iteration:
             return 200, 'No active iterations to manage.'
 
@@ -82,8 +90,7 @@ class TemporalLobe:
     def _get_active_iteration(self, env_id: str) -> Optional[Iteration]:
         # Lock the row to prevent race conditions during the tick
         return (
-            Iteration.objects.select_for_update()
-            .filter(
+            Iteration.objects.filter(
                 environment_id=env_id,
                 status_id__in=[
                     IterationStatus.WAITING,
@@ -147,36 +154,60 @@ class TemporalLobe:
                 return None
 
     @sync_to_async
-    def _dispatch_pending_workers(self, shift, slots, parent_spike) -> int:
-        # Not sure about circular. Check and move if possible.
-        from prefrontal_cortex.prefrontal_cortex import PrefrontalCortex
-
-        pfc = PrefrontalCortex(parent_spike.id)
-        dispatched = 0
+    def _lock_and_get_pending_participants(self, shift_id, slots):
         with transaction.atomic():
             pending_workers = (
                 IterationShiftParticipant.objects.select_for_update()
                 .filter(
-                    iteration_shift=shift,
+                    iteration_shift_id=shift_id,
                     status_id=IterationShiftParticipantStatus.SELECTED,
                 )
                 .order_by('id')[:slots]
             )
 
+            dispatched_ids = []
             for iteration_shift_participant in pending_workers:
                 iteration_shift_participant.status_id = (
                     IterationShiftParticipantStatus.ACTIVATED
                 )
                 iteration_shift_participant.save(update_fields=['status'])
-
-                pfc.dispatch(iteration_shift_participant.id)
-
-                dispatched += 1
+                dispatched_ids.append(iteration_shift_participant.id)
                 logger.info(
-                    f'[TemporalLobe] Dispatched {iteration_shift_participant.iteration_participant.name} to the PFC.'
+                    f'[TemporalLobe] Locked {
+                        iteration_shift_participant.iteration_participant.name
+                    } for dispatch.'
                 )
 
-        return dispatched
+            return dispatched_ids
+
+    async def _dispatch_pending_workers(
+        self, shift, slots, parent_spike
+    ) -> int:
+        logger.info(
+            f'[TemporalLobe] Dispatching pending workers for {parent_spike.id}.'
+        )
+
+        # 1. Grab the locked IDs safely from the synchronous DB thread
+        iteration_shift_participant_ids = (
+            await self._lock_and_get_pending_participants(shift.id, slots)
+        )
+
+        if not iteration_shift_participant_ids:
+            return 0
+
+        # Not sure about circular. Check and move if possible.
+        from prefrontal_cortex.prefrontal_cortex import PrefrontalCortex
+
+        pfc = PrefrontalCortex(parent_spike.id)
+
+        # 2. Execute the async dispatches in the event loop!
+        for worker_id in iteration_shift_participant_ids:
+            await pfc.dispatch(worker_id)
+            logger.info(
+                f'[TemporalLobe] Dispatched disc {worker_id} to the PFC.'
+            )
+
+        return len(iteration_shift_participant_ids)
 
     @sync_to_async
     def _cleanup_ghost_workers(self, shift):

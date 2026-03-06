@@ -428,7 +428,10 @@ class GenericEffectorCaster:
                 )
         except Exception as e:
             self.spike.application_log = f'Native Handler Exception: {str(e)}'
-            await self._save_head(fields=[self.APPLICATION_LOG_FIELD])
+            self.spike.status_id = SpikeStatus.FAILED
+            await self._save_head(
+                fields=[self.APPLICATION_LOG_FIELD, self.STATUS_FIELD]
+            )
             self.status = SpikeStatus.FAILED
             return
 
