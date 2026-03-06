@@ -1321,11 +1321,26 @@
   "fields": {
     "created": "2026-02-17T18:22:31.543Z",
     "description": "",
-    "modified": "2026-02-17T18:26:31.293Z",
+    "modified": "2026-03-05T13:31:35.304Z",
     "name": "Engage Frontal Lobe",
     "internal": true,
     "working_path": "",
     "executable": "run_frontal_lobe",
+    "log": "",
+    "switches": []
+  }
+},
+{
+  "model": "environments.talosexecutable",
+  "pk": 18,
+  "fields": {
+    "created": "2026-03-05T13:34:11.882Z",
+    "description": "",
+    "modified": "2026-03-05T13:35:24.891Z",
+    "name": "Engage Temporal Lobe",
+    "internal": true,
+    "working_path": "",
+    "executable": "run_temporal_lobe",
     "log": "",
     "switches": []
   }
@@ -1499,17 +1514,25 @@
   }
 },
 {
+  "model": "environments.projectenvironmenttype",
+  "pk": 2,
+  "fields": {
+    "name": "ReactJS"
+  }
+},
+{
   "model": "environments.projectenvironment",
   "pk": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
   "fields": {
     "created": "2026-02-11T15:33:50.687Z",
     "description": "Default UE Environment for Talos",
-    "modified": "2026-02-14T19:56:45.632Z",
+    "modified": "2026-03-06T15:40:10.501Z",
     "name": "Default Environment",
     "type": 1,
     "status": 1,
     "available": true,
-    "selected": true
+    "selected": true,
+    "default_iteration_definition": null
   }
 },
 {
@@ -1523,7 +1546,23 @@
     "type": 1,
     "status": 1,
     "available": true,
-    "selected": false
+    "selected": false,
+    "default_iteration_definition": null
+  }
+},
+{
+  "model": "environments.projectenvironment",
+  "pk": "c1b7a124-a50b-4710-aa85-154736a839bc",
+  "fields": {
+    "created": "2026-03-04T13:31:03.894Z",
+    "description": "",
+    "modified": "2026-03-06T15:40:04.603Z",
+    "name": "Are-Self-UI",
+    "type": 2,
+    "status": 1,
+    "available": true,
+    "selected": false,
+    "default_iteration_definition": 1
   }
 },
 {
@@ -1668,6 +1707,42 @@
     "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
     "key": 13,
     "value": "talos_bin\\4_prerelease"
+  }
+},
+{
+  "model": "environments.contextvariable",
+  "pk": 17,
+  "fields": {
+    "environment": "c1b7a124-a50b-4710-aa85-154736a839bc",
+    "key": 1,
+    "value": "Are-Self-UI"
+  }
+},
+{
+  "model": "environments.contextvariable",
+  "pk": 18,
+  "fields": {
+    "environment": "c1b7a124-a50b-4710-aa85-154736a839bc",
+    "key": 2,
+    "value": "C:\\are-self-ui\\src"
+  }
+},
+{
+  "model": "environments.contextvariable",
+  "pk": 19,
+  "fields": {
+    "environment": "c1b7a124-a50b-4710-aa85-154736a839bc",
+    "key": 5,
+    "value": "c:/talos"
+  }
+},
+{
+  "model": "environments.contextvariable",
+  "pk": 20,
+  "fields": {
+    "environment": "c1b7a124-a50b-4710-aa85-154736a839bc",
+    "key": 12,
+    "value": "c:/talos/venv/"
   }
 }
 ]
