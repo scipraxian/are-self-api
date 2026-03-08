@@ -1,0 +1,93 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Agent: {{ agent.hostname }}{% endblock %}
+{% block top_actions %}
+    <a href="{% url 'dashboard:home' %}" class="btn-secondary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Dashboard
+    </a>
+{% endblock %}
+{% block main_content %}
+    <div class="agent-detail-container" style="text-align: left;">
+        <div class="detail-header"
+             style="margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
+            <div class="header-main" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                <h1 style="margin: 0; font-size: 2.5rem;">{{ agent.hostname }}</h1>
+                <span class="badge status-{{ agent.status|lower }}">{{ agent.status }}</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                <span
+                        style="background: rgba(99, 102, 241, 0.2); color: #818cf8; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 800;">v{{ agent.version|default:"LEGACY" }}</span>
+                    {% if agent.version != server_version %}<span class="update-badge"
+                                                                  style="background: rgba(234, 179, 8, 0.2); color: #eab308; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 900; animation: pulse 2s infinite;">UPDATE
+                    NEEDED (Server: v{{ server_version }})</span>{% endif %}
+                </div>
+            </div>
+            <p style="margin-top: 10px; color: #94a3b8; font-family: monospace;">{{ agent.ip_address }}:{{ agent.agent_port }}
+                {% if latest_telemetry.raw_payload.hostname %}<span style="margin-left: 10px; color: #64748b;">(Remote
+                HW: {{ latest_telemetry.raw_payload.hostname }})</span>{% endif %}</p>
+        </div>
+
+        <div class="metrics-dashboard" style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+            <div id="live-metrics" hx-get="{% url 'agent_metrics' agent.pk %}" hx-trigger="every 5s"
+                 class="metrics-grid">
+                {% include "peripheral_nervous_system/partials/metrics_card.html" with metrics=latest_telemetry %}
+            </div>
+            <div
+                    style="background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 1.5rem;">
+                <h3>Recent LifeCycle Events</h3>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 400px; overflow-y: auto;">
+                    {% for event in recent_events %}
+                        <div style="font-size: 0.85rem; display: flex; gap: 1rem; align-items: center;">
+                            <span style="color: #64748b; font-family: monospace;">{{ event.timestamp|date:"H:i:s" }}</span>
+                            <span class="event-tag type-{{ event.event_type|lower }}">{{ event.get_event_type_display }}</span>
+                            <span>{{ event.message }}</span>
+                        </div>
+                    {% empty %}<p style="color: #64748b; font-style: italic;">No events.</p>{% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 3rem; background: rgba(30, 41, 59, 0.5); padding: 2rem; border-radius: 24px;">
+            <h3>Remote Controls</h3>
+            <div style="display: flex; gap: 1.5rem; margin-top: 1rem;">
+                <button class="btn-ctrl btn-launch" hx-post="{% url 'agent_launch' agent.pk %}"
+                        hx-target="#control-feedback">Launch Process
+                </button>
+                <button class="btn-ctrl btn-kill" hx-post="{% url 'agent_kill' agent.pk %}"
+                        hx-target="#control-feedback">Kill Process
+                </button>
+                <button class="btn-ctrl btn-update" hx-post="{% url 'agent_update' agent.pk %}"
+                        hx-target="#control-feedback">Push Update
+                </button>
+                <button class="btn-secondary" style="padding: 1rem 2rem;" hx-get="{% url 'agent_logs' agent.pk %}"
+                        hx-target="#log-stream-container" hx-swap="innerHTML">Attach Logs
+                </button>
+            </div>
+            <div id="control-feedback" style="margin-top: 1rem;"></div>
+        </div>
+        <div id="log-stream-container" style="display:none; margin-top: 2rem;"></div>
+    </div>
+{% endblock %}
+
+{% block extra_style %}
+    .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; }
+    .status-online { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
+    .status-offline { background: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+    .event-tag { padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; }
+    .type-launch { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+    .type-kill { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .type-update { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+    .btn-ctrl { padding: 1rem 2.5rem; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; transition:
+    all
+    0.2s; color: white !important; font-size: 1rem; }
+    .btn-launch { background: #22c55e !important; box-shadow: 0 4px 14px 0 rgba(34, 197, 94, 0.39); }
+    .btn-kill { background: #ef4444 !important; box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.39); }
+    .btn-update { background: #3b82f6 !important; box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39); }
+    .btn-ctrl:hover { transform: translateY(-2px); filter: brightness(1.1); }
+    @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.95); } 100% {
+    opacity:
+    1; transform: scale(1); } }
+{% endblock %}

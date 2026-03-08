@@ -244,7 +244,7 @@ class EffectorTarget(models.Model):
         Effector, on_delete=models.CASCADE, related_name='specific_targets'
     )
     target = models.ForeignKey(
-        'talos_agent.TalosAgentRegistry', on_delete=models.CASCADE
+        'peripheral_nervous_system.NerveTerminalRegistry', on_delete=models.CASCADE
     )
 
     class Meta:
@@ -491,7 +491,7 @@ class Spike(UUIDIdMixin, CreatedAndModifiedWithDelta):
     )
 
     target = models.ForeignKey(
-        'talos_agent.TalosAgentRegistry',
+        'peripheral_nervous_system.NerveTerminalRegistry',
         null=True,
         blank=True,
         on_delete=models.SET_NULL,

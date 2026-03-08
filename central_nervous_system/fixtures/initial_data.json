@@ -287,22 +287,22 @@
     "distribution_mode": 1,
     "tags": [],
     "switches": [
-      3,
-      5,
-      9,
-      10,
-      11,
-      13,
-      15,
-      19,
-      20,
       32,
       33,
       34,
+      3,
       35,
+      5,
       37,
       38,
-      44
+      9,
+      10,
+      11,
+      44,
+      13,
+      15,
+      19,
+      20
     ]
   }
 },
@@ -905,6 +905,21 @@
     "name": "Frontal Lobe Node",
     "is_favorite": false,
     "talos_executable": 17,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 172,
+  "fields": {
+    "created": "2026-03-05T13:35:37.844Z",
+    "description": null,
+    "modified": "2026-03-05T13:35:37.844Z",
+    "name": "Temporal Lobe Effector",
+    "is_favorite": false,
+    "talos_executable": 18,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -1716,6 +1731,20 @@
     "description": "Headless Test Only",
     "modified": "2026-01-09T15:05:55.848Z",
     "name": "CPPTests",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "c3dd041a-20eb-4414-b571-2a5fdbeb9b86",
+  "fields": {
+    "created": "2026-03-05T13:33:15.232Z",
+    "description": "",
+    "modified": "2026-03-05T13:33:15.232Z",
+    "name": "Engage Temporal Lobe",
     "environment": null,
     "is_favorite": false,
     "ui_json": "{}",
@@ -2882,7 +2911,7 @@
     "is_root": false,
     "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
     "effector": 171,
-    "ui_json": "{\"x\": 1458, \"y\": 298}",
+    "ui_json": "{\"x\": 1511, \"y\": 255}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2896,6 +2925,32 @@
     "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
     "effector": 145,
     "ui_json": "{\"x\": 334, \"y\": 92}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 129,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "c3dd041a-20eb-4414-b571-2a5fdbeb9b86",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 130,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "c3dd041a-20eb-4414-b571-2a5fdbeb9b86",
+    "effector": 172,
+    "ui_json": "{\"x\": 380, \"y\": 80}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -3694,6 +3749,17 @@
     "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
     "source": 7,
     "target": 73
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 161,
+  "fields": {
+    "modified": "2026-03-05T13:35:51.252Z",
+    "type": 1,
+    "pathway": "c3dd041a-20eb-4414-b571-2a5fdbeb9b86",
+    "source": 129,
+    "target": 130
   }
 }
 ]

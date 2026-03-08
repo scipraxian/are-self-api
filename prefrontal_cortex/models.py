@@ -74,6 +74,24 @@ class PFCTicketMixin(models.Model):
         abstract = True
 
 
+class PFCAssignmentMixin(models.Model):
+    owning_disc = models.ForeignKey(
+        'identity.IdentityDisc',
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name='%(app_label)s_%(class)s_owned',
+    )
+    previous_owners = models.ManyToManyField(
+        'identity.IdentityDisc',
+        blank=True,
+        related_name='%(app_label)s_%(class)s_previously_owned',
+    )
+
+    class Meta:
+        abstract = True
+
+
 class PFCEpic(
     UUIDIdMixin,
     NameMixin,
@@ -82,8 +100,9 @@ class PFCEpic(
     VectorMixin,
     PFCTagsMixin,
     PFCTicketMixin,
+    PFCAssignmentMixin,
 ):
-    """The High-Level Directives (Written by Humans).
+    """The High-Level Directives (Written by Humans, groomed by Are-Self).
     If the environment is set, the epic is scoped to that environment.
     """
 
@@ -112,8 +131,9 @@ class PFCStory(
     VectorMixin,
     PFCTagsMixin,
     PFCTicketMixin,
+    PFCAssignmentMixin,
 ):
-    """The Strategies (Written by Humans or Talos)."""
+    """The Strategies (Written by Humans or Are-Self)."""
 
     RELATED_NAME = 'stories'
 
@@ -133,8 +153,9 @@ class PFCTask(
     CreatedAndModifiedWithDelta,
     VectorMixin,
     PFCTagsMixin,
+    PFCAssignmentMixin,
 ):
-    """The Tactics (Written strictly by Talos). Replaces ReasoningGoal."""
+    """The Tactics (Written strictly by Are-Self). Replaces ReasoningGoal."""
 
     story = models.ForeignKey(
         PFCStory, on_delete=models.CASCADE, related_name='tasks'
@@ -144,10 +165,23 @@ class PFCTask(
     )
 
 
+class PFCCommentStatus(NameMixin):
+    """Lookup table for Comment Statuses."""
+
+    CREATED = 1
+    APPROVED = 2
+    REJECTED = 3
+    ARCHIVED = 4
+
+
 class PFCComment(UUIDIdMixin, CreatedMixin, ModifiedMixin, PFCTagsMixin):
     """A Comment on an Item. If user is None, the comment is made by Talos."""
 
     RELATED_NAME = 'comments'
+
+    status = models.ForeignKey(
+        PFCCommentStatus, blank=True, null=True, on_delete=models.PROTECT
+    )
 
     user = models.ForeignKey(
         'auth.User',

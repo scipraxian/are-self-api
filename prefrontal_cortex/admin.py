@@ -71,8 +71,8 @@ class PFCStoryInline(admin.TabularInline):
 
 @admin.register(PFCEpic)
 class PFCEpicAdmin(admin.ModelAdmin):
-    list_display = ('name', 'status', 'created', 'modified', 'story_count')
-    list_filter = ('status',)
+    list_display = ('name', 'status', 'created', 'environment', 'story_count')
+    list_filter = ('status', 'environment')
     search_fields = ('name', 'description')
     readonly_fields = ('created', 'modified', 'delta', 'vector')
 
@@ -80,7 +80,10 @@ class PFCEpicAdmin(admin.ModelAdmin):
     inlines = [PFCStoryInline, EpicCommentInline]
 
     fieldsets = (
-        ('Strategic Directive', {'fields': ('name', 'description', 'status')}),
+        (
+            'Strategic Directive',
+            {'fields': ('name', 'description', 'status', 'environment')},
+        ),
         (
             'Mathematical Lobe',
             {

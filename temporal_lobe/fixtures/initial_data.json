@@ -1,5 +1,145 @@
 [
 {
+  "model": "temporal_lobe.shift",
+  "pk": 1,
+  "fields": {
+    "name": "Grooming",
+    "default_turn_limit": 15
+  }
+},
+{
+  "model": "temporal_lobe.shift",
+  "pk": 2,
+  "fields": {
+    "name": "Pre-Planning",
+    "default_turn_limit": 5
+  }
+},
+{
+  "model": "temporal_lobe.shift",
+  "pk": 3,
+  "fields": {
+    "name": "Planning",
+    "default_turn_limit": 10
+  }
+},
+{
+  "model": "temporal_lobe.shift",
+  "pk": 4,
+  "fields": {
+    "name": "Executing",
+    "default_turn_limit": 50
+  }
+},
+{
+  "model": "temporal_lobe.shift",
+  "pk": 5,
+  "fields": {
+    "name": "Post-Execution",
+    "default_turn_limit": 10
+  }
+},
+{
+  "model": "temporal_lobe.iterationdefinition",
+  "pk": 1,
+  "fields": {
+    "name": "Standard Agile Sprint"
+  }
+},
+{
+  "model": "temporal_lobe.iterationdefinition",
+  "pk": 2,
+  "fields": {
+    "name": "Emergency Hotfix Cycle"
+  }
+},
+{
+  "model": "temporal_lobe.iterationshiftdefinition",
+  "pk": 1,
+  "fields": {
+    "definition": 1,
+    "shift": 1,
+    "order": 1,
+    "turn_limit": 15
+  }
+},
+{
+  "model": "temporal_lobe.iterationshiftdefinition",
+  "pk": 2,
+  "fields": {
+    "definition": 1,
+    "shift": 2,
+    "order": 2,
+    "turn_limit": 5
+  }
+},
+{
+  "model": "temporal_lobe.iterationshiftdefinition",
+  "pk": 3,
+  "fields": {
+    "definition": 1,
+    "shift": 3,
+    "order": 3,
+    "turn_limit": 10
+  }
+},
+{
+  "model": "temporal_lobe.iterationshiftdefinition",
+  "pk": 4,
+  "fields": {
+    "definition": 1,
+    "shift": 4,
+    "order": 4,
+    "turn_limit": 50
+  }
+},
+{
+  "model": "temporal_lobe.iterationshiftdefinition",
+  "pk": 5,
+  "fields": {
+    "definition": 1,
+    "shift": 5,
+    "order": 5,
+    "turn_limit": 10
+  }
+},
+{
+  "model": "temporal_lobe.iterationshiftdefinition",
+  "pk": 6,
+  "fields": {
+    "definition": 2,
+    "shift": 3,
+    "order": 1,
+    "turn_limit": 15
+  }
+},
+{
+  "model": "temporal_lobe.iterationshiftdefinition",
+  "pk": 7,
+  "fields": {
+    "definition": 2,
+    "shift": 4,
+    "order": 2,
+    "turn_limit": 5
+  }
+},
+{
+  "model": "temporal_lobe.iterationshiftdefinitionparticipant",
+  "pk": 1,
+  "fields": {
+    "shift_definition": 3,
+    "participant": "8a1b03d5-cb30-4298-b6dd-a5973e6b7914"
+  }
+},
+{
+  "model": "temporal_lobe.iterationshiftdefinitionparticipant",
+  "pk": 2,
+  "fields": {
+    "shift_definition": 4,
+    "participant": "8781b1ff-6513-4a6e-952f-0c5e20e33580"
+  }
+},
+{
   "model": "temporal_lobe.iterationstatus",
   "pk": 1,
   "fields": {
@@ -42,120 +182,38 @@
   }
 },
 {
-  "model": "temporal_lobe.shift",
+  "model": "temporal_lobe.iterationshiftparticipantstatus",
   "pk": 1,
   "fields": {
-    "name": "Grooming",
-    "turn_limit": 15
+    "name": "Selected"
   }
 },
 {
-  "model": "temporal_lobe.shift",
+  "model": "temporal_lobe.iterationshiftparticipantstatus",
   "pk": 2,
   "fields": {
-    "name": "Pre-Planning",
-    "turn_limit": 5
+    "name": "Activated"
   }
 },
 {
-  "model": "temporal_lobe.shift",
+  "model": "temporal_lobe.iterationshiftparticipantstatus",
   "pk": 3,
   "fields": {
-    "name": "Planning",
-    "turn_limit": 10
+    "name": "Completed"
   }
 },
 {
-  "model": "temporal_lobe.shift",
+  "model": "temporal_lobe.iterationshiftparticipantstatus",
   "pk": 4,
   "fields": {
-    "name": "Executing",
-    "turn_limit": 50
+    "name": "Paused"
   }
 },
 {
-  "model": "temporal_lobe.shift",
+  "model": "temporal_lobe.iterationshiftparticipantstatus",
   "pk": 5,
   "fields": {
-    "name": "Post-Execution",
-    "turn_limit": 10
-  }
-},
-{
-  "model": "temporal_lobe.iterationdefinition",
-  "pk": 1,
-  "fields": {
-    "name": "Standard Agile Sprint"
-  }
-},
-{
-  "model": "temporal_lobe.iterationdefinition",
-  "pk": 2,
-  "fields": {
-    "name": "Emergency Hotfix Cycle"
-  }
-},
-{
-  "model": "temporal_lobe.iterationshift",
-  "pk": 1,
-  "fields": {
-    "definition": 1,
-    "shift": 1,
-    "order": 1
-  }
-},
-{
-  "model": "temporal_lobe.iterationshift",
-  "pk": 2,
-  "fields": {
-    "definition": 1,
-    "shift": 2,
-    "order": 2
-  }
-},
-{
-  "model": "temporal_lobe.iterationshift",
-  "pk": 3,
-  "fields": {
-    "definition": 1,
-    "shift": 3,
-    "order": 3
-  }
-},
-{
-  "model": "temporal_lobe.iterationshift",
-  "pk": 4,
-  "fields": {
-    "definition": 1,
-    "shift": 4,
-    "order": 4
-  }
-},
-{
-  "model": "temporal_lobe.iterationshift",
-  "pk": 5,
-  "fields": {
-    "definition": 1,
-    "shift": 5,
-    "order": 5
-  }
-},
-{
-  "model": "temporal_lobe.iterationshift",
-  "pk": 6,
-  "fields": {
-    "definition": 2,
-    "shift": 3,
-    "order": 1
-  }
-},
-{
-  "model": "temporal_lobe.iterationshift",
-  "pk": 7,
-  "fields": {
-    "definition": 2,
-    "shift": 4,
-    "order": 2
+    "name": "Error"
   }
 }
 ]

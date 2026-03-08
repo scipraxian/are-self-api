@@ -118,12 +118,14 @@ class FrontalLobe:
         await sync_to_async(turn_record.save)()
 
     async def _build_turn_payload(
-            self, turn_record: ReasoningTurn
+        self, turn_record: ReasoningTurn
     ) -> list[dict]:
         """Assembles the Turn payload by integrating Identity and Sensory data."""
 
         system_instruction = await sync_to_async(build_identity_prompt)(
-            self.session.identity, turn_record.turn_number
+            identity_disc=self.session.identity_disc,
+            turn_number=turn_record.turn_number,
+            reasoning_turn_id=turn_record.id,
         )
 
         user_content = await relay_sensory_state(turn_record)
@@ -307,7 +309,10 @@ class FrontalLobe:
 
 
 async def run_frontal_lobe(spike_id: UUID) -> Tuple[int, str]:
-    """Asynchronous entry point for the generic effector caster."""
+    """Asynchronous entry point for the generic effector caster.
+
+    # Used by GEC.
+    """
     try:
         spike = await sync_to_async(
             lambda: Spike.objects.select_related('spike_train').get(id=spike_id)

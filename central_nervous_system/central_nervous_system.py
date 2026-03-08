@@ -1,4 +1,3 @@
-import json
 import logging
 import uuid
 from datetime import timedelta
@@ -10,7 +9,7 @@ from django.utils import timezone
 
 from config.celery import app as celery_app
 from environments.models import ProjectEnvironment
-from talos_agent.models import TalosAgentRegistry, TalosAgentStatus
+from peripheral_nervous_system.models import NerveTerminalRegistry, NerveTerminalStatus
 
 from .models import (
     Axon,
@@ -340,10 +339,7 @@ class CNS:
         )
 
         if getattr(neuron, 'invoked_pathway', None):
-            from .engine.graph_walker import GraphWalker
-
-            walker = GraphWalker(spike_train_id=self.spike_train.id)
-            walker.process_node(seed_spike)
+            self._spawn_subgraph(seed_spike)
             return
 
         if getattr(neuron, 'distribution_mode', None):
@@ -361,8 +357,8 @@ class CNS:
             self._prepare_and_dispatch(seed_spike)
 
     def _dispatch_fleet_wave(self, seed_spike: Spike) -> None:
-        agents = TalosAgentRegistry.objects.filter(
-            status_id=TalosAgentStatus.ONLINE
+        agents = NerveTerminalRegistry.objects.filter(
+            status_id=NerveTerminalStatus.ONLINE
         )
 
         if not agents.exists():
@@ -386,7 +382,7 @@ class CNS:
 
     def _dispatch_first_responder(self, seed_spike: Spike) -> None:
         agent = (
-            TalosAgentRegistry.objects.filter(status_id=TalosAgentStatus.ONLINE)
+            NerveTerminalRegistry.objects.filter(status_id=NerveTerminalStatus.ONLINE)
             .order_by('last_seen')
             .first()
         )
@@ -400,7 +396,7 @@ class CNS:
         self._clone_and_dispatch_spike(seed_spike, agent)
         seed_spike.delete()
 
-    def _clone_and_dispatch_spike(self, seed: Spike, agent: TalosAgentRegistry):
+    def _clone_and_dispatch_spike(self, seed: Spike, agent: NerveTerminalRegistry):
         new_spike = Spike.objects.create(
             spike_train=seed.spike_train,
             neuron=seed.neuron,
@@ -454,3 +450,33 @@ class CNS:
 
     def _calculate_progress(self) -> float:
         return 0.0
+
+    def _spawn_subgraph(self, spike: Spike) -> None:
+        """
+        Creates the Child SpikeTrain and puts the Parent Spike to sleep (DELEGATED).
+        """
+        target_pathway = spike.neuron.invoked_pathway
+        logger.info(
+            f'[CNS] Spike {spike.id} spawning subgraph {target_pathway.name}'
+        )
+
+        # A. Create the Child SpikeTrain
+        child_train = SpikeTrain.objects.create(
+            pathway=target_pathway,
+            parent_spike=spike,
+            environment=self.spike_train.environment,
+            status_id=SpikeTrainStatus.CREATED,
+        )
+
+        # B. Update Parent Spike Status
+        spike.status_id = SpikeStatus.DELEGATED
+        spike.save(update_fields=['status'])
+
+        # C. Kickoff the Child directly
+        def start_child():
+            CNS(spike_train_id=child_train.id).start()
+
+        transaction.on_commit(start_child)
+        logger.info(
+            f'[CNS] Spike {spike.id} delegated execution to SpikeTrain {child_train.id}'
+        )

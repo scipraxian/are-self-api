@@ -1,6 +1,6 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from django.test import TestCase
+from common.tests.common_test_case import CommonFixturesAPITestCase
 
 from environments.models import TalosExecutable
 from central_nervous_system.models import (
@@ -16,13 +16,7 @@ from central_nervous_system.effectors.effector_casters.generic_effector_caster i
 MODULE_PATH = 'central_nervous_system.effectors.effector_casters.generic_effector_caster'
 
 
-class GenericSpellcasterTest(TestCase):
-    fixtures = [
-        'environments/fixtures/initial_data.json',
-        'talos_agent/fixtures/initial_data.json',
-        'talos_agent/fixtures/test_agents.json',
-        'central_nervous_system/fixtures/initial_data.json',
-    ]
+class GenericSpellcasterTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         # 1. Setup Data Hierarchy using Fixtures
@@ -46,8 +40,8 @@ class GenericSpellcasterTest(TestCase):
         )
 
         self.spike = Spike.objects.create(effector=self.effector,
-                                             spike_train=self.spike_train,
-                                             status_id=SpikeStatus.CREATED)
+                                          spike_train=self.spike_train,
+                                          status_id=SpikeStatus.CREATED)
 
     def test_generic_spellcaster_instantiates(self):
         """Asserts that the GenericEffectorCaster can be instantiated."""

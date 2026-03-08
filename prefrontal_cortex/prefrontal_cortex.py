@@ -1,95 +1,189 @@
 import logging
 import uuid
-from typing import Tuple
 
 from asgiref.sync import sync_to_async
+from django.db import transaction
 
-from central_nervous_system.central_nervous_system import CNS
-from central_nervous_system.models import NeuralPathway, Spike
-from central_nervous_system.utils import get_active_environment
-from prefrontal_cortex.constants import PFCConstants
-from prefrontal_cortex.models import PFCItemStatus, PFCStory, PFCTask
+from central_nervous_system.models import Spike
+from frontal_lobe.frontal_lobe import FrontalLobe
+from frontal_lobe.models import ReasoningSession, ReasoningStatusID
+from identity.models import IdentityType
+from prefrontal_cortex.models import PFCEpic, PFCItemStatus, PFCStory, PFCTask
+from temporal_lobe.models import IterationShiftParticipant, Shift
 
 logger = logging.getLogger(__name__)
 
 
 class PrefrontalCortex:
-    """The Compiler: Translates Time into Context and dispatches the execution graph."""
+    def __init__(self, spike_id: uuid.UUID):
+        self.spike_id = spike_id
+        self.spike = None
 
-    def __init__(
-        self,
-        spike_id: uuid.UUID,
-        iteration_id: int,
-        shift_id: int,
-        identity_id: str,
+    @classmethod
+    def get_work_query_params(
+        cls, shift_id: int, identity_type_id: int, environment_id: str
+    ) -> tuple:
+        """
+        The absolute source of truth for mapping Shifts & Identities to Agile Models.
+        Returns (ModelClass, query_kwargs, order_by_field)
+        """
+        kwargs = {}
+
+        if identity_type_id == IdentityType.PM:
+            if shift_id == Shift.GROOMING:
+                kwargs['status_id__in'] = [
+                    PFCItemStatus.NEEDS_REFINEMENT,
+                    PFCItemStatus.BACKLOG,
+                ]
+                if environment_id:
+                    kwargs['environment_id'] = environment_id
+                return PFCEpic, kwargs, '-priority'
+
+            if shift_id in [Shift.PRE_PLANNING, Shift.PLANNING]:
+                kwargs['status_id__in'] = [
+                    PFCItemStatus.NEEDS_REFINEMENT,
+                ]
+                if environment_id:
+                    kwargs['epic__environment_id'] = environment_id
+                return PFCStory, kwargs, '-priority'
+
+        elif identity_type_id == IdentityType.WORKER:
+            if shift_id == Shift.EXECUTING:
+                kwargs['status_id__in'] = [
+                    PFCItemStatus.SELECTED_FOR_DEVELOPMENT,
+                ]
+                if environment_id:
+                    kwargs['story__epic__environment_id'] = environment_id
+                # PFCTask lacks 'priority', so we pull the oldest tasks first
+                return PFCTask, kwargs, 'created'
+
+        return None, None, None
+
+    async def dispatch(
+        self, iteration_shift_participant_id: int, environment_id: str
     ):
-        self.spike = Spike.objects.get(id=spike_id)
-        self.iteration_id = iteration_id
-        self.shift_id = shift_id
-        self.identity_id = identity_id
-
-    async def compile_and_dispatch(self) -> Tuple[int, str]:
-        """Compiles Agile Board context and fires the CNS Non-Blocking drop."""
-
-        # 1. Compile Domain Context
-        board_context = await self._query_agile_board()
-
-        # 2. Package the Blackboard
-        await self._inject_blackboard(board_context)
-
-        # 3. The Drop (Launch the Frontal Lobe loop)
-        return await self._launch_cns_pathway()
-
-    @sync_to_async
-    def _query_agile_board(self) -> str:
-        """Queries the Agile Board based on the current shift's focus."""
-        # Example dynamic compilation based on shift identity
-        # In a real implementation, check shift.name (e.g., 'Grooming' vs 'Executing')
-        backlog_status = PFCItemStatus.objects.get(id=PFCItemStatus.BACKLOG)
-        stories = PFCStory.objects.filter(status=backlog_status)[:5]
-
-        context_lines = ['[AGILE BOARD CONTEXT]']
-        for s in stories:
-            context_lines.append(f'- Story {s.id}: {s.name}')
-
-        return '\n'.join(context_lines)
-
-    @sync_to_async
-    def _inject_blackboard(self, board_context: str) -> None:
-        """Injects the compiled routing package into the runtime state."""
-        if not isinstance(self.spike.blackboard, dict):
-            self.spike.blackboard = {}
-
-        self.spike.blackboard.update(
-            {
-                'active_iteration_id': self.iteration_id,
-                'active_shift_id': self.shift_id,
-                'identity_id': self.identity_id,
-                'agile_context': board_context,
-            }
+        """The Handshake: Evaluates work, assigns it, and optionally wakes the Frontal Lobe."""
+        logger.info(
+            f'[PFC] Dispatching for {iteration_shift_participant_id} in spike {self.spike_id}.'
         )
-        self.spike.save(update_fields=['blackboard'])
+
+        self.spike = await sync_to_async(
+            Spike.objects.select_related('spike_train').get
+        )(id=self.spike_id)
+
+        participant = await sync_to_async(
+            IterationShiftParticipant.objects.select_related(
+                'iteration_shift__shift',
+                'iteration_shift__definition',
+                'iteration_participant__identity',
+            ).get
+        )(id=iteration_shift_participant_id)
+
+        # 1. Attempt to lock a ticket FOR THIS SPECIFIC WORKER
+        assigned_item = await self._assign_ticket(
+            shift_id=participant.iteration_shift.shift.id,
+            identity_type_id=participant.iteration_participant.identity.identity_type_id,
+            identity_disc=participant.iteration_participant,
+            environment_id=environment_id,
+        )
+
+        # THE BOUNCER: If there is no work, we STOP here. No Frontal Lobe is spun up.
+        if not assigned_item:
+            logger.info(
+                f'[PFC] No actionable work found for {participant.iteration_participant.name}. Standing down.'
+            )
+            return None
+
+        # 2. Work exists and is locked! Spin up the Frontal Lobe.
+        return await self._create_session_and_run(
+            participant.iteration_shift,
+            participant.iteration_participant,
+            participant,
+            assigned_item,
+        )
+
+    async def _create_session_and_run(
+        self, iteration_shift, identity_disc, participant, assigned_item
+    ):
+        """Wakes the AI now that a ticket is firmly in hand."""
+        lobe = FrontalLobe(self.spike)
+        lobe.session = await sync_to_async(ReasoningSession.objects.create)(
+            spike=self.spike,
+            status_id=ReasoningStatusID.ACTIVE,
+            max_turns=iteration_shift.definition.turn_limit,
+            identity_disc=identity_disc,
+            participant=participant,
+        )
+
+        # The AI is now awake and will read the assigned ticket via the Agile Addon
+        await lobe.run()
+
+        # Cleanup: Remove the owning disc and push to previous owners
+        if assigned_item:
+            await self._release_ticket(assigned_item, identity_disc)
+
+        return lobe.session.id
 
     @sync_to_async
-    def _launch_cns_pathway(self) -> Tuple[int, str]:
-        """Finds the Frontal Lobe graph and spins up the asynchronous SpikeTrain."""
-        env = get_active_environment(self.spike)
+    def _assign_ticket(
+        self,
+        shift_id: int,
+        identity_type_id: int,
+        identity_disc,
+        environment_id: str,
+    ):
+        """Finds the highest priority ticket, preferring ones this disc previously owned. Locks it."""
+        logger.info(
+            f'Assigning ticket for shift {shift_id} and identity type {identity_type_id}'
+        )
+        model_class, kwargs, order_field = self.get_work_query_params(
+            shift_id, identity_type_id, environment_id
+        )
+        if not model_class:
+            return None
 
-        pathway = NeuralPathway.objects.filter(
-            name__icontains=PFCConstants.TARGET_PATHWAY_NAME, environment=env
-        ).first()
+        with transaction.atomic():
+            # Strategy 1: Reclaim a previously owned ticket that is currently unassigned
+            item = (
+                model_class.objects.select_for_update()
+                .filter(
+                    previous_owners=identity_disc,
+                    owning_disc__isnull=True,
+                    **kwargs,
+                )
+                .order_by(order_field)
+                .first()
+            )
 
-        if not pathway:
-            return 500, PFCConstants.ERR_NO_PATHWAY
+            # Strategy 2: Grab the highest priority unassigned ticket
+            if not item:
+                item = (
+                    model_class.objects.select_for_update()
+                    .filter(owning_disc__isnull=True, **kwargs)
+                    .order_by(order_field)
+                    .first()
+                )
 
-        # Initialize the CNS execution
-        cns = CNS(pathway_id=pathway.id)
+            # Lock it in!
+            if item:
+                item.owning_disc = identity_disc
+                item.save(update_fields=['owning_disc'])
+                logger.info(
+                    f'[PFC] Locked {item.__class__.__name__} {item.id} to {identity_disc.name}'
+                )
+                return item
+            else:
+                logger.info(
+                    f'[PFC] No actionable work found for {identity_disc.name}.'
+                )
+            return None
 
-        # VITAL: Link the new SpikeTrain to the current Spike.
-        # This acts as the "bridge" carrying the Blackboard context forward.
-        cns.spike_train.parent_spike = self.spike
-        cns.spike_train.save(update_fields=['parent_spike'])
-
-        cns.start()
-
-        return 200, f'{PFCConstants.MSG_DISPATCHED} {cns.spike_train.id}'
+    @sync_to_async
+    def _release_ticket(self, item, identity_disc):
+        """Removes the active lock and logs the historical touch."""
+        item.owning_disc = None
+        item.save(update_fields=['owning_disc'])
+        item.previous_owners.add(identity_disc)
+        logger.info(
+            f'[PFC] Released {item.__class__.__name__} {item.id} from {identity_disc.name}'
+        )

@@ -1,6 +1,6 @@
 import pytest
 from django.contrib.auth.models import User
-from django.test import TestCase
+from common.tests.common_test_case import CommonFixturesAPITestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -11,20 +11,12 @@ from environments.models import (
 )
 
 
-class EnvironmentAPITest(TestCase):
-    # Load fixtures to ensure IDs and Foreign Keys are valid
-    fixtures = [
-        'environments/fixtures/initial_data.json',
-        'talos_agent/fixtures/initial_data.json',
-        'talos_agent/fixtures/test_agents.json',
-        'central_nervous_system/fixtures/initial_data.json',
-    ]
+class EnvironmentAPITest(CommonFixturesAPITestCase):
 
     def setUp(self):
         # 1. Setup Auth
-        self.user = User.objects.create_superuser(
-            'testadmin', 'admin@talos.dev', 'password'
-        )
+        self.user = User.objects.create_superuser('testadmin',
+                                                  'admin@talos.dev', 'password')
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
@@ -37,8 +29,7 @@ class EnvironmentAPITest(TestCase):
         self.status_ok = ProjectEnvironmentStatus.objects.first()
         if not self.status_ok:
             self.status_ok = ProjectEnvironmentStatus.objects.create(
-                name='Ready'
-            )
+                name='Ready')
 
         self.env_dev = ProjectEnvironment.objects.create(
             name='Development_API',

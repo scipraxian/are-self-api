@@ -1,11 +1,9 @@
-from django.db import transaction  # Added transaction import
+from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import Signal, receiver
 
-from .models import SpikeTrain, CNSStatusID
-
-# Delayed import of GraphWalker to avoid circularity if any,
-# though signals.py is usually safe.
+from .models import CNSStatusID, SpikeTrain
+from .tasks import check_next_wave  # Import the celery task directly
 
 spawn_failed = Signal()
 spawn_success = Signal()
@@ -28,9 +26,6 @@ def on_spawn_update(sender, instance, created, **kwargs):
 
     # Check for Parent Link (Delegation)
     if instance.parent_spike:
-        from .engine.graph_walker import GraphWalker
-        from .tasks import check_next_wave  # Import the task
-
         parent_spike = instance.parent_spike
 
         # Map Child Status -> Parent Status
@@ -40,17 +35,14 @@ def on_spawn_update(sender, instance, created, **kwargs):
 
         # LOGGING (Crucial for debugging recursion)
         print(
-            f'[SIGNAL] Child SpikeTrain {instance.id} woke up '
-            f'Parent Node {parent_spike.id}. Resuming Parent Graph.'
+            f'[SIGNAL] Child SpikeTrain {instance.id} finished. '
+            f'Woke up Parent Node {parent_spike.id}. Resuming Parent Graph.'
         )
 
         # RESUME PARENT GRAPH
-        # We instantiate the walker on the PARENT's SpikeTrain (the spike_train that owns the parent node)
-        walker = GraphWalker(spike_train_id=parent_spike.spike_train.id)
-        walker.process_node(parent_spike)
-
-        # CRITICAL FIX: Force the Parent SpikeTrain to check if it is now finished.
-        # Without this, if 'parent_spike' is the last node, the spike_train never finalizes.
+        # By calling the celery task, the parent CNS will boot up, see the
+        # newly finished spike, and naturally traverse its outgoing wires.
+        # This completely replaces the GraphWalker hack.
         transaction.on_commit(
             lambda: check_next_wave.delay(parent_spike.spike_train.id)
         )

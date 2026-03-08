@@ -8,31 +8,31 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from .filters import SpikeFilter, SpikeTrainFilter
 from .central_nervous_system import CNS
+from .filters import SpikeFilter, SpikeTrainFilter
 from .models import (
-    Spike,
-    SpikeTrain,
+    Axon,
     Effector,
     NeuralPathway,
-    Axon,
     Neuron,
     NeuronContext,
+    Spike,
+    SpikeTrain,
 )
-from .serializers import (
+from .serializers.serializers import (
     CNSGraphLayoutSerializer,
-    SpikeSerializer,
+    CNSNeuralPathwayConnectionWireSerializer,
+    CNSNeuralPathwayNodeSerializer,
+    CNSNeuralPathwaySerializer,
+    EffectorBookNodeContextSerializer,
+    EffectorSerializer,
     NeuronDetailsSerializer,
     NeuronTelemetrySerializer,
+    SpikeSerializer,
     SpikeTrainCreateSerializer,
     SpikeTrainLightSerializer,
     SpikeTrainSerializer,
     SpikeTrainStatusSerializer,
-    CNSNeuralPathwayConnectionWireSerializer,
-    EffectorBookNodeContextSerializer,
-    CNSNeuralPathwayNodeSerializer,
-    CNSNeuralPathwaySerializer,
-    EffectorSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,8 +47,11 @@ STATUS_OK = 'ok'
 class EffectorViewSet(viewsets.ReadOnlyModelViewSet):
     """Registry of all available effectors."""
 
-    queryset = (Effector.objects.all().select_related(
-        'distribution_mode', 'talos_executable').order_by('name'))
+    queryset = (
+        Effector.objects.all()
+        .select_related('distribution_mode', 'talos_executable')
+        .order_by('name')
+    )
     serializer_class = EffectorSerializer
 
 
@@ -71,10 +74,7 @@ class CNSNeuralPathwayViewSet(viewsets.ModelViewSet):
             effector_id=Effector.BEGIN_PLAY,
             defaults={
                 'is_root': True,
-                'ui_json': json.dumps({
-                    'x': 100,
-                    'y': 100
-                }),
+                'ui_json': json.dumps({'x': 100, 'y': 100}),
             },
         )
 
@@ -87,13 +87,15 @@ class CNSNeuralPathwayViewSet(viewsets.ModelViewSet):
         book = self.get_object()
 
         effectors = list(
-            Effector.objects.values('id', 'name', 'distribution_mode__name'))
+            Effector.objects.values('id', 'name', 'distribution_mode__name')
+        )
         for s in effectors:
             s['category'] = CATEGORY_SPELLS
 
         # Exclude self to prevent infinite recursion
         subgraphs = list(
-            NeuralPathway.objects.exclude(id=book.id).values('id', 'name'))
+            NeuralPathway.objects.exclude(id=book.id).values('id', 'name')
+        )
         for b in subgraphs:
             b['category'] = CATEGORY_SUBGRAPHS
             b['is_book'] = True
@@ -132,7 +134,8 @@ class CNSNeuralPathwayNodeViewSet(viewsets.ModelViewSet):
         is_delegated = bool(instance.invoked_pathway_id)
         if not is_delegated and instance.effector_id == Effector.BEGIN_PLAY:
             raise ValidationError(
-                'Cannot delete the core BeginPlay anchor node.')
+                'Cannot delete the core BeginPlay anchor node.'
+            )
         instance.delete()
 
     @action(detail=True, methods=['get'])
@@ -144,9 +147,9 @@ class CNSNeuralPathwayNodeViewSet(viewsets.ModelViewSet):
 
 
 @mcp_viewset()
-class CNSNeuralPathwayConnectionWireViewSet(mixins.CreateModelMixin,
-                                            mixins.DestroyModelMixin,
-                                            viewsets.GenericViewSet):
+class CNSNeuralPathwayConnectionWireViewSet(
+    mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet
+):
     """Graph Wires."""
 
     queryset = Axon.objects.all()
@@ -162,15 +165,16 @@ class EffectorBookNodeContextViewSet(viewsets.ModelViewSet):
 
 
 class SpikeTrainViewSet(
-        mixins.CreateModelMixin,
-        mixins.RetrieveModelMixin,
-        mixins.ListModelMixin,
-        viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
 ):
     """Mission Control and Spawns."""
 
-    queryset = SpikeTrain.objects.all().select_related('status', 'pathway',
-                                                       'environment')
+    queryset = SpikeTrain.objects.all().select_related(
+        'status', 'pathway', 'environment'
+    )
 
     filter_backends = [
         DjangoFilterBackend,
@@ -199,8 +203,9 @@ class SpikeTrainViewSet(
             controller = CNS(pathway_id=pathway_id)
             controller.start()
             read_serializer = SpikeTrainSerializer(controller.spike_train)
-            return Response(read_serializer.data,
-                            status=status.HTTP_201_CREATED)
+            return Response(
+                read_serializer.data, status=status.HTTP_201_CREATED
+            )
         except Exception as e:
             logger.exception(f'Failed to launch pathway {pathway_id}')
             return Response(
@@ -239,12 +244,14 @@ class SpikeTrainViewSet(
 
 
 @mcp_viewset()
-class SpikeViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin,
-                   viewsets.GenericViewSet):
+class SpikeViewSet(
+    mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet
+):
     """Forensics Unit. Retrieves heavy telemetry/logs."""
 
-    queryset = Spike.objects.all().select_related('status', 'effector',
-                                                  'target')
+    queryset = Spike.objects.all().select_related(
+        'status', 'effector', 'target'
+    )
 
     filter_backends = [
         DjangoFilterBackend,

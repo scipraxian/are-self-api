@@ -2,7 +2,7 @@
 """Talos Spell: Script Dumper.
 
 Concatenates source files from a target directory and streams them to stdout.
-Used by the Talos Agent to provide context for AI reasoning sessions.
+Used by the Peripheral Nervous System to provide context for AI reasoning sessions.
 """
 
 import logging
@@ -24,6 +24,9 @@ EXTENSIONS_TO_PROCESS: Set[str] = {
     '.html',
     '.js',
     '.md',
+    '.ts',
+    '.tsx',
+    '.sh',
 }
 
 DIRECTORIES_TO_IGNORE: Set[str] = {

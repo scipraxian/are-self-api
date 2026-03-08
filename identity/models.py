@@ -1,5 +1,4 @@
 from django.db import models
-from djangorestframework_mcp.types import MCPTool
 
 from common.models import (
     CreatedAndModifiedWithDelta,
@@ -27,7 +26,8 @@ class IdentityTag(NameMixin):
 class IdentityType(NameMixin):
     """These are the different types/categories of personas."""
 
-    pass
+    PM = 1
+    WORKER = 2
 
 
 class Identity(UUIDIdMixin, NameMixin, CreatedAndModifiedWithDelta):

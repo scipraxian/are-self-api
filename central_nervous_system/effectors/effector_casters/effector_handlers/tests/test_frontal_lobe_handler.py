@@ -3,7 +3,7 @@
 #
 # import pytest
 # from asgiref.sync import sync_to_async
-# from django.test import TransactionTestCase
+# from common.tests.common_test_case import CommonFixturesAPITestCase
 #
 # from central_nervous_system.models import (
 #     Spike,
@@ -27,15 +27,7 @@
 #
 #
 # # FIX 1: Use TransactionTestCase to prevent early DB rollbacks during async execution
-# class FrontalLobeHandlerTest(TransactionTestCase):
-#     fixtures = [
-#         'environments/fixtures/initial_data.json',
-#         'talos_agent/fixtures/initial_data.json',
-#         'talos_agent/fixtures/test_agents.json',
-#         'central_nervous_system/fixtures/initial_data.json',
-#         'frontal_lobe/fixtures/initial_data.json',
-#         'parietal_lobe/fixtures/initial_data.json',
-#     ]
+# class FrontalLobeHandlerTest(CommonFixturesAPITestCase):
 #
 #     def setUp(self):
 #         # Base Data

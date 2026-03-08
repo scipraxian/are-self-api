@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
         ('environments', '0001_initial'),
         ('frontal_lobe', '0002_initial'),
         ('hippocampus', '0001_initial'),
-        ('talos_agent', '0001_initial'),
+        ('peripheral_nervous_system', '0001_initial'),
     ]
 
     operations = [
