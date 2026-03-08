@@ -1,22 +1,22 @@
 services:
   # 1. The Database (With Vector Hardware)
   db:
-    image: pgvector/pgvector:pg16
-    container_name: talos_db
+    image: pgvector/pgvector:0.8.2-pg18-trixie
+    container_name: talos-pgvector-db
     restart: always
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: frith
+      POSTGRES_PASSWORD: Wingsofbronze22!
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
 
   # 2. The Nervous System (Task Queue)
   redis:
     image: redis
-    container_name: talos_redis
+    container_name: talos-redis-2
     restart: always
     ports:
       - "6379:6379"
