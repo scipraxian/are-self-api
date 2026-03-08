@@ -85,6 +85,21 @@ class PFCEpicAdmin(admin.ModelAdmin):
             {'fields': ('name', 'description', 'status', 'environment')},
         ),
         (
+            'Ticket Fields',
+            {
+                'fields': (
+                    'priority',
+                    'perspective',
+                    'assertions',
+                    'outside',
+                    'dod_exceptions',
+                    'dependencies',
+                    'demo_specifics',
+                ),
+                'classes': ('collapse',),
+            },
+        ),
+        (
             'Mathematical Lobe',
             {
                 'fields': ('vector',),
@@ -122,6 +137,21 @@ class PFCStoryAdmin(admin.ModelAdmin):
         (
             'Strategy (Story)',
             {'fields': ('epic', 'name', 'description', 'status')},
+        ),
+        (
+            'Ticket Fields',
+            {
+                'fields': (
+                    'priority',
+                    'perspective',
+                    'assertions',
+                    'outside',
+                    'dod_exceptions',
+                    'dependencies',
+                    'demo_specifics',
+                ),
+                'classes': ('collapse',),
+            },
         ),
         (
             'Mathematical Lobe',
