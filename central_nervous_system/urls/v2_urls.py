@@ -1,6 +1,26 @@
 from rest_framework import routers
 
+from central_nervous_system.api_v2 import (
+    AxonViewSetV2,
+    EffectorViewSetV2,
+    NeuralPathwayViewSetV2,
+    NeuronViewSetV2,
+    SpikeTrainViewSetV2,
+    SpikeViewSetV2,
+)
 from central_nervous_system.views.v2_viewsets import Pathway3DViewSet
 
 V2_CNS_ROUTER = routers.SimpleRouter()
 V2_CNS_ROUTER.register(r'pathways-3d', Pathway3DViewSet, basename='pathway-3d')
+
+V2_CNS_ROUTER = routers.SimpleRouter()
+V2_CNS_ROUTER.register(
+    r'spiketrains', SpikeTrainViewSetV2, basename='v2-spiketrain'
+)
+V2_CNS_ROUTER.register(r'spikes', SpikeViewSetV2, basename='v2-spike')
+V2_CNS_ROUTER.register(
+    r'neuralpathways', NeuralPathwayViewSetV2, basename='v2-neuralpathway'
+)
+V2_CNS_ROUTER.register(r'neurons', NeuronViewSetV2, basename='v2-neuron')
+V2_CNS_ROUTER.register(r'axons', AxonViewSetV2, basename='v2-axon')
+V2_CNS_ROUTER.register(r'effectors', EffectorViewSetV2, basename='v2-effector')

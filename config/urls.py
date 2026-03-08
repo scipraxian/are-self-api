@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework import routers
@@ -39,4 +41,4 @@ urlpatterns = [
         'api-auth/', include('rest_framework.urls', namespace='rest_framework')
     ),
     path('mcp/', include('djangorestframework_mcp.urls')),
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
