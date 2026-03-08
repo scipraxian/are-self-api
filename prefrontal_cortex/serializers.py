@@ -67,10 +67,16 @@ class PFCEpicDetailSerializer(serializers.ModelSerializer):
     source_engrams = TalosEngramSerializer(many=True, read_only=True)
     owning_disc = IdentityDiscSerializer(read_only=True)
     previous_owners = IdentityDiscSerializer(many=True, read_only=True)
+    comments = serializers.SerializerMethodField()
 
     class Meta:
         model = PFCEpic
         fields = ALL_FIELDS
+
+    def get_comments(self, obj):
+        return PFCCommentDetailSerializer(
+            obj.comments.all().order_by('created'), many=True
+        ).data
 
 
 class PFCStoryDetailSerializer(serializers.ModelSerializer):
@@ -80,10 +86,16 @@ class PFCStoryDetailSerializer(serializers.ModelSerializer):
     source_engrams = TalosEngramSerializer(many=True, read_only=True)
     owning_disc = IdentityDiscSerializer(read_only=True)
     previous_owners = IdentityDiscSerializer(many=True, read_only=True)
+    comments = serializers.SerializerMethodField()
 
     class Meta:
         model = PFCStory
         fields = ALL_FIELDS
+
+    def get_comments(self, obj):
+        return PFCCommentDetailSerializer(
+            obj.comments.all().order_by('created'), many=True
+        ).data
 
 
 class PFCTaskDetailSerializer(serializers.ModelSerializer):
