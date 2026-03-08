@@ -19,49 +19,42 @@ User = get_user_model()
 
 
 class UserLightweightSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name']
 
 
 class PFCItemStatusSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = PFCItemStatus
         fields = ALL_FIELDS
 
 
 class PFCTagSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = PFCTag
         fields = ALL_FIELDS
 
 
 class PFCEpicSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = PFCEpic
         fields = ALL_FIELDS
 
 
 class PFCStorySerializer(serializers.ModelSerializer):
-
     class Meta:
         model = PFCStory
         fields = ALL_FIELDS
 
 
 class PFCTaskSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = PFCTask
         fields = ALL_FIELDS
 
 
 class PFCCommentSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = PFCComment
         fields = ALL_FIELDS
@@ -73,6 +66,7 @@ class PFCEpicDetailSerializer(serializers.ModelSerializer):
     tags = PFCTagSerializer(many=True, read_only=True)
     source_engrams = TalosEngramSerializer(many=True, read_only=True)
     owning_disc = IdentityDiscSerializer(read_only=True)
+    previous_owners = IdentityDiscSerializer(many=True, read_only=True)
 
     class Meta:
         model = PFCEpic
@@ -85,6 +79,7 @@ class PFCStoryDetailSerializer(serializers.ModelSerializer):
     tags = PFCTagSerializer(many=True, read_only=True)
     source_engrams = TalosEngramSerializer(many=True, read_only=True)
     owning_disc = IdentityDiscSerializer(read_only=True)
+    previous_owners = IdentityDiscSerializer(many=True, read_only=True)
 
     class Meta:
         model = PFCStory
@@ -95,6 +90,7 @@ class PFCTaskDetailSerializer(serializers.ModelSerializer):
     story = PFCStorySerializer(read_only=True)
     status = PFCItemStatusSerializer(read_only=True)
     tags = PFCTagSerializer(many=True, read_only=True)
+    previous_owners = IdentityDiscSerializer(many=True, read_only=True)
 
     class Meta:
         model = PFCTask
