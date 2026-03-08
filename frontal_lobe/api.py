@@ -4,8 +4,8 @@ from rest_framework import filters, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from hydra.models import HydraHeadStatus
-from hydra.tasks import cast_hydra_spell
+from central_nervous_system.models import SpikeStatus
+from central_nervous_system.tasks import cast_cns_spell
 
 from . import serializers
 from .models import (
@@ -35,10 +35,12 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
     def graph_data(self, request, pk=None):
         """
         Serves the pure, nested JSON tree of the Reasoning Session.
-        The frontend JS is responsible for squashing this into D3 nodes and links.
+        The frontend JS is responsible for squashing this into D3 neurons and links.
         """
-        session = (self.get_queryset().select_related(
-            'status', 'conclusion', 'conclusion__status').prefetch_related(
+        session = (
+            self.get_queryset()
+            .select_related('status', 'conclusion', 'conclusion__status')
+            .prefetch_related(
                 Prefetch(
                     'goals',
                     queryset=ReasoningGoal.objects.select_related('status'),
@@ -46,53 +48,61 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
                 Prefetch(
                     'turns',
                     queryset=ReasoningTurn.objects.select_related(
-                        'status').order_by('turn_number'),
+                        'status'
+                    ).order_by('turn_number'),
                 ),
                 'turns__tool_calls__tool',
                 'turns__turn_goals',
-                'engram__source_turns',
-            ).get(pk=pk))
+                'engrams__source_turns',
+            )
+            .get(pk=pk)
+        )
 
         serializer = serializers.ReasoningSessionSerializer(session)
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
     def rerun(self, request, pk=None):
-        """Reboots the Cortex by restarting the originating HydraHead."""
+        """Reboots the Cortex by restarting the originating Spike."""
         session = self.get_object()
-        head = session.head
+        spike = session.spike
 
-        if not head:
-            return Response({'error': 'No associated HydraHead found.'},
-                            status=400)
+        if not spike:
+            return Response(
+                {'error': 'No associated Spike found.'}, status=400
+            )
 
-        # 1. Reset the head state
-        head.status_id = HydraHeadStatus.PENDING
-        head.save(update_fields=['status'])
+        # 1. Reset the spike state
+        spike.status_id = SpikeStatus.PENDING
+        spike.save(update_fields=['status'])
 
         # 2. Fire the Celery task to run the AI loop again
-        cast_hydra_spell.delay(head.id)
+        cast_cns_spell.delay(spike.id)
 
-        # 3. Return the Spawn ID so the frontend can redirect to the Monitor
-        return Response({
-            'status': 'Rebooting',
-            'spawn_id': str(head.spawn.id) if head.spawn else None,
-        })
+        # 3. Return the SpikeTrain ID so the frontend can redirect to the Monitor
+        return Response(
+            {
+                'status': 'Rebooting',
+                'spike_train_id': str(spike.spike_train.id) if spike.spike_train else None,
+            }
+        )
 
     @action(detail=True, methods=['post'])
     def stop(self, request, pk=None):
         """Gracefully signals the Frontal Lobe loop to halt at the next turn."""
         session = self.get_object()
-        head = session.head
+        spike = session.spike
 
-        if not head:
-            return Response({'error': 'No associated HydraHead found.'},
-                            status=400)
+        if not spike:
+            return Response(
+                {'error': 'No associated Spike found.'}, status=400
+            )
 
-        head.status_id = HydraHeadStatus.STOPPING
-        head.save(update_fields=['status'])
+        spike.status_id = SpikeStatus.STOPPING
+        spike.save(update_fields=['status'])
 
-        return Response({
-            'status':
-                'Halt signal sent. The Cortex will spin down after the current turn.'
-        })
+        return Response(
+            {
+                'status': 'Halt signal sent. The Cortex will spin down after the current turn.'
+            }
+        )

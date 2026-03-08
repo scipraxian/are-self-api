@@ -3,7 +3,7 @@ from typing import Any, Dict
 
 from django.template import Context, Template
 
-from hydra.constants import KEY_SERVER
+from central_nervous_system.constants import KEY_SERVER
 
 
 class VariableRenderer:

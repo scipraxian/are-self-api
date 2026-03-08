@@ -3,14 +3,14 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from hydra.models import (
-    HydraHead,
-    HydraHeadStatus,
-    HydraSpawn,
-    HydraSpawnStatus,
+from central_nervous_system.models import (
+    Spike,
+    SpikeStatus,
+    SpikeTrain,
+    SpikeTrainStatus,
 )
-from talos_hippocampus.models import TalosEngram
-from talos_parietal.models import ToolCall, ToolDefinition
+from hippocampus.models import TalosEngram
+from parietal_lobe.models import ToolCall, ToolDefinition
 from frontal_lobe import constants
 from frontal_lobe.models import (
     ReasoningGoal,
@@ -31,20 +31,20 @@ class ReasoningAPITest(TestCase):
             id=ReasoningStatus.PENDING, name='Pending'
         )
 
-        head_status, _ = HydraHeadStatus.objects.get_or_create(
+        spike_status, _ = SpikeStatus.objects.get_or_create(
             id=1, defaults={'name': 'Created'}
         )
-        spawn_status, _ = HydraSpawnStatus.objects.get_or_create(
+        spike_train_status, _ = SpikeTrainStatus.objects.get_or_create(
             id=1, defaults={'name': 'Created'}
         )
 
-        self.spawn = HydraSpawn.objects.create(status=spawn_status)
-        self.head = HydraHead.objects.create(
-            spawn=self.spawn, status=head_status
+        self.spike_train = SpikeTrain.objects.create(status=spike_train_status)
+        self.spike = Spike.objects.create(
+            spike_train=self.spike_train, status=spike_status
         )
 
         self.session = ReasoningSession.objects.create(
-            head=self.head, status=self.status_active
+            spike=self.spike, status=self.status_active
         )
         self.goal = ReasoningGoal.objects.create(
             session=self.session,

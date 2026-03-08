@@ -40,7 +40,7 @@ class ReasoningSessionAdmin(admin.ModelAdmin):
     # Add 'launch_cortex' to your list_display
     list_display = (
         'id',
-        'head',
+        'spike',
         'status',
         'launch_cortex',
         'max_turns',

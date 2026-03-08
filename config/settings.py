@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -37,7 +38,7 @@ INSTALLED_APPS = [
     'dashboard',
     'talos_agent',
     'celery',
-    'hydra',
+    'central_nervous_system',
     'django_celery_results',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -47,15 +48,19 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'environments',
     'django.contrib.staticfiles',
-    'talos_thalamus',
-    'talos_parietal',
-    'talos_occipital',
-    'talos_temporal',
+    'django.contrib.postgres',
+    'thalamus',
+    'parietal_lobe',
+    'occipital_lobe',
+    'temporal_lobe',
     'frontal_lobe',
     'djangorestframework_mcp',
     'rest_framework',
     'django_filters',
-    'talos_hippocampus.apps.TalosHippocampusConfig',
+    'hippocampus.apps.HippocampusConfig',
+    'prefrontal_cortex.apps.PrefrontalCortexConfig',
+    'identity.apps.IdentityConfig',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -101,14 +106,13 @@ ASGI_APPLICATION = 'config.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres-talos-local',  # Default name
-        'USER': 'postgres_guest',  # Default user
+        'NAME': 'postgres',  # Default name
+        'USER': 'postgres',  # Default user
         'PASSWORD': 'Wingsofbronze22!',
         'HOST': 'localhost',
-        'PORT': '5432',
+        'PORT': '5434',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -145,7 +149,8 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 # Celery
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# Override with CELERY_BROKER_URL env var if Redis is elsewhere (e.g. Docker, WSL).
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/')
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -172,7 +177,7 @@ LOGGING = {
         },
     },
     'loggers': {
-        'hydra': {
+        'central_nervous_system': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,

@@ -31,7 +31,7 @@ Architecture:
 * **Strict Typing:** All events are emitted as strictly typed NamedTuples
     (`TalosEvent`) to eliminate ambiguity between Logs and Exit Codes.
 * **Stateless:** Does not connect to the Database. It is a "dumb" executor
-    controlled entirely by the Hydra Spell Caster.
+    controlled entirely by the CNS Effector Caster.
 
 Security:
 ---------
@@ -477,7 +477,7 @@ async def _pipe_stream(
         raise
 
 
-async def run_hydra_pipeline(
+async def run_cns_pipeline(
     command: List[str],
     log_path: Optional[str],
     output_callback: Callable[[str], Awaitable[None]],
@@ -851,7 +851,7 @@ class TalosAgent:
         stop_event: Optional[asyncio.Event] = None,
     ) -> AsyncGenerator[TalosEvent, None]:
         """
-        Executes a command LOCALLY using run_hydra_pipeline.
+        Executes a command LOCALLY using run_cns_pipeline.
         Adapts the callback-based pipeline to an AsyncGenerator.
         Yields: TalosEvent(type, text, code, source)
         """
@@ -877,7 +877,7 @@ class TalosAgent:
         async def worker():
             try:
                 # Pass BOTH callbacks AND stop_event to the engine
-                exit_code = await run_hydra_pipeline(
+                exit_code = await run_cns_pipeline(
                     command,
                     log_path,
                     stdout_callback,

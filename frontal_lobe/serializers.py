@@ -1,18 +1,17 @@
 from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
-from talos_hippocampus.models import TalosEngram
-from talos_parietal.models import ToolCall, ToolDefinition
 from frontal_lobe.models import (
     ReasoningGoal,
     ReasoningSession,
     ReasoningTurn,
     SessionConclusion,
 )
+from hippocampus.models import TalosEngram
+from parietal_lobe.models import ToolCall, ToolDefinition
 
 
 class ToolDefinitionSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ToolDefinition
         fields = ALL_FIELDS
@@ -63,11 +62,9 @@ class SessionConclusionSerializer(serializers.ModelSerializer):
 
 class ReasoningSessionSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
-
-    # Recursive joins to build the JSON tree
     goals = ReasoningGoalSerializer(many=True, read_only=True)
     turns = ReasoningTurnSerializer(many=True, read_only=True)
-    engrams = TalosEngramSerializer(source='engram', many=True, read_only=True)
+    engrams = TalosEngramSerializer(many=True, read_only=True)
     conclusion = SessionConclusionSerializer(read_only=True)
 
     current_level = serializers.IntegerField(read_only=True)

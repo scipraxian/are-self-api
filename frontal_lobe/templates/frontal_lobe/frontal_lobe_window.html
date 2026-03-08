@@ -1,14 +1,14 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<spike>
     <meta charset="UTF-8">
     <title>CORTEX // {{ session.id|slice:":8" }}</title>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=JetBrains+Mono&family=Inter:wght@400;600&display=swap"
           rel="stylesheet">
     <link rel="stylesheet" href="{% static 'frontal_lobe/css/frontal_lobe_window.css' %}">
-</head>
+</spike>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
 <div class="cortex-grid">

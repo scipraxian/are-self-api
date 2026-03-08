@@ -5,6 +5,8 @@ from typing import Any, Dict, List, Optional
 import requests
 from django.conf import settings
 
+from frontal_lobe.constants import FrontalLobeConstants
+
 logger = logging.getLogger(__name__)
 
 
@@ -35,6 +37,8 @@ class OllamaConstants:
     # System Strings
     ERR_MSG_PREFIX = 'Error communicating with local LLM:'
 
+    EMBEDDING_KEY = 'embedding'
+
 
 @dataclass
 class OllamaChatPayload:
@@ -57,7 +61,8 @@ class ChatMessage:
     name: Optional[str] = None  # Used exclusively when role='tool'
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serializes to dict, stripping None values to satisfy strict JSON parsers."""
+        """Serializes to dict, stripping None values to satisfy strict JSON
+        parsers."""
         return {k: v for k, v in asdict(self).items() if v is not None}
 
 
@@ -84,7 +89,8 @@ class OllamaClient:
         tools: Optional[List[Dict[str, Any]]] = None,
         options: Optional[Dict[str, Any]] = None,
     ) -> OllamaResponse:
-        """Transmits message history to the model, optionally with tool schemas."""
+        """Transmits message history to the model, optionally with tool
+        schemas."""
 
         payload_obj = OllamaChatPayload(
             model=self.model,
@@ -146,3 +152,36 @@ class OllamaClient:
         except requests.RequestException as e:
             logger.warning(f'[Synapse] Unload warning (non-fatal): {e}')
             return False
+
+    def embed(self, text: str) -> List[float]:
+        """Generates an embedding vector using the modern Ollama /api/embed endpoint."""
+        # Corrected: Singular 'embed' endpoint to resolve 404
+        url = f'{OllamaConstants.BASE_URL}/api/embed'
+
+        # Corrected: Using 'input' key as required by modern Ollama API
+        payload = {
+            OllamaConstants.KEY_MODEL: self.model,
+            'input': text,
+        }
+
+        logger.info(
+            f'[Synapse] Generating embedding for text [{len(text)} chars]'
+        )
+        try:
+            response = requests.post(
+                url,
+                json=payload,
+                timeout=OllamaConstants.TIMEOUT_SECONDS,
+            )
+            response.raise_for_status()
+            data = response.json()
+
+            # The 'embeddings' key in the response remains plural (returning a list of lists)
+            # or 'embedding' if it was a single string. Ollama /api/embed usually returns
+            # an 'embeddings' array.
+            embeddings = data.get('embeddings', [])
+            return embeddings[0] if embeddings else []
+
+        except requests.RequestException as e:
+            logger.error(f'Ollama Embed Misfire: {e}')
+            return []

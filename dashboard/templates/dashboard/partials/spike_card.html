@@ -1,0 +1,42 @@
+<a href="{% url 'central_nervous_system:head_detail' spike.id %}"
+   class="spike-card
+          {% if spike.status_id == 1 or spike.status_id == 2 %}pending
+          {% elif spike.status_id == 3 or spike.status_id == 8 %}active
+           {% elif spike.status_id == 4 %}success
+          {% elif spike.status_id == 5 or spike.status_id == 6 %}failed
+          {% else %}stopped{% endif %}">
+
+    <div class="spike-header">
+        <div class="spike-name" style="color:{% if spike.status_id <= 2 %}#888{% else %}#fff{% endif %};">
+            {{ spike.effector_name|default:spike.effector.name }}
+        </div>
+        <div class="card-drill-btn" title="View Logs">☍</div>
+    </div>
+
+    <div class="spike-meta">
+        <span class="spike-target"
+              style="color:{% if spike.status_id <= 2 %}#666{% elif spike.status_id == 3 or spike.status_id == 8 %}var(--lcars-elbow){% elif spike.status_id == 4 %}#4ade80{% elif spike.status_id == 5 or spike.status_id == 6 %}#ef4444{% else %}#888{% endif %};">
+            {% if spike.status_id == 1 or spike.status_id == 2 %}
+                QUEUED
+            {% elif spike.status_id == 3 or spike.status_id == 8 %}
+                {{ spike.target_name|default:spike.target.hostname|default:"LOCAL" }}
+            {% else %}
+                {% if spike.result_code != None %}RC: {{ spike.result_code }}{% else %}
+                    {{ spike.status_name|default:spike.status.name }}{% endif %}
+            {% endif %}
+        </span>
+        <span class="spike-time" style="color: #666;">{{ spike.timestamp_str }}</span>
+    </div>
+
+    <div class="spike-footer">
+         <span class="spike-log"
+               style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px;">
+            {% if spike.status_id == 1 or spike.status_id == 2 %}
+                Waiting...
+            {% else %}
+                {{ spike.application_log|default:spike.status_name|default:spike.status.name|slice:"-30:" }}
+            {% endif %}
+        </span>
+        <span class="spike-duration" style="font-weight: 700; color: #aaa;">⏱ {{ spike.duration }}</span>
+    </div>
+</a>

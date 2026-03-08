@@ -8,6 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.urls import reverse
 from django.utils.timezone import now
+from pgvector.django import VectorField
 
 from common.constants import STANDARD_CHARFIELD_LENGTH
 
@@ -199,6 +200,17 @@ class BigIdMixin(models.Model):
     """Large ID keys."""
 
     id = models.BigAutoField(primary_key=True)
+
+    class Meta(object):  # pylint:disable=too-few-public-methods
+        """Django meta module."""
+
+        abstract = True
+
+
+class VectorMixin(models.Model):
+    """Vector Mixin."""
+
+    vector = VectorField(dimensions=768, null=True, blank=True)
 
     class Meta(object):  # pylint:disable=too-few-public-methods
         """Django meta module."""

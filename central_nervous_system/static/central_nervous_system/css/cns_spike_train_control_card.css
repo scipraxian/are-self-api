@@ -1,0 +1,47 @@
+.cns-control-card {
+    flex: 0 0 160px;
+    background: rgba(17, 24, 39, 0.6);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-left: 3px solid rgba(56, 189, 248, 0.8);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 70px;
+    padding: 8px;
+    gap: 8px;
+}
+
+.cns-control-card.active-state {
+    border-color: rgba(139, 92, 246, 0.5);
+    border-left-color: rgba(139, 92, 246, 0.9);
+}
+
+.btn-control {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    border-radius: 4px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-control:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+.btn-control.stop:hover {
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #f87171;
+}
+
+.btn-control.rerun:hover {
+    border-color: rgba(56, 189, 248, 0.4);
+    color: #38bdf8;
+}

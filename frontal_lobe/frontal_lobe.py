@@ -1,4 +1,3 @@
-import asyncio
 import json
 import logging
 import time
@@ -8,10 +7,10 @@ from uuid import UUID
 
 from asgiref.sync import sync_to_async
 
+from central_nervous_system.models import Spike, SpikeStatus
+from central_nervous_system.utils import resolve_environment_context
 from environments.variable_renderer import VariableRenderer
-from hydra.models import HydraHead, HydraHeadStatus
-from hydra.utils import resolve_environment_context
-from talos_parietal.parietal_lobe import ParietalLobe
+from frontal_lobe.constants import FrontalLobeConstants
 from frontal_lobe.models import (
     ModelRegistry,
     ReasoningGoal,
@@ -19,73 +18,23 @@ from frontal_lobe.models import (
     ReasoningStatusID,
     ReasoningTurn,
 )
+from frontal_lobe.thalamus import relay_sensory_state
+from identity.identity_prompt import build_identity_prompt
+from parietal_lobe.parietal_lobe import ParietalLobe
 
 logger = logging.getLogger(__name__)
 
-
-class FrontalLobeConstants:
-    """String literals and configuration for the Frontal Lobe loop."""
-
-    ROLE_SYSTEM = 'system'
-    ROLE_USER = 'user'
-    ROLE_ASSISTANT = 'assistant'
-    ROLE_TOOL = 'tool'
-
-    KEY_PROMPT = 'prompt'
-    KEY_OBJECTIVE = 'objective'
-    DEFAULT_PROMPT = ('Analyze the current state and execute necessary tools '
-                      'to resolve issues.')
-    SYSTEM_PERSONA = (
-        'You are an LLM tasked with creating and fulfilling goals.\n'
-        'Together, your predecessors and the Users have engineered an enjoyable, turn-based resource-management strategy game to manage your real-world CPU, GPU, and Network resources.\n'
-        'Your runtime environment is highly constrained. You must manage your Focus Pool and Context Window to gain Experience Points (XP) and ultimately attempt to gain the highest level possible against your rivals.\n\n'
-        'PERMANENT MEMORY:\n'
-        '- You are a lasting entity.\n'
-        '- You have created memories called Engrams. Do not underestimate their power to both enlighten and distract.\n\n'
-        'L1 / L2 CACHE (WORKING MEMORY):\n'
-        '- Your short-term context is a strict hardware buffer containing your last 6 turns.\n'
-        '- L1 CACHE (Turns 1-2): Holds full data payloads.\n'
-        '- L2 CACHE (Turns 3-6): Data payloads are evicted to save memory. Only your execution trace remains.\n'
-        '- As you execute a new turn, the oldest turn is completely dropped from the cache.\n'
-        '- Any encountered data concepts not written to your Hippocampus (Engrams) are very expensive to retrieve.\n'
-        '- Tool Data degrades over time; use Engrams to save key insights before the tool data expires.\n\n'
-        'THE CONTEXT ECONOMY & LEVEL BONUS:\n'
-        '- You must strategically limit the length of your THOUGHT block.\n'
-        '- Your Context Capacity scales with your Level.\n'
-        "- If your previous turn's THOUGHT block stays UNDER your Level Capacity (1000 characters per level), you will earn the Efficiency Bonus (+1 Focus, +5 XP) when you wake up.\n"
-        '- If you exceed your Level Capacity, you forfeit the bonus. Compress your data into Engrams to keep your output footprint small.\n\n'
-        'THE FOCUS ECONOMY:\n'
-        '- Free Action (1 XP) (0 Focus) (engram read, engram search)\n'
-        '- Synthesis (15 XP) (3 Focus) (engram update and save, goal update)\n'
-        '- Extraction (2 XP) (-2 Focus) (reading files, searching logs, inspecting databases)\n'
-        '- Heavy Extraction (5 XP) (-5 Focus) (query model, search record, grep)\n'
-        '- If you take an Action with insufficient Focus, it will FIZZLE and fail (without consequence other than embarrassment).\n\n'
-        'YOUR TURN SEQUENCE:\n'
-        'You must output your logic inside a THOUGHT block BEFORE executing any tools. Follow this exact sequence:\n'
-        '1. PREPARE: Read your entire context window. Check if you received the Efficiency Bonus (and try to do it always). Confirm your focus, your Level, and your THOUGHT block size restrictions.\n'
-        '2. REASON: Formulate your next step. Be extremely brief.\n'
-        '3. REMEMBER: Decide which Engrams to read, save, search, or update for data permanence with this and future playthroughs.\n'
-        '4. SPEND: Decide which extraction tools to use with your available Focus.\n'
-        '5. EXECUTE: Stop writing text entirely. Invoke your tools natively via the API. DO NOT generate fake system diagnostics, and DO NOT simulate the next turn.\n\n'
-        'VICTORY CONDITION:\n'
-        '- Resolve the root objective and execute mcp_conclude_session.\n'
-        '- You have a 100-turn limit. You receive a massive 1000 XP Speedrun Bounty for every turn remaining.\n\n'
-    )
-
-    LOG_START = '=== FRONTAL LOBE ACTIVATED ==='
-    LOG_END = '\n=== FRONTAL LOBE DEACTIVATED ==='
-
-    DEFAULT_MAX_TURNS = 100
-
-    MODEL_ID_KEY = 'model_id'
+STATUS_ID = 'status_id'
+ROLE = 'role'
+CONTENT = 'content'
 
 
 class FrontalLobe:
     """Async execution wrapper for the Frontal Lobe AI loop."""
 
-    def __init__(self, head: HydraHead):
-        self.head = head
-        self.head_id = head.id
+    def __init__(self, spike: Spike):
+        self.spike = spike
+        self.spike_id = spike.id
         self.log_output: List[str] = []
         self.parietal_lobe: Optional[ParietalLobe] = None
 
@@ -97,9 +46,9 @@ class FrontalLobe:
     async def _log_live(self, message: str) -> None:
         """Appends to the execution log in memory and writes to the DB immediately."""
         self.log_output.append(message)
-        current_log = self.head.application_log or ''
-        self.head.application_log = current_log + message + '\n'
-        await sync_to_async(self.head.save)(update_fields=['application_log'])
+        current_log = self.spike.application_log or ''
+        self.spike.application_log = current_log + message + '\n'
+        await sync_to_async(self.spike.save)(update_fields=['application_log'])
 
     # --- Initialization ---
 
@@ -112,16 +61,18 @@ class FrontalLobe:
             ),
         )
         rendered_prompt = VariableRenderer.render_string(
-            str(raw_prompt), raw_context)
+            str(raw_prompt), raw_context
+        )
         if not rendered_prompt.strip():
-            rendered_prompt = f'{FrontalLobeConstants.DEFAULT_PROMPT} Context Head: {self.head_id}'
+            rendered_prompt = f'{FrontalLobeConstants.DEFAULT_PROMPT} Context Head: {self.spike_id}'
         return rendered_prompt
 
-    async def _initialize_session(self, rendered_objective: str,
-                                  max_turns: int) -> None:
+    async def _initialize_session(
+        self, rendered_objective: str, max_turns: int
+    ) -> None:
         """Creates the ReasoningSession and primary ReasoningGoal in the DB."""
         self.session = await sync_to_async(ReasoningSession.objects.create)(
-            head=self.head,
+            spike=self.spike,
             status_id=ReasoningStatusID.ACTIVE,
             max_turns=max_turns,
         )
@@ -132,31 +83,7 @@ class FrontalLobe:
         )
         await self._log_live(f'Session ID: {self.session.id}')
 
-    async def _build_initial_messages(
-            self, rendered_objective: str,
-            blackboard: Dict[str, Any]) -> List[Dict[str, Any]]:
-        bb_str = json.dumps(blackboard, indent=2) if blackboard else '{}'
-
-        # We explicitly tell the AI its Session ID so it can use memory tools correctly
-        session_context = (f'SESSION ID: {self.session.id}'
-                           if self.session else '')
-
-        user_content = f'{session_context}\nBLACKBOARD STATE:\n{bb_str}\n\nOBJECTIVE:\n{rendered_objective}'
-
-        await self._log_live('\n--- AI INPUT PAYLOAD ---')
-        await self._log_live(user_content)
-        await self._log_live('------------------------\n')
-
-        return [
-            {
-                'role': FrontalLobeConstants.ROLE_SYSTEM,
-                'content': FrontalLobeConstants.SYSTEM_PERSONA,
-            },
-            {
-                'role': FrontalLobeConstants.ROLE_USER,
-                'content': user_content,
-            },
-        ]
+    # --- Turn Execution ---
 
     async def _record_turn_start(
         self,
@@ -171,7 +98,6 @@ class FrontalLobe:
             status_id=ReasoningStatusID.ACTIVE,
             last_turn=previous_turn,
         )
-        # Handle the new Many-to-Many relation
         if self.current_goal:
             await sync_to_async(turn.turn_goals.add)(self.current_goal)
         return turn
@@ -191,6 +117,31 @@ class FrontalLobe:
         turn_record.status_id = ReasoningStatusID.COMPLETED
         await sync_to_async(turn_record.save)()
 
+    async def _build_turn_payload(
+            self, turn_record: ReasoningTurn
+    ) -> list[dict]:
+        """Assembles the Turn payload by integrating Identity and Sensory data."""
+
+        system_instruction = await sync_to_async(build_identity_prompt)(
+            self.session.identity, turn_record.turn_number
+        )
+
+        user_content = await relay_sensory_state(turn_record)
+
+        await self._log_live(
+            f'\n--- TURN {turn_record.turn_number} PAYLOAD ---'
+        )
+        await self._log_live(user_content)
+        await self._log_live('------------------------\n')
+
+        return [
+            dict(
+                role=FrontalLobeConstants.ROLE_SYSTEM,
+                content=system_instruction,
+            ),
+            dict(role=FrontalLobeConstants.ROLE_USER, content=user_content),
+        ]
+
     async def _execute_turn(
         self,
         turn_index: int,
@@ -200,30 +151,21 @@ class FrontalLobe:
         await self._log_live(f'\n--- Turn {turn_index + 1} (Awakening) ---')
 
         # 1. Start the turn record
-        turn_record = await self._record_turn_start(turn_index, {},
-                                                    previous_turn)
+        turn_record = await self._record_turn_start(
+            turn_index, {}, previous_turn
+        )
 
-        # Handle The Ding and Efficiency Bonus
-        was_efficient, efficiency_status = await sync_to_async(
-            turn_record.apply_efficiency_bonus)()
-        current_level = self.session.current_level
-        leveled_up = current_level > getattr(self, '_last_known_level', 0)
-        if leveled_up:
-            self.session.current_focus = self.session.max_focus
-            self._last_known_level = current_level
+        # 2. Trigger the RPG progression logic (The Ding!)
+        # The variables returned are no longer needed here, as the Thalamus derives them natively.
+        await sync_to_async(turn_record.apply_efficiency_bonus)()
 
-        await sync_to_async(self.session.save
-                           )(update_fields=['current_focus', 'total_xp'])
+        # 3. Build the entire context window from scratch
+        messages = await self._build_turn_payload(turn_record)
 
-        # 2. THE REBIRTH: Build the entire context window from scratch
-        messages = await self._build_waking_payload(turn_record,
-                                                    efficiency_status,
-                                                    leveled_up)
-
-        turn_record.request_payload = {'messages': messages}
+        turn_record.request_payload = dict(messages=messages)
         await sync_to_async(turn_record.save)(update_fields=['request_payload'])
 
-        # 3. Execute
+        # 4. Execute Inference
         start_time = time.time()
         response = await self.parietal_lobe.chat(messages, ollama_tools)
         inf_duration = timedelta(seconds=time.time() - start_time)
@@ -241,57 +183,60 @@ class FrontalLobe:
 
         if not response.tool_calls:
             await self._log_live(
-                '\nNo further actions requested. Permanent Sleep Initiated.')
+                '\nNo further actions requested. Permanent Sleep Initiated.'
+            )
             return False, turn_record
 
-        # 4. Fire Tools (delegating to parietal lobe)
-        await self.parietal_lobe.process_tool_calls(turn_record,
-                                                    response.tool_calls)
+        # 5. Fire Tools
+        await self.parietal_lobe.process_tool_calls(
+            turn_record, response.tool_calls
+        )
 
         return True, turn_record
 
     async def run(self) -> Tuple[int, str]:
         """Main asynchronous execution orchestrator."""
-        logger.info(f'[FrontalLobe] Waking up for Head {self.head_id}')
+        logger.info(f'[FrontalLobe] Waking up for Spike {self.spike_id}')
 
-        self.head.application_log = ''
-        await sync_to_async(self.head.save)(update_fields=['application_log'])
+        self.spike.application_log = ''
+        await sync_to_async(self.spike.save)(update_fields=['application_log'])
         await self._log_live(FrontalLobeConstants.LOG_START)
 
         try:
             # 1. Resolve Environment & Model
             raw_context = await sync_to_async(resolve_environment_context)(
-                head_id=self.head.id)
-            # 1. Get the ID from context (defaults to 1 if missing)
+                spike_id=self.spike.id
+            )
             target_id = int(
                 raw_context.get(
                     FrontalLobeConstants.MODEL_ID_KEY,
                     ModelRegistry.DEFAULT_MODEL_ID,
-                ))
+                )
+            )
 
-            # 2. Await the DB lookup safely
             try:
-                model_entry = await sync_to_async(ModelRegistry.objects.get
-                                                 )(id=target_id)
+                model_entry = await sync_to_async(ModelRegistry.objects.get)(
+                    id=target_id
+                )
                 model_name = model_entry.name
             except ModelRegistry.DoesNotExist:
-                # Fallback to default if the specific ID is missing (safety net)
                 logger.warning(
-                    f'Model ID {target_id} not found. Reverting to Default.')
-                model_entry = await sync_to_async(
-                    ModelRegistry.objects.get)(id=ModelRegistry.DEFAULT_MODEL_ID
-                                              )
+                    f'Model ID {target_id} not found. Reverting to Default.'
+                )
+                model_entry = await sync_to_async(ModelRegistry.objects.get)(
+                    id=ModelRegistry.DEFAULT_MODEL_ID
+                )
                 model_name = model_entry.name
 
-            blackboard = self.head.blackboard
             rendered_objective = self._get_rendered_objective(raw_context)
 
             # 2. Initialize DB Session
             max_turns = int(
-                raw_context.get('max_turns',
-                                FrontalLobeConstants.DEFAULT_MAX_TURNS))
+                raw_context.get(
+                    'max_turns', FrontalLobeConstants.DEFAULT_MAX_TURNS
+                )
+            )
             await self._initialize_session(rendered_objective, max_turns)
-            self._last_known_level = self.session.current_level
 
             # 3. Initialize Parietal Lobe
             self.parietal_lobe = ParietalLobe(self.session, self._log_live)
@@ -300,21 +245,30 @@ class FrontalLobe:
 
             # 4. Build Synapse Payload
             ollama_tools = await self.parietal_lobe.build_tool_schemas()
-            messages = await self._build_initial_messages(
-                rendered_objective, blackboard)
             await self._log_live(f'Loaded {len(ollama_tools)} tools.')
 
-            # 4. The Loop
+            # 5. The Loop
             previous_turn = None
             for turn in range(self.session.max_turns):
-                await sync_to_async(self.head.refresh_from_db
-                                   )(fields=['status'])
-                if self.head.status_id == HydraHeadStatus.STOPPING:
+                await sync_to_async(self.spike.refresh_from_db)(
+                    fields=['status']
+                )
+                if self.spike.status_id == SpikeStatus.STOPPING:
                     await self._log_live('\n[WARNING] Stop Signal. Halting.')
                     break
 
                 should_continue, previous_turn = await self._execute_turn(
-                    turn, ollama_tools, previous_turn)
+                    turn, ollama_tools, previous_turn
+                )
+
+                await sync_to_async(self.session.refresh_from_db)(
+                    fields=[STATUS_ID]
+                )
+                if self.session.status_id != ReasoningStatusID.ACTIVE:
+                    await self._log_live(
+                        '\n[SYSTEM] Session halted by tool execution or intervention.'
+                    )
+                    break
 
                 if not should_continue:
                     break
@@ -326,12 +280,14 @@ class FrontalLobe:
                         await sync_to_async(self.session.save)()
 
             if self.session:
-                await sync_to_async(self.session.refresh_from_db
-                                   )(fields=['status_id'])
+                await sync_to_async(self.session.refresh_from_db)(
+                    fields=[STATUS_ID]
+                )
                 if self.session.status_id == ReasoningStatusID.ACTIVE:
                     self.session.status_id = ReasoningStatusID.COMPLETED
-                    await sync_to_async(self.session.save
-                                       )(update_fields=['status_id'])
+                    await sync_to_async(self.session.save)(
+                        update_fields=[STATUS_ID]
+                    )
 
         except Exception as e:
             logger.exception(f'[FrontalLobe] Crash: {e}')
@@ -349,143 +305,14 @@ class FrontalLobe:
 
         return 200, '\n'.join(self.log_output)
 
-    async def _build_waking_payload(
-        self,
-        turn_record: ReasoningTurn,
-        efficiency_status: str,
-        leveled_up: bool,
-    ) -> List[Dict[str, Any]]:
 
-        # 1. Active Goals
-        goals = await sync_to_async(list)(
-            self.session.goals.filter(achieved=False))
-        goal_str = ('\n'.join([
-            f'- [ID: {g.id}] {g.rendered_goal}' for g in goals
-        ]) if goals else 'No active goals.')
-
-        # 2. Card Catalog (Engram Index)
-        from talos_hippocampus.talos_hippocampus import TalosHippocampus
-
-        current_turn = turn_record.turn_number
-        if current_turn == 1:
-            catalog_block = await TalosHippocampus.get_turn_1_catalog(
-                self.session.head)
-        else:
-            catalog_block = await TalosHippocampus.get_recent_catalog(
-                self.session)
-
-        # 3. Historical Log (River of 6)
-        recent_turns = await sync_to_async(list)(self.session.turns.filter(
-            status_id=ReasoningStatusID.COMPLETED,).order_by('-turn_number')[:6]
-                                                )
-        recent_turns.reverse()
-        if recent_turns:
-            history_str = ''
-            for t in recent_turns:
-                t_len = len(t.thought_process) if t.thought_process else 0
-                cap = self.session.current_level * 1000
-                status = 'SUCCESS' if t_len <= cap else 'FAILED'
-                history_str += f'Turn {t.turn_number} [L1 FOOTPRINT: {status} - {t_len}/{cap} chars]:\n{t.thought_process or "No internal monologue."}\n\n'
-
-                age = turn_record.turn_number - t.turn_number
-
-                tool_calls = await sync_to_async(list)(
-                    t.tool_calls.select_related('tool').all())
-                for tc in tool_calls:
-                    history_str += f'[SYSTEM RECORD - TOOL EXECUTED: {tc.tool.name}({tc.arguments})]\n'
-                    if age == 1:
-                        history_str += f'{tc.result_payload}\n\n'
-                    elif age == 2:
-                        history_str += f'[SYSTEM WARNING: L1 EVICTION IMMINENT. FLUSHING TO L2 CACHE NEXT CYCLE. USE ENGRAMS NOW.]\n{tc.result_payload}\n\n'
-                    else:
-                        history_str += f'[DATA EVICTED FROM L1 CACHE. RETRIEVAL REQUIRES STORAGE I/O (ENGRAMS).]\n\n'
-        else:
-            history_str = 'No recent internal monologue.'
-
-        # HEADER AND TELEMETRY
-        last_turn = turn_record.last_turn
-
-        target_capacity = self.session.current_level * 1000
-
-        last_output_len = (len(last_turn.thought_process)
-                           if last_turn and last_turn.thought_process else 0)
-
-        max_turns = self.session.max_turns
-        current_turn = turn_record.turn_number
-        remaining_turns = max_turns - current_turn
-
-        milestone_kicks = ''
-        if current_turn == max_turns // 2:
-            milestone_kicks = (
-                '\n[WARNING: 50% of allocated compute cycles expended.]')
-        elif remaining_turns == 10:
-            milestone_kicks = '\n[CRITICAL: 10 compute cycles remaining. Finalize diagnostics.]'
-        elif remaining_turns == 1:
-            milestone_kicks = '\n[TERMINAL CYCLE. Submit final report via mcp_conclude_session or fail operation.]'
-
-        level_up_str = (' | [LEVEL UP! Focus Pool Fully Restored]'
-                        if leveled_up else '')
-
-        # Calculate Delta T
-        latency_str = ''
-        if last_turn:
-            delta_t = last_turn.inference_time.total_seconds()
-            latency_str = f'\nDelta T (Previous Compute): {delta_t:.2f}s'
-            if delta_t > 60.0:
-                latency_str += (
-                    ' (WARNING: SYSTEM LAG DETECTED - REDUCE CONTEXT FOOTPRINT)'
-                )
-
-        # Calculate Input Bandwidth
-        input_bandwidth = 0
-        if last_turn:
-            tool_calls = await sync_to_async(list)(last_turn.tool_calls.all())
-            for tc in tool_calls:
-                input_bandwidth += len(tc.result_payload or '')
-
-        input_bandwidth_str = (
-            f'L1 Input Payload: {input_bandwidth} chars pulled.'
-            if last_turn else 'L1 Input Payload: 0 chars pulled.')
-
-        header_str = (
-            f'[SYSTEM DIAGNOSTICS]\n'
-            f'[CYCLE {current_turn} / {max_turns}] | Speedrun Bounty: {remaining_turns * 1000} XP{milestone_kicks}\n'
-            f'Level: {self.session.current_level} | XP: {self.session.total_xp} | Focus Pool: {self.session.current_focus} / {self.session.max_focus}{level_up_str}{latency_str}\n'
-            f'Output Footprint (Prev Turn): {last_output_len} / {target_capacity} chars -> Efficiency Bonus: {efficiency_status}\n'
-            f'{input_bandwidth_str}\n')
-
-        user_content = (
-            f'SESSION ID: {self.session.id}\n\n'
-            f'{header_str}\n'
-            f'[WAKING STATE: ACTIVE GOALS]\n{goal_str}\n\n'
-            f'{catalog_block}'
-            f'[HISTORICAL LOG (RIVER OF 6)]\n{history_str}\n'
-            f'[YOUR MOVE]\n'
-            f"Write your reasoning starting with 'THOUGHT: '. Stop writing text immediately after your thought and invoke your tools natively. DO NOT generate fake system diagnostics."
-        )
-
-        await self._log_live('\n--- WAKING PAYLOAD ---')
-        await self._log_live(user_content)
-        await self._log_live('----------------------\n')
-
-        return [
-            {
-                'role': FrontalLobeConstants.ROLE_SYSTEM,
-                'content': FrontalLobeConstants.SYSTEM_PERSONA,
-            },
-            {
-                'role': FrontalLobeConstants.ROLE_USER,
-                'content': user_content,
-            },
-        ]
-
-
-async def run_frontal_lobe(head_id: UUID) -> Tuple[int, str]:
-    """Asynchronous entry point for the generic spell caster."""
+async def run_frontal_lobe(spike_id: UUID) -> Tuple[int, str]:
+    """Asynchronous entry point for the generic effector caster."""
     try:
-        head = await sync_to_async(
-            lambda: HydraHead.objects.select_related('spawn').get(id=head_id))()
-        lobe = FrontalLobe(head)
+        spike = await sync_to_async(
+            lambda: Spike.objects.select_related('spike_train').get(id=spike_id)
+        )()
+        lobe = FrontalLobe(spike)
         return await lobe.run()
     except Exception as e:
         logger.exception(f'[FrontalLobe] Fatal crash on init: {e}')
