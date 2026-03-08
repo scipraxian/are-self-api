@@ -3,11 +3,24 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
-from .models import PFCComment, PFCEpic, PFCItemStatus, PFCStory, PFCTask
+from .models import (
+    PFCComment,
+    PFCCommentStatus,
+    PFCEpic,
+    PFCItemStatus,
+    PFCStory,
+    PFCTask,
+)
 
 
 @admin.register(PFCItemStatus)
 class ItemStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ('name',)
+
+
+@admin.register(PFCCommentStatus)
+class PFCCommentStatusAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
     search_fields = ('name',)
 
