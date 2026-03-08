@@ -27,12 +27,14 @@ from environments.variable_renderer import VariableRenderer
 from frontal_lobe.frontal_lobe import (
     run_frontal_lobe,
 )
-from talos_agent.talos_agent import (
-    TalosAgent,
-    TalosAgentConstants,
+from peripheral_nervous_system.nerve_terminal import (
+    NerveTerminal,
+    NerveTerminalConstants,
 )
-from talos_agent.talos_agent_finder import scan_and_register
-from temporal_lobe.temporal_lobe import temporal_lobe_engage
+from peripheral_nervous_system.peripheral_nervous_system import (
+    scan_and_register,
+)
+from temporal_lobe.temporal_lobe import run_temporal_lobe
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +56,7 @@ NATIVE_HANDLERS = dict(
     scan_and_register=scan_and_register,  # TODO: move to management
     pathway_logic_neuron=pathway_logic_node,
     run_frontal_lobe=run_frontal_lobe,
-    temporal_lobe_engage=temporal_lobe_engage,
+    run_temporal_lobe=run_temporal_lobe,
 )
 
 
@@ -295,7 +297,7 @@ class GenericEffectorCaster:
 
     async def _execute_unified_pipeline(self):
         """
-        Uses TalosAgent to run the effector either locally or remotely.
+        Uses NerveTerminal to run the effector either locally or remotely.
         Replaces the old _execute_local_popen.
         """
         # 1. Prepare Arguments
@@ -325,7 +327,7 @@ class GenericEffectorCaster:
         self.status = self.STATUS_STREAMING_LOGS
 
         if is_remote:
-            event_stream = TalosAgent.execute_remote(
+            event_stream = NerveTerminal.execute_remote(
                 target_hostname=self.spike.target.hostname,
                 executable=executable,
                 params=params,
@@ -333,7 +335,7 @@ class GenericEffectorCaster:
                 stop_event=self.stop_event,
             )
         else:
-            event_stream = TalosAgent.execute_local(
+            event_stream = NerveTerminal.execute_local(
                 command=full_cmd,
                 log_path=log_path,
                 stop_event=self.stop_event,
@@ -342,7 +344,7 @@ class GenericEffectorCaster:
         exit_code = -1
         try:
             async for event in event_stream:
-                if event.type == TalosAgentConstants.T_LOG:
+                if event.type == NerveTerminalConstants.T_LOG:
                     text_to_log = event.text
                     if BLACKBOARD_SET_KEY in text_to_log:
                         self._log_info('Blackboard update detected.')
@@ -363,7 +365,7 @@ class GenericEffectorCaster:
                         )
                     if text_to_log:
                         await self.logger.append_spell(text_to_log)
-                elif event.type == TalosAgentConstants.T_EXIT:
+                elif event.type == NerveTerminalConstants.T_EXIT:
                     exit_code = event.code
         except Exception as e:
             await self.logger.write_immediate(f'\n[STREAM ERROR] {e}\n')
@@ -426,7 +428,10 @@ class GenericEffectorCaster:
                 )
         except Exception as e:
             self.spike.application_log = f'Native Handler Exception: {str(e)}'
-            await self._save_head(fields=[self.APPLICATION_LOG_FIELD])
+            self.spike.status_id = SpikeStatus.FAILED
+            await self._save_head(
+                fields=[self.APPLICATION_LOG_FIELD, self.STATUS_FIELD]
+            )
             self.status = SpikeStatus.FAILED
             return
 

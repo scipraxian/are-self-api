@@ -115,7 +115,7 @@ class IdentityDiscAdmin(admin.ModelAdmin):
     )
 
     def prompt_preview(self, obj):
-        if not obj.pk or not obj.identity:
+        if not obj.pk or not obj.identity_disc:
             return format_html(
                 '<span style="color: #94a3b8; font-style: italic;">'
                 'Save the disc and assign an Identity to generate a preview.'

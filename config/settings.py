@@ -36,7 +36,7 @@ INSTALLED_APPS = [
     'channels',
     'common',
     'dashboard',
-    'talos_agent',
+    'peripheral_nervous_system',
     'celery',
     'central_nervous_system',
     'django_celery_results',
@@ -61,9 +61,11 @@ INSTALLED_APPS = [
     'prefrontal_cortex.apps.PrefrontalCortexConfig',
     'identity.apps.IdentityConfig',
     'django_celery_beat',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -182,5 +184,24 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+        'prefrontal_cortex': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'temporal_lobe': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
     },
 }
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+]
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ORIGIN_ALLOW_ALL = True

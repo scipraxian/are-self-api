@@ -2,11 +2,11 @@ import os
 import uuid
 
 from django.core.management import call_command
-from django.test import TestCase
+
+from common.tests.common_test_case import CommonFixturesAPITestCase
 
 from central_nervous_system.management.commands.generate_prompt_payload import (
-    BLACKBOARD_RESULT_KEY,
-)
+    BLACKBOARD_RESULT_KEY,)
 from central_nervous_system.models import (
     Spike,
     SpikeStatus,
@@ -16,20 +16,13 @@ from central_nervous_system.models import (
 )
 
 
-class GeneratePromptPayloadTest(TestCase):
-    fixtures = [
-        'environments/fixtures/initial_data.json',
-        'talos_agent/fixtures/initial_data.json',
-        'talos_agent/fixtures/test_agents.json',
-        'central_nervous_system/fixtures/initial_data.json',
-    ]
+class GeneratePromptPayloadTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         # 1. Setup minimal relational infrastructure
         self.book = NeuralPathway.objects.create(name='Payload Test Protocol')
         self.spike_train = SpikeTrain.objects.create(
-            pathway=self.book, status_id=SpikeTrainStatus.CREATED
-        )
+            pathway=self.book, status_id=SpikeTrainStatus.CREATED)
 
         # 2. Pre-load the blackboard with a raw template and a variable to resolve
         initial_blackboard = {
@@ -47,8 +40,7 @@ class GeneratePromptPayloadTest(TestCase):
     def tearDown(self):
         # Prevent test suite from leaving physical temp files on the OS
         if self.generated_file_path and os.path.exists(
-            self.generated_file_path
-        ):
+                self.generated_file_path):
             os.remove(self.generated_file_path)
 
     def test_generate_prompt_payload_command(self):
@@ -63,19 +55,16 @@ class GeneratePromptPayloadTest(TestCase):
             # extract the path from the logs
             found_path = None
             for record in log_capture.output:
-                if (
-                    '::blackboard_set' in record
-                    and BLACKBOARD_RESULT_KEY in record
-                ):
+                if ('::blackboard_set' in record and
+                        BLACKBOARD_RESULT_KEY in record):
                     # Format: ::blackboard_set local_prompt_path::/tmp/path
                     parts = record.split('::')
                     if len(parts) >= 3:
                         found_path = parts[2].strip()
                         break
 
-            self.assertIsNotNone(
-                found_path, 'Did not find blackboard instruction in logs'
-            )
+            self.assertIsNotNone(found_path,
+                                 'Did not find blackboard instruction in logs')
             self.generated_file_path = found_path
 
         # Refresh is irrelevant now since command is read-only

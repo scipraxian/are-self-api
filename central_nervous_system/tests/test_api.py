@@ -1,16 +1,10 @@
 from rest_framework.test import APIClient
-from django.test import TestCase
 
+from common.tests.common_test_case import CommonFixturesAPITestCase
 from central_nervous_system.models import NeuralPathway, SpikeTrain, Spike, Effector, SpikeStatus, SpikeTrainStatus
 
 
-class CNSApiTest(TestCase):
-    fixtures = [
-        'environments/fixtures/initial_data.json',
-        'talos_agent/fixtures/initial_data.json',
-        'talos_agent/fixtures/test_agents.json',
-        'central_nervous_system/fixtures/initial_data.json',
-    ]
+class CNSApiTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         self.api_client = APIClient()

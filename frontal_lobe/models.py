@@ -83,8 +83,15 @@ class ReasoningSession(
     """
 
     RELATED_NAME = 'reasoning_session'
-    identity = models.ForeignKey(
+    identity_disc = models.ForeignKey(
         'identity.IdentityDisc',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name=RELATED_NAME,
+    )
+    participant = models.ForeignKey(
+        'temporal_lobe.IterationShiftParticipant',
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
