@@ -72,7 +72,7 @@ class IterationInceptionManager:
                 base_identity = p_def.participant
 
                 # Check the Barracks: Find the most experienced, available Disc of this type
-                disc = (
+                identity_disc = (
                     IdentityDisc.objects.filter(
                         identity=base_identity, available=True
                     )
@@ -80,21 +80,20 @@ class IterationInceptionManager:
                     .first()
                 )
 
-                if disc:
+                if identity_disc:
                     # Draft existing Disc
                     logger.info(
-                        f'Drafting existing Disc: {disc.name} (Lvl {disc.level})'
+                        f'Drafting existing Disc: {identity_disc.name} (Lvl {identity_disc.level})'
                     )
-                    disc.available = False  # Mark as deployed
-                    disc.save(update_fields=['available'])
                 else:
                     # Gestate new Disc
-                    disc = cls.gestate_disc(base_identity)
-                    logger.info(f'Gestated new Disc: {disc.name}')
+                    identity_disc = cls.gestate_disc(base_identity)
+                    logger.info(f'Gestated new Disc: {identity_disc.name}')
 
                 # Bind the Disc to the Shift's Synapses
                 IterationShiftParticipant.objects.create(
-                    iteration_shift=new_shift, iteration_participant=disc
+                    iteration_shift=new_shift,
+                    iteration_participant=identity_disc,
                 )
 
         # 5. Set the starting point

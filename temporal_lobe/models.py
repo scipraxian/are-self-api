@@ -77,16 +77,16 @@ class Iteration(CreatedAndModifiedWithDelta):
     )
     environment = models.ForeignKey(
         'environments.ProjectEnvironment',
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         blank=True,
         null=True,
     )
     status = models.ForeignKey(IterationStatus, on_delete=models.CASCADE)
     definition = models.ForeignKey(
-        IterationDefinition, on_delete=models.PROTECT
+        IterationDefinition, on_delete=models.CASCADE
     )
     current_shift = models.ForeignKey(
-        'IterationShift', on_delete=models.PROTECT, blank=True, null=True
+        'IterationShift', on_delete=models.SET_NULL, blank=True, null=True
     )
     turns_consumed_in_shift = models.IntegerField(default=0)
 

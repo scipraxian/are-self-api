@@ -245,16 +245,16 @@ class IterationViewSet(viewsets.ModelViewSet):
 
             base_identity = get_object_or_404(Identity, id=base_id)
             # Using your updated public method
-            disc = IterationInceptionManager.gestate_disc(base_identity)
+            identity_disc = IterationInceptionManager.gestate_disc(
+                base_identity
+            )
         elif disc_id:
-            disc = get_object_or_404(IdentityDisc, id=disc_id)
-            if not disc.available:
+            identity_disc = get_object_or_404(IdentityDisc, id=disc_id)
+            if not identity_disc.available:
                 return Response(
                     {'error': 'Disc is offline.'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            disc.available = False
-            disc.save(update_fields=['available'])
         else:
             return Response(
                 {'error': 'disc_id or base_id required'},
@@ -269,7 +269,7 @@ class IterationViewSet(viewsets.ModelViewSet):
 
         IterationShiftParticipant.objects.get_or_create(
             iteration_shift=shift,
-            iteration_participant=disc,
+            iteration_participant=identity_disc,
             defaults={'status': status_selected},
         )
 
@@ -295,14 +295,11 @@ class IterationViewSet(viewsets.ModelViewSet):
         shift = get_object_or_404(
             IterationShift, id=shift_id, shift_iteration=iteration
         )
-        disc = get_object_or_404(IdentityDisc, id=disc_id)
+        identity_disc = get_object_or_404(IdentityDisc, id=disc_id)
 
         IterationShiftParticipant.objects.filter(
-            iteration_shift=shift, iteration_participant=disc
+            iteration_shift=shift, iteration_participant=identity_disc
         ).delete()
-
-        disc.available = True
-        disc.save(update_fields=['available'])
 
         # CRITICAL FIX: Re-fetch the Iteration to bust the stale prefetch cache!
         fresh_iteration = self.get_queryset().get(pk=iteration.pk)

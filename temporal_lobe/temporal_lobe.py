@@ -209,6 +209,7 @@ class TemporalLobe:
         if not iteration_shift_participant_ids:
             return 0
 
+        # todo: remove I really don't like this local import.
         from prefrontal_cortex.prefrontal_cortex import PrefrontalCortex
 
         pfc = PrefrontalCortex(parent_spike.id)
