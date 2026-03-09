@@ -1,7 +1,7 @@
 from django.db import models
 
 from common.constants import STANDARD_CHARFIELD_LENGTH
-from common.models import CreatedAndModifiedWithDelta, NameMixin
+from common.models import CreatedAndModifiedWithDelta, NameMixin, UUIDIdMixin
 from identity.models import Identity, IdentityDisc
 
 
@@ -71,7 +71,7 @@ class IterationStatus(NameMixin):
     ERROR = 6
 
 
-class Iteration(CreatedAndModifiedWithDelta):
+class Iteration(UUIDIdMixin, CreatedAndModifiedWithDelta):
     name = models.CharField(
         max_length=STANDARD_CHARFIELD_LENGTH, blank=True, null=True
     )
