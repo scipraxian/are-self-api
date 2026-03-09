@@ -16,13 +16,14 @@ from environments.models import ProjectEnvironment
 class PFCItemStatus(NameMixin):
     """Lookup table for Agile States."""
 
-    BACKLOG = 1
-    SELECTED_FOR_DEVELOPMENT = 2
-    IN_PROGRESS = 3
-    BLOCKED_BY_USER = 4
-    DONE = 5
-    NEEDS_REFINEMENT = 6  # The story's complexity was not high enough.
-    WILL_NOT_DO = 7  # The story is not worth the effort.
+    NEEDS_REFINEMENT = 1  # PM/Worker refine and/or sift
+    BACKLOG = 2  # Worker Bid, PM Prioritize
+    SELECTED_FOR_DEVELOPMENT = 3  # Worker Commit, PM Do Nothing
+    IN_PROGRESS = 4  # worker work, pm sift
+    IN_REVIEW = 5  # worker review but no approval, PM Blocked by user Else Select for development w/ comment.
+    BLOCKED_BY_USER = 6
+    DONE = 7
+    WILL_NOT_DO = 8
 
     class Meta:
         verbose_name = 'Status'

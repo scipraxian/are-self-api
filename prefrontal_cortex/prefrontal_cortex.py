@@ -2,62 +2,186 @@ import logging
 import uuid
 
 from asgiref.sync import sync_to_async
-from django.db import transaction
+from django.db.models import Q
 
 from central_nervous_system.models import Spike
 from frontal_lobe.frontal_lobe import FrontalLobe
 from frontal_lobe.models import ReasoningSession, ReasoningStatusID
 from identity.models import IdentityType
-from prefrontal_cortex.models import PFCEpic, PFCItemStatus, PFCStory, PFCTask
+from prefrontal_cortex.models import PFCEpic, PFCItemStatus, PFCStory
 from temporal_lobe.models import IterationShiftParticipant, Shift
 
 logger = logging.getLogger(__name__)
+
+
+async def sifting_pm(identity_disc, environment_id) -> bool:
+    """The Sifting PM reviews work and moves it to the backlog."""
+    epics = PFCEpic.objects.filter(
+        (
+            Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
+            | Q(status_id=PFCItemStatus.BACKLOG)
+        )
+        & Q(environment=environment_id)
+    )
+    if epics.count():
+        return True
+
+    stories = PFCStory.objects.filter(
+        (
+            Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
+            | Q(status_id=PFCItemStatus.BACKLOG)
+        )
+        & Q(epic__environment_id=environment_id)
+    )
+    if stories.count():
+        return True
+    return False
+
+
+async def pre_planning_pm(identity_disc, environment_id) -> bool:
+    """The Planning PM queries the entire board and chooses what is selected
+    for development."""
+    return await sifting_pm(identity_disc, environment_id)
+
+
+async def planning_pm(identity_disc, environment_id) -> bool:
+    """The Planning PM has no role."""
+    return await sifting_pm(identity_disc, environment_id)
+
+
+async def executing_pm(identity_disc, environment_id) -> bool:
+    """The Executing PM has no role."""
+    return await sifting_pm(identity_disc, environment_id)
+
+
+async def post_execution_pm(identity_disc, environment_id) -> bool:
+    """The Post execution PM reviews work and sets to blocked
+    by user if it meets DoD else selected for development."""
+    return (
+        PFCStory.objects.filter(
+            Q(status_id=PFCItemStatus.IN_REVIEW)
+            & Q(epic__environment_id=environment_id)
+            & (Q(owning_disc__isnull=True) | Q(owning_disc=identity_disc))
+        ).count()
+        > 0
+    )
+
+
+async def sleeping_pm(identity_disc, environment_id) -> bool:
+    """The Sleeping PM has no tickets."""
+    return True
+
+
+async def sifting_worker(identity_disc, environment_id) -> bool:
+    """The Sifting Worker cleans items in the backlog and/or
+    Tasks to complete existing Stories."""
+    return (
+        PFCStory.objects.filter(
+            (
+                Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
+                | Q(status_id=PFCItemStatus.BACKLOG)
+            )
+            & Q(owning_disc__isnull=True)
+            | Q(owning_disc=identity_disc)
+            & Q(epic__environment_id=environment_id)
+        ).count()
+        > 0
+    )
+
+
+async def bidding_worker(identity_disc, environment_id) -> bool:
+    """The Worker BIDs on the backlog."""
+    stories = PFCStory.objects.filter(
+        Q(status_id=PFCItemStatus.BACKLOG)
+        & Q(owning_disc__isnull=True)
+        & Q(epic__environment_id=environment_id)
+        & Q(complexity=0)
+    )
+    if stories.count():
+        return True
+    else:
+        return await sifting_worker(identity_disc, environment_id)
+
+
+async def executing_worker(identity_disc, environment_id) -> bool:
+    """The Executing Worker is assigned or continues work on assigned tickets."""
+    my_stories = PFCStory.objects.filter(
+        Q(status_id=PFCItemStatus.SELECTED_FOR_DEVELOPMENT)
+        & Q(owning_disc=identity_disc)
+        & Q(epic__environment_id=environment_id)
+    )
+    if my_stories.count():
+        return True
+    available_stories = PFCStory.objects.filter(
+        Q(status_id=PFCItemStatus.SELECTED_FOR_DEVELOPMENT)
+        & Q(owning_disc__isnull=True)
+        & Q(epic__environment_id=environment_id)
+    )
+    if available_stories.count():
+        return True
+    return False
+
+
+async def sleeping_worker(identity_disc, environment_id) -> bool:
+    """The Sleeping Worker has no tickets."""
+    return True
+
+
+async def _is_available_work(
+    shift_id: int,
+    identity_type_id: int,
+    identity_disc,
+    environment_id: str,
+) -> bool:
+    """Is there appropriate work for myself."""
+    logger.info(
+        f'Assigning ticket for shift {shift_id} and identity type {identity_type_id}'
+    )
+    match shift_id:
+        case Shift.SIFTING:
+            match identity_type_id:
+                case IdentityType.PM:
+                    return await sifting_pm(identity_disc, environment_id)
+                case IdentityType.WORKER:
+                    return await bidding_worker(identity_disc, environment_id)
+        case Shift.PRE_PLANNING:
+            match identity_type_id:
+                case IdentityType.PM:
+                    return await pre_planning_pm(identity_disc, environment_id)
+                case IdentityType.WORKER:
+                    return await sifting_worker(identity_disc, environment_id)
+        case Shift.PLANNING:
+            match identity_type_id:
+                case IdentityType.PM:
+                    return await planning_pm(identity_disc, environment_id)
+                case IdentityType.WORKER:
+                    return await sifting_worker(identity_disc, environment_id)
+        case Shift.EXECUTING:
+            match identity_type_id:
+                case IdentityType.PM:
+                    return await executing_pm(identity_disc, environment_id)
+                case IdentityType.WORKER:
+                    return await executing_worker(identity_disc, environment_id)
+        case Shift.POST_EXECUTION:
+            match identity_type_id:
+                case IdentityType.PM:
+                    return await post_execution_pm(
+                        identity_disc, environment_id
+                    )
+                case IdentityType.WORKER:
+                    return await bidding_worker(identity_disc, environment_id)
+        case Shift.SLEEPING:
+            match identity_type_id:
+                case IdentityType.PM:
+                    return await sleeping_pm(identity_disc, environment_id)
+                case IdentityType.WORKER:
+                    return await sleeping_worker(identity_disc, environment_id)
 
 
 class PrefrontalCortex:
     def __init__(self, spike_id: uuid.UUID):
         self.spike_id = spike_id
         self.spike = None
-
-    @classmethod
-    def get_work_query_params(
-        cls, shift_id: int, identity_type_id: int, environment_id: str
-    ) -> tuple:
-        """
-        The absolute source of truth for mapping Shifts & Identities to Agile Models.
-        Returns (ModelClass, query_kwargs, order_by_field)
-        """
-        kwargs = {}
-
-        if identity_type_id == IdentityType.PM:
-            if shift_id == Shift.GROOMING:
-                kwargs['status_id__in'] = [
-                    PFCItemStatus.NEEDS_REFINEMENT,
-                    PFCItemStatus.BACKLOG,
-                ]
-                if environment_id:
-                    kwargs['environment_id'] = environment_id
-                return PFCEpic, kwargs, '-priority'
-
-            if shift_id in [Shift.PRE_PLANNING, Shift.PLANNING]:
-                kwargs['status_id__in'] = [
-                    PFCItemStatus.NEEDS_REFINEMENT,
-                ]
-                if environment_id:
-                    kwargs['epic__environment_id'] = environment_id
-                return PFCStory, kwargs, '-priority'
-
-        elif identity_type_id == IdentityType.WORKER:
-            if shift_id == Shift.EXECUTING:
-                kwargs['status_id__in'] = [
-                    PFCItemStatus.SELECTED_FOR_DEVELOPMENT,
-                ]
-                if environment_id:
-                    kwargs['story__epic__environment_id'] = environment_id
-                # PFCTask lacks 'priority', so we pull the oldest tasks first
-                return PFCTask, kwargs, 'created'
-
-        return None, None, None
 
     async def dispatch(
         self, iteration_shift_participant_id: int, environment_id: str
@@ -79,8 +203,8 @@ class PrefrontalCortex:
             ).get
         )(id=iteration_shift_participant_id)
 
-        # 1. Attempt to lock a ticket FOR THIS SPECIFIC WORKER
-        assigned_item = await self._assign_ticket(
+        # 1. Attempt to look for work.
+        is_available_work = await _is_available_work(
             shift_id=participant.iteration_shift.shift.id,
             identity_type_id=participant.iteration_participant.identity.identity_type_id,
             identity_disc=participant.iteration_participant,
@@ -88,22 +212,20 @@ class PrefrontalCortex:
         )
 
         # THE BOUNCER: If there is no work, we STOP here. No Frontal Lobe is spun up.
-        if not assigned_item:
+        if not is_available_work:
             logger.info(
                 f'[PFC] No actionable work found for {participant.iteration_participant.name}. Standing down.'
             )
             return None
 
-        # 2. Work exists and is locked! Spin up the Frontal Lobe.
         return await self._create_session_and_run(
             participant.iteration_shift,
             participant.iteration_participant,
             participant,
-            assigned_item,
         )
 
     async def _create_session_and_run(
-        self, iteration_shift, identity_disc, participant, assigned_item
+        self, iteration_shift, identity_disc, participant
     ):
         """Wakes the AI now that a ticket is firmly in hand."""
         lobe = FrontalLobe(self.spike)
@@ -114,69 +236,8 @@ class PrefrontalCortex:
             identity_disc=identity_disc,
             participant=participant,
         )
-
-        # The AI is now awake and will read the assigned ticket via the Agile Addon
         await lobe.run()
-
-        # Cleanup: Remove the owning disc and push to previous owners
-        if assigned_item:
-            await self._release_ticket(assigned_item, identity_disc)
-
         return lobe.session.id
-
-    @sync_to_async
-    def _assign_ticket(
-        self,
-        shift_id: int,
-        identity_type_id: int,
-        identity_disc,
-        environment_id: str,
-    ):
-        """Finds the highest priority ticket, preferring ones this disc previously owned. Locks it."""
-        logger.info(
-            f'Assigning ticket for shift {shift_id} and identity type {identity_type_id}'
-        )
-        model_class, kwargs, order_field = self.get_work_query_params(
-            shift_id, identity_type_id, environment_id
-        )
-        if not model_class:
-            return None
-
-        with transaction.atomic():
-            # Strategy 1: Reclaim a previously owned ticket that is currently unassigned
-            item = (
-                model_class.objects.select_for_update()
-                .filter(
-                    previous_owners=identity_disc,
-                    owning_disc__isnull=True,
-                    **kwargs,
-                )
-                .order_by(order_field)
-                .first()
-            )
-
-            # Strategy 2: Grab the highest priority unassigned ticket
-            if not item:
-                item = (
-                    model_class.objects.select_for_update()
-                    .filter(owning_disc__isnull=True, **kwargs)
-                    .order_by(order_field)
-                    .first()
-                )
-
-            # Lock it in!
-            if item:
-                item.owning_disc = identity_disc
-                item.save(update_fields=['owning_disc'])
-                logger.info(
-                    f'[PFC] Locked {item.__class__.__name__} {item.id} to {identity_disc.name}'
-                )
-                return item
-            else:
-                logger.info(
-                    f'[PFC] No actionable work found for {identity_disc.name}.'
-                )
-            return None
 
     @sync_to_async
     def _release_ticket(self, item, identity_disc):

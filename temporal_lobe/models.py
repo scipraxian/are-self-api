@@ -8,11 +8,19 @@ from identity.models import Identity, IdentityDisc
 class Shift(NameMixin):
     """Execute N number of turns."""
 
-    GROOMING = 1  # sifting
-    PRE_PLANNING = 2
-    PLANNING = 3
-    EXECUTING = 4
-    POST_EXECUTION = 5
+    SIFTING = 1  # pm refine epics and stories, # Worker BID on backlog
+    PRE_PLANNING = 2  # pm based on
+    # allocated turns and bids
+    # prioritize epics and stories
+    # move from needs refinement to backlog
+    # move from backlog to selected for development (if bid)
+    # worker sift
+    PLANNING = 3  # Worker sift, PM sift
+    EXECUTING = 4  # worker execute story, PM sift
+    POST_EXECUTION = (
+        5  # PM In Review to Blocked By User (else S4D), Worker BID on backlog
+    )
+    SLEEPING = 6  # Identity. Each identity sleeps by reviewing their memories and work, and growing.
     default_turn_limit = models.IntegerField(default=1)
 
 
