@@ -1,4 +1,5 @@
 import logging
+from uuid import UUID
 
 from django.db import transaction
 from django.utils import timezone
@@ -26,7 +27,7 @@ class IterationInceptionManager:
     def incept_iteration(
         cls,
         definition_id: int,
-        environment_id: str = None,
+        environment_id: UUID = None,
         custom_name: str = None,
     ) -> Iteration:
         # 1. Fetch the Blueprint

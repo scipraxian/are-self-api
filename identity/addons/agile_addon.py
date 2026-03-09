@@ -256,6 +256,8 @@ class AgilePromptBuilder:
         self.iteration_id = self.package.iteration
         if not self.iteration_id:
             raise ValueError('No active iteration.')
+        if not self.iteration_id or self.package.reasoning_turn_id is None:
+            return  # Skip all DB queries, we are in preview mode!
         if self.package.identity_disc:
             self.identity_disc = IdentityDisc.objects.get(
                 id=self.package.identity_disc
@@ -276,6 +278,8 @@ class AgilePromptBuilder:
     async def build_prompt(self) -> str:
         if not self.identity_disc:
             return '[AGILE BOARD CONTEXT: UI Preview Mode - No Active Disc Assigned]'
+        if not getattr(self, 'shift', None) or not self.identity_disc:
+            return '[AGILE BOARD CONTEXT: UI Preview Mode - No Active Shift or Disc Assigned]'
         self.context_lines = [
             '=========================================',
             f' AGILE BOARD CONTEXT | SHIFT: {self.shift.name}',
@@ -379,12 +383,10 @@ class AgilePromptBuilder:
         return '\n'.join(self.context_lines)
 
 
-# Keep the async wrapper exactly as you had it
 async def agile_addon(package: AddonPackage) -> str:
     """
     Identity Addon: Dynamically injects the active Agile Board context into the system prompt.
     Adapts the ticket payload based on the current Temporal Shift (Grooming, Planning, Executing).
     """
-    # Using sync_to_async to wrap the DB calls inside the builder
     builder = AgilePromptBuilder(package)
     return await builder.build_prompt()

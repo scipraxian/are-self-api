@@ -1,6 +1,9 @@
+import inspect
 import logging
 from typing import Optional
 from uuid import UUID
+
+from asgiref.sync import async_to_sync
 
 from identity.addons.addon_registry import ADDON_REGISTRY
 
@@ -68,11 +71,16 @@ def _resolve_addon_content(
             reasoning_turn_id=reasoning_turn_id,
         )
         try:
-            dynamic_text = ADDON_REGISTRY[slug](package)
+            func = ADDON_REGISTRY[slug]
+            if inspect.iscoroutinefunction(func):
+                dynamic_text = async_to_sync(func)(package)
+            else:
+                dynamic_text = func(package)
             return f'- {addon.name}:\n{dynamic_text}'
         except Exception as e:
-            logger.error(f"Addon '{slug}' failed to execute: {e}")
-            return f'- {addon.name}: [System Error: Dynamic module failed]'
+            error_message = f"Addon '{slug}' failed to execute: {e}"
+            logger.error(error_message)
+            return error_message
 
     # Fallback to static description if no slug or slug not found
     return f'- {addon.name}: {addon.description}'

@@ -132,6 +132,16 @@
   }
 },
 {
+  "model": "temporal_lobe.iterationshiftdefinition",
+  "pk": 8,
+  "fields": {
+    "definition": 1,
+    "shift": 6,
+    "order": 6,
+    "turn_limit": 1
+  }
+},
+{
   "model": "temporal_lobe.iterationshiftdefinitionparticipant",
   "pk": 1,
   "fields": {
