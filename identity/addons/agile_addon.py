@@ -1,19 +1,242 @@
-import json
-from random import random, randrange
-from typing import Optional
-
-from asgiref.sync import sync_to_async
+from django.db.models import Q
 
 from frontal_lobe.models import ReasoningTurn
 from identity.addons.addon_package import AddonPackage
 from identity.models import IdentityDisc, IdentityType
-from prefrontal_cortex.models import PFCEpic, PFCItemStatus, PFCStory, PFCTask
-from prefrontal_cortex.serializers import (
-    PFCEpicDetailSerializer,
-    PFCStoryDetailSerializer,
-    PFCTaskDetailSerializer,
-)
-from temporal_lobe.models import Iteration, Shift
+from prefrontal_cortex.models import PFCEpic, PFCItemStatus, PFCStory
+from temporal_lobe.models import Shift
+
+
+async def sifting_pm(identity_disc, environment_id) -> str:
+    """The Sifting PM reviews work and moves it to the backlog."""
+    success = False
+    statements = []
+    statements.append(
+        f'ROLE: Sifting PM - Refine and/or Create Epics and Stories.'
+    )
+    statements.append('PM == NO CODE == Planning and Oversight')
+    statements.append(f'ENVIRONMENT: {environment_id}')
+    epics = PFCEpic.objects.filter(
+        (
+            Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
+            | Q(status_id=PFCItemStatus.BACKLOG)
+        )
+        & Q(environment=environment_id)
+    )
+    if epics.count():
+        success = True
+        statements.append('Epics in need of refinement:')
+        for epic in epics:
+            statements.append(f'{epic.id} | {epic.name}')
+
+    stories = PFCStory.objects.filter(
+        (
+            Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
+            | Q(status_id=PFCItemStatus.BACKLOG)
+        )
+        & Q(epic__environment_id=environment_id)
+    )
+    if stories.count():
+        success = True
+        statements.append('Stories in need of refinement:')
+        for story in stories:
+            statements.append(f'{story.id} | {story.name}')
+
+    if not success:
+        statements.append('No stories or epics in need of refinement.')
+        statements.append('Review everything and make more where necessary.')
+
+    return '\n'.join(statements)
+
+
+async def pre_planning_pm(identity_disc, environment_id) -> str:
+    """The Pre-Planning PM queries the entire board and chooses what is selected
+    for development."""
+    success = False
+    statements = []
+    statements.append(
+        f'ROLE: Pre-Planning PM - Choose epics and stories and set them to selected for development.'
+    )
+    statements.append('PM == NO CODE == Planning and Oversight')
+    statements.append(f'ENVIRONMENT: {environment_id}')
+    epics = PFCEpic.objects.filter(
+        Q(status_id=PFCItemStatus.BACKLOG) & Q(environment=environment_id)
+    )
+    if epics.count():
+        success = True
+        statements.append('Epics to consider for development:')
+        for epic in epics:
+            statements.append(f'{epic.id} | {epic.name}')
+
+    stories = PFCStory.objects.filter(
+        Q(status_id=PFCItemStatus.BACKLOG)
+        & Q(epic__environment_id=environment_id)
+    )
+    if stories.count():
+        success = True
+        statements.append('Stories to consider for development:')
+        for story in stories:
+            statements.append(f'{story.id} | {story.name}')
+
+    selected_and_in_progress_stories = PFCStory.objects.filter(
+        (
+            Q(status_id=PFCItemStatus.SELECTED_FOR_DEVELOPMENT)
+            | Q(status_id=PFCItemStatus.IN_PROGRESS)
+        )
+        & Q(epic__environment_id=environment_id)
+    )
+
+    if selected_and_in_progress_stories.count():
+        success = True
+        statements.append('Stories already selected:')
+        for story in stories:
+            statements.append(
+                f'{story.id} | {story.name} | {story.status.name}'
+            )
+
+    if not success:
+        return await sifting_pm(identity_disc, environment_id)
+
+    return '\n'.join(statements)
+
+
+async def planning_pm(identity_disc, environment_id) -> str:
+    """The Planning PM has no role."""
+    return await sifting_pm(identity_disc, environment_id)
+
+
+async def executing_pm(identity_disc, environment_id) -> str:
+    """The Executing PM has no role."""
+    return await sifting_pm(identity_disc, environment_id)
+
+
+async def post_execution_pm(identity_disc, environment_id) -> str:
+    """Are there items for review?"""
+
+    success = False
+    statements = []
+    stories = PFCStory.objects.filter(
+        Q(status_id=PFCItemStatus.IN_REVIEW)
+        & Q(epic__environment_id=environment_id)
+    )
+    if stories.count():
+        success = True
+
+        statements.append(
+            f'ROLE: Post Execution PM - Review stories and epics, upgrade to BLOCKED_BY_USER if they pass the DoD (Definition of Done).'
+        )
+        statements.append('PM == NO CODE == Planning and Oversight')
+        statements.append(f'ENVIRONMENT: {environment_id}')
+        statements.append('Review as many stories as you have turns to do so.')
+        statements.append(
+            'If a story or epic does not meet the DoD, mcp_comment_add, and then set it back to SELECTED_FOR_DEVELOPMENT.'
+        )
+        for story in stories:
+            statements.append(f'{story.id} | {story.name}')
+
+    if success:
+        return '\n'.join(statements)
+    else:
+        return await sifting_pm(identity_disc, environment_id)
+
+
+async def sleeping_pm(identity_disc, environment_id) -> str:
+    """The Sleeping PM has no tickets."""
+    return (
+        'You may now sleep, these turns are yours to learn and grow. '
+        'Improve your memories, and learn from your previous work.'
+    )
+
+
+async def bidding_worker(identity_disc, environment_id) -> str:
+    """The Worker BIDs on the backlog."""
+    statements = []
+    stories = PFCStory.objects.filter(
+        Q(status_id=PFCItemStatus.BACKLOG)
+        & Q(owning_disc__isnull=True)
+        & Q(epic__environment_id=environment_id)
+        & Q(complexity=0)
+    )
+    if stories.count():
+        statements.append(
+            'A BID is how many turns you think it will take to complete a story. These stories are in need of a BID:'
+        )
+        for story in stories:
+            statements.append(f'{story.id} | {story.name}')
+        return '\n'.join(statements)
+    else:
+        return await sifting_worker(identity_disc, environment_id)
+
+
+async def sifting_worker(identity_disc, environment_id) -> str:
+    """The Sifting Worker cleans items in the backlog and/or
+    Tasks to complete existing Stories. Only deal with unassigned stories."""
+    success = False
+    statements = []
+    statements.append(f'ENVIRONMENT: {environment_id}')
+    statements.append(
+        'ROLE: Sifting Worker - Create and Improve Stories and Tasks so they meet Definition of Ready (DoR) so a PM may move it to the BACKLOG.'
+    )
+    statements.append('This is a non-execution Shift. NO CODE')
+    stories = PFCStory.objects.filter(
+        Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
+        & (Q(owning_disc__isnull=True) | Q(owning_disc=identity_disc))
+        & Q(epic__environment_id=environment_id)
+    )
+    if stories.count():
+        success = True
+        statements.append('Stories in need of refinement:')
+        for story in stories:
+            statements.append(f'{story.id} | {story.name}')
+
+    if not success:
+        statements.append('No stories need of refinement.')
+        statements.append('Review everything and make more where necessary.')
+
+    return '\n'.join(statements)
+
+
+async def executing_worker(identity_disc, environment_id) -> str:
+    """The Executing Worker is assigned or continues work on assigned tickets."""
+    success = False
+    statements = []
+    statements.append(f'ENVIRONMENT: {environment_id}')
+    statements.append('ROLE: Executing Worker - Execute stories and tasks.')
+    statements.append(
+        'This is an EXECUTION Shift. Fulfill Assertions to the best of your ability.'
+    )
+    my_stories = PFCStory.objects.filter(
+        Q(status_id=PFCItemStatus.SELECTED_FOR_DEVELOPMENT)
+        & Q(owning_disc=identity_disc)
+        & Q(epic__environment_id=environment_id)
+    )
+    if my_stories.count():
+        success = True
+        statements.append('You own the following stories:')
+        for story in my_stories:
+            statements.append(f'{story.id} | {story.name}')
+    available_stories = PFCStory.objects.filter(
+        Q(status_id=PFCItemStatus.SELECTED_FOR_DEVELOPMENT)
+        & Q(owning_disc__isnull=True)
+        & Q(epic__environment_id=environment_id)
+    )
+    if available_stories.count():
+        success = True
+        statements.append('You may work on the following stories:')
+        for story in available_stories:
+            statements.append(f'{story.id} | {story.name}')
+    if not success:
+        statements.append('No stories to work on.')
+        statements.append('Review everything and make more where necessary.')
+    return '\n'.join(statements)
+
+
+async def sleeping_worker(identity_disc, environment_id) -> str:
+    """The Sleeping Worker has no tickets."""
+    return (
+        'You may now sleep, these turns are yours to learn and grow. '
+        'Improve your memories, and learn from your previous work.'
+    )
 
 
 class AgilePromptBuilder:
@@ -22,6 +245,7 @@ class AgilePromptBuilder:
         self.iteration_id = None
         self.iteration_shift = None
         self.iteration = None
+        self.environment_id = None
         self.identity_disc = None
         self.turn_number = None
         self.reasoning_turn = None
@@ -46,9 +270,10 @@ class AgilePromptBuilder:
             self.reasoning_turn.session.participant.iteration_shift
         )
         self.iteration = self.iteration_shift.shift_iteration
+        self.environment_id = self.iteration.environment_id
         self.shift = self.iteration_shift.shift
 
-    def build_prompt(self) -> str:
+    async def build_prompt(self) -> str:
         if not self.identity_disc:
             return '[AGILE BOARD CONTEXT: UI Preview Mode - No Active Disc Assigned]'
         self.context_lines = [
@@ -57,80 +282,101 @@ class AgilePromptBuilder:
             '=========================================',
         ]
 
-        id_type = self.identity_disc.identity.identity_type_id
+        identity_type_id = self.identity_disc.identity.identity_type_id
         shift_id = self.shift.id
 
-        # ---------------------------------------------------------
-        # PM ROUTING
-        # ---------------------------------------------------------
-        if id_type == IdentityType.PM:
-            if shift_id == Shift.GROOMING:
-                self._handle_epic_grooming()
-            elif shift_id in [Shift.PRE_PLANNING, Shift.PLANNING]:
-                self._handle_story_planning()
-            else:
-                self.context_lines.append(
-                    f"-> DIRECTIVE: Standby. No active PM directives for shift '{self.shift.name}'."
-                )
-
-        # ---------------------------------------------------------
-        # WORKER ROUTING
-        # ---------------------------------------------------------
-        elif id_type == IdentityType.WORKER:
-            if shift_id == Shift.EXECUTING:
-                self._handle_task_execution()
-            else:
-                self.context_lines.append(
-                    f"-> DIRECTIVE: Standby. No active Worker directives for shift '{self.shift.name}'."
-                )
-
+        match shift_id:
+            case Shift.SIFTING:
+                match identity_type_id:
+                    case IdentityType.PM:
+                        self.context_lines.append(
+                            await sifting_pm(
+                                self.identity_disc, self.environment_id
+                            )
+                        )
+                    case IdentityType.WORKER:
+                        self.context_lines.append(
+                            await bidding_worker(
+                                self.identity_disc, self.environment_id
+                            )
+                        )
+            case Shift.PRE_PLANNING:
+                match identity_type_id:
+                    case IdentityType.PM:
+                        self.context_lines.append(
+                            await pre_planning_pm(
+                                self.identity_disc, self.environment_id
+                            )
+                        )
+                    case IdentityType.WORKER:
+                        self.context_lines.append(
+                            await sifting_worker(
+                                self.identity_disc, self.environment_id
+                            )
+                        )
+            case Shift.PLANNING:
+                match identity_type_id:
+                    case IdentityType.PM:
+                        self.context_lines.append(
+                            await planning_pm(
+                                self.identity_disc, self.environment_id
+                            )
+                        )
+                    case IdentityType.WORKER:
+                        self.context_lines.append(
+                            await sifting_worker(
+                                self.identity_disc, self.environment_id
+                            )
+                        )
+            case Shift.EXECUTING:
+                match identity_type_id:
+                    case IdentityType.PM:
+                        self.context_lines.append(
+                            await executing_pm(
+                                self.identity_disc, self.environment_id
+                            )
+                        )
+                    case IdentityType.WORKER:
+                        self.context_lines.append(
+                            await executing_worker(
+                                self.identity_disc, self.environment_id
+                            )
+                        )
+            case Shift.POST_EXECUTION:
+                match identity_type_id:
+                    case IdentityType.PM:
+                        self.context_lines.append(
+                            await post_execution_pm(
+                                self.identity_disc, self.environment_id
+                            )
+                        )
+                    case IdentityType.WORKER:
+                        self.context_lines.append(
+                            await bidding_worker(
+                                self.identity_disc, self.environment_id
+                            )
+                        )
+            case Shift.SLEEPING:
+                match identity_type_id:
+                    case IdentityType.PM:
+                        self.context_lines.append(
+                            await sleeping_pm(
+                                self.identity_disc, self.environment_id
+                            )
+                        )
+                    case IdentityType.WORKER:
+                        self.context_lines.append(
+                            await sleeping_worker(
+                                self.identity_disc, self.environment_id
+                            )
+                        )
+        self.context_lines.append(
+            'Use mcp_ticket... functions to deal with tickets.'
+        )
+        self.context_lines.append(
+            'Ticket status values in order by ("id", "name") are: [(1, "Backlog"), (2, "Selected for Development"), (3, "In Progress"), (4, "Blocked by User"), (5, "Done"), (6, "Needs Refinement"), (7, "Will not do.")]'
+        )
         return '\n'.join(self.context_lines)
-
-    def _handle_epic_grooming(self):
-        # Look for the exact Epic the PFC just locked to this disc
-        epic = PFCEpic.objects.filter(owning_disc=self.identity_disc).first()
-        if epic:
-            # Serialize the ENTIRE nested object (Environment, Tags, Engrams, etc.)
-            epic_data = PFCEpicDetailSerializer(epic).data
-            self.context_lines.append(
-                '-> DIRECTIVE: Groom this Epic. Break it down into strictly formatted Stories using mcp_ticket.'
-            )
-            self.context_lines.append('\n### ASSIGNED EPIC DATA ###')
-            self.context_lines.append(json.dumps(epic_data, indent=2))
-        else:
-            self.context_lines.append(
-                '-> DIRECTIVE: No Epic assigned. Review backlog or standby.'
-            )
-
-    def _handle_story_planning(self):
-        # Look for the exact Story the PFC just locked to this disc
-        story = PFCStory.objects.filter(owning_disc=self.identity_disc).first()
-        if story:
-            story_data = PFCStoryDetailSerializer(story).data
-            self.context_lines.append(
-                '-> DIRECTIVE: Verify DoR (Definition of Ready). Break this Story into actionable Tasks using mcp_ticket.'
-            )
-            self.context_lines.append('\n### ASSIGNED STORY DATA ###')
-            self.context_lines.append(json.dumps(story_data, indent=2))
-        else:
-            self.context_lines.append(
-                '-> DIRECTIVE: No Story assigned. Review backlog or standby.'
-            )
-
-    def _handle_task_execution(self):
-        # Look for the exact Task the PFC just locked to this disc
-        task = PFCTask.objects.filter(owning_disc=self.identity_disc).first()
-        if task:
-            task_data = PFCTaskDetailSerializer(task).data
-            self.context_lines.append(
-                '-> DIRECTIVE: Execute this task. Fulfill the parent story assertions. Document discoveries in Engrams. Close task when complete.'
-            )
-            self.context_lines.append('\n### ASSIGNED TASK DATA ###')
-            self.context_lines.append(json.dumps(task_data, indent=2))
-        else:
-            self.context_lines.append(
-                '-> DIRECTIVE: No Task assigned. Review backlog or standby.'
-            )
 
 
 # Keep the async wrapper exactly as you had it
@@ -141,4 +387,4 @@ async def agile_addon(package: AddonPackage) -> str:
     """
     # Using sync_to_async to wrap the DB calls inside the builder
     builder = AgilePromptBuilder(package)
-    return await sync_to_async(builder.build_prompt)()
+    return await builder.build_prompt()
