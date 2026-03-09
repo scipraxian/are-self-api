@@ -26,6 +26,7 @@ class Command(BaseCommand):
             'reasoningspiketrainmap',
             'reasoninggoal',
             'reasoningturn',
+            'sessionconclusion',
         ],
         'parietal_lobe': ['toolcall'],
         'prefrontal_cortex': ['pfcepic', 'pfcstory', 'pfctask', 'pfccomment'],
