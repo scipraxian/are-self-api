@@ -2170,7 +2170,7 @@
     "is_root": false,
     "pathway": "e94a9c50-5baa-4cae-808e-b17367c11fc6",
     "effector": 156,
-    "ui_json": "{\"x\": 434, \"y\": 102}",
+    "ui_json": "{\"x\":434,\"y\":102}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2508,7 +2508,7 @@
     "is_root": true,
     "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
     "effector": 1,
-    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "ui_json": "{\"x\":151.96227231444107,\"y\":82.07605970077542}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2768,7 +2768,7 @@
     "is_root": false,
     "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
     "effector": 156,
-    "ui_json": "{\"x\": 911, \"y\": 114}",
+    "ui_json": "{\"x\":853.1668914870171,\"y\":-177.1872927255}",
     "invoked_pathway": null,
     "distribution_mode": 1
   }
@@ -2859,7 +2859,7 @@
     "is_root": false,
     "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
     "effector": 169,
-    "ui_json": "{\"x\": 648, \"y\": 144}",
+    "ui_json": "{\"x\":521.7912490087372,\"y\":-94.9727143251056}",
     "invoked_pathway": null,
     "distribution_mode": 1
   }
@@ -2872,7 +2872,7 @@
     "is_root": false,
     "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
     "effector": 166,
-    "ui_json": "{\"x\": 356, \"y\": 168}",
+    "ui_json": "{\"x\":642.1229705554393,\"y\":226.43913630884015}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2885,7 +2885,7 @@
     "is_root": false,
     "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
     "effector": 170,
-    "ui_json": "{\"x\": 1225, \"y\": 131}",
+    "ui_json": "{\"x\":1225,\"y\":131}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2898,7 +2898,7 @@
     "is_root": false,
     "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
     "effector": 171,
-    "ui_json": "{\"x\": 357, \"y\": 274}",
+    "ui_json": "{\"x\":218.18651275820184,\"y\":-235.90826245443526}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2956,6 +2956,19 @@
   }
 },
 {
+  "model": "central_nervous_system.neuron",
+  "pk": 134,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "effector": 166,
+    "ui_json": "{\"x\":160.02699307159975,\"y\":313.98576488813706}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
   "model": "central_nervous_system.neuroncontext",
   "pk": 5,
   "fields": {
@@ -2980,6 +2993,24 @@
     "neuron": 127,
     "key": "prompt",
     "value": "use the unreal parsing tool mcp_run_unreal_diagnostic_parser\non the provenance spike\n{{spike.provenance.id}}\n\nwhich is the output of our Unreal 5.6.1 application.\n\nyou should also inspect the record\n\nmcp_inspect_record cns Spike {{spike.provenance.id}}\n\nEach turn enhance the Engrams of known issues, as well as create Engrams for new issues.\nOnce you think you have tagged all issues, use mcp_conclude_session to file a report and end."
+  }
+},
+{
+  "model": "central_nervous_system.neuroncontext",
+  "pk": 8,
+  "fields": {
+    "neuron": 122,
+    "key": "prompt",
+    "value": "Please attempt to count the number of files in this list {{provenance.application_log}}\ntest"
+  }
+},
+{
+  "model": "central_nervous_system.neuroncontext",
+  "pk": 9,
+  "fields": {
+    "neuron": 122,
+    "key": "prompt",
+    "value": "Please attempt to count the number of files in this list {{provenance.application_log}}"
   }
 },
 {
@@ -3654,28 +3685,6 @@
 },
 {
   "model": "central_nervous_system.axon",
-  "pk": 144,
-  "fields": {
-    "modified": "2026-02-16T20:37:41.377Z",
-    "type": 1,
-    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-    "source": 84,
-    "target": 123
-  }
-},
-{
-  "model": "central_nervous_system.axon",
-  "pk": 145,
-  "fields": {
-    "modified": "2026-02-16T20:38:13.963Z",
-    "type": 1,
-    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-    "source": 123,
-    "target": 122
-  }
-},
-{
-  "model": "central_nervous_system.axon",
   "pk": 146,
   "fields": {
     "modified": "2026-02-16T21:54:32.244Z",
@@ -3731,17 +3740,6 @@
 },
 {
   "model": "central_nervous_system.axon",
-  "pk": 159,
-  "fields": {
-    "modified": "2026-02-24T05:00:17.385Z",
-    "type": 1,
-    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-    "source": 84,
-    "target": 125
-  }
-},
-{
-  "model": "central_nervous_system.axon",
   "pk": 160,
   "fields": {
     "modified": "2026-03-01T16:29:30.878Z",
@@ -3760,6 +3758,17 @@
     "pathway": "c3dd041a-20eb-4414-b571-2a5fdbeb9b86",
     "source": 129,
     "target": 130
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 166,
+  "fields": {
+    "modified": "2026-03-07T23:49:03.534Z",
+    "type": 1,
+    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "source": 84,
+    "target": 123
   }
 }
 ]

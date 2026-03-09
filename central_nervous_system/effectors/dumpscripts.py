@@ -43,6 +43,7 @@ DIRECTORIES_TO_IGNORE: Set[str] = {
     'venv',
     '.junie',
     '.agent',
+    'staticfiles',
 }
 
 # Logger setup as per standards
