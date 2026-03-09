@@ -1,0 +1,1 @@
+import django; p = django.__path__[0]; import os; ap = os.path.join(p, 'contrib', 'auth', 'migrations'); print('Auth migrations path:', ap); print('Exists:', os.path.exists(ap)); print('Files:', os.listdir(ap)[:5] if os.path.exists(ap) else 'N/A')
