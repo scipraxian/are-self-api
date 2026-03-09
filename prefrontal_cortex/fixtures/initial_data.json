@@ -47,5 +47,33 @@
   "fields": {
     "name": "Will not do."
   }
+},
+{
+  "model": "prefrontal_cortex.pfccommentstatus",
+  "pk": 1,
+  "fields": {
+    "name": "Created"
+  }
+},
+{
+  "model": "prefrontal_cortex.pfccommentstatus",
+  "pk": 2,
+  "fields": {
+    "name": "Approved"
+  }
+},
+{
+  "model": "prefrontal_cortex.pfccommentstatus",
+  "pk": 3,
+  "fields": {
+    "name": "Rejected"
+  }
+},
+{
+  "model": "prefrontal_cortex.pfccommentstatus",
+  "pk": 4,
+  "fields": {
+    "name": "Archived"
+  }
 }
 ]

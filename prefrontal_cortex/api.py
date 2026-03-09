@@ -39,8 +39,9 @@ class FullPullMixin:
                 return self.detail_serializer_class
 
             if hasattr(self, 'request') and self.request is not None:
-                full_param = self.request.query_params.get('full',
-                                                           'false').lower()
+                full_param = self.request.query_params.get(
+                    'full', 'false'
+                ).lower()
                 if full_param in ['true', '1', 'yes']:
                     return self.detail_serializer_class
 
@@ -93,3 +94,9 @@ class PFCCommentViewSet(FullPullMixin, viewsets.ModelViewSet):
     queryset = PFCComment.objects.all()
     serializer_class = PFCCommentSerializer
     detail_serializer_class = PFCCommentDetailSerializer
+
+    def perform_create(self, serializer):
+        if self.request and self.request.user.is_authenticated:
+            serializer.save(user=self.request.user)
+        else:
+            serializer.save()

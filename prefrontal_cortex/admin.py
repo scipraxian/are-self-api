@@ -3,11 +3,24 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
-from .models import PFCComment, PFCEpic, PFCItemStatus, PFCStory, PFCTask
+from .models import (
+    PFCComment,
+    PFCCommentStatus,
+    PFCEpic,
+    PFCItemStatus,
+    PFCStory,
+    PFCTask,
+)
 
 
 @admin.register(PFCItemStatus)
 class ItemStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ('name',)
+
+
+@admin.register(PFCCommentStatus)
+class PFCCommentStatusAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
     search_fields = ('name',)
 
@@ -85,6 +98,21 @@ class PFCEpicAdmin(admin.ModelAdmin):
             {'fields': ('name', 'description', 'status', 'environment')},
         ),
         (
+            'Ticket Fields',
+            {
+                'fields': (
+                    'priority',
+                    'perspective',
+                    'assertions',
+                    'outside',
+                    'dod_exceptions',
+                    'dependencies',
+                    'demo_specifics',
+                ),
+                'classes': ('collapse',),
+            },
+        ),
+        (
             'Mathematical Lobe',
             {
                 'fields': ('vector',),
@@ -122,6 +150,21 @@ class PFCStoryAdmin(admin.ModelAdmin):
         (
             'Strategy (Story)',
             {'fields': ('epic', 'name', 'description', 'status')},
+        ),
+        (
+            'Ticket Fields',
+            {
+                'fields': (
+                    'priority',
+                    'perspective',
+                    'assertions',
+                    'outside',
+                    'dod_exceptions',
+                    'dependencies',
+                    'demo_specifics',
+                ),
+                'classes': ('collapse',),
+            },
         ),
         (
             'Mathematical Lobe',
