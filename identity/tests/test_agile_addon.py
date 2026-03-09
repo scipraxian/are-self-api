@@ -1,21 +1,26 @@
 import json
 import os
+
 import pytest
 from asgiref.sync import sync_to_async
 
 from common.tests.common_test_case import CommonFixturesAPITestCase
-
 from identity.models import Identity, IdentityDisc, IdentityType
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
-from temporal_lobe.models import (Iteration, IterationDefinition,
-                                  IterationShift, Shift,
-                                  IterationShiftParticipant, IterationStatus,
-                                  IterationShiftDefinition)
-from prefrontal_cortex.models import PFCEpic, PFCItemStatus
 from frontal_lobe.models import ReasoningSession, ReasoningTurn
 from identity.addons.addon_package import AddonPackage
 from identity.addons.agile_addon import agile_addon
+from prefrontal_cortex.models import PFCEpic, PFCItemStatus
+from temporal_lobe.models import (
+    Iteration,
+    IterationDefinition,
+    IterationShift,
+    IterationShiftDefinition,
+    IterationShiftParticipant,
+    IterationStatus,
+    Shift,
+)
 
 
 class AgileAddonTest(CommonFixturesAPITestCase):
@@ -50,7 +55,7 @@ class AgileAddonTest(CommonFixturesAPITestCase):
                                              })
 
         grooming_shift, _ = await sync_to_async(Shift.objects.get_or_create
-                                               )(id=Shift.GROOMING,
+                                               )(id=Shift.SIFTING,
                                                  defaults={
                                                      'name': 'Grooming'
                                                  })

@@ -16,7 +16,6 @@ def focus_addon(package: AddonPackage) -> str:
     prompt_blocks.append(
         f'### Identity Disc Statistics ###\n'
         f'Level: {identity_disc.level} | XP: {identity_disc.xp} | '
-        f'Tickets Closed: {identity_disc.successes} | Turnouts: {identity_disc.failures}'
     )
 
     if turn_number == 1:

@@ -23,9 +23,9 @@ def render_base_identity(
     if not identity:
         return 'No Identity provided. Operating with blank slate.'
 
+    # todo: allow variable resolve
     prompt_blocks = [identity.system_prompt_template]
 
-    # M2M fields require the object to be saved first
     if identity.pk:
         tags = [tag.name for tag in identity.tags.all()]
         if tags:
