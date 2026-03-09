@@ -323,10 +323,19 @@ class IterationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Hit the Ignition Switch!
-        from temporal_lobe.temporal_lobe import TemporalLobe
+        # 1. Flip the status
+        from temporal_lobe.models import IterationStatus
 
-        TemporalLobe.initiate_iteration(iteration)
+        status_running, _ = IterationStatus.objects.get_or_create(
+            id=2, defaults={'name': 'Running'}
+        )
+        iteration.status = status_running
+        iteration.save(update_fields=['status'])
+
+        # 2. Kick the Metronome manually
+        from temporal_lobe.temporal_lobe import trigger_temporal_metronomes
+
+        trigger_temporal_metronomes()
 
         # Re-fetch cache and return updated board
         fresh_iteration = self.get_queryset().get(pk=iteration.pk)
