@@ -9,7 +9,7 @@ from frontal_lobe.frontal_lobe import FrontalLobe
 from frontal_lobe.models import ReasoningSession, ReasoningStatusID
 from identity.models import IdentityType
 from prefrontal_cortex.models import PFCEpic, PFCItemStatus, PFCStory
-from temporal_lobe.models import IterationShiftParticipant, Shift
+from temporal_lobe.models import IterationShiftParticipant, IterationShiftParticipantStatus, Shift
 
 logger = logging.getLogger(__name__)
 
@@ -213,6 +213,15 @@ class PrefrontalCortex:
             participant=participant,
         )
         await lobe.run()
+
+        # Immediately mark participant as COMPLETED so the Temporal Lobe
+        # can advance the shift on the next tick without relying on ghost cleanup.
+        participant.status_id = IterationShiftParticipantStatus.COMPLETED
+        await sync_to_async(participant.save)(update_fields=['status'])
+        logger.info(
+            f'[PFC] Participant {participant.id} marked COMPLETED after session {lobe.session.id}.'
+        )
+
         return lobe.session.id
 
     @sync_to_async
