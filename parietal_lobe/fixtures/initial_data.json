@@ -394,6 +394,30 @@
   }
 },
 {
+  "model": "parietal_lobe.tooldefinition",
+  "pk": 24,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "description": "Unified filesystem operations. Pass 'action' (read, list, grep, patch) and 'params' dict with arguments. read: {path, page}. list: {path}. grep: {path, pattern, case_insensitive, page}. patch: {path, content, start_line, end_line, create}.",
+    "modified": "2026-03-10T12:00:00Z",
+    "name": "mcp_fs",
+    "is_async": true,
+    "use_type": 2
+  }
+},
+{
+  "model": "parietal_lobe.tooldefinition",
+  "pk": 25,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "description": "Unified git operations. Pass 'action' (status, diff, log, commit, add, stash, branch, checkout) and 'params' dict with arguments. status: {}. diff: {staged, file_path}. log: {count, oneline}. commit: {message}. add: {file_path, all_files}. stash: {action, message}. branch: {branch_name, create, delete}. checkout: {target}.",
+    "modified": "2026-03-10T12:00:00Z",
+    "name": "mcp_git",
+    "is_async": true,
+    "use_type": 2
+  }
+},
+{
   "model": "parietal_lobe.toolparameter",
   "pk": 1,
   "fields": {
@@ -951,6 +975,39 @@
     "description": "A JSON object containing the field names and values to apply.",
     "modified": "2026-03-05T12:00:00Z",
     "name": "payload",
+    "type": 6
+  }
+},
+{
+  "model": "parietal_lobe.toolparameter",
+  "pk": 52,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "description": "Filesystem action to perform.",
+    "modified": "2026-03-10T12:00:00Z",
+    "name": "fs_action",
+    "type": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameter",
+  "pk": 53,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "description": "Git action to perform.",
+    "modified": "2026-03-10T12:00:00Z",
+    "name": "git_action",
+    "type": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameter",
+  "pk": 54,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "description": "Dict of arguments for the selected action.",
+    "modified": "2026-03-10T12:00:00Z",
+    "name": "params",
     "type": 6
   }
 },
@@ -1648,6 +1705,50 @@
   }
 },
 {
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 95,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "tool": 24,
+    "parameter": 52,
+    "required": true
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 96,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "tool": 24,
+    "parameter": 54,
+    "required": true
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 97,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "tool": 25,
+    "parameter": 53,
+    "required": true
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 98,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "tool": 25,
+    "parameter": 54,
+    "required": true
+  }
+},
+{
   "model": "parietal_lobe.parameterenum",
   "pk": 1,
   "fields": {
@@ -1795,6 +1896,126 @@
     "modified": "2026-03-01T12:00:00Z",
     "parameter": 36,
     "value": "TASK"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 16,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "parameter": 52,
+    "value": "read"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 17,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "parameter": 52,
+    "value": "list"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 18,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "parameter": 52,
+    "value": "grep"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 19,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "parameter": 52,
+    "value": "patch"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 20,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "parameter": 53,
+    "value": "status"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 21,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "parameter": 53,
+    "value": "diff"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 22,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "parameter": 53,
+    "value": "log"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 23,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "parameter": 53,
+    "value": "commit"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 24,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "parameter": 53,
+    "value": "add"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 25,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "parameter": 53,
+    "value": "stash"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 26,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "parameter": 53,
+    "value": "branch"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 27,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "parameter": 53,
+    "value": "checkout"
   }
 }
 ]
