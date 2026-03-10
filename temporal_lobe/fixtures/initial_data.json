@@ -78,7 +78,7 @@
     "definition": 1,
     "shift": 2,
     "order": 2,
-    "turn_limit": 5
+    "turn_limit": 10
   }
 },
 {
@@ -128,7 +128,7 @@
     "definition": 2,
     "shift": 4,
     "order": 2,
-    "turn_limit": 5
+    "turn_limit": 10
   }
 },
 {
@@ -138,7 +138,7 @@
     "definition": 1,
     "shift": 6,
     "order": 6,
-    "turn_limit": 1
+    "turn_limit": 10
   }
 },
 {
