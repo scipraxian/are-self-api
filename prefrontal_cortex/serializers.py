@@ -5,6 +5,7 @@ from typing import Any, Optional
 from uuid import UUID
 
 from django.contrib.auth import get_user_model
+from django.core.serializers.json import DjangoJSONEncoder
 from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
@@ -75,7 +76,11 @@ def make_action_response(
         ok=ok,
         error=error,
     )
-    return json.dumps(PFCActionResponseSerializer(instance=obj).data)
+    # Use DjangoJSONEncoder so UUIDs and other Django types are safe.
+    return json.dumps(
+        PFCActionResponseSerializer(instance=obj).data,
+        cls=DjangoJSONEncoder,
+    )
 
 
 class UserLightweightSerializer(serializers.ModelSerializer):
