@@ -118,31 +118,34 @@ class FrontalLobe:
         turn_record.status_id = ReasoningStatusID.COMPLETED
         await sync_to_async(turn_record.save)()
 
+    def _get_identity_prompt(self, turn_record: ReasoningTurn):
+        iteration_id = None
+        if self.session.participant_id:
+            from temporal_lobe.models import IterationShiftParticipant
+
+            try:
+                p = IterationShiftParticipant.objects.select_related(
+                    'iteration_shift'
+                ).get(id=self.session.participant_id)
+                iteration_id = p.iteration_shift.shift_iteration_id
+            except IterationShiftParticipant.DoesNotExist:
+                pass
+
+        return build_identity_prompt(
+            identity_disc=self.session.identity_disc,
+            iteration_id=iteration_id,
+            turn_number=turn_record.turn_number,
+            reasoning_turn_id=turn_record.id,
+        )
+
     async def _build_turn_payload(
         self, turn_record: ReasoningTurn
     ) -> list[dict]:
         """Assembles the Turn payload by integrating Identity and Sensory data."""
 
-        def _get_identity_prompt():
-            iteration_id = None
-            if self.session.participant_id:
-                from temporal_lobe.models import IterationShiftParticipant
-                try:
-                    p = IterationShiftParticipant.objects.select_related(
-                        'iteration_shift'
-                    ).get(id=self.session.participant_id)
-                    iteration_id = p.iteration_shift.shift_iteration_id
-                except IterationShiftParticipant.DoesNotExist:
-                    pass
-
-            return build_identity_prompt(
-                identity_disc=self.session.identity_disc,
-                iteration_id=iteration_id,
-                turn_number=turn_record.turn_number,
-                reasoning_turn_id=turn_record.id,
-            )
-
-        system_instruction = await sync_to_async(_get_identity_prompt)()
+        system_instruction = await sync_to_async(self._get_identity_prompt)(
+            turn_record
+        )
 
         user_content = await relay_sensory_state(turn_record)
 

@@ -3,6 +3,7 @@ from typing import Callable, Dict
 
 from identity.addons.addon_package import AddonPackage
 from identity.addons.agile_addon import agile_addon
+from identity.addons.deadline_addon import deadline_addon
 from identity.addons.focus_addon import focus_addon
 
 logger = logging.getLogger(__name__)
@@ -12,4 +13,5 @@ logger = logging.getLogger(__name__)
 ADDON_REGISTRY: Dict[str, Callable[[AddonPackage], str]] = {
     'focus_game_dynamic': focus_addon,
     'agile_addon': agile_addon,
+    'deadline_addon': deadline_addon,
 }

@@ -284,7 +284,12 @@ class AgilePromptBuilder:
             f' AGILE BOARD CONTEXT | SHIFT: {self.shift.name}',
             '=========================================',
         ]
-
+        self.context_lines.append(
+            'Use mcp_ticket... functions to deal with tickets.'
+        )
+        self.context_lines.append(
+            'Ticket status values in order by ("id", "name") are: [(1, "Backlog"), (2, "Selected for Development"), (3, "In Progress"), (4, "Blocked by User"), (5, "Done"), (6, "Needs Refinement"), (7, "Will not do.")]'
+        )
         identity_type_id = self.identity_disc.identity.identity_type_id
         shift_id = self.shift.id
 
@@ -293,9 +298,7 @@ class AgilePromptBuilder:
                 match identity_type_id:
                     case IdentityType.PM:
                         self.context_lines.append(
-                            sifting_pm(
-                                self.identity_disc, self.environment_id
-                            )
+                            sifting_pm(self.identity_disc, self.environment_id)
                         )
                     case IdentityType.WORKER:
                         self.context_lines.append(
@@ -321,9 +324,7 @@ class AgilePromptBuilder:
                 match identity_type_id:
                     case IdentityType.PM:
                         self.context_lines.append(
-                            planning_pm(
-                                self.identity_disc, self.environment_id
-                            )
+                            planning_pm(self.identity_disc, self.environment_id)
                         )
                     case IdentityType.WORKER:
                         self.context_lines.append(
@@ -363,9 +364,7 @@ class AgilePromptBuilder:
                 match identity_type_id:
                     case IdentityType.PM:
                         self.context_lines.append(
-                            sleeping_pm(
-                                self.identity_disc, self.environment_id
-                            )
+                            sleeping_pm(self.identity_disc, self.environment_id)
                         )
                     case IdentityType.WORKER:
                         self.context_lines.append(
@@ -373,12 +372,6 @@ class AgilePromptBuilder:
                                 self.identity_disc, self.environment_id
                             )
                         )
-        self.context_lines.append(
-            'Use mcp_ticket... functions to deal with tickets.'
-        )
-        self.context_lines.append(
-            'Ticket status values in order by ("id", "name") are: [(1, "Backlog"), (2, "Selected for Development"), (3, "In Progress"), (4, "Blocked by User"), (5, "Done"), (6, "Needs Refinement"), (7, "Will not do.")]'
-        )
         return '\n'.join(self.context_lines)
 
 

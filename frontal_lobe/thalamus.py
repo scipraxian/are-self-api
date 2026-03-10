@@ -8,8 +8,8 @@ from frontal_lobe.models import (
     ReasoningStatusID,
     ReasoningTurn,
 )
-from prefrontal_cortex.models import PFCTask
 from hippocampus.hippocampus import TalosHippocampus
+from prefrontal_cortex.models import PFCTask
 
 
 async def relay_sensory_state(turn_record: ReasoningTurn) -> str:
@@ -20,9 +20,6 @@ async def relay_sensory_state(turn_record: ReasoningTurn) -> str:
     """
     session = turn_record.session
     current_turn = turn_record.turn_number
-
-    # 1. Active Task (From the Agile Board, NOT ReasoningGoals)
-    task_str = await _read_active_task(session)
 
     # 2. Hippocampus Catalog
     if current_turn == 1:
@@ -41,35 +38,11 @@ async def relay_sensory_state(turn_record: ReasoningTurn) -> str:
     return (
         f'SESSION ID: {session.id}\n\n'
         f'{header_str}\n'
-        f'[WAKING STATE: ACTIVE TASK]\n{task_str}\n\n'
         f'{catalog_block}'
-        f'[HISTORICAL LOG (RIVER OF 6)]\n{history_str}\n'
+        f'[L1/L2 Cache]\n{history_str}\n'
         f'[YOUR MOVE]\n'
         f"Write your reasoning starting with 'THOUGHT: '. Stop writing text immediately after your thought and invoke your tools natively. DO NOT generate fake system diagnostics."
     )
-
-
-async def _read_active_task(session: ReasoningSession) -> str:
-    """Reads the assigned Task ID from the blackboard."""
-    blackboard = session.spike.blackboard or {}
-    task_id = blackboard.get('active_pfc_task_id')
-
-    if not task_id:
-        return 'NO ACTIVE TASK ASSIGNED. You must query the Agile Board or consult the PM.'
-
-    try:
-        task = await sync_to_async(
-            PFCTask.objects.select_related('story', 'story__epic').get
-        )(id=task_id)
-
-        return (
-            f'EPIC: {task.story.epic.name}\n'
-            f'STORY: {task.story.name}\n'
-            f'TASK: {task.name}\n'
-            f'DETAILS: {task.description}'
-        )
-    except PFCTask.DoesNotExist:
-        return f'ERROR: Task ID {task_id} not found on the Agile Board.'
 
 
 async def _build_river_of_six(
@@ -139,24 +112,6 @@ async def _build_telemetry_header(
             else 'INEFFICIENT (XP PENALTY)'
         )
 
-    level_up_str = (
-        ' | [LEVEL UP! Focus Pool Fully Restored]'
-        if session.current_focus == session.max_focus and current_turn > 1
-        else ''
-    )
-
-    milestone_kicks = ''
-    if current_turn == max_turns // 2:
-        milestone_kicks = (
-            '\n[WARNING: 50% of allocated compute cycles expended.]'
-        )
-    elif remaining_turns == 10:
-        milestone_kicks = (
-            '\n[CRITICAL: 10 compute cycles remaining. Finalize diagnostics.]'
-        )
-    elif remaining_turns == 1:
-        milestone_kicks = '\n[TERMINAL CYCLE. Submit final report via mcp_conclude_session or fail operation.]'
-
     latency_str = ''
     input_bandwidth = 0
     if last_turn:
@@ -198,9 +153,9 @@ async def _build_telemetry_header(
 
     return (
         f'[SYSTEM DIAGNOSTICS]\n'
-        f'[CYCLE {current_turn} / {max_turns}] | Speedrun Bounty: {remaining_turns * 1000} XP{milestone_kicks}\n'
-        f'Level: {session.current_level} | XP: {session.total_xp} | Focus Pool: {session.current_focus} / {session.max_focus}{level_up_str}{latency_str}\n'
+        f'[CYCLE {current_turn} / {max_turns}] | Speedrun Bounty: {remaining_turns * 1000} XP\n'
         f'Output Footprint (Prev Turn): {last_output_len} / {target_capacity} chars -> Efficiency Bonus: {efficiency_status}\n'
+        f'Time Efficiency (Prev Turn): {latency_str}'
         f'{pressure_warning}'
         f'{input_bandwidth_str}\n'
     )
