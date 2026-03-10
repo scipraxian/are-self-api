@@ -35,7 +35,7 @@
   "model": "django_celery_beat.periodictasks",
   "pk": 1,
   "fields": {
-    "last_update": "2026-03-10T13:44:50.604Z"
+    "last_update": "2026-03-10T21:05:38.095Z"
   }
 },
 {
@@ -62,7 +62,7 @@
     "enabled": true,
     "last_run_at": null,
     "total_run_count": 0,
-    "date_changed": "2026-03-10T13:44:50.603Z",
+    "date_changed": "2026-03-10T21:05:38.094Z",
     "description": ""
   }
 },
@@ -88,9 +88,9 @@
     "one_off": false,
     "start_time": null,
     "enabled": true,
-    "last_run_at": "2026-03-10T13:50:36.291Z",
-    "total_run_count": 354,
-    "date_changed": "2026-03-10T13:50:51.306Z",
+    "last_run_at": "2026-03-10T21:08:23.381Z",
+    "total_run_count": 403,
+    "date_changed": "2026-03-10T21:08:38.414Z",
     "description": ""
   }
 }

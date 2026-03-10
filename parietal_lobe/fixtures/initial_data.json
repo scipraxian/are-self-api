@@ -131,42 +131,6 @@
 },
 {
   "model": "parietal_lobe.tooldefinition",
-  "pk": 1,
-  "fields": {
-    "created": "2026-02-18T12:00:00Z",
-    "description": "Reads a chunk of a local file using strict pagination. Crucial for avoiding amnesia via context overflow. Request page=1, then page=2, etc.",
-    "modified": "2026-02-18T12:00:00Z",
-    "name": "mcp_read_file",
-    "is_async": true,
-    "use_type": 2
-  }
-},
-{
-  "model": "parietal_lobe.tooldefinition",
-  "pk": 2,
-  "fields": {
-    "created": "2026-02-18T12:00:00Z",
-    "description": "Recursively searches files for a regex pattern. Returns file paths and line numbers. Use this to locate critical needles in the haystack before reading files.",
-    "modified": "2026-02-18T12:00:00Z",
-    "name": "mcp_grep",
-    "is_async": true,
-    "use_type": 3
-  }
-},
-{
-  "model": "parietal_lobe.tooldefinition",
-  "pk": 3,
-  "fields": {
-    "created": "2026-02-18T12:00:00Z",
-    "description": "Lists files and directories at a specific path. Use this to explore the project structure.",
-    "modified": "2026-02-18T12:00:00Z",
-    "name": "mcp_list_files",
-    "is_async": true,
-    "use_type": 2
-  }
-},
-{
-  "model": "parietal_lobe.tooldefinition",
   "pk": 4,
   "fields": {
     "created": "2026-02-18T12:00:00Z",
@@ -263,18 +227,6 @@
 },
 {
   "model": "parietal_lobe.tooldefinition",
-  "pk": 12,
-  "fields": {
-    "created": "2026-02-18T12:00:00Z",
-    "description": "Manages your active objectives across sleep cycles. Use CREATE to spike_train a sub-goal, UPDATE to modify it, and COMPLETE when you achieve it. This is your anchor.",
-    "modified": "2026-02-18T12:00:00Z",
-    "name": "mcp_update_goal",
-    "is_async": true,
-    "use_type": 1
-  }
-},
-{
-  "model": "parietal_lobe.tooldefinition",
   "pk": 13,
   "fields": {
     "created": "2026-02-20T20:37:37.755Z",
@@ -350,7 +302,7 @@
   "pk": 20,
   "fields": {
     "created": "2026-03-10T12:00:00Z",
-        "description": "Unified Agile ticket operations (EPIC, STORY, TASK). Pass 'ticket_action' (CREATE, READ, UPDATE, COMMENT, SEARCH) and 'params' dict with arguments. CREATE: {item_type, payload, parent_id}. READ: {item_id}. UPDATE: {item_id, payload}. SEARCH: {item_type, query}. COMMENT: {item_type, item_id, text}. All actions return a structured JSON blob describing ok, action, item_type, item_id, data, and error.",
+    "description": "Unified Agile ticket operations (EPIC, STORY, TASK). Pass 'ticket_action' (CREATE, READ, UPDATE, COMMENT, SEARCH) and 'params' dict with arguments. CREATE: {item_type, payload, parent_id}. READ: {item_id}. UPDATE: {item_id, payload}. SEARCH: {item_type, query}. COMMENT: {item_type, item_id, text}. All actions return a structured JSON blob describing ok, action, item_type, item_id, data, and error.",
     "modified": "2026-03-10T12:00:00Z",
     "name": "mcp_ticket",
     "is_async": true,
@@ -988,83 +940,6 @@
 },
 {
   "model": "parietal_lobe.toolparameterassignment",
-  "pk": 1,
-  "fields": {
-    "created": "2026-02-18T12:00:00Z",
-    "modified": "2026-02-18T12:00:00Z",
-    "tool": 1,
-    "parameter": 1,
-    "required": true
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 2,
-  "fields": {
-    "created": "2026-02-18T12:00:00Z",
-    "modified": "2026-02-18T12:00:00Z",
-    "tool": 1,
-    "parameter": 26,
-    "required": false
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 3,
-  "fields": {
-    "created": "2026-02-18T12:00:00Z",
-    "modified": "2026-02-18T12:00:00Z",
-    "tool": 1,
-    "parameter": 3,
-    "required": false
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 4,
-  "fields": {
-    "created": "2026-02-18T12:00:00Z",
-    "modified": "2026-02-18T12:00:00Z",
-    "tool": 2,
-    "parameter": 1,
-    "required": true
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 5,
-  "fields": {
-    "created": "2026-02-18T12:00:00Z",
-    "modified": "2026-02-18T12:00:00Z",
-    "tool": 2,
-    "parameter": 4,
-    "required": true
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 6,
-  "fields": {
-    "created": "2026-02-18T12:00:00Z",
-    "modified": "2026-02-18T12:00:00Z",
-    "tool": 2,
-    "parameter": 5,
-    "required": false
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 7,
-  "fields": {
-    "created": "2026-02-18T12:00:00Z",
-    "modified": "2026-02-18T12:00:00Z",
-    "tool": 3,
-    "parameter": 1,
-    "required": true
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
   "pk": 8,
   "fields": {
     "created": "2026-02-18T12:00:00Z",
@@ -1307,50 +1182,6 @@
 },
 {
   "model": "parietal_lobe.toolparameterassignment",
-  "pk": 42,
-  "fields": {
-    "created": "2026-02-18T12:00:00Z",
-    "modified": "2026-02-18T12:00:00Z",
-    "tool": 12,
-    "parameter": 18,
-    "required": true
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 43,
-  "fields": {
-    "created": "2026-02-18T12:00:00Z",
-    "modified": "2026-02-18T12:00:00Z",
-    "tool": 12,
-    "parameter": 27,
-    "required": true
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 44,
-  "fields": {
-    "created": "2026-02-18T12:00:00Z",
-    "modified": "2026-02-18T12:00:00Z",
-    "tool": 12,
-    "parameter": 28,
-    "required": false
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 45,
-  "fields": {
-    "created": "2026-02-18T12:00:00Z",
-    "modified": "2026-02-18T12:00:00Z",
-    "tool": 12,
-    "parameter": 29,
-    "required": false
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
   "pk": 49,
   "fields": {
     "created": "2026-02-21T20:53:49.896Z",
@@ -1527,17 +1358,6 @@
 },
 {
   "model": "parietal_lobe.toolparameterassignment",
-  "pk": 65,
-  "fields": {
-    "created": "2026-02-23T15:37:51.061Z",
-    "modified": "2026-02-23T15:37:51.061Z",
-    "tool": 2,
-    "parameter": 26,
-    "required": false
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
   "pk": 66,
   "fields": {
     "created": "2026-02-23T15:50:43.825Z",
@@ -1577,6 +1397,17 @@
     "modified": "2026-03-10T12:00:00Z",
     "tool": 20,
     "parameter": 54,
+    "required": true
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 86,
+  "fields": {
+    "created": "2026-03-01T12:00:00Z",
+    "modified": "2026-03-01T12:00:00Z",
+    "tool": 20,
+    "parameter": 51,
     "required": true
   }
 },
