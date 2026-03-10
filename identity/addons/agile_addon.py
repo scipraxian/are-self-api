@@ -7,7 +7,7 @@ from prefrontal_cortex.models import PFCEpic, PFCItemStatus, PFCStory
 from temporal_lobe.models import Shift
 
 
-async def sifting_pm(identity_disc, environment_id) -> str:
+def sifting_pm(identity_disc, environment_id) -> str:
     """The Sifting PM reviews work and moves it to the backlog."""
     success = False
     statements = []
@@ -49,7 +49,7 @@ async def sifting_pm(identity_disc, environment_id) -> str:
     return '\n'.join(statements)
 
 
-async def pre_planning_pm(identity_disc, environment_id) -> str:
+def pre_planning_pm(identity_disc, environment_id) -> str:
     """The Pre-Planning PM queries the entire board and chooses what is selected
     for development."""
     success = False
@@ -95,22 +95,22 @@ async def pre_planning_pm(identity_disc, environment_id) -> str:
             )
 
     if not success:
-        return await sifting_pm(identity_disc, environment_id)
+        return sifting_pm(identity_disc, environment_id)
 
     return '\n'.join(statements)
 
 
-async def planning_pm(identity_disc, environment_id) -> str:
+def planning_pm(identity_disc, environment_id) -> str:
     """The Planning PM has no role."""
-    return await sifting_pm(identity_disc, environment_id)
+    return sifting_pm(identity_disc, environment_id)
 
 
-async def executing_pm(identity_disc, environment_id) -> str:
+def executing_pm(identity_disc, environment_id) -> str:
     """The Executing PM has no role."""
-    return await sifting_pm(identity_disc, environment_id)
+    return sifting_pm(identity_disc, environment_id)
 
 
-async def post_execution_pm(identity_disc, environment_id) -> str:
+def post_execution_pm(identity_disc, environment_id) -> str:
     """Are there items for review?"""
 
     success = False
@@ -137,10 +137,10 @@ async def post_execution_pm(identity_disc, environment_id) -> str:
     if success:
         return '\n'.join(statements)
     else:
-        return await sifting_pm(identity_disc, environment_id)
+        return sifting_pm(identity_disc, environment_id)
 
 
-async def sleeping_pm(identity_disc, environment_id) -> str:
+def sleeping_pm(identity_disc, environment_id) -> str:
     """The Sleeping PM has no tickets."""
     return (
         'You may now sleep, these turns are yours to learn and grow. '
@@ -148,7 +148,7 @@ async def sleeping_pm(identity_disc, environment_id) -> str:
     )
 
 
-async def bidding_worker(identity_disc, environment_id) -> str:
+def bidding_worker(identity_disc, environment_id) -> str:
     """The Worker BIDs on the backlog."""
     statements = []
     stories = PFCStory.objects.filter(
@@ -165,10 +165,10 @@ async def bidding_worker(identity_disc, environment_id) -> str:
             statements.append(f'{story.id} | {story.name}')
         return '\n'.join(statements)
     else:
-        return await sifting_worker(identity_disc, environment_id)
+        return sifting_worker(identity_disc, environment_id)
 
 
-async def sifting_worker(identity_disc, environment_id) -> str:
+def sifting_worker(identity_disc, environment_id) -> str:
     """The Sifting Worker cleans items in the backlog and/or
     Tasks to complete existing Stories. Only deal with unassigned stories."""
     success = False
@@ -196,7 +196,7 @@ async def sifting_worker(identity_disc, environment_id) -> str:
     return '\n'.join(statements)
 
 
-async def executing_worker(identity_disc, environment_id) -> str:
+def executing_worker(identity_disc, environment_id) -> str:
     """The Executing Worker is assigned or continues work on assigned tickets."""
     success = False
     statements = []
@@ -231,7 +231,7 @@ async def executing_worker(identity_disc, environment_id) -> str:
     return '\n'.join(statements)
 
 
-async def sleeping_worker(identity_disc, environment_id) -> str:
+def sleeping_worker(identity_disc, environment_id) -> str:
     """The Sleeping Worker has no tickets."""
     return (
         'You may now sleep, these turns are yours to learn and grow. '
@@ -242,7 +242,7 @@ async def sleeping_worker(identity_disc, environment_id) -> str:
 class AgilePromptBuilder:
     def __init__(self, package: AddonPackage):
         self.package = package
-        self.iteration_id = None
+        self.iteration_id = self.package.iteration
         self.iteration_shift = None
         self.iteration = None
         self.environment_id = None
@@ -250,24 +250,21 @@ class AgilePromptBuilder:
         self.turn_number = None
         self.reasoning_turn = None
         self.context_lines = []
-        self._extract_package()
 
     def _extract_package(self):
-        self.iteration_id = self.package.iteration
-        if not self.iteration_id:
-            raise ValueError('No active iteration.')
         if not self.iteration_id or self.package.reasoning_turn_id is None:
             return  # Skip all DB queries, we are in preview mode!
+
         if self.package.identity_disc:
-            self.identity_disc = IdentityDisc.objects.get(
-                id=self.package.identity_disc
-            )
+            self.identity_disc = IdentityDisc.objects.select_related(
+                'identity'
+            ).get(id=self.package.identity_disc)
         self.turn_number = self.package.turn_number
-        if self.package.reasoning_turn_id is None:
-            raise ValueError('No reasoning turn provided.')
-        self.reasoning_turn = ReasoningTurn.objects.get(
-            id=self.package.reasoning_turn_id
-        )
+        self.reasoning_turn = ReasoningTurn.objects.select_related(
+            'session__participant__iteration_shift__shift_iteration',
+            'session__participant__iteration_shift__shift',
+        ).get(id=self.package.reasoning_turn_id)
+
         self.iteration_shift = (
             self.reasoning_turn.session.participant.iteration_shift
         )
@@ -275,7 +272,9 @@ class AgilePromptBuilder:
         self.environment_id = self.iteration.environment_id
         self.shift = self.iteration_shift.shift
 
-    async def build_prompt(self) -> str:
+    def build_prompt(self) -> str:
+        self._extract_package()
+
         if not self.identity_disc:
             return '[AGILE BOARD CONTEXT: UI Preview Mode - No Active Disc Assigned]'
         if not getattr(self, 'shift', None) or not self.identity_disc:
@@ -294,13 +293,13 @@ class AgilePromptBuilder:
                 match identity_type_id:
                     case IdentityType.PM:
                         self.context_lines.append(
-                            await sifting_pm(
+                            sifting_pm(
                                 self.identity_disc, self.environment_id
                             )
                         )
                     case IdentityType.WORKER:
                         self.context_lines.append(
-                            await bidding_worker(
+                            bidding_worker(
                                 self.identity_disc, self.environment_id
                             )
                         )
@@ -308,13 +307,13 @@ class AgilePromptBuilder:
                 match identity_type_id:
                     case IdentityType.PM:
                         self.context_lines.append(
-                            await pre_planning_pm(
+                            pre_planning_pm(
                                 self.identity_disc, self.environment_id
                             )
                         )
                     case IdentityType.WORKER:
                         self.context_lines.append(
-                            await sifting_worker(
+                            sifting_worker(
                                 self.identity_disc, self.environment_id
                             )
                         )
@@ -322,13 +321,13 @@ class AgilePromptBuilder:
                 match identity_type_id:
                     case IdentityType.PM:
                         self.context_lines.append(
-                            await planning_pm(
+                            planning_pm(
                                 self.identity_disc, self.environment_id
                             )
                         )
                     case IdentityType.WORKER:
                         self.context_lines.append(
-                            await sifting_worker(
+                            sifting_worker(
                                 self.identity_disc, self.environment_id
                             )
                         )
@@ -336,13 +335,13 @@ class AgilePromptBuilder:
                 match identity_type_id:
                     case IdentityType.PM:
                         self.context_lines.append(
-                            await executing_pm(
+                            executing_pm(
                                 self.identity_disc, self.environment_id
                             )
                         )
                     case IdentityType.WORKER:
                         self.context_lines.append(
-                            await executing_worker(
+                            executing_worker(
                                 self.identity_disc, self.environment_id
                             )
                         )
@@ -350,13 +349,13 @@ class AgilePromptBuilder:
                 match identity_type_id:
                     case IdentityType.PM:
                         self.context_lines.append(
-                            await post_execution_pm(
+                            post_execution_pm(
                                 self.identity_disc, self.environment_id
                             )
                         )
                     case IdentityType.WORKER:
                         self.context_lines.append(
-                            await bidding_worker(
+                            bidding_worker(
                                 self.identity_disc, self.environment_id
                             )
                         )
@@ -364,13 +363,13 @@ class AgilePromptBuilder:
                 match identity_type_id:
                     case IdentityType.PM:
                         self.context_lines.append(
-                            await sleeping_pm(
+                            sleeping_pm(
                                 self.identity_disc, self.environment_id
                             )
                         )
                     case IdentityType.WORKER:
                         self.context_lines.append(
-                            await sleeping_worker(
+                            sleeping_worker(
                                 self.identity_disc, self.environment_id
                             )
                         )
@@ -383,10 +382,10 @@ class AgilePromptBuilder:
         return '\n'.join(self.context_lines)
 
 
-async def agile_addon(package: AddonPackage) -> str:
+def agile_addon(package: AddonPackage) -> str:
     """
     Identity Addon: Dynamically injects the active Agile Board context into the system prompt.
     Adapts the ticket payload based on the current Temporal Shift (Grooming, Planning, Executing).
     """
     builder = AgilePromptBuilder(package)
-    return await builder.build_prompt()
+    return builder.build_prompt()

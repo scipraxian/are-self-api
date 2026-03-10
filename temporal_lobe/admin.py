@@ -23,7 +23,7 @@ class IterationShiftParticipantStatusAdmin(admin.ModelAdmin):
 
 @admin.register(IterationShiftParticipant)
 class IterationShiftParticipantAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('id', 'status')
 
 
 @admin.register(IterationStatus)

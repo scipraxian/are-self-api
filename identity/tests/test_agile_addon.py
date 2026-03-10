@@ -1,4 +1,5 @@
 import json
+import unittest
 import os
 
 import pytest
@@ -26,8 +27,7 @@ from temporal_lobe.models import (
 class AgileAddonTest(CommonFixturesAPITestCase):
 
     @pytest.mark.skip(
-        reason=
-        "Fails under APITestCase due to thread-local DB transaction isolation. Needs refactor."
+        reason="Fails under APITestCase due to thread-local DB transaction isolation. Needs refactor."
     )
     @pytest.mark.asyncio
     async def test_agile_addon_prompt_generation(self):
