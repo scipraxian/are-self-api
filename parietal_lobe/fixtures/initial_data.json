@@ -349,48 +349,12 @@
   "model": "parietal_lobe.tooldefinition",
   "pk": 20,
   "fields": {
-    "created": "2026-03-05T12:00:00Z",
-    "description": "Creates a new Agile ticket (EPIC, STORY, or TASK). 'payload' must be a JSON object containing the fields to populate (e.g. {'name': 'Fix Bug', 'description': '...'}).",
-    "modified": "2026-03-05T12:00:00Z",
-    "name": "mcp_ticket_create",
+    "created": "2026-03-10T12:00:00Z",
+        "description": "Unified Agile ticket operations (EPIC, STORY, TASK). Pass 'ticket_action' (CREATE, READ, UPDATE, COMMENT, SEARCH) and 'params' dict with arguments. CREATE: {item_type, payload, parent_id}. READ: {item_id}. UPDATE: {item_id, payload}. SEARCH: {item_type, query}. COMMENT: {item_type, item_id, text}. All actions return a structured JSON blob describing ok, action, item_type, item_id, data, and error.",
+    "modified": "2026-03-10T12:00:00Z",
+    "name": "mcp_ticket",
     "is_async": true,
     "use_type": 1
-  }
-},
-{
-  "model": "parietal_lobe.tooldefinition",
-  "pk": 21,
-  "fields": {
-    "created": "2026-03-05T12:00:00Z",
-    "description": "Updates an existing Agile ticket. 'payload' must be a JSON object containing ONLY the fields you want to change.",
-    "modified": "2026-03-05T12:00:00Z",
-    "name": "mcp_ticket_update",
-    "is_async": true,
-    "use_type": 1
-  }
-},
-{
-  "model": "parietal_lobe.tooldefinition",
-  "pk": 22,
-  "fields": {
-    "created": "2026-03-05T12:00:00Z",
-    "description": "Appends a comment or question to a specific Agile ticket for human or PM review.",
-    "modified": "2026-03-05T12:00:00Z",
-    "name": "mcp_comment_add",
-    "is_async": true,
-    "use_type": 1
-  }
-},
-{
-  "model": "parietal_lobe.tooldefinition",
-  "pk": 23,
-  "fields": {
-    "created": "2026-03-05T12:00:00Z",
-    "description": "Searches the Agile board for tickets matching a text query.",
-    "modified": "2026-03-05T12:00:00Z",
-    "name": "mcp_ticket_search",
-    "is_async": true,
-    "use_type": 2
   }
 },
 {
@@ -1012,6 +976,17 @@
   }
 },
 {
+  "model": "parietal_lobe.toolparameter",
+  "pk": 55,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "description": "Ticket action to perform (create, update, search, comment).",
+    "modified": "2026-03-10T12:00:00Z",
+    "name": "ticket_action",
+    "type": 1
+  }
+},
+{
   "model": "parietal_lobe.toolparameterassignment",
   "pk": 1,
   "fields": {
@@ -1587,10 +1562,10 @@
   "model": "parietal_lobe.toolparameterassignment",
   "pk": 84,
   "fields": {
-    "created": "2026-03-01T12:00:00Z",
-    "modified": "2026-03-01T12:00:00Z",
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
     "tool": 20,
-    "parameter": 36,
+    "parameter": 55,
     "required": true
   }
 },
@@ -1598,109 +1573,10 @@
   "model": "parietal_lobe.toolparameterassignment",
   "pk": 85,
   "fields": {
-    "created": "2026-03-01T12:00:00Z",
-    "modified": "2026-03-01T12:00:00Z",
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
     "tool": 20,
-    "parameter": 38,
-    "required": false
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 86,
-  "fields": {
-    "created": "2026-03-01T12:00:00Z",
-    "modified": "2026-03-01T12:00:00Z",
-    "tool": 20,
-    "parameter": 51,
-    "required": true
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 87,
-  "fields": {
-    "created": "2026-03-01T12:00:00Z",
-    "modified": "2026-03-01T12:00:00Z",
-    "tool": 21,
-    "parameter": 36,
-    "required": true
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 88,
-  "fields": {
-    "created": "2026-03-01T12:00:00Z",
-    "modified": "2026-03-01T12:00:00Z",
-    "tool": 21,
-    "parameter": 37,
-    "required": true
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 89,
-  "fields": {
-    "created": "2026-03-01T12:00:00Z",
-    "modified": "2026-03-01T12:00:00Z",
-    "tool": 21,
-    "parameter": 51,
-    "required": true
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 90,
-  "fields": {
-    "created": "2026-03-01T12:00:00Z",
-    "modified": "2026-03-01T12:00:00Z",
-    "tool": 22,
-    "parameter": 36,
-    "required": true
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 91,
-  "fields": {
-    "created": "2026-03-01T12:00:00Z",
-    "modified": "2026-03-01T12:00:00Z",
-    "tool": 22,
-    "parameter": 37,
-    "required": true
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 92,
-  "fields": {
-    "created": "2026-03-01T12:00:00Z",
-    "modified": "2026-03-01T12:00:00Z",
-    "tool": 22,
-    "parameter": 50,
-    "required": true
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 93,
-  "fields": {
-    "created": "2026-03-01T12:00:00Z",
-    "modified": "2026-03-01T12:00:00Z",
-    "tool": 23,
-    "parameter": 36,
-    "required": true
-  }
-},
-{
-  "model": "parietal_lobe.toolparameterassignment",
-  "pk": 94,
-  "fields": {
-    "created": "2026-03-01T12:00:00Z",
-    "modified": "2026-03-01T12:00:00Z",
-    "tool": 23,
-    "parameter": 16,
+    "parameter": 54,
     "required": true
   }
 },
@@ -2016,6 +1892,46 @@
     "modified": "2026-03-10T12:00:00Z",
     "parameter": 53,
     "value": "checkout"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 28,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "parameter": 55,
+    "value": "create"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 29,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "parameter": 55,
+    "value": "update"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 30,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "parameter": 55,
+    "value": "search"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 31,
+  "fields": {
+    "created": "2026-03-10T12:00:00Z",
+    "modified": "2026-03-10T12:00:00Z",
+    "parameter": 55,
+    "value": "comment"
   }
 }
 ]

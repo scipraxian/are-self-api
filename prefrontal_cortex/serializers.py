@@ -1,3 +1,9 @@
+import json
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Optional
+from uuid import UUID
+
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
@@ -16,6 +22,60 @@ from .models import (
 )
 
 User = get_user_model()
+
+
+@dataclass
+class PFCActionResponse:
+    action: str
+    item_type: str
+    item_id: UUID
+    data: Any
+    ok: bool = True
+    error: Optional[str] = None
+
+
+class PFCActionResponseSerializer(serializers.Serializer):
+    ok = serializers.BooleanField()
+    action = serializers.CharField()
+    item_type = serializers.CharField()
+    item_id = serializers.UUIDField()
+    data = serializers.JSONField(required=False)
+    error = serializers.CharField(required=False, allow_blank=True)
+
+
+class TicketAction(str, Enum):
+    CREATE = 'create'
+    UPDATE = 'update'
+    SEARCH = 'search'
+    COMMENT = 'comment'
+    READ = 'read'
+
+    def __str__(self) -> str:  # pragma: no cover - trivial
+        return self.value
+
+
+def make_action_response(
+    *,
+    action: TicketAction,
+    item_type: str = '',
+    item_id: Optional[UUID] = None,
+    data: Any = None,
+    ok: bool = True,
+    error: Optional[str] = None,
+) -> str:
+    """
+    Helper to build a PFCActionResponse and serialize it to JSON.
+    This centralizes JSON + serializer usage so call sites stay clean.
+    """
+    obj = PFCActionResponse(
+        action=str(action),
+        item_type=item_type,
+        item_id=item_id or UUID(int=0),
+        data=data if data is not None else {},
+        ok=ok,
+        error=error,
+    )
+    return json.dumps(PFCActionResponseSerializer(instance=obj).data)
 
 
 class UserLightweightSerializer(serializers.ModelSerializer):

@@ -27,7 +27,9 @@ def sifting_pm(identity_disc, environment_id) -> str:
         success = True
         statements.append('Epics in need of refinement:')
         for epic in epics:
-            statements.append(f'{epic.id} | {epic.name}')
+            statements.append(
+                f"mcp_ticket(action='read', params={{'item_id': '{epic.id}'}}) | {epic.name}"
+            )
 
     stories = PFCStory.objects.filter(
         (
@@ -40,7 +42,9 @@ def sifting_pm(identity_disc, environment_id) -> str:
         success = True
         statements.append('Stories in need of refinement:')
         for story in stories:
-            statements.append(f'{story.id} | {story.name}')
+            statements.append(
+                f"mcp_ticket(action='read', params={{'item_id': '{story.id}'}}) | {story.name}"
+            )
 
     if not success:
         statements.append('No stories or epics in need of refinement.')
@@ -66,7 +70,9 @@ def pre_planning_pm(identity_disc, environment_id) -> str:
         success = True
         statements.append('Epics to consider for development:')
         for epic in epics:
-            statements.append(f'{epic.id} | {epic.name}')
+            statements.append(
+                f"mcp_ticket(action='read', params={{'item_id': '{epic.id}'}}) | {epic.name}"
+            )
 
     stories = PFCStory.objects.filter(
         Q(status_id=PFCItemStatus.BACKLOG)
@@ -76,7 +82,9 @@ def pre_planning_pm(identity_disc, environment_id) -> str:
         success = True
         statements.append('Stories to consider for development:')
         for story in stories:
-            statements.append(f'{story.id} | {story.name}')
+            statements.append(
+                f"mcp_ticket(action='read', params={{'item_id': '{story.id}'}}) | {story.name}"
+            )
 
     selected_and_in_progress_stories = PFCStory.objects.filter(
         (
@@ -89,9 +97,9 @@ def pre_planning_pm(identity_disc, environment_id) -> str:
     if selected_and_in_progress_stories.count():
         success = True
         statements.append('Stories already selected:')
-        for story in stories:
+        for story in selected_and_in_progress_stories:
             statements.append(
-                f'{story.id} | {story.name} | {story.status.name}'
+                f"mcp_ticket(action='read', params={{'item_id': '{story.id}'}}) | {story.name} | {story.status.name}"
             )
 
     if not success:
@@ -129,10 +137,12 @@ def post_execution_pm(identity_disc, environment_id) -> str:
         statements.append(f'ENVIRONMENT: {environment_id}')
         statements.append('Review as many stories as you have turns to do so.')
         statements.append(
-            'If a story or epic does not meet the DoD, mcp_comment_add, and then set it back to SELECTED_FOR_DEVELOPMENT.'
+            "If a story or epic does not meet the DoD, use mcp_ticket with action='comment', and then set it back to SELECTED_FOR_DEVELOPMENT."
         )
         for story in stories:
-            statements.append(f'{story.id} | {story.name}')
+            statements.append(
+                f"mcp_ticket(action='read', params={{'item_id': '{story.id}'}}) | {story.name}"
+            )
 
     if success:
         return '\n'.join(statements)
@@ -162,7 +172,9 @@ def bidding_worker(identity_disc, environment_id) -> str:
             'A BID is how many turns you think it will take to complete a story. These stories are in need of a BID:'
         )
         for story in stories:
-            statements.append(f'{story.id} | {story.name}')
+            statements.append(
+                f"mcp_ticket(action='read', params={{'item_id': '{story.id}'}}) | {story.name}"
+            )
         return '\n'.join(statements)
     else:
         return sifting_worker(identity_disc, environment_id)
@@ -187,7 +199,9 @@ def sifting_worker(identity_disc, environment_id) -> str:
         success = True
         statements.append('Stories in need of refinement:')
         for story in stories:
-            statements.append(f'{story.id} | {story.name}')
+            statements.append(
+                f"mcp_ticket(action='read', params={{'item_id': '{story.id}'}}) | {story.name}"
+            )
 
     if not success:
         statements.append('No stories need of refinement.')
@@ -214,7 +228,9 @@ def executing_worker(identity_disc, environment_id) -> str:
         success = True
         statements.append('You own the following stories:')
         for story in my_stories:
-            statements.append(f'{story.id} | {story.name}')
+            statements.append(
+                f"mcp_ticket(action='read', params={{'item_id': '{story.id}'}}) | {story.name}"
+            )
     available_stories = PFCStory.objects.filter(
         Q(status_id=PFCItemStatus.SELECTED_FOR_DEVELOPMENT)
         & Q(owning_disc__isnull=True)
@@ -224,7 +240,9 @@ def executing_worker(identity_disc, environment_id) -> str:
         success = True
         statements.append('You may work on the following stories:')
         for story in available_stories:
-            statements.append(f'{story.id} | {story.name}')
+            statements.append(
+                f"mcp_ticket(action='read', params={{'item_id': '{story.id}'}}) | {story.name}"
+            )
     if not success:
         statements.append('No stories to work on.')
         statements.append('Review everything and make more where necessary.')
@@ -285,7 +303,7 @@ class AgilePromptBuilder:
             '=========================================',
         ]
         self.context_lines.append(
-            'Use mcp_ticket... functions to deal with tickets.'
+            "Use mcp_ticket with action='create', 'read', 'update', 'search', or 'comment' to manage tickets. Prefer 'read' and 'update' with only an item_id and payload; the system will infer EPIC/STORY/TASK from the UUID."
         )
         self.context_lines.append(
             'Ticket status values in order by ("id", "name") are: [(1, "Backlog"), (2, "Selected for Development"), (3, "In Progress"), (4, "Blocked by User"), (5, "Done"), (6, "Needs Refinement"), (7, "Will not do.")]'
