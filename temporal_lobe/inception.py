@@ -32,7 +32,7 @@ class IterationInceptionManager:
     ) -> Iteration:
         # 1. Fetch the Blueprint
         definition = IterationDefinition.objects.prefetch_related(
-            'iterationshiftdefinition_set__iterationshiftdefinitionparticipant_set__participant'
+            'iterationshiftdefinition_set__iterationshiftdefinitionparticipant_set__identity_disc'
         ).get(id=definition_id)
 
         # Ensure we have the "Waiting" status ready (ID 1 from your fixtures)
@@ -67,29 +67,10 @@ class IterationInceptionManager:
             if not first_shift:
                 first_shift = new_shift
 
-            # 4. Staffing: Find available Discs or Gestate new ones
+            # 4. Staffing: Attach the configured Discs for this shift definition
             participants = s_def.iterationshiftdefinitionparticipant_set.all()
             for p_def in participants:
-                base_identity = p_def.participant
-
-                # Check the Barracks: Find the most experienced, available Disc of this type
-                identity_disc = (
-                    IdentityDisc.objects.filter(
-                        identity=base_identity, available=True
-                    )
-                    .order_by('-level', '-xp')
-                    .first()
-                )
-
-                if identity_disc:
-                    # Draft existing Disc
-                    logger.info(
-                        f'Drafting existing Disc: {identity_disc.name} (Lvl {identity_disc.level})'
-                    )
-                else:
-                    # Gestate new Disc
-                    identity_disc = cls.gestate_disc(base_identity)
-                    logger.info(f'Gestated new Disc: {identity_disc.name}')
+                identity_disc = p_def.identity_disc
 
                 # Bind the Disc to the Shift's Synapses
                 IterationShiftParticipant.objects.create(

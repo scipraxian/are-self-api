@@ -142,22 +142,6 @@
   }
 },
 {
-  "model": "temporal_lobe.iterationshiftdefinitionparticipant",
-  "pk": 1,
-  "fields": {
-    "shift_definition": 3,
-    "participant": "8a1b03d5-cb30-4298-b6dd-a5973e6b7914"
-  }
-},
-{
-  "model": "temporal_lobe.iterationshiftdefinitionparticipant",
-  "pk": 2,
-  "fields": {
-    "shift_definition": 4,
-    "participant": "8781b1ff-6513-4a6e-952f-0c5e20e33580"
-  }
-},
-{
   "model": "temporal_lobe.iterationstatus",
   "pk": 1,
   "fields": {

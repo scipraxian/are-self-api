@@ -34,6 +34,7 @@ class Command(BaseCommand):
             'iteration',
             'iterationshift',
             'iterationshiftparticipant',
+            'iterationshiftdefinitionparticipant',
         ],
     }
 

@@ -56,10 +56,12 @@ class IterationShiftDefinitionParticipant(models.Model):
     shift_definition = models.ForeignKey(
         IterationShiftDefinition, on_delete=models.CASCADE
     )
-    participant = models.ForeignKey(Identity, on_delete=models.CASCADE)
+    identity_disc = models.ForeignKey(
+        IdentityDisc, on_delete=models.CASCADE, blank=True, null=True
+    )
 
     def __str__(self):
-        return f'{self.shift_definition} - {self.participant}'
+        return f'{self.shift_definition} - {self.identity_disc}'
 
 
 class IterationStatus(NameMixin):

@@ -54,7 +54,7 @@ class ShiftAdmin(admin.ModelAdmin):
 class IterationShiftDefinitionParticipantInline(admin.TabularInline):
     model = IterationShiftDefinitionParticipant
     extra = 1
-    raw_id_fields = ('participant',)
+    raw_id_fields = ('identity_disc',)
 
 
 @admin.register(IterationShiftDefinition)

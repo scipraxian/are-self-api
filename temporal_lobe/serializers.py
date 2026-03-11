@@ -60,17 +60,24 @@ class IterationShiftDefinitionParticipantSerializer(
 ):
     """Serializer for the IterationShiftDefinitionParticipant model."""
 
-    participant_detail = IdentityLightSerializer(
-        source='participant', read_only=True
+    participant_detail = IdentityDiscLightSerializer(
+        source='identity_disc', read_only=True
     )
 
     class Meta:
         model = IterationShiftDefinitionParticipant
-        fields = ['id', 'shift_definition', 'participant', 'participant_detail']
+        fields = [
+            'id',
+            'shift_definition',
+            'identity_disc',
+            'participant_detail',
+        ]
 
 
 class IterationShiftDefinitionSerializer(serializers.ModelSerializer):
     """Serializer for the IterationShiftDefinition model."""
+
+    shift = ShiftSerializer(read_only=True)
 
     participants = IterationShiftDefinitionParticipantSerializer(
         source='iterationshiftdefinitionparticipant_set',
@@ -80,7 +87,7 @@ class IterationShiftDefinitionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IterationShiftDefinition
-        fields = ['id', 'definition', 'shift', 'order', 'turn_limit', 'participants']
+        fields = ALL_FIELDS
 
 
 class IterationDefinitionSerializer(serializers.ModelSerializer):
@@ -94,7 +101,7 @@ class IterationDefinitionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IterationDefinition
-        fields = ['id', 'name', 'shift_definitions']
+        fields = ALL_FIELDS
 
 
 class IterationStatusSerializer(serializers.ModelSerializer):

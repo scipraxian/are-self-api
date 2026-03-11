@@ -351,7 +351,7 @@ class IterationDefinitionViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
     queryset = IterationDefinition.objects.prefetch_related(
         'iterationshiftdefinition_set__shift',
-        'iterationshiftdefinition_set__iterationshiftdefinitionparticipant_set__participant',
+        'iterationshiftdefinition_set__iterationshiftdefinitionparticipant_set__identity_disc',
     ).all()
     serializer_class = IterationDefinitionSerializer
 
@@ -395,8 +395,8 @@ class IterationDefinitionViewSet(viewsets.ModelViewSet):
     def slot_disc(self, request, pk=None):
         """
         Add a participant to a shift in the blueprint. Payload: shift_definition_id,
-        and disc_id or base_id (Identity). If base_id, the Identity is recorded for
-        the blueprint; at inception a disc is created if needed. Same contract as
+        and disc_id or base_id (Identity). If base_id, a new Disc is gestated and
+        stored. Same contract as
         IterationViewSet.slot_disc but for the definition.
         """
         definition = self.get_object()
@@ -417,10 +417,12 @@ class IterationDefinitionViewSet(viewsets.ModelViewSet):
         )
 
         if base_id:
+            from temporal_lobe.inception import IterationInceptionManager
+
             identity = get_object_or_404(Identity, id=base_id)
+            disc = IterationInceptionManager.gestate_disc(identity)
         elif disc_id:
             disc = get_object_or_404(IdentityDisc, id=disc_id)
-            identity = disc.identity
         else:
             return Response(
                 {'error': 'disc_id or base_id required'},
@@ -429,7 +431,7 @@ class IterationDefinitionViewSet(viewsets.ModelViewSet):
 
         IterationShiftDefinitionParticipant.objects.get_or_create(
             shift_definition=shift_def,
-            participant=identity,
+            identity_disc=disc,
         )
 
         fresh_definition = self.get_queryset().get(pk=definition.pk)
@@ -459,7 +461,6 @@ class IterationDefinitionViewSet(viewsets.ModelViewSet):
             identity = get_object_or_404(Identity, id=base_id)
         elif disc_id:
             disc = get_object_or_404(IdentityDisc, id=disc_id)
-            identity = disc.identity
         else:
             return Response(
                 {'error': 'disc_id or base_id required'},
@@ -472,9 +473,15 @@ class IterationDefinitionViewSet(viewsets.ModelViewSet):
             definition=definition,
         )
 
-        IterationShiftDefinitionParticipant.objects.filter(
-            shift_definition=shift_def, participant=identity
-        ).delete()
+        qs = IterationShiftDefinitionParticipant.objects.filter(
+            shift_definition=shift_def,
+        )
+        if base_id:
+            qs = qs.filter(identity_disc__identity=identity)
+        elif disc_id:
+            qs = qs.filter(identity_disc=disc)
+
+        qs.delete()
 
         fresh_definition = self.get_queryset().get(pk=definition.pk)
         return Response(
