@@ -38,6 +38,7 @@ class ParietalLobe:
         self.session = session
         self.log_callback = log_callback
         self.client = None
+        self.enabled_tools = self.session.identity_disc.identity.enabled_tools
 
     async def _log_live(self, message: str) -> None:
         if self.log_callback:
@@ -49,21 +50,30 @@ class ParietalLobe:
     async def initialize_client(self, model_name: str) -> None:
         self.client = OllamaClient(model=model_name)
 
-    async def chat(self, messages: List[Dict[str, Any]],
-                   tools: List[Dict[str, Any]]) -> Any:
+    async def chat(
+        self, messages: List[Dict[str, Any]], tools: List[Dict[str, Any]]
+    ) -> Any:
         return await asyncio.to_thread(self.client.chat, messages, tools)
 
     async def unload_client(self) -> None:
         if self.client:
             await asyncio.to_thread(self.client.unload)
 
-    async def build_tool_schemas(self) -> List[Dict[str, Any]]:
-        """Constructs strict JSON schemas from the normalized ToolParameterAssignment relations."""
-        db_tools = await sync_to_async(lambda: list(
-            ToolDefinition.objects.prefetch_related(
+    def _fetch_tools(self, identity):
+        return list(
+            identity.enabled_tools.prefetch_related(
                 'assignments__parameter__type',
                 'assignments__parameter__enum_values',
-            ).select_related('use_type').filter(is_async=True)))()
+            )
+            .select_related('use_type')
+            .filter(is_async=True)
+        )
+
+    async def build_tool_schemas(self) -> List[Dict[str, Any]]:
+        """Constructs strict JSON schemas from the normalized ToolParameterAssignment relations."""
+        db_tools = await sync_to_async(self._fetch_tools)(
+            self.session.identity_disc.identity
+        )
 
         ollama_tools = []
 
@@ -75,11 +85,9 @@ class ParietalLobe:
                 param_def = assignment.parameter
                 type_name = param_def.type.name
                 schema_def: Dict[str, Any] = {
-                    self.SCHEMA_TYPE:
-                        type_name,
-                    self.T_DESC:
-                        param_def.description
-                        or f'The {param_def.name} parameter.',
+                    self.SCHEMA_TYPE: type_name,
+                    self.T_DESC: param_def.description
+                    or f'The {param_def.name} parameter.',
                 }
                 enums = [e.value for e in param_def.enum_values.all()]
                 if enums:
@@ -96,18 +104,20 @@ class ParietalLobe:
 
             full_description = f'{cost_str}{t.description}'
 
-            ollama_tools.append({
-                self.T_TYPE: self.TYPE_FUNCTION,
-                self.T_FUNC: {
-                    self.T_NAME: t.name,
-                    self.T_DESC: full_description,
-                    self.T_PARAMS: {
-                        self.SCHEMA_TYPE: self.TYPE_OBJECT,
-                        self.SCHEMA_PROPERTIES: properties,
-                        self.SCHEMA_REQUIRED: required_fields,
+            ollama_tools.append(
+                {
+                    self.T_TYPE: self.TYPE_FUNCTION,
+                    self.T_FUNC: {
+                        self.T_NAME: t.name,
+                        self.T_DESC: full_description,
+                        self.T_PARAMS: {
+                            self.SCHEMA_TYPE: self.TYPE_OBJECT,
+                            self.SCHEMA_PROPERTIES: properties,
+                            self.SCHEMA_REQUIRED: required_fields,
+                        },
                     },
-                },
-            })
+                }
+            )
 
         return ollama_tools
 
@@ -122,8 +132,8 @@ class ParietalLobe:
         return {}
 
     async def handle_tool_execution(
-            self, turn_record: ReasoningTurn,
-            tool_call_data: Dict[str, Any]) -> Dict[str, Any]:
+        self, turn_record: ReasoningTurn, tool_call_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Parses, records, and executes a single tool call, enforcing the Focus Economy."""
         func_data = tool_call_data.get(self.T_FUNC, {})
         tool_name = func_data.get(self.T_NAME)
@@ -139,7 +149,9 @@ class ParietalLobe:
         try:
             tool_def = await sync_to_async(
                 lambda: ToolDefinition.objects.select_related('use_type').get(
-                    name=tool_name))()
+                    name=tool_name
+                )
+            )()
         except ToolDefinition.DoesNotExist:
             tool_def = None
             logger.error(f'AI tried to call unknown tool: {tool_name}')
@@ -201,9 +213,9 @@ class ParietalLobe:
                     self.session.current_focus + focus_mod,
                 )
                 self.session.total_xp += xp_gain
-                await sync_to_async(
-                    self.session.save
-                )(update_fields=['current_focus', 'total_xp'])
+                await sync_to_async(self.session.save)(
+                    update_fields=['current_focus', 'total_xp']
+                )
 
         except Exception as e:
             tool_result = f'Tool Execution Error: {str(e)}'
@@ -220,15 +232,20 @@ class ParietalLobe:
             name=tool_name,
         ).to_dict()
 
-    async def process_tool_calls(self, turn_record: ReasoningTurn,
-                                 tool_calls_data: List[Dict[str, Any]]) -> None:
+    async def process_tool_calls(
+        self, turn_record: ReasoningTurn, tool_calls_data: List[Dict[str, Any]]
+    ) -> None:
         """Sorts tool calls by focus_modifier and executes them."""
         tool_names = [
             tc.get(self.T_FUNC, {}).get(self.T_NAME) for tc in tool_calls_data
         ]
-        tool_defs = await sync_to_async(lambda: list(
-            ToolDefinition.objects.select_related('use_type').filter(
-                name__in=tool_names)))()
+        tool_defs = await sync_to_async(
+            lambda: list(
+                ToolDefinition.objects.select_related('use_type').filter(
+                    name__in=tool_names
+                )
+            )
+        )()
         tool_def_map = {td.name: td for td in tool_defs}
 
         def get_focus_mod(tc):
@@ -238,9 +255,9 @@ class ParietalLobe:
                 return td.use_type.focus_modifier
             return 0
 
-        sorted_tool_calls = sorted(tool_calls_data,
-                                   key=get_focus_mod,
-                                   reverse=True)
+        sorted_tool_calls = sorted(
+            tool_calls_data, key=get_focus_mod, reverse=True
+        )
 
         for tool_call_data in sorted_tool_calls:
             await self.handle_tool_execution(turn_record, tool_call_data)

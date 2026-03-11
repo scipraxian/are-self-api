@@ -38,8 +38,10 @@ class PrefrontalCortexDispatchTest(CommonFixturesAPITestCase):
         )
 
         # 2. Agile Setup
-        self.status_backlog = PFCItemStatus.objects.get(name='Backlog')
-        self.status_done = PFCItemStatus.objects.get(name='Done')
+        self.status_backlog = PFCItemStatus.objects.get(
+            id=PFCItemStatus.BACKLOG
+        )
+        self.status_done = PFCItemStatus.objects.get(id=PFCItemStatus.DONE)
 
         # 3. Temporal Setup
         self.shift_sifting = Shift.objects.get(id=Shift.SIFTING)

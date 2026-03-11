@@ -3,49 +3,56 @@
   "model": "prefrontal_cortex.pfcitemstatus",
   "pk": 1,
   "fields": {
-    "name": "Backlog"
+    "name": "Needs Refinement"
   }
 },
 {
   "model": "prefrontal_cortex.pfcitemstatus",
   "pk": 2,
   "fields": {
-    "name": "Selected for Development"
+    "name": "Backlog"
   }
 },
 {
   "model": "prefrontal_cortex.pfcitemstatus",
   "pk": 3,
   "fields": {
-    "name": "In Progress"
+    "name": "Selected For Development"
   }
 },
 {
   "model": "prefrontal_cortex.pfcitemstatus",
   "pk": 4,
   "fields": {
-    "name": "Blocked by User"
+    "name": "In Progress"
   }
 },
 {
   "model": "prefrontal_cortex.pfcitemstatus",
   "pk": 5,
   "fields": {
-    "name": "Done"
+    "name": "In Review"
   }
 },
 {
   "model": "prefrontal_cortex.pfcitemstatus",
   "pk": 6,
   "fields": {
-    "name": "Needs Refinement"
+    "name": "Blocked By User"
   }
 },
 {
   "model": "prefrontal_cortex.pfcitemstatus",
   "pk": 7,
   "fields": {
-    "name": "Will not do."
+    "name": "Done"
+  }
+},
+{
+  "model": "prefrontal_cortex.pfcitemstatus",
+  "pk": 8,
+  "fields": {
+    "name": "Will Not Do"
   }
 },
 {
