@@ -28,6 +28,7 @@ class PFCItemStatus(NameMixin):
     class Meta:
         verbose_name = 'Status'
         verbose_name_plural = 'Statuses'
+        ordering = ['id']
 
 
 class PFCTag(NameMixin):
