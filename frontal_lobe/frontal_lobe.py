@@ -19,7 +19,7 @@ from frontal_lobe.models import (
     ReasoningTurn,
 )
 from frontal_lobe.thalamus import relay_sensory_state
-from identity.identity_prompt import build_identity_prompt
+from identity.identity_prompt import build_identity_prompt, collect_addon_blocks
 from parietal_lobe.parietal_lobe import ParietalLobe
 
 logger = logging.getLogger(__name__)
@@ -138,30 +138,212 @@ class FrontalLobe:
             reasoning_turn_id=turn_record.id,
         )
 
+    async def _build_history_messages(
+        self, turn_record: ReasoningTurn
+    ) -> List[Dict[str, Any]]:
+        """
+        Rebuilds the recent conversational history as native chat messages.
+
+        For each of the last ~6 completed ReasoningTurns, we append:
+        - The historical user messages that the model saw on that turn.
+        - The assistant message containing the stored thought_process and a
+          native-style tool_calls array.
+        - Tool messages that surface the cached (or evicted) tool results,
+          applying L1/L2 cache eviction rules based on turn age.
+        """
+        if not self.session:
+            return []
+
+        session = self.session
+        current_turn = turn_record.turn_number
+
+        recent_turns: List[ReasoningTurn] = await sync_to_async(list)(
+            session.turns.filter(
+                status_id=ReasoningStatusID.COMPLETED,
+                turn_number__lt=current_turn,
+            ).order_by('-turn_number')[:6]
+        )
+        recent_turns.reverse()
+
+        messages: List[Dict[str, Any]] = []
+
+        for t in recent_turns:
+            # 1. Historical user messages (what the model saw on that turn)
+            payload = t.request_payload or {}
+            user_contents: List[str] = []
+
+            if isinstance(payload, dict):
+                raw_messages = payload.get('messages') or []
+                for msg in raw_messages:
+                    if (
+                        isinstance(msg, dict)
+                        and msg.get('role') == FrontalLobeConstants.ROLE_USER
+                    ):
+                        content = msg.get('content')
+                        if content:
+                            user_contents.append(str(content))
+
+            # Fallback for legacy turns that might not have structured messages
+            if not user_contents:
+                if t.thought_process:
+                    user_contents.append(
+                        f'[LEGACY CONTEXT SNAPSHOT] User context for turn {t.turn_number} was not stored as messages.'
+                    )
+
+            for content in user_contents:
+                messages.append(
+                    {
+                        ROLE: FrontalLobeConstants.ROLE_USER,
+                        CONTENT: content,
+                    }
+                )
+
+            # 2. Assistant message with thought_process and native-style tool_calls
+            tool_calls = await sync_to_async(list)(
+                t.tool_calls.select_related('tool').all()
+            )
+            tool_calls_payload: List[Dict[str, Any]] = []
+            for tc in tool_calls:
+                func_payload: Dict[str, Any] = {
+                    'name': tc.tool.name,
+                    'arguments': tc.arguments or '{}',
+                }
+                tool_calls_payload.append(
+                    {
+                        'id': f'call_{tc.id}',
+                        'type': 'function',
+                        'function': func_payload,
+                    }
+                )
+
+            assistant_message: Dict[str, Any] = {
+                ROLE: FrontalLobeConstants.ROLE_ASSISTANT,
+                CONTENT: t.thought_process or '',
+            }
+            if tool_calls_payload:
+                assistant_message['tool_calls'] = tool_calls_payload
+            messages.append(assistant_message)
+
+            # 3. Tool result messages with L1/L2 cache eviction applied
+            age = current_turn - t.turn_number
+            for tc in tool_calls:
+                if age <= 3:
+                    result_content = tc.result_payload or ''
+                    if age == 3:
+                        result_content += (
+                            '\n\n[SYSTEM WARNING: L1 EVICTION IMMINENT. '
+                            'FLUSH TO ENGRAMS.]'
+                        )
+                else:
+                    result_content = (
+                        '[DATA EVICTED FROM L1 CACHE. '
+                        'REQUIRES ENGRAM RETRIEVAL.]'
+                    )
+
+                messages.append(
+                    {
+                        ROLE: FrontalLobeConstants.ROLE_TOOL,
+                        CONTENT: result_content,
+                        'name': tc.tool.name,
+                    }
+                )
+
+        return messages
+
+    async def _build_addon_messages(
+        self, turn_record: ReasoningTurn
+    ) -> List[Dict[str, Any]]:
+        """
+        Executes Identity Addons for the current turn and emits one user
+        message per addon, with the addon name baked into the content.
+        """
+        if not self.session or not self.session.identity_disc:
+            return []
+
+        iteration_id = None
+        if self.session.participant_id:
+            from temporal_lobe.models import IterationShiftParticipant
+
+            try:
+                p = IterationShiftParticipant.objects.select_related(
+                    'iteration_shift'
+                ).get(id=self.session.participant_id)
+                iteration_id = p.iteration_shift.shift_iteration_id
+            except IterationShiftParticipant.DoesNotExist:
+                pass
+
+        addon_blocks = await sync_to_async(collect_addon_blocks)(
+            identity_disc=self.session.identity_disc,
+            iteration_id=iteration_id,
+            turn_number=turn_record.turn_number,
+            reasoning_turn_id=turn_record.id,
+        )
+
+        messages: List[Dict[str, Any]] = []
+        for addon_name, addon_text in addon_blocks:
+            prefix = f'[{addon_name.upper()} ADDON]: '
+            messages.append(
+                {
+                    ROLE: FrontalLobeConstants.ROLE_USER,
+                    CONTENT: f'{prefix}{addon_text}',
+                }
+            )
+
+        return messages
+
     async def _build_turn_payload(
         self, turn_record: ReasoningTurn
     ) -> list[dict]:
-        """Assembles the Turn payload by integrating Identity and Sensory data."""
+        """
+        Assembles the Turn payload as a Living Chatroom array.
+
+        Phases:
+        1. Immutable laws (system prompt from IdentityDisc + Focus/Cache rules).
+        2. Timeline reconstruction (last ~6 ReasoningTurns with tool_calls + L1/L2 cache).
+        3. Living chatroom (current-turn Addons as individual user messages).
+        4. Final sensory trigger (Thalamus) for this turn.
+        """
 
         system_instruction = await sync_to_async(self._get_identity_prompt)(
             turn_record
         )
 
-        user_content = await relay_sensory_state(turn_record)
+        history_messages = await self._build_history_messages(turn_record)
+        addon_messages = await self._build_addon_messages(turn_record)
+        sensory_trigger = await relay_sensory_state(turn_record)
+
+        messages: List[Dict[str, Any]] = []
+
+        # Phase 1: Immutable laws
+        messages.append(
+            {
+                ROLE: FrontalLobeConstants.ROLE_SYSTEM,
+                CONTENT: system_instruction,
+            }
+        )
+
+        # Phase 2: Reconstructed history with L1/L2 cache semantics
+        messages.extend(history_messages)
+
+        # Phase 3: Addons as first-class chatroom participants
+        messages.extend(addon_messages)
+
+        # Phase 4: Final sensory trigger for this turn
+        messages.append(
+            {
+                ROLE: FrontalLobeConstants.ROLE_USER,
+                CONTENT: sensory_trigger,
+            }
+        )
 
         await self._log_live(
-            f'\n--- TURN {turn_record.turn_number} PAYLOAD ---'
+            f'\n--- TURN {turn_record.turn_number} PAYLOAD ({len(messages)} messages) ---'
         )
-        await self._log_live(user_content)
+        for msg in messages:
+            await self._log_live(f"[{msg.get(ROLE)}] {msg.get(CONTENT)[:500]}")
         await self._log_live('------------------------\n')
 
-        return [
-            dict(
-                role=FrontalLobeConstants.ROLE_SYSTEM,
-                content=system_instruction,
-            ),
-            dict(role=FrontalLobeConstants.ROLE_USER, content=user_content),
-        ]
+        return messages
 
     async def _execute_turn(
         self,
