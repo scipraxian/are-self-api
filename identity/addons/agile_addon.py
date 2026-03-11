@@ -39,7 +39,7 @@ def sifting_pm(identity_disc, environment_id, turn_number) -> str:
             )
             for epic in epics:
                 statements.append(
-                    f"mcp_ticket(action='read', params={{'item_id': '{epic.id}'}}) | {epic.name}"
+                    f"mcp_ticket(action='read', item_id='{epic.id}') | {epic.name}"
                 )
 
         stories = PFCStory.objects.filter(
@@ -53,7 +53,7 @@ def sifting_pm(identity_disc, environment_id, turn_number) -> str:
             )
             for story in stories:
                 statements.append(
-                    f"mcp_ticket(action='read', params={{'item_id': '{story.id}'}}) | {story.name}"
+                    f"mcp_ticket(action='read', item_id='{story.id}') | {story.name}"
                 )
 
     if not success:
@@ -81,7 +81,7 @@ def pre_planning_pm(identity_disc, environment_id, turn_number) -> str:
         statements.append('Epics to consider for development:')
         for epic in epics:
             statements.append(
-                f"mcp_ticket(action='read', params={{'item_id': '{epic.id}'}}) | {epic.name}"
+                f"mcp_ticket(action='read', item_id='{epic.id}') | {epic.name}"
             )
 
     stories = PFCStory.objects.filter(
@@ -93,7 +93,7 @@ def pre_planning_pm(identity_disc, environment_id, turn_number) -> str:
         statements.append('Stories to consider for development:')
         for story in stories:
             statements.append(
-                f"mcp_ticket(action='read', params={{'item_id': '{story.id}'}}) | {story.name}"
+                f"mcp_ticket(action='read', item_id='{story.id}') | {story.name}"
             )
 
     selected_and_in_progress_stories = PFCStory.objects.filter(
@@ -151,7 +151,7 @@ def post_execution_pm(identity_disc, environment_id, turn_number) -> str:
         )
         for story in stories:
             statements.append(
-                f"mcp_ticket(action='read', params={{'item_id': '{story.id}'}}) | {story.name}"
+                f"mcp_ticket(action='read', item_id='{story.id}') | {story.name}"
             )
 
     if success:
@@ -183,7 +183,7 @@ def bidding_worker(identity_disc, environment_id, turn_number) -> str:
         )
         for story in stories:
             statements.append(
-                f"mcp_ticket(action='read', params={{'item_id': '{story.id}'}}) | {story.name}"
+                f"mcp_ticket(action='read', item_id='{story.id}') | {story.name}"
             )
         return '\n'.join(statements)
     else:
@@ -210,7 +210,7 @@ def sifting_worker(identity_disc, environment_id, turn_number) -> str:
         statements.append('Stories in need of refinement:')
         for story in stories:
             statements.append(
-                f"mcp_ticket(action='read', params={{'item_id': '{story.id}'}}) | {story.name}"
+                f"mcp_ticket(action='read', item_id='{story.id}') | {story.name}"
             )
 
     if not success:
@@ -240,7 +240,7 @@ def executing_worker(identity_disc, environment_id, turn_number) -> str:
             statements.append('You own the following stories:')
             for story in my_stories:
                 statements.append(
-                    f"mcp_ticket(action='read', params={{'item_id': '{story.id}'}}) | {story.name}"
+                    f"mcp_ticket(action='read', item_id='{story.id}') | {story.name}"
                 )
         available_stories = PFCStory.objects.filter(
             Q(status_id=PFCItemStatus.SELECTED_FOR_DEVELOPMENT)
@@ -252,7 +252,7 @@ def executing_worker(identity_disc, environment_id, turn_number) -> str:
             statements.append('You may work on the following stories:')
             for story in available_stories:
                 statements.append(
-                    f"mcp_ticket(action='read', params={{'item_id': '{story.id}'}}) | {story.name}"
+                    f"mcp_ticket(action='read', item_id='{story.id}') | {story.name}"
                 )
         if not success:
             statements.append('No stories to work on.')
@@ -317,7 +317,7 @@ class AgilePromptBuilder:
                 '=========================================',
             ]
             self.context_lines.append(
-                "Use mcp_ticket with action='create', 'read', 'update', 'search', or 'comment' to manage tickets. Prefer 'read' and 'update' with only an item_id and payload; the system will infer EPIC/STORY/TASK from the UUID."
+                "Use mcp_ticket with a flat, single-field interface to manage Agile tickets. Call it with action='create', 'read', 'update', 'search', or 'comment' plus flat string arguments: item_type, item_id, field_name, field_value, parent_id, query. Perform atomic updates by calling mcp_ticket once per field you want to change (for example, call it twice to update both 'status' and 'priority')."
             )
             statuses = PFCItemStatus.objects.all()
             self.context_lines.append(
