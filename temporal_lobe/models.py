@@ -24,6 +24,7 @@ class Shift(NameMixin):
     default_turn_limit = models.IntegerField(default=1)
 
 
+# todo: i don't think we are using this anymore.
 class ShiftDefaultParticipant(models.Model):
     shift = models.ForeignKey(Shift, on_delete=models.CASCADE)
     participant = models.ForeignKey(Identity, on_delete=models.CASCADE)

@@ -2,6 +2,7 @@ from rest_framework import routers
 
 from temporal_lobe.api import (
     IterationDefinitionViewSet,
+    IterationShiftDefinitionViewSet,
     IterationViewSet,
     TemporalViewSet,
 )
@@ -17,4 +18,9 @@ V2_TEMPORAL_LOBE_ROUTER.register(
     r'iteration-definitions',
     IterationDefinitionViewSet,
     basename='iteration-definitions',
+)
+V2_TEMPORAL_LOBE_ROUTER.register(
+    r'iteration-shift-definitions',
+    IterationShiftDefinitionViewSet,
+    basename='iteration-shift-definitions',
 )

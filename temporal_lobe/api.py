@@ -19,6 +19,7 @@ from temporal_lobe.models import (
 from temporal_lobe.serializers import (
     IterationDefinitionSerializer,
     IterationSerializer,
+    IterationShiftDefinitionSerializer,
     IterationShiftDetailSerializer,
 )
 from temporal_lobe.temporal_lobe import (
@@ -27,6 +28,7 @@ from temporal_lobe.temporal_lobe import (
 )
 
 
+# DEPRECIATED
 class TemporalViewSet(viewsets.ViewSet):
     """
     Command Center API for the Temporal Lobe.
@@ -374,14 +376,11 @@ class IterationDefinitionViewSet(viewsets.ModelViewSet):
                 custom_name=custom_name,
             )
             # Re-fetch with same prefetch as IterationViewSet for full payload
-            fresh = (
-                Iteration.objects.prefetch_related(
-                    'iterationshift_set__shift',
-                    'iterationshift_set__definition',
-                    'iterationshift_set__iterationshiftparticipant_set__iteration_participant',
-                )
-                .get(pk=iteration.pk)
-            )
+            fresh = Iteration.objects.prefetch_related(
+                'iterationshift_set__shift',
+                'iterationshift_set__definition',
+                'iterationshift_set__iterationshiftparticipant_set__iteration_participant',
+            ).get(pk=iteration.pk)
             return Response(
                 IterationSerializer(fresh).data, status=status.HTTP_201_CREATED
             )
@@ -436,7 +435,8 @@ class IterationDefinitionViewSet(viewsets.ModelViewSet):
 
         fresh_definition = self.get_queryset().get(pk=definition.pk)
         return Response(
-            self.get_serializer(fresh_definition).data, status=status.HTTP_200_OK
+            self.get_serializer(fresh_definition).data,
+            status=status.HTTP_200_OK,
         )
 
     @action(detail=True, methods=['post'], url_path='remove_disc')
@@ -485,5 +485,23 @@ class IterationDefinitionViewSet(viewsets.ModelViewSet):
 
         fresh_definition = self.get_queryset().get(pk=definition.pk)
         return Response(
-            self.get_serializer(fresh_definition).data, status=status.HTTP_200_OK
+            self.get_serializer(fresh_definition).data,
+            status=status.HTTP_200_OK,
         )
+
+
+class IterationShiftDefinitionViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing IterationShiftDefinition objects.
+    """
+
+    queryset = (
+        IterationShiftDefinition.objects.select_related('definition', 'shift')
+        .prefetch_related(
+            'iterationshiftdefinitionparticipant_set__identity_disc'
+        )
+        .all()
+    )
+
+    serializer_class = IterationShiftDefinitionSerializer
+    permission_classes = [AllowAny]
