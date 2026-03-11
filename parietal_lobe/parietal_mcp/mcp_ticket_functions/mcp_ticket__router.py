@@ -19,23 +19,21 @@ ALLOWED_ACTIONS = {a.value for a in TicketAction}
 ALLOWED_TYPES = {t.value for t in TicketType}
 
 
-async def route(action: str, params: dict) -> str:
+async def route(action: str, **kwargs) -> str:
     """
     Central routing for ticket operations.
+
+    This router now forwards a flat set of keyword arguments directly to the
+    underlying handler. The handlers are responsible for validating any
+    action-specific requirements (e.g., item_type for create/search).
     """
     action = str(action).lower()
-    item_type = str(params.get('item_type', '')).upper()
 
     if action not in ALLOWED_ACTIONS:
-        return f"Error: Invalid action '{action}'. Must be one of: {', '.join(sorted(ALLOWED_ACTIONS))}."
-
-    # READ and UPDATE operations infer type from UUID and do not strictly require item_type.
-    if action not in {TicketAction.READ.value, TicketAction.UPDATE.value}:
-        if item_type not in ALLOWED_TYPES:
-            return (
-                f"Error: Invalid item_type '{item_type}'. Must be one of: "
-                f'{", ".join(sorted(ALLOWED_TYPES))}.'
-            )
+        return (
+            "Error: Invalid action "
+            f"'{action}'. Must be one of: {', '.join(sorted(ALLOWED_ACTIONS))}."
+        )
 
     # Map 'comment' action to 'comment_add' module
     module_action = 'comment_add' if action == 'comment' else action
@@ -53,10 +51,8 @@ async def route(action: str, params: dict) -> str:
     if not execute_fn:
         return f"Error: Ticket action '{action}' has no execute function."
 
-    exec_params = {k: v for k, v in params.items() if k != 'item_type'}
-
     try:
-        return await execute_fn(item_type=item_type, **exec_params)
+        return await execute_fn(**kwargs)
     except TypeError as e:
         return f'Error: Invalid parameters for ticket {action}: {str(e)}'
     except Exception as e:

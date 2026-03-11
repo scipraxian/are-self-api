@@ -12,8 +12,8 @@ MODEL_MAP = {
 
 
 @sync_to_async
-def _search_sync(item_type: str, query: str) -> str:
-    item_type_normalized = str(item_type).upper()
+def _search_sync(item_type: str | None, query: str | None) -> str:
+    item_type_normalized = str(item_type or '').upper()
     if item_type_normalized not in MODEL_MAP:
         return make_action_response(
             action=TicketAction.SEARCH,
@@ -22,7 +22,7 @@ def _search_sync(item_type: str, query: str) -> str:
             error='Invalid item type. Must be EPIC, STORY, or TASK.',
         )
 
-    if not str(query).strip():
+    if not str(query or '').strip():
         return make_action_response(
             action=TicketAction.SEARCH,
             ok=False,
@@ -54,6 +54,10 @@ def _search_sync(item_type: str, query: str) -> str:
     )
 
 
-async def execute(item_type: str, query: str) -> str:
-    """Implementation of ticket search."""
-    return await _search_sync(item_type, query)
+async def execute(
+    item_type: str | None = None,
+    query: str | None = None,
+    **_: object,
+) -> str:
+    """Implementation of ticket search using flat arguments."""
+    return await _search_sync(item_type=item_type, query=query)

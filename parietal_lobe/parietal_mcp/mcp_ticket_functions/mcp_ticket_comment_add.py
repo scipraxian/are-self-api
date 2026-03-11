@@ -15,17 +15,16 @@ from prefrontal_cortex.serializers import TicketAction, make_action_response
 
 
 @sync_to_async
-def _comment_sync(item_type: str, item_id: str, text: str) -> str:
-    item_type_normalized = str(item_type).upper()
-
-    # 1. Strict UUID Validation
+def _comment_sync(item_id: str, text: str) -> str:
+    """
+    Add a comment to a ticket by inferring its type from the UUID alone.
+    """
     try:
         val_uuid = uuid.UUID(str(item_id))
     except ValueError:
         return make_action_response(
             action=TicketAction.COMMENT,
             ok=False,
-            item_type=item_type_normalized,
             error=(
                 f"Invalid item_id '{item_id}'. You must provide the full, "
                 'exact UUID (e.g., 123e4567-e89b-12d3-a456-426614174000).'
@@ -34,52 +33,24 @@ def _comment_sync(item_type: str, item_id: str, text: str) -> str:
 
     kwargs = {'text': text, 'status_id': PFCCommentStatus.CREATED}
 
-    # 2. Explicit Target Validation & Assignment
-    if item_type_normalized == 'EPIC':
-        if not PFCEpic.objects.filter(id=val_uuid).exists():
-            return make_action_response(
-                action=TicketAction.COMMENT,
-                ok=False,
-                item_type=item_type_normalized,
-                error=f"EPIC with ID '{val_uuid}' does not exist on the board.",
-            )
+    item_type_normalized = ''
+
+    if PFCEpic.objects.filter(id=val_uuid).exists():
+        item_type_normalized = 'EPIC'
         kwargs['epic_id'] = str(val_uuid)
-
-    elif item_type_normalized == 'STORY':
-        if not PFCStory.objects.filter(id=val_uuid).exists():
-            return make_action_response(
-                action=TicketAction.COMMENT,
-                ok=False,
-                item_type=item_type_normalized,
-                error=(
-                    f"STORY with ID '{val_uuid}' "
-                    'does not exist on the board.'
-                ),
-            )
+    elif PFCStory.objects.filter(id=val_uuid).exists():
+        item_type_normalized = 'STORY'
         kwargs['story_id'] = str(val_uuid)
-
-    elif item_type_normalized == 'TASK':
-        if not PFCTask.objects.filter(id=val_uuid).exists():
-            return make_action_response(
-                action=TicketAction.COMMENT,
-                ok=False,
-                item_type=item_type_normalized,
-                error=f"TASK with ID '{val_uuid}' does not exist on the board.",
-            )
+    elif PFCTask.objects.filter(id=val_uuid).exists():
+        item_type_normalized = 'TASK'
         kwargs['task_id'] = str(val_uuid)
-
     else:
         return make_action_response(
             action=TicketAction.COMMENT,
             ok=False,
-            item_type=item_type_normalized,
-            error=(
-                f"Invalid item_type '{item_type_normalized}'. "
-                'Must be exactly EPIC, STORY, or TASK.'
-            ),
+            error=f"No EPIC/STORY/TASK with ID '{val_uuid}' exists on the board.",
         )
 
-    # 3. Clean Execution
     try:
         comment = PFCComment.objects.create(**kwargs)
         return make_action_response(
@@ -115,6 +86,10 @@ def _comment_sync(item_type: str, item_id: str, text: str) -> str:
         )
 
 
-async def execute(item_type: str, item_id: str, text: str) -> str:
-    """Implementation of adding a comment to a ticket."""
-    return await _comment_sync(item_type, item_id, text)
+async def execute(
+    item_id: str | None = None,
+    field_value: str | None = None,
+    **_: object,
+) -> str:
+    """Implementation of adding a comment to a ticket using flat arguments."""
+    return await _comment_sync(item_id=str(item_id or ''), text=str(field_value or ''))

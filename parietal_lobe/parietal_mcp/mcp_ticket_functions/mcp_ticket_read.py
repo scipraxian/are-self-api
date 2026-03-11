@@ -64,9 +64,7 @@ async def execute(item_type: str, item_id: str, **kwargs) -> str:
     """
     Implementation of ticket read.
 
-    The router currently requires item_type, but we ignore it here
-    and infer the type from the UUID instead.
+    item_id alone is sufficient; the type is inferred from the UUID.
     """
-    # Silence unused-arg linters while documenting intent
-    _ = item_type, kwargs
+    _ = item_type, kwargs  # backwards-compat shim for any legacy callers
     return await _read_sync(item_id=item_id)

@@ -1,44 +1,48 @@
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from parietal_lobe.parietal_mcp.mcp_ticket_functions.mcp_ticket__router import route
 
 
 async def mcp_ticket(
     action: Optional[str] = None,
-    params: Optional[Dict[str, Any]] = None,
-    ticket_action: Optional[str] = None,
+    item_id: Optional[str] = None,
+    item_type: Optional[str] = None,
+    field_name: Optional[str] = None,
+    field_value: Optional[str] = None,
+    parent_id: Optional[str] = None,
+    query: Optional[str] = None,
 ) -> str:
     """MCP Tool: Unified Agile ticket operations (EPIC, STORY, TASK).
 
-    This tool can be invoked in two equivalent ways:
+    This tool uses a **flat, single-field** argument model. The LLM should
+    perform atomic updates by calling the tool separately for each field it
+    wants to set or change.
 
-    - Legacy: mcp_ticket(action='create', params={...})
-    - Enums-based: mcp_ticket(ticket_action='CREATE', params={...})
-
-    Actions:
-        - create: create a new EPIC/STORY/TASK
-        - read:   read a ticket by UUID (type inferred)
-        - update: patch a ticket by UUID (type inferred)
-        - search: search tickets by type and text query
-        - comment: add a comment to a specific ticket
-
-    Params:
-        - create:  {'item_type': 'EPIC|STORY|TASK', 'payload': {...}, 'parent_id': '...'(optional)}
-        - read:    {'item_id': 'uuid-string'}
-        - update:  {'item_id': 'uuid-string', 'payload': {...}}
-        - search:  {'item_type': 'EPIC|STORY|TASK', 'query': 'text'}
-        - comment: {'item_type': 'EPIC|STORY|TASK', 'item_id': 'uuid-string', 'text': 'comment'}
+    Arguments:
+        - action:     'create', 'read', 'update', 'search', or 'comment'.
+        - item_id:    UUID of the target ticket (for read, update, comment).
+        - item_type:  'EPIC', 'STORY', or 'TASK' (for create, search).
+        - field_name: Exact model field name to update (for update).
+        - field_value:
+            - create:   Short ticket name/title.
+            - update:   New value for the given field_name.
+            - comment:  Comment body text.
+        - parent_id:  UUID of parent ticket (Epic for Story, Story for Task).
+        - query:      Search string (for search).
 
     All actions return a JSON string produced by a PFCActionResponseSerializer
     wrapper with fields: ok, action, item_type, item_id, data, error.
     """
-    # Prefer explicit `action` when provided, otherwise fall back to ticket_action
-    effective_action = (action or ticket_action or '').lower()
+    effective_action = (action or '').lower()
     if not effective_action:
-        return (
-            "Error: mcp_ticket requires either 'action' "
-            "or 'ticket_action' to be provided."
-        )
+        return "Error: mcp_ticket requires 'action' to be provided."
 
-    params_dict: Dict[str, Any] = params or {}
-    return await route(effective_action, params_dict)
+    return await route(
+        effective_action,
+        item_id=item_id,
+        item_type=item_type,
+        field_name=field_name,
+        field_value=field_value,
+        parent_id=parent_id,
+        query=query,
+    )

@@ -18,8 +18,19 @@ MODEL_MAP = {
 
 
 @sync_to_async
-def _create_sync(item_type: str, payload: dict, parent_id: str | None = None) -> str:
-    item_type_normalized = str(item_type).upper()
+def _create_sync(
+    item_type: str | None,
+    field_value: str | None = None,
+    parent_id: str | None = None,
+) -> str:
+    """
+    Create a new ticket using a flat argument model.
+
+    - item_type:  EPIC, STORY, or TASK (required).
+    - field_value: Used as the ticket name/title (required).
+    - parent_id:  For STORY (epic) or TASK (story).
+    """
+    item_type_normalized = str(item_type or '').upper()
     if item_type_normalized not in MODEL_MAP:
         return make_action_response(
             action=TicketAction.CREATE,
@@ -31,10 +42,19 @@ def _create_sync(item_type: str, payload: dict, parent_id: str | None = None) ->
             ),
         )
 
+    if not (field_value or '').strip():
+        return make_action_response(
+            action=TicketAction.CREATE,
+            ok=False,
+            item_type=item_type_normalized,
+            error='field_value (ticket name) is required for create.',
+        )
+
     _, serializer_class = MODEL_MAP[item_type_normalized]
 
+    payload: dict = {'name': field_value}
+
     # Map parent relationships
-    payload = dict(payload or {})
     if item_type_normalized == 'STORY' and parent_id:
         payload['epic'] = parent_id
     elif item_type_normalized == 'TASK' and parent_id:
@@ -58,6 +78,11 @@ def _create_sync(item_type: str, payload: dict, parent_id: str | None = None) ->
     )
 
 
-async def execute(item_type: str, payload: dict, parent_id: str | None = None) -> str:
-    """Implementation of ticket creation."""
-    return await _create_sync(item_type, payload, parent_id)
+async def execute(
+    item_type: str | None = None,
+    field_value: str | None = None,
+    parent_id: str | None = None,
+    **_: object,
+) -> str:
+    """Implementation of ticket creation using flat arguments."""
+    return await _create_sync(item_type=item_type, field_value=field_value, parent_id=parent_id)
