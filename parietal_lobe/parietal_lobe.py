@@ -6,15 +6,28 @@ from typing import Any, Callable, Dict, List
 from asgiref.sync import sync_to_async
 
 from frontal_lobe.models import (
+    ChatMessage,
+    ChatMessageRole,
     ReasoningSession,
     ReasoningStatusID,
     ReasoningTurn,
 )
-from frontal_lobe.synapse import ChatMessage, OllamaClient
+from frontal_lobe.synapse import OllamaClient
 from parietal_lobe.models import ToolCall, ToolDefinition
 from parietal_lobe.parietal_mcp.gateway import ParietalMCP
 
 logger = logging.getLogger(__name__)
+
+
+def _json_str_to_dict(raw_args: Any) -> Dict[str, Any]:
+    if isinstance(raw_args, dict):
+        return raw_args
+    if isinstance(raw_args, str):
+        try:
+            return json.loads(raw_args)
+        except json.JSONDecodeError:
+            return {}
+    return {}
 
 
 class ParietalLobe:
@@ -32,7 +45,9 @@ class ParietalLobe:
     SCHEMA_PROPERTIES = 'properties'
     SCHEMA_REQUIRED = 'required'
     TYPE_OBJECT = 'object'
-    ROLE_TOOL = 'tool'
+
+    SESSION_ID = 'session_id'
+    TURN_ID = 'turn_id'
 
     def __init__(self, session: ReasoningSession, log_callback: Callable):
         self.session = session
@@ -121,29 +136,16 @@ class ParietalLobe:
 
         return ollama_tools
 
-    def _parse_tool_arguments(self, raw_args: Any) -> Dict[str, Any]:
-        if isinstance(raw_args, dict):
-            return raw_args
-        if isinstance(raw_args, str):
-            try:
-                return json.loads(raw_args)
-            except json.JSONDecodeError:
-                return {}
-        return {}
-
     async def handle_tool_execution(
         self, turn_record: ReasoningTurn, tool_call_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Parses, records, and executes a single tool call, enforcing the Focus Economy."""
+    ) -> None:
+        """Parses, records, and executes a single tool call, writing results natively to ChatMessage."""
         func_data = tool_call_data.get(self.T_FUNC, {})
         tool_name = func_data.get(self.T_NAME)
         raw_args = func_data.get(self.T_ARGS, {})
-        args = self._parse_tool_arguments(raw_args)
-
-        # Safe Injection: Pass the exact turn ID to memory tools
-        if tool_name in ['mcp_engram_save', 'mcp_engram_update']:
-            args['turn_id'] = turn_record.id
-
+        args = _json_str_to_dict(raw_args)
+        args[self.SESSION_ID] = str(self.session.id)
+        args[self.TURN_ID] = turn_record.id
         await self._log_live(f'Tool Call: {tool_name}({args})')
 
         try:
@@ -156,10 +158,23 @@ class ParietalLobe:
             tool_def = None
             logger.error(f'AI tried to call unknown tool: {tool_name}')
 
+            # Immediately record the error in the conversation history
+            error_msg = f"Error: Unknown tool '{tool_name}'"
+            await self._log_live(f'Result: {error_msg}')
+            await sync_to_async(ChatMessage.objects.create)(
+                session=self.session,
+                turn=turn_record,
+                role_id=ChatMessageRole.TOOL,
+                content=error_msg,
+                is_volatile=False,
+            )
+            return
+
         mechanics = tool_def.use_type if tool_def else None
         focus_mod = mechanics.focus_modifier if mechanics else 0
         xp_gain = mechanics.xp_reward if mechanics else 0
 
+        # --- FOCUS FIZZLE ---  # todo: the focus addon should be doing this.
         if focus_mod < 0 and self.session.current_focus + focus_mod < 0:
             fizzle_msg = (
                 f'SYSTEM OVERRIDE: Effector Fizzled! Insufficient Focus. '
@@ -168,30 +183,33 @@ class ParietalLobe:
             )
             await self._log_live(f'Result: {fizzle_msg}')
 
-            if tool_def:
-                await sync_to_async(ToolCall.objects.create)(
-                    turn=turn_record,
-                    tool=tool_def,
-                    arguments=json.dumps(args),
-                    status_id=ReasoningStatusID.ERROR,
-                    result_payload=fizzle_msg,
-                    traceback='Insufficient Focus.',
-                )
-
-            return ChatMessage(
-                role=self.ROLE_TOOL,
-                content=fizzle_msg,
-                name=tool_name,
-            ).to_dict()
-
-        db_tool_call = None
-        if tool_def:
             db_tool_call = await sync_to_async(ToolCall.objects.create)(
                 turn=turn_record,
                 tool=tool_def,
                 arguments=json.dumps(args),
-                status_id=ReasoningStatusID.ACTIVE,
+                status_id=ReasoningStatusID.ERROR,
+                result_payload=fizzle_msg,
+                traceback='Insufficient Focus.',
             )
+
+            # Insert Fizzle directly into history
+            await sync_to_async(ChatMessage.objects.create)(
+                session=self.session,
+                turn=turn_record,
+                role_id=ChatMessageRole.TOOL,
+                content=fizzle_msg,
+                tool_call=db_tool_call,
+                is_volatile=False,
+            )
+            return
+
+        # --- NORMAL EXECUTION ---
+        db_tool_call = await sync_to_async(ToolCall.objects.create)(
+            turn=turn_record,
+            tool=tool_def,
+            arguments=json.dumps(args),
+            status_id=ReasoningStatusID.ACTIVE,
+        )
 
         try:
             tool_result = await ParietalMCP.execute(tool_name, args)
@@ -203,34 +221,37 @@ class ParietalLobe:
 
             tool_result = str(tool_result)
 
-            if db_tool_call:
-                db_tool_call.result_payload = tool_result[:10000]
-                db_tool_call.status_id = ReasoningStatusID.COMPLETED
-                await sync_to_async(db_tool_call.save)()
+            db_tool_call.result_payload = tool_result[:20000]
+            db_tool_call.status_id = ReasoningStatusID.COMPLETED
+            await sync_to_async(db_tool_call.save)()
 
-                self.session.current_focus = min(
-                    self.session.max_focus,
-                    self.session.current_focus + focus_mod,
-                )
-                self.session.total_xp += xp_gain
-                await sync_to_async(self.session.save)(
-                    update_fields=['current_focus', 'total_xp']
-                )
+            self.session.current_focus = min(
+                self.session.max_focus,
+                self.session.current_focus + focus_mod,
+            )
+            self.session.total_xp += xp_gain
+            await sync_to_async(self.session.save)(
+                update_fields=['current_focus', 'total_xp']
+            )
 
         except Exception as e:
             tool_result = f'Tool Execution Error: {str(e)}'
-            if db_tool_call:
-                db_tool_call.traceback = str(e)
-                db_tool_call.status_id = ReasoningStatusID.ERROR
-                await sync_to_async(db_tool_call.save)()
+            db_tool_call.traceback = str(e)
+            db_tool_call.status_id = ReasoningStatusID.ERROR
+            await sync_to_async(db_tool_call.save)()
 
         await self._log_live(f'Result: {tool_result[:200]}...')
 
-        return ChatMessage(
-            role=self.ROLE_TOOL,
+        # --- SAVE RESULT TO HISTORY ---
+        # Notice `is_volatile=False`! This locks the real outcome into permanent memory.
+        await sync_to_async(ChatMessage.objects.create)(
+            session=self.session,
+            turn=turn_record,
+            role_id=ChatMessageRole.TOOL,
             content=tool_result,
-            name=tool_name,
-        ).to_dict()
+            tool_call=db_tool_call,
+            is_volatile=False,
+        )
 
     async def process_tool_calls(
         self, turn_record: ReasoningTurn, tool_calls_data: List[Dict[str, Any]]

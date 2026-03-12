@@ -12,7 +12,6 @@ from prefrontal_cortex.serializers import (
     make_action_response,
 )
 
-
 MODEL_SERIALIZER_SEQ = [
     ('EPIC', PFCEpic, PFCEpicSerializer),
     ('STORY', PFCStory, PFCStorySerializer),
@@ -33,7 +32,7 @@ def _update_sync(item_id: str, field_name: str, field_value: str) -> str:
             action=TicketAction.UPDATE,
             ok=False,
             error=(
-                "Invalid item_id "
+                'Invalid item_id '
                 f"'{item_id}'. You must provide the full, exact UUID "
                 '(e.g., 123e4567-e89b-12d3-a456-426614174000).'
             ),
@@ -61,8 +60,22 @@ def _update_sync(item_id: str, field_name: str, field_value: str) -> str:
                 error=f"Field '{field_name}' does not exist on {type_name}.",
             )
 
-        # Apply the atomic field update
-        setattr(instance, field_name, field_value)
+        try:
+            setattr(instance, field_name, field_value)
+        except ValueError as e:
+            # Try id lookup.
+            fk_field_name = f'{field_name}_id'
+            if hasattr(instance, fk_field_name):
+                setattr(instance, fk_field_name, field_value)
+            else:
+                return make_action_response(
+                    action=TicketAction.UPDATE,
+                    ok=False,
+                    item_type=type_name,
+                    item_id=val_uuid,
+                    error=f"Invalid value for '{field_name}': {str(e)}",
+                )
+
         try:
             instance.full_clean()
             instance.save()
@@ -104,4 +117,3 @@ async def execute(
         field_name=str(field_name or ''),
         field_value=str(field_value or ''),
     )
-

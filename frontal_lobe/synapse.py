@@ -52,21 +52,6 @@ class OllamaChatPayload:
 
 
 @dataclass
-class ChatMessage:
-    """Strictly typed representation of a single message in a Chat array."""
-
-    role: str
-    content: str
-    tool_calls: Optional[List[Dict[str, Any]]] = None
-    name: Optional[str] = None  # Used exclusively when role='tool'
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Serializes to dict, stripping None values to satisfy strict JSON
-        parsers."""
-        return {k: v for k, v in asdict(self).items() if v is not None}
-
-
-@dataclass
 class OllamaResponse:
     """Strictly typed return structure for the reasoning engine."""
 

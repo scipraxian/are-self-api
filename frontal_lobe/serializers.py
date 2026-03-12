@@ -2,6 +2,8 @@ from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
 from frontal_lobe.models import (
+    ChatMessage,
+    ChatMessageRole,
     ReasoningGoal,
     ReasoningSession,
     ReasoningTurn,
@@ -34,10 +36,24 @@ class ReasoningGoalSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
+class ChatMessageRoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatMessageRole
+        fields = ALL_FIELDS
+
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    role = ChatMessageRoleSerializer(read_only=True)
+
+    class Meta:
+        model = ChatMessage
+        fields = ALL_FIELDS
+
+
 class ReasoningTurnSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     tool_calls = ToolCallSerializer(many=True, read_only=True)
-    turn_goals = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    messages = ChatMessageSerializer(many=True, read_only=True)
 
     class Meta:
         model = ReasoningTurn
@@ -62,7 +78,6 @@ class SessionConclusionSerializer(serializers.ModelSerializer):
 
 class ReasoningSessionSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
-    goals = ReasoningGoalSerializer(many=True, read_only=True)
     turns = ReasoningTurnSerializer(many=True, read_only=True)
     engrams = TalosEngramSerializer(many=True, read_only=True)
     conclusion = SessionConclusionSerializer(read_only=True)
