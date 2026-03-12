@@ -124,5 +124,37 @@
     "cost_per_1k_input": "0.000000",
     "cost_per_1k_output": "0.000000"
   }
+},
+{
+  "model": "frontal_lobe.chatmessagerole",
+  "pk": 1,
+  "fields": {
+    "created": "2026-03-12T15:38:42.606Z",
+    "name": "system"
+  }
+},
+{
+  "model": "frontal_lobe.chatmessagerole",
+  "pk": 2,
+  "fields": {
+    "created": "2026-03-12T15:38:48.946Z",
+    "name": "user"
+  }
+},
+{
+  "model": "frontal_lobe.chatmessagerole",
+  "pk": 3,
+  "fields": {
+    "created": "2026-03-12T15:38:57.804Z",
+    "name": "assistant"
+  }
+},
+{
+  "model": "frontal_lobe.chatmessagerole",
+  "pk": 4,
+  "fields": {
+    "created": "2026-03-12T15:39:06.536Z",
+    "name": "tool"
+  }
 }
 ]

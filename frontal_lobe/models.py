@@ -217,3 +217,37 @@ class SessionConclusion(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
     @property
     def engrams(self):
         return self.session.talosengram_set.all()
+
+
+class ChatMessageRole(NameMixin, CreatedMixin):
+    SYSTEM = 1  #'system', 'System'
+    USER = 2  #'user', 'User'
+    ASSISTANT = 3  # 'assistant', 'Assistant'
+    TOOL = 4
+
+
+class ChatMessage(UUIDIdMixin, CreatedMixin):
+    RELATED_NAME = 'messages'
+    session = models.ForeignKey(
+        ReasoningSession, on_delete=models.CASCADE, related_name=RELATED_NAME
+    )
+    turn = models.ForeignKey(
+        ReasoningTurn, on_delete=models.CASCADE, related_name=RELATED_NAME
+    )
+    role = models.ForeignKey(ChatMessageRole, on_delete=models.CASCADE)
+    content = models.TextField()
+    tool_call = models.ForeignKey(
+        'parietal_lobe.ToolCall',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    is_volatile = models.BooleanField(
+        default=False,
+        help_text='If True, this message (like an Addon) is excluded from historical memory.',
+    )
+
+    class Meta:
+        ordering = ['-created']
+        verbose_name = 'Chat Message'
+        verbose_name_plural = 'Chat Messages'
