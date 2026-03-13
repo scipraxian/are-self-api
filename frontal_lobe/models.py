@@ -122,6 +122,10 @@ class ReasoningSession(
         """Level 1 = 10. Level 2 = 11. Level 3 = 12."""
         return 10 + int((self.current_level - 1) * 0.5)
 
+    @property
+    def current_turn(self):
+        return self.turns.last() if self.turns.exists() else None
+
     def __str__(self):
         return f'Session {self.id} Status: {self.status}'
 
@@ -150,6 +154,9 @@ class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
     last_turn = models.ForeignKey(
         'self', on_delete=models.SET_NULL, null=True, blank=True
     )
+
+    class Meta:
+        ordering = ['turn_number']
 
     def __str__(self):
         return f'Turn {self.turn_number} (Session: {self.session_id})'

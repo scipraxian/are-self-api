@@ -48,7 +48,7 @@ class IdentityDiscViewSet(viewsets.ModelViewSet):
     """
 
     queryset = (
-        IdentityDisc.objects.select_related('identity', 'last_turn')
+        IdentityDisc.objects.select_related('ai_model', 'last_turn')
         .prefetch_related('memories')
         .all()
         .order_by('-level', '-xp', 'name')

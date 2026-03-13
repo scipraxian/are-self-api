@@ -1,6 +1,7 @@
 from django.db import models
 from pgvector.django import VectorField
 
+from central_nervous_system.models import Spike
 from common.models import (
     DefaultFieldsMixin,
     DescriptionMixin,
@@ -8,7 +9,6 @@ from common.models import (
     UUIDIdMixin,
 )
 from frontal_lobe.models import ReasoningSession, ReasoningTurn
-from central_nervous_system.models import Spike
 from prefrontal_cortex.models import PFCTask
 
 
@@ -45,6 +45,16 @@ class TalosEngram(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     )
     tasks = models.ManyToManyField(
         PFCTask, related_name=RELATED_NAME, blank=True
+    )
+    creator = models.ForeignKey(
+        'identity.IdentityDisc',
+        related_name='engrams_creator',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    identity_discs = models.ManyToManyField(
+        'identity.IdentityDisc', related_name=RELATED_NAME, blank=True
     )
 
     is_active = models.BooleanField(default=True)
