@@ -15,7 +15,6 @@ from frontal_lobe.models import (
     ChatMessage,
     ChatMessageRole,
     ModelRegistry,
-    ReasoningGoal,
     ReasoningSession,
     ReasoningStatusID,
     ReasoningTurn,
@@ -41,7 +40,6 @@ class FrontalLobe:
         self.parietal_lobe: Optional[ParietalLobe] = None
 
         self.session: Optional[ReasoningSession] = None
-        self.current_goal: Optional[ReasoningGoal] = None
 
     # --- IO & Logging ---
 
@@ -72,18 +70,13 @@ class FrontalLobe:
     async def _initialize_session(
         self, rendered_objective: str, max_turns: int
     ) -> None:
-        """Creates the ReasoningSession and primary ReasoningGoal in the DB."""
+        """Creates the ReasoningSession in the DB."""
         if not self.session:
             self.session = await sync_to_async(ReasoningSession.objects.create)(
                 spike=self.spike,
                 status_id=ReasoningStatusID.ACTIVE,
                 max_turns=max_turns,
             )
-        self.current_goal = await sync_to_async(ReasoningGoal.objects.create)(
-            session=self.session,
-            rendered_goal=rendered_objective,
-            status_id=ReasoningStatusID.ACTIVE,
-        )
         await self._log_live(f'Session ID: {self.session.id}')
 
     # --- Turn Execution ---
@@ -99,8 +92,6 @@ class FrontalLobe:
             status_id=ReasoningStatusID.ACTIVE,
             last_turn=previous_turn,
         )
-        if self.current_goal:
-            await sync_to_async(turn.turn_goals.add)(self.current_goal)
         return turn
 
     async def _record_turn_completion(

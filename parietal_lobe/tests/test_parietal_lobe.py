@@ -7,7 +7,6 @@ from asgiref.sync import sync_to_async
 from common.tests.common_test_case import CommonFixturesAPITestCase
 from identity.models import Identity, IdentityDisc, IdentityType
 from frontal_lobe.models import (
-    ReasoningGoal,
     ReasoningSession,
     ReasoningStatusID,
     ReasoningTurn,

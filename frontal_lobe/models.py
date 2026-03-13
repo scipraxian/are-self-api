@@ -123,19 +123,6 @@ class ReasoningSession(
         return f'Session {self.id} Status: {self.status}'
 
 
-class ReasoningGoal(ReasoningStatusMixin, CreatedMixin, ModifiedMixin):
-    """Individual objectives within a session."""
-
-    session = models.ForeignKey(
-        ReasoningSession, on_delete=models.CASCADE, related_name='goals'
-    )
-    achieved = models.BooleanField(default=False)
-    rendered_goal = models.TextField(blank=True, default='')
-
-    def __str__(self):
-        return f'Goal: {self.rendered_goal[:50]}...'
-
-
 class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
     """
     A single 'tick' or step in the reasoning process.
@@ -152,9 +139,6 @@ class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
     tokens_input = models.IntegerField(default=0)
     inference_time = models.DurationField(default=timedelta)
 
-    turn_goals = models.ManyToManyField(
-        ReasoningGoal, blank=True, related_name=RELATED_NAME
-    )
     thought_process = models.TextField(
         help_text='The internal monologue of the AI.'
     )

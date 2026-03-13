@@ -5,19 +5,11 @@ from .models import (
     ChatMessage,
     ChatMessageRole,
     ModelRegistry,
-    ReasoningGoal,
     ReasoningSession,
     ReasoningStatus,
     ReasoningTurn,
     SessionConclusion,
 )
-
-
-class ReasoningGoalInline(admin.TabularInline):
-    model = ReasoningGoal
-    extra = 0
-    fields = ('status', 'rendered_goal', 'achieved', 'created')
-    readonly_fields = ('created',)
 
 
 class ReasoningTurnInline(admin.TabularInline):
@@ -67,10 +59,10 @@ class ReasoningSessionAdmin(admin.ModelAdmin):
         'delta',
     )
     list_filter = ('status', 'created')
-    search_fields = ('id', 'goals__rendered_goal')
+    search_fields = ('id',)
     readonly_fields = ('created', 'modified', 'delta')
     list_select_related = ('status', 'identity_disc', 'participant', 'spike')
-    inlines = [ReasoningGoalInline, ReasoningTurnInline]
+    inlines = [ReasoningTurnInline]
 
     @admin.display(description='Interface')
     def launch_cortex(self, obj):
@@ -82,30 +74,6 @@ class ReasoningSessionAdmin(admin.ModelAdmin):
         )
 
     launch_cortex.short_description = 'Interface'
-
-
-@admin.register(ReasoningGoal)
-class ReasoningGoalAdmin(admin.ModelAdmin):
-    list_display = (
-        'id',
-        'session',
-        'status',
-        'achieved',
-        'short_goal',
-        'created',
-    )
-    list_filter = ('status', 'achieved')
-    search_fields = ('rendered_goal', 'session__id')
-    list_select_related = ('session', 'status')
-
-    def short_goal(self, obj):
-        return (
-            obj.rendered_goal[:50] + '...'
-            if len(obj.rendered_goal) > 50
-            else obj.rendered_goal
-        )
-
-    short_goal.short_description = 'Goal Preview'
 
 
 @admin.register(ReasoningTurn)
@@ -121,9 +89,6 @@ class ReasoningTurnAdmin(admin.ModelAdmin):
     list_filter = ('status', 'created')
     search_fields = ('thought_process', 'session__id')
     list_select_related = ('session', 'status', 'last_turn')
-    filter_horizontal = (
-        'turn_goals',
-    )  # Renders a nice dual-selector for the M2M field
     readonly_fields = ('created', 'modified', 'delta')
     inlines = [ChatMessageInline]
 

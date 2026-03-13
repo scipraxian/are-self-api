@@ -7,7 +7,6 @@ from common.tests.common_test_case import CommonFixturesAPITestCase
 from frontal_lobe.constants import FrontalLobeConstants
 from frontal_lobe.frontal_lobe import FrontalLobe
 from frontal_lobe.models import (
-    ReasoningGoal,
     ReasoningSession,
     ReasoningStatusID,
     ReasoningTurn,
@@ -47,13 +46,6 @@ class LivingChatroomTest(CommonFixturesAPITestCase):
         self.session.identity_disc = self.identity_disc
         self.session.save(update_fields=['identity_disc'])
 
-        self.status_goal_active = ReasoningStatusID.ACTIVE
-        self.goal = ReasoningGoal.objects.create(
-            session=self.session,
-            status_id=self.status_goal_active,
-            rendered_goal='Test goal',
-        )
-
         # Simple log collector instead of hitting the DB in tests
         self.log_messages = []
 
@@ -72,7 +64,6 @@ class LivingChatroomTest(CommonFixturesAPITestCase):
         self.spike = DummySpike()
         self.lobe = FrontalLobe(self.spike)
         self.lobe.session = self.session
-        self.lobe.current_goal = self.goal
         self.lobe._log_live = log_cb
 
     @pytest.mark.django_db

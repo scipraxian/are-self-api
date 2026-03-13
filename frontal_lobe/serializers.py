@@ -4,7 +4,6 @@ from common.constants import ALL_FIELDS
 from frontal_lobe.models import (
     ChatMessage,
     ChatMessageRole,
-    ReasoningGoal,
     ReasoningSession,
     ReasoningTurn,
     SessionConclusion,
@@ -25,14 +24,6 @@ class ToolCallSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ToolCall
-        fields = ALL_FIELDS
-
-
-class ReasoningGoalSerializer(serializers.ModelSerializer):
-    status_name = serializers.CharField(source='status.name', read_only=True)
-
-    class Meta:
-        model = ReasoningGoal
         fields = ALL_FIELDS
 
 

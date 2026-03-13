@@ -13,7 +13,6 @@ from hippocampus.models import TalosEngram
 from parietal_lobe.models import ToolCall, ToolDefinition
 from frontal_lobe import constants
 from frontal_lobe.models import (
-    ReasoningGoal,
     ReasoningSession,
     ReasoningStatus,
     ReasoningTurn,
@@ -46,11 +45,6 @@ class ReasoningAPITest(TestCase):
         self.session = ReasoningSession.objects.create(
             spike=self.spike, status=self.status_active
         )
-        self.goal = ReasoningGoal.objects.create(
-            session=self.session,
-            status=self.status_active,
-            rendered_goal='Sub Goal 1',
-        )
 
         self.turn = ReasoningTurn.objects.create(
             session=self.session,
@@ -59,7 +53,6 @@ class ReasoningAPITest(TestCase):
             thought_process='Thinking 1',
             status=self.status_active,
         )
-        self.turn.turn_goals.add(self.goal)
 
         self.tool = ToolDefinition.objects.create(name='TestTool')
         self.tool_call = ToolCall.objects.create(
@@ -79,8 +72,7 @@ class ReasoningAPITest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.data
-        # --- FIX: Check for the native REST keys instead of the old D3 keys ---
-        self.assertIn('goals', data)
+        # --- Check for the native REST keys instead of the old D3 keys ---
         self.assertIn('turns', data)
         self.assertIn('engrams', data)
         self.assertIn('status_name', data)
