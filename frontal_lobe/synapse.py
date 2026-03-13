@@ -78,7 +78,7 @@ class OllamaClient:
         # but we know that the hippocampus uses this for vector analysis.
         # we can just create/use an identity disc made for vector analysis.... NOMIC_EMBED_TEXT
 
-        # so here is the ask.
+        # so here is the ask. always pass an identity disc so we know which model to use.
 
     def chat(
         self,
