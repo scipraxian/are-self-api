@@ -39,9 +39,11 @@ class LivingChatroomTest(CommonFixturesAPITestCase):
             identity_type=pm_type,
             system_prompt_template='You are a PM.',
         )
+        # IdentityDisc now owns the identity fields directly; no FK to Identity.
         self.identity_disc = IdentityDisc.objects.create(
-            identity=self.identity,
             name='PM [Mk.1]',
+            identity_type=pm_type,
+            system_prompt_template='You are a PM.',
         )
         self.session.identity_disc = self.identity_disc
         self.session.save(update_fields=['identity_disc'])
@@ -93,13 +95,22 @@ class LivingChatroomTest(CommonFixturesAPITestCase):
             name='mcp_test_tool',
             is_async=True,
         )
-        await sync_to_async(
-            ToolCall.objects.create
-        )(
+        tool_call = await sync_to_async(ToolCall.objects.create)(
             turn=turn1,
             tool=tool_def,
             arguments='{"foo": "bar"}',
             result_payload='OK',
+        )
+        # Seed an assistant message on the same turn so history reconstruction
+        # has an anchor to attach tool_calls to.
+        from frontal_lobe.models import ChatMessage, ChatMessageRole
+
+        await sync_to_async(ChatMessage.objects.create)(
+            session=self.session,
+            turn=turn1,
+            role_id=ChatMessageRole.ASSISTANT,
+            content='Tool invocation complete.',
+            tool_call=tool_call,
         )
 
         # Turn 2: active turn that looks back at turn 1

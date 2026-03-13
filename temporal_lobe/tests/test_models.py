@@ -12,7 +12,8 @@ class TemporalLobeModelsTest(CommonFixturesAPITestCase):
     def test_iteration_shift_participant_relationships(self):
         # Create minimal objects required
         identity = Identity.objects.create(name="TempIdentity")
-        disc = IdentityDisc.objects.create(identity=identity, name="TempDisc")
+        # IdentityDisc now owns the identity fields directly; no FK to Identity.
+        disc = IdentityDisc.objects.create(name="TempDisc")
 
         status = IterationStatus.objects.first()
         if not status:

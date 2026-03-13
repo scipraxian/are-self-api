@@ -53,7 +53,12 @@ class ParietalLobe:
         self.session = session
         self.log_callback = log_callback
         self.client = None
-        self.enabled_tools = self.session.identity_disc.identity.enabled_tools
+        # IdentityDisc now directly owns enabled_tools.
+        self.enabled_tools = (
+            self.session.identity_disc.enabled_tools
+            if self.session.identity_disc
+            else None
+        )
 
     async def _log_live(self, message: str) -> None:
         if self.log_callback:
@@ -62,8 +67,11 @@ class ParietalLobe:
             else:
                 self.log_callback(message)
 
-    async def initialize_client(self, model_name: str) -> None:
-        self.client = OllamaClient(model=model_name)
+    async def initialize_client(self, identity_disc) -> None:
+        """
+        Initialize the Ollama client for the provided IdentityDisc.
+        """
+        self.client = OllamaClient(identity_disc=identity_disc)
 
     async def chat(
         self, messages: List[Dict[str, Any]], tools: List[Dict[str, Any]]
@@ -74,9 +82,9 @@ class ParietalLobe:
         if self.client:
             await asyncio.to_thread(self.client.unload)
 
-    def _fetch_tools(self, identity):
+    def _fetch_tools(self, identity_disc):
         return list(
-            identity.enabled_tools.prefetch_related(
+            identity_disc.enabled_tools.prefetch_related(
                 'assignments__parameter__type',
                 'assignments__parameter__enum_values',
             )
@@ -86,8 +94,11 @@ class ParietalLobe:
 
     async def build_tool_schemas(self) -> List[Dict[str, Any]]:
         """Constructs strict JSON schemas from the normalized ToolParameterAssignment relations."""
+        if not self.session.identity_disc:
+            return []
+
         db_tools = await sync_to_async(self._fetch_tools)(
-            self.session.identity_disc.identity
+            self.session.identity_disc
         )
 
         ollama_tools = []
@@ -138,8 +149,12 @@ class ParietalLobe:
 
     async def handle_tool_execution(
         self, turn_record: ReasoningTurn, tool_call_data: Dict[str, Any]
-    ) -> None:
-        """Parses, records, and executes a single tool call, writing results natively to ChatMessage."""
+    ) -> Dict[str, Any] | None:
+        """Parses, records, and executes a single tool call.
+
+        Returns a lightweight dict summarizing the tool result for in-memory
+        callers, while always writing the canonical record to ChatMessage.
+        """
         func_data = tool_call_data.get(self.T_FUNC, {})
         tool_name = func_data.get(self.T_NAME)
         raw_args = func_data.get(self.T_ARGS, {})
@@ -168,7 +183,11 @@ class ParietalLobe:
                 content=error_msg,
                 is_volatile=False,
             )
-            return
+            return {
+                'role': 'tool',
+                'name': tool_name,
+                'content': error_msg,
+            }
 
         mechanics = tool_def.use_type if tool_def else None
         focus_mod = mechanics.focus_modifier if mechanics else 0
@@ -201,7 +220,11 @@ class ParietalLobe:
                 tool_call=db_tool_call,
                 is_volatile=False,
             )
-            return
+            return {
+                'role': 'tool',
+                'name': tool_name,
+                'content': fizzle_msg,
+            }
 
         # --- NORMAL EXECUTION ---
         db_tool_call = await sync_to_async(ToolCall.objects.create)(
@@ -252,6 +275,11 @@ class ParietalLobe:
             tool_call=db_tool_call,
             is_volatile=False,
         )
+        return {
+            'role': 'tool',
+            'name': tool_name,
+            'content': tool_result,
+        }
 
     async def process_tool_calls(
         self, turn_record: ReasoningTurn, tool_calls_data: List[Dict[str, Any]]

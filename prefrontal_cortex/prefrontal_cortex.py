@@ -175,14 +175,14 @@ class PrefrontalCortex:
             IterationShiftParticipant.objects.select_related(
                 'iteration_shift__shift',
                 'iteration_shift__definition',
-                'iteration_participant__identity',
+                'iteration_participant__identity_type',
             ).get
         )(id=iteration_shift_participant_id)
 
         # 1. Attempt to look for work.
         is_available_work = await _is_available_work(
             shift_id=participant.iteration_shift.shift.id,
-            identity_type_id=participant.iteration_participant.identity.identity_type_id,
+            identity_type_id=participant.iteration_participant.identity_type_id,
             identity_disc=participant.iteration_participant,
             environment_id=environment_id,
         )

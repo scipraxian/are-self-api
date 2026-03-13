@@ -14,7 +14,6 @@ from frontal_lobe.constants import FrontalLobeConstants
 from frontal_lobe.models import (
     ChatMessage,
     ChatMessageRole,
-    ModelRegistry,
     ReasoningSession,
     ReasoningStatusID,
     ReasoningTurn,
@@ -388,31 +387,10 @@ class FrontalLobe:
         await self._log_live(FrontalLobeConstants.LOG_START)
 
         try:
-            # 1. Resolve Environment & Model
+            # 1. Resolve Environment & Objective
             raw_context = await sync_to_async(resolve_environment_context)(
                 spike_id=self.spike.id
             )
-            target_id = int(
-                raw_context.get(
-                    FrontalLobeConstants.MODEL_ID_KEY,
-                    ModelRegistry.DEFAULT_MODEL_ID,
-                )
-            )
-
-            try:
-                model_entry = await sync_to_async(ModelRegistry.objects.get)(
-                    id=target_id
-                )
-                model_name = model_entry.name
-            except ModelRegistry.DoesNotExist:
-                logger.warning(
-                    f'Model ID {target_id} not found. Reverting to Default.'
-                )
-                model_entry = await sync_to_async(ModelRegistry.objects.get)(
-                    id=ModelRegistry.DEFAULT_MODEL_ID
-                )
-                model_name = model_entry.name
-
             rendered_objective = self._get_rendered_objective(raw_context)
 
             # 2. Initialize DB Session
@@ -423,10 +401,16 @@ class FrontalLobe:
             )
             await self._initialize_session(rendered_objective, max_turns)
 
-            # 3. Initialize Parietal Lobe
+            # 3. Resolve model from IdentityDisc and initialize Parietal Lobe
+            identity_disc = self.session.identity_disc
+            if not identity_disc or not identity_disc.ai_model:
+                raise ValueError(
+                    'ReasoningSession.identity_disc.ai_model must be set before FrontalLobe.run().'
+                )
+
             self.parietal_lobe = ParietalLobe(self.session, self._log_live)
-            await self.parietal_lobe.initialize_client(model_name)
-            await self._log_live(f'Model: {model_name}')
+            await self.parietal_lobe.initialize_client(identity_disc)
+            await self._log_live(f'Model: {identity_disc.ai_model.name}')
 
             # 4. Build Synapse Payload
             ollama_tools = await self.parietal_lobe.build_tool_schemas()

@@ -1,11 +1,12 @@
 import logging
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import requests
 from django.conf import settings
 
 from frontal_lobe.constants import FrontalLobeConstants
+from identity.models import IdentityDisc
 
 logger = logging.getLogger(__name__)
 
@@ -51,11 +52,11 @@ class OllamaChatPayload:
     tools: Optional[List[Dict[str, Any]]] = None
 
     def size(self):
-        return (
-            len(str(self.model))
-            + sum(len(str(msg)) for msg in self.messages)
-            + sum(len(str(tool)) for tool in self.tools if self.tools)
-        )
+        """Approximate payload size for context window tuning."""
+        base = len(str(self.model)) + sum(len(str(msg)) for msg in self.messages)
+        if not self.tools:
+            return base
+        return base + sum(len(str(tool)) for tool in self.tools)
 
 
 @dataclass
@@ -72,13 +73,27 @@ class OllamaResponse:
 class OllamaClient:
     """Synaptic interface to the local AI. Supports Native Tool Calling."""
 
-    def __init__(self, model: str):
-        self.model = model  # todo: pass the model table id so i can get tokens
-        # todo: we needd to be usign the identity disc for this model choice.
-        # but we know that the hippocampus uses this for vector analysis.
-        # we can just create/use an identity disc made for vector analysis.... NOMIC_EMBED_TEXT
+    def __init__(self, identity_source: Union[IdentityDisc, str]):
+        """
+        Initialize the client using either:
 
-        # so here is the ask. always pass an identity disc so we know which model to use.
+        - an IdentityDisc (preferred for runtime, so we can resolve the model
+          from identity_disc.ai_model and later use the disc for accounting), or
+        - a raw model name string (backwards-compatible for tests and simple callers).
+        """
+        self.identity_disc: Optional[IdentityDisc] = None
+
+        if isinstance(identity_source, IdentityDisc):
+            identity_disc = identity_source
+            if not identity_disc.ai_model:
+                raise ValueError(
+                    f'IdentityDisc "{identity_disc}" has no ai_model configured.'
+                )
+            self.identity_disc = identity_disc
+            self.model = identity_disc.ai_model.name
+        else:
+            # Backwards-compatible path: accept a bare model name.
+            self.model = str(identity_source)
 
     def chat(
         self,

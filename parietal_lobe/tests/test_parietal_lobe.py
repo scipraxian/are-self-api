@@ -58,8 +58,11 @@ class ParietalLobeTest(CommonFixturesAPITestCase):
             identity_type=worker_type,
             system_prompt_template='Test prompt',
         )
+        # IdentityDisc now owns the identity fields directly; no FK to Identity.
         self.identity_disc = IdentityDisc.objects.create(
-            identity=self.identity, name='Test Disc'
+            name='Test Disc',
+            identity_type=worker_type,
+            system_prompt_template='Test prompt',
         )
         self.session.identity_disc = self.identity_disc
         self.session.save(update_fields=['identity_disc'])
@@ -117,9 +120,9 @@ class ParietalLobeTest(CommonFixturesAPITestCase):
         tool_def.use_type = mechanics
         await sync_to_async(tool_def.save)()
 
-        # Ensure this tool is actually enabled for the session's identity so that
+        # Ensure this tool is actually enabled for the session's IdentityDisc so that
         # ParietalLobe._fetch_tools() will include it.
-        await sync_to_async(self.identity.enabled_tools.add)(tool_def)
+        await sync_to_async(self.identity_disc.enabled_tools.add)(tool_def)
 
         t_str, _ = await sync_to_async(ToolParameterType.objects.get_or_create
                                       )(name='string')
@@ -182,8 +185,11 @@ class ParietalLobeTest(CommonFixturesAPITestCase):
         self.assertEqual(self.session.current_focus, 6)  # 5 + 1
         self.assertEqual(self.session.total_xp, 10)
 
-        mock_execute.assert_called_with('mcp_dummy_tool',
-                                        {'dummy_arg': 'value'})
+        # Ensure the core arguments are passed through; additional metadata
+        # (like session_id/turn_id) is allowed.
+        args, kwargs = mock_execute.call_args
+        self.assertEqual(args[0], 'mcp_dummy_tool')
+        self.assertEqual(args[1]['dummy_arg'], 'value')
 
         # Verify db record
         tool_call = await sync_to_async(
@@ -267,5 +273,6 @@ class ParietalLobeTest(CommonFixturesAPITestCase):
         await sync_to_async(self.session.refresh_from_db)()
         self.assertEqual(self.session.current_focus, self.session.max_focus)
 
-        mock_execute.assert_called_with('mcp_pass',
-                                        {'session_id': str(self.session.id)})
+        args, kwargs = mock_execute.call_args
+        self.assertEqual(args[0], 'mcp_pass')
+        self.assertEqual(args[1]['session_id'], str(self.session.id))
