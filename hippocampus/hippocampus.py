@@ -146,6 +146,7 @@ class TalosHippocampus(object):
                     ReasoningTurn.objects.get(id=turn_id) if turn_id else None
                 )
                 clean_title = title[:254]
+                identity_disc = session.identity_disc
 
                 if embedding:
                     qs = (
@@ -193,10 +194,20 @@ class TalosHippocampus(object):
                     vector=embedding if embedding else None,
                 )
 
+                # Link all contextual relationships for this engram
                 engram.sessions.add(session)
-                engram.spikes.add(session.spike)
+                if session.spike:
+                    engram.spikes.add(session.spike)
                 if exact_turn:
                     engram.source_turns.add(exact_turn)
+
+                # Identity wiring: set creator and cross-link memories
+                if identity_disc:
+                    if engram.creator_id is None:
+                        engram.creator = identity_disc
+                        engram.save(update_fields=['creator'])
+                    engram.identity_discs.add(identity_disc)
+                    identity_disc.memories.add(engram)
 
                 if tags:
                     tag_list = [t.strip() for t in tags.split(',') if t.strip()]
@@ -257,6 +268,7 @@ class TalosHippocampus(object):
                 exact_turn = (
                     ReasoningTurn.objects.get(id=turn_id) if turn_id else None
                 )
+                identity_disc = session.identity_disc
 
                 if embedding:
                     qs = (
@@ -276,11 +288,23 @@ class TalosHippocampus(object):
                 engram.description = combined_text
                 if embedding:
                     engram.vector = embedding
-                engram.save(update_fields=['description', 'vector'])
 
+                update_fields = ['description', 'vector']
+                if identity_disc and engram.creator_id is None:
+                    engram.creator = identity_disc
+                    update_fields.append('creator')
+
+                engram.save(update_fields=update_fields)
+
+                # Maintain all relationship links on update as well
                 engram.sessions.add(session)
+                if session.spike:
+                    engram.spikes.add(session.spike)
                 if exact_turn:
                     engram.source_turns.add(exact_turn)
+                if identity_disc:
+                    engram.identity_discs.add(identity_disc)
+                    identity_disc.memories.add(engram)
 
                 msg = f"Success: Engram '{engram.name}' has been updated with the new data."
                 return HippocampusMemoryYield(
@@ -304,8 +328,18 @@ class TalosHippocampus(object):
             try:
                 engram = TalosEngram.objects.get(id=engram_id, is_active=True)
                 session = ReasoningSession.objects.get(id=session_id)
+                identity_disc = session.identity_disc
 
+                # Ensure all contextual links are maintained whenever an Engram is read
                 engram.sessions.add(session)
+                if session.spike:
+                    engram.spikes.add(session.spike)
+                if identity_disc:
+                    if engram.creator_id is None:
+                        engram.creator = identity_disc
+                        engram.save(update_fields=['creator'])
+                    engram.identity_discs.add(identity_disc)
+                    identity_disc.memories.add(engram)
 
                 tags = ', '.join([t.name for t in engram.tags.all()])
                 return f'--- ENGRAM {engram.id}: {engram.name} ---\nTags: {tags}\nFact: {engram.description}'
