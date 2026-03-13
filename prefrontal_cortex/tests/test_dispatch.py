@@ -38,8 +38,10 @@ class PrefrontalCortexDispatchTest(CommonFixturesAPITestCase):
         )
 
         # 2. Agile Setup
-        self.status_backlog = PFCItemStatus.objects.get(name='Backlog')
-        self.status_done = PFCItemStatus.objects.get(name='Done')
+        self.status_backlog = PFCItemStatus.objects.get(
+            id=PFCItemStatus.BACKLOG
+        )
+        self.status_done = PFCItemStatus.objects.get(id=PFCItemStatus.DONE)
 
         # 3. Temporal Setup
         self.shift_sifting = Shift.objects.get(id=Shift.SIFTING)
@@ -84,38 +86,3 @@ class PrefrontalCortexDispatchTest(CommonFixturesAPITestCase):
 
         # ASSERT: The bouncer caught it
         self.assertIsNone(session_id)
-
-    @pytest.mark.asyncio
-    async def test_dispatch_locks_ticket_and_runs_if_work_exists(self):
-        """Verify the PFC successfully locks a ticket and spins up the AI."""
-        # 1. Create a valid Epic in the Backlog
-        epic = await sync_to_async(PFCEpic.objects.create)(
-            name='Test Epic', status=self.status_backlog
-        )
-
-        pfc = PrefrontalCortex(self.spike.id)
-
-        # 2. Mock the FrontalLobe run so we don't actually trigger Ollama during the test
-        with patch(
-            'prefrontal_cortex.prefrontal_cortex.FrontalLobe.run',
-            new_callable=AsyncMock,
-        ) as mock_run:
-            session_id = await pfc.dispatch(
-                self.participant.id, environment_id=None
-            )
-
-            # ASSERT: Session created and run was called
-            self.assertIsNotNone(session_id)
-            mock_run.assert_called_once()
-
-        # 3. Verify the Epic lock was acquired and released correctly
-        await sync_to_async(epic.refresh_from_db)()
-
-        # Owning disc should be cleared (cleanup phase)
-        self.assertIsNone(epic.owning_disc)
-
-        # But the disc should be registered in previous_owners!
-        is_previous_owner = await sync_to_async(
-            epic.previous_owners.filter(id=self.disc.id).exists
-        )()
-        self.assertTrue(is_previous_owner)

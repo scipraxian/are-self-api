@@ -1,4 +1,5 @@
 import logging
+from uuid import UUID
 
 from django.db import transaction
 from django.utils import timezone
@@ -26,12 +27,12 @@ class IterationInceptionManager:
     def incept_iteration(
         cls,
         definition_id: int,
-        environment_id: str = None,
+        environment_id: UUID = None,
         custom_name: str = None,
     ) -> Iteration:
         # 1. Fetch the Blueprint
         definition = IterationDefinition.objects.prefetch_related(
-            'iterationshiftdefinition_set__iterationshiftdefinitionparticipant_set__participant'
+            'iterationshiftdefinition_set__iterationshiftdefinitionparticipant_set__identity_disc'
         ).get(id=definition_id)
 
         # Ensure we have the "Waiting" status ready (ID 1 from your fixtures)
@@ -66,35 +67,15 @@ class IterationInceptionManager:
             if not first_shift:
                 first_shift = new_shift
 
-            # 4. Staffing: Find available Discs or Gestate new ones
+            # 4. Staffing: Attach the configured Discs for this shift definition
             participants = s_def.iterationshiftdefinitionparticipant_set.all()
             for p_def in participants:
-                base_identity = p_def.participant
-
-                # Check the Barracks: Find the most experienced, available Disc of this type
-                disc = (
-                    IdentityDisc.objects.filter(
-                        identity=base_identity, available=True
-                    )
-                    .order_by('-level', '-xp')
-                    .first()
-                )
-
-                if disc:
-                    # Draft existing Disc
-                    logger.info(
-                        f'Drafting existing Disc: {disc.name} (Lvl {disc.level})'
-                    )
-                    disc.available = False  # Mark as deployed
-                    disc.save(update_fields=['available'])
-                else:
-                    # Gestate new Disc
-                    disc = cls.gestate_disc(base_identity)
-                    logger.info(f'Gestated new Disc: {disc.name}')
+                identity_disc = p_def.identity_disc
 
                 # Bind the Disc to the Shift's Synapses
                 IterationShiftParticipant.objects.create(
-                    iteration_shift=new_shift, iteration_participant=disc
+                    iteration_shift=new_shift,
+                    iteration_participant=identity_disc,
                 )
 
         # 5. Set the starting point

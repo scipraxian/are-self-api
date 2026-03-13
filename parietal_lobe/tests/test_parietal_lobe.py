@@ -5,7 +5,7 @@ import pytest
 from asgiref.sync import sync_to_async
 
 from common.tests.common_test_case import CommonFixturesAPITestCase
-
+from identity.models import Identity, IdentityDisc, IdentityType
 from frontal_lobe.models import (
     ReasoningGoal,
     ReasoningSession,
@@ -50,6 +50,21 @@ class ParietalLobeTest(CommonFixturesAPITestCase):
             total_xp=0,
         )
 
+        # Attach an identity to the session so ParietalLobe can resolve enabled tools.
+        worker_type, _ = IdentityType.objects.get_or_create(
+            id=IdentityType.WORKER, defaults={'name': 'Worker'}
+        )
+        self.identity = Identity.objects.create(
+            name='Test Identity',
+            identity_type=worker_type,
+            system_prompt_template='Test prompt',
+        )
+        self.identity_disc = IdentityDisc.objects.create(
+            identity=self.identity, name='Test Disc'
+        )
+        self.session.identity_disc = self.identity_disc
+        self.session.save(update_fields=['identity_disc'])
+
         self.turn = ReasoningTurn.objects.create(
             session=self.session,
             turn_number=1,
@@ -90,21 +105,22 @@ class ParietalLobeTest(CommonFixturesAPITestCase):
         """Test the parameter-to-schema extraction logic."""
         tool_def, _ = await sync_to_async(ToolDefinition.objects.get_or_create)(
             name='mcp_dummy_tool',
-            defaults={
-                'description': 'A dummy tool.',
-                'is_async': True
-            },
+            defaults={'description': 'A dummy tool.', 'is_async': True},
         )
         mechanics, _ = await sync_to_async(ToolUseType.objects.get_or_create)(
             name='Extraction',
             defaults={
                 'focus_modifier': -2,
                 'xp_reward': 5,
-                'description': ''
+                'description': '',
             },
         )
         tool_def.use_type = mechanics
         await sync_to_async(tool_def.save)()
+
+        # Ensure this tool is actually enabled for the session's identity so that
+        # ParietalLobe._fetch_tools() will include it.
+        await sync_to_async(self.identity.enabled_tools.add)(tool_def)
 
         t_str, _ = await sync_to_async(ToolParameterType.objects.get_or_create
                                       )(name='string')

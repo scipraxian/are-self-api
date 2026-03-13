@@ -1,26 +1,26 @@
 from django.contrib import admin
 
-from environments.models import ProjectEnvironment
 from central_nervous_system.utils import (
     get_active_environment,
     resolve_environment_context,
 )
+from environments.models import ProjectEnvironment
 
 from .models import (
+    Axon,
     CNSDistributionMode,
+    CNSTag,
+    Effector,
+    EffectorArgumentAssignment,
+    EffectorContext,
+    EffectorTarget,
+    NeuralPathway,
+    Neuron,
+    NeuronContext,
     Spike,
     SpikeStatus,
     SpikeTrain,
     SpikeTrainStatus,
-    Effector,
-    EffectorArgumentAssignment,
-    NeuralPathway,
-    Axon,
-    Neuron,
-    NeuronContext,
-    EffectorContext,
-    EffectorTarget,
-    CNSTag,
 )
 
 
@@ -246,4 +246,13 @@ class CNSNeuralPathwayNodeAdmin(admin.ModelAdmin):
 
 admin.site.register(SpikeStatus)
 admin.site.register(SpikeTrainStatus)
-admin.site.register(SpikeTrain)
+
+
+
+@admin.register(SpikeTrain)
+class SpikeTrainAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'status',
+        'created',
+    )

@@ -98,11 +98,13 @@ class TemporalLobe:
         return 200, f'Tick complete. Dispatched {dispatched_count} new workers.'
 
     @sync_to_async
-    def _get_active_iteration(self, env_id: str) -> Optional[Iteration]:
+    def _get_active_iteration(
+        self, environment_id: UUID
+    ) -> Optional[Iteration]:
         # Lock the row to prevent race conditions during the tick
         return (
             Iteration.objects.filter(
-                environment_id=env_id,
+                environment_id=environment_id,
                 status_id__in=[
                     IterationStatus.WAITING,
                     IterationStatus.RUNNING,
@@ -162,6 +164,20 @@ class TemporalLobe:
                 logger.info(
                     f'[TemporalLobe] Iteration {iteration.id} completely finished.'
                 )
+
+                # ----------------------------------------------------
+                # AUTO-INCEPT THE NEXT LOOP
+                # ----------------------------------------------------
+                from temporal_lobe.inception import IterationInceptionManager
+
+                new_iteration = IterationInceptionManager.incept_iteration(
+                    definition_id=iteration.definition_id,
+                    environment_id=iteration.environment_id,
+                )
+
+                logger.info(
+                    f'[TemporalLobe] Ouroboros Protocol: Auto-incepted new Iteration loop {new_iteration.id}'
+                )
                 return None
 
     @sync_to_async
@@ -209,6 +225,7 @@ class TemporalLobe:
         if not iteration_shift_participant_ids:
             return 0
 
+        # todo: remove I really don't like this local import.
         from prefrontal_cortex.prefrontal_cortex import PrefrontalCortex
 
         pfc = PrefrontalCortex(parent_spike.id)

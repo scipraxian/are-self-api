@@ -124,21 +124,5 @@
     "cost_per_1k_input": "0.000000",
     "cost_per_1k_output": "0.000000"
   }
-},
-{
-  "model": "frontal_lobe.sessionconclusion",
-  "pk": 1,
-  "fields": {
-    "created": "2026-03-08T14:15:09.150Z",
-    "modified": "2026-03-08T14:15:09.150Z",
-    "status": 1,
-    "session": "632e1b78-fa35-4f86-9431-8e9c92b4abf6",
-    "summary": "The \"Fix Bug\" task has been confirmed as \"Done\" multiple times, and no new tasks or updates were found on the Agile board. The objective has been successfully completed.",
-    "reasoning_trace": "",
-    "outcome_status": "SUCCESS",
-    "recommended_action": "None",
-    "next_goal_suggestion": "None",
-    "system_persona_and_prompt_feedback": "None"
-  }
 }
 ]

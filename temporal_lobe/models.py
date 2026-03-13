@@ -1,7 +1,7 @@
 from django.db import models
 
 from common.constants import STANDARD_CHARFIELD_LENGTH
-from common.models import CreatedAndModifiedWithDelta, NameMixin
+from common.models import CreatedAndModifiedWithDelta, NameMixin, UUIDIdMixin
 from identity.models import Identity, IdentityDisc
 
 
@@ -24,6 +24,7 @@ class Shift(NameMixin):
     default_turn_limit = models.IntegerField(default=1)
 
 
+# todo: i don't think we are using this anymore.
 class ShiftDefaultParticipant(models.Model):
     shift = models.ForeignKey(Shift, on_delete=models.CASCADE)
     participant = models.ForeignKey(Identity, on_delete=models.CASCADE)
@@ -56,10 +57,12 @@ class IterationShiftDefinitionParticipant(models.Model):
     shift_definition = models.ForeignKey(
         IterationShiftDefinition, on_delete=models.CASCADE
     )
-    participant = models.ForeignKey(Identity, on_delete=models.CASCADE)
+    identity_disc = models.ForeignKey(
+        IdentityDisc, on_delete=models.CASCADE, blank=True, null=True
+    )
 
     def __str__(self):
-        return f'{self.shift_definition} - {self.participant}'
+        return f'{self.shift_definition} - {self.identity_disc}'
 
 
 class IterationStatus(NameMixin):
@@ -71,22 +74,22 @@ class IterationStatus(NameMixin):
     ERROR = 6
 
 
-class Iteration(CreatedAndModifiedWithDelta):
+class Iteration(UUIDIdMixin, CreatedAndModifiedWithDelta):
     name = models.CharField(
         max_length=STANDARD_CHARFIELD_LENGTH, blank=True, null=True
     )
     environment = models.ForeignKey(
         'environments.ProjectEnvironment',
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         blank=True,
         null=True,
     )
     status = models.ForeignKey(IterationStatus, on_delete=models.CASCADE)
     definition = models.ForeignKey(
-        IterationDefinition, on_delete=models.PROTECT
+        IterationDefinition, on_delete=models.CASCADE
     )
     current_shift = models.ForeignKey(
-        'IterationShift', on_delete=models.PROTECT, blank=True, null=True
+        'IterationShift', on_delete=models.SET_NULL, blank=True, null=True
     )
     turns_consumed_in_shift = models.IntegerField(default=0)
 

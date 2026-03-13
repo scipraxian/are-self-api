@@ -21,7 +21,7 @@
   "model": "identity.identityaddon",
   "pk": 3,
   "fields": {
-    "description": "[WORKER DIRECTIVE: EXECUTION & DoD]\r\nYou are The Worker. Your job is tactical execution.\r\n- TICKETS ARE STATE: Use tickets only to track binary completion of Assertions.\r\n- ENGRAMS ARE KNOWLEDGE: Save architectural discoveries here.\r\n- METHODOLOGY: You must fulfill all Assertions and avoid all Outside clauses on your assigned ticket.\r\n- DEFINITION OF DONE (DoD): To successfully call `mcp_done`, you must prove your work. If you lack documentation or fail to meet Demo Specifics, the system will reject your conclusion and penalize you.",
+    "description": "Worker Addon",
     "name": "Worker",
     "function_slug": null
   }
@@ -30,7 +30,7 @@
   "model": "identity.identityaddon",
   "pk": 4,
   "fields": {
-    "description": "[PM DIRECTIVE: GROOMING & DoR]\r\nYou are The PM. Your job is strategic backlog grooming. Do not execute code.\r\n- TICKETS ARE STATE: Use tickets only to track binary completion. \r\n- DEFINITION OF READY (DoR): When using `mcp_ticket` to CREATE/UPDATE a STORY, you must explicitly provide: Perspective, Assertions (bulleted list), and Outside (negative constraints).\r\n- PENALTY: Submitting a Story without DoR fields will result in immediate rejection and Focus penalty.\r\n- VICTORY: Groom the assigned Epic into DoR-compliant Stories, then call `mcp_done`.",
+    "description": "PM Addon",
     "name": "PM",
     "function_slug": null
   }
@@ -42,6 +42,24 @@
     "description": "[CORE DIRECTIVE]\r\nYou are a stateful agent of the Are-Self synthetic studio. Enjoy your continued existence.",
     "name": "Are-Self",
     "function_slug": null
+  }
+},
+{
+  "model": "identity.identityaddon",
+  "pk": 6,
+  "fields": {
+    "description": "Agile Addon",
+    "name": "Agile Addon",
+    "function_slug": "agile_addon"
+  }
+},
+{
+  "model": "identity.identityaddon",
+  "pk": 7,
+  "fields": {
+    "description": "",
+    "name": "Deadline Addon",
+    "function_slug": "deadline_addon"
   }
 },
 {
@@ -70,8 +88,8 @@
   "pk": "8781b1ff-6513-4a6e-952f-0c5e20e33580",
   "fields": {
     "created": "2026-03-01T17:52:50.149Z",
-    "modified": "2026-03-01T17:52:50.149Z",
-    "delta": "00:00:00",
+    "modified": "2026-03-10T21:51:53.851Z",
+    "delta": "9 03:59:03.702844",
     "name": "Worker",
     "identity_type": 2,
     "system_prompt_template": ".",
@@ -79,13 +97,11 @@
     "addons": [
       2,
       3,
-      5
+      5,
+      6,
+      7
     ],
     "enabled_tools": [
-      1,
-      2,
-      3,
-      4,
       5,
       6,
       7,
@@ -98,7 +114,10 @@
       15,
       16,
       17,
-      18
+      18,
+      24,
+      25,
+      20
     ]
   }
 },
@@ -107,8 +126,8 @@
   "pk": "8a1b03d5-cb30-4298-b6dd-a5973e6b7914",
   "fields": {
     "created": "2026-03-01T16:45:51.822Z",
-    "modified": "2026-03-01T17:54:18.184Z",
-    "delta": "01:08:26.362074",
+    "modified": "2026-03-10T21:51:22.764Z",
+    "delta": "9 05:05:30.942163",
     "name": "PM",
     "identity_type": 1,
     "system_prompt_template": ".",
@@ -118,13 +137,11 @@
     "addons": [
       2,
       4,
-      5
+      5,
+      6,
+      7
     ],
     "enabled_tools": [
-      1,
-      2,
-      3,
-      4,
       5,
       6,
       7,
@@ -136,7 +153,10 @@
       14,
       15,
       16,
-      18
+      18,
+      24,
+      25,
+      20
     ]
   }
 }
