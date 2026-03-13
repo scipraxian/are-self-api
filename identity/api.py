@@ -2,8 +2,20 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from identity.models import Identity, IdentityDisc
-from identity.serializers import IdentityDiscSerializer, IdentitySerializer
+from identity.models import (
+    Identity,
+    IdentityAddon,
+    IdentityDisc,
+    IdentityTag,
+    IdentityType,
+)
+from identity.serializers import (
+    IdentityAddonSerializer,
+    IdentityDiscSerializer,
+    IdentitySerializer,
+    IdentityTagSerializer,
+    IdentityTypeSerializer,
+)
 
 
 class IdentityViewSet(viewsets.ModelViewSet):
@@ -54,3 +66,18 @@ class IdentityDiscViewSet(viewsets.ModelViewSet):
         .order_by('-level', '-xp', 'name')
     )
     serializer_class = IdentityDiscSerializer
+
+
+class IdentityAddonViewSet(viewsets.ModelViewSet):
+    queryset = IdentityAddon.objects.all().order_by('name')
+    serializer_class = IdentityAddonSerializer
+
+
+class IdentityTagViewSet(viewsets.ModelViewSet):
+    queryset = IdentityTag.objects.all().order_by('name')
+    serializer_class = IdentityTagSerializer
+
+
+class IdentityTypeViewSet(viewsets.ModelViewSet):
+    queryset = IdentityType.objects.all().order_by('name')
+    serializer_class = IdentityTypeSerializer
