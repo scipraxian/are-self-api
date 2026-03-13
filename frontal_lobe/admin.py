@@ -2,8 +2,12 @@ from django.contrib import admin
 from django.utils.html import format_html
 
 from .models import (
+    ChatMessage,
+    ChatMessageRole,
+    ModelRegistry,
     ReasoningGoal,
     ReasoningSession,
+    ReasoningStatus,
     ReasoningTurn,
     SessionConclusion,
 )
@@ -35,6 +39,21 @@ class ReasoningTurnInline(admin.TabularInline):
     show_change_link = True
 
 
+class ChatMessageInline(admin.TabularInline):
+    model = ChatMessage
+    fk_name = 'turn'
+    extra = 0
+    fields = (
+        'role',
+        'session',
+        'content',
+        'tool_call',
+        'is_volatile',
+        'created',
+    )
+    readonly_fields = ('created',)
+
+
 @admin.register(ReasoningSession)
 class ReasoningSessionAdmin(admin.ModelAdmin):
     # Add 'launch_cortex' to your list_display
@@ -48,8 +67,9 @@ class ReasoningSessionAdmin(admin.ModelAdmin):
         'delta',
     )
     list_filter = ('status', 'created')
-    search_fields = ('id', 'head__id', 'goals__rendered_goal')
+    search_fields = ('id', 'goals__rendered_goal')
     readonly_fields = ('created', 'modified', 'delta')
+    list_select_related = ('status', 'identity_disc', 'participant', 'spike')
     inlines = [ReasoningGoalInline, ReasoningTurnInline]
 
     @admin.display(description='Interface')
@@ -76,6 +96,7 @@ class ReasoningGoalAdmin(admin.ModelAdmin):
     )
     list_filter = ('status', 'achieved')
     search_fields = ('rendered_goal', 'session__id')
+    list_select_related = ('session', 'status')
 
     def short_goal(self, obj):
         return (
@@ -99,10 +120,12 @@ class ReasoningTurnAdmin(admin.ModelAdmin):
     )
     list_filter = ('status', 'created')
     search_fields = ('thought_process', 'session__id')
+    list_select_related = ('session', 'status', 'last_turn')
     filter_horizontal = (
         'turn_goals',
     )  # Renders a nice dual-selector for the M2M field
     readonly_fields = ('created', 'modified', 'delta')
+    inlines = [ChatMessageInline]
 
 
 @admin.register(SessionConclusion)
@@ -114,3 +137,38 @@ class SessionConclusionAdmin(admin.ModelAdmin):
         'outcome_status',
         'session__id',
     )
+    list_select_related = ('session', 'status')
+
+
+@admin.register(ReasoningStatus)
+class ReasoningStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ('name',)
+
+
+@admin.register(ModelRegistry)
+class ModelRegistryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'api_variant')
+    search_fields = ('name', 'api_variant')
+
+
+@admin.register(ChatMessageRole)
+class ChatMessageRoleAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'created')
+    search_fields = ('name',)
+
+
+@admin.register(ChatMessage)
+class ChatMessageAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'session',
+        'turn',
+        'role',
+        'is_volatile',
+        'created',
+    )
+    list_filter = ('role', 'is_volatile')
+    search_fields = ('content', 'session__id', 'turn__id')
+    list_select_related = ('session', 'turn', 'role', 'tool_call')
+    readonly_fields = ('created',)

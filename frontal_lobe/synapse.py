@@ -50,6 +50,13 @@ class OllamaChatPayload:
     stream: bool = False
     tools: Optional[List[Dict[str, Any]]] = None
 
+    def size(self):
+        return (
+            len(str(self.model))
+            + sum(len(str(msg)) for msg in self.messages)
+            + sum(len(str(tool)) for tool in self.tools if self.tools)
+        )
+
 
 @dataclass
 class OllamaResponse:
@@ -66,7 +73,7 @@ class OllamaClient:
     """Synaptic interface to the local AI. Supports Native Tool Calling."""
 
     def __init__(self, model: str):
-        self.model = model
+        self.model = model  # todo: pass the model table id so i can get tokens
 
     def chat(
         self,
@@ -84,14 +91,15 @@ class OllamaClient:
             tools=tools,
         )
 
+        size = payload_obj.size()
+        num_ctx = int(size / 3) + 2048  # TODO: expose constants.
+        payload_obj.options.update(num_ctx=num_ctx)
+        logger.info(f'[Synapse] Firing API payload: [ {num_ctx} tokens ]')
+
         # Strip None values
         payload_dict = {
             k: v for k, v in asdict(payload_obj).items() if v is not None
         }
-
-        logger.info(
-            f'[Synapse] Firing API payload: [ {len(str(payload_dict))} chars ]'
-        )
 
         try:
             response = requests.post(

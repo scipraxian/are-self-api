@@ -159,6 +159,7 @@ class FrontalLobe:
                 is_volatile=False,
             )
             .select_related('turn', 'role', 'tool_call__tool')
+            .prefetch_related('turn__tool_calls__tool')  # <-- ADD THIS PREFETCH
             .order_by('created')
         )
 
@@ -174,34 +175,39 @@ class FrontalLobe:
                 role_name = 'tool'
 
             content = msg.content
-            message_dict = {ROLE: role_name}
+            message_dict: Dict[str, Any] = {ROLE: role_name}
 
-            # Handle Assistant Tool Calls formatting
-            if msg.role_id == ChatMessageRole.ASSISTANT and msg.tool_call_id:
-                # Reconstruct the tool_calls array format expected by the LLM
-                raw_args = msg.tool_call.arguments or '{}'
-                if isinstance(raw_args, str):
-                    try:
-                        parsed_args = json.loads(raw_args)
-                    except json.JSONDecodeError:
+            # 2. FIX ASSISTANT FORMATTING
+            if msg.role_id == ChatMessageRole.ASSISTANT:
+                # Look at the TURN's tool calls, not the message's tool call ID
+                tool_calls_payload = []
+                for tc in msg.turn.tool_calls.all():
+                    raw_args = tc.arguments or '{}'
+                    if isinstance(raw_args, str):
+                        try:
+                            parsed_args = json.loads(raw_args)
+                        except json.JSONDecodeError:
+                            parsed_args = {}
+                    elif isinstance(raw_args, dict):
+                        parsed_args = raw_args
+                    else:
                         parsed_args = {}
-                elif isinstance(raw_args, dict):
-                    parsed_args = raw_args
-                else:
-                    parsed_args = {}
 
-                message_dict['tool_calls'] = [
-                    {
-                        'id': f'call_{msg.tool_call.id}',
-                        'type': 'function',
-                        'function': {
-                            'name': msg.tool_call.tool.name,
-                            'arguments': parsed_args,
-                        },
-                    }
-                ]
+                    tool_calls_payload.append(
+                        {
+                            'id': f'call_{tc.id}',
+                            'type': 'function',
+                            'function': {
+                                'name': tc.tool.name,
+                                'arguments': parsed_args,
+                            },
+                        }
+                    )
 
-            # Handle Tool Results formatting & L2 Eviction logic
+                if tool_calls_payload:
+                    message_dict['tool_calls'] = tool_calls_payload
+
+            # Handle Tool Results formatting & L2 Eviction logic (Unchanged, this was correct)
             elif msg.role_id == ChatMessageRole.TOOL:
                 age = current_turn_num - msg.turn.turn_number
 
@@ -337,6 +343,9 @@ class FrontalLobe:
 
         # 4. Build the context window for the LLM
         messages = await self._build_turn_payload(turn_record)
+
+        turn_record.request_payload = {'messages': messages}
+        await sync_to_async(turn_record.save)(update_fields=['request_payload'])
 
         # 5. Execute Inference
         start_time = time.time()

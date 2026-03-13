@@ -36,3 +36,4 @@ Logs/
 Thumbs.db
 _talos_concatenated_source.txt
 /live_reports/
+.aider*
