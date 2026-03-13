@@ -9,6 +9,7 @@ from central_nervous_system.tasks import cast_cns_spell
 
 from . import serializers
 from .models import (
+    ModelRegistry,
     ReasoningSession,
     ReasoningTurn,
 )
@@ -99,3 +100,9 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
                 'status': 'Halt signal sent. The Cortex will spin down after the current turn.'
             }
         )
+
+
+class ModelRegistryViewSet(viewsets.ModelViewSet):
+    queryset = ModelRegistry.objects.all()
+    serializer_class = serializers.ModelRegistrySerializer
+

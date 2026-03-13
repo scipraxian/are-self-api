@@ -4,12 +4,19 @@ from common.constants import ALL_FIELDS
 from frontal_lobe.models import (
     ChatMessage,
     ChatMessageRole,
+    ModelRegistry,
     ReasoningSession,
     ReasoningTurn,
     SessionConclusion,
 )
 from hippocampus.models import TalosEngram
 from parietal_lobe.models import ToolCall, ToolDefinition
+
+
+class ModelRegistrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ModelRegistry
+        fields = ALL_FIELDS
 
 
 class ToolDefinitionSerializer(serializers.ModelSerializer):

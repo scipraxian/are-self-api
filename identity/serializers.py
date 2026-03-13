@@ -2,6 +2,11 @@ from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
 from frontal_lobe.models import ReasoningSession, ReasoningStatus, ReasoningTurn
+from frontal_lobe.serializers import (
+    ModelRegistrySerializer,
+    TalosEngramSerializer,
+)
+from hippocampus.models import TalosEngram
 from parietal_lobe.models import ToolDefinition
 
 from .models import (
@@ -44,6 +49,7 @@ class IdentitySerializer(serializers.ModelSerializer):
     identity_type = IdentityTypeSerializer(read_only=True)
 
     rendered = serializers.SerializerMethodField()
+    ai_model = ModelRegistrySerializer()
 
     class Meta:
         model = Identity
@@ -93,14 +99,18 @@ class IdentityDiscReasoningSerializer(serializers.ModelSerializer):
 
 
 class IdentityDiscSerializer(serializers.ModelSerializer):
-    identity = IdentitySerializer(read_only=True)
+    ai_model = ModelRegistrySerializer()
+    enabled_tools = ToolDefinitionSerializer(many=True, read_only=True)
+    tags = IdentityTagSerializer(many=True, read_only=True)
+    addons = IdentityAddonSerializer(many=True, read_only=True)
+    identity_type = IdentityTypeSerializer(read_only=True)
     rendered = serializers.SerializerMethodField()
-
     reasoning_session = IdentityDiscReasoningSerializer(
         read_only=True, many=True
     )
     session_count = serializers.SerializerMethodField()
     turn_count = serializers.SerializerMethodField()
+    memories = TalosEngramSerializer(many=True, read_only=True)
 
     class Meta:
         model = IdentityDisc
