@@ -74,6 +74,11 @@ class OllamaClient:
 
     def __init__(self, model: str):
         self.model = model  # todo: pass the model table id so i can get tokens
+        # todo: we needd to be usign the identity disc for this model choice.
+        # but we know that the hippocampus uses this for vector analysis.
+        # we can just create/use an identity disc made for vector analysis.... NOMIC_EMBED_TEXT
+
+        # so here is the ask.
 
     def chat(
         self,

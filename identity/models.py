@@ -44,10 +44,9 @@ class Identity(UUIDIdMixin, NameMixin, CreatedAndModifiedWithDelta):
     enabled_tools = models.ManyToManyField(ToolDefinition, blank=True)
 
 
-class IdentityDisc(UUIDIdMixin, NameMixin, CreatedAndModifiedWithDelta):
+class IdentityDisc(Identity):
     """This is a persistent implementation of an identity."""
 
-    identity = models.ForeignKey(Identity, on_delete=models.PROTECT)
     available = models.BooleanField(default=True)
     last_message_to_self = models.TextField(blank=True, default='')
     level = models.IntegerField(default=1)

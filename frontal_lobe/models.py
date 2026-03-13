@@ -61,6 +61,9 @@ class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
     LLAMA3_LATEST = 3
     LLAMA3 = 4
     NOMIC_EMBED_TEXT = 5
+    GPT_OSS_LATEST = 6
+    QWEN_LATEST = 7
+    GLM_47_FLASH_LATEST = 8
 
     api_variant = models.CharField(max_length=50, default='ollama')
     context_window_size = models.IntegerField(default=32768)
