@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
@@ -110,7 +111,8 @@ class IdentityDiscSerializer(serializers.ModelSerializer):
     )
     session_count = serializers.SerializerMethodField()
     turn_count = serializers.SerializerMethodField()
-    memories = TalosEngramSerializer(many=True, read_only=True)
+
+    memories = serializers.SerializerMethodField()
 
     class Meta:
         model = IdentityDisc
@@ -128,3 +130,12 @@ class IdentityDiscSerializer(serializers.ModelSerializer):
         return sum(
             session.turns.count() for session in obj.reasoning_session.all()
         )
+
+    def get_memories(self, identity_disc):
+
+        print('HELLO')
+
+        return TalosEngramSerializer(
+            identity_disc.engrams.distinct(),
+            many=True,
+        ).data

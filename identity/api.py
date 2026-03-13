@@ -42,14 +42,25 @@ class IdentityViewSet(viewsets.ModelViewSet):
         # Optionally allow passing a custom name, otherwise generate one
         custom_name = request.data.get('name')
         new_name = (
-            custom_name if custom_name else f'{base_identity.name} [Recruit]'
+            custom_name if custom_name else f'{base_identity.name} [Program]'
         )
 
-        # Create the stateful instance
+        # 1. Create the Disc with the standard (Direct/ForeignKey) fields
+        # Note: Use `ai_models` or `ai_model` depending on what you named it in models.py
         new_disc = IdentityDisc.objects.create(
-            name=new_name, identity=base_identity, level=1, xp=0, available=True
+            name=new_name,
+            identity_type=base_identity.identity_type,
+            system_prompt_template=base_identity.system_prompt_template,
+            ai_model=base_identity.ai_model,
         )
 
+        # 2. Copy the Many-to-Many relationships
+        # This MUST happen after objects.create() so the new_disc has an ID
+        new_disc.tags.set(base_identity.tags.all())
+        new_disc.addons.set(base_identity.addons.all())
+        new_disc.enabled_tools.set(base_identity.enabled_tools.all())
+
+        # Return the fully fleshed out Disc to the frontend
         serializer = IdentityDiscSerializer(new_disc)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
