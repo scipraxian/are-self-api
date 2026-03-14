@@ -62,7 +62,7 @@ class OllamaChatPayload:
 
 
 @dataclass
-class OllamaResponse:
+class SynapseResponse:
     """Strictly typed return structure for the reasoning engine."""
 
     content: str
@@ -102,7 +102,7 @@ class OllamaClient:
         messages: List[Dict[str, Any]],
         tools: Optional[List[Dict[str, Any]]] = None,
         options: Optional[Dict[str, Any]] = None,
-    ) -> OllamaResponse:
+    ) -> SynapseResponse:
         """Transmits message history to the model, optionally with tool
         schemas."""
 
@@ -134,7 +134,7 @@ class OllamaClient:
 
             msg_data = data.get(OllamaConstants.KEY_MESSAGE, {})
 
-            return OllamaResponse(
+            return SynapseResponse(
                 content=msg_data.get(OllamaConstants.KEY_CONTENT, ''),
                 tool_calls=msg_data.get(OllamaConstants.KEY_TOOL_CALLS, []),
                 tokens_input=data.get(OllamaConstants.KEY_PROMPT_EVAL_COUNT, 0),
@@ -149,7 +149,7 @@ class OllamaClient:
             logger.error(f'Ollama Synapse Misfire: {error_details}')
 
             # Return a safe fallback response so the loop doesn't explode
-            return OllamaResponse(
+            return SynapseResponse(
                 content=f'{OllamaConstants.ERR_MSG_PREFIX} {error_details}',
                 tool_calls=[],
                 tokens_input=0,

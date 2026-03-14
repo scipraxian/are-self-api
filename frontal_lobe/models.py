@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.db import models
 
+from common.constants import STANDARD_CHARFIELD_LENGTH
 from common.models import (
     CreatedAndModifiedWithDelta,
     CreatedMixin,
@@ -48,6 +49,57 @@ class ReasoningStatusMixin(models.Model):
         abstract = True
 
 
+class ModelProvider(DefaultFieldsMixin, DescriptionMixin):
+    """
+    Provider-level network configuration for LLM backends.
+
+    This decouples ModelRegistry entries from hardcoded URLs and headers and
+    allows dynamic switching between providers like Ollama and OpenRouter.
+    """
+
+    # Use id keys for stable FK references (see fixtures).
+    OLLAMA = 1
+    OPENROUTER = 2
+
+    name = models.CharField(
+        max_length=STANDARD_CHARFIELD_LENGTH,
+        help_text='Human-readable name, e.g. "Ollama", "OpenRouter".',
+    )
+
+    key = models.CharField(
+        max_length=50,
+        unique=True,
+        help_text='Stable identifier, e.g. "ollama", "openrouter", "local".',
+    )
+    base_url = models.URLField(
+        max_length=255,
+        help_text='Base URL for this provider, e.g. https://openrouter.ai/api',
+    )
+    chat_path = models.CharField(
+        max_length=255,
+        default='/v1/chat/completions',
+        help_text='Path segment for chat completions, appended to base_url.',
+    )
+    requires_api_key = models.BooleanField(
+        default=False,
+        help_text='Whether this provider requires an API key for requests.',
+    )
+    api_key_header = models.CharField(
+        max_length=100,
+        default='Authorization',
+        help_text='Header name used to send the API key (e.g. Authorization).',
+    )
+    api_key_env_var = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text='Environment variable name that stores the API key.',
+    )
+
+    class Meta:
+        verbose_name_plural = 'Model Providers'
+
+
 class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
     """
     Database-driven LLM definition.
@@ -72,6 +124,13 @@ class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
     )
     cost_per_1k_output = models.DecimalField(
         max_digits=10, decimal_places=6, default=0
+    )
+    provider = models.ForeignKey(
+        'frontal_lobe.ModelProvider',
+        on_delete=models.PROTECT,
+        related_name='models',
+        blank=True,
+        null=True,
     )
 
     class Meta:

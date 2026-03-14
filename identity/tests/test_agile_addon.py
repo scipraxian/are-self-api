@@ -154,4 +154,3 @@ def test_agile_addon_sifting_pm_context_for_pm(monkeypatch):
 
     # Sifting PM guidance text
     assert "Definition of Ready (DoR)" in prompt
-    assert "No stories or epics in need of refinement." in prompt

@@ -56,6 +56,38 @@
   }
 },
 {
+  "model": "frontal_lobe.modelprovider",
+  "pk": 1,
+  "fields": {
+    "created": "2026-02-17T12:00:00Z",
+    "description": "Local Ollama provider",
+    "modified": "2026-03-14T19:48:21.595Z",
+    "name": "Ollama Local",
+    "key": "ollama",
+    "base_url": "http://localhost:11434",
+    "chat_path": "/api/chat",
+    "requires_api_key": false,
+    "api_key_header": "Authorization",
+    "api_key_env_var": null
+  }
+},
+{
+  "model": "frontal_lobe.modelprovider",
+  "pk": 2,
+  "fields": {
+    "created": "2026-02-17T12:00:00Z",
+    "description": "OpenRouter provider",
+    "modified": "2026-03-14T19:48:47.600Z",
+    "name": "Open Router",
+    "key": "openrouter",
+    "base_url": "https://openrouter.ai/api",
+    "chat_path": "/v1/chat/completions",
+    "requires_api_key": true,
+    "api_key_header": "Authorization",
+    "api_key_env_var": "OPENROUTER_API_KEY"
+  }
+},
+{
   "model": "frontal_lobe.modelregistry",
   "pk": 1,
   "fields": {
@@ -66,7 +98,8 @@
     "api_variant": "ollama",
     "context_window_size": 262144,
     "cost_per_1k_input": "0.000000",
-    "cost_per_1k_output": "0.000000"
+    "cost_per_1k_output": "0.000000",
+    "provider": 1
   }
 },
 {
@@ -80,7 +113,8 @@
     "api_variant": "ollama",
     "context_window_size": 131072,
     "cost_per_1k_input": "0.000000",
-    "cost_per_1k_output": "0.000000"
+    "cost_per_1k_output": "0.000000",
+    "provider": 1
   }
 },
 {
@@ -94,7 +128,8 @@
     "api_variant": "ollama",
     "context_window_size": 8192,
     "cost_per_1k_input": "0.000000",
-    "cost_per_1k_output": "0.000000"
+    "cost_per_1k_output": "0.000000",
+    "provider": 1
   }
 },
 {
@@ -108,7 +143,8 @@
     "api_variant": "ollama",
     "context_window_size": 131072,
     "cost_per_1k_input": "0.000000",
-    "cost_per_1k_output": "0.000000"
+    "cost_per_1k_output": "0.000000",
+    "provider": 1
   }
 },
 {
@@ -122,7 +158,8 @@
     "api_variant": "ollama",
     "context_window_size": 2048,
     "cost_per_1k_input": "0.000000",
-    "cost_per_1k_output": "0.000000"
+    "cost_per_1k_output": "0.000000",
+    "provider": 1
   }
 },
 {
@@ -136,7 +173,8 @@
     "api_variant": "ollama",
     "context_window_size": 131072,
     "cost_per_1k_input": "0.000000",
-    "cost_per_1k_output": "0.000000"
+    "cost_per_1k_output": "0.000000",
+    "provider": 1
   }
 },
 {
@@ -150,7 +188,8 @@
     "api_variant": "ollama",
     "context_window_size": 131072,
     "cost_per_1k_input": "0.000000",
-    "cost_per_1k_output": "0.000000"
+    "cost_per_1k_output": "0.000000",
+    "provider": 1
   }
 },
 {
@@ -164,7 +203,8 @@
     "api_variant": "ollama",
     "context_window_size": 131072,
     "cost_per_1k_input": "0.000000",
-    "cost_per_1k_output": "0.000000"
+    "cost_per_1k_output": "0.000000",
+    "provider": null
   }
 },
 {

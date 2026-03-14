@@ -4,6 +4,7 @@ from django.utils.html import format_html
 from .models import (
     ChatMessage,
     ChatMessageRole,
+    ModelProvider,
     ModelRegistry,
     ReasoningSession,
     ReasoningStatus,
@@ -108,6 +109,15 @@ class SessionConclusionAdmin(admin.ModelAdmin):
 @admin.register(ReasoningStatus)
 class ReasoningStatusAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
+    search_fields = ('name',)
+
+
+@admin.register(ModelProvider)
+class ModelProviderAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'name',
+    )
     search_fields = ('name',)
 
 

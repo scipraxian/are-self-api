@@ -8,11 +8,14 @@ from asgiref.sync import sync_to_async
 from frontal_lobe.models import (
     ChatMessage,
     ChatMessageRole,
+    ModelProvider,
+    ModelRegistry,
     ReasoningSession,
     ReasoningStatusID,
     ReasoningTurn,
 )
 from frontal_lobe.synapse import OllamaClient
+from frontal_lobe.synapse_open_router import OpenRouterClient
 from parietal_lobe.models import ToolCall, ToolDefinition
 from parietal_lobe.parietal_mcp.gateway import ParietalMCP
 
@@ -69,8 +72,21 @@ class ParietalLobe:
 
     async def initialize_client(self, identity_disc) -> None:
         """
-        Initialize the Ollama client for the provided IdentityDisc.
+        Initialize the LLM client for the provided IdentityDisc.
         """
+        # When we have a real IdentityDisc, inspect its ModelRegistry + provider
+        # to decide which concrete client implementation to use.
+        from identity.models import IdentityDisc  # Local import to avoid cycles
+
+        if isinstance(identity_disc, IdentityDisc) and identity_disc.ai_model:
+            registry: ModelRegistry = identity_disc.ai_model
+            provider = registry.provider
+
+            if provider and provider.id == ModelProvider.OPENROUTER:
+                self.client = OpenRouterClient(identity_disc=identity_disc)
+                return
+
+        # Fallback for legacy callers or local/Ollama providers:
         self.client = OllamaClient(identity_disc=identity_disc)
 
     async def chat(
