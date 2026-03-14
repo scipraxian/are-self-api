@@ -303,7 +303,7 @@ class AgilePromptBuilder:
 
         if not self.identity_disc:
             return '[AGILE BOARD CONTEXT: UI Preview Mode - No Active Disc Assigned]'
-        if not getattr(self, 'shift', None) or not self.identity_disc:
+        if not self.shift_id:
             return '[AGILE BOARD CONTEXT: UI Preview Mode - No Active Shift or Disc Assigned]'
         if self.turn_number % 3 == 1:
             self.context_lines = [

@@ -1,122 +1,157 @@
-import json
-import unittest
 import os
 
 import pytest
-from asgiref.sync import sync_to_async
 
-from common.tests.common_test_case import CommonFixturesAPITestCase
-from identity.models import Identity, IdentityDisc, IdentityType
+from identity.models import IdentityType, IdentityDisc
+from identity.addons.addon_package import AddonPackage
+from identity.addons import agile_addon as agile_module
+from identity.addons.agile_addon import agile_addon
+from prefrontal_cortex.models import PFCItemStatus, PFCEpic, PFCStory
+from temporal_lobe.models import Shift
+
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
-from frontal_lobe.models import ReasoningSession, ReasoningTurn
-from identity.addons.addon_package import AddonPackage
-from identity.addons.agile_addon import agile_addon
-from prefrontal_cortex.models import PFCEpic, PFCItemStatus
-from temporal_lobe.models import (
-    Iteration,
-    IterationDefinition,
-    IterationShift,
-    IterationShiftDefinition,
-    IterationShiftParticipant,
-    IterationStatus,
-    Shift,
-)
 
 
-class AgileAddonTest(CommonFixturesAPITestCase):
+class _FakeDisc:
+    def __init__(self, identity_type_id):
+        self.identity_type_id = identity_type_id
+        self.id = "fake-disc-id"
+        self.identity_type = None
 
-    @pytest.mark.skip(
-        reason="Fails under APITestCase due to thread-local DB transaction isolation. Needs refactor."
+
+class _FakeDiscManager:
+    def __init__(self, identity_type_id):
+        self._disc = _FakeDisc(identity_type_id=identity_type_id)
+
+    def select_related(self, *args, **kwargs):
+        return self
+
+    def get(self, id):
+        return self._disc
+
+
+class _EmptyQuerySet:
+    def count(self):
+        return 0
+
+    def exists(self):
+        return False
+
+    def __iter__(self):
+        return iter([])
+
+
+class _EmptyManager:
+    def filter(self, *args, **kwargs):
+        return _EmptyQuerySet()
+
+
+class _FakeStatus:
+    def __init__(self, pk, name):
+        self.pk = pk
+        self.name = name
+
+
+class _StatusManager:
+    def all(self):
+        return [
+            _FakeStatus(pk=PFCItemStatus.BACKLOG, name="Backlog"),
+        ]
+
+
+def _make_package(
+    iteration=1,
+    identity="fake-identity-id",
+    identity_disc="fake-disc-id",
+    turn_number=1,
+    reasoning_turn_id=1,
+    environment_id="env-123",
+    shift_id=None,
+):
+    return AddonPackage(
+        iteration=iteration,
+        identity=identity,
+        identity_disc=identity_disc,
+        turn_number=turn_number,
+        reasoning_turn_id=reasoning_turn_id,
+        environment_id=environment_id,
+        shift_id=shift_id,
     )
-    @pytest.mark.asyncio
-    async def test_agile_addon_prompt_generation(self):
-        # 1. Setup Statuses & Types
-        worker_type, _ = await sync_to_async(IdentityType.objects.get_or_create
-                                            )(id=IdentityType.WORKER,
-                                              defaults={
-                                                  'name': 'Worker'
-                                              })
-        pm_type, _ = await sync_to_async(IdentityType.objects.get_or_create
-                                        )(id=IdentityType.PM,
-                                          defaults={
-                                              'name': 'PM'
-                                          })
 
-        iteration_status, _ = await sync_to_async(
-            IterationStatus.objects.get_or_create)(id=IterationStatus.RUNNING,
-                                                   defaults={
-                                                       'name': 'Running'
-                                                   })
-        pfc_status, _ = await sync_to_async(PFCItemStatus.objects.get_or_create
-                                           )(id=PFCItemStatus.BACKLOG,
-                                             defaults={
-                                                 'name': 'Backlog'
-                                             })
 
-        grooming_shift, _ = await sync_to_async(Shift.objects.get_or_create
-                                               )(id=Shift.SIFTING,
-                                                 defaults={
-                                                     'name': 'Grooming'
-                                                 })
+def test_agile_addon_preview_mode_without_disc():
+    """When no disc or reasoning turn is provided, addon stays in preview mode."""
+    package = AddonPackage(
+        iteration=None,
+        identity=None,
+        identity_disc=None,
+        turn_number=1,
+        reasoning_turn_id=None,
+        environment_id=None,
+        shift_id=None,
+    )
 
-        # 2. Setup Identities
-        pm_identity = await sync_to_async(Identity.objects.create
-                                         )(name="Test PM",
-                                           identity_type=pm_type,
-                                           system_prompt_template="PM prompt")
-        pm_disc = await sync_to_async(IdentityDisc.objects.create
-                                     )(identity=pm_identity, name="PM Disc 1")
+    prompt = agile_addon(package)
 
-        # 3. Setup Iteration & Sessions
-        iter_def = await sync_to_async(IterationDefinition.objects.create
-                                      )(name="Test Iteration Def")
-        iteration = await sync_to_async(Iteration.objects.create
-                                       )(name="Test Iteration",
-                                         status=iteration_status,
-                                         definition=iter_def)
+    assert (
+        prompt
+        == "[AGILE BOARD CONTEXT: UI Preview Mode - No Active Disc Assigned]"
+    )
 
-        iter_shift_def_groom = await sync_to_async(
-            IterationShiftDefinition.objects.create)(definition=iter_def,
-                                                     shift=grooming_shift,
-                                                     order=1)
 
-        iteration_shift_groom = await sync_to_async(
-            IterationShift.objects.create)(definition=iter_shift_def_groom,
-                                           shift_iteration=iteration,
-                                           shift=grooming_shift)
+def test_agile_addon_preview_mode_without_shift(monkeypatch):
+    """With a disc but no shift_id, addon reports missing shift context."""
+    # Avoid hitting the real DB for IdentityDisc
+    monkeypatch.setattr(
+        agile_module.IdentityDisc,
+        "objects",
+        _FakeDiscManager(identity_type_id=IdentityType.PM),
+    )
 
-        pm_participant = await sync_to_async(
-            IterationShiftParticipant.objects.create
-        )(iteration_shift=iteration_shift_groom, iteration_participant=pm_disc)
+    package = _make_package(shift_id=None)
 
-        pm_session = await sync_to_async(ReasoningSession.objects.create
-                                        )(identity_disc=pm_disc,
-                                          participant=pm_participant)
+    prompt = agile_addon(package)
 
-        pm_turn = await sync_to_async(ReasoningTurn.objects.create
-                                     )(session=pm_session,
-                                       turn_number=1,
-                                       thought_process="Planning...")
+    assert "No Active Shift or Disc Assigned" in prompt
 
-        # 4. Setup Epic
-        epic = await sync_to_async(PFCEpic.objects.create
-                                  )(name="Super Epic Test",
-                                    owning_disc=pm_disc,
-                                    status=pfc_status,
-                                    perspective="User perspective",
-                                    assertions="Assert something")
 
-        # 5. Build AddonPackage and Invoke
-        pm_package = AddonPackage(iteration=iteration.id,
-                                  identity=pm_identity.id,
-                                  identity_disc=pm_disc.id,
-                                  turn_number=1,
-                                  reasoning_turn_id=pm_turn.id)
+def test_agile_addon_sifting_pm_context_for_pm(monkeypatch):
+    """
+    For a PM in the SIFTING shift, the addon should emit
+    Agile board context with DoR guidance and environment info.
+    """
+    # Patch ORM access so we do not require a database
+    monkeypatch.setattr(
+        agile_module.IdentityDisc,
+        "objects",
+        _FakeDiscManager(identity_type_id=IdentityType.PM),
+    )
+    monkeypatch.setattr(
+        agile_module.PFCEpic,
+        "objects",
+        _EmptyManager(),
+    )
+    monkeypatch.setattr(
+        agile_module.PFCStory,
+        "objects",
+        _EmptyManager(),
+    )
+    monkeypatch.setattr(
+        agile_module.PFCItemStatus,
+        "objects",
+        _StatusManager(),
+    )
 
-        pm_prompt = await agile_addon(pm_package)
+    package = _make_package(shift_id=Shift.SIFTING)
 
-        # 6. Assertions
-        assert "Super Epic Test" in pm_prompt
-        assert "Groom this Epic" in pm_prompt
-        assert "AGILE BOARD CONTEXT" in pm_prompt
+    prompt = agile_addon(package)
+
+    # Header & environment
+    assert "AGILE BOARD CONTEXT" in prompt
+    assert "SHIFT:" in prompt
+    assert "ENVIRONMENT: env-123" in prompt
+
+    # Sifting PM guidance text
+    assert "Definition of Ready (DoR)" in prompt
+    assert "No stories or epics in need of refinement." in prompt
