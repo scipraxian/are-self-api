@@ -48,7 +48,7 @@ def _conclude_sync(
         return f'Error: {str(e)}'
 
 
-async def mcp_conclude_session(
+async def mcp_done(
     session_id: str,
     goal_achieved: bool,
     outcome_status: str,

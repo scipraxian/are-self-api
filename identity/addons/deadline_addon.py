@@ -27,8 +27,7 @@ def deadline_addon(package: AddonPackage) -> str:
     )
     if remaining_turns == 1:
         prompt_blocks.append(
-            '[LAST TURN. SUBMIT mcp_conclude_session or '
-            'session will be DESTROYED.]'
+            '[LAST TURN. SUBMIT mcp_done or session will be DESTROYED.]'
         )
     elif remaining_turns <= 5:
         prompt_blocks.append(

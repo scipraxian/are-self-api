@@ -218,9 +218,9 @@
   "pk": 11,
   "fields": {
     "created": "2026-02-18T12:00:00Z",
-    "description": "To post your name to the Leader Boards and end your run use mcp_conclude_session. Use this ONLY when the absolute root objective is complete or permanently blocked.",
+    "description": "To post your name to the Leader Boards and end your run use mcp_done. Use this ONLY when the absolute root objective is complete or permanently blocked.",
     "modified": "2026-02-23T14:23:21.136Z",
-    "name": "mcp_conclude_session",
+    "name": "mcp_done",
     "is_async": true,
     "use_type": 5
   }

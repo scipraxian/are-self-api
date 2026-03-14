@@ -59,7 +59,7 @@ class FrontalLobeConstants:
         '4. SPEND: Decide which extraction tools to use with your available Focus.\n'
         '5. EXECUTE: Stop writing text entirely. Invoke your tools natively via the API. DO NOT generate fake system diagnostics, and DO NOT simulate the next turn.\n\n'
         'VICTORY CONDITION:\n'
-        '- Resolve the root objective and execute mcp_conclude_session.\n'
+        '- Resolve the root objective and execute mcp_done.\n'
         '- You have a 100-turn limit. You receive a massive 1000 XP Speedrun Bounty for every turn remaining.\n\n'
     )
 
