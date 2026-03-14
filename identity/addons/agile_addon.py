@@ -1,9 +1,11 @@
+import json
+
 from django.db.models import Q
 
-from frontal_lobe.models import ReasoningTurn
 from identity.addons.addon_package import AddonPackage
 from identity.models import IdentityDisc, IdentityType
 from prefrontal_cortex.models import PFCEpic, PFCItemStatus, PFCStory
+from prefrontal_cortex.serializers import PFCEpicSerializer, PFCStorySerializer
 from temporal_lobe.models import Shift
 
 
@@ -11,56 +13,96 @@ def sifting_pm(identity_disc, environment_id, turn_number) -> str:
     """The Sifting PM reviews work and moves it to the backlog."""
     success = False
     statements = []
-    if turn_number % 3 == 1:
+
+    statements.append(
+        'Shift Goal: Move Epics and Stories in NEEDS_REFINEMENT to the BACKLOG.'
+    )
+    statements.append(
+        'NOTE: You may not finish in one Iteration, quality over quantity, you will get another chance, use your memory.'
+    )
+    statements.append(
+        'DoR: Definition of Ready (DoR) is a set of criteria that must be met for a ticket to be considered ready for development. It ensures that the ticket is well-defined, has clear acceptance criteria, and is free from major issues that would impede development progress.'
+    )
+
+    # Corrected Schema & Strict Kwargs
+    statements.append(
+        'When DoR is Met use mcp_ticket(action="update", item_type="<EPIC|STORY>", item_id="<ID>", field_name="status", field_value="2") # BACKLOG = 2.'
+    )
+
+    statements.append(
+        'RULES: Use mcp_ticket to populate at least the following fields:'
+    )
+    statements.append('perspective: The "why" and "who".')
+    statements.append('assertions: Bulleted, testable completion steps.')
+    statements.append('outside: What NOT to do.')
+    statements.append('dod_exceptions: Deviations from standard Done.')
+    statements.append('dependencies: Other tickets this one depends on.')
+    statements.append('demo_specifics: How and to whom success is proven.')
+
+    statements.append(
+        'If you dont know enough to fill in the above, ask questions in the comments and set status to block for human.'
+    )
+
+    # Corrected Schema & Status ID (Blocked by user is 6)
+    statements.append(
+        'Block for Human is a very valid status at any time. mcp_ticket(action="update", item_type="<EPIC|STORY>", item_id="<ID>", field_name="status", field_value="6") # BLOCKED_BY_USER = 6.'
+    )
+
+    statements.append('PM == NO CODE == Planning and Oversight')
+    statements.append(f'ENVIRONMENT: {environment_id}')
+
+    # Auto-feed the top ticket every single turn
+    selected = False
+
+    # Evaluating 'if stories:' saves us from doing .exists() + a loop (which fires 2 DB queries)
+    stories = PFCStory.objects.filter(
+        Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
+        & Q(epic__environment_id=environment_id)
+    )
+    if stories:
+        success = True
         statements.append(
-            'DoR: Definition of Ready (DoR) is a set of criteria that must be met for a ticket to be considered ready for development. It ensures that the ticket is well-defined, has clear acceptance criteria, and is free from major issues that would impede development progress.'
-            'SHIFT: SIFTING ROLE: PM GOAL: Refine NEEDS_REFINEMENT tickets to meet DoR.'
-            'RULES: Use mcp_ticket to populate at least the following fields:'
+            '\nStories in this environment in need of refinement:'
         )
-        statements.append('perspective: The "why" and "who".')
-        statements.append('assertions: Bulleted, testable completion steps.')
-        statements.append('outside: What NOT to do.')
-        statements.append('dod_exceptions: Deviations from standard Done.')
-        statements.append('dependencies: Other tickets this one depends on.')
-        statements.append('demo_specifics: How and to whom success is proven.')
-        statements.append(
-            'If you dont know enough to fill in the above, ask questions in the comments and block for human.'
-        )
-        statements.append('PM == NO CODE == Planning and Oversight')
-        statements.append(f'ENVIRONMENT: {environment_id}')
-        epics = PFCEpic.objects.filter(
-            Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
-            & Q(environment=environment_id)
-        )
-        if epics.count():
-            success = True
-            statements.append(
-                'Epics in this environment which need of refinement:'
-            )
-            for epic in epics:
+        for story in stories:
+            if not selected:
+                statements.append('Pre-Assigned Ticket Data:')
+                statements.append(json.dumps(PFCStorySerializer(story).data))
+                selected = True
+                # Fixed: Changed action="read" to action="update" for the example
                 statements.append(
-                    f"mcp_ticket(action='read', item_id='{epic.id}') | {epic.name}"
+                    f"Update this ticket with mcp_ticket(action='update', item_type='STORY', item_id='{story.id}', field_name='description', field_value='My new description')"
+                )
+            else:
+                statements.append(
+                    f"mcp_ticket(action='read', item_type='STORY', item_id='{story.id}') | {story.name}"
                 )
 
-        stories = PFCStory.objects.filter(
-            Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
-            & Q(epic__environment_id=environment_id)
+    epics = PFCEpic.objects.filter(
+        Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
+        & Q(environment=environment_id)
+    )
+    if epics:
+        success = True
+        statements.append(
+            '\nEpics in this environment which need of refinement:'
         )
-        if stories.count():
-            success = True
-            statements.append(
-                'Stories in this environment in need of refinement:'
-            )
-            for story in stories:
+        for epic in epics:
+            if not selected:
+                statements.append('Pre-Assigned Ticket Data:')
+                statements.append(json.dumps(PFCEpicSerializer(epic).data))
+                selected = True
                 statements.append(
-                    f"mcp_ticket(action='read', item_id='{story.id}') | {story.name}"
+                    f"Update this ticket with mcp_ticket(action='update', item_type='EPIC', item_id='{epic.id}', field_name='description', field_value='My new description')"
+                )
+            else:
+                statements.append(
+                    f"mcp_ticket(action='read', item_type='EPIC', item_id='{epic.id}') | {epic.name}"
                 )
 
-        if not success:
-            statements.append('No stories or epics in need of refinement.')
-            statements.append(
-                'Review everything and make more where necessary.'
-            )
+    if not success:
+        statements.append('\nNo stories or epics in need of refinement.')
+        statements.append('Review everything and make more where necessary.')
 
     return '\n'.join(statements)
 
