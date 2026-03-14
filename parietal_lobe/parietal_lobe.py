@@ -22,6 +22,23 @@ from parietal_lobe.parietal_mcp.gateway import ParietalMCP
 logger = logging.getLogger(__name__)
 
 
+def _create_synapse_client(identity_disc):
+    """
+    Resolve ModelRegistry provider and return the appropriate client (Ollama or OpenRouter).
+    Must run in sync context (e.g. via sync_to_async) to avoid SynchronousOnlyOperation.
+    """
+    from identity.models import IdentityDisc
+
+    if not isinstance(identity_disc, IdentityDisc) or not identity_disc.ai_model_id:
+        return OllamaClient(identity_disc=identity_disc)
+    registry = ModelRegistry.objects.select_related('provider').get(
+        pk=identity_disc.ai_model_id
+    )
+    if registry.provider_id == ModelProvider.OPENROUTER:
+        return OpenRouterClient(identity_disc=identity_disc)
+    return OllamaClient(identity_disc=identity_disc)
+
+
 def _json_str_to_dict(raw_args: Any) -> Dict[str, Any]:
     if isinstance(raw_args, dict):
         return raw_args
@@ -73,21 +90,9 @@ class ParietalLobe:
     async def initialize_client(self, identity_disc) -> None:
         """
         Initialize the LLM client for the provided IdentityDisc.
+        Resolves provider in a sync thread to avoid SynchronousOnlyOperation in async context.
         """
-        # When we have a real IdentityDisc, inspect its ModelRegistry + provider
-        # to decide which concrete client implementation to use.
-        from identity.models import IdentityDisc  # Local import to avoid cycles
-
-        if isinstance(identity_disc, IdentityDisc) and identity_disc.ai_model:
-            registry: ModelRegistry = identity_disc.ai_model
-            provider = registry.provider
-
-            if provider and provider.id == ModelProvider.OPENROUTER:
-                self.client = OpenRouterClient(identity_disc=identity_disc)
-                return
-
-        # Fallback for legacy callers or local/Ollama providers:
-        self.client = OllamaClient(identity_disc=identity_disc)
+        self.client = await sync_to_async(_create_synapse_client)(identity_disc)
 
     async def chat(
         self, messages: List[Dict[str, Any]], tools: List[Dict[str, Any]]

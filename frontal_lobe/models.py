@@ -99,6 +99,12 @@ class ModelProvider(DefaultFieldsMixin, DescriptionMixin):
     class Meta:
         verbose_name_plural = 'Model Providers'
 
+    def __str__(self):
+        return self.name
+
+    def natural_key(self):
+        return self.name
+
 
 class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
     """
@@ -117,7 +123,9 @@ class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
     QWEN_LATEST = 7
     GLM_47_FLASH_LATEST = 8
 
-    api_variant = models.CharField(max_length=50, default='ollama')
+    api_variant = models.CharField(
+        max_length=50, default='ollama', blank=True, null=True
+    )
     context_window_size = models.IntegerField(default=32768)
     cost_per_1k_input = models.DecimalField(
         max_digits=10, decimal_places=6, default=0
@@ -135,6 +143,12 @@ class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
 
     class Meta:
         verbose_name_plural = 'Model Registries'
+
+    def __str__(self):
+        return f'{self.provider}-{self.name}'
+
+    def natural_key(self):
+        return self.name
 
 
 class ReasoningSession(

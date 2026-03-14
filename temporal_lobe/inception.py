@@ -84,25 +84,3 @@ class IterationInceptionManager:
             iteration.save(update_fields=['current_shift'])
 
         return iteration
-
-    @classmethod
-    def gestate_disc(cls, base_identity) -> IdentityDisc:
-        """
-        Gestation: The biological process of growing a stateful
-        Identity Disc from a Base Identity template.
-        """
-        # Give the clone a unique lineage designation (e.g., "Worker [Mk.3]")
-        count = IdentityDisc.objects.filter(identity=base_identity).count() + 1
-        new_name = f'{base_identity.name} [Mk.{count}]'
-
-        new_disc = IdentityDisc.objects.create(
-            name=new_name,
-            identity=base_identity,
-            level=1,
-            xp=0,
-            available=False,  # Spawned directly into a deployment
-            successes=0,
-            failures=0,
-            timeouts=0,
-        )
-        return new_disc

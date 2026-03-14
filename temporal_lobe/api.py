@@ -244,14 +244,11 @@ class IterationViewSet(viewsets.ModelViewSet):
         )
 
         if base_id:
+            from identity.forge import forge_identity_disc
             from identity.models import Identity
-            from temporal_lobe.inception import IterationInceptionManager
 
             base_identity = get_object_or_404(Identity, id=base_id)
-            # Using your updated public method
-            identity_disc = IterationInceptionManager.gestate_disc(
-                base_identity
-            )
+            identity_disc = forge_identity_disc(base_identity)
         elif disc_id:
             identity_disc = get_object_or_404(IdentityDisc, id=disc_id)
             if not identity_disc.available:
@@ -416,10 +413,10 @@ class IterationDefinitionViewSet(viewsets.ModelViewSet):
         )
 
         if base_id:
-            from temporal_lobe.inception import IterationInceptionManager
+            from identity.forge import forge_identity_disc
 
             identity = get_object_or_404(Identity, id=base_id)
-            disc = IterationInceptionManager.gestate_disc(identity)
+            disc = forge_identity_disc(identity)
         elif disc_id:
             disc = get_object_or_404(IdentityDisc, id=disc_id)
         else:
@@ -443,7 +440,7 @@ class IterationDefinitionViewSet(viewsets.ModelViewSet):
     def remove_disc(self, request, pk=None):
         """
         Remove a participant from a shift in the blueprint. Payload: shift_definition_id,
-        and disc_id or base_id to identify the participant (Identity). Same contract
+        and disc_id to identify the participant (IdentityDisc). Same contract
         as IterationViewSet.remove_disc but for the definition.
         """
         definition = self.get_object()
@@ -476,9 +473,7 @@ class IterationDefinitionViewSet(viewsets.ModelViewSet):
         qs = IterationShiftDefinitionParticipant.objects.filter(
             shift_definition=shift_def,
         )
-        if base_id:
-            qs = qs.filter(identity_disc__identity=identity)
-        elif disc_id:
+        if disc_id:
             qs = qs.filter(identity_disc=disc)
 
         qs.delete()

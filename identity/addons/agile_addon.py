@@ -67,7 +67,12 @@ def sifting_pm(identity_disc, environment_id, turn_number) -> str:
         for story in stories:
             if not selected:
                 statements.append('Pre-Assigned Ticket Data:')
-                statements.append(json.dumps(PFCStorySerializer(story).data))
+                statements.append(
+                    json.dumps(
+                        PFCStorySerializer(story).data,
+                        default=str,
+                    )
+                )
                 selected = True
                 # Fixed: Changed action="read" to action="update" for the example
                 statements.append(
@@ -90,7 +95,12 @@ def sifting_pm(identity_disc, environment_id, turn_number) -> str:
         for epic in epics:
             if not selected:
                 statements.append('Pre-Assigned Ticket Data:')
-                statements.append(json.dumps(PFCEpicSerializer(epic).data))
+                statements.append(
+                    json.dumps(
+                        PFCEpicSerializer(epic).data,
+                        default=str,
+                    )
+                )
                 selected = True
                 statements.append(
                     f"Update this ticket with mcp_ticket(action='update', item_type='EPIC', item_id='{epic.id}', field_name='description', field_value='My new description')"
