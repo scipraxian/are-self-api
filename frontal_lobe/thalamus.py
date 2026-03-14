@@ -12,6 +12,7 @@ from hippocampus.hippocampus import TalosHippocampus
 from prefrontal_cortex.models import PFCTask
 
 
+# TODO: push this upstream.
 async def relay_sensory_state(turn_record: ReasoningTurn) -> str:
     """
     The Thalamus.
@@ -28,13 +29,15 @@ async def relay_sensory_state(turn_record: ReasoningTurn) -> str:
         catalog_block = await TalosHippocampus.get_recent_catalog(session)
 
     return (
-        f'{catalog_block}'
-        f'[SYSTEM SENSORY]: Memory banks indexed.\n\n'
-        f"YOUR MOVE: Write your THOUGHT and execute tools.\n\n"
-        f"Write your reasoning starting with 'THOUGHT: '. Stop writing text immediately after your thought and invoke your tools natively. DO NOT generate fake system diagnostics."
+        f'{catalog_block}\n\n'
+        'YOUR MOVE:'
+        "1. You MUST write your new and unique reasoning starting with 'THOUGHT: '.\n\n"
+        '2. Stop writing text immediately after your thought.\n\n'
+        '3. Invoke any required tool(s) natively.\n\n'
     )
 
 
+# LEGACY
 async def _build_river_of_six(
     session: ReasoningSession, current_turn: int
 ) -> str:
@@ -81,6 +84,7 @@ async def _build_river_of_six(
     return history_str
 
 
+# TODO: This is good. we should add this back in in some way.
 async def _build_telemetry_header(
     session: ReasoningSession, turn_record: ReasoningTurn, l1_cache_size: int
 ) -> str:
