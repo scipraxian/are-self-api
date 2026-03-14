@@ -9,7 +9,11 @@ from frontal_lobe.frontal_lobe import FrontalLobe
 from frontal_lobe.models import ReasoningSession, ReasoningStatusID
 from identity.models import IdentityType
 from prefrontal_cortex.models import PFCEpic, PFCItemStatus, PFCStory
-from temporal_lobe.models import IterationShiftParticipant, IterationShiftParticipantStatus, Shift
+from temporal_lobe.models import (
+    IterationShiftParticipant,
+    IterationShiftParticipantStatus,
+    Shift,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -17,15 +21,22 @@ logger = logging.getLogger(__name__)
 async def sifting_pm(identity_disc, environment_id) -> bool:
     """The Sifting PM reviews work and moves it to the backlog."""
     epics = PFCEpic.objects.filter(
-        (Q(status_id=PFCItemStatus.NEEDS_REFINEMENT) |
-         Q(status_id=PFCItemStatus.BACKLOG)) & Q(environment=environment_id))
+        (
+            Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
+            | Q(status_id=PFCItemStatus.BACKLOG)
+        )
+        & Q(environment=environment_id)
+    )
     if await epics.acount():
         return True
 
     stories = PFCStory.objects.filter(
-        (Q(status_id=PFCItemStatus.NEEDS_REFINEMENT) |
-         Q(status_id=PFCItemStatus.BACKLOG)) &
-        Q(epic__environment_id=environment_id))
+        (
+            Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
+            | Q(status_id=PFCItemStatus.BACKLOG)
+        )
+        & Q(epic__environment_id=environment_id)
+    )
     if await stories.acount():
         return True
     return False
@@ -50,11 +61,14 @@ async def executing_pm(identity_disc, environment_id) -> bool:
 async def post_execution_pm(identity_disc, environment_id) -> bool:
     """The Post execution PM reviews work and sets to blocked
     by user if it meets DoD else selected for development."""
-    return (await PFCStory.objects.filter(
-        Q(status_id=PFCItemStatus.IN_REVIEW) &
-        Q(epic__environment_id=environment_id) &
-        (Q(owning_disc__isnull=True) | Q(owning_disc=identity_disc))).acount()
-            > 0)
+    return (
+        await PFCStory.objects.filter(
+            Q(status_id=PFCItemStatus.IN_REVIEW)
+            & Q(epic__environment_id=environment_id)
+            & (Q(owning_disc__isnull=True) | Q(owning_disc=identity_disc))
+        ).acount()
+        > 0
+    )
 
 
 async def sleeping_pm(identity_disc, environment_id) -> bool:
@@ -63,20 +77,27 @@ async def sleeping_pm(identity_disc, environment_id) -> bool:
 
 
 async def sifting_worker(identity_disc, environment_id) -> bool:
-    """The Sifting Worker cleans items in the backlog and/or
-    Tasks to complete existing Stories."""
-    return (await PFCStory.objects.filter(
-        (Q(status_id=PFCItemStatus.NEEDS_REFINEMENT) |
-         Q(status_id=PFCItemStatus.BACKLOG)) & Q(owning_disc__isnull=True) |
-        Q(owning_disc=identity_disc) &
-        Q(epic__environment_id=environment_id)).acount() > 0)
+    return (
+        await PFCStory.objects.filter(
+            (
+                Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
+                | Q(status_id=PFCItemStatus.BACKLOG)
+            )
+            & (Q(owning_disc__isnull=True) | Q(owning_disc=identity_disc))
+            & Q(epic__environment_id=environment_id)
+        ).acount()
+        > 0
+    )
 
 
 async def bidding_worker(identity_disc, environment_id) -> bool:
     """The Worker BIDs on the backlog."""
     stories = PFCStory.objects.filter(
-        Q(status_id=PFCItemStatus.BACKLOG) & Q(owning_disc__isnull=True) &
-        Q(epic__environment_id=environment_id) & Q(complexity=0))
+        Q(status_id=PFCItemStatus.BACKLOG)
+        & Q(owning_disc__isnull=True)
+        & Q(epic__environment_id=environment_id)
+        & Q(complexity=0)
+    )
     if await stories.acount():
         return True
     else:
@@ -86,13 +107,17 @@ async def bidding_worker(identity_disc, environment_id) -> bool:
 async def executing_worker(identity_disc, environment_id) -> bool:
     """The Executing Worker is assigned or continues work on assigned tickets."""
     my_stories = PFCStory.objects.filter(
-        Q(status_id=PFCItemStatus.SELECTED_FOR_DEVELOPMENT) &
-        Q(owning_disc=identity_disc) & Q(epic__environment_id=environment_id))
+        Q(status_id=PFCItemStatus.SELECTED_FOR_DEVELOPMENT)
+        & Q(owning_disc=identity_disc)
+        & Q(epic__environment_id=environment_id)
+    )
     if await my_stories.acount():
         return True
     available_stories = PFCStory.objects.filter(
-        Q(status_id=PFCItemStatus.SELECTED_FOR_DEVELOPMENT) &
-        Q(owning_disc__isnull=True) & Q(epic__environment_id=environment_id))
+        Q(status_id=PFCItemStatus.SELECTED_FOR_DEVELOPMENT)
+        & Q(owning_disc__isnull=True)
+        & Q(epic__environment_id=environment_id)
+    )
     if await available_stories.acount():
         return True
     return False
@@ -107,11 +132,12 @@ async def _is_available_work(
     shift_id: int,
     identity_type_id: int,
     identity_disc,
-    environment_id: str,
+    environment_id: uuid.UUID,
 ) -> bool:
     """Is there appropriate work for myself."""
     logger.info(
-        f'Assigning ticket for shift {shift_id} and identity type {identity_type_id}'
+        f'Assigning ticket for shift {shift_id} '
+        f'and identity type {identity_type_id}'
     )
     match shift_id:
         case Shift.SIFTING:
@@ -152,6 +178,7 @@ async def _is_available_work(
                     return await sleeping_pm(identity_disc, environment_id)
                 case IdentityType.WORKER:
                     return await sleeping_worker(identity_disc, environment_id)
+    return False
 
 
 class PrefrontalCortex:
@@ -160,7 +187,7 @@ class PrefrontalCortex:
         self.spike = None
 
     async def dispatch(
-        self, iteration_shift_participant_id: int, environment_id: UUID
+        self, iteration_shift_participant_id: int, environment_id: uuid.UUID
     ):
         """The Handshake: Evaluates work, assigns it, and optionally wakes the Frontal Lobe."""
         logger.info(
@@ -176,6 +203,7 @@ class PrefrontalCortex:
                 'iteration_shift__shift',
                 'iteration_shift__definition',
                 'iteration_participant__identity_type',
+                'iteration_participant__ai_model',
             ).get
         )(id=iteration_shift_participant_id)
 

@@ -2,7 +2,12 @@ from django.db.models import Q
 from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
-from frontal_lobe.models import ReasoningSession, ReasoningStatus, ReasoningTurn
+from frontal_lobe.models import (
+    ModelRegistry,
+    ReasoningSession,
+    ReasoningStatus,
+    ReasoningTurn,
+)
 from frontal_lobe.serializers import (
     ModelRegistrySerializer,
     TalosEngramSerializer,
@@ -100,7 +105,9 @@ class IdentityDiscReasoningSerializer(serializers.ModelSerializer):
 
 
 class IdentityDiscSerializer(serializers.ModelSerializer):
-    ai_model = ModelRegistrySerializer()
+    ai_model = serializers.PrimaryKeyRelatedField(
+        queryset=ModelRegistry.objects.all(), allow_null=True, required=False
+    )
     enabled_tools = ToolDefinitionSerializer(many=True, read_only=True)
     tags = IdentityTagSerializer(many=True, read_only=True)
     addons = IdentityAddonSerializer(many=True, read_only=True)
@@ -132,10 +139,20 @@ class IdentityDiscSerializer(serializers.ModelSerializer):
         )
 
     def get_memories(self, identity_disc):
-
-        print('HELLO')
-
         return TalosEngramSerializer(
             identity_disc.engrams.distinct(),
             many=True,
         ).data
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        # Replace the flat ID with the nested dictionary representation
+        if instance.ai_model:
+            representation['ai_model'] = ModelRegistrySerializer(
+                instance.ai_model
+            ).data
+        else:
+            representation['ai_model'] = None
+
+        return representation

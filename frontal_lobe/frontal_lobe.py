@@ -403,14 +403,19 @@ class FrontalLobe:
 
             # 3. Resolve model from IdentityDisc and initialize Parietal Lobe
             identity_disc = self.session.identity_disc
-            if not identity_disc or not identity_disc.ai_model:
+            ai_model = (
+                await sync_to_async(getattr)(identity_disc, 'ai_model', None)
+                if identity_disc
+                else None
+            )
+            if not identity_disc or not ai_model:
                 raise ValueError(
                     'ReasoningSession.identity_disc.ai_model must be set before FrontalLobe.run().'
                 )
 
             self.parietal_lobe = ParietalLobe(self.session, self._log_live)
             await self.parietal_lobe.initialize_client(identity_disc)
-            await self._log_live(f'Model: {identity_disc.ai_model.name}')
+            await self._log_live(f'Model: {ai_model.name}')
 
             # 4. Build Synapse Payload
             ollama_tools = await self.parietal_lobe.build_tool_schemas()
