@@ -47,6 +47,8 @@ def _resolve_addon_content(
     iteration_id: Optional[int],
     turn_number: int,
     reasoning_turn_id: Optional[int],
+    environment_id: Optional[UUID] = None,
+    shift_id: Optional[int] = None,
 ) -> str:
     """Safely executes the dynamic addon function or falls back to static text."""
     slug = addon.function_slug
@@ -58,6 +60,8 @@ def _resolve_addon_content(
             identity_disc=identity_disc_id,
             turn_number=turn_number,
             reasoning_turn_id=reasoning_turn_id,
+            environment_id=environment_id,
+            shift_id=shift_id,
         )
         try:
             func = ADDON_REGISTRY[slug]
@@ -80,6 +84,8 @@ def collect_addon_blocks(
     iteration_id: Optional[int] = None,
     turn_number: int = 1,
     reasoning_turn_id: Optional[int] = None,
+    environment_id: Optional[UUID] = None,
+    shift_id: Optional[int] = None,
 ) -> List[Tuple[str, str]]:
     """
     Returns (addon_name, addon_text) tuples for all addons on the IdentityDisc.
@@ -101,6 +107,8 @@ def collect_addon_blocks(
             iteration_id,
             turn_number,
             reasoning_turn_id,
+            environment_id,
+            shift_id,
         )
         if block_text:
             blocks.append((addon.name, str(block_text)))

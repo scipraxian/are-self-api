@@ -53,7 +53,9 @@ class OllamaChatPayload:
 
     def size(self):
         """Approximate payload size for context window tuning."""
-        base = len(str(self.model)) + sum(len(str(msg)) for msg in self.messages)
+        base = len(str(self.model)) + sum(
+            len(str(msg)) for msg in self.messages
+        )
         if not self.tools:
             return base
         return base + sum(len(str(tool)) for tool in self.tools)
@@ -73,7 +75,7 @@ class OllamaResponse:
 class OllamaClient:
     """Synaptic interface to the local AI. Supports Native Tool Calling."""
 
-    def __init__(self, identity_source: Union[IdentityDisc, str]):
+    def __init__(self, identity_disc: Union[IdentityDisc, str]):
         """
         Initialize the client using either:
 
@@ -83,8 +85,8 @@ class OllamaClient:
         """
         self.identity_disc: Optional[IdentityDisc] = None
 
-        if isinstance(identity_source, IdentityDisc):
-            identity_disc = identity_source
+        if isinstance(identity_disc, IdentityDisc):
+            identity_disc = identity_disc
             if not identity_disc.ai_model:
                 raise ValueError(
                     f'IdentityDisc "{identity_disc}" has no ai_model configured.'
@@ -93,7 +95,7 @@ class OllamaClient:
             self.model = identity_disc.ai_model.name
         else:
             # Backwards-compatible path: accept a bare model name.
-            self.model = str(identity_source)
+            self.model = str(identity_disc)
 
     def chat(
         self,

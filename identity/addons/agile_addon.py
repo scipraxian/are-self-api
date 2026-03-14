@@ -56,9 +56,11 @@ def sifting_pm(identity_disc, environment_id, turn_number) -> str:
                     f"mcp_ticket(action='read', item_id='{story.id}') | {story.name}"
                 )
 
-    if not success:
-        statements.append('No stories or epics in need of refinement.')
-        statements.append('Review everything and make more where necessary.')
+        if not success:
+            statements.append('No stories or epics in need of refinement.')
+            statements.append(
+                'Review everything and make more where necessary.'
+            )
 
     return '\n'.join(statements)
 
@@ -76,7 +78,7 @@ def pre_planning_pm(identity_disc, environment_id, turn_number) -> str:
     epics = PFCEpic.objects.filter(
         Q(status_id=PFCItemStatus.BACKLOG) & Q(environment=environment_id)
     )
-    if epics.count():
+    if epics.exists():
         success = True
         statements.append('Epics to consider for development:')
         for epic in epics:
@@ -88,7 +90,7 @@ def pre_planning_pm(identity_disc, environment_id, turn_number) -> str:
         Q(status_id=PFCItemStatus.BACKLOG)
         & Q(epic__environment_id=environment_id)
     )
-    if stories.count():
+    if stories.exists():
         success = True
         statements.append('Stories to consider for development:')
         for story in stories:
@@ -104,7 +106,7 @@ def pre_planning_pm(identity_disc, environment_id, turn_number) -> str:
         & Q(epic__environment_id=environment_id)
     )
 
-    if selected_and_in_progress_stories.count():
+    if selected_and_in_progress_stories.exists():
         success = True
         statements.append('Stories already selected:')
         for story in selected_and_in_progress_stories:
@@ -137,7 +139,7 @@ def post_execution_pm(identity_disc, environment_id, turn_number) -> str:
         Q(status_id=PFCItemStatus.IN_REVIEW)
         & Q(epic__environment_id=environment_id)
     )
-    if stories.count():
+    if stories.exists():
         success = True
 
         statements.append(
@@ -177,7 +179,7 @@ def bidding_worker(identity_disc, environment_id, turn_number) -> str:
         & Q(epic__environment_id=environment_id)
         & Q(complexity=0)
     )
-    if stories.count():
+    if stories.exists():
         statements.append(
             'A BID is how many turns you think it will take to complete a story. These stories are in need of a BID:'
         )
@@ -205,7 +207,7 @@ def sifting_worker(identity_disc, environment_id, turn_number) -> str:
         & (Q(owning_disc__isnull=True) | Q(owning_disc=identity_disc))
         & Q(epic__environment_id=environment_id)
     )
-    if stories.count():
+    if stories.exists():
         success = True
         statements.append('Stories in need of refinement:')
         for story in stories:
@@ -235,7 +237,7 @@ def executing_worker(identity_disc, environment_id, turn_number) -> str:
             & Q(owning_disc=identity_disc)
             & Q(epic__environment_id=environment_id)
         )
-        if my_stories.count():
+        if my_stories.exists():
             success = True
             statements.append('You own the following stories:')
             for story in my_stories:
@@ -247,7 +249,7 @@ def executing_worker(identity_disc, environment_id, turn_number) -> str:
             & Q(owning_disc__isnull=True)
             & Q(epic__environment_id=environment_id)
         )
-        if available_stories.count():
+        if available_stories.exists():
             success = True
             statements.append('You may work on the following stories:')
             for story in available_stories:
@@ -281,6 +283,7 @@ class AgilePromptBuilder:
         self.turn_number = None
         self.reasoning_turn = None
         self.context_lines = []
+        self.shift_id = None
 
     def _extract_package(self):
         if not self.iteration_id or self.package.reasoning_turn_id is None:
@@ -288,20 +291,12 @@ class AgilePromptBuilder:
 
         if self.package.identity_disc:
             self.identity_disc = IdentityDisc.objects.select_related(
-                'identity'
+                'identity_type'
             ).get(id=self.package.identity_disc)
         self.turn_number = self.package.turn_number
-        self.reasoning_turn = ReasoningTurn.objects.select_related(
-            'session__participant__iteration_shift__shift_iteration',
-            'session__participant__iteration_shift__shift',
-        ).get(id=self.package.reasoning_turn_id)
 
-        self.iteration_shift = (
-            self.reasoning_turn.session.participant.iteration_shift
-        )
-        self.iteration = self.iteration_shift.shift_iteration
-        self.environment_id = self.iteration.environment_id
-        self.shift = self.iteration_shift.shift
+        self.environment_id = getattr(self.package, 'environment_id', None)
+        self.shift_id = getattr(self.package, 'shift_id', None)
 
     def build_prompt(self) -> str:
         self._extract_package()
@@ -313,7 +308,7 @@ class AgilePromptBuilder:
         if self.turn_number % 3 == 1:
             self.context_lines = [
                 '=========================================',
-                f' AGILE BOARD CONTEXT | SHIFT: {self.shift.name}',
+                f' AGILE BOARD CONTEXT | SHIFT: {self.shift_id}',
                 '=========================================',
             ]
             self.context_lines.append(
@@ -324,8 +319,8 @@ class AgilePromptBuilder:
                 f'Ticket status values IN ORDER by ("id", "name") are: '
                 f'{[(status.pk, status.name) for status in statuses]}'
             )
-        identity_type_id = self.identity_disc.identity.identity_type_id
-        shift_id = self.shift.id
+        identity_type_id = self.identity_disc.identity_type_id
+        shift_id = self.shift_id
 
         match shift_id:
             case Shift.SIFTING:

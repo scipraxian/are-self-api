@@ -21,6 +21,7 @@ from frontal_lobe.models import (
 from frontal_lobe.thalamus import relay_sensory_state
 from identity.identity_prompt import build_identity_prompt, collect_addon_blocks
 from parietal_lobe.parietal_lobe import ParietalLobe
+from temporal_lobe.models import IterationShiftParticipant
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,10 @@ class FrontalLobe:
         self.parietal_lobe: Optional[ParietalLobe] = None
 
         self.session: Optional[ReasoningSession] = None
+
+        self._cached_environment_id = None
+        self._cached_shift_id = None
+        self._cached_iteration_id = None
 
     # --- IO & Logging ---
 
@@ -76,7 +81,29 @@ class FrontalLobe:
                 status_id=ReasoningStatusID.ACTIVE,
                 max_turns=max_turns,
             )
+
+        await self.cache_ids()
+
         await self._log_live(f'Session ID: {self.session.id}')
+
+    async def cache_ids(self):
+        # Cache the iteration ID so we don't query it every turn
+        if self.session.participant_id:
+            try:
+                p = await sync_to_async(
+                    IterationShiftParticipant.objects.select_related(
+                        'iteration_shift',
+                        'iteration_shift__shift',
+                        'iteration_shift__shift_iteration__environment',
+                    ).get
+                )(id=self.session.participant_id)
+                self._cached_iteration_id = p.iteration_shift.shift_iteration_id
+                self._cached_environment_id = (
+                    p.iteration_shift.shift_iteration.environment.id
+                )
+                self._cached_shift_id = p.iteration_shift.shift_id
+            except IterationShiftParticipant.DoesNotExist:
+                self._cached_iteration_id = None
 
     # --- Turn Execution ---
 
@@ -92,19 +119,6 @@ class FrontalLobe:
             last_turn=previous_turn,
         )
         return turn
-
-    async def _record_turn_completion(
-        self,
-        turn_record: ReasoningTurn,
-        tokens_in: int,
-        tokens_out: int,
-        inference_duration: timedelta,
-    ) -> None:
-        turn_record.tokens_input = tokens_in
-        turn_record.tokens_output = tokens_out
-        turn_record.inference_time = inference_duration
-        turn_record.status_id = ReasoningStatusID.COMPLETED
-        await sync_to_async(turn_record.save)()
 
     def _get_identity_prompt(self, turn_record: ReasoningTurn):
         iteration_id = None
@@ -215,6 +229,17 @@ class FrontalLobe:
 
         return messages_for_llm
 
+    def _get_iteration_id(self) -> Optional[int]:
+        from temporal_lobe.models import IterationShiftParticipant
+
+        try:
+            p = IterationShiftParticipant.objects.select_related(
+                'iteration_shift'
+            ).get(id=self.session.participant_id)
+            return p.iteration_shift.shift_iteration_id
+        except IterationShiftParticipant.DoesNotExist:
+            return None
+
     async def _inject_addons(self, turn_record: ReasoningTurn) -> None:
         """
         Executes Identity Addons for the current turn and saves them directly
@@ -225,24 +250,15 @@ class FrontalLobe:
 
         iteration_id = None
         if self.session.participant_id:
-            from temporal_lobe.models import IterationShiftParticipant
-
-            def _get_iteration_id() -> Optional[int]:
-                try:
-                    p = IterationShiftParticipant.objects.select_related(
-                        'iteration_shift'
-                    ).get(id=self.session.participant_id)
-                    return p.iteration_shift.shift_iteration_id
-                except IterationShiftParticipant.DoesNotExist:
-                    return None
-
-            iteration_id = await sync_to_async(_get_iteration_id)()
+            iteration_id = await sync_to_async(self._get_iteration_id)()
 
         addon_blocks = await sync_to_async(collect_addon_blocks)(
             identity_disc=self.session.identity_disc,
             iteration_id=iteration_id,
             turn_number=turn_record.turn_number,
             reasoning_turn_id=turn_record.id,
+            environment_id=self._cached_environment_id,
+            shift_id=self._cached_shift_id,
         )
 
         for addon_name, addon_text in addon_blocks:
@@ -357,7 +373,7 @@ class FrontalLobe:
         # MUST be saved as ChatMessage objects with role=TOOL and is_volatile=False
         # inside process_tool_calls() to ensure they enter the history properly.
 
-        await self._record_turn_completion(
+        await _record_turn_completion(
             turn_record,
             response.tokens_input,
             response.tokens_output,
@@ -494,3 +510,16 @@ async def run_frontal_lobe(spike_id: UUID) -> Tuple[int, str]:
     except Exception as e:
         logger.exception(f'[FrontalLobe] Fatal crash on init: {e}')
         return 500, f'Fatal Error: {str(e)}'
+
+
+async def _record_turn_completion(
+    turn_record: ReasoningTurn,
+    tokens_in: int,
+    tokens_out: int,
+    inference_duration: timedelta,
+) -> None:
+    turn_record.tokens_input = tokens_in
+    turn_record.tokens_output = tokens_out
+    turn_record.inference_time = inference_duration
+    turn_record.status_id = ReasoningStatusID.COMPLETED
+    await sync_to_async(turn_record.save)()
