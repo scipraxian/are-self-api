@@ -31,7 +31,7 @@ async def relay_sensory_state(turn_record: ReasoningTurn) -> str:
     return (
         f'{catalog_block}\n\n'
         'YOUR MOVE:\n'
-        '1. You MUST call `mcp_internal_monologue` on every single turn to process your state.\n'
+        '1. You MUST call mcp_internal_monologue ALONGSIDE any other tools you call in parallel. Never fire a tool without also firing your monologue.\n'
         '2. You should call your tools (like `mcp_ticket`) in parallel during the exact same turn.\n'
         '3. Use structured JSON for all tool calls natively.\n'
     )

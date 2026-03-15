@@ -16,6 +16,7 @@ staticfiles/
 # --- Celery & Async ---
 celerybeat-schedule
 celerybeat.pid
+celery_beat.pid
 dump.rdb
 
 
