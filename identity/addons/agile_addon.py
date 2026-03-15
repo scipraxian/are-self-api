@@ -174,12 +174,12 @@ def pre_planning_pm(identity_disc, environment_id, turn_number) -> str:
 
 def planning_pm(identity_disc, environment_id, turn_number) -> str:
     """The Planning PM has no role."""
-    return sifting_pm(identity_disc, environment_id, turn_number)
+    return 'Planning PM has no role.'  # sifting_pm(identity_disc, environment_id, turn_number)
 
 
 def executing_pm(identity_disc, environment_id, turn_number) -> str:
     """The Executing PM has no role."""
-    return sifting_pm(identity_disc, environment_id, turn_number)
+    return 'Executing PM has no role.'  #  sifting_pm(identity_disc, environment_id, turn_number)
 
 
 def post_execution_pm(identity_disc, environment_id, turn_number) -> str:
@@ -251,7 +251,7 @@ def sifting_worker(identity_disc, environment_id, turn_number) -> str:
     statements = []
     statements.append(f'ENVIRONMENT: {environment_id}')
     statements.append(
-        'ROLE: Sifting Worker - Create and Improve Stories and Tasks so they meet Definition of Ready (DoR) so a PM may move it to the BACKLOG.'
+        'ROLE: Sifting Worker - You may Create and Improve Stories and Tasks so they meet Definition of Ready (DoR) so a PM may move it to the BACKLOG.'
     )
     statements.append('This is a non-execution Shift. NO CODE')
     stories = PFCStory.objects.filter(

@@ -21,20 +21,14 @@ logger = logging.getLogger(__name__)
 async def sifting_pm(identity_disc, environment_id) -> bool:
     """The Sifting PM reviews work and moves it to the backlog."""
     epics = PFCEpic.objects.filter(
-        (
-            Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
-            | Q(status_id=PFCItemStatus.BACKLOG)
-        )
+        (Q(status_id=PFCItemStatus.NEEDS_REFINEMENT))
         & Q(environment=environment_id)
     )
     if await epics.acount():
         return True
 
     stories = PFCStory.objects.filter(
-        (
-            Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
-            | Q(status_id=PFCItemStatus.BACKLOG)
-        )
+        (Q(status_id=PFCItemStatus.NEEDS_REFINEMENT))
         & Q(epic__environment_id=environment_id)
     )
     if await stories.acount():
@@ -43,19 +37,30 @@ async def sifting_pm(identity_disc, environment_id) -> bool:
 
 
 async def pre_planning_pm(identity_disc, environment_id) -> bool:
-    """The Planning PM queries the entire board and chooses what is selected
-    for development."""
-    return await sifting_pm(identity_disc, environment_id)
+    """The Planning PM Backlog -> Selected for Development."""
+    epics = PFCEpic.objects.filter(
+        (Q(status_id=PFCItemStatus.BACKLOG)) & Q(environment=environment_id)
+    )
+    if await epics.acount():
+        return True
+
+    stories = PFCStory.objects.filter(
+        (Q(status_id=PFCItemStatus.BACKLOG))
+        & Q(epic__environment_id=environment_id)
+    )
+    if await stories.acount():
+        return True
+    return False
 
 
 async def planning_pm(identity_disc, environment_id) -> bool:
     """The Planning PM has no role."""
-    return await sifting_pm(identity_disc, environment_id)
+    return False  # await sifting_pm(identity_disc, environment_id)
 
 
 async def executing_pm(identity_disc, environment_id) -> bool:
     """The Executing PM has no role."""
-    return await sifting_pm(identity_disc, environment_id)
+    return False  # await sifting_pm(identity_disc, environment_id)
 
 
 async def post_execution_pm(identity_disc, environment_id) -> bool:

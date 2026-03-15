@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import time
 from datetime import timedelta
 from typing import Any, Dict, List, Optional, Tuple
@@ -203,7 +204,9 @@ class FrontalLobe:
                             'type': 'function',
                             'function': {
                                 'name': tc.tool.name,
-                                'arguments': parsed_args,
+                                'arguments': tc.arguments
+                                if isinstance(tc.arguments, dict)
+                                else json.loads(tc.arguments or '{}'),
                             },
                         }
                     )

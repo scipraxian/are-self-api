@@ -208,6 +208,21 @@
   }
 },
 {
+  "model": "frontal_lobe.modelregistry",
+  "pk": 9,
+  "fields": {
+    "created": "2026-03-14T20:26:35.851Z",
+    "description": "",
+    "modified": "2026-03-14T21:06:34.866Z",
+    "name": "openrouter/hunter-alpha",
+    "api_variant": null,
+    "context_window_size": 1048576,
+    "cost_per_1k_input": "0.000000",
+    "cost_per_1k_output": "0.000000",
+    "provider": 2
+  }
+},
+{
   "model": "frontal_lobe.chatmessagerole",
   "pk": 1,
   "fields": {

@@ -499,7 +499,7 @@ def _is_spike_alive(spike: Spike) -> bool:
 
     # ── 4. THE QUEUE & PENDING HEURISTIC ─────────────────────────────────────
     # Task is PENDING. Give it 15 minutes to be picked up by a worker.
-    if spike.created_at < zombie_cutoff:
+    if spike.created < zombie_cutoff:
         logger.warning(
             f'[TemporalLobe] Task {task_id} is unassigned and older than '
             f'{ZOMBIE_THRESHOLD_MINUTES} min. Timeout Ghost detected!'

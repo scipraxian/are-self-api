@@ -3,6 +3,7 @@ import logging
 import os
 import time
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Any, Dict, List, Optional, Union
 
 import requests
@@ -112,17 +113,7 @@ class OpenRouterClient:
         }
 
         api_key = self._get_api_key()
-
-        # Enhanced debug - print everything
-        print(f"DEBUG: _api_key_header = '{self._api_key_header}'")
-        print(
-            f"DEBUG: api_key value = '{api_key[:10]}...'"
-            if api_key
-            else 'DEBUG: api_key = None'
-        )
-
         if api_key:
-            # Check if key already includes "Bearer "
             if api_key.startswith('Bearer '):
                 print(
                     "DEBUG: WARNING - API key already includes 'Bearer ' prefix!"
@@ -130,9 +121,6 @@ class OpenRouterClient:
                 headers[self._api_key_header] = api_key
             else:
                 headers[self._api_key_header] = f'Bearer {api_key}'
-            print(
-                f"DEBUG: Added header '{self._api_key_header}' with value starting with '{headers[self._api_key_header][:20]}...'"
-            )
         else:
             print('DEBUG: No API key found, no auth header added')
             if self._requires_api_key:
@@ -145,8 +133,6 @@ class OpenRouterClient:
             headers['HTTP-Referer'] = site
         if app_title:
             headers['X-Title'] = app_title
-
-        print(f'DEBUG: Final headers = {list(headers.keys())}')
         return headers
 
     def chat(
@@ -200,12 +186,15 @@ class OpenRouterClient:
         try:
             while max_retries:
                 max_retries -= 1
+                start_time = time.time()
+                logger.info(f'>>>>>>>>>>>>>Sending request to Provider...')
                 response = requests.post(
                     self._chat_url,
                     json=payload_dict,
                     headers=self._build_headers(),
                     timeout=options.get('timeout', 600),
                 )
+                inf_duration = timedelta(seconds=time.time() - start_time)
                 if response.status_code != 200:
                     logger.warning(
                         f'Retry WAIT due to Provider {response.status_code}'
@@ -216,9 +205,10 @@ class OpenRouterClient:
                     )
                     continue
                 break
-
             response.raise_for_status()
-            logger.info(f'Successful response from Provider.')
+            logger.info(
+                f'<<<<<<<<<<<<<Successful response from Provider {inf_duration}s.'
+            )
             data = response.json()
 
             choices = data.get('choices', []) or []

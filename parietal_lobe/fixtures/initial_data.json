@@ -130,6 +130,18 @@
   }
 },
 {
+  "model": "parietal_lobe.toolusetype",
+  "pk": 6,
+  "fields": {
+    "created": "2026-03-15T19:19:37.345Z",
+    "description": "Internal processing. Costs no focus, yields no XP.",
+    "modified": "2026-03-15T19:19:37.345Z",
+    "name": "Cognitive Action",
+    "focus_modifier": 0,
+    "xp_reward": 0
+  }
+},
+{
   "model": "parietal_lobe.tooldefinition",
   "pk": 4,
   "fields": {
@@ -255,8 +267,8 @@
   "fields": {
     "created": "2026-02-23T15:09:02.506Z",
     "description": "Search the web and return Titles, URLs, and Snippets of the top 5 results.",
-    "modified": "2026-02-23T15:09:02.506Z",
-    "name": "mcp_browser_search",
+    "modified": "2026-03-15T14:33:19.044Z",
+    "name": "mcp_internet_query",
     "is_async": true,
     "use_type": 3
   }
@@ -331,6 +343,18 @@
     "name": "mcp_git",
     "is_async": true,
     "use_type": 2
+  }
+},
+{
+  "model": "parietal_lobe.tooldefinition",
+  "pk": 26,
+  "fields": {
+    "created": "2026-03-15T19:19:37.350Z",
+    "description": "MANDATORY: You must call this tool on EVERY turn to log your thoughts, speak to the user, and pass state.",
+    "modified": "2026-03-15T19:19:37.350Z",
+    "name": "mcp_internal_monologue",
+    "is_async": true,
+    "use_type": 6
   }
 },
 {
@@ -950,6 +974,39 @@
   }
 },
 {
+  "model": "parietal_lobe.toolparameter",
+  "pk": 57,
+  "fields": {
+    "created": "2026-03-15T19:19:37.356Z",
+    "description": "Reason through your current state, focus economy, and Agile goals.",
+    "modified": "2026-03-15T19:19:37.356Z",
+    "name": "thought",
+    "type": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameter",
+  "pk": 58,
+  "fields": {
+    "created": "2026-03-15T19:19:37.363Z",
+    "description": "Text to display directly to the human user. Leave empty if you have nothing to say.",
+    "modified": "2026-03-15T19:19:37.363Z",
+    "name": "message_to_user",
+    "type": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameter",
+  "pk": 59,
+  "fields": {
+    "created": "2026-03-15T19:19:37.366Z",
+    "description": "A concise, factual summary of what you just did and what you need to do next. This is your memory.",
+    "modified": "2026-03-15T19:19:37.366Z",
+    "name": "note_for_next_turn",
+    "type": 1
+  }
+},
+{
   "model": "parietal_lobe.toolparameterassignment",
   "pk": 8,
   "fields": {
@@ -1530,6 +1587,39 @@
     "tool": 20,
     "parameter": 16,
     "required": false
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 147,
+  "fields": {
+    "created": "2026-03-15T19:19:37.370Z",
+    "modified": "2026-03-15T19:19:37.370Z",
+    "tool": 26,
+    "parameter": 57,
+    "required": true
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 148,
+  "fields": {
+    "created": "2026-03-15T19:19:37.376Z",
+    "modified": "2026-03-15T19:19:37.376Z",
+    "tool": 26,
+    "parameter": 58,
+    "required": false
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 149,
+  "fields": {
+    "created": "2026-03-15T19:19:37.380Z",
+    "modified": "2026-03-15T19:19:37.380Z",
+    "tool": 26,
+    "parameter": 59,
+    "required": true
   }
 },
 {
