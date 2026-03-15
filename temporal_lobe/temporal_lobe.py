@@ -1,11 +1,15 @@
 import logging
+from datetime import timedelta
 from typing import Any, Optional, Tuple
 from uuid import UUID
 
 from asgiref.sync import sync_to_async
+from celery import current_app, states
 from celery.result import AsyncResult
 from django.db import transaction
 from django.db.models import Q, QuerySet
+from django.utils import timezone
+from django_celery_results.models import TaskResult
 
 from central_nervous_system.central_nervous_system import CNS
 from central_nervous_system.models import (
@@ -301,20 +305,13 @@ class TemporalLobe:
                         continue  # Check next session, this one is dead
 
                     # 2. Does Celery actually know about this task?
-                    if session.spike.celery_task_id:
-                        res = AsyncResult(str(session.spike.celery_task_id))
-                        if res.state not in [
-                            'PENDING',
-                            'STARTED',
-                            'RECEIVED',
-                            'RETRY',
-                        ]:
-                            logger.warning(
-                                f'[TemporalLobe] Ghost Session {session.id}: Celery task is dead ({res.state}).'
-                            )
-                            session.status_id = ReasoningStatusID.ERROR
-                            session.save(update_fields=['status'])
-                            continue  # Dead!
+                    if not _is_spike_alive(session.spike):
+                        logger.warning(
+                            f'[TemporalLobe] Ghost Session {session.id}: Celery task is dead.'
+                        )
+                        session.status_id = ReasoningStatusID.ERROR
+                        session.save(update_fields=['status'])
+                        continue  # Dead!
 
                 # If we passed the gauntlet, it's genuinely running
                 is_running = True
@@ -399,10 +396,12 @@ def get_or_create_environment_trains(
         )
         is_already_running = trains.exists()
         if is_already_running:
+            # TODO: Check that celery task is actually still running.
             logger.info(
                 f'[TemporalLobe] SpikeTrain for Environment {env_id} is already running.'
             )
             train_list.extend(trains.values_list('id', flat=True))
+
             continue
 
         # Safe to spawn!
@@ -429,56 +428,129 @@ def get_or_create_environment_trains(
     return train_list
 
 
+ZOMBIE_THRESHOLD_MINUTES = 20
+
+
+def _is_spike_alive(spike: Spike) -> bool:
+    if not spike.celery_task_id:
+        return False
+
+    task_id = str(spike.celery_task_id)
+    zombie_cutoff = timezone.now() - timedelta(minutes=ZOMBIE_THRESHOLD_MINUTES)
+    db_status = 'UNKNOWN'
+
+    # ── 1. DEFINITIVE DEATH CHECKS (DB & Broker) ─────────────────────────────
+    try:
+        task_result = TaskResult.objects.get(task_id=task_id)
+        db_status = task_result.status
+        if db_status in states.READY_STATES:
+            logger.info(
+                f'[TemporalLobe] DB confirms task {task_id} is dead ({db_status}).'
+            )
+            return False
+    except TaskResult.DoesNotExist:
+        db_status = 'PENDING'
+
+    res = AsyncResult(task_id)
+    if res.state in states.READY_STATES:
+        logger.info(
+            f'[TemporalLobe] Broker confirms task {task_id} is dead ({res.state}).'
+        )
+        return False
+
+    # ── 2. THE NUCLEAR OPTION (Worker Inspection) ────────────────────────────
+    inspector_succeeded = False
+    try:
+        inspector = current_app.control.inspect()
+
+        active_tasks = inspector.active()
+        if active_tasks:
+            inspector_succeeded = True
+            for worker_name, tasks in active_tasks.items():
+                if any(t['id'] == task_id for t in tasks):
+                    logger.info(
+                        f'[TemporalLobe] Inspector caught {task_id} running on {worker_name}.'
+                    )
+                    return True
+
+        reserved_tasks = inspector.reserved()
+        if reserved_tasks:
+            inspector_succeeded = True
+            for worker_name, tasks in reserved_tasks.items():
+                if any(t['id'] == task_id for t in tasks):
+                    logger.info(
+                        f'[TemporalLobe] Inspector caught {task_id} reserved by {worker_name}.'
+                    )
+                    return True
+
+    except Exception as e:
+        logger.warning(
+            f'[TemporalLobe] Celery Inspector failed for {task_id}: {e}'
+        )
+
+    # ── 3. IMMEDIATE GHOST EXECUTION ─────────────────────────────────────────
+    # If the inspector successfully checked the workers, NO worker has the task,
+    # BUT the database claims it is "STARTED", it is a confirmed Hard-Crash Ghost.
+    if inspector_succeeded and db_status == 'STARTED':
+        logger.warning(
+            f'[TemporalLobe] DB says STARTED but workers are empty. Instant Ghost Kill: {task_id}'
+        )
+        return False
+
+    # ── 4. THE QUEUE & PENDING HEURISTIC ─────────────────────────────────────
+    # Task is PENDING. Give it 15 minutes to be picked up by a worker.
+    if spike.created_at < zombie_cutoff:
+        logger.warning(
+            f'[TemporalLobe] Task {task_id} is unassigned and older than '
+            f'{ZOMBIE_THRESHOLD_MINUTES} min. Timeout Ghost detected!'
+        )
+        return False
+
+    logger.info(
+        f'[TemporalLobe] Task {task_id} is unassigned but new. '
+        f"Assuming it's safely waiting in the queue."
+    )
+    return True
+
+
 def lobe_garbage_collection() -> NeuralPathway:
     pathway = fetch_canonical_temporal_pathway()
 
-    # =========================================================================
-    # STEP 1: CELERY-FIRST GARBAGE COLLECTION
-    # =========================================================================
-    active_metronomes = SpikeTrain.objects.filter(
+    active_trains = SpikeTrain.objects.filter(
         pathway=pathway,
         status_id__in=[SpikeTrainStatus.CREATED, SpikeTrainStatus.RUNNING],
     )
-    logger.info(
-        f'[TemporalLobe] Found {active_metronomes.count()} active metronomes.'
-    )
-    for train in active_metronomes:
-        logger.info(f'[TemporalLobe] Processing metronome {train.id}')
-        # Get the active execution nodes for this train
+    logger.info(f'[TemporalLobe] Found {active_trains.count()} active trains.')
+
+    for train in active_trains:
+        logger.info(f'[TemporalLobe] Processing metronome {train.id}.')
+
         active_spikes = train.spikes.filter(
             status_id__in=[SpikeStatus.RUNNING, SpikeStatus.PENDING]
         )
         logger.info(
-            f'[TemporalLobe] Found {active_spikes.count()} active spikes for metronome {train.id}'
+            f'[TemporalLobe] Found {active_spikes.count()} active spikes '
+            f'for metronome {train.id}.'
         )
-        is_truly_alive = False
 
-        for spike in active_spikes:
-            if spike.celery_task_id:
-                res = AsyncResult(str(spike.celery_task_id))
-                # Ask Celery for the absolute truth
-                if res.state in ['PENDING', 'STARTED', 'RECEIVED', 'RETRY']:
-                    is_truly_alive = True
-                    logger.info(
-                        f'[TemporalLobe] Celery task {spike.celery_task_id} is alive.'
-                    )
-                    break  # We found a healthy pulse, no need to check other spikes
+        # The train is alive if *any* of its spikes are genuinely running.
+        train_is_alive = any(_is_spike_alive(spike) for spike in active_spikes)
 
-        if is_truly_alive:
-            logger.info(f'[TemporalLobe] SpikeTrain {train.id} is truly alive.')
+        if train_is_alive:
+            logger.info(
+                f'[TemporalLobe] SpikeTrain {train.id} has a pulse — leaving it alone.'
+            )
             continue
 
-        # If we get here, the DB says RUNNING, but Celery has absolutely no idea what we are talking about.
-        # It's a system crash ghost. NOW we wake up the Orchestrator to clean up the DB.
         logger.warning(
-            f'[TemporalLobe] System Crash Ghost detected for SpikeTrain {train.id}. Triggering GC.'
+            f'[TemporalLobe] Zombie detected: SpikeTrain {train.id} — triggering GC.'
         )
         try:
-            cns = CNS(spike_train_id=train.id)
-            logger.info(f'[TemporalLobe] Cleaning ghost SpikeTrain {train.id}')
-            cns.poll()  # This will mark the spikes FAILED and cascade the train to a stopped state
+            CNS(spike_train_id=train.id).poll()
         except Exception as e:
             logger.error(
-                f'[TemporalLobe] Error cleaning ghost SpikeTrain {train.id}: {e}'
+                f'[TemporalLobe] Error cleaning zombie SpikeTrain {train.id}: {e}',
+                exc_info=True,
             )
+
     return pathway

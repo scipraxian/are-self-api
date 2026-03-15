@@ -223,6 +223,7 @@ class FrontalLobe:
 
                 if msg.tool_call_id:
                     message_dict['name'] = msg.tool_call.tool.name
+                    message_dict['tool_call_id'] = f'call_{msg.tool_call_id}'
 
             message_dict[CONTENT] = content
             messages_for_llm.append(message_dict)

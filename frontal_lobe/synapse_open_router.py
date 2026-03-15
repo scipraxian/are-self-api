@@ -1,15 +1,16 @@
+import json
 import logging
 import os
+import time
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
 import requests
 from django.conf import settings
 
-from identity.models import IdentityDisc
 from frontal_lobe.models import ModelRegistry
 from frontal_lobe.synapse import SynapseResponse
-
+from identity.models import IdentityDisc
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class OpenRouterClient:
 
         self.identity_disc: Optional[IdentityDisc] = None
         self._chat_url: Optional[str] = None
-        self._requires_api_key: bool = False
+        self._requires_api_key: bool = True
         self._api_key_header: str = 'Authorization'
         self._api_key_env_var: Optional[str] = None
 
@@ -60,13 +61,17 @@ class OpenRouterClient:
 
             provider = getattr(registry, 'provider', None)
             if provider:
-                base_url = provider.base_url.rstrip('/') if provider.base_url else ''
+                base_url = (
+                    provider.base_url.rstrip('/') if provider.base_url else ''
+                )
                 chat_path = provider.chat_path or '/v1/chat/completions'
                 if not chat_path.startswith('/'):
                     chat_path = f'/{chat_path}'
                 self._chat_url = f'{base_url}{chat_path}'
-                self._requires_api_key = provider.requires_api_key
-                self._api_key_header = provider.api_key_header or 'Authorization'
+                self._requires_api_key = True
+                self._api_key_header = (
+                    provider.api_key_header or 'Authorization'
+                )
                 self._api_key_env_var = provider.api_key_env_var
         else:
             # Bare model string path; used only in narrow test scenarios.
@@ -83,20 +88,55 @@ class OpenRouterClient:
             # Prefer explicit environment variable but fall back to Django settings.
             self._api_key_env_var = 'OPENROUTER_API_KEY'
 
+    def _get_api_key(self) -> Optional[str]:
+        """Resolve API key from Django settings or env. Used for auth header."""
+        if not self._requires_api_key:
+            return None
+        # Prefer Django settings so Celery workers pick up config.settings
+        key = getattr(settings, 'OPENROUTER_API_KEY', None) or ''
+        key = (
+            key
+            or os.environ.get(self._api_key_env_var or 'OPENROUTER_API_KEY')
+            or ''
+        ).strip()
+        if not key and logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                'OpenRouter API key missing: set OPENROUTER_API_KEY in Django '
+                'settings or OPENROUTER_API_KEY env var (restart Celery after changing settings).'
+            )
+        return key or None
+
     def _build_headers(self) -> Dict[str, str]:
         headers: Dict[str, str] = {
             'Content-Type': 'application/json',
         }
 
-        api_key: Optional[str] = None
-        if self._requires_api_key:
-            api_key = os.getenv(self._api_key_env_var or '') or getattr(
-                settings, 'OPENROUTER_API_KEY', None
-            )
+        api_key = self._get_api_key()
+
+        # Enhanced debug - print everything
+        print(f"DEBUG: _api_key_header = '{self._api_key_header}'")
+        print(
+            f"DEBUG: api_key value = '{api_key[:10]}...'"
+            if api_key
+            else 'DEBUG: api_key = None'
+        )
 
         if api_key:
-            # OpenRouter typically uses Bearer tokens via Authorization header.
-            headers[self._api_key_header] = f'Bearer {api_key}'
+            # Check if key already includes "Bearer "
+            if api_key.startswith('Bearer '):
+                print(
+                    "DEBUG: WARNING - API key already includes 'Bearer ' prefix!"
+                )
+                headers[self._api_key_header] = api_key
+            else:
+                headers[self._api_key_header] = f'Bearer {api_key}'
+            print(
+                f"DEBUG: Added header '{self._api_key_header}' with value starting with '{headers[self._api_key_header][:20]}...'"
+            )
+        else:
+            print('DEBUG: No API key found, no auth header added')
+            if self._requires_api_key:
+                print('DEBUG: ERROR - Auth required but no key available!')
 
         # Optional but recommended metadata headers
         site = getattr(settings, 'OPENROUTER_SITE', None)
@@ -106,6 +146,7 @@ class OpenRouterClient:
         if app_title:
             headers['X-Title'] = app_title
 
+        print(f'DEBUG: Final headers = {list(headers.keys())}')
         return headers
 
     def chat(
@@ -117,32 +158,67 @@ class OpenRouterClient:
         """
         Send a chat completion request to OpenRouter and map it into SynapseResponse.
         """
+        if self._requires_api_key and not self._get_api_key():
+            env_var = self._api_key_env_var or 'OPENROUTER_API_KEY'
+            msg = (
+                f'OpenRouter requires an API key. Set the {env_var} environment '
+                'variable (e.g. in your Celery worker) or OPENROUTER_API_KEY in '
+                'Django settings.'
+            )
+            logger.error(f'OpenRouter Synapse Misfire: {msg}')
+            return SynapseResponse(
+                content=msg,
+                tool_calls=[],
+                tokens_input=0,
+                tokens_output=0,
+                model=self.model,
+            )
 
         options = options or {}
-        payload = OpenRouterChatPayload(
-            model=self.model,
-            messages=messages,
-            tools=tools,
-            stream=False,
-            max_tokens=options.get('max_tokens'),
-            temperature=options.get('temperature'),
-        )
 
-        # Strip None values and dataclass metadata.
+        # Build payload dictionary manually for better control
         payload_dict = {
-            k: v
-            for k, v in payload.__dict__.items()
-            if v is not None
+            'model': self.model,
+            'messages': messages,
+            'stream': False,
         }
 
+        # Only add tools if they exist AND are non-empty
+        if tools:
+            payload_dict['tools'] = tools
+            # Add tool_choice when tools are provided (required by some models)
+            payload_dict['tool_choice'] = 'auto'
+
+        # Add optional parameters only if they have values
+        if options.get('max_tokens') is not None:
+            payload_dict['max_tokens'] = options['max_tokens']
+        if options.get('temperature') is not None:
+            payload_dict['temperature'] = options['temperature']
+
+        # print(f'DEBUG: Sending payload: {json.dumps(payload_dict, indent=2)}')
+        max_retries = 3
         try:
-            response = requests.post(
-                self._chat_url,
-                json=payload_dict,
-                headers=self._build_headers(),
-                timeout=options.get('timeout', 600),
-            )
+            while max_retries:
+                max_retries -= 1
+                response = requests.post(
+                    self._chat_url,
+                    json=payload_dict,
+                    headers=self._build_headers(),
+                    timeout=options.get('timeout', 600),
+                )
+                if response.status_code != 200:
+                    logger.warning(
+                        f'Retry WAIT due to Provider {response.status_code}'
+                    )
+                    time.sleep(4)
+                    logger.warning(
+                        f'Retry now due to Provider {response.status_code}'
+                    )
+                    continue
+                break
+
             response.raise_for_status()
+            logger.info(f'Successful response from Provider.')
             data = response.json()
 
             choices = data.get('choices', []) or []
@@ -161,7 +237,10 @@ class OpenRouterClient:
 
         except Exception as e:
             error_details = str(e)
-            if hasattr(e, 'response') and getattr(e, 'response', None) is not None:
+            if (
+                hasattr(e, 'response')
+                and getattr(e, 'response', None) is not None
+            ):
                 try:
                     error_details += f' | Details: {e.response.text}'
                 except Exception:
@@ -176,4 +255,3 @@ class OpenRouterClient:
                 tokens_output=0,
                 model=self.model,
             )
-
