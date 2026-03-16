@@ -245,3 +245,10 @@ class OpenRouterClient:
                 tokens_output=0,
                 model=self.model,
             )
+
+    def unload(self) -> bool:
+        """Unload the OpenRouter Synapse instance.
+
+        This is for compatibility.
+        """
+        return self == self
