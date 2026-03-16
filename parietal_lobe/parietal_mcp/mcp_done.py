@@ -21,12 +21,6 @@ def _conclude_sync(
     try:
         session = ReasoningSession.objects.get(id=session_id)
 
-        # Update the Session Goal status based on AI report
-        if session.goals.exists():
-            main_goal = session.goals.first()
-            main_goal.achieved = goal_achieved
-            main_goal.save()
-
         # Create Conclusion
         SessionConclusion.objects.update_or_create(
             session=session,
