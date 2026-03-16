@@ -184,10 +184,11 @@ class FrontalLobe:
 
             # 2. FIX ASSISTANT FORMATTING
             if msg.role_id == ChatMessageRole.ASSISTANT:
-                # Look at the TURN's tool calls, not the message's tool call ID
                 tool_calls_payload = []
                 for tc in msg.turn.tool_calls.all():
                     raw_args = tc.arguments or '{}'
+
+                    # 1. Parse into a dictionary
                     if isinstance(raw_args, str):
                         try:
                             parsed_args = json.loads(raw_args)
@@ -198,15 +199,27 @@ class FrontalLobe:
                     else:
                         parsed_args = {}
 
+                    # 2. Prune the heavy context for older turns
+                    if (
+                        tc.tool.name == 'mcp_internal_monologue'
+                        and msg.turn.turn_number < current_turn_num
+                    ):
+                        if 'thought' in parsed_args:
+                            parsed_args['thought'] = '[PRUNED TO SAVE TOKENS]'
+                        if 'message_to_user' in parsed_args:
+                            parsed_args['message_to_user'] = (
+                                '[PRUNED - DELIVERED TO USER]'
+                            )
+
+                    # 3. Append to payload (CRITICAL FIX: Use json.dumps here!)
                     tool_calls_payload.append(
                         {
                             'id': f'call_{tc.id}',
                             'type': 'function',
                             'function': {
                                 'name': tc.tool.name,
-                                'arguments': tc.arguments
-                                if isinstance(tc.arguments, dict)
-                                else json.loads(tc.arguments or '{}'),
+                                'arguments': json.dumps(parsed_args),
+                                # <--- MUST BE A STRING
                             },
                         }
                     )
@@ -439,7 +452,7 @@ class FrontalLobe:
 
             # 4. Build Synapse Payload
             ollama_tools = await self.parietal_lobe.build_tool_schemas()
-            await self._log_live(f'Loaded {len(ollama_tools)} tools.')
+            await self._log_live(f'[[[[[Loaded {len(ollama_tools)} tools.]]]]]')
 
             # 5. The Loop
             previous_turn = None
