@@ -37,7 +37,7 @@ from peripheral_nervous_system.peripheral_nervous_system import (
 )
 from synaptic_cleft.axon_hillok import fire_neurotransmitter
 from synaptic_cleft.constants import LogChannel
-from synaptic_cleft.neuraltransmitters import (
+from synaptic_cleft.neurotransmitters import (
     Acetylcholine,
     Cortisol,
     Dopamine,
