@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'identity.apps.IdentityConfig',
     'django_celery_beat',
     'corsheaders',
+    'synaptic_cleft.apps.SynapticCleftConfig',
 ]
 
 MIDDLEWARE = [
