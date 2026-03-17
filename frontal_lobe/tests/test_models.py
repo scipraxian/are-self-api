@@ -1,6 +1,6 @@
 import pytest
 from common.tests.common_test_case import CommonFixturesAPITestCase
-from frontal_lobe.models import ReasoningSession, ReasoningTurn, ReasoningGoal, ReasoningStatus, ReasoningStatusID
+from frontal_lobe.models import ReasoningSession, ReasoningTurn, ReasoningStatus, ReasoningStatusID
 
 
 class FrontalLobeTest(CommonFixturesAPITestCase):
@@ -32,9 +32,3 @@ class FrontalLobeTest(CommonFixturesAPITestCase):
         self.assertTrue(was_efficient)
         self.assertTrue("SUCCESS" in status)
         self.assertEqual(self.session.total_xp, 255)  # increased by 5
-
-    def test_reasoning_goal_creation(self):
-        goal = ReasoningGoal.objects.create(session=self.session,
-                                            achieved=False,
-                                            rendered_goal="Compute tests")
-        self.assertEqual(str(goal), 'Goal: Compute tests...')

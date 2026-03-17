@@ -66,8 +66,9 @@ class PrefrontalCortexDispatchTest(CommonFixturesAPITestCase):
         self.identity = Identity.objects.create(
             name='Test PM', identity_type=pm_type
         )
+        # IdentityDisc now owns the identity fields directly; no FK to Identity.
         self.disc = IdentityDisc.objects.create(
-            name='Test PM Disc', identity=self.identity
+            name='Test PM Disc', identity_type=pm_type
         )
 
         self.participant = IterationShiftParticipant.objects.create(

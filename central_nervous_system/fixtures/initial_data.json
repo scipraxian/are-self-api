@@ -287,22 +287,22 @@
     "distribution_mode": 1,
     "tags": [],
     "switches": [
-      3,
-      5,
-      9,
-      10,
-      11,
-      13,
-      15,
-      19,
-      20,
       32,
       33,
       34,
+      3,
       35,
+      5,
       37,
       38,
-      44
+      9,
+      10,
+      11,
+      44,
+      13,
+      15,
+      19,
+      20
     ]
   }
 },
@@ -2326,7 +2326,7 @@
     "is_root": true,
     "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
     "effector": 1,
-    "ui_json": "{\"x\": 32, \"y\": 106}",
+    "ui_json": "{\"x\":-156.00674795840493,\"y\":-62.8468245995866}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2521,7 +2521,7 @@
     "is_root": true,
     "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
     "effector": 1,
-    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "ui_json": "{\"x\":-176,\"y\":122}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2534,7 +2534,7 @@
     "is_root": false,
     "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
     "effector": 1,
-    "ui_json": "{\"x\": 501, \"y\": 137}",
+    "ui_json": "{\"x\":501,\"y\":137}",
     "invoked_pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
     "distribution_mode": null
   }
@@ -2560,7 +2560,7 @@
     "is_root": false,
     "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
     "effector": 151,
-    "ui_json": "{\"x\": 318, \"y\": 66}",
+    "ui_json": "{\"x\":698.8034767565144,\"y\":-166.31407072567237}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2586,7 +2586,7 @@
     "is_root": false,
     "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
     "effector": 150,
-    "ui_json": "{\"x\": 1073, \"y\": 110}",
+    "ui_json": "{\"x\":1714.8574325204145,\"y\":34.55780177465279}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2612,7 +2612,7 @@
     "is_root": false,
     "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
     "effector": 160,
-    "ui_json": "{\"x\": 59, \"y\": 317}",
+    "ui_json": "{\"x\":0.32273471361884276,\"y\":288.2601149617725}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2638,7 +2638,7 @@
     "is_root": false,
     "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
     "effector": 158,
-    "ui_json": "{\"x\": 859, \"y\": 343}",
+    "ui_json": "{\"x\":1057.7842048477403,\"y\":249.5953736257606}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2807,7 +2807,7 @@
     "is_root": false,
     "pathway": "94a67ded-0d4b-4060-b79a-6f895b2373a3",
     "effector": 168,
-    "ui_json": "{\"x\": 415, \"y\": 96}",
+    "ui_json": "{\"x\":483.24194909366236,\"y\":96.58326452216804}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2924,7 +2924,7 @@
     "is_root": false,
     "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
     "effector": 145,
-    "ui_json": "{\"x\": 334, \"y\": 92}",
+    "ui_json": "{\"x\":335.19749520992616,\"y\":80.02504790073853}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2950,7 +2950,7 @@
     "is_root": false,
     "pathway": "c3dd041a-20eb-4414-b571-2a5fdbeb9b86",
     "effector": 172,
-    "ui_json": "{\"x\": 380, \"y\": 80}",
+    "ui_json": "{\"x\":380,\"y\":80}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2964,6 +2964,19 @@
     "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
     "effector": 166,
     "ui_json": "{\"x\":160.02699307159975,\"y\":313.98576488813706}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 136,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "effector": 110,
+    "ui_json": "{\"x\":1101.1529521195198,\"y\":-533.4724452343838}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2992,7 +3005,7 @@
   "fields": {
     "neuron": 127,
     "key": "prompt",
-    "value": "use the unreal parsing tool mcp_run_unreal_diagnostic_parser\non the provenance spike\n{{spike.provenance.id}}\n\nwhich is the output of our Unreal 5.6.1 application.\n\nyou should also inspect the record\n\nmcp_inspect_record cns Spike {{spike.provenance.id}}\n\nEach turn enhance the Engrams of known issues, as well as create Engrams for new issues.\nOnce you think you have tagged all issues, use mcp_conclude_session to file a report and end."
+    "value": "use the unreal parsing tool mcp_run_unreal_diagnostic_parser\non the provenance spike\n{{spike.provenance.id}}\n\nwhich is the output of our Unreal 5.6.1 application.\n\nyou should also inspect the record\n\nmcp_inspect_record cns Spike {{spike.provenance.id}}\n\nEach turn enhance the Engrams of known issues, as well as create Engrams for new issues.\nOnce you think you have tagged all issues, use mcp_done to file a report and end."
   }
 },
 {
@@ -3778,6 +3791,17 @@
     "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
     "source": 84,
     "target": 123
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 167,
+  "fields": {
+    "modified": "2026-03-14T00:07:23.174Z",
+    "type": 1,
+    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "source": 84,
+    "target": 136
   }
 }
 ]

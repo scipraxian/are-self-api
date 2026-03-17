@@ -145,12 +145,10 @@ class PFCEpicDetailSerializer(serializers.ModelSerializer):
 
 
 class PFCStoryDetailSerializer(serializers.ModelSerializer):
-    epic = PFCEpicSerializer(read_only=True)
     status = PFCItemStatusSerializer(read_only=True)
     tags = PFCTagSerializer(many=True, read_only=True)
     source_engrams = TalosEngramSerializer(many=True, read_only=True)
     owning_disc = IdentityDiscSerializer(read_only=True)
-    previous_owners = IdentityDiscSerializer(many=True, read_only=True)
     comments = serializers.SerializerMethodField()
 
     class Meta:
@@ -177,9 +175,6 @@ class PFCTaskDetailSerializer(serializers.ModelSerializer):
 class PFCCommentDetailSerializer(serializers.ModelSerializer):
     user = UserLightweightSerializer(read_only=True)
     tags = PFCTagSerializer(many=True, read_only=True)
-    epic = PFCEpicSerializer(read_only=True)
-    story = PFCStorySerializer(read_only=True)
-    task = PFCTaskSerializer(read_only=True)
 
     class Meta:
         model = PFCComment

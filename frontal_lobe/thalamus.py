@@ -12,39 +12,32 @@ from hippocampus.hippocampus import TalosHippocampus
 from prefrontal_cortex.models import PFCTask
 
 
+# TODO: push this upstream.
 async def relay_sensory_state(turn_record: ReasoningTurn) -> str:
     """
     The Thalamus.
-    Compiles the current state of the world, active Agile tasks, and memories,
-    relaying them as a single sensory payload to the Frontal Lobe.
+    Compiles the current state of the world, active Agile tasks, and memories
+    for the *current* turn, and returns the final sensory trigger message.
     """
     session = turn_record.session
     current_turn = turn_record.turn_number
 
-    # 2. Hippocampus Catalog
+    # Hippocampus Catalog for this turn
     if current_turn == 1:
         catalog_block = await TalosHippocampus.get_turn_1_catalog(session.spike)
     else:
         catalog_block = await TalosHippocampus.get_recent_catalog(session)
 
-    # 3. Historical Log (River of 6)
-    history_str = await _build_river_of_six(session, current_turn)
-
-    # 4. Telemetry Header & Warnings
-    header_str = await _build_telemetry_header(
-        session, turn_record, len(history_str)
-    )
-
     return (
-        f'SESSION ID: {session.id}\n\n'
-        f'{header_str}\n'
-        f'{catalog_block}'
-        f'[L1/L2 Cache]\n{history_str}\n'
-        f'[YOUR MOVE]\n'
-        f"Write your reasoning starting with 'THOUGHT: '. Stop writing text immediately after your thought and invoke your tools natively. DO NOT generate fake system diagnostics."
+        f'{catalog_block}\n\n'
+        'YOUR MOVE:\n'
+        '1. You MUST call mcp_internal_monologue ALONGSIDE any other tools you call in parallel. Never fire a tool without also firing your monologue.\n'
+        '2. You should call your tools (like `mcp_ticket`) in parallel during the exact same turn.\n'
+        '3. Use structured JSON for all tool calls natively.\n'
     )
 
 
+# LEGACY
 async def _build_river_of_six(
     session: ReasoningSession, current_turn: int
 ) -> str:
@@ -91,6 +84,7 @@ async def _build_river_of_six(
     return history_str
 
 
+# TODO: This is good. we should add this back in in some way.
 async def _build_telemetry_header(
     session: ReasoningSession, turn_record: ReasoningTurn, l1_cache_size: int
 ) -> str:

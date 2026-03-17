@@ -8,6 +8,7 @@ import uuid
 from typing import List, Optional
 
 from asgiref.sync import sync_to_async
+from channels.layers import get_channel_layer
 
 from central_nervous_system.effectors.effector_casters.begin_play_node import (
     begin_play,
@@ -33,6 +34,14 @@ from peripheral_nervous_system.nerve_terminal import (
 )
 from peripheral_nervous_system.peripheral_nervous_system import (
     scan_and_register,
+)
+from synaptic_cleft.axon_hillok import fire_neurotransmitter
+from synaptic_cleft.constants import LogChannel
+from synaptic_cleft.neurotransmitters import (
+    Acetylcholine,
+    Cortisol,
+    Dopamine,
+    Glutamate,
 )
 from temporal_lobe.temporal_lobe import run_temporal_lobe
 
@@ -86,6 +95,8 @@ class AsyncLogManager:
         self._last_flush_time = time.time()
         self._flush_size = flush_size
         self._flush_interval = flush_interval
+        # Lazy-resolved channel layer for websocket mirroring
+        self._channel_layer = get_channel_layer()
 
     async def append(self, text: str):
         if text:
@@ -113,6 +124,10 @@ class AsyncLogManager:
         async with self._lock:
             await self._flush_unsafe()
             self.spike.execution_log += text
+            await self._mirror_to_socket(
+                execution_chunk=text,
+                application_chunk='',
+            )
             await self._save_to_db()
 
     async def flush(self):
@@ -130,16 +145,51 @@ class AsyncLogManager:
         if not self.exec_buffer and not self.spell_buffer:
             return
 
+        # Capture current buffered chunks before mutating spike fields
+        exec_chunk = ''.join(self.exec_buffer) if self.exec_buffer else ''
+        spell_chunk = ''.join(self.spell_buffer) if self.spell_buffer else ''
+
         if self.exec_buffer:
-            self.spike.execution_log += ''.join(self.exec_buffer)
+            self.spike.execution_log += exec_chunk
             self.exec_buffer.clear()
 
         if self.spell_buffer:
-            self.spike.application_log += ''.join(self.spell_buffer)
+            self.spike.application_log += spell_chunk
             self.spell_buffer.clear()
+
+        await self._mirror_to_socket(
+            execution_chunk=exec_chunk,
+            application_chunk=spell_chunk,
+        )
 
         await self._save_to_db()
         self._last_flush_time = time.time()
+
+    async def _mirror_to_socket(
+        self,
+        execution_chunk: str,
+        application_chunk: str,
+    ) -> None:
+        """
+        Releases Glutamate neurotransmitters for newly flushed log chunks.
+        """
+        if execution_chunk:
+            await fire_neurotransmitter(
+                Glutamate(
+                    spike_id=self.spike.id,
+                    channel=LogChannel.EXECUTION,
+                    message=execution_chunk,
+                )
+            )
+
+        if application_chunk:
+            await fire_neurotransmitter(
+                Glutamate(
+                    spike_id=self.spike.id,
+                    channel=LogChannel.APPLICATION,
+                    message=application_chunk,
+                )
+            )
 
     async def _save_to_db(self):
         """
@@ -161,7 +211,7 @@ class AsyncLogManager:
 
 
 class GenericEffectorCaster:
-    """The Orchestrator for Talos Spells."""
+    """The Orchestrator for Are-Self Executables."""
 
     LOG_START_MESSAGE = 'Starting effector execution.\n'
     STATUS_STREAMING_LOGS = 100
@@ -351,6 +401,7 @@ class GenericEffectorCaster:
                         matches = list(
                             BLACKBOARD_SET_KEY_REGEX.finditer(text_to_log)
                         )
+                        channel_layer = get_channel_layer()
                         for match in matches:
                             key = match.group(1).strip()
                             val = match.group(2).strip()
@@ -359,6 +410,14 @@ class GenericEffectorCaster:
                             self.spike.blackboard[key] = val
                             self._log_info(
                                 f'Blackboard updated with {key}={val}.'
+                            )
+                            # Release Acetylcholine for memory updates!
+                            await fire_neurotransmitter(
+                                Acetylcholine(
+                                    spike_id=self.spike.id,
+                                    key=key,
+                                    value=val,
+                                )
                             )
                         text_to_log = BLACKBOARD_SET_STRIPPER.sub(
                             '', text_to_log
@@ -435,8 +494,9 @@ class GenericEffectorCaster:
             self.status = SpikeStatus.FAILED
             return
 
-        self.spike.application_log = output_log
-        await self._save_head(fields=[self.APPLICATION_LOG_FIELD])
+        if output_log:
+            await self.logger.append_spell(output_log)
+            await self.logger.flush()
 
         new_status = (
             SpikeStatus.SUCCESS if return_code == 200 else SpikeStatus.FAILED
@@ -471,6 +531,14 @@ class GenericEffectorCaster:
     async def _update_status(self, status_id: int):
         self.spike.status_id = status_id
         await self._save_head(fields=[self.STATUS_FIELD])
+
+        # Decide which neurotransmitter to release based on the status
+        if status_id in self.STATUSES_WHICH_HALT:
+            transmitter = Cortisol(spike_id=self.spike.id, status_id=status_id)
+        else:
+            transmitter = Dopamine(spike_id=self.spike.id, status_id=status_id)
+
+        await fire_neurotransmitter(transmitter)
 
     async def _preflight(self):
         self.spike.execution_log = self.LOG_START_MESSAGE

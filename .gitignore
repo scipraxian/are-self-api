@@ -16,6 +16,7 @@ staticfiles/
 # --- Celery & Async ---
 celerybeat-schedule
 celerybeat.pid
+celery_beat.pid
 dump.rdb
 
 
@@ -36,7 +37,8 @@ Logs/
 Thumbs.db
 _talos_concatenated_source.txt
 /live_reports/
-.cursor/rules/julia-lang-styling.mdc
-.cursorrules
-.gitignore
-config/settings.py
+.aider*
+.aider.chat.history.md
+.aider.conf.yml
+.aider.input.history
+.aider.tags.cache.v4/cache.db

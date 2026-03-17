@@ -1,0 +1,218 @@
+warning: in the working copy of 'frontal_lobe/api.py', LF will be replaced by CRLF the next time Git touches it
+diff --git a/config/urls.py b/config/urls.py
+index c31c37f..014c0e9 100644
+--- a/config/urls.py
++++ b/config/urls.py
+@@ -8,7 +8,9 @@ from central_nervous_system.urls.api_urls import CNS_ROUTER
+ from central_nervous_system.urls.v2_urls import V2_CNS_ROUTER
+ from dashboard.api_urls import DASHBOARD_ROUTER
+ from environments.api_urls import ENVIRONMENTS_ROUTER
+-from frontal_lobe.api_urls import REASONING_ROUTER
++from frontal_lobe.api_urls import V2_REASONING_ROUTER
++from hippocampus.api_urls import V2_HIPPOCAMPUS_ROUTER
++from identity.api_urls import V2_IDENTITY_ROUTER
+ from identity.urls import V2_IDENTITY_ROUTER
+ from prefrontal_cortex.urls import V2_PREFRONTAL_CORTEX_ROUTER
+ from temporal_lobe.urls import V2_TEMPORAL_LOBE_ROUTER
+@@ -17,7 +19,7 @@ v1_router = routers.DefaultRouter()
+ v1_router.registry.extend(ENVIRONMENTS_ROUTER.registry)
+ v1_router.registry.extend(CNS_ROUTER.registry)
+ v1_router.registry.extend(DASHBOARD_ROUTER.registry)
+-v1_router.registry.extend(REASONING_ROUTER.registry)
++v1_router.registry.extend(V2_REASONING_ROUTER.registry)
+
+
+ V2_ROUTER = routers.DefaultRouter()
+@@ -26,6 +28,8 @@ V2_ROUTER.registry.extend(DASHBOARD_ROUTER.registry)
+ V2_ROUTER.registry.extend(V2_TEMPORAL_LOBE_ROUTER.registry)
+ V2_ROUTER.registry.extend(V2_IDENTITY_ROUTER.registry)
+ V2_ROUTER.registry.extend(V2_PREFRONTAL_CORTEX_ROUTER.registry)
++V2_ROUTER.registry.extend(V2_HIPPOCAMPUS_ROUTER.registry)
++V2_ROUTER.registry.extend(V2_REASONING_ROUTER.registry)
+
+ urlpatterns = [
+     path('', include('dashboard.urls')),
+diff --git a/frontal_lobe/api.py b/frontal_lobe/api.py
+index 523b469..029450c 100644
+--- a/frontal_lobe/api.py
++++ b/frontal_lobe/api.py
+@@ -9,6 +9,7 @@ from central_nervous_system.tasks import cast_cns_spell
+
+ from . import serializers
+ from .models import (
++    ModelRegistry,
+     ReasoningSession,
+     ReasoningTurn,
+ )
+@@ -99,3 +100,9 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
+                 'status': 'Halt signal sent. The Cortex will spin down after the current turn.'
+             }
+         )
++
++
++class ModelRegistryViewSet(viewsets.ModelViewSet):
++    queryset = ModelRegistry.objects.all()
++    serializer_class = serializers.ModelRegistrySerializer
++
+diff --git a/frontal_lobe/api_urls.py b/frontal_lobe/api_urls.py
+index 5649612..20606d4 100644
+--- a/frontal_lobe/api_urls.py
++++ b/frontal_lobe/api_urls.py
+@@ -2,9 +2,12 @@
+
+ from rest_framework import routers
+
+-from .api import ReasoningSessionViewSet
++from .api import ModelRegistryViewSet, ReasoningSessionViewSet
+
+-REASONING_ROUTER = routers.SimpleRouter()
+-REASONING_ROUTER.register(
++V2_REASONING_ROUTER = routers.SimpleRouter()
++V2_REASONING_ROUTER.register(
+     r'reasoning_sessions', ReasoningSessionViewSet, basename='reasoningsession'
+ )
++V2_REASONING_ROUTER.register(
++    r'model_registry', ModelRegistryViewSet, basename='modelregistry'
++)
+diff --git a/frontal_lobe/serializers.py b/frontal_lobe/serializers.py
+index 4ddc6aa..b900bb5 100644
+--- a/frontal_lobe/serializers.py
++++ b/frontal_lobe/serializers.py
+@@ -4,6 +4,7 @@ from common.constants import ALL_FIELDS
+ from frontal_lobe.models import (
+     ChatMessage,
+     ChatMessageRole,
++    ModelRegistry,
+     ReasoningSession,
+     ReasoningTurn,
+     SessionConclusion,
+@@ -12,6 +13,12 @@ from hippocampus.models import TalosEngram
+ from parietal_lobe.models import ToolCall, ToolDefinition
+
+
++class ModelRegistrySerializer(serializers.ModelSerializer):
++    class Meta:
++        model = ModelRegistry
++        fields = ALL_FIELDS
++
++
+ class ToolDefinitionSerializer(serializers.ModelSerializer):
+     class Meta:
+         model = ToolDefinition
+diff --git a/hippocampus/api.py b/hippocampus/api.py
+index e69de29..cef90ca 100644
+--- a/hippocampus/api.py
++++ b/hippocampus/api.py
+@@ -0,0 +1,11 @@
++from rest_framework.viewsets import ModelViewSet
++
++from hippocampus.models import TalosEngram, TalosEngramTag
++
++
++class TalosEngramTagViewSet(ModelViewSet):
++    queryset = TalosEngramTag.objects.all()
++
++
++class TalosEngramViewSet(ModelViewSet):
++    queryset = TalosEngram.objects.all()
+diff --git a/hippocampus/api_urls.py b/hippocampus/api_urls.py
+index e69de29..1682a7b 100644
+--- a/hippocampus/api_urls.py
++++ b/hippocampus/api_urls.py
+@@ -0,0 +1,14 @@
++from rest_framework import routers
++
++from .api import (
++    TalosEngramTagViewSet,
++    TalosEngramViewSet,
++)
++
++V2_HIPPOCAMPUS_ROUTER = routers.SimpleRouter()
++V2_HIPPOCAMPUS_ROUTER.register(
++    r'engram_tags', TalosEngramTagViewSet, basename='engram_tags'
++)
++V2_HIPPOCAMPUS_ROUTER.register(
++    r'engrams', TalosEngramViewSet, basename='engrams'
++)
+diff --git a/identity/api_urls.py b/identity/api_urls.py
+index 92cef78..f5b898a 100644
+--- a/identity/api_urls.py
++++ b/identity/api_urls.py
+@@ -1,13 +1,11 @@
+-# frontal_lobe/api_urls.py
+-
+ from rest_framework import routers
+
+-from .api import ModelRegistryViewSet, ReasoningSessionViewSet
++from .api import IdentityDiscViewSet, IdentityViewSet
+
+-REASONING_ROUTER = routers.SimpleRouter()
+-REASONING_ROUTER.register(
+-    r'reasoning_sessions', ReasoningSessionViewSet, basename='reasoningsession'
++V2_IDENTITY_ROUTER = routers.SimpleRouter()
++V2_IDENTITY_ROUTER.register(
++    r'identities', IdentityViewSet, basename='identities'
+ )
+-REASONING_ROUTER.register(
+-    r'model_registry', ModelRegistryViewSet, basename='modelregistry'
++V2_IDENTITY_ROUTER.register(
++    r'identity_discs', IdentityDiscViewSet, basename='identitydiscs'
+ )
+diff --git a/identity/serializers.py b/identity/serializers.py
+index cc5b3b6..dd069cf 100644
+--- a/identity/serializers.py
++++ b/identity/serializers.py
+@@ -2,6 +2,11 @@ from rest_framework import serializers
+
+ from common.constants import ALL_FIELDS
+ from frontal_lobe.models import ReasoningSession, ReasoningStatus, ReasoningTurn
++from frontal_lobe.serializers import (
++    ModelRegistrySerializer,
++    TalosEngramSerializer,
++)
++from hippocampus.models import TalosEngram
+ from parietal_lobe.models import ToolDefinition
+
+ from .models import (
+@@ -44,6 +49,7 @@ class IdentitySerializer(serializers.ModelSerializer):
+     identity_type = IdentityTypeSerializer(read_only=True)
+
+     rendered = serializers.SerializerMethodField()
++    ai_model = ModelRegistrySerializer()
+
+     class Meta:
+         model = Identity
+@@ -93,14 +99,18 @@ class IdentityDiscReasoningSerializer(serializers.ModelSerializer):
+
+
+ class IdentityDiscSerializer(serializers.ModelSerializer):
+-    identity = IdentitySerializer(read_only=True)
++    ai_model = ModelRegistrySerializer()
++    enabled_tools = ToolDefinitionSerializer(many=True, read_only=True)
++    tags = IdentityTagSerializer(many=True, read_only=True)
++    addons = IdentityAddonSerializer(many=True, read_only=True)
++    identity_type = IdentityTypeSerializer(read_only=True)
+     rendered = serializers.SerializerMethodField()
+-
+     reasoning_session = IdentityDiscReasoningSerializer(
+         read_only=True, many=True
+     )
+     session_count = serializers.SerializerMethodField()
+     turn_count = serializers.SerializerMethodField()
++    memories = TalosEngramSerializer(many=True, read_only=True)
+
+     class Meta:
+         model = IdentityDisc
+diff --git a/talos.bat b/talos.bat
+index 0a5236e..48d0ad0 100644
+--- a/talos.bat
++++ b/talos.bat
+@@ -30,7 +30,7 @@ echo Starting Celery Worker...
+ start "Are-Self Worker" cmd /c ".\venv\Scripts\celery -A config worker --loglevel=info --concurrency=4 -P threads"
+ :: 1.5 Start Celery Beats Worker
+ echo Starting Celery Beats Worker...
+-start "Are-Self Heartbeat" cmd /c ".\venv\Scripts\celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
++:: start "Are-Self Heartbeat" cmd /c ".\venv\Scripts\celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+
+ :: 2. Start Django Server in its own window
+ echo Starting Django Server...

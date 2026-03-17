@@ -10,3 +10,5 @@ class AddonPackage:
     identity_disc: Optional[UUID]
     turn_number: int
     reasoning_turn_id: Optional[int]
+    environment_id: Optional[UUID]
+    shift_id: Optional[int]
