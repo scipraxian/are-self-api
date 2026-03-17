@@ -9,7 +9,7 @@ from central_nervous_system.tasks import cast_cns_spell
 
 from . import serializers
 from .models import (
-    ReasoningGoal,
+    ModelRegistry,
     ReasoningSession,
     ReasoningTurn,
 )
@@ -27,8 +27,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter,
         filters.SearchFilter,
     ]
-    # Fixed to point to the new related model
-    search_fields = ['goals__rendered_goal']
+    search_fields = ['id', 'conclusion__summary']
     filterset_fields = ['status']
 
     @action(detail=True, methods=['get'], url_path='graph_data')
@@ -42,17 +41,12 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
             .select_related('status', 'conclusion', 'conclusion__status')
             .prefetch_related(
                 Prefetch(
-                    'goals',
-                    queryset=ReasoningGoal.objects.select_related('status'),
-                ),
-                Prefetch(
                     'turns',
                     queryset=ReasoningTurn.objects.select_related(
                         'status'
                     ).order_by('turn_number'),
                 ),
                 'turns__tool_calls__tool',
-                'turns__turn_goals',
                 'engrams__source_turns',
             )
             .get(pk=pk)
@@ -106,3 +100,9 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
                 'status': 'Halt signal sent. The Cortex will spin down after the current turn.'
             }
         )
+
+
+class ModelRegistryViewSet(viewsets.ModelViewSet):
+    queryset = ModelRegistry.objects.all()
+    serializer_class = serializers.ModelRegistrySerializer
+

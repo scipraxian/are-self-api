@@ -30,7 +30,7 @@ class IdentityType(NameMixin):
     WORKER = 2
 
 
-class Identity(UUIDIdMixin, NameMixin, CreatedAndModifiedWithDelta):
+class IdentityFields(models.Model):
     """These are the details used to represent a persona."""
 
     identity_type = models.ForeignKey(
@@ -39,15 +39,35 @@ class Identity(UUIDIdMixin, NameMixin, CreatedAndModifiedWithDelta):
     tags = models.ManyToManyField(IdentityTag, blank=True)
     addons = models.ManyToManyField(IdentityAddon, blank=True)
     system_prompt_template = models.TextField(
-        help_text='The core instructions given to the Frontal Lobe.'
+        help_text='The core instructions given to the Frontal Lobe.',
+        blank=True,
+        null=True,
     )
     enabled_tools = models.ManyToManyField(ToolDefinition, blank=True)
+    ai_model = models.ForeignKey(
+        'frontal_lobe.ModelRegistry',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        abstract = True
 
 
-class IdentityDisc(UUIDIdMixin, NameMixin, CreatedAndModifiedWithDelta):
+class Identity(
+    UUIDIdMixin, NameMixin, CreatedAndModifiedWithDelta, IdentityFields
+):
+    """These are the details used to represent a persona."""
+
+    pass
+
+
+class IdentityDisc(
+    UUIDIdMixin, NameMixin, CreatedAndModifiedWithDelta, IdentityFields
+):
     """This is a persistent implementation of an identity."""
 
-    identity = models.ForeignKey(Identity, on_delete=models.PROTECT)
     available = models.BooleanField(default=True)
     last_message_to_self = models.TextField(blank=True, default='')
     level = models.IntegerField(default=1)

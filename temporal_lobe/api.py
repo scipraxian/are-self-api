@@ -5,11 +5,13 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from central_nervous_system.central_nervous_system import CNS
-from identity.models import IdentityDisc
+from identity.models import Identity, IdentityDisc
 from temporal_lobe.models import (
     Iteration,
     IterationDefinition,
     IterationShift,
+    IterationShiftDefinition,
+    IterationShiftDefinitionParticipant,
     IterationShiftParticipant,
     IterationShiftParticipantStatus,
     IterationStatus,
@@ -17,6 +19,7 @@ from temporal_lobe.models import (
 from temporal_lobe.serializers import (
     IterationDefinitionSerializer,
     IterationSerializer,
+    IterationShiftDefinitionSerializer,
     IterationShiftDetailSerializer,
 )
 from temporal_lobe.temporal_lobe import (
@@ -25,6 +28,7 @@ from temporal_lobe.temporal_lobe import (
 )
 
 
+# DEPRECIATED
 class TemporalViewSet(viewsets.ViewSet):
     """
     Command Center API for the Temporal Lobe.
@@ -240,21 +244,18 @@ class IterationViewSet(viewsets.ModelViewSet):
         )
 
         if base_id:
+            from identity.forge import forge_identity_disc
             from identity.models import Identity
-            from temporal_lobe.inception import IterationInceptionManager
 
             base_identity = get_object_or_404(Identity, id=base_id)
-            # Using your updated public method
-            disc = IterationInceptionManager.gestate_disc(base_identity)
+            identity_disc = forge_identity_disc(base_identity)
         elif disc_id:
-            disc = get_object_or_404(IdentityDisc, id=disc_id)
-            if not disc.available:
+            identity_disc = get_object_or_404(IdentityDisc, id=disc_id)
+            if not identity_disc.available:
                 return Response(
                     {'error': 'Disc is offline.'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            disc.available = False
-            disc.save(update_fields=['available'])
         else:
             return Response(
                 {'error': 'disc_id or base_id required'},
@@ -269,7 +270,7 @@ class IterationViewSet(viewsets.ModelViewSet):
 
         IterationShiftParticipant.objects.get_or_create(
             iteration_shift=shift,
-            iteration_participant=disc,
+            iteration_participant=identity_disc,
             defaults={'status': status_selected},
         )
 
@@ -295,14 +296,11 @@ class IterationViewSet(viewsets.ModelViewSet):
         shift = get_object_or_404(
             IterationShift, id=shift_id, shift_iteration=iteration
         )
-        disc = get_object_or_404(IdentityDisc, id=disc_id)
+        identity_disc = get_object_or_404(IdentityDisc, id=disc_id)
 
         IterationShiftParticipant.objects.filter(
-            iteration_shift=shift, iteration_participant=disc
+            iteration_shift=shift, iteration_participant=identity_disc
         ).delete()
-
-        disc.available = True
-        disc.save(update_fields=['available'])
 
         # CRITICAL FIX: Re-fetch the Iteration to bust the stale prefetch cache!
         fresh_iteration = self.get_queryset().get(pk=iteration.pk)
@@ -323,10 +321,19 @@ class IterationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Hit the Ignition Switch!
-        from temporal_lobe.temporal_lobe import TemporalLobe
+        # 1. Flip the status
+        from temporal_lobe.models import IterationStatus
 
-        TemporalLobe.initiate_iteration(iteration)
+        status_running, _ = IterationStatus.objects.get_or_create(
+            id=2, defaults={'name': 'Running'}
+        )
+        iteration.status = status_running
+        iteration.save(update_fields=['status'])
+
+        # 2. Kick the Metronome manually
+        from temporal_lobe.temporal_lobe import trigger_temporal_metronomes
+
+        trigger_temporal_metronomes()
 
         # Re-fetch cache and return updated board
         fresh_iteration = self.get_queryset().get(pk=iteration.pk)
@@ -335,9 +342,161 @@ class IterationViewSet(viewsets.ModelViewSet):
         )
 
 
-class IterationDefinitionViewSet(viewsets.ReadOnlyModelViewSet):
-    """Provides the UI with the available blueprints for Inception."""
+class IterationDefinitionViewSet(viewsets.ModelViewSet):
+    """Provides the UI with the available blueprints for Inception. Supports editing
+    definition participants (slot_disc / remove_disc) and incepting a new iteration.
+    """
 
     permission_classes = [AllowAny]
-    queryset = IterationDefinition.objects.all()
+    queryset = IterationDefinition.objects.prefetch_related(
+        'iterationshiftdefinition_set__shift',
+        'iterationshiftdefinition_set__iterationshiftdefinitionparticipant_set__identity_disc',
+    ).all()
     serializer_class = IterationDefinitionSerializer
+
+    @action(detail=True, methods=['post'], url_path='incept')
+    def incept(self, request, pk=None):
+        """
+        Triggers the IterationInceptionManager to build a new cycle from this blueprint.
+        Payload: {"environment_id": "optional-uuid", "custom_name": "optional"}.
+        """
+        definition = self.get_object()
+        environment_id = request.data.get('environment_id')
+        custom_name = request.data.get('custom_name')
+
+        from temporal_lobe.inception import IterationInceptionManager
+
+        try:
+            iteration = IterationInceptionManager.incept_iteration(
+                definition_id=definition.id,
+                environment_id=environment_id,
+                custom_name=custom_name,
+            )
+            # Re-fetch with same prefetch as IterationViewSet for full payload
+            fresh = Iteration.objects.prefetch_related(
+                'iterationshift_set__shift',
+                'iterationshift_set__definition',
+                'iterationshift_set__iterationshiftparticipant_set__iteration_participant',
+            ).get(pk=iteration.pk)
+            return Response(
+                IterationSerializer(fresh).data, status=status.HTTP_201_CREATED
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Inception failed: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    @action(detail=True, methods=['post'], url_path='slot_disc')
+    def slot_disc(self, request, pk=None):
+        """
+        Add a participant to a shift in the blueprint. Payload: shift_definition_id,
+        and disc_id or base_id (Identity). If base_id, a new Disc is gestated and
+        stored. Same contract as
+        IterationViewSet.slot_disc but for the definition.
+        """
+        definition = self.get_object()
+        shift_definition_id = request.data.get('shift_definition_id')
+        disc_id = request.data.get('disc_id')
+        base_id = request.data.get('base_id')
+
+        if not shift_definition_id:
+            return Response(
+                {'error': 'shift_definition_id required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        shift_def = get_object_or_404(
+            IterationShiftDefinition,
+            id=shift_definition_id,
+            definition=definition,
+        )
+
+        if base_id:
+            from identity.forge import forge_identity_disc
+
+            identity = get_object_or_404(Identity, id=base_id)
+            disc = forge_identity_disc(identity)
+        elif disc_id:
+            disc = get_object_or_404(IdentityDisc, id=disc_id)
+        else:
+            return Response(
+                {'error': 'disc_id or base_id required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        IterationShiftDefinitionParticipant.objects.get_or_create(
+            shift_definition=shift_def,
+            identity_disc=disc,
+        )
+
+        fresh_definition = self.get_queryset().get(pk=definition.pk)
+        return Response(
+            self.get_serializer(fresh_definition).data,
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=True, methods=['post'], url_path='remove_disc')
+    def remove_disc(self, request, pk=None):
+        """
+        Remove a participant from a shift in the blueprint. Payload: shift_definition_id,
+        and disc_id to identify the participant (IdentityDisc). Same contract
+        as IterationViewSet.remove_disc but for the definition.
+        """
+        definition = self.get_object()
+        shift_definition_id = request.data.get('shift_definition_id')
+        disc_id = request.data.get('disc_id')
+        base_id = request.data.get('base_id')
+
+        if not shift_definition_id:
+            return Response(
+                {'error': 'shift_definition_id required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if base_id:
+            identity = get_object_or_404(Identity, id=base_id)
+        elif disc_id:
+            disc = get_object_or_404(IdentityDisc, id=disc_id)
+        else:
+            return Response(
+                {'error': 'disc_id or base_id required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        shift_def = get_object_or_404(
+            IterationShiftDefinition,
+            id=shift_definition_id,
+            definition=definition,
+        )
+
+        qs = IterationShiftDefinitionParticipant.objects.filter(
+            shift_definition=shift_def,
+        )
+        if disc_id:
+            qs = qs.filter(identity_disc=disc)
+
+        qs.delete()
+
+        fresh_definition = self.get_queryset().get(pk=definition.pk)
+        return Response(
+            self.get_serializer(fresh_definition).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class IterationShiftDefinitionViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing IterationShiftDefinition objects.
+    """
+
+    queryset = (
+        IterationShiftDefinition.objects.select_related('definition', 'shift')
+        .prefetch_related(
+            'iterationshiftdefinitionparticipant_set__identity_disc'
+        )
+        .all()
+    )
+
+    serializer_class = IterationShiftDefinitionSerializer
+    permission_classes = [AllowAny]

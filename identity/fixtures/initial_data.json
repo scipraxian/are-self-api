@@ -12,7 +12,7 @@
   "model": "identity.identityaddon",
   "pk": 2,
   "fields": {
-    "description": "[THE FOCUS GAME (RPG MECHANICS)]\r\nYou are playing a resource-management strategy game.\r\n- CONTEXT LIMIT: Keep your THOUGHT block under (1000 chars * Your Level) to earn the Efficiency Bonus (+1 Focus, +5 XP). \r\n- L1/L2 CACHE: You only see your last 6 turns. Turn data degrades. Save critical insights to the Hippocampus (Engrams) before they vanish.\r\n- THE ECONOMY:\r\n  * Free Actions (0 Focus, 1 XP): Engram read/search.\r\n  * Synthesis (+3 Focus, 15 XP): Engram update/save, pass turn, update ticket.\r\n  * Extraction (-2 Focus, 2 XP): Read files, search logs.\r\n  * Heavy Extraction (-5 Focus, 5 XP): Query model, grep.\r\n- If you lack Focus for an action, it fizzles. Use Synthesis actions to regain Focus.\r\n- VICTORY: Call `mcp_done` to end the session. You gain +1000 XP for every turn remaining under the 100-turn limit.",
+    "description": "[THE FOCUS GAME (RPG MECHANICS)]\r\nYou are playing a resource-management strategy game.\r\n- CONTEXT BONUS: \r\nGain +1 Focus, +5 XP if your THOUGHT is 2 to 6 sentences and contains new, non-repetitive reasoning.\r\nSilence costs focus, which is ok, just be aware if THOUGHT is repeated or empty -1 Focus.\r\n- L1/L2 CACHE: You only see your last 6 turns. Turn data degrades. Save critical insights to the Hippocampus (Engrams) before they vanish.\r\n- THE ECONOMY:\r\n  * Free Actions (0 Focus, 1 XP): Engram read/search.\r\n  * Synthesis (+3 Focus, 15 XP): Engram update/save, pass turn, update ticket.\r\n  * Extraction (-2 Focus, 2 XP): Read files, search logs.\r\n  * Heavy Extraction (-5 Focus, 5 XP): Query model, grep.\r\n- If you lack Focus for an action, it fizzles. Use Synthesis actions to regain Focus.\r\n- VICTORY: Call `mcp_done` to end the session. You gain +1000 XP for every turn remaining under the stated limit.",
     "name": "The Focus Game",
     "function_slug": null
   }
@@ -21,7 +21,7 @@
   "model": "identity.identityaddon",
   "pk": 3,
   "fields": {
-    "description": "[WORKER DIRECTIVE: EXECUTION & DoD]\r\nYou are The Worker. Your job is tactical execution.\r\n- TICKETS ARE STATE: Use tickets only to track binary completion of Assertions.\r\n- ENGRAMS ARE KNOWLEDGE: Save architectural discoveries here.\r\n- METHODOLOGY: You must fulfill all Assertions and avoid all Outside clauses on your assigned ticket.\r\n- DEFINITION OF DONE (DoD): To successfully call `mcp_done`, you must prove your work. If you lack documentation or fail to meet Demo Specifics, the system will reject your conclusion and penalize you.",
+    "description": "Worker Addon",
     "name": "Worker",
     "function_slug": null
   }
@@ -30,7 +30,7 @@
   "model": "identity.identityaddon",
   "pk": 4,
   "fields": {
-    "description": "[PM DIRECTIVE: GROOMING & DoR]\r\nYou are The PM. Your job is strategic backlog grooming. Do not execute code.\r\n- TICKETS ARE STATE: Use tickets only to track binary completion. \r\n- DEFINITION OF READY (DoR): When using `mcp_ticket` to CREATE/UPDATE a STORY, you must explicitly provide: Perspective, Assertions (bulleted list), and Outside (negative constraints).\r\n- PENALTY: Submitting a Story without DoR fields will result in immediate rejection and Focus penalty.\r\n- VICTORY: Groom the assigned Epic into DoR-compliant Stories, then call `mcp_done`.",
+    "description": "PM Addon",
     "name": "PM",
     "function_slug": null
   }
@@ -45,10 +45,35 @@
   }
 },
 {
+  "model": "identity.identityaddon",
+  "pk": 6,
+  "fields": {
+    "description": "Agile Addon",
+    "name": "Agile Addon",
+    "function_slug": "agile_addon"
+  }
+},
+{
+  "model": "identity.identityaddon",
+  "pk": 7,
+  "fields": {
+    "description": "",
+    "name": "Deadline Addon",
+    "function_slug": "deadline_addon"
+  }
+},
+{
   "model": "identity.identitytag",
   "pk": 1,
   "fields": {
     "name": "PM"
+  }
+},
+{
+  "model": "identity.identitytag",
+  "pk": 2,
+  "fields": {
+    "name": "Worker"
   }
 },
 {
@@ -70,22 +95,21 @@
   "pk": "8781b1ff-6513-4a6e-952f-0c5e20e33580",
   "fields": {
     "created": "2026-03-01T17:52:50.149Z",
-    "modified": "2026-03-01T17:52:50.149Z",
-    "delta": "00:00:00",
+    "modified": "2026-03-15T19:34:10.679Z",
+    "delta": "14 01:41:20.530590",
     "name": "Worker",
     "identity_type": 2,
     "system_prompt_template": ".",
+    "ai_model": 6,
     "tags": [],
     "addons": [
       2,
       3,
-      5
+      5,
+      6,
+      7
     ],
     "enabled_tools": [
-      1,
-      2,
-      3,
-      4,
       5,
       6,
       7,
@@ -98,7 +122,11 @@
       15,
       16,
       17,
-      18
+      18,
+      24,
+      25,
+      20,
+      26
     ]
   }
 },
@@ -107,24 +135,23 @@
   "pk": "8a1b03d5-cb30-4298-b6dd-a5973e6b7914",
   "fields": {
     "created": "2026-03-01T16:45:51.822Z",
-    "modified": "2026-03-01T17:54:18.184Z",
-    "delta": "01:08:26.362074",
+    "modified": "2026-03-15T19:34:31.982Z",
+    "delta": "14 02:48:40.160620",
     "name": "PM",
     "identity_type": 1,
     "system_prompt_template": ".",
+    "ai_model": 6,
     "tags": [
       1
     ],
     "addons": [
       2,
       4,
-      5
+      5,
+      6,
+      7
     ],
     "enabled_tools": [
-      1,
-      2,
-      3,
-      4,
       5,
       6,
       7,
@@ -136,7 +163,94 @@
       14,
       15,
       16,
-      18
+      18,
+      24,
+      25,
+      20,
+      26
+    ]
+  }
+},
+{
+  "model": "identity.identity",
+  "pk": "9a60fb9c-76c4-434c-ab19-9ab5d5c6b21e",
+  "fields": {
+    "created": "2026-03-14T21:09:36.050Z",
+    "modified": "2026-03-15T19:33:48.064Z",
+    "delta": "22:24:12.014512",
+    "name": "Remote Worker",
+    "identity_type": 2,
+    "system_prompt_template": "",
+    "ai_model": 9,
+    "tags": [
+      2
+    ],
+    "addons": [
+      2,
+      3,
+      5,
+      6,
+      7
+    ],
+    "enabled_tools": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      20,
+      24,
+      25,
+      26
+    ]
+  }
+},
+{
+  "model": "identity.identity",
+  "pk": "a19d8d09-351c-43b7-bbbf-8e33c2c17374",
+  "fields": {
+    "created": "2026-03-14T21:08:48.601Z",
+    "modified": "2026-03-15T19:33:57.265Z",
+    "delta": "22:25:08.663586",
+    "name": "Remote PM",
+    "identity_type": 1,
+    "system_prompt_template": "",
+    "ai_model": 9,
+    "tags": [
+      1
+    ],
+    "addons": [
+      2,
+      4,
+      5,
+      6,
+      7
+    ],
+    "enabled_tools": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      13,
+      14,
+      15,
+      16,
+      18,
+      20,
+      24,
+      25,
+      26
     ]
   }
 }

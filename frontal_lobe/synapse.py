@@ -1,11 +1,12 @@
 import logging
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import requests
 from django.conf import settings
 
 from frontal_lobe.constants import FrontalLobeConstants
+from identity.models import IdentityDisc
 
 logger = logging.getLogger(__name__)
 
@@ -50,24 +51,18 @@ class OllamaChatPayload:
     stream: bool = False
     tools: Optional[List[Dict[str, Any]]] = None
 
-
-@dataclass
-class ChatMessage:
-    """Strictly typed representation of a single message in a Chat array."""
-
-    role: str
-    content: str
-    tool_calls: Optional[List[Dict[str, Any]]] = None
-    name: Optional[str] = None  # Used exclusively when role='tool'
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Serializes to dict, stripping None values to satisfy strict JSON
-        parsers."""
-        return {k: v for k, v in asdict(self).items() if v is not None}
+    def size(self):
+        """Approximate payload size for context window tuning."""
+        base = len(str(self.model)) + sum(
+            len(str(msg)) for msg in self.messages
+        )
+        if not self.tools:
+            return base
+        return base + sum(len(str(tool)) for tool in self.tools)
 
 
 @dataclass
-class OllamaResponse:
+class SynapseResponse:
     """Strictly typed return structure for the reasoning engine."""
 
     content: str
@@ -80,15 +75,34 @@ class OllamaResponse:
 class OllamaClient:
     """Synaptic interface to the local AI. Supports Native Tool Calling."""
 
-    def __init__(self, model: str):
-        self.model = model
+    def __init__(self, identity_disc: Union[IdentityDisc, str]):
+        """
+        Initialize the client using either:
+
+        - an IdentityDisc (preferred for runtime, so we can resolve the model
+          from identity_disc.ai_model and later use the disc for accounting), or
+        - a raw model name string (backwards-compatible for tests and simple callers).
+        """
+        self.identity_disc: Optional[IdentityDisc] = None
+
+        if isinstance(identity_disc, IdentityDisc):
+            identity_disc = identity_disc
+            if not identity_disc.ai_model:
+                raise ValueError(
+                    f'IdentityDisc "{identity_disc}" has no ai_model configured.'
+                )
+            self.identity_disc = identity_disc
+            self.model = identity_disc.ai_model.name
+        else:
+            # Backwards-compatible path: accept a bare model name.
+            self.model = str(identity_disc)
 
     def chat(
         self,
         messages: List[Dict[str, Any]],
         tools: Optional[List[Dict[str, Any]]] = None,
         options: Optional[Dict[str, Any]] = None,
-    ) -> OllamaResponse:
+    ) -> SynapseResponse:
         """Transmits message history to the model, optionally with tool
         schemas."""
 
@@ -99,14 +113,15 @@ class OllamaClient:
             tools=tools,
         )
 
+        size = payload_obj.size()
+        num_ctx = int(size / 3) + 2048  # TODO: expose constants.
+        payload_obj.options.update(num_ctx=num_ctx)
+        logger.info(f'[Synapse] Firing API payload: [ {num_ctx} tokens ]')
+
         # Strip None values
         payload_dict = {
             k: v for k, v in asdict(payload_obj).items() if v is not None
         }
-
-        logger.info(
-            f'[Synapse] Firing API payload: [ {len(str(payload_dict))} chars ]'
-        )
 
         try:
             response = requests.post(
@@ -119,7 +134,7 @@ class OllamaClient:
 
             msg_data = data.get(OllamaConstants.KEY_MESSAGE, {})
 
-            return OllamaResponse(
+            return SynapseResponse(
                 content=msg_data.get(OllamaConstants.KEY_CONTENT, ''),
                 tool_calls=msg_data.get(OllamaConstants.KEY_TOOL_CALLS, []),
                 tokens_input=data.get(OllamaConstants.KEY_PROMPT_EVAL_COUNT, 0),
@@ -134,7 +149,7 @@ class OllamaClient:
             logger.error(f'Ollama Synapse Misfire: {error_details}')
 
             # Return a safe fallback response so the loop doesn't explode
-            return OllamaResponse(
+            return SynapseResponse(
                 content=f'{OllamaConstants.ERR_MSG_PREFIX} {error_details}',
                 tool_calls=[],
                 tokens_input=0,

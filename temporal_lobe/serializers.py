@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
-from identity.models import IdentityDisc
+from identity.models import Identity, IdentityDisc
 from temporal_lobe.models import (
     Iteration,
     IterationDefinition,
@@ -23,6 +23,14 @@ class IdentityDiscLightSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
+class IdentityLightSerializer(serializers.ModelSerializer):
+    """Lightweight representation of a base Identity for definition participants."""
+
+    class Meta:
+        model = Identity
+        fields = ['id', 'name']
+
+
 class ShiftSerializer(serializers.ModelSerializer):
     """Serializer for the Shift model."""
 
@@ -39,19 +47,11 @@ class ShiftDefaultParticipantSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
-class IterationDefinitionSerializer(serializers.ModelSerializer):
-    """Serializer for the IterationDefinition model."""
+class ShiftDefaultParticipantSerializer(serializers.ModelSerializer):
+    """Serializer for the ShiftDefaultParticipant model."""
 
     class Meta:
-        model = IterationDefinition
-        fields = ALL_FIELDS
-
-
-class IterationShiftDefinitionSerializer(serializers.ModelSerializer):
-    """Serializer for the IterationShiftDefinition model."""
-
-    class Meta:
-        model = IterationShiftDefinition
+        model = ShiftDefaultParticipant
         fields = ALL_FIELDS
 
 
@@ -60,8 +60,47 @@ class IterationShiftDefinitionParticipantSerializer(
 ):
     """Serializer for the IterationShiftDefinitionParticipant model."""
 
+    participant_detail = IdentityDiscLightSerializer(
+        source='identity_disc', read_only=True
+    )
+
     class Meta:
         model = IterationShiftDefinitionParticipant
+        fields = [
+            'id',
+            'shift_definition',
+            'identity_disc',
+            'participant_detail',
+        ]
+
+
+class IterationShiftDefinitionSerializer(serializers.ModelSerializer):
+    """Serializer for the IterationShiftDefinition model."""
+
+    shift = ShiftSerializer(read_only=True)
+
+    participants = IterationShiftDefinitionParticipantSerializer(
+        source='iterationshiftdefinitionparticipant_set',
+        many=True,
+        read_only=True,
+    )
+
+    class Meta:
+        model = IterationShiftDefinition
+        fields = ALL_FIELDS
+
+
+class IterationDefinitionSerializer(serializers.ModelSerializer):
+    """Serializer for the IterationDefinition model."""
+
+    shift_definitions = IterationShiftDefinitionSerializer(
+        source='iterationshiftdefinition_set',
+        many=True,
+        read_only=True,
+    )
+
+    class Meta:
+        model = IterationDefinition
         fields = ALL_FIELDS
 
 

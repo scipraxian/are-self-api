@@ -2,11 +2,15 @@ from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import Signal, receiver
 
-from .models import CNSStatusID, SpikeTrain
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
+from .models import CNSStatusID, Spike, SpikeTrain
 from .tasks import check_next_wave  # Import the celery task directly
 
 spawn_failed = Signal()
 spawn_success = Signal()
+spike_status_changed = Signal()
 
 
 @receiver(post_save, sender=SpikeTrain)
@@ -46,3 +50,37 @@ def on_spawn_update(sender, instance, created, **kwargs):
         transaction.on_commit(
             lambda: check_next_wave.delay(parent_spike.spike_train.id)
         )
+
+
+@receiver(post_save, sender=Spike)
+def on_spike_status_changed(sender, instance: Spike, **kwargs):
+    """
+    Emits websocket lifecycle events when a Spike's status changes.
+    """
+    if not instance or instance.id is None:
+        return
+
+    channel_layer = get_channel_layer()
+    if not channel_layer:
+        return
+
+    # Broadcast over the spike_log_<uuid> group so listeners can sync lifecycle.
+    group_name = f'spike_log_{instance.id}'
+    payload = {
+        'type': 'spike.status',
+        'spike_id': str(instance.id),
+        'status_id': instance.status_id,
+    }
+
+    # Fire both the Django signal (for in-process listeners) and the socket event.
+    spike_status_changed.send(
+        sender=sender,
+        spike=instance,
+        status_id=instance.status_id,
+    )
+
+    try:
+        async_to_sync(channel_layer.group_send)(group_name, payload)
+    except Exception:
+        # Socket failures should never break DB writes.
+        pass

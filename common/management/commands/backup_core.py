@@ -24,8 +24,9 @@ class Command(BaseCommand):
             'reasoningsession',
             'reasoningengram',
             'reasoningspiketrainmap',
-            'reasoninggoal',
             'reasoningturn',
+            'sessionconclusion',
+            'chatmessage',
         ],
         'parietal_lobe': ['toolcall'],
         'prefrontal_cortex': ['pfcepic', 'pfcstory', 'pfctask', 'pfccomment'],
@@ -33,6 +34,7 @@ class Command(BaseCommand):
             'iteration',
             'iterationshift',
             'iterationshiftparticipant',
+            'iterationshiftdefinitionparticipant',
         ],
     }
 

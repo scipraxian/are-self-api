@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.db import models
 
+from common.constants import STANDARD_CHARFIELD_LENGTH
 from common.models import (
     CreatedAndModifiedWithDelta,
     CreatedMixin,
@@ -48,6 +49,63 @@ class ReasoningStatusMixin(models.Model):
         abstract = True
 
 
+class ModelProvider(DefaultFieldsMixin, DescriptionMixin):
+    """
+    Provider-level network configuration for LLM backends.
+
+    This decouples ModelRegistry entries from hardcoded URLs and headers and
+    allows dynamic switching between providers like Ollama and OpenRouter.
+    """
+
+    # Use id keys for stable FK references (see fixtures).
+    OLLAMA = 1
+    OPENROUTER = 2
+
+    name = models.CharField(
+        max_length=STANDARD_CHARFIELD_LENGTH,
+        help_text='Human-readable name, e.g. "Ollama", "OpenRouter".',
+    )
+
+    key = models.CharField(
+        max_length=50,
+        unique=True,
+        help_text='Stable identifier, e.g. "ollama", "openrouter", "local".',
+    )
+    base_url = models.URLField(
+        max_length=255,
+        help_text='Base URL for this provider, e.g. https://openrouter.ai/api',
+    )
+    chat_path = models.CharField(
+        max_length=255,
+        default='/v1/chat/completions',
+        help_text='Path segment for chat completions, appended to base_url.',
+    )
+    requires_api_key = models.BooleanField(
+        default=False,
+        help_text='Whether this provider requires an API key for requests.',
+    )
+    api_key_header = models.CharField(
+        max_length=100,
+        default='Authorization',
+        help_text='Header name used to send the API key (e.g. Authorization).',
+    )
+    api_key_env_var = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text='Environment variable name that stores the API key.',
+    )
+
+    class Meta:
+        verbose_name_plural = 'Model Providers'
+
+    def __str__(self):
+        return self.name
+
+    def natural_key(self):
+        return self.name
+
+
 class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
     """
     Database-driven LLM definition.
@@ -61,8 +119,13 @@ class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
     LLAMA3_LATEST = 3
     LLAMA3 = 4
     NOMIC_EMBED_TEXT = 5
+    GPT_OSS_LATEST = 6
+    QWEN_LATEST = 7
+    GLM_47_FLASH_LATEST = 8
 
-    api_variant = models.CharField(max_length=50, default='ollama')
+    api_variant = models.CharField(
+        max_length=50, default='ollama', blank=True, null=True
+    )
     context_window_size = models.IntegerField(default=32768)
     cost_per_1k_input = models.DecimalField(
         max_digits=10, decimal_places=6, default=0
@@ -70,9 +133,22 @@ class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
     cost_per_1k_output = models.DecimalField(
         max_digits=10, decimal_places=6, default=0
     )
+    provider = models.ForeignKey(
+        'frontal_lobe.ModelProvider',
+        on_delete=models.PROTECT,
+        related_name='models',
+        blank=True,
+        null=True,
+    )
 
     class Meta:
         verbose_name_plural = 'Model Registries'
+
+    def __str__(self):
+        return f'{self.provider}-{self.name}'
+
+    def natural_key(self):
+        return self.name
 
 
 class ReasoningSession(
@@ -119,21 +195,12 @@ class ReasoningSession(
         """Level 1 = 10. Level 2 = 11. Level 3 = 12."""
         return 10 + int((self.current_level - 1) * 0.5)
 
+    @property
+    def current_turn(self):
+        return self.turns.last() if self.turns.exists() else None
+
     def __str__(self):
         return f'Session {self.id} Status: {self.status}'
-
-
-class ReasoningGoal(ReasoningStatusMixin, CreatedMixin, ModifiedMixin):
-    """Individual objectives within a session."""
-
-    session = models.ForeignKey(
-        ReasoningSession, on_delete=models.CASCADE, related_name='goals'
-    )
-    achieved = models.BooleanField(default=False)
-    rendered_goal = models.TextField(blank=True, default='')
-
-    def __str__(self):
-        return f'Goal: {self.rendered_goal[:50]}...'
 
 
 class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
@@ -152,9 +219,6 @@ class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
     tokens_input = models.IntegerField(default=0)
     inference_time = models.DurationField(default=timedelta)
 
-    turn_goals = models.ManyToManyField(
-        ReasoningGoal, blank=True, related_name=RELATED_NAME
-    )
     thought_process = models.TextField(
         help_text='The internal monologue of the AI.'
     )
@@ -163,6 +227,9 @@ class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
     last_turn = models.ForeignKey(
         'self', on_delete=models.SET_NULL, null=True, blank=True
     )
+
+    class Meta:
+        ordering = ['turn_number']
 
     def __str__(self):
         return f'Turn {self.turn_number} (Session: {self.session_id})'
@@ -217,3 +284,37 @@ class SessionConclusion(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
     @property
     def engrams(self):
         return self.session.talosengram_set.all()
+
+
+class ChatMessageRole(NameMixin, CreatedMixin):
+    SYSTEM = 1  #'system', 'System'
+    USER = 2  #'user', 'User'
+    ASSISTANT = 3  # 'assistant', 'Assistant'
+    TOOL = 4
+
+
+class ChatMessage(UUIDIdMixin, CreatedMixin):
+    RELATED_NAME = 'messages'
+    session = models.ForeignKey(
+        ReasoningSession, on_delete=models.CASCADE, related_name=RELATED_NAME
+    )
+    turn = models.ForeignKey(
+        ReasoningTurn, on_delete=models.CASCADE, related_name=RELATED_NAME
+    )
+    role = models.ForeignKey(ChatMessageRole, on_delete=models.CASCADE)
+    content = models.TextField()
+    tool_call = models.ForeignKey(
+        'parietal_lobe.ToolCall',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    is_volatile = models.BooleanField(
+        default=False,
+        help_text='If True, this message (like an Addon) is excluded from historical memory.',
+    )
+
+    class Meta:
+        ordering = ['-created']
+        verbose_name = 'Chat Message'
+        verbose_name_plural = 'Chat Messages'

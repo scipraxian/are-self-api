@@ -44,3 +44,5 @@ html2text
 
 django-celery-beat
 django-cors-headers
+
+pydantic

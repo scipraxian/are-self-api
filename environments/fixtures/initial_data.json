@@ -1526,12 +1526,12 @@
   "fields": {
     "created": "2026-02-11T15:33:50.687Z",
     "description": "Default UE Environment for Talos",
-    "modified": "2026-03-08T18:48:25.145Z",
+    "modified": "2026-03-11T21:44:51.271Z",
     "name": "Default Environment",
     "type": 1,
     "status": 1,
     "available": true,
-    "selected": false,
+    "selected": true,
     "default_iteration_definition": 1
   }
 },
@@ -1556,12 +1556,12 @@
   "fields": {
     "created": "2026-03-04T13:31:03.894Z",
     "description": "",
-    "modified": "2026-03-08T23:40:56.114Z",
+    "modified": "2026-03-11T21:44:47.526Z",
     "name": "Are-Self-UI",
     "type": 2,
     "status": 1,
     "available": true,
-    "selected": true,
+    "selected": false,
     "default_iteration_definition": 1
   }
 },

@@ -31,10 +31,17 @@ start "Are-Self Worker" cmd /c ".\venv\Scripts\celery -A config worker --logleve
 :: 1.5 Start Celery Beats Worker
 echo Starting Celery Beats Worker...
 :: start "Are-Self Heartbeat" cmd /c ".\venv\Scripts\celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
-:: 2. Start Django Server in this window
+
+:: 2. Start Django Server in its own window
 echo Starting Django Server...
 start "" "http://127.0.0.1:8000"
-.\venv\Scripts\python.exe manage.py runserver
+start "Talos Django Server" cmd /k ".\venv\Scripts\python.exe manage.py runserver"
+
+timeout /t 3 >nul
+echo Start RJS Server
+start "RJS Server" cmd /k "cd /d c:\are-self-ui\ && npm run dev"
+start "" "http://localhost:5173"
+
 
 :: If runserver exits, pause so we can see the error
 if %ERRORLEVEL% NEQ 0 (
@@ -42,3 +49,4 @@ if %ERRORLEVEL% NEQ 0 (
     echo Server stopped with error code %ERRORLEVEL%
     pause
 )
+

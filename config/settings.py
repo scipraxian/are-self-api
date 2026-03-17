@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'identity.apps.IdentityConfig',
     'django_celery_beat',
     'corsheaders',
+    'synaptic_cleft.apps.SynapticCleftConfig',
 ]
 
 MIDDLEWARE = [
@@ -159,11 +160,10 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
+CELERY_TASK_TRACK_STARTED = True
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny'
-    ]
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny']
 }
 
 LOGGING = {

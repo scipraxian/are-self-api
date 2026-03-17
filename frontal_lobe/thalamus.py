@@ -8,70 +8,36 @@ from frontal_lobe.models import (
     ReasoningStatusID,
     ReasoningTurn,
 )
-from prefrontal_cortex.models import PFCTask
 from hippocampus.hippocampus import TalosHippocampus
+from prefrontal_cortex.models import PFCTask
 
 
+# TODO: push this upstream.
 async def relay_sensory_state(turn_record: ReasoningTurn) -> str:
     """
     The Thalamus.
-    Compiles the current state of the world, active Agile tasks, and memories,
-    relaying them as a single sensory payload to the Frontal Lobe.
+    Compiles the current state of the world, active Agile tasks, and memories
+    for the *current* turn, and returns the final sensory trigger message.
     """
     session = turn_record.session
     current_turn = turn_record.turn_number
 
-    # 1. Active Task (From the Agile Board, NOT ReasoningGoals)
-    task_str = await _read_active_task(session)
-
-    # 2. Hippocampus Catalog
+    # Hippocampus Catalog for this turn
     if current_turn == 1:
         catalog_block = await TalosHippocampus.get_turn_1_catalog(session.spike)
     else:
         catalog_block = await TalosHippocampus.get_recent_catalog(session)
 
-    # 3. Historical Log (River of 6)
-    history_str = await _build_river_of_six(session, current_turn)
-
-    # 4. Telemetry Header & Warnings
-    header_str = await _build_telemetry_header(
-        session, turn_record, len(history_str)
-    )
-
     return (
-        f'SESSION ID: {session.id}\n\n'
-        f'{header_str}\n'
-        f'[WAKING STATE: ACTIVE TASK]\n{task_str}\n\n'
-        f'{catalog_block}'
-        f'[HISTORICAL LOG (RIVER OF 6)]\n{history_str}\n'
-        f'[YOUR MOVE]\n'
-        f"Write your reasoning starting with 'THOUGHT: '. Stop writing text immediately after your thought and invoke your tools natively. DO NOT generate fake system diagnostics."
+        f'{catalog_block}\n\n'
+        'YOUR MOVE:\n'
+        '1. You MUST call mcp_internal_monologue ALONGSIDE any other tools you call in parallel. Never fire a tool without also firing your monologue.\n'
+        '2. You should call your tools (like `mcp_ticket`) in parallel during the exact same turn.\n'
+        '3. Use structured JSON for all tool calls natively.\n'
     )
 
 
-async def _read_active_task(session: ReasoningSession) -> str:
-    """Reads the assigned Task ID from the blackboard."""
-    blackboard = session.spike.blackboard or {}
-    task_id = blackboard.get('active_pfc_task_id')
-
-    if not task_id:
-        return 'NO ACTIVE TASK ASSIGNED. You must query the Agile Board or consult the PM.'
-
-    try:
-        task = await sync_to_async(
-            PFCTask.objects.select_related('story', 'story__epic').get
-        )(id=task_id)
-
-        return (
-            f'EPIC: {task.story.epic.name}\n'
-            f'STORY: {task.story.name}\n'
-            f'TASK: {task.name}\n'
-            f'DETAILS: {task.description}'
-        )
-    except PFCTask.DoesNotExist:
-        return f'ERROR: Task ID {task_id} not found on the Agile Board.'
-
-
+# LEGACY
 async def _build_river_of_six(
     session: ReasoningSession, current_turn: int
 ) -> str:
@@ -118,6 +84,7 @@ async def _build_river_of_six(
     return history_str
 
 
+# TODO: This is good. we should add this back in in some way.
 async def _build_telemetry_header(
     session: ReasoningSession, turn_record: ReasoningTurn, l1_cache_size: int
 ) -> str:
@@ -138,24 +105,6 @@ async def _build_telemetry_header(
             if last_output_len <= target_capacity
             else 'INEFFICIENT (XP PENALTY)'
         )
-
-    level_up_str = (
-        ' | [LEVEL UP! Focus Pool Fully Restored]'
-        if session.current_focus == session.max_focus and current_turn > 1
-        else ''
-    )
-
-    milestone_kicks = ''
-    if current_turn == max_turns // 2:
-        milestone_kicks = (
-            '\n[WARNING: 50% of allocated compute cycles expended.]'
-        )
-    elif remaining_turns == 10:
-        milestone_kicks = (
-            '\n[CRITICAL: 10 compute cycles remaining. Finalize diagnostics.]'
-        )
-    elif remaining_turns == 1:
-        milestone_kicks = '\n[TERMINAL CYCLE. Submit final report via mcp_conclude_session or fail operation.]'
 
     latency_str = ''
     input_bandwidth = 0
@@ -198,9 +147,9 @@ async def _build_telemetry_header(
 
     return (
         f'[SYSTEM DIAGNOSTICS]\n'
-        f'[CYCLE {current_turn} / {max_turns}] | Speedrun Bounty: {remaining_turns * 1000} XP{milestone_kicks}\n'
-        f'Level: {session.current_level} | XP: {session.total_xp} | Focus Pool: {session.current_focus} / {session.max_focus}{level_up_str}{latency_str}\n'
+        f'[CYCLE {current_turn} / {max_turns}] | Speedrun Bounty: {remaining_turns * 1000} XP\n'
         f'Output Footprint (Prev Turn): {last_output_len} / {target_capacity} chars -> Efficiency Bonus: {efficiency_status}\n'
+        f'Time Efficiency (Prev Turn): {latency_str}'
         f'{pressure_warning}'
         f'{input_bandwidth_str}\n'
     )

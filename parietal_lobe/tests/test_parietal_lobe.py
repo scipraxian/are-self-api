@@ -5,9 +5,8 @@ import pytest
 from asgiref.sync import sync_to_async
 
 from common.tests.common_test_case import CommonFixturesAPITestCase
-
+from identity.models import Identity, IdentityDisc, IdentityType
 from frontal_lobe.models import (
-    ReasoningGoal,
     ReasoningSession,
     ReasoningStatusID,
     ReasoningTurn,
@@ -50,6 +49,24 @@ class ParietalLobeTest(CommonFixturesAPITestCase):
             total_xp=0,
         )
 
+        # Attach an identity to the session so ParietalLobe can resolve enabled tools.
+        worker_type, _ = IdentityType.objects.get_or_create(
+            id=IdentityType.WORKER, defaults={'name': 'Worker'}
+        )
+        self.identity = Identity.objects.create(
+            name='Test Identity',
+            identity_type=worker_type,
+            system_prompt_template='Test prompt',
+        )
+        # IdentityDisc now owns the identity fields directly; no FK to Identity.
+        self.identity_disc = IdentityDisc.objects.create(
+            name='Test Disc',
+            identity_type=worker_type,
+            system_prompt_template='Test prompt',
+        )
+        self.session.identity_disc = self.identity_disc
+        self.session.save(update_fields=['identity_disc'])
+
         self.turn = ReasoningTurn.objects.create(
             session=self.session,
             turn_number=1,
@@ -90,21 +107,22 @@ class ParietalLobeTest(CommonFixturesAPITestCase):
         """Test the parameter-to-schema extraction logic."""
         tool_def, _ = await sync_to_async(ToolDefinition.objects.get_or_create)(
             name='mcp_dummy_tool',
-            defaults={
-                'description': 'A dummy tool.',
-                'is_async': True
-            },
+            defaults={'description': 'A dummy tool.', 'is_async': True},
         )
         mechanics, _ = await sync_to_async(ToolUseType.objects.get_or_create)(
             name='Extraction',
             defaults={
                 'focus_modifier': -2,
                 'xp_reward': 5,
-                'description': ''
+                'description': '',
             },
         )
         tool_def.use_type = mechanics
         await sync_to_async(tool_def.save)()
+
+        # Ensure this tool is actually enabled for the session's IdentityDisc so that
+        # ParietalLobe._fetch_tools() will include it.
+        await sync_to_async(self.identity_disc.enabled_tools.add)(tool_def)
 
         t_str, _ = await sync_to_async(ToolParameterType.objects.get_or_create
                                       )(name='string')
@@ -167,8 +185,11 @@ class ParietalLobeTest(CommonFixturesAPITestCase):
         self.assertEqual(self.session.current_focus, 6)  # 5 + 1
         self.assertEqual(self.session.total_xp, 10)
 
-        mock_execute.assert_called_with('mcp_dummy_tool',
-                                        {'dummy_arg': 'value'})
+        # Ensure the core arguments are passed through; additional metadata
+        # (like session_id/turn_id) is allowed.
+        args, kwargs = mock_execute.call_args
+        self.assertEqual(args[0], 'mcp_dummy_tool')
+        self.assertEqual(args[1]['dummy_arg'], 'value')
 
         # Verify db record
         tool_call = await sync_to_async(
@@ -252,5 +273,6 @@ class ParietalLobeTest(CommonFixturesAPITestCase):
         await sync_to_async(self.session.refresh_from_db)()
         self.assertEqual(self.session.current_focus, self.session.max_focus)
 
-        mock_execute.assert_called_with('mcp_pass',
-                                        {'session_id': str(self.session.id)})
+        args, kwargs = mock_execute.call_args
+        self.assertEqual(args[0], 'mcp_pass')
+        self.assertEqual(args[1]['session_id'], str(self.session.id))

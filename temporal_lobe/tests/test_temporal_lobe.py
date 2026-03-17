@@ -106,8 +106,8 @@ class TemporalLobeTest(CommonFixturesAPITestCase):
         from identity.models import IdentityDisc
         from temporal_lobe.models import IterationShiftParticipant
 
-        disc = await sync_to_async(IdentityDisc.objects.create
-                                  )(identity=self.identity)
+        # IdentityDisc now owns the identity fields directly; no FK to Identity.
+        disc = await sync_to_async(IdentityDisc.objects.create)()
         await sync_to_async(IterationShiftParticipant.objects.create
                            )(iteration_shift=shift_link,
                              iteration_participant=disc)
@@ -164,8 +164,8 @@ class TemporalLobeTest(CommonFixturesAPITestCase):
         from identity.models import IdentityDisc
         from temporal_lobe.models import IterationShiftParticipant
 
-        disc = await sync_to_async(IdentityDisc.objects.create
-                                  )(identity=self.identity)
+        # IdentityDisc now owns the identity fields directly; no FK to Identity.
+        disc = await sync_to_async(IdentityDisc.objects.create)()
 
         lobe = TemporalLobe(str(self.spike.id))
         await lobe.tick()

@@ -43,7 +43,7 @@ class IdentityAddonAdmin(admin.ModelAdmin):
 @admin.register(Identity)
 class IdentityAdmin(admin.ModelAdmin):
     list_display = ('name', 'identity_type', 'created')
-    list_filter = ('identity_type',)
+    list_filter = ('identity_type', 'ai_model')
     search_fields = ('name', 'system_prompt_template')
     filter_horizontal = ('tags', 'addons', 'enabled_tools')
     readonly_fields = ('created', 'modified', 'delta', 'prompt_preview')
@@ -51,7 +51,14 @@ class IdentityAdmin(admin.ModelAdmin):
     fieldsets = (
         (
             'Persona Core',
-            {'fields': ('name', 'identity_type', 'system_prompt_template')},
+            {
+                'fields': (
+                    'name',
+                    'identity_type',
+                    'ai_model',
+                    'system_prompt_template',
+                )
+            },
         ),
         (
             'Capabilities & Flavor',
@@ -63,7 +70,14 @@ class IdentityAdmin(admin.ModelAdmin):
             'System Prompt Preview',
             {
                 'fields': ('prompt_preview',),
-                'description': 'The baseline persona instructions. (Does not include Disc stats).',
+                'description': 'The baseline persona instructions.',
+            },
+        ),
+        (
+            'System Info',
+            {
+                'fields': ('created', 'modified', 'delta'),
+                'classes': ('collapse',),
             },
         ),
     )
@@ -72,7 +86,7 @@ class IdentityAdmin(admin.ModelAdmin):
         if not obj.pk:
             return format_html(
                 '<span style="color: #94a3b8; font-style: italic;">'
-                'Save the identity to generate a preview of its tags and addons.'
+                'Save the identity to generate a preview.'
                 '</span>'
             )
         prompt = render_base_identity(obj)
@@ -83,14 +97,24 @@ class IdentityAdmin(admin.ModelAdmin):
 
 @admin.register(IdentityDisc)
 class IdentityDiscAdmin(admin.ModelAdmin):
-    list_display = ('name', 'identity', 'level', 'xp', 'available')
-    list_filter = ('available', 'level', 'identity')
-    search_fields = ('name', 'identity__name')
+    list_display = ('name', 'identity_type', 'level', 'xp', 'available')
+    list_filter = ('available', 'level', 'identity_type', 'ai_model')
+    search_fields = ('name', 'system_prompt_template')
     readonly_fields = ('created', 'modified', 'delta', 'prompt_preview')
-    filter_horizontal = ('memories',)
+    filter_horizontal = ('tags', 'addons', 'enabled_tools', 'memories')
 
     fieldsets = (
-        ('Disc Profile', {'fields': ('name', 'identity', 'available')}),
+        ('Disc Profile', {'fields': ('name', 'identity_type', 'available')}),
+        (
+            'Persona Core',
+            {'fields': ('ai_model', 'system_prompt_template')},
+        ),
+        (
+            'Capabilities & Flavor',
+            {
+                'fields': ('tags', 'addons', 'enabled_tools'),
+            },
+        ),
         (
             'Live Statistics',
             {
@@ -112,13 +136,20 @@ class IdentityDiscAdmin(admin.ModelAdmin):
                 'classes': ('collapse',),
             },
         ),
+        (
+            'System Info',
+            {
+                'fields': ('created', 'modified', 'delta'),
+                'classes': ('collapse',),
+            },
+        ),
     )
 
     def prompt_preview(self, obj):
-        if not obj.pk or not obj.identity_disc:
+        if not obj.pk:
             return format_html(
                 '<span style="color: #94a3b8; font-style: italic;">'
-                'Save the disc and assign an Identity to generate a preview.'
+                'Save the disc to generate a preview.'
                 '</span>'
             )
         prompt = build_identity_prompt(obj, turn_number=1)
