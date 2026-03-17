@@ -1,17 +1,29 @@
 from django.db.models import Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from central_nervous_system.models import SpikeStatus
 from central_nervous_system.tasks import cast_cns_spell
+from frontal_lobe.models import ChatMessage, ChatMessageRole, ReasoningStatusID
+from frontal_lobe.serializers import (
+    KEY_REPLY,
+    ResumeSessionRequestSerializer,
+    ResumeSessionResponseDTO,
+    ResumeSessionResponseSerializer,
+)
 
 from . import serializers
 from .models import (
     ModelRegistry,
     ReasoningSession,
     ReasoningTurn,
+)
+
+MSG_REIGNITED = 'Neural pathway re-ignited.'
+MSG_INVALID_STATE = (
+    'Session is not awaiting attention. Current status: {status_id}'
 )
 
 
@@ -62,9 +74,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         spike = session.spike
 
         if not spike:
-            return Response(
-                {'error': 'No associated Spike found.'}, status=400
-            )
+            return Response({'error': 'No associated Spike found.'}, status=400)
 
         # 1. Reset the spike state
         spike.status_id = SpikeStatus.PENDING
@@ -77,8 +87,63 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         return Response(
             {
                 'status': 'Rebooting',
-                'spike_train_id': str(spike.spike_train.id) if spike.spike_train else None,
+                'spike_train_id': str(spike.spike_train.id)
+                if spike.spike_train
+                else None,
             }
+        )
+
+    @action(
+        detail=True,
+        methods=['post'],
+        serializer_class=ResumeSessionRequestSerializer,
+    )
+    def resume(self, request, pk=None):
+        """
+        Resumes a paused ReasoningSession, attaching the human's reply.
+        """
+        session = self.get_object()
+
+        # 1. Validate State
+        if session.status_id != ReasoningStatusID.ATTENTION_REQUIRED:
+            error_dto = ResumeSessionResponseDTO(
+                ok=False,
+                message=MSG_INVALID_STATE.format(status_id=session.status_id),
+            )
+            return Response(
+                ResumeSessionResponseSerializer(instance=error_dto).data,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 2. Parse payload using strict serializer
+        request_serializer = self.get_serializer(data=request.data)
+        request_serializer.is_valid(raise_exception=True)
+
+        user_reply = request_serializer.validated_data.get(KEY_REPLY)
+
+        # 3. Attach the human memory
+        if user_reply:
+            last_turn = session.turns.order_by('-turn_number').first()
+            if last_turn:
+                ChatMessage.objects.create(
+                    session=session,
+                    turn=last_turn,
+                    role_id=ChatMessageRole.USER,
+                    content=user_reply,
+                )
+
+        # 4. Update status natively
+        session.status_id = ReasoningStatusID.ACTIVE
+        session.save(update_fields=['status_id'])
+
+        # 5. Re-ignite the async execution queue
+        cast_cns_spell.delay(session.spike_id)
+
+        # 6. Return strictly typed response
+        success_dto = ResumeSessionResponseDTO(ok=True, message=MSG_REIGNITED)
+        return Response(
+            ResumeSessionResponseSerializer(instance=success_dto).data,
+            status=status.HTTP_200_OK,
         )
 
     @action(detail=True, methods=['post'])
@@ -88,9 +153,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         spike = session.spike
 
         if not spike:
-            return Response(
-                {'error': 'No associated Spike found.'}, status=400
-            )
+            return Response({'error': 'No associated Spike found.'}, status=400)
 
         spike.status_id = SpikeStatus.STOPPING
         spike.save(update_fields=['status'])
@@ -105,4 +168,3 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
 class ModelRegistryViewSet(viewsets.ModelViewSet):
     queryset = ModelRegistry.objects.all()
     serializer_class = serializers.ModelRegistrySerializer
-

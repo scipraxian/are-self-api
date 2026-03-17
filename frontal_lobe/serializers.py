@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
@@ -11,6 +13,33 @@ from frontal_lobe.models import (
 )
 from hippocampus.models import TalosEngram
 from parietal_lobe.models import ToolCall, ToolDefinition
+
+KEY_REPLY = 'reply'
+KEY_OK = 'ok'
+
+
+@dataclass
+class ResumeSessionRequestDTO:
+    reply: str
+
+
+class ResumeSessionRequestSerializer(serializers.Serializer):
+    """Strict schema for the incoming human reply."""
+
+    reply = serializers.CharField(allow_blank=True, required=False, default='')
+
+
+@dataclass
+class ResumeSessionResponseDTO:
+    ok: bool
+    message: str
+
+
+class ResumeSessionResponseSerializer(serializers.Serializer):
+    """Strict schema for the API response."""
+
+    ok = serializers.BooleanField()
+    message = serializers.CharField()
 
 
 class ModelRegistrySerializer(serializers.ModelSerializer):
