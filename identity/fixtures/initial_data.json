@@ -77,6 +77,13 @@
   }
 },
 {
+  "model": "identity.identitytag",
+  "pk": 3,
+  "fields": {
+    "name": "Oversight"
+  }
+},
+{
   "model": "identity.identitytype",
   "pk": 1,
   "fields": {
@@ -88,6 +95,53 @@
   "pk": 2,
   "fields": {
     "name": "Worker"
+  }
+},
+{
+  "model": "identity.identitytype",
+  "pk": 3,
+  "fields": {
+    "name": "Oversight"
+  }
+},
+{
+  "model": "identity.identity",
+  "pk": "14148e25-283d-4547-a17d-e28d021eba07",
+  "fields": {
+    "created": "2026-03-17T19:41:44.516Z",
+    "modified": "2026-03-17T19:41:44.516Z",
+    "delta": "00:00:00",
+    "name": "Corpus Callosum",
+    "identity_type": 3,
+    "system_prompt_template": "The system user has requested your attention.",
+    "ai_model": 9,
+    "tags": [
+      3
+    ],
+    "addons": [
+      5
+    ],
+    "enabled_tools": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      20,
+      24,
+      25,
+      26,
+      27
+    ]
   }
 },
 {

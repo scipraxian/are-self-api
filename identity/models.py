@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.db import models
 
 from common.models import (
@@ -60,13 +62,15 @@ class Identity(
 ):
     """These are the details used to represent a persona."""
 
-    pass
+    CORPUS_CALLOSUM = UUID('14148e25-283d-4547-a17d-e28d021eba07')
 
 
 class IdentityDisc(
     UUIDIdMixin, NameMixin, CreatedAndModifiedWithDelta, IdentityFields
 ):
     """This is a persistent implementation of an identity."""
+
+    CORPUS_CALLOSUM = UUID('2e50d62a-e6ec-489e-84ce-0a1ea2101a73')
 
     available = models.BooleanField(default=True)
     last_message_to_self = models.TextField(blank=True, default='')
@@ -79,3 +83,7 @@ class IdentityDisc(
     )
     timeouts = models.IntegerField(default=0)
     memories = models.ManyToManyField(TalosEngram, blank=True)
+
+    @classmethod
+    def get_or_create_corpus_callosum(cls):
+        IdentityDisc.objects.get_or_create()

@@ -6,6 +6,7 @@ from rest_framework import routers
 
 from central_nervous_system.urls.api_urls import CNS_ROUTER
 from central_nervous_system.urls.v2_urls import V2_CNS_ROUTER
+from corpus_callosum.urls import V2_CORPUS_CALLOSUM
 from dashboard.api_urls import DASHBOARD_ROUTER
 from environments.api_urls import ENVIRONMENTS_ROUTER
 from frontal_lobe.api_urls import V2_REASONING_ROUTER
@@ -34,6 +35,7 @@ V2_ROUTER.registry.extend(V2_HIPPOCAMPUS_ROUTER.registry)
 V2_ROUTER.registry.extend(V2_REASONING_ROUTER.registry)
 V2_ROUTER.registry.extend(V2_PARIETAL_LOBE.registry)
 V2_ROUTER.registry.extend(V2_PNS_ROUTER.registry)
+V2_ROUTER.registry.extend(V2_CORPUS_CALLOSUM.registry)
 
 urlpatterns = [
     path('', include('dashboard.urls')),
