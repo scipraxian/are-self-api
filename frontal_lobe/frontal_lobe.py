@@ -77,11 +77,28 @@ class FrontalLobe:
     ) -> None:
         """Creates the ReasoningSession in the DB."""
         if not self.session:
-            self.session = await sync_to_async(ReasoningSession.objects.create)(
-                spike=self.spike,
-                status_id=ReasoningStatusID.ACTIVE,
-                max_turns=max_turns,
-            )
+            # Resume support: if this Spike already has a session that halted
+            # awaiting human input, reuse it instead of creating a new one.
+            existing = await sync_to_async(
+                lambda: ReasoningSession.objects.filter(
+                    spike=self.spike,
+                    status_id=ReasoningStatusID.ATTENTION_REQUIRED,
+                )
+                .order_by('-created')
+                .first()
+            )()
+            if existing:
+                existing.status_id = ReasoningStatusID.ACTIVE
+                await sync_to_async(existing.save)(update_fields=['status'])
+                self.session = existing
+            else:
+                self.session = await sync_to_async(
+                    ReasoningSession.objects.create
+                )(
+                    spike=self.spike,
+                    status_id=ReasoningStatusID.ACTIVE,
+                    max_turns=max_turns,
+                )
 
         await self.cache_ids()
 
