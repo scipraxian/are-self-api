@@ -9,6 +9,7 @@ from typing import List, Optional
 
 from asgiref.sync import sync_to_async
 from channels.layers import get_channel_layer
+from django.conf import settings
 
 from central_nervous_system.effectors.effector_casters.begin_play_node import (
     begin_play,
@@ -86,29 +87,36 @@ def check_channel_layer_config():
     Diagnostic helper to check channel layer configuration.
     Logs detailed info about why channel layer might be None.
     """
-    from django.conf import settings
-    
+
     channel_layer = get_channel_layer()
-    
+
     if channel_layer is None:
         logger.warning('[CHANNEL_LAYER] get_channel_layer() returned None')
-        
+
         # Check if CHANNEL_LAYERS is configured
         if not hasattr(settings, 'CHANNEL_LAYERS'):
-            logger.warning('[CHANNEL_LAYER] CHANNEL_LAYERS not found in settings')
+            logger.warning(
+                '[CHANNEL_LAYER] CHANNEL_LAYERS not found in settings'
+            )
         else:
-            logger.info(f'[CHANNEL_LAYER] CHANNEL_LAYERS config: {settings.CHANNEL_LAYERS}')
-            
+            logger.info(
+                f'[CHANNEL_LAYER] CHANNEL_LAYERS config: {settings.CHANNEL_LAYERS}'
+            )
+
             # Check if using InMemoryChannelLayer (won't work across processes)
-            backend = settings.CHANNEL_LAYERS.get('default', {}).get('BACKEND', '')
+            backend = settings.CHANNEL_LAYERS.get('default', {}).get(
+                'BACKEND', ''
+            )
             if 'InMemoryChannelLayer' in backend:
                 logger.warning(
                     '[CHANNEL_LAYER] Using InMemoryChannelLayer - this does NOT work '
                     'across processes (Celery workers need Redis or similar)'
                 )
     else:
-        logger.info(f'[CHANNEL_LAYER] Channel layer initialized: {type(channel_layer).__name__}')
-    
+        logger.info(
+            f'[CHANNEL_LAYER] Channel layer initialized: {type(channel_layer).__name__}'
+        )
+
     return channel_layer
 
 
