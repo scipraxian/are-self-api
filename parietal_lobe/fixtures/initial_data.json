@@ -358,6 +358,18 @@
   }
 },
 {
+  "model": "parietal_lobe.tooldefinition",
+  "pk": 27,
+  "fields": {
+    "created": "2026-03-17T12:00:00Z",
+    "description": "Request human input and pause the current reasoning session. Use this anytime you want immediate organic feedback.",
+    "modified": "2026-03-17T12:00:00Z",
+    "name": "mcp_ask_user",
+    "is_async": true,
+    "use_type": 6
+  }
+},
+{
   "model": "parietal_lobe.toolparameter",
   "pk": 1,
   "fields": {
@@ -1007,6 +1019,28 @@
   }
 },
 {
+  "model": "parietal_lobe.toolparameter",
+  "pk": 60,
+  "fields": {
+    "created": "2026-03-17T12:00:00Z",
+    "description": "The specific question or prompt you want to ask the human.",
+    "modified": "2026-03-17T12:00:00Z",
+    "name": "question",
+    "type": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameter",
+  "pk": 61,
+  "fields": {
+    "created": "2026-03-17T12:00:00Z",
+    "description": "Optional background details or context to help the human answer.",
+    "modified": "2026-03-17T12:00:00Z",
+    "name": "details",
+    "type": 1
+  }
+},
+{
   "model": "parietal_lobe.toolparameterassignment",
   "pk": 8,
   "fields": {
@@ -1619,6 +1653,39 @@
     "modified": "2026-03-15T19:19:37.380Z",
     "tool": 26,
     "parameter": 59,
+    "required": true
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 150,
+  "fields": {
+    "created": "2026-03-17T12:00:00Z",
+    "modified": "2026-03-17T12:00:00Z",
+    "tool": 27,
+    "parameter": 60,
+    "required": true
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 151,
+  "fields": {
+    "created": "2026-03-17T12:00:00Z",
+    "modified": "2026-03-17T12:00:00Z",
+    "tool": 27,
+    "parameter": 61,
+    "required": false
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 152,
+  "fields": {
+    "created": "2026-03-17T12:00:00Z",
+    "modified": "2026-03-17T12:00:00Z",
+    "tool": 27,
+    "parameter": 18,
     "required": true
   }
 },
