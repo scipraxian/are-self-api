@@ -8,6 +8,14 @@
   }
 },
 {
+  "model": "django_celery_beat.intervalschedule",
+  "pk": 2,
+  "fields": {
+    "every": 5,
+    "period": "seconds"
+  }
+},
+{
   "model": "django_celery_beat.crontabschedule",
   "pk": 1,
   "fields": {
@@ -35,7 +43,7 @@
   "model": "django_celery_beat.periodictasks",
   "pk": 1,
   "fields": {
-    "last_update": "2026-03-15T21:38:47.925Z"
+    "last_update": "2026-03-17T16:35:21.818Z"
   }
 },
 {
@@ -62,7 +70,7 @@
     "enabled": true,
     "last_run_at": null,
     "total_run_count": 0,
-    "date_changed": "2026-03-15T21:38:47.925Z",
+    "date_changed": "2026-03-17T16:33:22.971Z",
     "description": ""
   }
 },
@@ -72,7 +80,7 @@
   "fields": {
     "name": "Are-Self Heartbeat",
     "task": "temporal_lobe.tasks.autonomous_temporal_tick",
-    "interval": 1,
+    "interval": 2,
     "crontab": null,
     "solar": null,
     "clocked": null,
@@ -88,9 +96,9 @@
     "one_off": false,
     "start_time": null,
     "enabled": true,
-    "last_run_at": "2026-03-15T21:38:48.042Z",
-    "total_run_count": 2103,
-    "date_changed": "2026-03-15T21:38:48.091Z",
+    "last_run_at": "2026-03-17T16:40:19.376Z",
+    "total_run_count": 2459,
+    "date_changed": "2026-03-17T16:40:24.422Z",
     "description": ""
   }
 }

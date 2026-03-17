@@ -2807,7 +2807,7 @@
     "is_root": false,
     "pathway": "94a67ded-0d4b-4060-b79a-6f895b2373a3",
     "effector": 168,
-    "ui_json": "{\"x\":483.24194909366236,\"y\":96.58326452216804}",
+    "ui_json": "{\"x\":493.74194909366236,\"y\":46.58326452216804}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2859,7 +2859,7 @@
     "is_root": false,
     "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
     "effector": 169,
-    "ui_json": "{\"x\":521.7912490087372,\"y\":-94.9727143251056}",
+    "ui_json": "{\"x\":376.91187521579616,\"y\":-212.89778601703435}",
     "invoked_pathway": null,
     "distribution_mode": 1
   }
@@ -2898,7 +2898,7 @@
     "is_root": false,
     "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
     "effector": 171,
-    "ui_json": "{\"x\":218.18651275820184,\"y\":-235.90826245443526}",
+    "ui_json": "{\"x\":77.79952264876295,\"y\":-399.88026690225996}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -3791,17 +3791,6 @@
     "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
     "source": 84,
     "target": 123
-  }
-},
-{
-  "model": "central_nervous_system.axon",
-  "pk": 167,
-  "fields": {
-    "modified": "2026-03-14T00:07:23.174Z",
-    "type": 1,
-    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-    "source": 84,
-    "target": 136
   }
 }
 ]
