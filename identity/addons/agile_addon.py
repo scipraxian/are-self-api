@@ -73,7 +73,9 @@ def _get_locked_ticket(
 # ---------------------------------------------------------------------------
 
 
-def _pm_instructions_sifting(item_type: str, item_id: str) -> str:
+def _pm_instructions_sifting(
+    shift_id: int, item_type: str, item_id: str
+) -> str:
     return f"""\
 ROLE: Sifting Project Manager
 GOAL: Refine this {item_type} until it meets the Definition of Ready (DoR).
@@ -96,7 +98,9 @@ BLOCKER: If you lack information to fill a field, post a targeted question via
 """
 
 
-def _pm_instructions_pre_planning(item_type: str, item_id: str) -> str:
+def _pm_instructions_pre_planning(
+    shift_id: int, item_type: str, item_id: str
+) -> str:
     return f"""\
 ROLE: Pre-Planning Project Manager
 GOAL: Review this {item_type} from the Backlog and route it correctly.
@@ -106,7 +110,9 @@ STORY → Move to SELECTED_FOR_DEV (status=3) so workers can begin.
 """
 
 
-def _pm_instructions_post_execution(item_type: str, item_id: str) -> str:
+def _pm_instructions_post_execution(
+    shift_id: int, item_type: str, item_id: str
+) -> str:
     return f"""\
 ROLE: Post-Execution QA Manager
 GOAL: Determine whether this {item_type} satisfies the Definition of Done (DoD).
@@ -128,9 +134,13 @@ _PM_INSTRUCTION_BUILDERS = {
 
 
 def _build_pm_instructions(shift_id: int, item_type: str, item_id: str) -> str:
-    builder = _PM_INSTRUCTION_BUILDERS.get(shift_id, item_id)
+    # 1. Get the builder function using ONLY the key (shift_id)
+    builder = _PM_INSTRUCTION_BUILDERS.get(shift_id)
+
     if builder:
-        return builder(item_type)
+        # 2. Call the builder function with the three arguments it requires
+        return builder(shift_id, item_type, item_id)
+
     return 'You have no actionable tickets for this shift. Sleep and consolidate your memories.'
 
 

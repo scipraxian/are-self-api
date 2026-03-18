@@ -218,7 +218,7 @@
   "pk": 10,
   "fields": {
     "created": "2026-02-18T12:00:00Z",
-    "description": "CRYSTALLIZE A NEW FACT. If you discover a critical path or error, save it immediately to a NEW Engram or it will be lost to the void. If the Engram already exists, use mcp_engram_update instead.",
+    "description": "CRYSTALLIZE A NEW FACT. If you discover a critical path or error, save it immediately to a NEW Engram. (Automatically prevents duplicates via vector similarity).",
     "modified": "2026-02-18T12:00:00Z",
     "name": "mcp_engram_save",
     "is_async": true,
@@ -254,7 +254,7 @@
   "pk": 14,
   "fields": {
     "created": "2026-02-21T10:00:00Z",
-    "description": "Appends new findings to an existing Engram in your Hippocampus. Use this to update a memory instead of creating duplicates.",
+    "description": "Appends new findings to an existing Engram in your Hippocampus. REQUIRES THE ENGRAM UUID.",
     "modified": "2026-02-21T10:00:00Z",
     "name": "mcp_engram_update",
     "is_async": true,
@@ -693,10 +693,10 @@
   "pk": 30,
   "fields": {
     "created": "2026-02-20T20:37:37.764Z",
-    "description": "The ID of the Engram.",
+    "description": "The UUID of the Engram.",
     "modified": "2026-02-20T20:37:37.764Z",
     "name": "engram_id",
-    "type": 3
+    "type": 1
   }
 },
 {
@@ -1371,7 +1371,7 @@
     "created": "2026-02-21T20:53:49.903Z",
     "modified": "2026-02-21T20:53:49.903Z",
     "tool": 14,
-    "parameter": 31,
+    "parameter": 30,
     "required": true,
     "prune_after_turns": 0
   }

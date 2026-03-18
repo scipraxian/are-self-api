@@ -4,7 +4,7 @@ from frontal_lobe.models import ChatMessage, ChatMessageRole
 from identity.addons.addon_package import AddonPackage
 
 
-def river_of_6_addon(package: AddonPackage) -> List[ChatMessage]:
+def river_of_six_addon(package: AddonPackage) -> List[ChatMessage]:
     """
     Identity Addon (Phase: HISTORY):
     A highly constrained memory window. Retains 6 turns of history,

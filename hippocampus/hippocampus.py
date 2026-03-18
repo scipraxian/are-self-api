@@ -7,6 +7,7 @@ An asynchronous engine for managing permanent memories (Engrams) during reasonin
 
 import logging
 from dataclasses import dataclass
+from typing import Optional
 
 from asgiref.sync import sync_to_async
 from django.contrib.postgres.search import SearchQuery, SearchVector
@@ -47,6 +48,11 @@ class HippocampusMemoryYield:
         return self.message
 
 
+# ---------------------------------------------------------------------------
+# Pure Synchronous DB Operations (Module Level, Flat, Fully Scoped)
+# ---------------------------------------------------------------------------
+
+
 def _get_recent_sync(session: ReasoningSession) -> str:
     engrams = session.engrams.filter(is_active=True).order_by('created')
     if not engrams.exists():
@@ -54,51 +60,265 @@ def _get_recent_sync(session: ReasoningSession) -> str:
     return '\n'.join([f'- ID {e.id}: {e.name}' for e in engrams])
 
 
+def _get_catalog_sync(spike: Spike, limit: int) -> str:
+    qs = (
+        TalosEngram.objects.filter(spikes__neuron=spike.neuron, is_active=True)
+        .exclude(spikes=spike)
+        .annotate(
+            session_count=Count('sessions', distinct=True),
+            head_count=Count('spikes', distinct=True),
+        )
+        .order_by('-modified')
+        .prefetch_related('tags', 'sessions', 'spikes')[:limit]
+    )
+
+    res_lines = []
+    for talos_engram in qs:
+        tags_str = ', '.join([tag.name for tag in talos_engram.tags.all()])
+        res_lines.append(
+            f'- ID {talos_engram.id} | '
+            f'Sessions: {talos_engram.sessions.count()} | '
+            f'Spikes: {talos_engram.spikes.count()} | '
+            f'Title: {talos_engram.name} | '
+            f'Tags: {tags_str}'
+        )
+
+    return '\n'.join(res_lines)
+
+
+def _read_sync(engram_id: str, session_id: str) -> str:
+    try:
+        engram = TalosEngram.objects.get(id=engram_id, is_active=True)
+        session = ReasoningSession.objects.get(id=session_id)
+        identity_disc = session.identity_disc
+
+        engram.sessions.add(session)
+        if session.spike:
+            engram.spikes.add(session.spike)
+        if identity_disc:
+            if engram.creator_id is None:
+                engram.creator = identity_disc
+                engram.save(update_fields=['creator'])
+            engram.identity_discs.add(identity_disc)
+            identity_disc.memories.add(engram)
+
+        tags = ', '.join([t.name for t in engram.tags.all()])
+        return f'--- ENGRAM {engram.id}: {engram.name} ---\nTags: {tags}\nFact: {engram.description}'
+    except TalosEngram.DoesNotExist:
+        return f'Error: Engram ID {engram_id} not found in Hippocampus.'
+    except Exception as e:
+        logger.error(f'Failed to read engram {engram_id}: {e}')
+        return f'Error: {str(e)}'
+
+
+def _search_sync(query: str, tags: str, limit: int) -> str:
+    qs = TalosEngram.objects.filter(is_active=True)
+
+    if query:
+        qs = qs.annotate(search=SearchVector('name', 'description')).filter(
+            search=SearchQuery(query)
+        )
+    if tags:
+        tag_list = [t.strip() for t in tags.split(',') if t.strip()]
+        qs = qs.filter(tags__name__in=tag_list)
+
+    qs = qs.distinct().order_by('-relevance_score', '-created')[:limit]
+
+    if not qs.exists():
+        return 'No engrams found matching criteria.'
+
+    results = [
+        'Found Engrams in Hippocampus (Use mcp_engram_read to read the full fact):'
+    ]
+    for m in qs:
+        tag_str = ', '.join([t.name for t in m.tags.all()])
+        results.append(
+            f'ID {m.id} | Title: {m.name} | Tags: [{tag_str}] | Rel: {m.relevance_score}'
+        )
+
+    return '\n'.join(results)
+
+
+def _save_sync(
+    session_id: str,
+    title: str,
+    fact: str,
+    turn_id: int,
+    tags: str,
+    relevance: float,
+    embedding: Optional[list],
+) -> HippocampusMemoryYield:
+    """Strictly for creating new engrams. Uses safe filters for name collisions."""
+    try:
+        session = ReasoningSession.objects.get(id=session_id)
+        exact_turn = ReasoningTurn.objects.get(id=turn_id) if turn_id else None
+        clean_title = title[:254]
+        identity_disc = session.identity_disc
+
+        if embedding:
+            qs = (
+                TalosEngram.objects.exclude(vector__isnull=True)
+                .annotate(distance=CosineDistance('vector', embedding))
+                .order_by('distance')
+            )
+
+            if qs.exists():
+                best_match = qs.first()
+                similarity = 1.0 - best_match.distance
+                if similarity >= 0.90:
+                    msg = (
+                        f'Save rejected. High memory overlap detected. You already know this. '
+                        f'[0 Focus Awarded]. Here is the existing Engram (ID: {best_match.id}): {best_match.description}'
+                    )
+                    return HippocampusMemoryYield(
+                        intercepted=True,
+                        message=msg,
+                        similarity=similarity,
+                    )
+                max_sim = similarity
+            else:
+                max_sim = 0.0
+        else:
+            max_sim = 0.0
+
+        # Safe collision check without crashing on MultipleObjectsReturned
+        existing_engram = TalosEngram.objects.filter(name=clean_title).first()
+        if existing_engram:
+            msg = (
+                f"SYSTEM NOTICE: Engram with title '{clean_title}' already exists (ID: {existing_engram.id}).\n"
+                f'Current Fact: {existing_engram.description}\n'
+                f'ACTION REQUIRED: Use `mcp_engram_update` with ID {existing_engram.id} to append new information.'
+            )
+            return HippocampusMemoryYield(
+                intercepted=False, message=msg, similarity=max_sim
+            )
+
+        engram = TalosEngram.objects.create(
+            name=clean_title,
+            description=fact,
+            relevance_score=relevance,
+            vector=embedding if embedding else None,
+        )
+
+        engram.sessions.add(session)
+        if session.spike:
+            engram.spikes.add(session.spike)
+        if exact_turn:
+            engram.source_turns.add(exact_turn)
+
+        if identity_disc:
+            if engram.creator_id is None:
+                engram.creator = identity_disc
+                engram.save(update_fields=['creator'])
+            engram.identity_discs.add(identity_disc)
+            identity_disc.memories.add(engram)
+
+        if tags:
+            tag_list = [t.strip() for t in tags.split(',') if t.strip()]
+            for t_name in tag_list:
+                tag_obj, _ = TalosEngramTag.objects.get_or_create(name=t_name)
+                engram.tags.add(tag_obj)
+
+        msg = f'Success: Memory Card [{engram.id}: {engram.name}] permanently crystallized.'
+        return HippocampusMemoryYield(
+            intercepted=False, message=msg, similarity=max_sim
+        )
+    except Exception as e:
+        logger.error(f"Failed to save engram '{title}': {e}")
+        return HippocampusMemoryYield(
+            intercepted=False,
+            message=f'Memory Error: {str(e)}',
+            similarity=0.0,
+        )
+
+
+def _get_existing_desc_sync(
+    engram_id: str,
+) -> tuple[Optional[str], Optional[str]]:
+    """Strictly lookup by UUID for updates."""
+    try:
+        engram = TalosEngram.objects.get(id=engram_id)
+        return engram.description, engram.name
+    except TalosEngram.DoesNotExist:
+        return None, None
+
+
+def _update_sync(
+    session_id: str,
+    engram_id: str,
+    combined_text: str,
+    turn_id: int,
+    embedding: Optional[list],
+) -> HippocampusMemoryYield:
+    """Strictly updates by UUID."""
+    try:
+        engram = TalosEngram.objects.get(id=engram_id)
+
+        session = ReasoningSession.objects.get(id=session_id)
+        exact_turn = ReasoningTurn.objects.get(id=turn_id) if turn_id else None
+        identity_disc = session.identity_disc
+
+        if embedding:
+            qs = (
+                TalosEngram.objects.exclude(id=engram.id)
+                .exclude(vector__isnull=True)
+                .annotate(distance=CosineDistance('vector', embedding))
+                .order_by('distance')
+            )
+            if qs.exists():
+                best_match = qs.first()
+                max_sim = 1.0 - best_match.distance
+            else:
+                max_sim = 0.0
+        else:
+            max_sim = 0.0
+
+        engram.description = combined_text
+        if embedding:
+            engram.vector = embedding
+
+        update_fields = ['description', 'vector']
+        if identity_disc and engram.creator_id is None:
+            engram.creator = identity_disc
+            update_fields.append('creator')
+
+        engram.save(update_fields=update_fields)
+
+        engram.sessions.add(session)
+        if session.spike:
+            engram.spikes.add(session.spike)
+        if exact_turn:
+            engram.source_turns.add(exact_turn)
+        if identity_disc:
+            engram.identity_discs.add(identity_disc)
+            identity_disc.memories.add(engram)
+
+        msg = f"Success: Engram '{engram.name}' (ID: {engram.id}) has been updated with the new data."
+        return HippocampusMemoryYield(
+            intercepted=False, message=msg, similarity=max_sim
+        )
+    except Exception as e:
+        logger.error(f"Failed to update engram '{engram_id}': {e}")
+        return HippocampusMemoryYield(
+            intercepted=False,
+            message=f'Update Error: {str(e)}',
+            similarity=0.0,
+        )
+
+
+# ---------------------------------------------------------------------------
+# The Interface
+# ---------------------------------------------------------------------------
+
+
 class TalosHippocampus(object):
     """
-    An asynchronous manager for Talos Engrams. It acts as the permanent storage
-    and retrieval mechanism for AI memories. All database I/O is routed through
-    this object via `sync_to_async` to preserve event-loop safety.
+    An asynchronous manager for Talos Engrams.
     """
 
     @classmethod
-    async def get_turn_1_catalog(cls, spike: Spike, limit: int = 15) -> str:
-        """
-        Retrieves the indexed catalog of active engrams linked to a specific Spike,
-        formatted as a context block for the L1 cache.
-        """
-
-        def _get_catalog_sync() -> str:
-            qs = (
-                TalosEngram.objects.filter(
-                    spikes__neuron=spike.neuron, is_active=True
-                )
-                .exclude(spikes=spike)
-                .annotate(
-                    session_count=Count('sessions', distinct=True),
-                    head_count=Count('spikes', distinct=True),
-                )
-                .order_by('-modified')
-                .prefetch_related('tags', 'sessions', 'spikes')[:limit]
-            )
-
-            res_lines = []
-            for talos_engram in qs:
-                tags_str = ', '.join(
-                    [tag.name for tag in talos_engram.tags.all()]
-                )
-                res_lines.append(
-                    f'- ID {talos_engram.id} | '
-                    f'Sessions: {talos_engram.sessions.count()} | '
-                    f'Spikes: {talos_engram.spikes.count()} | '
-                    f'Title: {talos_engram.name} | '
-                    f'Tags: {tags_str}'
-                )
-
-            return '\n'.join(res_lines)
-
-        catalog_body = await sync_to_async(_get_catalog_sync)()
-
+    def get_turn_1_catalog(cls, spike: Spike, limit: int = 15) -> str:
+        catalog_body = _get_catalog_sync(spike, limit)
         if not catalog_body:
             return (
                 '[YOUR CARD CATALOG (ENGRAM INDEX)]\n'
@@ -115,13 +335,8 @@ class TalosHippocampus(object):
         )
 
     @classmethod
-    async def get_recent_catalog(cls, session: ReasoningSession) -> str:
-        """
-        Retrieves a simple list of recently created engrams for normal turns.
-        """
-
-        catalog_str = await sync_to_async(_get_recent_sync)(session)
-
+    def get_recent_catalog(cls, session: ReasoningSession) -> str:
+        catalog_str = _get_recent_sync(session)
         return (
             f'[YOUR CARD CATALOG (ENGRAM INDEX)]\n'
             f'{catalog_str}\n'
@@ -138,7 +353,7 @@ class TalosHippocampus(object):
         tags: str = '',
         relevance: float = 1.0,
     ) -> 'HippocampusMemoryYield':
-        """Saves a new fact into the Hippocampus as an Engram."""
+        """Acts as CREATE. Notes its action in docstring."""
         registry = await sync_to_async(ModelRegistry.objects.get)(
             id=ModelRegistry.NOMIC_EMBED_TEXT
         )
@@ -146,121 +361,27 @@ class TalosHippocampus(object):
         text_payload = f'Title: {title}\nFact: {fact}'
         embedding = await sync_to_async(client.embed)(text_payload)
 
-        def _save_sync() -> 'HippocampusMemoryYield':
-            try:
-                session = ReasoningSession.objects.get(id=session_id)
-                exact_turn = (
-                    ReasoningTurn.objects.get(id=turn_id) if turn_id else None
-                )
-                clean_title = title[:254]
-                identity_disc = session.identity_disc
-
-                if embedding:
-                    qs = (
-                        TalosEngram.objects.exclude(vector__isnull=True)
-                        .annotate(distance=CosineDistance('vector', embedding))
-                        .order_by('distance')
-                    )
-
-                    if qs.exists():
-                        best_match = qs.first()
-                        similarity = 1.0 - best_match.distance
-                        if similarity >= 0.90:
-                            msg = (
-                                f'Save rejected. High memory overlap detected. You already know this. '
-                                f'[0 Focus Awarded]. Here is the existing Engram: {best_match.description}'
-                            )
-                            return HippocampusMemoryYield(
-                                intercepted=True,
-                                message=msg,
-                                similarity=similarity,
-                            )
-                        max_sim = similarity
-                    else:
-                        max_sim = 0.0
-                else:
-                    max_sim = 0.0
-
-                existing_engram = TalosEngram.objects.filter(
-                    name=clean_title
-                ).first()
-                if existing_engram:
-                    msg = (
-                        f"SYSTEM NOTICE: Engram '{clean_title}' already exists in your Hippocampus.\n"
-                        f'Current Fact: {existing_engram.description}\n'
-                        f'ACTION REQUIRED: If you wish to add new information to this, cast `mcp_engram_update`.'
-                    )
-                    return HippocampusMemoryYield(
-                        intercepted=False, message=msg, similarity=max_sim
-                    )
-
-                engram = TalosEngram.objects.create(
-                    name=clean_title,
-                    description=fact,
-                    relevance_score=relevance,
-                    vector=embedding if embedding else None,
-                )
-
-                # Link all contextual relationships for this engram
-                engram.sessions.add(session)
-                if session.spike:
-                    engram.spikes.add(session.spike)
-                if exact_turn:
-                    engram.source_turns.add(exact_turn)
-
-                # Identity wiring: set creator and cross-link memories
-                if identity_disc:
-                    if engram.creator_id is None:
-                        engram.creator = identity_disc
-                        engram.save(update_fields=['creator'])
-                    engram.identity_discs.add(identity_disc)
-                    identity_disc.memories.add(engram)
-
-                if tags:
-                    tag_list = [t.strip() for t in tags.split(',') if t.strip()]
-                    for t_name in tag_list:
-                        tag_obj, _ = TalosEngramTag.objects.get_or_create(
-                            name=t_name
-                        )
-                        engram.tags.add(tag_obj)
-
-                msg = f'Success: Memory Card [{engram.id}: {engram.name}] permanently crystallized.'
-                return HippocampusMemoryYield(
-                    intercepted=False, message=msg, similarity=max_sim
-                )
-            except Exception as e:
-                logger.error(f"Failed to save engram '{title}': {e}")
-                return HippocampusMemoryYield(
-                    intercepted=False,
-                    message=f'Memory Error: {str(e)}',
-                    similarity=0.0,
-                )
-
-        return await sync_to_async(_save_sync)()
+        return await sync_to_async(_save_sync)(
+            session_id, title, fact, turn_id, tags, relevance, embedding
+        )
 
     @classmethod
     async def update_engram(
-        cls, session_id: str, title: str, additional_fact: str, turn_id: int
+        cls, session_id: str, engram_id: str, additional_fact: str, turn_id: int
     ) -> 'HippocampusMemoryYield':
-        """Appends new findings to an existing Engram."""
+        """Acts as UPDATE. Strictly uses UUID/ID."""
+        existing_desc, engram_title = await sync_to_async(
+            _get_existing_desc_sync
+        )(engram_id)
 
-        def _get_existing_sync():
-            clean_title = title[:254]
-            try:
-                engram = TalosEngram.objects.get(name=clean_title)
-                return engram.description, clean_title
-            except TalosEngram.DoesNotExist:
-                return None, clean_title
-
-        existing_desc, clean_title = await sync_to_async(_get_existing_sync)()
         if existing_desc is None:
-            msg = f"Error: Engram with title '{clean_title}' does not exist. Use `mcp_engram_save` to create it first."
+            msg = f"Error: Engram ID '{engram_id}' does not exist. Use `mcp_engram_save` to create it."
             return HippocampusMemoryYield(
                 intercepted=False, message=msg, similarity=0.0
             )
 
         combined_text = f'{existing_desc}\n\n[UPDATE]: {additional_fact}'
-        text_payload = f'Title: {title}\nFact: {combined_text}'
+        text_payload = f'Title: {engram_title}\nFact: {combined_text}'
 
         registry = await sync_to_async(ModelRegistry.objects.get)(
             name='nomic-embed-text'
@@ -268,127 +389,16 @@ class TalosHippocampus(object):
         client = OllamaClient(registry.name)
         embedding = await sync_to_async(client.embed)(text_payload)
 
-        def _update_sync() -> 'HippocampusMemoryYield':
-            try:
-                engram = TalosEngram.objects.get(name=clean_title)
-                session = ReasoningSession.objects.get(id=session_id)
-                exact_turn = (
-                    ReasoningTurn.objects.get(id=turn_id) if turn_id else None
-                )
-                identity_disc = session.identity_disc
-
-                if embedding:
-                    qs = (
-                        TalosEngram.objects.exclude(id=engram.id)
-                        .exclude(vector__isnull=True)
-                        .annotate(distance=CosineDistance('vector', embedding))
-                        .order_by('distance')
-                    )
-                    if qs.exists():
-                        best_match = qs.first()
-                        max_sim = 1.0 - best_match.distance
-                    else:
-                        max_sim = 0.0
-                else:
-                    max_sim = 0.0
-
-                engram.description = combined_text
-                if embedding:
-                    engram.vector = embedding
-
-                update_fields = ['description', 'vector']
-                if identity_disc and engram.creator_id is None:
-                    engram.creator = identity_disc
-                    update_fields.append('creator')
-
-                engram.save(update_fields=update_fields)
-
-                # Maintain all relationship links on update as well
-                engram.sessions.add(session)
-                if session.spike:
-                    engram.spikes.add(session.spike)
-                if exact_turn:
-                    engram.source_turns.add(exact_turn)
-                if identity_disc:
-                    engram.identity_discs.add(identity_disc)
-                    identity_disc.memories.add(engram)
-
-                msg = f"Success: Engram '{engram.name}' has been updated with the new data."
-                return HippocampusMemoryYield(
-                    intercepted=False, message=msg, similarity=max_sim
-                )
-            except Exception as e:
-                logger.error(f"Failed to update engram '{title}': {e}")
-                return HippocampusMemoryYield(
-                    intercepted=False,
-                    message=f'Update Error: {str(e)}',
-                    similarity=0.0,
-                )
-
-        return await sync_to_async(_update_sync)()
+        return await sync_to_async(_update_sync)(
+            session_id, engram_id, combined_text, turn_id, embedding
+        )
 
     @classmethod
-    async def read_engram(cls, session_id: str, engram_id: int) -> str:
-        """Reads the full fact of a specific Engram by ID."""
-
-        def _read_sync() -> str:
-            try:
-                engram = TalosEngram.objects.get(id=engram_id, is_active=True)
-                session = ReasoningSession.objects.get(id=session_id)
-                identity_disc = session.identity_disc
-
-                # Ensure all contextual links are maintained whenever an Engram is read
-                engram.sessions.add(session)
-                if session.spike:
-                    engram.spikes.add(session.spike)
-                if identity_disc:
-                    if engram.creator_id is None:
-                        engram.creator = identity_disc
-                        engram.save(update_fields=['creator'])
-                    engram.identity_discs.add(identity_disc)
-                    identity_disc.memories.add(engram)
-
-                tags = ', '.join([t.name for t in engram.tags.all()])
-                return f'--- ENGRAM {engram.id}: {engram.name} ---\nTags: {tags}\nFact: {engram.description}'
-            except TalosEngram.DoesNotExist:
-                return f'Error: Engram ID {engram_id} not found in Hippocampus.'
-            except Exception as e:
-                logger.error(f'Failed to read engram {engram_id}: {e}')
-                return f'Error: {str(e)}'
-
-        return await sync_to_async(_read_sync)()
+    async def read_engram(cls, session_id: str, engram_id: str) -> str:
+        return await sync_to_async(_read_sync)(engram_id, session_id)
 
     @classmethod
     async def search_engrams(
         cls, query: str = '', tags: str = '', limit: int = 10
     ) -> str:
-        """Searches the permanent Hippocampus catalog."""
-
-        def _search_sync() -> str:
-            qs = TalosEngram.objects.filter(is_active=True)
-
-            if query:
-                qs = qs.annotate(
-                    search=SearchVector('name', 'description')
-                ).filter(search=SearchQuery(query))
-            if tags:
-                tag_list = [t.strip() for t in tags.split(',') if t.strip()]
-                qs = qs.filter(tags__name__in=tag_list)
-
-            qs = qs.distinct().order_by('-relevance_score', '-created')[:limit]
-
-            if not qs.exists():
-                return 'No engrams found matching criteria.'
-
-            results = [
-                'Found Engrams in Hippocampus (Use mcp_engram_read to read the full fact):'
-            ]
-            for m in qs:
-                tag_str = ', '.join([t.name for t in m.tags.all()])
-                results.append(
-                    f'ID {m.id} | Title: {m.name} | Tags: [{tag_str}] | Rel: {m.relevance_score}'
-                )
-
-            return '\n'.join(results)
-
-        return await sync_to_async(_search_sync)()
+        return await sync_to_async(_search_sync)(query, tags, limit)

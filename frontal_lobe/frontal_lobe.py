@@ -1,7 +1,5 @@
-import inspect
 import json
 import logging
-import re
 import time
 from datetime import timedelta
 from typing import Any, Dict, List, Optional, Tuple
@@ -21,10 +19,8 @@ from frontal_lobe.models import (
     ReasoningTurn,
 )
 from frontal_lobe.serializers import LLMFunctionCall, LLMToolCall
-from hippocampus.hippocampus import TalosHippocampus
 from identity.addons.addon_package import AddonPackage
 from identity.addons.addon_registry import ADDON_REGISTRY
-from identity.identity_prompt import build_identity_prompt, collect_addon_blocks
 from parietal_lobe.parietal_lobe import ParietalLobe
 from temporal_lobe.models import IterationShiftParticipant
 
@@ -33,6 +29,13 @@ logger = logging.getLogger(__name__)
 STATUS_ID = 'status_id'
 ROLE = 'role'
 CONTENT = 'content'
+
+
+def _serialize_messages_sync(turn_record, all_messages):
+    return [
+        chat_message_to_llm_dict(msg, current_turn=turn_record.turn_number)
+        for msg in all_messages
+    ]
 
 
 class FrontalLobe:
@@ -144,17 +147,6 @@ class FrontalLobe:
         )
         return turn
 
-    def _get_iteration_id(self) -> Optional[int]:
-        from temporal_lobe.models import IterationShiftParticipant
-
-        try:
-            p = IterationShiftParticipant.objects.select_related(
-                'iteration_shift'
-            ).get(id=self.session.participant_id)
-            return p.iteration_shift.shift_iteration_id
-        except IterationShiftParticipant.DoesNotExist:
-            return None
-
     async def _build_turn_payload(
         self, turn_record: ReasoningTurn
     ) -> list[dict]:
@@ -190,17 +182,18 @@ class FrontalLobe:
         # 3. Execute addons and collect ChatMessage instances
         for addon_model in active_addons:
             addon_func = ADDON_REGISTRY.get(addon_model.function_slug)
-            if not addon_func:
-                continue
-
-            # Check if the addon is async or sync and execute accordingly
-            if inspect.iscoroutinefunction(addon_func):
-                addon_messages = await addon_func(package)
-            else:
+            if addon_func:
+                logger.info(f'Executing addon: {addon_model.function_slug}')
                 addon_messages = await sync_to_async(addon_func)(package)
-
-            if addon_messages:
-                all_messages.extend(addon_messages)
+                if addon_messages:
+                    logger.debug(
+                        f'Addon {addon_model.function_slug} returned {len(addon_messages)} messages'
+                    )
+                    all_messages.extend(addon_messages)
+            else:
+                logger.warning(
+                    f'Addon {addon_model.name} not found in registry.'
+                )
 
         # 4. Bulk save ONLY the new, volatile messages (so they appear in your DB timeline)
         unsaved_volatile = [
@@ -215,9 +208,10 @@ class FrontalLobe:
                 unsaved_volatile
             )
 
-        # 5. Translate the final sequence to LLM dictionaries
-        llm_payload = [chat_message_to_llm_dict(msg) for msg in all_messages]
-
+            # 5. Translate the final sequence to LLM dictionaries
+            llm_payload = await sync_to_async(_serialize_messages_sync)(
+                turn_record, all_messages
+            )
         # Logging output for debug
         await self._log_live(
             f'\n--- TURN {turn_record.turn_number} PAYLOAD ({len(llm_payload)} messages) ---'
@@ -241,9 +235,6 @@ class FrontalLobe:
 
         # 1. Start the turn record
         turn_record = await self._record_turn_start(turn_index, previous_turn)
-
-        # 3. Inject Volatile Context (Addons & Sensory triggers) directly into DB for this turn
-        await self._inject_addons(turn_record)
 
         # 4. Build the context window for the LLM
         messages = await self._build_turn_payload(turn_record)
