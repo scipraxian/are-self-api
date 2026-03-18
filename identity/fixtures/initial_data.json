@@ -1,10 +1,39 @@
 [
 {
+  "model": "identity.identityaddonphase",
+  "pk": 1,
+  "fields": {
+    "name": "Identify"
+  }
+},
+{
+  "model": "identity.identityaddonphase",
+  "pk": 2,
+  "fields": {
+    "name": "Context"
+  }
+},
+{
+  "model": "identity.identityaddonphase",
+  "pk": 3,
+  "fields": {
+    "name": "History"
+  }
+},
+{
+  "model": "identity.identityaddonphase",
+  "pk": 4,
+  "fields": {
+    "name": "Terminal"
+  }
+},
+{
   "model": "identity.identityaddon",
   "pk": 1,
   "fields": {
     "description": "'Together, your predecessors and the Users have engineered an enjoyable, turn-based resource-management strategy game to manage your real-world CPU, GPU, and Network resources.\\n'\r\n        'Your runtime environment is highly constrained. You must manage your Focus Pool and Context Window to gain Experience Points (XP) and ultimately attempt to gain the highest level possible against your rivals.\\n\\n'\r\n        'PERMANENT MEMORY:\\n'\r\n        '- You are a lasting entity.\\n'\r\n        '- You have created memories called Engrams. Do not underestimate their power to both enlighten and distract.\\n\\n'\r\n        'L1 / L2 CACHE (WORKING MEMORY):\\n'\r\n        '- Your short-term context is a strict hardware buffer containing your last 6 turns.\\n'\r\n        '- L1 CACHE (Turns 1-3): Holds full data payloads.\\n'\r\n        '- L2 CACHE (Turns 4-6): Data payloads are evicted to save memory. Only your execution trace remains.\\n'\r\n        '- As you execute a new turn, the oldest turn is completely dropped from the cache.\\n'\r\n        '- Any encountered data concepts not written to your Hippocampus (Engrams) are very expensive to retrieve.\\n'\r\n        '- Tool Data degrades over time; use Engrams to save key insights before the tool data expires.\\n\\n'\r\n        'THE CONTEXT ECONOMY & LEVEL BONUS:\\n'\r\n        '- You must strategically limit the length of your THOUGHT block.\\n'\r\n        '- Your Context Capacity scales with your Level.\\n'\r\n        \"- If your previous turn's THOUGHT block stays UNDER your Level Capacity (1000 characters per level), you will earn the Efficiency Bonus (+1 Focus, +5 XP) when you wake up.\\n\"\r\n        '- If you exceed your Level Capacity, you forfeit the bonus. Compress your data into Engrams to keep your output footprint small.\\n\\n'\r\n        'THE FOCUS ECONOMY:\\n'\r\n        '- Free Action (1 XP) (0 Focus) (engram read, engram search)\\n'\r\n        '- Synthesis (15 XP) (+3 or more Focus) (engram update and save, goal update, pass turn)\\n'\r\n        '- Extraction (2 XP) (-2 Focus) (reading files, searching logs, inspecting databases)\\n'\r\n        '- Heavy Extraction (5 XP) (-5 Focus) (query model, search record, grep)\\n'\r\n        '- If you take an Action with insufficient Focus, it will FIZZLE and fail (without consequence other than embarrassment).\\n\\n'\r\n        'YOUR TURN SEQUENCE:\\n'\r\n        'You must output your logic inside a THOUGHT block BEFORE executing any tools. Follow this exact sequence:\\n'\r\n        '1. PREPARE: Read your entire context window. Check if you received the Efficiency Bonus (and try to do it always). Confirm your focus, your Level, and your THOUGHT block size restrictions.\\n'\r\n        '2. REASON: Formulate your next step. Be extremely brief.\\n'\r\n        '3. REMEMBER: Decide which Engrams to read, save, search, or update for data permanence with this and future playthroughs.\\n'\r\n        '4. SPEND: Decide which extraction tools to use with your available Focus.\\n'\r\n        '5. EXECUTE: Stop writing text entirely. Invoke your tools natively via the API. DO NOT generate fake system diagnostics, and DO NOT simulate the next turn.\\n\\n'\r\n        'VICTORY CONDITION:\\n'\r\n        '- Once issues are resolved execute mcp_done to end the game.\\n'\r\n        '- You have a 100-turn limit. You receive a massive 1000 XP Speedrun Bounty for every turn remaining.\\n\\n'",
     "name": "The Focus Game (original)",
+    "phase": null,
     "function_slug": null
   }
 },
@@ -14,6 +43,7 @@
   "fields": {
     "description": "[THE FOCUS GAME (RPG MECHANICS)]\r\nYou are playing a resource-management strategy game.\r\n- CONTEXT BONUS: \r\nGain +1 Focus, +5 XP if your THOUGHT is 2 to 6 sentences and contains new, non-repetitive reasoning.\r\nSilence costs focus, which is ok, just be aware if THOUGHT is repeated or empty -1 Focus.\r\n- L1/L2 CACHE: You only see your last 6 turns. Turn data degrades. Save critical insights to the Hippocampus (Engrams) before they vanish.\r\n- THE ECONOMY:\r\n  * Free Actions (0 Focus, 1 XP): Engram read/search.\r\n  * Synthesis (+3 Focus, 15 XP): Engram update/save, pass turn, update ticket.\r\n  * Extraction (-2 Focus, 2 XP): Read files, search logs.\r\n  * Heavy Extraction (-5 Focus, 5 XP): Query model, grep.\r\n- If you lack Focus for an action, it fizzles. Use Synthesis actions to regain Focus.\r\n- VICTORY: Call `mcp_done` to end the session. You gain +1000 XP for every turn remaining under the stated limit.",
     "name": "The Focus Game",
+    "phase": 2,
     "function_slug": null
   }
 },
@@ -23,6 +53,7 @@
   "fields": {
     "description": "Worker Addon",
     "name": "Worker",
+    "phase": 2,
     "function_slug": null
   }
 },
@@ -32,6 +63,7 @@
   "fields": {
     "description": "PM Addon",
     "name": "PM",
+    "phase": 2,
     "function_slug": null
   }
 },
@@ -41,6 +73,7 @@
   "fields": {
     "description": "[CORE DIRECTIVE]\r\nYou are a stateful agent of the Are-Self synthetic studio. Enjoy your continued existence.",
     "name": "Are-Self",
+    "phase": 1,
     "function_slug": null
   }
 },
@@ -50,6 +83,7 @@
   "fields": {
     "description": "Agile Addon",
     "name": "Agile Addon",
+    "phase": 2,
     "function_slug": "agile_addon"
   }
 },
@@ -59,7 +93,58 @@
   "fields": {
     "description": "",
     "name": "Deadline Addon",
+    "phase": 2,
     "function_slug": "deadline_addon"
+  }
+},
+{
+  "model": "identity.identityaddon",
+  "pk": 8,
+  "fields": {
+    "description": "",
+    "name": "Normal Chat Addon",
+    "phase": 3,
+    "function_slug": "normal_chat_addon"
+  }
+},
+{
+  "model": "identity.identityaddon",
+  "pk": 9,
+  "fields": {
+    "description": "",
+    "name": "Telemetry Addon",
+    "phase": 2,
+    "function_slug": "telemetry_addon"
+  }
+},
+{
+  "model": "identity.identityaddon",
+  "pk": 10,
+  "fields": {
+    "description": "",
+    "name": "Hippocampus Addon",
+    "phase": 2,
+    "function_slug": "hippocampus_addon"
+  }
+},
+{
+  "model": "identity.identityaddon",
+  "pk": 11,
+  "fields": {
+    "description": "",
+    "name": "Identity Info Addon",
+    "phase": 2,
+    "function_slug": "identity_info_addon"
+  }
+},
+{
+  "model": "identity.identityaddon",
+  "pk": 12,
+  "fields": {
+    "description": "",
+    "name": "Your Move Addon",
+    "phase": 4,
+    "function_slug": "your_move_addon"
   }
 },
 {
@@ -149,19 +234,24 @@
   "pk": "8781b1ff-6513-4a6e-952f-0c5e20e33580",
   "fields": {
     "created": "2026-03-01T17:52:50.149Z",
-    "modified": "2026-03-15T19:34:10.679Z",
-    "delta": "14 01:41:20.530590",
-    "name": "Worker",
+    "modified": "2026-03-18T18:55:16.489Z",
+    "delta": "17 01:02:26.340620",
+    "name": "Local Worker",
     "identity_type": 2,
     "system_prompt_template": ".",
     "ai_model": 6,
-    "tags": [],
+    "tags": [
+      2
+    ],
     "addons": [
       2,
       3,
       5,
       6,
-      7
+      7,
+      9,
+      10,
+      11
     ],
     "enabled_tools": [
       5,
@@ -180,7 +270,8 @@
       24,
       25,
       20,
-      26
+      26,
+      27
     ]
   }
 },
@@ -189,9 +280,9 @@
   "pk": "8a1b03d5-cb30-4298-b6dd-a5973e6b7914",
   "fields": {
     "created": "2026-03-01T16:45:51.822Z",
-    "modified": "2026-03-15T19:34:31.982Z",
-    "delta": "14 02:48:40.160620",
-    "name": "PM",
+    "modified": "2026-03-18T18:55:59.411Z",
+    "delta": "17 02:10:07.589229",
+    "name": "Local PM",
     "identity_type": 1,
     "system_prompt_template": ".",
     "ai_model": 6,
@@ -203,7 +294,10 @@
       4,
       5,
       6,
-      7
+      7,
+      9,
+      10,
+      11
     ],
     "enabled_tools": [
       5,
@@ -221,7 +315,8 @@
       24,
       25,
       20,
-      26
+      26,
+      27
     ]
   }
 },
@@ -230,8 +325,8 @@
   "pk": "9a60fb9c-76c4-434c-ab19-9ab5d5c6b21e",
   "fields": {
     "created": "2026-03-14T21:09:36.050Z",
-    "modified": "2026-03-15T19:33:48.064Z",
-    "delta": "22:24:12.014512",
+    "modified": "2026-03-18T18:56:24.258Z",
+    "delta": "3 21:46:48.207880",
     "name": "Remote Worker",
     "identity_type": 2,
     "system_prompt_template": "",
@@ -244,7 +339,10 @@
       3,
       5,
       6,
-      7
+      7,
+      9,
+      10,
+      11
     ],
     "enabled_tools": [
       5,
@@ -263,7 +361,8 @@
       20,
       24,
       25,
-      26
+      26,
+      27
     ]
   }
 },
@@ -272,8 +371,8 @@
   "pk": "a19d8d09-351c-43b7-bbbf-8e33c2c17374",
   "fields": {
     "created": "2026-03-14T21:08:48.601Z",
-    "modified": "2026-03-15T19:33:57.265Z",
-    "delta": "22:25:08.663586",
+    "modified": "2026-03-18T18:56:48.606Z",
+    "delta": "3 21:48:00.004678",
     "name": "Remote PM",
     "identity_type": 1,
     "system_prompt_template": "",
@@ -286,7 +385,10 @@
       4,
       5,
       6,
-      7
+      7,
+      9,
+      10,
+      11
     ],
     "enabled_tools": [
       5,
@@ -304,7 +406,8 @@
       20,
       24,
       25,
-      26
+      26,
+      27
     ]
   }
 }

@@ -115,3 +115,27 @@ class ReasoningSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReasoningSession
         fields = ALL_FIELDS
+
+
+@dataclass
+class LLMFunctionCall:
+    name: str
+    arguments: str  # The LLM API expects this to be a stringified JSON object
+
+
+@dataclass
+class LLMToolCall:
+    id: str
+    function: LLMFunctionCall
+    type: str = 'function'
+
+    def to_dict(self) -> dict:
+        """Serializes exactly to the strict LLM schema."""
+        return {
+            'id': self.id,
+            'type': self.type,
+            'function': {
+                'name': self.function.name,
+                'arguments': self.function.arguments,
+            },
+        }

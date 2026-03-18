@@ -1,10 +1,20 @@
-from frontal_lobe.models import ReasoningTurn
+from typing import List
+
+from frontal_lobe.models import ChatMessage, ChatMessageRole, ReasoningTurn
 from identity.addons.addon_package import AddonPackage
 
 
-def deadline_addon(package: AddonPackage) -> str:
+def deadline_addon(package: AddonPackage) -> List[ChatMessage]:
     if not package.reasoning_turn_id:
-        return 'Deadline Addon Preview Mode (No Reasoning Turn)'
+        return [
+            ChatMessage(
+                session_id=package.session_id,
+                turn_id=package.reasoning_turn_id,
+                role_id=ChatMessageRole.USER,
+                content='Deadline Addon Preview Mode (No Reasoning Turn)',
+                is_volatile=True,
+            )
+        ]
     session = ReasoningTurn.objects.get(id=package.reasoning_turn_id).session
 
     current_turn = package.turn_number
@@ -34,4 +44,13 @@ def deadline_addon(package: AddonPackage) -> str:
             f'[CRITICAL: ONLY {remaining_turns} TURNS REMAIN.]'
         )
 
-    return '\n\n'.join(prompt_blocks)
+    text_content = '\n\n'.join(prompt_blocks)
+    return [
+        ChatMessage(
+            session_id=package.session_id,
+            turn_id=package.reasoning_turn_id,
+            role_id=ChatMessageRole.USER,
+            content=text_content,
+            is_volatile=True,
+        )
+    ]

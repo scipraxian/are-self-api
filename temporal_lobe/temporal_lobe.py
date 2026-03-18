@@ -30,6 +30,56 @@ from temporal_lobe.models import (
 )
 
 logger = logging.getLogger(__name__)
+from asgiref.sync import async_to_sync
+
+from prefrontal_cortex.prefrontal_cortex import PrefrontalCortex
+
+
+def get_or_create_environment_trains(
+    active_iteration_environments: list[UUID],
+) -> list[UUID]:
+    train_list = []
+    pathway = fetch_canonical_temporal_pathway()
+    for env_id in active_iteration_environments:
+        # --- THE NEW PRE-CHECK ---
+        # Don't even start the clock if the board is completely empty or stalled.
+        has_work = async_to_sync(
+            PrefrontalCortex.has_actionable_work_in_environment
+        )(env_id)
+        if not has_work:
+            logger.info(
+                f'[TemporalLobe] Environment {env_id} board is empty. Skipping metronome.'
+            )
+            continue
+        # -------------------------
+
+        trains = SpikeTrain.objects.filter(
+            pathway=pathway,
+            environment_id=env_id,
+            status_id__in=[SpikeTrainStatus.CREATED, SpikeTrainStatus.RUNNING],
+        )
+        is_already_running = trains.exists()
+        if is_already_running:
+            logger.info(
+                f'[TemporalLobe] SpikeTrain for Environment {env_id} is already running.'
+            )
+            train_list.extend(trains.values_list('id', flat=True))
+            continue
+
+        spike_train = SpikeTrain.objects.create(
+            pathway=pathway,
+            environment_id=env_id,
+            status_id=SpikeTrainStatus.CREATED,
+        )
+        logger.info(
+            f'[TemporalLobe] Created new SpikeTrain {spike_train.id} for Environment {env_id}'
+        )
+
+        cns = CNS(spike_train_id=spike_train.id)
+        cns.start()
+        train_list.append(spike_train.id)
+
+    return train_list
 
 
 class TemporalLobe:

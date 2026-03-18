@@ -1,3 +1,4 @@
+import inspect
 import json
 import logging
 import re
@@ -19,8 +20,10 @@ from frontal_lobe.models import (
     ReasoningStatusID,
     ReasoningTurn,
 )
+from frontal_lobe.serializers import LLMFunctionCall, LLMToolCall
 from hippocampus.hippocampus import TalosHippocampus
 from identity.addons.addon_package import AddonPackage
+from identity.addons.addon_registry import ADDON_REGISTRY
 from identity.identity_prompt import build_identity_prompt, collect_addon_blocks
 from parietal_lobe.parietal_lobe import ParietalLobe
 from temporal_lobe.models import IterationShiftParticipant
@@ -141,131 +144,6 @@ class FrontalLobe:
         )
         return turn
 
-    def _get_identity_prompt(self, turn_record: ReasoningTurn):
-        iteration_id = None
-        if self.session.participant_id:
-            from temporal_lobe.models import IterationShiftParticipant
-
-            try:
-                p = IterationShiftParticipant.objects.select_related(
-                    'iteration_shift'
-                ).get(id=self.session.participant_id)
-                iteration_id = p.iteration_shift.shift_iteration_id
-            except IterationShiftParticipant.DoesNotExist:
-                pass
-
-        return build_identity_prompt(
-            identity_disc=self.session.identity_disc,
-            iteration_id=iteration_id,
-            turn_number=turn_record.turn_number,
-            reasoning_turn_id=turn_record.id,
-        )
-
-    async def _build_history_messages(
-        self, turn_record: ReasoningTurn
-    ) -> List[Dict[str, Any]]:
-        """
-        Rebuilds the recent conversational history from native ChatMessage records.
-        L1 (Previous 2 turns): Full data.
-        L2 (Turns 3-6 prior): Truncated tool data.
-        """
-        if not self.session:
-            return []
-
-        current_turn_num = turn_record.turn_number
-        cutoff_turn = max(1, current_turn_num - 6)
-
-        # Retrieve strictly non-volatile messages from the last 6 turns, ordered chronologically
-        history_qs = await sync_to_async(list)(
-            ChatMessage.objects.filter(
-                session=self.session,
-                turn__turn_number__gte=cutoff_turn,
-                turn__turn_number__lt=current_turn_num,
-                is_volatile=False,
-            )
-            .select_related('turn', 'role', 'tool_call__tool')
-            .prefetch_related('turn__tool_calls__tool')  # <-- ADD THIS PREFETCH
-            .order_by('created')
-        )
-
-        messages_for_llm = []
-
-        for msg in history_qs:
-            role_name = 'system'
-            if msg.role_id == ChatMessageRole.USER:
-                role_name = 'user'
-            elif msg.role_id == ChatMessageRole.ASSISTANT:
-                role_name = 'assistant'
-            elif msg.role_id == ChatMessageRole.TOOL:
-                role_name = 'tool'
-
-            content = msg.content
-            message_dict: Dict[str, Any] = {ROLE: role_name}
-
-            # 2. FIX ASSISTANT FORMATTING
-            if msg.role_id == ChatMessageRole.ASSISTANT:
-                tool_calls_payload = []
-                for tc in msg.turn.tool_calls.all():
-                    raw_args = tc.arguments or '{}'
-
-                    # 1. Parse into a dictionary
-                    if isinstance(raw_args, str):
-                        try:
-                            parsed_args = json.loads(raw_args)
-                        except json.JSONDecodeError:
-                            parsed_args = {}
-                    elif isinstance(raw_args, dict):
-                        parsed_args = raw_args
-                    else:
-                        parsed_args = {}
-
-                    # 2. Prune the heavy context for older turns
-                    if (
-                        tc.tool.name == 'mcp_internal_monologue'
-                        and msg.turn.turn_number < current_turn_num
-                    ):
-                        if 'thought' in parsed_args:
-                            parsed_args['thought'] = '[PRUNED TO SAVE TOKENS]'
-                        if 'message_to_user' in parsed_args:
-                            parsed_args['message_to_user'] = (
-                                '[PRUNED - DELIVERED TO USER]'
-                            )
-
-                    # 3. Append to payload (CRITICAL FIX: Use json.dumps here!)
-                    tool_calls_payload.append(
-                        {
-                            'id': f'call_{tc.id}',
-                            'type': 'function',
-                            'function': {
-                                'name': tc.tool.name,
-                                'arguments': json.dumps(parsed_args),
-                                # <--- MUST BE A STRING
-                            },
-                        }
-                    )
-
-                if tool_calls_payload:
-                    message_dict['tool_calls'] = tool_calls_payload
-
-            # Handle Tool Results formatting & L2 Eviction logic (Unchanged, this was correct)
-            elif msg.role_id == ChatMessageRole.TOOL:
-                age = current_turn_num - msg.turn.turn_number
-
-                # L2 Eviction: If older than 2 turns, strip the heavy data
-                if age > 2:
-                    content = '[DATA EVICTED FROM L1 CACHE. REQUIRES ENGRAM RETRIEVAL.]'
-                elif age == 2:
-                    content += '\n\n[SYSTEM WARNING: L1 EVICTION IMMINENT. FLUSH TO ENGRAMS.]'
-
-                if msg.tool_call_id:
-                    message_dict['name'] = msg.tool_call.tool.name
-                    message_dict['tool_call_id'] = f'call_{msg.tool_call_id}'
-
-            message_dict[CONTENT] = content
-            messages_for_llm.append(message_dict)
-
-        return messages_for_llm
-
     def _get_iteration_id(self) -> Optional[int]:
         from temporal_lobe.models import IterationShiftParticipant
 
@@ -277,63 +155,81 @@ class FrontalLobe:
         except IterationShiftParticipant.DoesNotExist:
             return None
 
-    async def _inject_addons(self, turn_record: ReasoningTurn) -> None:
+    async def _build_turn_payload(
+        self, turn_record: ReasoningTurn
+    ) -> list[dict]:
         """
-        Executes Identity Addons for the current turn and saves them directly
-        to the database as Volatile user messages.
+        Assembles the Turn payload by purely orchestrating Addons.
+        Relies entirely on IdentityAddonPhase for ordering (Identify -> Context -> History -> Terminal).
         """
-        if not self.session or not self.session.identity_disc:
-            return
 
-        iteration_id = None
-        if self.session.participant_id:
-            iteration_id = await sync_to_async(self._get_iteration_id)()
+        all_messages: list[ChatMessage] = []
 
-        addon_blocks = await sync_to_async(collect_addon_blocks)(
-            identity_disc=self.session.identity_disc,
-            iteration_id=iteration_id,
+        # 1. Build the unified context package
+        package = AddonPackage(
+            session_id=self.session.id,
+            spike_id=self.spike.id,
+            identity_disc=self.session.identity_disc.id
+            if self.session.identity_disc
+            else None,
             turn_number=turn_record.turn_number,
             reasoning_turn_id=turn_record.id,
+            iteration=self._cached_iteration_id,
             environment_id=self._cached_environment_id,
             shift_id=self._cached_shift_id,
         )
 
-        for addon_name, addon_text in addon_blocks:
-            await sync_to_async(ChatMessage.objects.create)(
-                session=self.session,
-                turn=turn_record,
-                role_id=ChatMessageRole.USER,
-                content=f'[{addon_name.upper()} ADDON]:\n{addon_text}',
-                is_volatile=True,
+        # 2. Fetch active addons ordered by Phase
+        # (Assuming you link IdentityAddon to IdentityDisc somehow, e.g., via a M2M or foreign key)
+        active_addons = await sync_to_async(list)(
+            self.session.identity_disc.addons.select_related('phase').order_by(
+                'phase__id'
             )
-
-    async def _build_turn_payload(
-        self, turn_record: ReasoningTurn
-    ) -> list[dict]:
-        all_messages: list[ChatMessage] = []
-
-        # 1. Build the package
-        package = AddonPackage(
-            session_id=self.session.id,
-            spike_id=self.spike.id,
-            reasoning_turn_id=turn_record.id,
-            turn_number=turn_record.turn_number,
-            # ... other fields ...
         )
 
-        # 2. Iterate through your Active Addons (ordered by Phase!)
-        # active_addons = await ... fetch from DB ordered by Phase ...
-        # for addon in active_addons:
-        #     messages = await execute_addon(addon.slug, package)
-        #     all_messages.extend(messages)
+        # 3. Execute addons and collect ChatMessage instances
+        for addon_model in active_addons:
+            addon_func = ADDON_REGISTRY.get(addon_model.function_slug)
+            if not addon_func:
+                continue
 
-        # 3. Bulk Save Volatiles so they appear in your DB viewer
-        unsaved = [m for m in all_messages if m._state.adding and m.is_volatile]
-        if unsaved:
-            await sync_to_async(ChatMessage.objects.bulk_create)(unsaved)
+            # Check if the addon is async or sync and execute accordingly
+            if inspect.iscoroutinefunction(addon_func):
+                addon_messages = await addon_func(package)
+            else:
+                addon_messages = await sync_to_async(addon_func)(package)
 
-        # 4. Serialize to dicts
-        return [msg.to_llm_dict() for msg in all_messages]
+            if addon_messages:
+                all_messages.extend(addon_messages)
+
+        # 4. Bulk save ONLY the new, volatile messages (so they appear in your DB timeline)
+        unsaved_volatile = [
+            m for m in all_messages if m._state.adding and m.is_volatile
+        ]
+        if unsaved_volatile:
+            # Ensure they are linked to the current turn/session just in case the addon forgot
+            for msg in unsaved_volatile:
+                msg.session_id = self.session.id
+                msg.turn_id = turn_record.id
+            await sync_to_async(ChatMessage.objects.bulk_create)(
+                unsaved_volatile
+            )
+
+        # 5. Translate the final sequence to LLM dictionaries
+        llm_payload = [chat_message_to_llm_dict(msg) for msg in all_messages]
+
+        # Logging output for debug
+        await self._log_live(
+            f'\n--- TURN {turn_record.turn_number} PAYLOAD ({len(llm_payload)} messages) ---'
+        )
+        for msg in llm_payload:
+            content_str = msg.get(ChatMessage.CONTENT_KEY, '') or ''
+            await self._log_live(
+                f'[{msg.get(ChatMessage.ROLE_KEY)}] {content_str[:150]}...'
+            )
+        await self._log_live('------------------------\n')
+
+        return llm_payload
 
     async def _execute_turn(
         self,
@@ -529,26 +425,57 @@ async def _record_turn_completion(
     await sync_to_async(turn_record.save)()
 
 
-async def relay_sensory_state(turn_record: ReasoningTurn) -> str:
-    """
-    The Thalamus.
-    Compiles the current state of the world, active Agile tasks, and memories
-    for the *current* turn, and returns the final sensory trigger message.
-    """
-    session = turn_record.session
-    current_turn = turn_record.turn_number
+def chat_message_to_llm_dict(
+    chat_message: ChatMessage, current_turn: Optional[int] = None
+) -> dict:
+    role_map = dict(ChatMessageRole.ROLE_CHOICES)
+    role_name = role_map.get(chat_message.role_id, ChatMessageRole.USER_NAME)
 
-    # Hippocampus Catalog for this turn
-    if current_turn == 1:
-        spike = await sync_to_async(lambda: session.spike)()
-        catalog_block = await TalosHippocampus.get_turn_1_catalog(spike)
-    else:
-        catalog_block = await TalosHippocampus.get_recent_catalog(session)
+    payload = {
+        chat_message.ROLE_KEY: role_name,
+        chat_message.CONTENT_KEY: chat_message.content,
+    }
 
-    return (
-        f'{catalog_block}\n\n'
-        'YOUR MOVE:\n'
-        '1. You MUST call mcp_internal_monologue ALONGSIDE any other tools you call in parallel. Never fire a tool without also firing your monologue.\n'
-        '2. You should call your tools (like `mcp_ticket`) in parallel during the exact same turn.\n'
-        '3. Use structured JSON for all tool calls natively.\n'
-    )
+    # Handle Tool Results
+    if (
+        chat_message.role_id == ChatMessageRole.TOOL
+        and chat_message.tool_call_id
+    ):
+        if chat_message.tool_call and getattr(
+            chat_message.tool_call, chat_message.TOOL_KEY, None
+        ):
+            payload[chat_message.NAME_KEY] = chat_message.tool_call.tool.name
+        payload[chat_message.TOOL_CALL_ID_KEY] = (
+            f'call_{chat_message.tool_call_id}'
+        )
+
+    # Handle Assistant Tool Requests
+    elif chat_message.role_id == ChatMessageRole.ASSISTANT:
+        tool_calls_payload = []
+        for tc in chat_message.turn.tool_calls.all():
+            raw_args = tc.arguments or '{}'
+            parsed_args = (
+                json.loads(raw_args) if isinstance(raw_args, str) else raw_args
+            )
+            if current_turn:
+                age = current_turn - chat_message.turn.turn_number
+                for assignment in tc.tool.assignments.all():
+                    if (
+                        assignment.prune_after_turns
+                        and age >= assignment.prune_after_turns
+                    ):
+                        param_name = assignment.parameter.name
+                        if param_name in parsed_args:
+                            parsed_args[param_name] = '[PRUNED TO SAVE TOKENS]'
+            llm_tc = LLMToolCall(
+                id=f'call_{tc.id}',
+                function=LLMFunctionCall(
+                    name=tc.tool.name, arguments=json.dumps(parsed_args)
+                ),
+            )
+            tool_calls_payload.append(llm_tc.to_dict())
+
+        if tool_calls_payload:
+            payload[chat_message.TOOL_CALLS_KEY] = tool_calls_payload
+
+    return payload

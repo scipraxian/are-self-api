@@ -47,6 +47,13 @@ class HippocampusMemoryYield:
         return self.message
 
 
+def _get_recent_sync(session: ReasoningSession) -> str:
+    engrams = session.engrams.filter(is_active=True).order_by('created')
+    if not engrams.exists():
+        return 'You have no Engrams in your Hippocampus yet.'
+    return '\n'.join([f'- ID {e.id}: {e.name}' for e in engrams])
+
+
 class TalosHippocampus(object):
     """
     An asynchronous manager for Talos Engrams. It acts as the permanent storage
@@ -71,15 +78,21 @@ class TalosHippocampus(object):
                     session_count=Count('sessions', distinct=True),
                     head_count=Count('spikes', distinct=True),
                 )
-                .order_by('-session_count')
-                .prefetch_related('tags')[:limit]
+                .order_by('-modified')
+                .prefetch_related('tags', 'sessions', 'spikes')[:limit]
             )
 
             res_lines = []
-            for e in qs:
-                tags_str = ', '.join([tag.name for tag in e.tags.all()])
+            for talos_engram in qs:
+                tags_str = ', '.join(
+                    [tag.name for tag in talos_engram.tags.all()]
+                )
                 res_lines.append(
-                    f'- ID {e.id} | Sessions: {e.session_count} | Heads: {e.head_count} | Title: {e.name} | Tags: {tags_str}'
+                    f'- ID {talos_engram.id} | '
+                    f'Sessions: {talos_engram.sessions.count()} | '
+                    f'Spikes: {talos_engram.spikes.count()} | '
+                    f'Title: {talos_engram.name} | '
+                    f'Tags: {tags_str}'
                 )
 
             return '\n'.join(res_lines)
@@ -89,8 +102,8 @@ class TalosHippocampus(object):
         if not catalog_body:
             return (
                 '[YOUR CARD CATALOG (ENGRAM INDEX)]\n'
-                'Your memory banks are completely empty.\n'
-                '(Use mcp_engram_read to read full facts)\n\n'
+                'Your memory cache is empty.\n'
+                '(Use mcp_engram_search to find others)\n\n'
             )
 
         return (
@@ -107,13 +120,7 @@ class TalosHippocampus(object):
         Retrieves a simple list of recently created engrams for normal turns.
         """
 
-        def _get_recent_sync() -> str:
-            engrams = session.engrams.filter(is_active=True).order_by('created')
-            if not engrams.exists():
-                return 'Your memory banks are completely empty.'
-            return '\n'.join([f'- ID {e.id}: {e.name}' for e in engrams])
-
-        catalog_str = await sync_to_async(_get_recent_sync)()
+        catalog_str = await sync_to_async(_get_recent_sync)(session)
 
         return (
             f'[YOUR CARD CATALOG (ENGRAM INDEX)]\n'

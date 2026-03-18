@@ -351,7 +351,7 @@
   "fields": {
     "created": "2026-03-15T19:19:37.350Z",
     "description": "MANDATORY: You must call this tool on EVERY turn to log your thoughts, speak to the user, and pass state.",
-    "modified": "2026-03-15T19:19:37.350Z",
+    "modified": "2026-03-18T17:05:19.598Z",
     "name": "mcp_internal_monologue",
     "is_async": true,
     "use_type": 6
@@ -1048,7 +1048,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 4,
     "parameter": 6,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1059,7 +1060,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 4,
     "parameter": 7,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1070,7 +1072,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 4,
     "parameter": 8,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1081,7 +1084,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 5,
     "parameter": 10,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1092,7 +1096,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 5,
     "parameter": 11,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1103,7 +1108,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 6,
     "parameter": 10,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1114,7 +1120,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 6,
     "parameter": 11,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1125,7 +1132,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 6,
     "parameter": 12,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1136,7 +1144,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 6,
     "parameter": 26,
-    "required": false
+    "required": false,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1147,7 +1156,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 7,
     "parameter": 10,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1158,7 +1168,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 7,
     "parameter": 11,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1169,7 +1180,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 7,
     "parameter": 12,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1180,7 +1192,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 7,
     "parameter": 4,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1191,7 +1204,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 8,
     "parameter": 10,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1202,7 +1216,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 8,
     "parameter": 13,
-    "required": false
+    "required": false,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1213,7 +1228,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 8,
     "parameter": 14,
-    "required": false
+    "required": false,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1224,7 +1240,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 8,
     "parameter": 26,
-    "required": false
+    "required": false,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1235,7 +1252,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 11,
     "parameter": 18,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1246,7 +1264,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 11,
     "parameter": 22,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1257,7 +1276,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 11,
     "parameter": 23,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1268,7 +1288,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 11,
     "parameter": 24,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1279,7 +1300,8 @@
     "modified": "2026-02-18T12:00:00Z",
     "tool": 11,
     "parameter": 25,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1290,7 +1312,8 @@
     "modified": "2026-02-21T20:53:49.896Z",
     "tool": 10,
     "parameter": 18,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1301,7 +1324,8 @@
     "modified": "2026-02-21T20:53:49.898Z",
     "tool": 10,
     "parameter": 31,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1312,7 +1336,8 @@
     "modified": "2026-02-21T20:53:49.900Z",
     "tool": 10,
     "parameter": 19,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1323,7 +1348,8 @@
     "modified": "2026-02-21T20:53:49.901Z",
     "tool": 10,
     "parameter": 17,
-    "required": false
+    "required": false,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1334,7 +1360,8 @@
     "modified": "2026-02-21T20:53:49.902Z",
     "tool": 14,
     "parameter": 18,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1345,7 +1372,8 @@
     "modified": "2026-02-21T20:53:49.903Z",
     "tool": 14,
     "parameter": 31,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1356,7 +1384,8 @@
     "modified": "2026-02-21T20:53:49.905Z",
     "tool": 14,
     "parameter": 32,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1367,7 +1396,8 @@
     "modified": "2026-02-21T20:53:49.906Z",
     "tool": 13,
     "parameter": 18,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1378,7 +1408,8 @@
     "modified": "2026-02-21T20:53:49.907Z",
     "tool": 13,
     "parameter": 30,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1389,7 +1420,8 @@
     "modified": "2026-02-21T20:53:49.908Z",
     "tool": 9,
     "parameter": 16,
-    "required": false
+    "required": false,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1400,7 +1432,8 @@
     "modified": "2026-02-21T20:53:49.909Z",
     "tool": 9,
     "parameter": 17,
-    "required": false
+    "required": false,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1411,7 +1444,8 @@
     "modified": "2026-02-23T14:23:21.138Z",
     "tool": 11,
     "parameter": 33,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1422,7 +1456,8 @@
     "modified": "2026-02-23T14:23:21.141Z",
     "tool": 11,
     "parameter": 34,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1433,7 +1468,8 @@
     "modified": "2026-02-23T15:09:02.513Z",
     "tool": 15,
     "parameter": 16,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1444,7 +1480,8 @@
     "modified": "2026-02-23T15:09:02.520Z",
     "tool": 16,
     "parameter": 35,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1455,7 +1492,8 @@
     "modified": "2026-02-23T15:09:02.526Z",
     "tool": 17,
     "parameter": 6,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1466,7 +1504,8 @@
     "modified": "2026-02-23T15:50:43.825Z",
     "tool": 17,
     "parameter": 26,
-    "required": false
+    "required": false,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1477,7 +1516,8 @@
     "modified": "2026-02-25T12:00:00Z",
     "tool": 18,
     "parameter": 18,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1488,7 +1528,8 @@
     "modified": "2026-03-11T12:00:00Z",
     "tool": 20,
     "parameter": 15,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1499,7 +1540,8 @@
     "modified": "2026-03-11T12:00:00Z",
     "tool": 20,
     "parameter": 54,
-    "required": false
+    "required": false,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1510,7 +1552,8 @@
     "modified": "2026-03-11T12:00:00Z",
     "tool": 20,
     "parameter": 51,
-    "required": false
+    "required": false,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1521,7 +1564,8 @@
     "modified": "2026-03-10T12:00:00Z",
     "tool": 24,
     "parameter": 52,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1532,7 +1576,8 @@
     "modified": "2026-03-10T12:00:00Z",
     "tool": 24,
     "parameter": 54,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1543,7 +1588,8 @@
     "modified": "2026-03-10T12:00:00Z",
     "tool": 25,
     "parameter": 53,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1554,7 +1600,8 @@
     "modified": "2026-03-10T12:00:00Z",
     "tool": 25,
     "parameter": 54,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1565,7 +1612,8 @@
     "modified": "2026-03-11T12:00:00Z",
     "tool": 20,
     "parameter": 36,
-    "required": false
+    "required": false,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1576,7 +1624,8 @@
     "modified": "2026-03-11T12:00:00Z",
     "tool": 20,
     "parameter": 37,
-    "required": false
+    "required": false,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1587,7 +1636,8 @@
     "modified": "2026-03-11T12:00:00Z",
     "tool": 20,
     "parameter": 12,
-    "required": false
+    "required": false,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1598,7 +1648,8 @@
     "modified": "2026-03-11T12:00:00Z",
     "tool": 20,
     "parameter": 56,
-    "required": false
+    "required": false,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1609,7 +1660,8 @@
     "modified": "2026-03-11T12:00:00Z",
     "tool": 20,
     "parameter": 38,
-    "required": false
+    "required": false,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1620,7 +1672,8 @@
     "modified": "2026-03-11T12:00:00Z",
     "tool": 20,
     "parameter": 16,
-    "required": false
+    "required": false,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1628,10 +1681,11 @@
   "pk": 147,
   "fields": {
     "created": "2026-03-15T19:19:37.370Z",
-    "modified": "2026-03-15T19:19:37.370Z",
+    "modified": "2026-03-18T17:05:00.712Z",
     "tool": 26,
     "parameter": 57,
-    "required": true
+    "required": true,
+    "prune_after_turns": 2
   }
 },
 {
@@ -1639,10 +1693,11 @@
   "pk": 148,
   "fields": {
     "created": "2026-03-15T19:19:37.376Z",
-    "modified": "2026-03-15T19:19:37.376Z",
+    "modified": "2026-03-18T17:05:00.710Z",
     "tool": 26,
     "parameter": 58,
-    "required": false
+    "required": false,
+    "prune_after_turns": 1
   }
 },
 {
@@ -1650,10 +1705,11 @@
   "pk": 149,
   "fields": {
     "created": "2026-03-15T19:19:37.380Z",
-    "modified": "2026-03-15T19:19:37.380Z",
+    "modified": "2026-03-18T17:05:00.711Z",
     "tool": 26,
     "parameter": 59,
-    "required": true
+    "required": true,
+    "prune_after_turns": 6
   }
 },
 {
@@ -1664,7 +1720,8 @@
     "modified": "2026-03-17T12:00:00Z",
     "tool": 27,
     "parameter": 60,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1675,7 +1732,8 @@
     "modified": "2026-03-17T12:00:00Z",
     "tool": 27,
     "parameter": 61,
-    "required": false
+    "required": false,
+    "prune_after_turns": 0
   }
 },
 {
@@ -1686,7 +1744,8 @@
     "modified": "2026-03-17T12:00:00Z",
     "tool": 27,
     "parameter": 18,
-    "required": true
+    "required": true,
+    "prune_after_turns": 0
   }
 },
 {

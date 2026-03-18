@@ -1,495 +1,289 @@
 import json
+from typing import List, Optional, Tuple
+from uuid import UUID
 
-from django.db.models import Q
-
+from frontal_lobe.models import ChatMessage, ChatMessageRole
 from identity.addons.addon_package import AddonPackage
 from identity.models import IdentityDisc, IdentityType
-from prefrontal_cortex.models import PFCEpic, PFCItemStatus, PFCStory
-from prefrontal_cortex.serializers import PFCEpicSerializer, PFCStorySerializer
+from prefrontal_cortex.models import PFCEpic, PFCItemStatus, PFCStory, PFCTask
+from prefrontal_cortex.serializers import (
+    PFCEpicSerializer,
+    PFCStorySerializer,
+    PFCTaskSerializer,
+)
 from temporal_lobe.models import Shift
 
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
 
-def sifting_pm(identity_disc, environment_id, turn_number) -> str:
-    """The Sifting PM reviews work and moves it to the backlog."""
-    success = False
-    statements = []
+_MCP_TOOL_MECHANICS = """\
+--- TOOL MECHANICS ---
+Use `mcp_ticket` with the following interface:
+  mcp_ticket(action, item_type?, item_id?, field_name?, field_value?, parent_id?, body?)
 
-    statements.append(
-        'Shift Goal: Move Epics and Stories in NEEDS_REFINEMENT to the BACKLOG.'
-    )
-    statements.append(
-        'NOTE: You may not finish in one Iteration, quality over quantity, you will get another chance, use your memory.'
-    )
-    statements.append(
-        'DoR: Definition of Ready (DoR) is a set of criteria that must be met for a ticket to be considered ready for development. It ensures that the ticket is well-defined, has clear acceptance criteria, and is free from major issues that would impede development progress.'
-    )
+Actions:
+  'create'  — Creates a new ticket. Requires: item_type, parent_id.
+  'read'    — Reads a ticket. Requires: item_id.
+  'update'  — Updates a single field. Requires: item_id, field_name, field_value.
+              One call per field. To update two fields, call twice.
+  'comment' — Adds a comment. Requires: item_id, body.
 
-    # Corrected Schema & Strict Kwargs
-    statements.append(
-        'When DoR is Met use mcp_ticket(action="update", item_type="<EPIC|STORY>", item_id="<ID>", field_name="status", field_value="2") # BACKLOG = 2.'
-    )
+Valid status values for field_name='status':
+  1=NEEDS_REFINEMENT  2=BACKLOG            3=SELECTED_FOR_DEV
+  4=IN_PROGRESS       5=IN_REVIEW          6=BLOCKED_BY_USER   7=DONE
 
-    statements.append(
-        'RULES: Use mcp_ticket to populate at least the following fields:'
-    )
-    statements.append('perspective: The "why" and "who".')
-    statements.append('assertions: Bulleted, testable completion steps.')
-    statements.append('outside: What NOT to do.')
-    statements.append('dod_exceptions: Deviations from standard Done.')
-    statements.append('dependencies: Other tickets this one depends on.')
-    statements.append('demo_specifics: How and to whom success is proven.')
+Valid item_type values: 'EPIC', 'STORY', 'TASK'
+"""
 
-    statements.append(
-        'If you dont know enough to fill in the above, ask questions in the comments and set status to block for human.'
-    )
+_NO_ASSIGNMENT_MESSAGE = (
+    '[AGILE BOARD] You have no active assignments for this shift. '
+    'Proceed to consolidate memories.'
+)
 
-    # Corrected Schema & Status ID (Blocked by user is 6)
-    statements.append(
-        'Block for Human is a very valid status at any time. mcp_ticket(action="update", item_type="<EPIC|STORY>", item_id="<ID>", field_name="status", field_value="6") # BLOCKED_BY_USER = 6.'
-    )
+# ---------------------------------------------------------------------------
+# Ticket resolution
+# ---------------------------------------------------------------------------
 
-    statements.append('PM == NO CODE == Planning and Oversight')
-    statements.append(f'ENVIRONMENT: {environment_id}')
-
-    # Auto-feed the top ticket every single turn
-    selected = False
-
-    # Evaluating 'if stories:' saves us from doing .exists() + a loop (which fires 2 DB queries)
-    stories = PFCStory.objects.filter(
-        Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
-        & Q(epic__environment_id=environment_id)
-    )
-    if stories:
-        success = True
-        statements.append(
-            '\nStories in this environment in need of refinement:'
-        )
-        for story in stories:
-            if not selected:
-                statements.append('Pre-Assigned Ticket Data:')
-                statements.append(
-                    json.dumps(
-                        PFCStorySerializer(story).data,
-                        default=str,
-                    )
-                )
-                selected = True
-                # Fixed: Changed action="read" to action="update" for the example
-                statements.append(
-                    f"Update this ticket with mcp_ticket(action='update', item_type='STORY', item_id='{story.id}', field_name='description', field_value='My new description')"
-                )
-            else:
-                statements.append(
-                    f"mcp_ticket(action='read', item_type='STORY', item_id='{story.id}') | {story.name}"
-                )
-
-    epics = PFCEpic.objects.filter(
-        Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
-        & Q(environment=environment_id)
-    )
-    if epics:
-        success = True
-        statements.append(
-            '\nEpics in this environment which need of refinement:'
-        )
-        for epic in epics:
-            if not selected:
-                statements.append('Pre-Assigned Ticket Data:')
-                statements.append(
-                    json.dumps(
-                        PFCEpicSerializer(epic).data,
-                        default=str,
-                    )
-                )
-                selected = True
-                statements.append(
-                    f"Update this ticket with mcp_ticket(action='update', item_type='EPIC', item_id='{epic.id}', field_name='description', field_value='My new description')"
-                )
-            else:
-                statements.append(
-                    f"mcp_ticket(action='read', item_type='EPIC', item_id='{epic.id}') | {epic.name}"
-                )
-
-    if not success:
-        statements.append('\nNo stories or epics in need of refinement.')
-        statements.append('Review everything and make more where necessary.')
-
-    return '\n'.join(statements)
+_TICKET_TYPES = [
+    ('EPIC', PFCEpic, PFCEpicSerializer),
+    ('STORY', PFCStory, PFCStorySerializer),
+    ('TASK', PFCTask, PFCTaskSerializer),
+]
 
 
-def pre_planning_pm(identity_disc, environment_id, turn_number) -> str:
-    """The Pre-Planning PM queries the entire board and chooses what is selected
-    for development."""
-    success = False
-    statements = []
-    statements.append(
-        f'ROLE: Pre-Planning PM - Choose BACKLOG epics and stories and set them to selected for development.'
-    )
-    statements.append('PM == NO CODE == Planning and Oversight')
-    statements.append(f'ENVIRONMENT: {environment_id}')
-    epics = PFCEpic.objects.filter(
-        Q(status_id=PFCItemStatus.BACKLOG) & Q(environment=environment_id)
-    )
-    if epics.exists():
-        success = True
-        statements.append('Epics to consider for development:')
-        for epic in epics:
-            statements.append(
-                f"mcp_ticket(action='read', item_id='{epic.id}') | {epic.name}"
-            )
-
-    stories = PFCStory.objects.filter(
-        Q(status_id=PFCItemStatus.BACKLOG)
-        & Q(epic__environment_id=environment_id)
-    )
-    if stories.exists():
-        success = True
-        statements.append('Stories to consider for development:')
-        for story in stories:
-            statements.append(
-                f"mcp_ticket(action='read', item_id='{story.id}') | {story.name}"
-            )
-
-    selected_and_in_progress_stories = PFCStory.objects.filter(
-        (
-            Q(status_id=PFCItemStatus.SELECTED_FOR_DEVELOPMENT)
-            | Q(status_id=PFCItemStatus.IN_PROGRESS)
-        )
-        & Q(epic__environment_id=environment_id)
-    )
-
-    if selected_and_in_progress_stories.exists():
-        success = True
-        statements.append('Stories already selected:')
-        for story in selected_and_in_progress_stories:
-            statements.append(
-                f"mcp_ticket(action='read', params={{'item_id': '{story.id}'}}) | {story.name} | {story.status.name}"
-            )
-
-    if not success:
-        return sifting_pm(identity_disc, environment_id, turn_number)
-
-    return '\n'.join(statements)
-
-
-def planning_pm(identity_disc, environment_id, turn_number) -> str:
-    """The Planning PM has no role."""
-    return 'Planning PM has no role.'  # sifting_pm(identity_disc, environment_id, turn_number)
-
-
-def executing_pm(identity_disc, environment_id, turn_number) -> str:
-    """The Executing PM has no role."""
-    return 'Executing PM has no role.'  #  sifting_pm(identity_disc, environment_id, turn_number)
-
-
-def post_execution_pm(identity_disc, environment_id, turn_number) -> str:
-    """Are there items for review?"""
-
-    success = False
-    statements = []
-    stories = PFCStory.objects.filter(
-        Q(status_id=PFCItemStatus.IN_REVIEW)
-        & Q(epic__environment_id=environment_id)
-    )
-    if stories.exists():
-        success = True
-
-        statements.append(
-            f'ROLE: Post Execution PM - Review stories and epics, upgrade to BLOCKED_BY_USER if they pass the DoD (Definition of Done).'
-        )
-        statements.append('PM == NO CODE == Planning and Oversight')
-        statements.append(f'ENVIRONMENT: {environment_id}')
-        statements.append('Review as many stories as you have turns to do so.')
-        statements.append(
-            "If a story or epic does not meet the DoD, use mcp_ticket with action='comment', and then set it back to SELECTED_FOR_DEVELOPMENT."
-        )
-        for story in stories:
-            statements.append(
-                f"mcp_ticket(action='read', item_id='{story.id}') | {story.name}"
-            )
-
-    if success:
-        return '\n'.join(statements)
-    else:
-        return sifting_pm(identity_disc, environment_id, turn_number)
-
-
-def sleeping_pm(identity_disc, environment_id, turn_number) -> str:
-    """The Sleeping PM has no tickets."""
-    return (
-        'You may now sleep, these turns are yours to learn and grow. '
-        'Improve your memories, and learn from your previous work.'
-    )
-
-
-def bidding_worker(identity_disc, environment_id, turn_number) -> str:
-    """The Worker BIDs on the backlog."""
-    statements = []
-    stories = PFCStory.objects.filter(
-        Q(status_id=PFCItemStatus.BACKLOG)
-        & Q(owning_disc__isnull=True)
-        & Q(epic__environment_id=environment_id)
-        & Q(complexity=0)
-    )
-    if stories.exists():
-        statements.append(
-            'A BID is how many turns you think it will take to complete a story. These stories are in need of a BID:'
-        )
-        for story in stories:
-            statements.append(
-                f"mcp_ticket(action='read', item_id='{story.id}') | {story.name}"
-            )
-        return '\n'.join(statements)
-    else:
-        return sifting_worker(identity_disc, environment_id, turn_number)
-
-
-def sifting_worker(identity_disc, environment_id, turn_number) -> str:
-    """The Sifting Worker cleans items in the backlog and/or
-    Tasks to complete existing Stories. Only deal with unassigned stories."""
-    success = False
-    statements = []
-    statements.append(f'ENVIRONMENT: {environment_id}')
-    statements.append(
-        'ROLE: Sifting Worker - You may Create and Improve Stories and Tasks so they meet Definition of Ready (DoR) so a PM may move it to the BACKLOG.'
-    )
-    statements.append('This is a non-execution Shift. NO CODE')
-    stories = PFCStory.objects.filter(
-        Q(status_id=PFCItemStatus.NEEDS_REFINEMENT)
-        & (Q(owning_disc__isnull=True) | Q(owning_disc=identity_disc))
-        & Q(epic__environment_id=environment_id)
-    )
-    if stories.exists():
-        success = True
-        statements.append('Stories in need of refinement:')
-        for story in stories:
-            statements.append(
-                f"mcp_ticket(action='read', item_id='{story.id}') | {story.name}"
-            )
-
-    if not success:
-        statements.append('No stories need of refinement.')
-        statements.append('Review everything and make more where necessary.')
-
-    return '\n'.join(statements)
-
-
-def executing_worker(identity_disc, environment_id, turn_number) -> str:
-    """The Executing Worker is assigned or continues work on assigned tickets."""
-    success = False
-    statements = []
-    statements.append(f'ENVIRONMENT: {environment_id}')
-    statements.append('ROLE: Executing Worker - Execute stories and tasks.')
-    statements.append(
-        'This is an EXECUTION Shift. Fulfill Assertions to the best of your ability.'
-    )
-    if turn_number % 3 == 1:
-        my_stories = PFCStory.objects.filter(
-            Q(status_id=PFCItemStatus.SELECTED_FOR_DEVELOPMENT)
-            & Q(owning_disc=identity_disc)
-            & Q(epic__environment_id=environment_id)
-        )
-        if my_stories.exists():
-            success = True
-            statements.append('You own the following stories:')
-            for story in my_stories:
-                statements.append(
-                    f"mcp_ticket(action='read', item_id='{story.id}') | {story.name}"
-                )
-        available_stories = PFCStory.objects.filter(
-            Q(status_id=PFCItemStatus.SELECTED_FOR_DEVELOPMENT)
-            & Q(owning_disc__isnull=True)
-            & Q(epic__environment_id=environment_id)
-        )
-        if available_stories.exists():
-            success = True
-            statements.append('You may work on the following stories:')
-            for story in available_stories:
-                statements.append(
-                    f"mcp_ticket(action='read', item_id='{story.id}') | {story.name}"
-                )
-        if not success:
-            statements.append('No stories to work on.')
-            statements.append(
-                'Review everything and make more where necessary.'
-            )
-    return '\n'.join(statements)
-
-
-def sleeping_worker(identity_disc, environment_id, turn_number) -> str:
-    """The Sleeping Worker has no tickets."""
-    return (
-        'You may now sleep, these turns are yours to learn and grow. '
-        'Improve your memories, and learn from your previous work.'
-    )
-
-
-class AgilePromptBuilder:
-    def __init__(self, package: AddonPackage):
-        self.package = package
-        self.iteration_id = self.package.iteration
-        self.iteration_shift = None
-        self.iteration = None
-        self.environment_id = None
-        self.identity_disc = None
-        self.turn_number = None
-        self.reasoning_turn = None
-        self.context_lines = []
-        self.shift_id = None
-
-    def _extract_package(self):
-        if not self.iteration_id or self.package.reasoning_turn_id is None:
-            return  # Skip all DB queries, we are in preview mode!
-
-        if self.package.identity_disc:
-            self.identity_disc = IdentityDisc.objects.select_related(
-                'identity_type'
-            ).get(id=self.package.identity_disc)
-        self.turn_number = self.package.turn_number
-
-        self.environment_id = getattr(self.package, 'environment_id', None)
-        self.shift_id = getattr(self.package, 'shift_id', None)
-
-    def build_prompt(self) -> str:
-        self._extract_package()
-
-        if not self.identity_disc:
-            return '[AGILE BOARD CONTEXT: UI Preview Mode - No Active Disc Assigned]'
-        if not self.shift_id:
-            return '[AGILE BOARD CONTEXT: UI Preview Mode - No Active Shift or Disc Assigned]'
-        if self.turn_number % 3 == 1:
-            self.context_lines = [
-                '=========================================',
-                f' AGILE BOARD CONTEXT | SHIFT: {self.shift_id}',
-                '=========================================',
-            ]
-            self.context_lines.append(
-                "Use mcp_ticket with a flat, single-field interface to manage Agile tickets. Call it with action='create', 'read', 'update', 'search', or 'comment' plus flat string arguments: item_type, item_id, field_name, field_value, parent_id, query. Perform atomic updates by calling mcp_ticket once per field you want to change (for example, call it twice to update both 'status' and 'priority')."
-            )
-            statuses = PFCItemStatus.objects.all()
-            self.context_lines.append(
-                f'Ticket status values IN ORDER by ("id", "name") are: '
-                f'{[(status.pk, status.name) for status in statuses]}'
-            )
-        identity_type_id = self.identity_disc.identity_type_id
-        shift_id = self.shift_id
-
-        match shift_id:
-            case Shift.SIFTING:
-                match identity_type_id:
-                    case IdentityType.PM:
-                        self.context_lines.append(
-                            sifting_pm(
-                                self.identity_disc,
-                                self.environment_id,
-                                self.turn_number,
-                            )
-                        )
-                    case IdentityType.WORKER:
-                        self.context_lines.append(
-                            bidding_worker(
-                                self.identity_disc,
-                                self.environment_id,
-                                self.turn_number,
-                            )
-                        )
-            case Shift.PRE_PLANNING:
-                match identity_type_id:
-                    case IdentityType.PM:
-                        self.context_lines.append(
-                            pre_planning_pm(
-                                self.identity_disc,
-                                self.environment_id,
-                                self.turn_number,
-                            )
-                        )
-                    case IdentityType.WORKER:
-                        self.context_lines.append(
-                            sifting_worker(
-                                self.identity_disc,
-                                self.environment_id,
-                                self.turn_number,
-                            )
-                        )
-            case Shift.PLANNING:
-                match identity_type_id:
-                    case IdentityType.PM:
-                        self.context_lines.append(
-                            planning_pm(
-                                self.identity_disc,
-                                self.environment_id,
-                                self.turn_number,
-                            )
-                        )
-                    case IdentityType.WORKER:
-                        self.context_lines.append(
-                            sifting_worker(
-                                self.identity_disc,
-                                self.environment_id,
-                                self.turn_number,
-                            )
-                        )
-            case Shift.EXECUTING:
-                match identity_type_id:
-                    case IdentityType.PM:
-                        self.context_lines.append(
-                            executing_pm(
-                                self.identity_disc,
-                                self.environment_id,
-                                self.turn_number,
-                            )
-                        )
-                    case IdentityType.WORKER:
-                        self.context_lines.append(
-                            executing_worker(
-                                self.identity_disc,
-                                self.environment_id,
-                                self.turn_number,
-                            )
-                        )
-            case Shift.POST_EXECUTION:
-                match identity_type_id:
-                    case IdentityType.PM:
-                        self.context_lines.append(
-                            post_execution_pm(
-                                self.identity_disc,
-                                self.environment_id,
-                                self.turn_number,
-                            )
-                        )
-                    case IdentityType.WORKER:
-                        self.context_lines.append(
-                            bidding_worker(
-                                self.identity_disc,
-                                self.environment_id,
-                                self.turn_number,
-                            )
-                        )
-            case Shift.SLEEPING:
-                match identity_type_id:
-                    case IdentityType.PM:
-                        self.context_lines.append(
-                            sleeping_pm(
-                                self.identity_disc,
-                                self.environment_id,
-                                self.turn_number,
-                            )
-                        )
-                    case IdentityType.WORKER:
-                        self.context_lines.append(
-                            sleeping_worker(
-                                self.identity_disc,
-                                self.environment_id,
-                                self.turn_number,
-                            )
-                        )
-        return '\n'.join(self.context_lines)
-
-
-def agile_addon(package: AddonPackage) -> str:
+def _get_locked_ticket(
+    identity_disc_id: UUID,
+) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """
-    Identity Addon: Dynamically injects the active Agile Board context into the system prompt.
-    Adapts the ticket payload based on the current Temporal Shift (Grooming, Planning, Executing).
+    Return (item_type, item_id, item_json) for the single ticket locked to
+    this disc, or (None, None, None) if none exists.
     """
-    builder = AgilePromptBuilder(package)
-    return builder.build_prompt()
+    for item_type, model, serializer in _TICKET_TYPES:
+        instance = model.objects.filter(owning_disc_id=identity_disc_id).first()
+        if instance:
+            item_json = json.dumps(serializer(instance).data, default=str)
+            return item_type, str(instance.id), item_json
+
+    return None, None, None
+
+
+# ---------------------------------------------------------------------------
+# PM instruction builders
+# ---------------------------------------------------------------------------
+
+
+def _pm_instructions_sifting(item_type: str, item_id: str) -> str:
+    return f"""\
+ROLE: Sifting Project Manager
+GOAL: Refine this {item_type} until it meets the Definition of Ready (DoR).
+
+DEFINITION OF READY — all of the following fields must be populated:
+  perspective    — The 'why' (business value) and 'who' (affected users/teams).
+  assertions     — Bulleted, independently testable completion criteria.
+  outside        — Explicit scope exclusions (what NOT to do).
+  dod_exceptions — Any agreed deviations from the standard Definition of Done.
+  dependencies   — IDs of tickets that must be resolved first.
+  demo_specifics — Who will witness the demo and exactly what will be shown.
+
+STEPS:
+  1. Read the ticket thoroughly.
+  2. For each missing or weak field, update it with mcp_ticket(action='update', item_id='{item_id}', ...).
+  3. Once every field is solid, move to BACKLOG (status=2).
+
+BLOCKER: If you lack information to fill a field, post a targeted question via
+  mcp_ticket(action='comment') and set status to BLOCKED_BY_USER (status=6).
+"""
+
+
+def _pm_instructions_pre_planning(item_type: str, item_id: str) -> str:
+    return f"""\
+ROLE: Pre-Planning Project Manager
+GOAL: Review this {item_type} from the Backlog and route it correctly.
+
+EPIC  → Move to BLOCKED_BY_USER (status=6) so a human can approve the budget.
+STORY → Move to SELECTED_FOR_DEV (status=3) so workers can begin.
+"""
+
+
+def _pm_instructions_post_execution(item_type: str, item_id: str) -> str:
+    return f"""\
+ROLE: Post-Execution QA Manager
+GOAL: Determine whether this {item_type} satisfies the Definition of Done (DoD).
+
+PASS → Every assertion in the ticket is verifiably met.
+       Move to BLOCKED_BY_USER (status=6) for final human sign-off.
+
+FAIL → At least one assertion is unmet or the work is flawed.
+       Leave a specific comment explaining the failure.
+       Move back to SELECTED_FOR_DEV (status=3).
+"""
+
+
+_PM_INSTRUCTION_BUILDERS = {
+    Shift.SIFTING: _pm_instructions_sifting,
+    Shift.PRE_PLANNING: _pm_instructions_pre_planning,
+    Shift.POST_EXECUTION: _pm_instructions_post_execution,
+}
+
+
+def _build_pm_instructions(shift_id: int, item_type: str, item_id: str) -> str:
+    builder = _PM_INSTRUCTION_BUILDERS.get(shift_id, item_id)
+    if builder:
+        return builder(item_type)
+    return 'You have no actionable tickets for this shift. Sleep and consolidate your memories.'
+
+
+# ---------------------------------------------------------------------------
+# Worker instruction builders
+# ---------------------------------------------------------------------------
+
+
+def _worker_instructions_sifting(item_type: str, item_id: str) -> str:
+    return f"""\
+ROLE: Estimating Worker
+GOAL: Provide a complexity BID for this {item_type}.
+
+COMPLEXITY SCALE (number of AI turns expected to complete the ticket):
+  1–2   Very small — a single self-contained change.
+  3–5   Small — a few related changes.
+  6–10  Medium — multiple components or integration work.
+  11+   Large — consider asking a PM to split the ticket.
+
+SUCCESS: Update the complexity field with your integer estimate:
+  mcp_ticket(action='update', item_id='{item_id}', field_name='complexity', field_value='<integer>')
+  Do NOT use descriptive text — the value must be a raw integer (e.g., "4").
+"""
+
+
+def _worker_instructions_pre_planning(item_type: str, item_id: str) -> str:
+    return f"""\
+ROLE: Architectural Worker
+GOAL: Decompose this {item_type} into discrete, executable TASKs.
+
+STEPS:
+  1. Read the 'assertions' field carefully — each assertion maps to ≥1 task.
+  2. For each distinct technical step, create a child TASK:
+       mcp_ticket(action='create', item_type='TASK', parent_id='{item_id}')
+  3. Keep tasks isolated and strictly technical (no UI copy, no PM work).
+
+WARNING: You will execute every task you create. Do not over-decompose.
+SUCCESS:  All tasks created → your shift is complete.
+"""
+
+
+def _worker_instructions_executing(item_type: str, item_id: str) -> str:
+    return f"""\
+ROLE: Executing Developer
+GOAL: Complete all code/work required for this {item_type}.
+
+STEPS:
+  1. Set status to IN_PROGRESS:
+       mcp_ticket(action='update', item_id='{item_id}', field_name='status', field_value='4')
+  2. Implement the work described in the 'assertions' field using your system tools.
+  3. When fully complete, set status to IN_REVIEW:
+       mcp_ticket(action='update', item_id='{item_id}', field_name='status', field_value='5')
+"""
+
+
+def _worker_instructions_post_execution(item_type: str, item_id: str) -> str:
+    return f"""\
+ROLE: Peer Review Worker
+GOAL: Verify that the submitted work for this {item_type} satisfies every assertion.
+
+PASS → All assertions met:
+       mcp_ticket(action='update', item_id='{item_id}', field_name='status', field_value='7')  # DONE
+
+FAIL → At least one assertion unmet:
+       1. Leave a detailed comment explaining what failed and why.
+       2. mcp_ticket(action='update', item_id='{item_id}', field_name='status', field_value='3')  # Back to SELECTED_FOR_DEV
+"""
+
+
+_WORKER_INSTRUCTION_BUILDERS = {
+    Shift.SIFTING: _worker_instructions_sifting,
+    Shift.PRE_PLANNING: _worker_instructions_pre_planning,
+    Shift.EXECUTING: _worker_instructions_executing,
+    Shift.POST_EXECUTION: _worker_instructions_post_execution,
+}
+
+
+def _build_worker_instructions(
+    shift_id: int, item_type: str, item_id: str
+) -> str:
+    builder = _WORKER_INSTRUCTION_BUILDERS.get(shift_id)
+    if builder:
+        return builder(item_type, item_id)
+    return 'You have no actionable tickets for this shift. Sleep and consolidate your memories.'
+
+
+# ---------------------------------------------------------------------------
+# Content assembly
+# ---------------------------------------------------------------------------
+
+
+def _build_assignment_content(
+    shift_id: int,
+    item_type: str,
+    item_id: str,
+    item_json: str,
+    is_pm: bool,
+) -> str:
+    role_label = 'PM' if is_pm else 'WORKER'
+    instructions = (
+        _build_pm_instructions(shift_id, item_type, item_id)
+        if is_pm
+        else _build_worker_instructions(shift_id, item_type, item_id)
+    )
+
+    return (
+        f'{"=" * 57}\n'
+        f' AGILE SHIFT ASSIGNMENT | {role_label} | TICKET: {item_id}\n'
+        f'{"=" * 57}\n'
+        f'{instructions}\n'
+        f'{_MCP_TOOL_MECHANICS}\n'
+        f'--- ASSIGNED TICKET DATA ---\n'
+        f'{item_json}'
+    )
+
+
+# ---------------------------------------------------------------------------
+# Public addon entry point
+# ---------------------------------------------------------------------------
+
+
+def agile_addon(package: AddonPackage) -> List[ChatMessage]:
+    """
+    Identity Addon (Phase: CONTEXT)
+
+    Resolves the ticket locked to this AI disc and injects hyper-focused
+    shift instructions as a volatile USER message.
+    """
+    if not package.shift_id or not package.identity_disc:
+        return []
+
+    item_type, item_id, item_json = _get_locked_ticket(package.identity_disc)
+
+    if item_type is None:
+        content = _NO_ASSIGNMENT_MESSAGE
+    else:
+        disc = IdentityDisc.objects.select_related('identity_type').get(
+            id=package.identity_disc
+        )
+        content = _build_assignment_content(
+            shift_id=package.shift_id,
+            item_type=item_type,
+            item_id=item_id,
+            item_json=item_json,
+            is_pm=(disc.identity_type_id == IdentityType.PM),
+        )
+
+    return [
+        ChatMessage(
+            session_id=package.session_id,
+            turn_id=package.reasoning_turn_id,
+            role_id=ChatMessageRole.USER,
+            content=content,
+            is_volatile=True,
+        )
+    ]
