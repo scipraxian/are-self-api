@@ -80,12 +80,14 @@ class FrontalLobe:
             # Resume support: if this Spike already has a session that halted
             # awaiting human input, reuse it instead of creating a new one.
             existing = await sync_to_async(
-                lambda: ReasoningSession.objects.filter(
-                    spike=self.spike,
-                    status_id=ReasoningStatusID.ATTENTION_REQUIRED,
+                lambda: (
+                    ReasoningSession.objects.filter(
+                        spike=self.spike,
+                        status_id=ReasoningStatusID.ATTENTION_REQUIRED,
+                    )
+                    .order_by('-created')
+                    .first()
                 )
-                .order_by('-created')
-                .first()
             )()
             if existing:
                 existing.status_id = ReasoningStatusID.ACTIVE
@@ -452,7 +454,9 @@ class FrontalLobe:
             await self._initialize_session(rendered_objective, max_turns)
 
             # 3. Resolve model from IdentityDisc and initialize Parietal Lobe
-            identity_disc = self.session.identity_disc
+            identity_disc = await sync_to_async(
+                lambda: self.session.identity_disc
+            )()
             ai_model = (
                 await sync_to_async(getattr)(identity_disc, 'ai_model', None)
                 if identity_disc

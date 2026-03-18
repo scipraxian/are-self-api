@@ -24,7 +24,8 @@ async def relay_sensory_state(turn_record: ReasoningTurn) -> str:
 
     # Hippocampus Catalog for this turn
     if current_turn == 1:
-        catalog_block = await TalosHippocampus.get_turn_1_catalog(session.spike)
+        spike = await sync_to_async(lambda: session.spike)()
+        catalog_block = await TalosHippocampus.get_turn_1_catalog(spike)
     else:
         catalog_block = await TalosHippocampus.get_recent_catalog(session)
 
