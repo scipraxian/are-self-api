@@ -19,7 +19,8 @@ from frontal_lobe.models import (
     ReasoningStatusID,
     ReasoningTurn,
 )
-from frontal_lobe.thalamus import relay_sensory_state
+from hippocampus.hippocampus import TalosHippocampus
+from identity.addons.addon_package import AddonPackage
 from identity.identity_prompt import build_identity_prompt, collect_addon_blocks
 from parietal_lobe.parietal_lobe import ParietalLobe
 from temporal_lobe.models import IterationShiftParticipant
@@ -309,62 +310,30 @@ class FrontalLobe:
     async def _build_turn_payload(
         self, turn_record: ReasoningTurn
     ) -> list[dict]:
-        """
-        Assembles the Turn payload as a Living Chatroom array.
-        Fetches the static core, historical context, and volatile context from the DB.
-        """
-        messages: List[Dict[str, Any]] = []
+        all_messages: list[ChatMessage] = []
 
-        # Phase 1: Immutable laws (System Prompt)
-        system_instruction = await sync_to_async(self._get_identity_prompt)(
-            turn_record
-        )
-        messages.append(
-            {
-                ROLE: 'system',
-                CONTENT: system_instruction,
-            }
+        # 1. Build the package
+        package = AddonPackage(
+            session_id=self.session.id,
+            spike_id=self.spike.id,
+            reasoning_turn_id=turn_record.id,
+            turn_number=turn_record.turn_number,
+            # ... other fields ...
         )
 
-        # Phase 2: Timeline reconstruction (L1/L2 cache from DB)
-        history_messages = await self._build_history_messages(turn_record)
-        messages.extend(history_messages)
+        # 2. Iterate through your Active Addons (ordered by Phase!)
+        # active_addons = await ... fetch from DB ordered by Phase ...
+        # for addon in active_addons:
+        #     messages = await execute_addon(addon.slug, package)
+        #     all_messages.extend(messages)
 
-        # Phase 3: Living chatroom (Fetch the Volatile Addons we just created for this turn)
-        current_turn_volatile_qs = await sync_to_async(list)(
-            ChatMessage.objects.filter(
-                turn=turn_record, is_volatile=True
-            ).order_by('created')
-        )
-        for volatile_msg in current_turn_volatile_qs:
-            messages.append({ROLE: 'user', CONTENT: volatile_msg.content})
+        # 3. Bulk Save Volatiles so they appear in your DB viewer
+        unsaved = [m for m in all_messages if m._state.adding and m.is_volatile]
+        if unsaved:
+            await sync_to_async(ChatMessage.objects.bulk_create)(unsaved)
 
-        # Phase 4: Final sensory trigger for this turn (Saved as volatile)
-        sensory_trigger = await relay_sensory_state(turn_record)
-        await sync_to_async(ChatMessage.objects.create)(
-            session=self.session,
-            turn=turn_record,
-            role_id=ChatMessageRole.USER,
-            content=sensory_trigger,
-            is_volatile=True,
-        )
-        messages.append(
-            {
-                ROLE: 'user',
-                CONTENT: sensory_trigger,
-            }
-        )
-
-        # Logging output for debug
-        await self._log_live(
-            f'\n--- TURN {turn_record.turn_number} PAYLOAD ({len(messages)} messages) ---'
-        )
-        for msg in messages:
-            content_str = msg.get(CONTENT, '') or ''
-            await self._log_live(f'[{msg.get(ROLE)}] {content_str[:500]}')
-        await self._log_live('------------------------\n')
-
-        return messages
+        # 4. Serialize to dicts
+        return [msg.to_llm_dict() for msg in all_messages]
 
     async def _execute_turn(
         self,
@@ -376,9 +345,6 @@ class FrontalLobe:
 
         # 1. Start the turn record
         turn_record = await self._record_turn_start(turn_index, previous_turn)
-
-        # 2. Trigger the RPG progression logic (The Ding!)
-        await sync_to_async(turn_record.apply_efficiency_bonus)()
 
         # 3. Inject Volatile Context (Addons & Sensory triggers) directly into DB for this turn
         await self._inject_addons(turn_record)
@@ -561,3 +527,28 @@ async def _record_turn_completion(
     turn_record.inference_time = inference_duration
     turn_record.status_id = ReasoningStatusID.COMPLETED
     await sync_to_async(turn_record.save)()
+
+
+async def relay_sensory_state(turn_record: ReasoningTurn) -> str:
+    """
+    The Thalamus.
+    Compiles the current state of the world, active Agile tasks, and memories
+    for the *current* turn, and returns the final sensory trigger message.
+    """
+    session = turn_record.session
+    current_turn = turn_record.turn_number
+
+    # Hippocampus Catalog for this turn
+    if current_turn == 1:
+        spike = await sync_to_async(lambda: session.spike)()
+        catalog_block = await TalosHippocampus.get_turn_1_catalog(spike)
+    else:
+        catalog_block = await TalosHippocampus.get_recent_catalog(session)
+
+    return (
+        f'{catalog_block}\n\n'
+        'YOUR MOVE:\n'
+        '1. You MUST call mcp_internal_monologue ALONGSIDE any other tools you call in parallel. Never fire a tool without also firing your monologue.\n'
+        '2. You should call your tools (like `mcp_ticket`) in parallel during the exact same turn.\n'
+        '3. Use structured JSON for all tool calls natively.\n'
+    )

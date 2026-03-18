@@ -203,6 +203,7 @@ class ReasoningSession(
         return f'Session {self.id} Status: {self.status}'
 
 
+# TODO: consider uuid.
 class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
     """
     A single 'tick' or step in the reasoning process.
@@ -287,14 +288,36 @@ class SessionConclusion(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
 
 
 class ChatMessageRole(NameMixin, CreatedMixin):
-    SYSTEM = 1  #'system', 'System'
-    USER = 2  #'user', 'User'
-    ASSISTANT = 3  # 'assistant', 'Assistant'
+    SYSTEM = 1
+    SYSTEM_NAME = 'system'
+    USER = 2
+    USER_NAME = 'user'
+    ASSISTANT = 3
+    ASSISTANT_NAME = 'assistant'
     TOOL = 4
+    TOOL_NAME = 'tool'
+
+    ROLE_CHOICES = (
+        (SYSTEM, SYSTEM_NAME),
+        (USER, USER_NAME),
+        (ASSISTANT, ASSISTANT_NAME),
+        (TOOL, TOOL_NAME),
+    )
+
+    ROLE_NAMES = [ROLE_NAME for _, ROLE_NAME in ROLE_CHOICES]
+
+    class Meta:
+        verbose_name_plural = 'Chat Message Roles'
+        ordering = ['id']
 
 
 class ChatMessage(UUIDIdMixin, CreatedMixin):
     RELATED_NAME = 'messages'
+    ROLE_KEY = 'role'
+    CONTENT_KEY = 'content'
+    NAME_KEY = 'name'
+    TOOL_CALL_ID_KEY = 'tool_call_id'
+
     session = models.ForeignKey(
         ReasoningSession, on_delete=models.CASCADE, related_name=RELATED_NAME
     )
@@ -318,3 +341,23 @@ class ChatMessage(UUIDIdMixin, CreatedMixin):
         ordering = ['-created']
         verbose_name = 'Chat Message'
         verbose_name_plural = 'Chat Messages'
+
+    def to_llm_dict(self) -> dict:
+        """Translates the DB model into the exact dictionary the LLM expects."""
+        # 1. Map the integer ID back to the string name ('system', 'user', etc.)
+        role_map = dict(ChatMessageRole.ROLE_CHOICES)
+        role_name = role_map.get(self.role_id, ChatMessageRole.USER_NAME)
+
+        payload = {
+            self.ROLE_KEY: role_name,
+            self.CONTENT_KEY: self.content,
+        }
+
+        # 2. Handle Tool Call Results (if the LLM previously fired a tool)
+        if self.role_id == ChatMessageRole.TOOL and self.tool_call_id:
+            # Assumes you use .select_related('tool_call__tool') when querying!
+            if self.tool_call and self.tool_call.tool:
+                payload[self.NAME_KEY] = self.tool_call.tool.name
+            payload[self.TOOL_CALL_ID_KEY] = f'call_{self.tool_call_id}'
+
+        return payload

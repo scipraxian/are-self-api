@@ -13,9 +13,21 @@ from hippocampus.models import TalosEngram
 from parietal_lobe.models import ToolDefinition
 
 
+class IdentityAddonPhase(NameMixin):
+    """When to Apply Addon."""
+
+    IDENTIFY = 1  # System and Identity
+    CONTEXT = 2  #  telemetry and focus...
+    HISTORY = 3  # All previous messages to be included.
+    TERMINAL = 4  # YOUR MOVE
+
+
 class IdentityAddon(NameMixin, DescriptionMixin):
     """These are the different addons that can be applied to a persona."""
 
+    phase = models.ForeignKey(
+        IdentityAddonPhase, on_delete=models.SET_NULL, blank=True, null=True
+    )
     function_slug = models.CharField(max_length=255, blank=True, null=True)
 
 
