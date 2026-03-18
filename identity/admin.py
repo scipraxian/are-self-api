@@ -5,6 +5,7 @@ from .identity_prompt import build_identity_prompt, render_base_identity
 from .models import (
     Identity,
     IdentityAddon,
+    IdentityAddonPhase,
     IdentityDisc,
     IdentityTag,
     IdentityType,
@@ -36,8 +37,9 @@ class IdentityTagAdmin(admin.ModelAdmin):
 
 @admin.register(IdentityAddon)
 class IdentityAddonAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description')
+    list_display = ('name', 'phase', 'description')
     search_fields = ('name',)
+    list_filter = ('phase',)
 
 
 @admin.register(Identity)
@@ -156,3 +158,8 @@ class IdentityDiscAdmin(admin.ModelAdmin):
         return _render_terminal_preview(prompt)
 
     prompt_preview.short_description = 'Resolved Output'
+
+
+@admin.register(IdentityAddonPhase)
+class IdentityAddonPhaseAdmin(admin.ModelAdmin):
+    pass

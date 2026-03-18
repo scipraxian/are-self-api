@@ -1,4 +1,6 @@
+import json
 from datetime import timedelta
+from typing import Optional
 
 from django.db import models
 
@@ -317,6 +319,8 @@ class ChatMessage(UUIDIdMixin, CreatedMixin):
     CONTENT_KEY = 'content'
     NAME_KEY = 'name'
     TOOL_CALL_ID_KEY = 'tool_call_id'
+    TOOL_CALLS_KEY = 'tool_calls'
+    TOOL_KEY = 'tool'
 
     session = models.ForeignKey(
         ReasoningSession, on_delete=models.CASCADE, related_name=RELATED_NAME
@@ -341,23 +345,3 @@ class ChatMessage(UUIDIdMixin, CreatedMixin):
         ordering = ['-created']
         verbose_name = 'Chat Message'
         verbose_name_plural = 'Chat Messages'
-
-    def to_llm_dict(self) -> dict:
-        """Translates the DB model into the exact dictionary the LLM expects."""
-        # 1. Map the integer ID back to the string name ('system', 'user', etc.)
-        role_map = dict(ChatMessageRole.ROLE_CHOICES)
-        role_name = role_map.get(self.role_id, ChatMessageRole.USER_NAME)
-
-        payload = {
-            self.ROLE_KEY: role_name,
-            self.CONTENT_KEY: self.content,
-        }
-
-        # 2. Handle Tool Call Results (if the LLM previously fired a tool)
-        if self.role_id == ChatMessageRole.TOOL and self.tool_call_id:
-            # Assumes you use .select_related('tool_call__tool') when querying!
-            if self.tool_call and self.tool_call.tool:
-                payload[self.NAME_KEY] = self.tool_call.tool.name
-            payload[self.TOOL_CALL_ID_KEY] = f'call_{self.tool_call_id}'
-
-        return payload
