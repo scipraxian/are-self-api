@@ -1,42 +1,39 @@
 import asyncio
 import json
 import logging
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 from asgiref.sync import sync_to_async
 
 from frontal_lobe.models import (
     ChatMessage,
     ChatMessageRole,
-    ModelProvider,
-    ModelRegistry,
     ReasoningSession,
     ReasoningStatusID,
     ReasoningTurn,
 )
-from frontal_lobe.synapse import OllamaClient
-from frontal_lobe.synapse_open_router import OpenRouterClient
+from frontal_lobe.synapse_client import SynapseClient, SynapseResponse
+from hypothalamus.hypothalamus import ModelSelection
 from parietal_lobe.models import ToolCall, ToolDefinition
 from parietal_lobe.parietal_mcp.gateway import ParietalMCP
 
 logger = logging.getLogger(__name__)
 
 
-def _create_synapse_client(identity_disc):
-    """
-    Resolve ModelRegistry provider and return the appropriate client (Ollama or OpenRouter).
-    Must run in sync context (e.g. via sync_to_async) to avoid SynchronousOnlyOperation.
-    """
-    from identity.models import IdentityDisc
+def _sync_chat_execution(
+    messages: List[Dict[str, Any]],
+    tools: List[Dict[str, Any]],
+    model_selection: ModelSelection,
+) -> SynapseResponse:
+    """Runs completely synchronously inside the thread to allow DB resolution."""
+    client = SynapseClient(model_selection)
+    return client.chat(messages, tools)
 
-    if not isinstance(identity_disc, IdentityDisc) or not identity_disc.ai_model_id:
-        return OllamaClient(identity_disc=identity_disc)
-    registry = ModelRegistry.objects.select_related('provider').get(
-        pk=identity_disc.ai_model_id
-    )
-    if registry.provider_id == ModelProvider.OPENROUTER:
-        return OpenRouterClient(identity_disc=identity_disc)
-    return OllamaClient(identity_disc=identity_disc)
+
+def _sync_unload_execution(model_selection: ModelSelection):
+    """Runs synchronously to send the VRAM drop signal."""
+    client = SynapseClient(model_selection)
+    client.unload()
 
 
 def _json_str_to_dict(raw_args: Any) -> Dict[str, Any]:
@@ -72,8 +69,8 @@ class ParietalLobe:
     def __init__(self, session: ReasoningSession, log_callback: Callable):
         self.session = session
         self.log_callback = log_callback
-        self.client = None
-        # IdentityDisc now directly owns enabled_tools.
+        self._last_used_model_selection: Optional[ModelSelection] = None
+
         self.enabled_tools = (
             self.session.identity_disc.enabled_tools
             if self.session.identity_disc
@@ -87,21 +84,31 @@ class ParietalLobe:
             else:
                 self.log_callback(message)
 
-    async def initialize_client(self, identity_disc) -> None:
-        """
-        Initialize the LLM client for the provided IdentityDisc.
-        Resolves provider in a sync thread to avoid SynchronousOnlyOperation in async context.
-        """
-        self.client = await sync_to_async(_create_synapse_client)(identity_disc)
-
     async def chat(
-        self, messages: List[Dict[str, Any]], tools: List[Dict[str, Any]]
-    ) -> Any:
-        return await asyncio.to_thread(self.client.chat, messages, tools)
+        self,
+        messages: List[Dict[str, Any]],
+        tools: List[Dict[str, Any]],
+        model_selection: ModelSelection,
+    ) -> SynapseResponse:
+        """Acts as a pure conduit, passing the dynamic model choice directly to the Synapse."""
+
+        # Track for VRAM unloading later
+        self._last_used_model_selection = model_selection
+
+        # Hand the execution over to the async thread
+        return await asyncio.to_thread(
+            _sync_chat_execution, messages, tools, model_selection
+        )
 
     async def unload_client(self) -> None:
-        if self.client:
-            await asyncio.to_thread(self.client.unload)
+        """Sends the VRAM unload signal to the last used model."""
+        if (
+            hasattr(self, '_last_used_model_selection')
+            and self._last_used_model_selection
+        ):
+            await asyncio.to_thread(
+                _sync_unload_execution, self._last_used_model_selection
+            )
 
     def _fetch_tools(self, identity_disc):
         return list(
@@ -171,11 +178,7 @@ class ParietalLobe:
     async def handle_tool_execution(
         self, turn_record: ReasoningTurn, tool_call_data: Dict[str, Any]
     ) -> Dict[str, Any] | None:
-        """Parses, records, and executes a single tool call.
-
-        Returns a lightweight dict summarizing the tool result for in-memory
-        callers, while always writing the canonical record to ChatMessage.
-        """
+        """Parses, records, and executes a single tool call."""
         func_data = tool_call_data.get(self.T_FUNC, {})
         tool_name = func_data.get(self.T_NAME)
         raw_args = func_data.get(self.T_ARGS, {})
@@ -194,7 +197,6 @@ class ParietalLobe:
             tool_def = None
             logger.error(f'AI tried to call unknown tool: {tool_name}')
 
-            # Immediately record the error in the conversation history
             error_msg = f"Error: Unknown tool '{tool_name}'"
             await self._log_live(f'Result: {error_msg}')
             await sync_to_async(ChatMessage.objects.create)(
@@ -214,7 +216,7 @@ class ParietalLobe:
         focus_mod = mechanics.focus_modifier if mechanics else 0
         xp_gain = mechanics.xp_reward if mechanics else 0
 
-        # --- FOCUS FIZZLE ---  # todo: the focus addon should be doing this.
+        # --- FOCUS FIZZLE ---
         if focus_mod < 0 and self.session.current_focus + focus_mod < 0:
             fizzle_msg = (
                 f'SYSTEM OVERRIDE: Effector Fizzled! Insufficient Focus. '
@@ -232,7 +234,6 @@ class ParietalLobe:
                 traceback='Insufficient Focus.',
             )
 
-            # Insert Fizzle directly into history
             await sync_to_async(ChatMessage.objects.create)(
                 session=self.session,
                 turn=turn_record,
@@ -287,7 +288,6 @@ class ParietalLobe:
         await self._log_live(f'Result: {tool_result[:200]}...')
 
         # --- SAVE RESULT TO HISTORY ---
-        # Notice `is_volatile=False`! This locks the real outcome into permanent memory.
         await sync_to_async(ChatMessage.objects.create)(
             session=self.session,
             turn=turn_record,

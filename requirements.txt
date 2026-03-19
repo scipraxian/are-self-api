@@ -48,3 +48,5 @@ django-cors-headers
 pydantic
 
 channels-redis
+
+litellm

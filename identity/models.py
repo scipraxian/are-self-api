@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from django.db import models
+from pgvector.django import VectorField
 
 from common.models import (
     CreatedAndModifiedWithDelta,
@@ -8,8 +9,9 @@ from common.models import (
     NameMixin,
     UUIDIdMixin,
 )
-from frontal_lobe.models import ReasoningTurn
+from frontal_lobe.models import ModelRegistry, ReasoningTurn
 from hippocampus.models import TalosEngram
+from hypothalamus.hypothalamus import Hypothalamus, ModelSelection
 from parietal_lobe.models import ToolDefinition
 
 
@@ -44,6 +46,19 @@ class IdentityType(NameMixin):
     WORKER = 2
 
 
+class IdentityBudget(NameMixin):
+    """
+    Limits for a persona, mapped strictly to per-token reality.
+    """
+
+    max_input_cost_per_token = models.DecimalField(
+        max_digits=25,  # Massive precision to handle things like 0.00000015
+        decimal_places=15,
+        default=0.000000000000000,
+        help_text='Max Input Cost Per 1 Token. Set to 0.0 for strict Free only. (e.g., 0.00003 for GPT-4 level)',
+    )
+
+
 class IdentityFields(models.Model):
     """These are the details used to represent a persona."""
 
@@ -58,11 +73,11 @@ class IdentityFields(models.Model):
         null=True,
     )
     enabled_tools = models.ManyToManyField(ToolDefinition, blank=True)
-    ai_model = models.ForeignKey(
-        'frontal_lobe.ModelRegistry',
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
+    budget = models.ForeignKey(
+        IdentityBudget, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    category = models.ForeignKey(
+        'hypothalamus.AIModelCategory', on_delete=models.PROTECT
     )
 
     class Meta:
@@ -95,7 +110,31 @@ class IdentityDisc(
     )
     timeouts = models.IntegerField(default=0)
     memories = models.ManyToManyField(TalosEngram, blank=True)
+    vector = VectorField(
+        dimensions=768,
+        null=True,
+        blank=True,
+    )
 
     @classmethod
     def get_or_create_thalamus(cls):
-        IdentityDisc.objects.get_or_create()
+        return IdentityDisc.objects.get_or_create(id=cls.THALAMUS)
+
+    def update_vector(self):
+        """Generates a vector for this IdentityDisc."""
+        from frontal_lobe.synapse import OllamaClient
+
+        registry = ModelRegistry.objects.get(id=ModelRegistry.NOMIC_EMBED_TEXT)
+        client = OllamaClient(registry.name)
+        tag_names = ', '.join(self.tags.values_list('name', flat=True))
+        rich_text = (
+            f'Tags: {tag_names}.'
+            f'Type: {self.identity_type.name}.'
+            f'Prompt: {self.system_prompt_template}'
+        )
+        self.vector = client.embed(rich_text)
+        self.save(update_fields=['vector'])
+
+    def ai_model(self, payload_size: int) -> ModelSelection:
+        """Returns the optimal AI model for this IdentityDisc."""
+        return Hypothalamus.pick_optimal_model(self, payload_size)

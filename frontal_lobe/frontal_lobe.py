@@ -2,6 +2,7 @@ import json
 import logging
 import time
 from datetime import timedelta
+from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
@@ -19,6 +20,9 @@ from frontal_lobe.models import (
     ReasoningTurn,
 )
 from frontal_lobe.serializers import LLMFunctionCall, LLMToolCall
+from frontal_lobe.synapse_client import SynapseResponse
+from hypothalamus.hypothalamus import ModelSelection
+from hypothalamus.models import AIModelProvider, AIModelProviderUsageRecord
 from identity.addons.addon_package import AddonPackage
 from identity.addons.addon_registry import ADDON_REGISTRY
 from parietal_lobe.parietal_lobe import ParietalLobe
@@ -38,15 +42,49 @@ def _serialize_messages_sync(turn_record, all_messages):
     ]
 
 
-def _fetch_disc_and_model_sync(session_id):
-    # Hydrate the entire relationship tree in one swift DB hit
+def _fetch_disc_sync(session_id):
+    # We no longer fetch a static ai_model here. Just the disc and its budget constraint.
     s = ReasoningSession.objects.select_related(
-        'identity_disc', 'identity_disc__ai_model'
+        'identity_disc', 'identity_disc__budget'
     ).get(id=session_id)
+    return s.identity_disc
 
-    disc = s.identity_disc
-    model = getattr(disc, 'ai_model', None) if disc else None
-    return disc, model
+
+def _mint_usage_record_sync(
+    identity_disc,
+    model_selection: ModelSelection,
+    response: SynapseResponse,
+    estimated_cost: Decimal,
+    duration: timedelta,
+):
+    """Synchronously creates the immutable FinOps ledger entry."""
+
+    # Safety Check: If the API crashed before processing tokens, don't mint a blank ledger
+    if response.is_error and response.tokens_input == 0:
+        return
+
+    provider_record = (
+        AIModelProvider.objects.filter(
+            provider_unique_model_id=model_selection.provider_model_id
+        )
+        .select_related('ai_model')
+        .first()
+    )
+
+    if provider_record:
+        AIModelProviderUsageRecord.objects.create(
+            ai_model_provider=provider_record,
+            ai_model=provider_record.ai_model,
+            identity_disc=identity_disc,
+            query_time=duration,
+            input_tokens=response.tokens_input,
+            output_tokens=response.tokens_output,
+            reasoning_tokens=response.metrics.reasoning_tokens,
+            cache_read_input_tokens=response.metrics.cache_read_input_tokens,
+            cache_creation_input_tokens=response.metrics.cache_creation_input_tokens,
+            audio_tokens=response.metrics.audio_tokens,
+            estimated_cost=estimated_cost,
+        )
 
 
 class FrontalLobe:
@@ -121,7 +159,6 @@ class FrontalLobe:
                 )
 
         await self.cache_ids()
-
         await self._log_live(f'Session ID: {self.session.id}')
 
     async def cache_ids(self):
@@ -163,9 +200,7 @@ class FrontalLobe:
     ) -> list[dict]:
         """
         Assembles the Turn payload by purely orchestrating Addons.
-        Relies entirely on IdentityAddonPhase for ordering (Identify -> Context -> History -> Terminal).
         """
-
         all_messages: list[ChatMessage] = []
 
         # 1. Build the unified context package
@@ -183,7 +218,6 @@ class FrontalLobe:
         )
 
         # 2. Fetch active addons ordered by Phase
-        # (Assuming you link IdentityAddon to IdentityDisc somehow, e.g., via a M2M or foreign key)
         active_addons = await sync_to_async(list)(
             self.session.identity_disc.addons.select_related('phase').order_by(
                 'phase__id'
@@ -202,7 +236,6 @@ class FrontalLobe:
                         session_id=self.session.id,
                         turn_id=turn_record.id,
                         role_id=ChatMessageRole.SYSTEM,
-                        # Core rules should carry SYSTEM weight
                         content=addon_model.description,
                         is_volatile=True,
                     )
@@ -215,9 +248,6 @@ class FrontalLobe:
                 logger.info(f'Executing addon: {addon_model.function_slug}')
                 addon_messages = await sync_to_async(addon_func)(package)
                 if addon_messages:
-                    logger.debug(
-                        f'Addon {addon_model.function_slug} returned {len(addon_messages)} messages'
-                    )
                     all_messages.extend(addon_messages)
             else:
                 logger.warning(
@@ -229,7 +259,6 @@ class FrontalLobe:
             m for m in all_messages if m._state.adding and m.is_volatile
         ]
         if unsaved_volatile:
-            # Ensure they are linked to the current turn/session just in case the addon forgot
             for msg in unsaved_volatile:
                 msg.session_id = self.session.id
                 msg.turn_id = turn_record.id
@@ -241,6 +270,7 @@ class FrontalLobe:
             llm_payload = await sync_to_async(_serialize_messages_sync)(
                 turn_record, all_messages
             )
+
         # Logging output for debug
         await self._log_live(
             f'\n--- TURN {turn_record.turn_number} PAYLOAD ({len(llm_payload)} messages) ---'
@@ -265,18 +295,52 @@ class FrontalLobe:
         # 1. Start the turn record
         turn_record = await self._record_turn_start(turn_index, previous_turn)
 
-        # 4. Build the context window for the LLM
+        # 2. Build the context window for the LLM
         messages = await self._build_turn_payload(turn_record)
 
-        turn_record.request_payload = {'messages': messages}
+        # 3. Dynamic Model Routing (The Hypothalamus)
+        # Estimate token mass (~4 chars per token)
+        estimated_mass = sum(len(str(m)) for m in messages) // 4
+
+        # Pick the perfect brain based on this specific payload mass
+        model_selection = await sync_to_async(
+            self.session.identity_disc.ai_model
+        )(estimated_mass)
+
+        await self._log_live(
+            f'[Thalamus] Routed to {model_selection.ai_model_name} '
+            f'(Input Cost: ${model_selection.input_cost_per_token:.6f}/token)'
+        )
+
+        turn_record.request_payload = {
+            'messages': messages,
+            'provider_model_id': model_selection.provider_model_id,
+        }
         await sync_to_async(turn_record.save)(update_fields=['request_payload'])
 
-        # 5. Execute Inference
+        # 4. Execute Inference
         start_time = time.time()
-        response = await self.parietal_lobe.chat(messages, ollama_tools)
+
+        # We pass the dynamic selection directly to the Parietal Lobe
+        response: SynapseResponse = await self.parietal_lobe.chat(
+            messages=messages,
+            tools=ollama_tools,
+            model_selection=model_selection,
+        )
         inf_duration = timedelta(seconds=time.time() - start_time)
 
-        # 6. Save AI Response to ChatMessage (Persistent)
+        # --- THE SAFETY CATCH ---
+        if response.is_error:
+            await self._log_live(f'\n[SYSTEM ERROR] {response.error_message}')
+            turn_record.status_id = ReasoningStatusID.ERROR
+            await sync_to_async(turn_record.save)(update_fields=['status_id'])
+
+            # Pause the Swarm and wait for human intervention on an API crash
+            self.session.status_id = ReasoningStatusID.ATTENTION_REQUIRED
+            await sync_to_async(self.session.save)(update_fields=['status_id'])
+            return False, turn_record
+
+        # 5. Save AI Response to ChatMessage (Persistent)
         if response.content:
             await sync_to_async(ChatMessage.objects.create)(
                 session=self.session,
@@ -287,30 +351,24 @@ class FrontalLobe:
             )
             await self._log_live(f'Thought: {response.content.strip()}')
 
-        # Note: Tool execution will happen in ParietalLobe, and those results
-        # MUST be saved as ChatMessage objects with role=TOOL and is_volatile=False
-        # inside process_tool_calls() to ensure they enter the history properly.
-
+        # 6. Record Completion & Mint FinOps Ledger
         await _record_turn_completion(
             turn_record,
-            response.tokens_input,
-            response.tokens_output,
+            response,
+            model_selection,
             inf_duration,
+            self.session.identity_disc,
         )
 
         if not response.tool_calls:
             await self._log_live(
                 '\n[SYSTEM] No tools invoked. Yielding to Human.'
             )
-            # Universal Rule: If the agent didn't call `mcp_done`, it is not dead.
-            # It is pausing and waiting for the user to respond.
             self.session.status_id = ReasoningStatusID.ATTENTION_REQUIRED
             await sync_to_async(self.session.save)(update_fields=['status_id'])
-
             return False, turn_record
 
         # 7. Fire Tools
-        # Ensure parietal_lobe.process_tool_calls is updated to save ChatMessages!
         await self.parietal_lobe.process_tool_calls(
             turn_record, response.tool_calls
         )
@@ -340,25 +398,19 @@ class FrontalLobe:
             )
             await self._initialize_session(rendered_objective, max_turns)
 
-            # 3. Resolve model from IdentityDisc and initialize Parietal Lobe
-            identity_disc, ai_model = await sync_to_async(
-                _fetch_disc_and_model_sync
-            )(self.session.id)
-
-            # Re-attach the fully hydrated disc to the session so Addons don't trigger lazy-loads
-            self.session.identity_disc = identity_disc
-
-            if not identity_disc or not ai_model:
+            # 3. Resolve IdentityDisc and prep Parietal Lobe
+            identity_disc = await sync_to_async(_fetch_disc_sync)(
+                self.session.id
+            )
+            if not identity_disc:
                 raise ValueError(
-                    f'Session {self.session.id} failed to resolve an AI Model. '
-                    f'Ensure the IdentityDisc UUID assigned to it exists and has an ai_model.'
+                    f'Session {self.session.id} missing IdentityDisc.'
                 )
 
+            self.session.identity_disc = identity_disc
             self.parietal_lobe = ParietalLobe(self.session, self._log_live)
-            await self.parietal_lobe.initialize_client(identity_disc)
-            await self._log_live(f'Model: {ai_model.name}')
 
-            # 4. Build Synapse Payload
+            # 4. Build Tool Schemas
             ollama_tools = await self.parietal_lobe.build_tool_schemas()
             await self._log_live(f'[[[[[Loaded {len(ollama_tools)} tools.]]]]]')
 
@@ -413,7 +465,7 @@ class FrontalLobe:
             return 500, '\n'.join(self.log_output)
 
         finally:
-            await self._log_live('\n[SYSTEM] Unloading model to free VRAM...')
+            await self._log_live('\n[SYSTEM] Requesting VRAM cleanup...')
             if self.parietal_lobe:
                 await self.parietal_lobe.unload_client()
             await self._log_live(FrontalLobeConstants.LOG_END)
@@ -422,10 +474,6 @@ class FrontalLobe:
 
 
 async def run_frontal_lobe(spike_id: UUID) -> Tuple[int, str]:
-    """Asynchronous entry point for the generic effector caster.
-
-    # Used by GEC.
-    """
     try:
         spike = await sync_to_async(
             lambda: Spike.objects.select_related('spike_train').get(id=spike_id)
@@ -439,15 +487,31 @@ async def run_frontal_lobe(spike_id: UUID) -> Tuple[int, str]:
 
 async def _record_turn_completion(
     turn_record: ReasoningTurn,
-    tokens_in: int,
-    tokens_out: int,
+    response: SynapseResponse,
+    model_selection: ModelSelection,
     inference_duration: timedelta,
+    identity_disc: 'IdentityDisc',
 ) -> None:
-    turn_record.tokens_input = tokens_in
-    turn_record.tokens_output = tokens_out
+    # 1. Update Turn
+    turn_record.tokens_input = response.tokens_input
+    turn_record.tokens_output = response.tokens_output
     turn_record.inference_time = inference_duration
     turn_record.status_id = ReasoningStatusID.COMPLETED
     await sync_to_async(turn_record.save)()
+
+    # 2. Calculate the estimated cost based on the Selection
+    estimated_cost = (
+        Decimal(response.tokens_input) * model_selection.input_cost_per_token
+    )
+
+    # 3. Mint Usage Record
+    await sync_to_async(_mint_usage_record_sync)(
+        identity_disc,
+        model_selection,
+        response,
+        estimated_cost,
+        inference_duration,
+    )
 
 
 def chat_message_to_llm_dict(
@@ -461,7 +525,6 @@ def chat_message_to_llm_dict(
         chat_message.CONTENT_KEY: chat_message.content,
     }
 
-    # Handle Tool Results
     if (
         chat_message.role_id == ChatMessageRole.TOOL
         and chat_message.tool_call_id
@@ -474,7 +537,6 @@ def chat_message_to_llm_dict(
             f'call_{chat_message.tool_call_id}'
         )
 
-    # Handle Assistant Tool Requests
     elif chat_message.role_id == ChatMessageRole.ASSISTANT:
         tool_calls_payload = []
         for tc in chat_message.turn.tool_calls.all():

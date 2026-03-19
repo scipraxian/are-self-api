@@ -70,6 +70,9 @@ class SynapseResponse:
     tokens_input: int
     tokens_output: int
     model: str
+    reasoning_tokens: int = 0
+    cache_read_input_tokens: int = 0
+    cache_creation_input_tokens: int = 0
 
 
 class OllamaClient:
