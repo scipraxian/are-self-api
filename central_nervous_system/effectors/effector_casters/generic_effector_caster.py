@@ -9,6 +9,7 @@ from typing import List, Optional
 
 from asgiref.sync import sync_to_async
 from channels.layers import get_channel_layer
+from django.conf import settings
 
 from central_nervous_system.effectors.effector_casters.begin_play_node import (
     begin_play,
@@ -81,6 +82,44 @@ def evaluate_return_code(executable_name: str, return_code: int) -> bool:
     return return_code == 0
 
 
+def check_channel_layer_config():
+    """
+    Diagnostic helper to check channel layer configuration.
+    Logs detailed info about why channel layer might be None.
+    """
+
+    channel_layer = get_channel_layer()
+
+    if channel_layer is None:
+        logger.warning('[CHANNEL_LAYER] get_channel_layer() returned None')
+
+        # Check if CHANNEL_LAYERS is configured
+        if not hasattr(settings, 'CHANNEL_LAYERS'):
+            logger.warning(
+                '[CHANNEL_LAYER] CHANNEL_LAYERS not found in settings'
+            )
+        else:
+            logger.info(
+                f'[CHANNEL_LAYER] CHANNEL_LAYERS config: {settings.CHANNEL_LAYERS}'
+            )
+
+            # Check if using InMemoryChannelLayer (won't work across processes)
+            backend = settings.CHANNEL_LAYERS.get('default', {}).get(
+                'BACKEND', ''
+            )
+            if 'InMemoryChannelLayer' in backend:
+                logger.warning(
+                    '[CHANNEL_LAYER] Using InMemoryChannelLayer - this does NOT work '
+                    'across processes (Celery workers need Redis or similar)'
+                )
+    else:
+        logger.info(
+            f'[CHANNEL_LAYER] Channel layer initialized: {type(channel_layer).__name__}'
+        )
+
+    return channel_layer
+
+
 class AsyncLogManager:
     """
     Handles buffered log writes to the Database with async safety.
@@ -95,8 +134,8 @@ class AsyncLogManager:
         self._last_flush_time = time.time()
         self._flush_size = flush_size
         self._flush_interval = flush_interval
-        # Lazy-resolved channel layer for websocket mirroring
-        self._channel_layer = get_channel_layer()
+        # Check channel layer configuration on init
+        self._channel_layer_available = check_channel_layer_config() is not None
 
     async def append(self, text: str):
         if text:
@@ -172,7 +211,11 @@ class AsyncLogManager:
     ) -> None:
         """
         Releases Glutamate neurotransmitters for newly flushed log chunks.
+        Skips if channel layer is not available (logs once).
         """
+        if not self._channel_layer_available:
+            return
+
         if execution_chunk:
             await fire_neurotransmitter(
                 Glutamate(
@@ -401,7 +444,6 @@ class GenericEffectorCaster:
                         matches = list(
                             BLACKBOARD_SET_KEY_REGEX.finditer(text_to_log)
                         )
-                        channel_layer = get_channel_layer()
                         for match in matches:
                             key = match.group(1).strip()
                             val = match.group(2).strip()
