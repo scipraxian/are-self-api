@@ -5,32 +5,32 @@ from rest_framework import serializers
 
 
 @dataclass
-class CorpusCallosumRequestDTO:
+class ThalamusRequestDTO:
     message: str
 
 
-class CorpusCallosumRequestSerializer(serializers.Serializer):
+class ThalamusRequestSerializer(serializers.Serializer):
     message = serializers.CharField(required=True, allow_blank=False)
 
 
 @dataclass
-class CorpusCallosumResponseDTO:
+class ThalamusResponseDTO:
     ok: bool
     message: str
 
 
-class CorpusCallosumResponseSerializer(serializers.Serializer):
+class ThalamusResponseSerializer(serializers.Serializer):
     ok = serializers.BooleanField()
     message = serializers.CharField()
 
 
 @dataclass
-class CorpusCallosumMessageDTO:
+class ThalamusMessageDTO:
     role: str
     content: str
 
 
-class CorpusCallosumMessageSerializer(serializers.Serializer):
+class ThalamusMessageSerializer(serializers.Serializer):
     """Schema for a single chat message."""
 
     role = serializers.CharField()
@@ -38,11 +38,11 @@ class CorpusCallosumMessageSerializer(serializers.Serializer):
 
 
 @dataclass
-class CorpusCallosumMessageListDTO:
-    messages: List[CorpusCallosumMessageDTO]
+class ThalamusMessageListDTO:
+    messages: List[ThalamusMessageDTO]
 
 
-class CorpusCallosumMessageListSerializer(serializers.Serializer):
+class ThalamusMessageListSerializer(serializers.Serializer):
     """Schema for the full history payload expected by assistant-ui."""
 
-    messages = CorpusCallosumMessageSerializer(many=True)
+    messages = ThalamusMessageSerializer(many=True)

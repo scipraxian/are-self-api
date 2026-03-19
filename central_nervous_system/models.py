@@ -282,8 +282,8 @@ class NeuralPathway(
     The Container. Now supports a visual JSON layout, Tags, and Favorites.
     """
 
-    # Contains the CC Axon and Neuron.
-    CORPUS_CALLOSUM = UUID('04c3997f-d5f3-402f-952a-519bbd7e4dee')
+    # Contains the Thalamus Axon and Neuron.
+    THALAMUS = UUID('04c3997f-d5f3-402f-952a-519bbd7e4dee')
 
     ui_json = models.TextField(blank=True, default='{}')
 

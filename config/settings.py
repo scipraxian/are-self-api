@@ -63,7 +63,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'corsheaders',
     'synaptic_cleft.apps.SynapticCleftConfig',
-    'corpus_callosum.apps.CorpusCallosumConfig',
+    'hypothalamus.apps.HypothalamusConfig',
 ]
 
 MIDDLEWARE = [

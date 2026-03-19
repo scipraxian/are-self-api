@@ -23,20 +23,20 @@ from frontal_lobe.models import (
 from identity.models import IdentityDisc
 
 from .serializers import (
-    CorpusCallosumMessageDTO,
-    CorpusCallosumMessageListDTO,
-    CorpusCallosumMessageListSerializer,
-    CorpusCallosumRequestSerializer,
-    CorpusCallosumResponseDTO,
-    CorpusCallosumResponseSerializer,
+    ThalamusMessageDTO,
+    ThalamusMessageListDTO,
+    ThalamusMessageListSerializer,
+    ThalamusRequestSerializer,
+    ThalamusResponseDTO,
+    ThalamusResponseSerializer,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class CorpusCallosumViewSet(viewsets.ViewSet):
+class ThalamusViewSet(viewsets.ViewSet):
     """
-    Dedicated ViewSet for the Corpus Callosum UI chat bubble.
+    Dedicated ViewSet for the Thalamus UI chat bubble.
     Statelessly routes human chat into the AI's standing ReasoningSession.
     """
 
@@ -47,11 +47,11 @@ class CorpusCallosumViewSet(viewsets.ViewSet):
         methods=['post'],
     )
     def interact(self, request):
-        serializer = CorpusCallosumRequestSerializer(data=request.data)
+        serializer = ThalamusRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user_message = serializer.validated_data['message'].strip()
 
-        pathway_id = NeuralPathway.CORPUS_CALLOSUM
+        pathway_id = NeuralPathway.THALAMUS
         standing_train = (
             SpikeTrain.objects.filter(pathway_id=pathway_id)
             .order_by('-created')
@@ -93,11 +93,11 @@ class CorpusCallosumViewSet(viewsets.ViewSet):
 
             cast_cns_spell.delay(session.spike_id)
 
-            dto = CorpusCallosumResponseDTO(
+            dto = ThalamusResponseDTO(
                 ok=True, message='Neural pathway re-ignited.'
             )
             return Response(
-                CorpusCallosumResponseSerializer(instance=dto).data,
+                ThalamusResponseSerializer(instance=dto).data,
                 status=status.HTTP_200_OK,
             )
 
@@ -108,7 +108,7 @@ class CorpusCallosumViewSet(viewsets.ViewSet):
             return Response(
                 {
                     'ok': False,
-                    'message': 'Corpus Callosum is currently thinking.',
+                    'message': 'Thalamus is currently thinking.',
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -131,7 +131,7 @@ class CorpusCallosumViewSet(viewsets.ViewSet):
             spike=spike,
             status_id=ReasoningStatusID.ATTENTION_REQUIRED,
             max_turns=50,
-            identity_disc_id=IdentityDisc.CORPUS_CALLOSUM,
+            identity_disc_id=IdentityDisc.THALAMUS,
         )
 
         first_turn = ReasoningTurn.objects.create(
@@ -149,11 +149,11 @@ class CorpusCallosumViewSet(viewsets.ViewSet):
 
         cast_cns_spell.delay(spike.id)
 
-        dto = CorpusCallosumResponseDTO(
+        dto = ThalamusResponseDTO(
             ok=True, message='Fresh Spike spawned with user prompt.'
         )
         return Response(
-            CorpusCallosumResponseSerializer(instance=dto).data,
+            ThalamusResponseSerializer(instance=dto).data,
             status=status.HTTP_200_OK,
         )
 
@@ -163,7 +163,7 @@ class CorpusCallosumViewSet(viewsets.ViewSet):
         Hydrates the assistant-ui chat thread and handles polling.
         Returns the clean 'user' and 'assistant' history of the Standing Train.
         """
-        pathway_id = NeuralPathway.CORPUS_CALLOSUM
+        pathway_id = NeuralPathway.THALAMUS
         standing_train = (
             SpikeTrain.objects.filter(pathway_id=pathway_id)
             .order_by('-created')
@@ -171,9 +171,9 @@ class CorpusCallosumViewSet(viewsets.ViewSet):
         )
 
         if not standing_train:
-            empty_dto = CorpusCallosumMessageListDTO(messages=[])
+            empty_dto = ThalamusMessageListDTO(messages=[])
             return Response(
-                CorpusCallosumMessageListSerializer(instance=empty_dto).data,
+                ThalamusMessageListSerializer(instance=empty_dto).data,
                 status=status.HTTP_200_OK,
             )
 
@@ -184,9 +184,9 @@ class CorpusCallosumViewSet(viewsets.ViewSet):
         )
 
         if not session:
-            empty_dto = CorpusCallosumMessageListDTO(messages=[])
+            empty_dto = ThalamusMessageListDTO(messages=[])
             return Response(
-                CorpusCallosumMessageListSerializer(instance=empty_dto).data,
+                ThalamusMessageListSerializer(instance=empty_dto).data,
                 status=status.HTTP_200_OK,
             )
 
@@ -207,14 +207,14 @@ class CorpusCallosumViewSet(viewsets.ViewSet):
         for msg in chat_msgs:
             if msg.content and msg.content.strip():
                 messages_payload.append(
-                    CorpusCallosumMessageDTO(
+                    ThalamusMessageDTO(
                         role=msg.role.name.lower(), content=msg.content.strip()
                     )
                 )
 
         # 3. Return the strongly typed response
-        response_dto = CorpusCallosumMessageListDTO(messages=messages_payload)
+        response_dto = ThalamusMessageListDTO(messages=messages_payload)
         return Response(
-            CorpusCallosumMessageListSerializer(instance=response_dto).data,
+            ThalamusMessageListSerializer(instance=response_dto).data,
             status=status.HTTP_200_OK,
         )

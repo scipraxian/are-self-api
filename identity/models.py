@@ -74,7 +74,7 @@ class Identity(
 ):
     """These are the details used to represent a persona."""
 
-    CORPUS_CALLOSUM = UUID('14148e25-283d-4547-a17d-e28d021eba07')
+    THALAMUS = UUID('14148e25-283d-4547-a17d-e28d021eba07')
 
 
 class IdentityDisc(
@@ -82,7 +82,7 @@ class IdentityDisc(
 ):
     """This is a persistent implementation of an identity."""
 
-    CORPUS_CALLOSUM = UUID('2e50d62a-e6ec-489e-84ce-0a1ea2101a73')
+    THALAMUS = UUID('2e50d62a-e6ec-489e-84ce-0a1ea2101a73')
 
     available = models.BooleanField(default=True)
     last_message_to_self = models.TextField(blank=True, default='')
@@ -97,5 +97,5 @@ class IdentityDisc(
     memories = models.ManyToManyField(TalosEngram, blank=True)
 
     @classmethod
-    def get_or_create_corpus_callosum(cls):
+    def get_or_create_thalamus(cls):
         IdentityDisc.objects.get_or_create()
