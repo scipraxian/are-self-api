@@ -300,8 +300,13 @@ class FrontalLobe:
 
         if not response.tool_calls:
             await self._log_live(
-                '\nNo further actions requested. Permanent Sleep Initiated.'
+                '\n[SYSTEM] No tools invoked. Yielding to Human.'
             )
+            # Universal Rule: If the agent didn't call `mcp_done`, it is not dead.
+            # It is pausing and waiting for the user to respond.
+            self.session.status_id = ReasoningStatusID.ATTENTION_REQUIRED
+            await sync_to_async(self.session.save)(update_fields=['status_id'])
+
             return False, turn_record
 
         # 7. Fire Tools

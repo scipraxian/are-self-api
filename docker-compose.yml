@@ -21,5 +21,25 @@ services:
     ports:
       - "6379:6379"
 
+  # 3. The API Gateway & Budget Enforcer (LiteLLM Proxy)
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: talos_litellm
+    restart: always
+    ports:
+      - "4000:4000"
+    volumes:
+      # Mounts your routing rules from your host machine
+      - ./litellm_config.yaml:/app/config.yaml
+    environment:
+      # Passes your actual provider keys securely
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      # The Magic: Points the proxy to your existing Postgres container for ledger tracking
+      - DATABASE_URL=postgresql://postgres:frith@db:5432/postgres
+    command: [ "--config", "/app/config.yaml" ]
+    depends_on:
+      - db
+
 volumes:
   postgres_data:
+

@@ -91,9 +91,6 @@ class CorpusCallosumViewSet(viewsets.ViewSet):
                 content=user_message,
             )
 
-            session.status_id = ReasoningStatusID.ACTIVE
-            session.save(update_fields=['status_id'])
-
             cast_cns_spell.delay(session.spike_id)
 
             dto = CorpusCallosumResponseDTO(
@@ -167,40 +164,57 @@ class CorpusCallosumViewSet(viewsets.ViewSet):
         Returns the clean 'user' and 'assistant' history of the Standing Train.
         """
         pathway_id = NeuralPathway.CORPUS_CALLOSUM
-        standing_train = SpikeTrain.objects.filter(pathway_id=pathway_id).order_by('-created').first()
+        standing_train = (
+            SpikeTrain.objects.filter(pathway_id=pathway_id)
+            .order_by('-created')
+            .first()
+        )
 
         if not standing_train:
             empty_dto = CorpusCallosumMessageListDTO(messages=[])
-            return Response(CorpusCallosumMessageListSerializer(instance=empty_dto).data, status=status.HTTP_200_OK)
+            return Response(
+                CorpusCallosumMessageListSerializer(instance=empty_dto).data,
+                status=status.HTTP_200_OK,
+            )
 
-        session = ReasoningSession.objects.filter(
-            spike__spike_train=standing_train
-        ).order_by('-created').first()
+        session = (
+            ReasoningSession.objects.filter(spike__spike_train=standing_train)
+            .order_by('-created')
+            .first()
+        )
 
         if not session:
             empty_dto = CorpusCallosumMessageListDTO(messages=[])
-            return Response(CorpusCallosumMessageListSerializer(instance=empty_dto).data, status=status.HTTP_200_OK)
+            return Response(
+                CorpusCallosumMessageListSerializer(instance=empty_dto).data,
+                status=status.HTTP_200_OK,
+            )
 
         # 1. Fetch non-volatile chat messages natively
         # We strictly filter for 'user' and 'assistant' roles to match the assistant-ui schema perfectly.
-        chat_msgs = ChatMessage.objects.filter(
-            session=session,
-            is_volatile=False,
-            role__name__in=['user', 'assistant']
-        ).select_related('role').order_by('created')
+        chat_msgs = (
+            ChatMessage.objects.filter(
+                session=session,
+                is_volatile=False,
+                role__name__in=['user', 'assistant'],
+            )
+            .select_related('role')
+            .order_by('created')
+        )
 
         # 2. Map directly to DTOs
         messages_payload = []
         for msg in chat_msgs:
             if msg.content and msg.content.strip():
-                messages_payload.append(CorpusCallosumMessageDTO(
-                    role=msg.role.name.lower(),
-                    content=msg.content.strip()
-                ))
+                messages_payload.append(
+                    CorpusCallosumMessageDTO(
+                        role=msg.role.name.lower(), content=msg.content.strip()
+                    )
+                )
 
         # 3. Return the strongly typed response
         response_dto = CorpusCallosumMessageListDTO(messages=messages_payload)
         return Response(
             CorpusCallosumMessageListSerializer(instance=response_dto).data,
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
