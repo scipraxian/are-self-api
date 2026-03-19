@@ -38,6 +38,17 @@ def _serialize_messages_sync(turn_record, all_messages):
     ]
 
 
+def _fetch_disc_and_model_sync(session_id):
+    # Hydrate the entire relationship tree in one swift DB hit
+    s = ReasoningSession.objects.select_related(
+        'identity_disc', 'identity_disc__ai_model'
+    ).get(id=session_id)
+
+    disc = s.identity_disc
+    model = getattr(disc, 'ai_model', None) if disc else None
+    return disc, model
+
+
 class FrontalLobe:
     """Async execution wrapper for the Frontal Lobe AI loop."""
 
@@ -181,6 +192,24 @@ class FrontalLobe:
 
         # 3. Execute addons and collect ChatMessage instances
         for addon_model in active_addons:
+            # --- NATIVE TEXT INJECTION (No Python Function Required) ---
+            if not addon_model.function_slug:
+                if addon_model.description:
+                    logger.info(
+                        f'Injecting native text addon: {addon_model.name}'
+                    )
+                    native_msg = ChatMessage(
+                        session_id=self.session.id,
+                        turn_id=turn_record.id,
+                        role_id=ChatMessageRole.SYSTEM,
+                        # Core rules should carry SYSTEM weight
+                        content=addon_model.description,
+                        is_volatile=True,
+                    )
+                    all_messages.append(native_msg)
+                continue
+
+            # --- DYNAMIC PYTHON EXECUTION ---
             addon_func = ADDON_REGISTRY.get(addon_model.function_slug)
             if addon_func:
                 logger.info(f'Executing addon: {addon_model.function_slug}')
@@ -192,7 +221,7 @@ class FrontalLobe:
                     all_messages.extend(addon_messages)
             else:
                 logger.warning(
-                    f'Addon {addon_model.name} not found in registry.'
+                    f'Addon {addon_model.function_slug} not found in registry.'
                 )
 
         # 4. Bulk save ONLY the new, volatile messages (so they appear in your DB timeline)
@@ -307,17 +336,17 @@ class FrontalLobe:
             await self._initialize_session(rendered_objective, max_turns)
 
             # 3. Resolve model from IdentityDisc and initialize Parietal Lobe
-            identity_disc = await sync_to_async(
-                lambda: self.session.identity_disc
-            )()
-            ai_model = (
-                await sync_to_async(getattr)(identity_disc, 'ai_model', None)
-                if identity_disc
-                else None
-            )
+            identity_disc, ai_model = await sync_to_async(
+                _fetch_disc_and_model_sync
+            )(self.session.id)
+
+            # Re-attach the fully hydrated disc to the session so Addons don't trigger lazy-loads
+            self.session.identity_disc = identity_disc
+
             if not identity_disc or not ai_model:
                 raise ValueError(
-                    'ReasoningSession.identity_disc.ai_model must be set before FrontalLobe.run().'
+                    f'Session {self.session.id} failed to resolve an AI Model. '
+                    f'Ensure the IdentityDisc UUID assigned to it exists and has an ai_model.'
                 )
 
             self.parietal_lobe = ParietalLobe(self.session, self._log_live)
