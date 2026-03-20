@@ -92,7 +92,12 @@ class AIModelFamily(NameMixin, DescriptionMixin):
     """
     Groups models into conceptual lineages (e.g., 'Claude 3.5', 'Llama 3').
     Allows the Swarm to understand that different physical endpoints are the same 'Brain'.
+
+    NOTE Name must be unique AND slug must be unique.
+    slug is what we use to help identify the family.
     """
+
+    slug = models.SlugField(unique=True, default='llama-3-70b-instruct')
 
     class Meta:
         verbose_name_plural = 'AI Model Families'
