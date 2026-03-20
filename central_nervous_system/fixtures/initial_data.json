@@ -1,3856 +1,3856 @@
 [
-  {
-    "model": "central_nervous_system.cnstag",
-    "pk": 1,
-    "fields": {
-      "name": "Agent"
-    }
-  },
-  {
-    "model": "central_nervous_system.cnstag",
-    "pk": 2,
-    "fields": {
-      "name": "Pre-Release"
-    }
-  },
-  {
-    "model": "central_nervous_system.cnstag",
-    "pk": 3,
-    "fields": {
-      "name": "Corpus Callosum"
-    }
-  },
-  {
-    "model": "central_nervous_system.spiketrainstatus",
-    "pk": 1,
-    "fields": {
-      "name": "Created"
-    }
-  },
-  {
-    "model": "central_nervous_system.spiketrainstatus",
-    "pk": 2,
-    "fields": {
-      "name": "Pending"
-    }
-  },
-  {
-    "model": "central_nervous_system.spiketrainstatus",
-    "pk": 3,
-    "fields": {
-      "name": "Running"
-    }
-  },
-  {
-    "model": "central_nervous_system.spiketrainstatus",
-    "pk": 4,
-    "fields": {
-      "name": "Success"
-    }
-  },
-  {
-    "model": "central_nervous_system.spiketrainstatus",
-    "pk": 5,
-    "fields": {
-      "name": "Failed"
-    }
-  },
-  {
-    "model": "central_nervous_system.spiketrainstatus",
-    "pk": 6,
-    "fields": {
-      "name": "Aborted"
-    }
-  },
-  {
-    "model": "central_nervous_system.spiketrainstatus",
-    "pk": 7,
-    "fields": {
-      "name": "Delegated"
-    }
-  },
-  {
-    "model": "central_nervous_system.spiketrainstatus",
-    "pk": 8,
-    "fields": {
-      "name": "Stopping"
-    }
-  },
-  {
-    "model": "central_nervous_system.spiketrainstatus",
-    "pk": 9,
-    "fields": {
-      "name": "Stopped"
-    }
-  },
-  {
-    "model": "central_nervous_system.spikestatus",
-    "pk": 1,
-    "fields": {
-      "name": "Created"
-    }
-  },
-  {
-    "model": "central_nervous_system.spikestatus",
-    "pk": 2,
-    "fields": {
-      "name": "Pending"
-    }
-  },
-  {
-    "model": "central_nervous_system.spikestatus",
-    "pk": 3,
-    "fields": {
-      "name": "Running"
-    }
-  },
-  {
-    "model": "central_nervous_system.spikestatus",
-    "pk": 4,
-    "fields": {
-      "name": "Success"
-    }
-  },
-  {
-    "model": "central_nervous_system.spikestatus",
-    "pk": 5,
-    "fields": {
-      "name": "Failed"
-    }
-  },
-  {
-    "model": "central_nervous_system.spikestatus",
-    "pk": 6,
-    "fields": {
-      "name": "Aborted"
-    }
-  },
-  {
-    "model": "central_nervous_system.spikestatus",
-    "pk": 7,
-    "fields": {
-      "name": "Delegated"
-    }
-  },
-  {
-    "model": "central_nervous_system.spikestatus",
-    "pk": 8,
-    "fields": {
-      "name": "Stopping"
-    }
-  },
-  {
-    "model": "central_nervous_system.spikestatus",
-    "pk": 9,
-    "fields": {
-      "name": "Stopped"
-    }
-  },
-  {
-    "model": "central_nervous_system.cnsdistributionmode",
-    "pk": 1,
-    "fields": {
-      "description": "Executes strictly on the local Talos Server (e.g. Compiling).",
-      "name": "Local Server (Default)"
-    }
-  },
-  {
-    "model": "central_nervous_system.cnsdistributionmode",
-    "pk": 2,
-    "fields": {
-      "description": "Broadcasts execution to every ONLINE agent (e.g. Deployment).",
-      "name": "All Online Agents"
-    }
-  },
-  {
-    "model": "central_nervous_system.cnsdistributionmode",
-    "pk": 3,
-    "fields": {
-      "description": "Executes on the first available ONLINE agent (e.g. Distributed Testing).",
-      "name": "One Available Agent"
-    }
-  },
-  {
-    "model": "central_nervous_system.cnsdistributionmode",
-    "pk": 4,
-    "fields": {
-      "description": "Executes only on targets explicitly linked via EffectorTarget.",
-      "name": "Specific Targets"
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 1,
-    "fields": {
-      "created": "2026-01-01T00:00:00Z",
-      "description": null,
-      "modified": "2026-01-22T22:13:06.759Z",
-      "name": "Begin Play",
-      "is_favorite": false,
-      "talos_executable": 1,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 2,
-    "fields": {
-      "created": "2026-01-01T00:00:00Z",
-      "description": null,
-      "modified": "2026-01-21T22:07:32.891Z",
-      "name": "Staging: Build Game",
-      "is_favorite": false,
-      "talos_executable": 5,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": [
-        9,
-        10,
-        11,
-        35,
-        36,
-        37,
-        38
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 3,
-    "fields": {
-      "created": "2026-01-01T00:00:00Z",
-      "description": null,
-      "modified": "2026-01-23T19:58:04.138Z",
-      "name": "Staging: Record PSOs",
-      "is_favorite": false,
-      "talos_executable": 6,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": [
-        17,
-        23,
-        24,
-        25,
-        29,
-        30,
-        31
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 4,
-    "fields": {
-      "created": "2026-01-01T00:00:00Z",
-      "description": null,
-      "modified": "2026-01-23T20:29:01.872Z",
-      "name": "Staging Run Once",
-      "is_favorite": false,
-      "talos_executable": 6,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": [
-        16,
-        23,
-        24,
-        25,
-        40
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 100,
-    "fields": {
-      "created": "2026-01-07T22:58:23.399Z",
-      "description": null,
-      "modified": "2026-01-23T20:13:48.542Z",
-      "name": "Compile PSO Cache",
-      "is_favorite": false,
-      "talos_executable": 4,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": [
-        2,
-        3,
-        22,
-        26,
-        27
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 110,
-    "fields": {
-      "created": "2026-01-08T15:50:00Z",
-      "description": null,
-      "modified": "2026-01-26T17:43:04.964Z",
-      "name": "Pre-Release Build",
-      "is_favorite": false,
-      "talos_executable": 5,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": [
-        32,
-        33,
-        34,
-        3,
-        35,
-        5,
-        37,
-        38,
-        9,
-        10,
-        11,
-        44,
-        13,
-        15,
-        19,
-        20
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 120,
-    "fields": {
-      "created": "2026-01-08T12:00:00Z",
-      "description": null,
-      "modified": "2026-01-20T16:24:06.085Z",
-      "name": "UAT Run (Legacy)",
-      "is_favorite": false,
-      "talos_executable": 1,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 130,
-    "fields": {
-      "created": "2026-01-08T18:00:00Z",
-      "description": null,
-      "modified": "2026-01-27T23:11:29.978Z",
-      "name": "Deploy",
-      "is_favorite": false,
-      "talos_executable": 13,
-      "distribution_mode": 2,
-      "tags": [],
-      "switches": [
-        50,
-        51,
-        52,
-        53,
-        55,
-        56,
-        57
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 140,
-    "fields": {
-      "created": "2026-01-09T12:00:00Z",
-      "description": null,
-      "modified": "2026-01-22T16:15:08.374Z",
-      "name": "Version Metadata",
-      "is_favorite": false,
-      "talos_executable": 9,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 142,
-    "fields": {
-      "created": "2026-01-17T02:00:50.152Z",
-      "description": null,
-      "modified": "2026-01-20T16:14:01.054Z",
-      "name": "MP Remotes",
-      "is_favorite": false,
-      "talos_executable": 1,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 143,
-    "fields": {
-      "created": "2026-01-17T02:00:50.156Z",
-      "description": null,
-      "modified": "2026-01-26T17:53:32.250Z",
-      "name": "Pre-Release Run",
-      "is_favorite": false,
-      "talos_executable": 7,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": [
-        23,
-        24,
-        25,
-        40
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 144,
-    "fields": {
-      "created": "2026-01-27T17:25:34.483Z",
-      "description": null,
-      "modified": "2026-01-27T17:26:18.581Z",
-      "name": "Get Agent UUID",
-      "is_favorite": false,
-      "talos_executable": 11,
-      "distribution_mode": 4,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 145,
-    "fields": {
-      "created": "2026-01-27T19:19:00.155Z",
-      "description": null,
-      "modified": "2026-01-27T19:19:00.155Z",
-      "name": "Scan for Agents",
-      "is_favorite": false,
-      "talos_executable": 12,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 146,
-    "fields": {
-      "created": "2026-01-27T23:22:10.133Z",
-      "description": null,
-      "modified": "2026-01-27T23:23:03.205Z",
-      "name": "Launch All",
-      "is_favorite": false,
-      "talos_executable": 7,
-      "distribution_mode": 2,
-      "tags": [],
-      "switches": [
-        23,
-        24,
-        25,
-        28,
-        40
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 147,
-    "fields": {
-      "created": "2026-01-28T16:17:19.220Z",
-      "description": null,
-      "modified": "2026-01-30T19:50:49.527Z",
-      "name": "Retry w/ 5 Second Delay",
-      "is_favorite": false,
-      "talos_executable": 14,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": [
-        58,
-        60
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 148,
-    "fields": {
-      "created": "2026-01-01T00:00:00Z",
-      "description": null,
-      "modified": "2026-02-10T16:22:55.534Z",
-      "name": "Test",
-      "is_favorite": false,
-      "talos_executable": 4,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": [
-        2,
-        4,
-        17,
-        40,
-        41,
-        47,
-        48,
-        49
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 149,
-    "fields": {
-      "created": "2026-01-30T16:34:23.839Z",
-      "description": null,
-      "modified": "2026-01-30T16:34:23.839Z",
-      "name": "Cache Shader Cache",
-      "is_favorite": false,
-      "talos_executable": 13,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 150,
-    "fields": {
-      "created": "2026-01-30T18:37:12.059Z",
-      "description": null,
-      "modified": "2026-01-30T18:39:01.226Z",
-      "name": "Add Shaders to Prerelease",
-      "is_favorite": false,
-      "talos_executable": 13,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 151,
-    "fields": {
-      "created": "2026-01-31T14:37:51.784Z",
-      "description": null,
-      "modified": "2026-02-08T22:50:30.100Z",
-      "name": "Backup SaveGames (Prerelease -> Cache)",
-      "is_favorite": false,
-      "talos_executable": 13,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": [
-        52,
-        53,
-        54,
-        55,
-        56,
-        57,
-        63
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 152,
-    "fields": {
-      "created": "2026-01-31T14:39:35.355Z",
-      "description": null,
-      "modified": "2026-02-08T22:47:28.893Z",
-      "name": "Restore SaveGames (Cache -> Prerelease)",
-      "is_favorite": false,
-      "talos_executable": 13,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": [
-        50,
-        52,
-        53,
-        54,
-        55,
-        56,
-        57
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 153,
-    "fields": {
-      "created": "2026-01-31T15:17:41.419Z",
-      "description": null,
-      "modified": "2026-02-08T18:03:51.164Z",
-      "name": "Remove Pre-Release SaveGames",
-      "is_favorite": false,
-      "talos_executable": 15,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": [
-        62,
-        61
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 154,
-    "fields": {
-      "created": "2026-01-31T15:51:56.896Z",
-      "description": null,
-      "modified": "2026-01-31T15:51:56.896Z",
-      "name": "Remove Intermediate",
-      "is_favorite": false,
-      "talos_executable": 15,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 155,
-    "fields": {
-      "created": "2026-01-31T16:09:07.810Z",
-      "description": null,
-      "modified": "2026-02-12T22:05:47.939Z",
-      "name": "Dump Talos Scripts",
-      "is_favorite": false,
-      "talos_executable": 2,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 156,
-    "fields": {
-      "created": "2026-01-31T20:25:05.728Z",
-      "description": null,
-      "modified": "2026-02-16T20:35:29.308Z",
-      "name": "Ollama Query llama3.2:3b from Path",
-      "is_favorite": false,
-      "talos_executable": 15,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 157,
-    "fields": {
-      "created": "2026-02-02T14:43:47.917Z",
-      "description": null,
-      "modified": "2026-02-03T18:39:52.179Z",
-      "name": "Launch #2 Server",
-      "is_favorite": false,
-      "talos_executable": 7,
-      "distribution_mode": 4,
-      "tags": [],
-      "switches": [
-        23,
-        24,
-        25,
-        28
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 158,
-    "fields": {
-      "created": "2026-02-08T17:47:11.756Z",
-      "description": null,
-      "modified": "2026-02-08T17:47:11.756Z",
-      "name": "Remove Pre-Release Logs",
-      "is_favorite": false,
-      "talos_executable": 15,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": [
-        62,
-        61
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 159,
-    "fields": {
-      "created": "2026-02-08T17:51:13.962Z",
-      "description": null,
-      "modified": "2026-02-08T17:51:31.870Z",
-      "name": "Remove Pre-Release User Config",
-      "is_favorite": false,
-      "talos_executable": 15,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": [
-        62,
-        61
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 160,
-    "fields": {
-      "created": "2026-02-08T17:55:00.040Z",
-      "description": null,
-      "modified": "2026-02-08T22:49:57.630Z",
-      "name": "Backup UserConfig (Prerelease -> Cache)",
-      "is_favorite": false,
-      "talos_executable": 13,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": [
-        52,
-        53,
-        54,
-        55,
-        56,
-        57,
-        63
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 161,
-    "fields": {
-      "created": "2026-02-08T17:56:39.786Z",
-      "description": null,
-      "modified": "2026-02-08T17:56:39.786Z",
-      "name": "Restore UserConfig (Cache -> Prerelease)",
-      "is_favorite": false,
-      "talos_executable": 13,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": [
-        50,
-        52,
-        53,
-        54,
-        55,
-        56,
-        57
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 162,
-    "fields": {
-      "created": "2026-02-08T19:00:18.699Z",
-      "description": null,
-      "modified": "2026-02-08T22:49:22.505Z",
-      "name": "Remote Pre-Release Save to Cache",
-      "is_favorite": false,
-      "talos_executable": 13,
-      "distribution_mode": 2,
-      "tags": [],
-      "switches": [
-        52,
-        53,
-        54,
-        55,
-        56,
-        57,
-        63
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 163,
-    "fields": {
-      "created": "2026-02-08T19:02:16.111Z",
-      "description": null,
-      "modified": "2026-02-08T19:29:25.342Z",
-      "name": "Remote Pre-Release Restore Save",
-      "is_favorite": false,
-      "talos_executable": 13,
-      "distribution_mode": 2,
-      "tags": [],
-      "switches": [
-        50,
-        52,
-        53,
-        54,
-        55,
-        56,
-        57
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 164,
-    "fields": {
-      "created": "2026-02-08T19:33:00.839Z",
-      "description": null,
-      "modified": "2026-02-08T22:48:48.160Z",
-      "name": "Remote Pre-Release Cache UserConfig",
-      "is_favorite": false,
-      "talos_executable": 13,
-      "distribution_mode": 2,
-      "tags": [],
-      "switches": [
-        52,
-        53,
-        54,
-        55,
-        56,
-        57,
-        63
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 165,
-    "fields": {
-      "created": "2026-02-08T19:34:47.032Z",
-      "description": null,
-      "modified": "2026-02-08T19:34:47.032Z",
-      "name": "Remote Restore User Config",
-      "is_favorite": false,
-      "talos_executable": 13,
-      "distribution_mode": 2,
-      "tags": [],
-      "switches": [
-        50,
-        52,
-        53,
-        54,
-        55,
-        56,
-        57
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 166,
-    "fields": {
-      "created": "2026-02-10T18:44:05.324Z",
-      "description": null,
-      "modified": "2026-02-10T18:44:57.240Z",
-      "name": "List Location",
-      "is_favorite": false,
-      "talos_executable": 11,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 167,
-    "fields": {
-      "created": "2026-02-11T16:30:50.618Z",
-      "description": null,
-      "modified": "2026-02-11T23:14:10.176Z",
-      "name": "Switch Resolution Test",
-      "is_favorite": false,
-      "talos_executable": 11,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 168,
-    "fields": {
-      "created": "2026-02-12T22:07:16.774Z",
-      "description": null,
-      "modified": "2026-02-12T22:07:16.774Z",
-      "name": "Dump Project Scripts",
-      "is_favorite": false,
-      "talos_executable": 2,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 169,
-    "fields": {
-      "created": "2026-02-16T18:40:09.814Z",
-      "description": null,
-      "modified": "2026-02-16T18:59:11.608Z",
-      "name": "Generate Prompt Payload",
-      "is_favorite": false,
-      "talos_executable": 3,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 170,
-    "fields": {
-      "created": "2026-02-16T21:53:52.610Z",
-      "description": null,
-      "modified": "2026-02-16T21:53:52.610Z",
-      "name": "Delete Prompt Temp File",
-      "is_favorite": false,
-      "talos_executable": 15,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 171,
-    "fields": {
-      "created": "2026-02-17T18:23:16.500Z",
-      "description": null,
-      "modified": "2026-02-17T18:26:37.884Z",
-      "name": "Frontal Lobe Node",
-      "is_favorite": false,
-      "talos_executable": 17,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effector",
-    "pk": 172,
-    "fields": {
-      "created": "2026-03-05T13:35:37.844Z",
-      "description": null,
-      "modified": "2026-03-05T13:35:37.844Z",
-      "name": "Temporal Lobe Effector",
-      "is_favorite": false,
-      "talos_executable": 18,
-      "distribution_mode": 1,
-      "tags": [],
-      "switches": []
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorcontext",
-    "pk": 2,
-    "fields": {
-      "effector": 169,
-      "key": "prompt",
-      "value": "Yo AI dude, do you see this or what? {{provenance.execution_log}}"
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorcontext",
-    "pk": 3,
-    "fields": {
-      "effector": 171,
-      "key": "prompt",
-      "value": "You are part of the Frontal Lobe"
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 1,
-    "fields": {
-      "effector": 2,
-      "order": 10,
-      "argument": 6
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 2,
-    "fields": {
-      "effector": 1,
-      "order": 10,
-      "argument": 3
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 3,
-    "fields": {
-      "effector": 100,
-      "order": 1,
-      "argument": 3
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 4,
-    "fields": {
-      "effector": 100,
-      "order": 2,
-      "argument": 5
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 5,
-    "fields": {
-      "effector": 100,
-      "order": 3,
-      "argument": 4
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 6,
-    "fields": {
-      "effector": 100,
-      "order": 4,
-      "argument": 1
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 7,
-    "fields": {
-      "effector": 100,
-      "order": 5,
-      "argument": 2
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 8,
-    "fields": {
-      "effector": 110,
-      "order": 10,
-      "argument": 6
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 9,
-    "fields": {
-      "effector": 144,
-      "order": 10,
-      "argument": 9
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 10,
-    "fields": {
-      "effector": 130,
-      "order": 1,
-      "argument": 10
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 11,
-    "fields": {
-      "effector": 130,
-      "order": 2,
-      "argument": 11
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 12,
-    "fields": {
-      "effector": 149,
-      "order": 10,
-      "argument": 16
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 13,
-    "fields": {
-      "effector": 149,
-      "order": 10,
-      "argument": 12
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 14,
-    "fields": {
-      "effector": 149,
-      "order": 10,
-      "argument": 17
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 15,
-    "fields": {
-      "effector": 150,
-      "order": 2,
-      "argument": 18
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 16,
-    "fields": {
-      "effector": 150,
-      "order": 10,
-      "argument": 17
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 17,
-    "fields": {
-      "effector": 150,
-      "order": 1,
-      "argument": 12
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 18,
-    "fields": {
-      "effector": 151,
-      "order": 10,
-      "argument": 20
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 19,
-    "fields": {
-      "effector": 151,
-      "order": 10,
-      "argument": 19
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 20,
-    "fields": {
-      "effector": 152,
-      "order": 10,
-      "argument": 19
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 21,
-    "fields": {
-      "effector": 152,
-      "order": 10,
-      "argument": 20
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 22,
-    "fields": {
-      "effector": 153,
-      "order": 2,
-      "argument": 20
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 23,
-    "fields": {
-      "effector": 153,
-      "order": 1,
-      "argument": 23
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 24,
-    "fields": {
-      "effector": 154,
-      "order": 10,
-      "argument": 23
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 25,
-    "fields": {
-      "effector": 154,
-      "order": 10,
-      "argument": 24
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 26,
-    "fields": {
-      "effector": 155,
-      "order": 10,
-      "argument": 26
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 27,
-    "fields": {
-      "effector": 155,
-      "order": 10,
-      "argument": 21
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 29,
-    "fields": {
-      "effector": 158,
-      "order": 10,
-      "argument": 23
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 30,
-    "fields": {
-      "effector": 158,
-      "order": 10,
-      "argument": 33
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 31,
-    "fields": {
-      "effector": 159,
-      "order": 10,
-      "argument": 23
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 32,
-    "fields": {
-      "effector": 159,
-      "order": 10,
-      "argument": 34
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 33,
-    "fields": {
-      "effector": 160,
-      "order": 10,
-      "argument": 34
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 34,
-    "fields": {
-      "effector": 160,
-      "order": 10,
-      "argument": 35
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 35,
-    "fields": {
-      "effector": 161,
-      "order": 10,
-      "argument": 35
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 36,
-    "fields": {
-      "effector": 161,
-      "order": 10,
-      "argument": 34
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 37,
-    "fields": {
-      "effector": 162,
-      "order": 10,
-      "argument": 20
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 38,
-    "fields": {
-      "effector": 162,
-      "order": 10,
-      "argument": 19
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 39,
-    "fields": {
-      "effector": 163,
-      "order": 10,
-      "argument": 19
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 40,
-    "fields": {
-      "effector": 163,
-      "order": 10,
-      "argument": 20
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 41,
-    "fields": {
-      "effector": 164,
-      "order": 10,
-      "argument": 34
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 42,
-    "fields": {
-      "effector": 164,
-      "order": 10,
-      "argument": 35
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 43,
-    "fields": {
-      "effector": 165,
-      "order": 10,
-      "argument": 35
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 44,
-    "fields": {
-      "effector": 165,
-      "order": 10,
-      "argument": 34
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 45,
-    "fields": {
-      "effector": 148,
-      "order": 10,
-      "argument": 3
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 46,
-    "fields": {
-      "effector": 166,
-      "order": 10,
-      "argument": 36
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 47,
-    "fields": {
-      "effector": 167,
-      "order": 10,
-      "argument": 37
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 48,
-    "fields": {
-      "effector": 168,
-      "order": 10,
-      "argument": 26
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 49,
-    "fields": {
-      "effector": 168,
-      "order": 10,
-      "argument": 38
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 50,
-    "fields": {
-      "effector": 169,
-      "order": 10,
-      "argument": 39
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 51,
-    "fields": {
-      "effector": 169,
-      "order": 10,
-      "argument": 40
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 52,
-    "fields": {
-      "effector": 156,
-      "order": 4,
-      "argument": 41
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 53,
-    "fields": {
-      "effector": 156,
-      "order": 3,
-      "argument": 42
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 54,
-    "fields": {
-      "effector": 169,
-      "order": 10,
-      "argument": 43
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 55,
-    "fields": {
-      "effector": 156,
-      "order": 0,
-      "argument": 44
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 56,
-    "fields": {
-      "effector": 156,
-      "order": 2,
-      "argument": 31
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 57,
-    "fields": {
-      "effector": 156,
-      "order": 1,
-      "argument": 28
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 58,
-    "fields": {
-      "effector": 170,
-      "order": 10,
-      "argument": 45
-    }
-  },
-  {
-    "model": "central_nervous_system.effectorargumentassignment",
-    "pk": 59,
-    "fields": {
-      "effector": 170,
-      "order": 10,
-      "argument": 41
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-    "fields": {
-      "created": "2026-01-08T16:10:00Z",
-      "description": "Full Chain: Test -> UAT",
-      "modified": "2026-01-20T16:19:19.230Z",
-      "name": "Full",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "0245b699-5b9a-43ec-9391-b788b578d25f",
-    "fields": {
-      "created": "2026-01-09T20:16:00.695Z",
-      "description": "Create and place Version Metadata.",
-      "modified": "2026-01-20T16:15:44.857Z",
-      "name": "Version Meta",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "04c3997f-d5f3-402f-952a-519bbd7e4dee",
-    "fields": {
-      "created": "2026-03-17T20:50:47.832Z",
-      "description": "",
-      "modified": "2026-03-17T20:50:47.832Z",
-      "name": "Corpus Callosum",
-      "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": [
-        3
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "123bc9f0-5c8f-4410-a6e5-a49725fbb375",
-    "fields": {
-      "created": "2026-02-10T18:43:05.690Z",
-      "description": null,
-      "modified": "2026-02-10T18:43:05.690Z",
-      "name": "List Location R",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "22334455-6677-8899-0011-aabbccddeeff",
-    "fields": {
-      "created": "2026-01-08T16:40:00Z",
-      "description": "Compile Shaders",
-      "modified": "2026-01-20T16:16:24.355Z",
-      "name": "Compile Shaders",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-    "fields": {
-      "created": "2026-01-08T21:58:00.568Z",
-      "description": "Distribute to Agents",
-      "modified": "2026-01-27T23:05:17.105Z",
-      "name": "Deploy",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-    "fields": {
-      "created": "2026-01-27T19:19:26.787Z",
-      "description": null,
-      "modified": "2026-02-04T20:43:22.223Z",
-      "name": "Scan For Agents",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": [
-        1
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "4e52e554-f7b3-4adc-96f2-f80da0329774",
-    "fields": {
-      "created": "2026-02-04T22:04:12.822Z",
-      "description": null,
-      "modified": "2026-02-04T22:04:12.822Z",
-      "name": "Process Test 2",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "52b62ed2-7752-4d16-ba29-4810a54815d0",
-    "fields": {
-      "created": "2026-01-31T14:40:15.233Z",
-      "description": null,
-      "modified": "2026-02-05T15:33:05.105Z",
-      "name": "Restore Save",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": [
-        2
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "559cecbd-2128-478a-be50-436ba30b7396",
-    "fields": {
-      "created": "2026-01-20T00:54:46.432Z",
-      "description": "Local Game Launcher",
-      "modified": "2026-02-05T15:32:32.421Z",
-      "name": "Pre-Release Run",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": [
-        2
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "596804db-1566-4388-a7e7-dafa7ab2f4fb",
-    "fields": {
-      "created": "2026-02-06T17:31:36.055Z",
-      "description": null,
-      "modified": "2026-02-06T17:31:36.055Z",
-      "name": "Debug Protocol",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "5aedec3f-df9d-4149-b62b-6bd17c8ca8a3",
-    "fields": {
-      "created": "2026-01-31T16:07:02.726Z",
-      "description": null,
-      "modified": "2026-01-31T16:13:18.776Z",
-      "name": "Dump Talos Scripts",
-      "environment": null,
-      "is_favorite": true,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "5b5bebe0-be34-4614-b40f-b78bd3a1c269",
-    "fields": {
-      "created": "2026-01-31T15:50:39.700Z",
-      "description": null,
-      "modified": "2026-01-31T15:50:39.700Z",
-      "name": "Remove Intermediate",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "8686149a-8b56-4a47-b5df-7d8cf7635dbc",
-    "fields": {
-      "created": "2026-01-27T23:23:20.836Z",
-      "description": null,
-      "modified": "2026-01-27T23:23:20.836Z",
-      "name": "All Remotes",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "925c871c-618e-4de8-a9d2-6978aed216e8",
-    "fields": {
-      "created": "2026-02-04T20:51:27.826Z",
-      "description": null,
-      "modified": "2026-02-04T20:51:27.826Z",
-      "name": "Process Test",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "94a67ded-0d4b-4060-b79a-6f895b2373a3",
-    "fields": {
-      "created": "2026-02-12T22:39:57.776Z",
-      "description": null,
-      "modified": "2026-02-12T22:39:57.776Z",
-      "name": "Dump Project Scripts",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-    "fields": {
-      "created": "2026-02-01T16:37:12.246Z",
-      "description": null,
-      "modified": "2026-02-01T16:37:12.246Z",
-      "name": "Scan2ax",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-    "fields": {
-      "created": "2026-01-01T00:00:00Z",
-      "description": null,
-      "modified": "2026-01-23T20:00:48.967Z",
-      "name": "Stage",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "b7b1017e-0e5f-4e3d-b91a-13270b41b4b3",
-    "fields": {
-      "created": "2026-01-23T22:01:37.231Z",
-      "description": "RecordPSOs",
-      "modified": "2026-01-23T22:01:37.231Z",
-      "name": "RecordPSOs",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "b8e9f0a1-2c3d-4e5f-6a7b-8c9d0e1f2b3c",
-    "fields": {
-      "created": "2026-01-01T00:00:00Z",
-      "description": "Headless Test Only",
-      "modified": "2026-01-09T15:05:55.848Z",
-      "name": "CPPTests",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "c3dd041a-20eb-4414-b571-2a5fdbeb9b86",
-    "fields": {
-      "created": "2026-03-05T13:33:15.232Z",
-      "description": "",
-      "modified": "2026-03-05T13:33:15.232Z",
-      "name": "Engage Temporal Lobe",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
-    "fields": {
-      "created": "2026-01-01T00:00:00Z",
-      "description": "Run Staging Game (Smoke Test)",
-      "modified": "2026-01-01T00:00:00Z",
-      "name": "Staging Run Only",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "e94a9c50-5baa-4cae-808e-b17367c11fc6",
-    "fields": {
-      "created": "2026-01-31T20:25:45.813Z",
-      "description": null,
-      "modified": "2026-01-31T20:25:45.813Z",
-      "name": "Ollama Query",
-      "environment": null,
-      "is_favorite": false,
-      "ui_json": "{}",
-      "tags": []
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
-    "fields": {
-      "created": "2026-01-17T02:00:50.162Z",
-      "description": "Side-by-side Live Debugging (Remote Server + Local Client)",
-      "modified": "2026-02-05T15:33:25.493Z",
-      "name": "Multiplayer (C&S)",
-      "environment": null,
-      "is_favorite": true,
-      "ui_json": "{}",
-      "tags": [
-        2
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.neuralpathway",
-    "pk": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
-    "fields": {
-      "created": "2026-01-08T16:00:00Z",
-      "description": "Step 4 Standalone: UAT BuildCookRun with Archive.",
-      "modified": "2026-02-05T15:33:35.343Z",
-      "name": "Pre-Release",
-      "environment": null,
-      "is_favorite": true,
-      "ui_json": "{}",
-      "tags": [
-        2
-      ]
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 1,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "b8e9f0a1-2c3d-4e5f-6a7b-8c9d0e1f2b3c",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 2,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "0245b699-5b9a-43ec-9391-b788b578d25f",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 4,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "b8e9f0a1-2c3d-4e5f-6a7b-8c9d0e1f2b3c",
-      "effector": 148,
-      "ui_json": "{\"x\": 446, \"y\": 97}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 5,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 6,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
-      "effector": 110,
-      "ui_json": "{\"x\": 938, \"y\": 222}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 7,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 9,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
-      "effector": 143,
-      "ui_json": "{\"x\": 1074, \"y\": 147}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 10,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 11,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "effector": 145,
-      "ui_json": "{\"x\": 468, \"y\": 115}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 13,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "effector": 147,
-      "ui_json": "{\"x\": 797, \"y\": 43}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 14,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "effector": 145,
-      "ui_json": "{\"x\": 1150, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 15,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 16,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-      "effector": 2,
-      "ui_json": "{\"x\": 456, \"y\": 90}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 17,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-      "effector": 3,
-      "ui_json": "{\"x\": 790, \"y\": 137}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 18,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 20,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "8686149a-8b56-4a47-b5df-7d8cf7635dbc",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 21,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "22334455-6677-8899-0011-aabbccddeeff",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 22,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "22334455-6677-8899-0011-aabbccddeeff",
-      "effector": 100,
-      "ui_json": "{\"x\": 350, \"y\": 103}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 23,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "0245b699-5b9a-43ec-9391-b788b578d25f",
-      "effector": 140,
-      "ui_json": "{\"x\": 418, \"y\": 82}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 24,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "22334455-6677-8899-0011-aabbccddeeff",
-      "effector": 149,
-      "ui_json": "{\"x\": 758, \"y\": 148}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 25,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "effector": 145,
-      "ui_json": "{\"x\": 464, \"y\": 366}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 27,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
-      "effector": 150,
-      "ui_json": "{\"x\": 717, \"y\": 232}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 28,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "52b62ed2-7752-4d16-ba29-4810a54815d0",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 29,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "52b62ed2-7752-4d16-ba29-4810a54815d0",
-      "effector": 152,
-      "ui_json": "{\"x\": 459, \"y\": 233}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 32,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "5aedec3f-df9d-4149-b62b-6bd17c8ca8a3",
-      "effector": 155,
-      "ui_json": "{\"x\": 589, \"y\": 234}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 33,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "5aedec3f-df9d-4149-b62b-6bd17c8ca8a3",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 34,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "e94a9c50-5baa-4cae-808e-b17367c11fc6",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 35,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "e94a9c50-5baa-4cae-808e-b17367c11fc6",
-      "effector": 156,
-      "ui_json": "{\"x\":434,\"y\":102}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 37,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 48,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-      "effector": 145,
-      "ui_json": "{\"x\": 240, \"y\": 319}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 49,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-      "effector": 1,
-      "ui_json": "{\"x\": 605, \"y\": 206}",
-      "invoked_pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 50,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-      "effector": 145,
-      "ui_json": "{\"x\": 1127, \"y\": 258}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 51,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-      "effector": 147,
-      "ui_json": "{\"x\": 560, \"y\": 583}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 52,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-      "effector": 156,
-      "ui_json": "{\"x\": 930, \"y\": 439}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 53,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "b7b1017e-0e5f-4e3d-b91a-13270b41b4b3",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 54,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "8686149a-8b56-4a47-b5df-7d8cf7635dbc",
-      "effector": 146,
-      "ui_json": "{\"x\": 749, \"y\": 101}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 55,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "8686149a-8b56-4a47-b5df-7d8cf7635dbc",
-      "effector": 145,
-      "ui_json": "{\"x\": 461, \"y\": 93}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 56,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 58,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
-      "effector": 157,
-      "ui_json": "{\"x\": 948, \"y\": 275}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 60,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "effector": 1,
-      "ui_json": "{\"x\":-156.00674795840493,\"y\":-62.8468245995866}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 61,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "effector": 130,
-      "ui_json": "{\"x\": 1412, \"y\": 824}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 63,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
-      "effector": 143,
-      "ui_json": "{\"x\": 950, \"y\": 52}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 64,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-      "effector": 147,
-      "ui_json": "{\"x\": 430, \"y\": 3}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 65,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-      "effector": 147,
-      "ui_json": "{\"x\": 742, \"y\": 9}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 70,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
-      "effector": 151,
-      "ui_json": "{\"x\": 630, \"y\": 128}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 73,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
-      "effector": 152,
-      "ui_json": "{\"x\": 428, \"y\": 72}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 74,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
-      "effector": 1,
-      "ui_json": "{\"x\": 1236, \"y\": 93}",
-      "invoked_pathway": "559cecbd-2128-478a-be50-436ba30b7396",
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 76,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-      "effector": 100,
-      "ui_json": "{\"x\": 1093, \"y\": 118}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 77,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-      "effector": 149,
-      "ui_json": "{\"x\": 1392, \"y\": 117}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 78,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-      "effector": 1,
-      "ui_json": "{\"x\": 398, \"y\": 76}",
-      "invoked_pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 79,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-      "effector": 1,
-      "ui_json": "{\"x\": 695, \"y\": 137}",
-      "invoked_pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 82,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
-      "effector": 140,
-      "ui_json": "{\"x\": 366, \"y\": 108}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 83,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "effector": 147,
-      "ui_json": "{\"x\": 157, \"y\": 394}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 84,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-      "effector": 1,
-      "ui_json": "{\"x\":151.96227231444107,\"y\":82.07605970077542}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 89,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
-      "effector": 1,
-      "ui_json": "{\"x\":-176,\"y\":122}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 90,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
-      "effector": 1,
-      "ui_json": "{\"x\":501,\"y\":137}",
-      "invoked_pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 91,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
-      "effector": 1,
-      "ui_json": "{\"x\": 398, \"y\": 345}",
-      "invoked_pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 92,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "effector": 151,
-      "ui_json": "{\"x\":698.8034767565144,\"y\":-166.31407072567237}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 93,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "effector": 153,
-      "ui_json": "{\"x\": 358, \"y\": 350}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 94,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "effector": 150,
-      "ui_json": "{\"x\":1714.8574325204145,\"y\":34.55780177465279}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 95,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
-      "effector": 1,
-      "ui_json": "{\"x\": 484, \"y\": 262}",
-      "invoked_pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 96,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "effector": 160,
-      "ui_json": "{\"x\":0.32273471361884276,\"y\":288.2601149617725}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 97,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "effector": 159,
-      "ui_json": "{\"x\": 614, \"y\": 347}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 98,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "effector": 158,
-      "ui_json": "{\"x\":1057.7842048477403,\"y\":249.5953736257606}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 99,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "effector": 162,
-      "ui_json": "{\"x\": 1101, \"y\": 582}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 100,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "effector": 164,
-      "ui_json": "{\"x\": 1085, \"y\": 768}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 101,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "effector": 165,
-      "ui_json": "{\"x\": 1643, \"y\": 986}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 102,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "effector": 163,
-      "ui_json": "{\"x\": 1767, \"y\": 769}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 105,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "effector": 161,
-      "ui_json": "{\"x\": 2347, \"y\": 933}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 106,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "effector": 152,
-      "ui_json": "{\"x\": 2059, \"y\": 962}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 107,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "123bc9f0-5c8f-4410-a6e5-a49725fbb375",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 108,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "123bc9f0-5c8f-4410-a6e5-a49725fbb375",
-      "effector": 166,
-      "ui_json": "{\"x\": 808, \"y\": 112}",
-      "invoked_pathway": null,
-      "distribution_mode": 2
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 109,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "123bc9f0-5c8f-4410-a6e5-a49725fbb375",
-      "effector": 145,
-      "ui_json": "{\"x\": 475, \"y\": 109}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 113,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-      "effector": 156,
-      "ui_json": "{\"x\":853.1668914870171,\"y\":-177.1872927255}",
-      "invoked_pathway": null,
-      "distribution_mode": 1
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 116,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "5aedec3f-df9d-4149-b62b-6bd17c8ca8a3",
-      "effector": 168,
-      "ui_json": "{\"x\": 349, \"y\": 404}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 117,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "94a67ded-0d4b-4060-b79a-6f895b2373a3",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 118,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "94a67ded-0d4b-4060-b79a-6f895b2373a3",
-      "effector": 168,
-      "ui_json": "{\"x\":493.74194909366236,\"y\":46.58326452216804}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 119,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
-      "effector": 1,
-      "ui_json": "{\"x\": 392, \"y\": 561}",
-      "invoked_pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 120,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
-      "effector": 1,
-      "ui_json": "{\"x\": 783, \"y\": 324}",
-      "invoked_pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 121,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
-      "effector": 1,
-      "ui_json": "{\"x\": 776, \"y\": 554}",
-      "invoked_pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 122,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-      "effector": 169,
-      "ui_json": "{\"x\":376.91187521579616,\"y\":-212.89778601703435}",
-      "invoked_pathway": null,
-      "distribution_mode": 1
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 123,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-      "effector": 166,
-      "ui_json": "{\"x\":662.6721544094712,\"y\":198.18400850954632}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 124,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-      "effector": 170,
-      "ui_json": "{\"x\":1225,\"y\":131}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 125,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-      "effector": 171,
-      "ui_json": "{\"x\":77.79952264876295,\"y\":-399.88026690225996}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 127,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
-      "effector": 171,
-      "ui_json": "{\"x\": 1511, \"y\": 255}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 128,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "effector": 145,
-      "ui_json": "{\"x\":335.19749520992616,\"y\":80.02504790073853}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 129,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "c3dd041a-20eb-4414-b571-2a5fdbeb9b86",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 130,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "c3dd041a-20eb-4414-b571-2a5fdbeb9b86",
-      "effector": 172,
-      "ui_json": "{\"x\":380,\"y\":80}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 134,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-      "effector": 166,
-      "ui_json": "{\"x\":160.02699307159975,\"y\":313.98576488813706}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 136,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-      "effector": 110,
-      "ui_json": "{\"x\":1101.1529521195198,\"y\":-533.4724452343838}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 138,
-    "fields": {
-      "environment": null,
-      "is_root": true,
-      "pathway": "04c3997f-d5f3-402f-952a-519bbd7e4dee",
-      "effector": 1,
-      "ui_json": "{\"x\": 100, \"y\": 100}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuron",
-    "pk": 139,
-    "fields": {
-      "environment": null,
-      "is_root": false,
-      "pathway": "04c3997f-d5f3-402f-952a-519bbd7e4dee",
-      "effector": 171,
-      "ui_json": "{\"x\": 506, \"y\": 151}",
-      "invoked_pathway": null,
-      "distribution_mode": null
-    }
-  },
-  {
-    "model": "central_nervous_system.neuroncontext",
-    "pk": 5,
-    "fields": {
-      "neuron": 122,
-      "key": "prompt",
-      "value": "Please attempt to count the number of files in this list {{provenance.application_log}}"
-    }
-  },
-  {
-    "model": "central_nervous_system.neuroncontext",
-    "pk": 6,
-    "fields": {
-      "neuron": 125,
-      "key": "prompt",
-      "value": "I would like to know what you can learn about yourself and what level you can achieve.... you time out at 10 minutes so be careful of your context window, enjoy the game.... you live at c:/talos/\nEnjoy please."
-    }
-  },
-  {
-    "model": "central_nervous_system.neuroncontext",
-    "pk": 7,
-    "fields": {
-      "neuron": 127,
-      "key": "prompt",
-      "value": "use the unreal parsing tool mcp_run_unreal_diagnostic_parser\non the provenance spike\n{{spike.provenance.id}}\n\nwhich is the output of our Unreal 5.6.1 application.\n\nyou should also inspect the record\n\nmcp_inspect_record cns Spike {{spike.provenance.id}}\n\nEach turn enhance the Engrams of known issues, as well as create Engrams for new issues.\nOnce you think you have tagged all issues, use mcp_done to file a report and end."
-    }
-  },
-  {
-    "model": "central_nervous_system.neuroncontext",
-    "pk": 8,
-    "fields": {
-      "neuron": 122,
-      "key": "prompt",
-      "value": "Please attempt to count the number of files in this list {{provenance.application_log}}\ntest"
-    }
-  },
-  {
-    "model": "central_nervous_system.neuroncontext",
-    "pk": 9,
-    "fields": {
-      "neuron": 122,
-      "key": "prompt",
-      "value": "Please attempt to count the number of files in this list {{provenance.application_log}}"
-    }
-  },
-  {
-    "model": "central_nervous_system.neuroncontext",
-    "pk": 10,
-    "fields": {
-      "neuron": 125,
-      "key": "prompt",
-      "value": "Please attempt to count the number of files in this list {{provenance.application_log}}"
-    }
-  },
-  {
-    "model": "central_nervous_system.axontype",
-    "pk": 1,
-    "fields": {
-      "name": "Flow"
-    }
-  },
-  {
-    "model": "central_nervous_system.axontype",
-    "pk": 2,
-    "fields": {
-      "name": "Success"
-    }
-  },
-  {
-    "model": "central_nervous_system.axontype",
-    "pk": 3,
-    "fields": {
-      "name": "Failure"
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 2,
-    "fields": {
-      "modified": "2026-01-28T23:21:26.029Z",
-      "type": 1,
-      "pathway": "b8e9f0a1-2c3d-4e5f-6a7b-8c9d0e1f2b3c",
-      "source": 1,
-      "target": 4
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 13,
-    "fields": {
-      "modified": "2026-01-30T15:30:57.936Z",
-      "type": 1,
-      "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-      "source": 15,
-      "target": 16
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 16,
-    "fields": {
-      "modified": "2026-01-30T16:06:52.977Z",
-      "type": 1,
-      "pathway": "0245b699-5b9a-43ec-9391-b788b578d25f",
-      "source": 2,
-      "target": 23
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 18,
-    "fields": {
-      "modified": "2026-01-30T16:38:50.108Z",
-      "type": 1,
-      "pathway": "22334455-6677-8899-0011-aabbccddeeff",
-      "source": 21,
-      "target": 22
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 20,
-    "fields": {
-      "modified": "2026-01-30T16:39:09.204Z",
-      "type": 2,
-      "pathway": "22334455-6677-8899-0011-aabbccddeeff",
-      "source": 22,
-      "target": 24
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 24,
-    "fields": {
-      "modified": "2026-01-31T14:40:38.352Z",
-      "type": 1,
-      "pathway": "52b62ed2-7752-4d16-ba29-4810a54815d0",
-      "source": 28,
-      "target": 29
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 27,
-    "fields": {
-      "modified": "2026-01-31T20:26:04.533Z",
-      "type": 1,
-      "pathway": "e94a9c50-5baa-4cae-808e-b17367c11fc6",
-      "source": 34,
-      "target": 35
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 37,
-    "fields": {
-      "modified": "2026-02-01T18:15:36.464Z",
-      "type": 1,
-      "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-      "source": 48,
-      "target": 49
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 38,
-    "fields": {
-      "modified": "2026-02-01T18:53:40.638Z",
-      "type": 1,
-      "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-      "source": 49,
-      "target": 50
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 39,
-    "fields": {
-      "modified": "2026-02-02T02:17:56.315Z",
-      "type": 1,
-      "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-      "source": 51,
-      "target": 49
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 40,
-    "fields": {
-      "modified": "2026-02-02T02:18:00.651Z",
-      "type": 3,
-      "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-      "source": 49,
-      "target": 51
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 41,
-    "fields": {
-      "modified": "2026-02-02T02:18:56.725Z",
-      "type": 3,
-      "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-      "source": 49,
-      "target": 52
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 42,
-    "fields": {
-      "modified": "2026-02-02T14:16:14.679Z",
-      "type": 1,
-      "pathway": "8686149a-8b56-4a47-b5df-7d8cf7635dbc",
-      "source": 20,
-      "target": 55
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 43,
-    "fields": {
-      "modified": "2026-02-02T14:16:17.684Z",
-      "type": 1,
-      "pathway": "8686149a-8b56-4a47-b5df-7d8cf7635dbc",
-      "source": 55,
-      "target": 54
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 49,
-    "fields": {
-      "modified": "2026-02-02T15:58:31.820Z",
-      "type": 1,
-      "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-      "source": 64,
-      "target": 65
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 50,
-    "fields": {
-      "modified": "2026-02-02T15:58:34.533Z",
-      "type": 1,
-      "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-      "source": 37,
-      "target": 64
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 51,
-    "fields": {
-      "modified": "2026-02-02T15:58:38.712Z",
-      "type": 1,
-      "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-      "source": 65,
-      "target": 48
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 55,
-    "fields": {
-      "modified": "2026-02-03T15:50:24.531Z",
-      "type": 2,
-      "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-      "source": 16,
-      "target": 17
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 57,
-    "fields": {
-      "modified": "2026-02-03T15:54:33.608Z",
-      "type": 2,
-      "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
-      "source": 70,
-      "target": 6
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 63,
-    "fields": {
-      "modified": "2026-02-03T16:02:26.746Z",
-      "type": 2,
-      "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
-      "source": 73,
-      "target": 27
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 64,
-    "fields": {
-      "modified": "2026-02-03T16:02:32.752Z",
-      "type": 2,
-      "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
-      "source": 27,
-      "target": 9
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 65,
-    "fields": {
-      "modified": "2026-02-03T16:03:20.650Z",
-      "type": 2,
-      "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
-      "source": 6,
-      "target": 74
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 67,
-    "fields": {
-      "modified": "2026-02-03T16:24:31.489Z",
-      "type": 2,
-      "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-      "source": 17,
-      "target": 76
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 68,
-    "fields": {
-      "modified": "2026-02-03T16:24:37.058Z",
-      "type": 2,
-      "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-      "source": 76,
-      "target": 77
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 69,
-    "fields": {
-      "modified": "2026-02-03T16:25:05.489Z",
-      "type": 1,
-      "pathway": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-      "source": 18,
-      "target": 78
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 70,
-    "fields": {
-      "modified": "2026-02-03T16:26:11.380Z",
-      "type": 2,
-      "pathway": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
-      "source": 78,
-      "target": 79
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 71,
-    "fields": {
-      "modified": "2026-02-03T16:45:13.985Z",
-      "type": 1,
-      "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
-      "source": 5,
-      "target": 82
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 72,
-    "fields": {
-      "modified": "2026-02-03T16:45:17.281Z",
-      "type": 2,
-      "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
-      "source": 82,
-      "target": 70
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 76,
-    "fields": {
-      "modified": "2026-02-04T16:20:27.635Z",
-      "type": 1,
-      "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "source": 10,
-      "target": 83
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 78,
-    "fields": {
-      "modified": "2026-02-04T16:20:39.813Z",
-      "type": 2,
-      "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "source": 83,
-      "target": 25
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 79,
-    "fields": {
-      "modified": "2026-02-04T16:20:42.423Z",
-      "type": 2,
-      "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "source": 83,
-      "target": 11
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 80,
-    "fields": {
-      "modified": "2026-02-04T16:20:47.805Z",
-      "type": 2,
-      "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "source": 11,
-      "target": 13
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 81,
-    "fields": {
-      "modified": "2026-02-04T16:20:53.226Z",
-      "type": 2,
-      "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "source": 13,
-      "target": 14
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 86,
-    "fields": {
-      "modified": "2026-02-04T22:04:45.242Z",
-      "type": 1,
-      "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
-      "source": 89,
-      "target": 90
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 87,
-    "fields": {
-      "modified": "2026-02-04T22:04:48.170Z",
-      "type": 1,
-      "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
-      "source": 89,
-      "target": 91
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 89,
-    "fields": {
-      "modified": "2026-02-08T16:51:52.152Z",
-      "type": 1,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "source": 60,
-      "target": 92
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 94,
-    "fields": {
-      "modified": "2026-02-08T16:59:06.071Z",
-      "type": 1,
-      "pathway": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
-      "source": 56,
-      "target": 95
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 103,
-    "fields": {
-      "modified": "2026-02-08T19:37:00.755Z",
-      "type": 2,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "source": 94,
-      "target": 99
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 114,
-    "fields": {
-      "modified": "2026-02-08T20:10:54.643Z",
-      "type": 1,
-      "pathway": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
-      "source": 95,
-      "target": 58
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 115,
-    "fields": {
-      "modified": "2026-02-08T20:10:57.977Z",
-      "type": 1,
-      "pathway": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
-      "source": 95,
-      "target": 63
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 116,
-    "fields": {
-      "modified": "2026-02-08T20:22:51.649Z",
-      "type": 1,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "source": 92,
-      "target": 96
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 117,
-    "fields": {
-      "modified": "2026-02-08T20:22:54.581Z",
-      "type": 1,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "source": 96,
-      "target": 93
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 118,
-    "fields": {
-      "modified": "2026-02-08T20:22:56.485Z",
-      "type": 1,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "source": 93,
-      "target": 97
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 119,
-    "fields": {
-      "modified": "2026-02-08T20:22:58.396Z",
-      "type": 1,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "source": 97,
-      "target": 98
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 120,
-    "fields": {
-      "modified": "2026-02-08T20:23:00.837Z",
-      "type": 1,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "source": 98,
-      "target": 94
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 121,
-    "fields": {
-      "modified": "2026-02-08T20:23:33.968Z",
-      "type": 1,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "source": 99,
-      "target": 100
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 122,
-    "fields": {
-      "modified": "2026-02-08T20:23:39.902Z",
-      "type": 1,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "source": 100,
-      "target": 61
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 123,
-    "fields": {
-      "modified": "2026-02-08T20:23:51.248Z",
-      "type": 1,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "source": 61,
-      "target": 102
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 124,
-    "fields": {
-      "modified": "2026-02-08T20:23:55.848Z",
-      "type": 1,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "source": 102,
-      "target": 101
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 125,
-    "fields": {
-      "modified": "2026-02-08T20:32:22.140Z",
-      "type": 1,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "source": 101,
-      "target": 106
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 126,
-    "fields": {
-      "modified": "2026-02-08T20:32:41.980Z",
-      "type": 1,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "source": 106,
-      "target": 105
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 128,
-    "fields": {
-      "modified": "2026-02-10T18:47:03.088Z",
-      "type": 1,
-      "pathway": "123bc9f0-5c8f-4410-a6e5-a49725fbb375",
-      "source": 107,
-      "target": 109
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 129,
-    "fields": {
-      "modified": "2026-02-10T18:47:06.150Z",
-      "type": 1,
-      "pathway": "123bc9f0-5c8f-4410-a6e5-a49725fbb375",
-      "source": 109,
-      "target": 108
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 137,
-    "fields": {
-      "modified": "2026-02-12T22:39:06.961Z",
-      "type": 1,
-      "pathway": "5aedec3f-df9d-4149-b62b-6bd17c8ca8a3",
-      "source": 33,
-      "target": 32
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 138,
-    "fields": {
-      "modified": "2026-02-12T22:40:25.021Z",
-      "type": 1,
-      "pathway": "94a67ded-0d4b-4060-b79a-6f895b2373a3",
-      "source": 117,
-      "target": 118
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 139,
-    "fields": {
-      "modified": "2026-02-14T13:36:05.076Z",
-      "type": 1,
-      "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
-      "source": 89,
-      "target": 119
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 140,
-    "fields": {
-      "modified": "2026-02-14T13:43:26.881Z",
-      "type": 1,
-      "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
-      "source": 91,
-      "target": 120
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 141,
-    "fields": {
-      "modified": "2026-02-14T13:43:33.234Z",
-      "type": 1,
-      "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
-      "source": 91,
-      "target": 121
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 143,
-    "fields": {
-      "modified": "2026-02-16T18:52:31.213Z",
-      "type": 1,
-      "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-      "source": 122,
-      "target": 113
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 146,
-    "fields": {
-      "modified": "2026-02-16T21:54:32.244Z",
-      "type": 1,
-      "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-      "source": 113,
-      "target": 124
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 152,
-    "fields": {
-      "modified": "2026-02-18T15:16:41.739Z",
-      "type": 1,
-      "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
-      "source": 9,
-      "target": 127
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 153,
-    "fields": {
-      "modified": "2026-02-19T15:45:50.142Z",
-      "type": 1,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "source": 60,
-      "target": 128
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 154,
-    "fields": {
-      "modified": "2026-02-19T15:45:57.373Z",
-      "type": 1,
-      "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
-      "source": 128,
-      "target": 92
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 155,
-    "fields": {
-      "modified": "2026-02-19T15:46:52.464Z",
-      "type": 1,
-      "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-      "source": 10,
-      "target": 11
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 160,
-    "fields": {
-      "modified": "2026-03-01T16:29:30.878Z",
-      "type": 1,
-      "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
-      "source": 7,
-      "target": 73
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 161,
-    "fields": {
-      "modified": "2026-03-05T13:35:51.252Z",
-      "type": 1,
-      "pathway": "c3dd041a-20eb-4414-b571-2a5fdbeb9b86",
-      "source": 129,
-      "target": 130
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 166,
-    "fields": {
-      "modified": "2026-03-07T23:49:03.534Z",
-      "type": 1,
-      "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-      "source": 84,
-      "target": 123
-    }
-  },
-  {
-    "model": "central_nervous_system.axon",
-    "pk": 168,
-    "fields": {
-      "modified": "2026-03-17T20:55:09.403Z",
-      "type": 1,
-      "pathway": "04c3997f-d5f3-402f-952a-519bbd7e4dee",
-      "source": 138,
-      "target": 139
-    }
+{
+  "model": "central_nervous_system.cnstag",
+  "pk": 1,
+  "fields": {
+    "name": "Agent"
   }
+},
+{
+  "model": "central_nervous_system.cnstag",
+  "pk": 2,
+  "fields": {
+    "name": "Pre-Release"
+  }
+},
+{
+  "model": "central_nervous_system.cnstag",
+  "pk": 3,
+  "fields": {
+    "name": "Corpus Callosum"
+  }
+},
+{
+  "model": "central_nervous_system.spiketrainstatus",
+  "pk": 1,
+  "fields": {
+    "name": "Created"
+  }
+},
+{
+  "model": "central_nervous_system.spiketrainstatus",
+  "pk": 2,
+  "fields": {
+    "name": "Pending"
+  }
+},
+{
+  "model": "central_nervous_system.spiketrainstatus",
+  "pk": 3,
+  "fields": {
+    "name": "Running"
+  }
+},
+{
+  "model": "central_nervous_system.spiketrainstatus",
+  "pk": 4,
+  "fields": {
+    "name": "Success"
+  }
+},
+{
+  "model": "central_nervous_system.spiketrainstatus",
+  "pk": 5,
+  "fields": {
+    "name": "Failed"
+  }
+},
+{
+  "model": "central_nervous_system.spiketrainstatus",
+  "pk": 6,
+  "fields": {
+    "name": "Aborted"
+  }
+},
+{
+  "model": "central_nervous_system.spiketrainstatus",
+  "pk": 7,
+  "fields": {
+    "name": "Delegated"
+  }
+},
+{
+  "model": "central_nervous_system.spiketrainstatus",
+  "pk": 8,
+  "fields": {
+    "name": "Stopping"
+  }
+},
+{
+  "model": "central_nervous_system.spiketrainstatus",
+  "pk": 9,
+  "fields": {
+    "name": "Stopped"
+  }
+},
+{
+  "model": "central_nervous_system.spikestatus",
+  "pk": 1,
+  "fields": {
+    "name": "Created"
+  }
+},
+{
+  "model": "central_nervous_system.spikestatus",
+  "pk": 2,
+  "fields": {
+    "name": "Pending"
+  }
+},
+{
+  "model": "central_nervous_system.spikestatus",
+  "pk": 3,
+  "fields": {
+    "name": "Running"
+  }
+},
+{
+  "model": "central_nervous_system.spikestatus",
+  "pk": 4,
+  "fields": {
+    "name": "Success"
+  }
+},
+{
+  "model": "central_nervous_system.spikestatus",
+  "pk": 5,
+  "fields": {
+    "name": "Failed"
+  }
+},
+{
+  "model": "central_nervous_system.spikestatus",
+  "pk": 6,
+  "fields": {
+    "name": "Aborted"
+  }
+},
+{
+  "model": "central_nervous_system.spikestatus",
+  "pk": 7,
+  "fields": {
+    "name": "Delegated"
+  }
+},
+{
+  "model": "central_nervous_system.spikestatus",
+  "pk": 8,
+  "fields": {
+    "name": "Stopping"
+  }
+},
+{
+  "model": "central_nervous_system.spikestatus",
+  "pk": 9,
+  "fields": {
+    "name": "Stopped"
+  }
+},
+{
+  "model": "central_nervous_system.cnsdistributionmode",
+  "pk": 1,
+  "fields": {
+    "description": "Executes strictly on the local Talos Server (e.g. Compiling).",
+    "name": "Local Server (Default)"
+  }
+},
+{
+  "model": "central_nervous_system.cnsdistributionmode",
+  "pk": 2,
+  "fields": {
+    "description": "Broadcasts execution to every ONLINE agent (e.g. Deployment).",
+    "name": "All Online Agents"
+  }
+},
+{
+  "model": "central_nervous_system.cnsdistributionmode",
+  "pk": 3,
+  "fields": {
+    "description": "Executes on the first available ONLINE agent (e.g. Distributed Testing).",
+    "name": "One Available Agent"
+  }
+},
+{
+  "model": "central_nervous_system.cnsdistributionmode",
+  "pk": 4,
+  "fields": {
+    "description": "Executes only on targets explicitly linked via EffectorTarget.",
+    "name": "Specific Targets"
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 1,
+  "fields": {
+    "created": "2026-01-01T00:00:00Z",
+    "description": null,
+    "modified": "2026-01-22T22:13:06.759Z",
+    "name": "Begin Play",
+    "is_favorite": false,
+    "talos_executable": 1,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 2,
+  "fields": {
+    "created": "2026-01-01T00:00:00Z",
+    "description": null,
+    "modified": "2026-01-21T22:07:32.891Z",
+    "name": "Staging: Build Game",
+    "is_favorite": false,
+    "talos_executable": 5,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": [
+      9,
+      10,
+      11,
+      35,
+      36,
+      37,
+      38
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 3,
+  "fields": {
+    "created": "2026-01-01T00:00:00Z",
+    "description": null,
+    "modified": "2026-01-23T19:58:04.138Z",
+    "name": "Staging: Record PSOs",
+    "is_favorite": false,
+    "talos_executable": 6,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": [
+      17,
+      23,
+      24,
+      25,
+      29,
+      30,
+      31
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 4,
+  "fields": {
+    "created": "2026-01-01T00:00:00Z",
+    "description": null,
+    "modified": "2026-01-23T20:29:01.872Z",
+    "name": "Staging Run Once",
+    "is_favorite": false,
+    "talos_executable": 6,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": [
+      16,
+      23,
+      24,
+      25,
+      40
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 100,
+  "fields": {
+    "created": "2026-01-07T22:58:23.399Z",
+    "description": null,
+    "modified": "2026-01-23T20:13:48.542Z",
+    "name": "Compile PSO Cache",
+    "is_favorite": false,
+    "talos_executable": 4,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": [
+      2,
+      3,
+      22,
+      26,
+      27
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 110,
+  "fields": {
+    "created": "2026-01-08T15:50:00Z",
+    "description": null,
+    "modified": "2026-01-26T17:43:04.964Z",
+    "name": "Pre-Release Build",
+    "is_favorite": false,
+    "talos_executable": 5,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": [
+      32,
+      33,
+      34,
+      3,
+      35,
+      5,
+      37,
+      38,
+      9,
+      10,
+      11,
+      44,
+      13,
+      15,
+      19,
+      20
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 120,
+  "fields": {
+    "created": "2026-01-08T12:00:00Z",
+    "description": null,
+    "modified": "2026-01-20T16:24:06.085Z",
+    "name": "UAT Run (Legacy)",
+    "is_favorite": false,
+    "talos_executable": 1,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 130,
+  "fields": {
+    "created": "2026-01-08T18:00:00Z",
+    "description": null,
+    "modified": "2026-01-27T23:11:29.978Z",
+    "name": "Deploy",
+    "is_favorite": false,
+    "talos_executable": 13,
+    "distribution_mode": 2,
+    "tags": [],
+    "switches": [
+      50,
+      51,
+      52,
+      53,
+      55,
+      56,
+      57
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 140,
+  "fields": {
+    "created": "2026-01-09T12:00:00Z",
+    "description": null,
+    "modified": "2026-01-22T16:15:08.374Z",
+    "name": "Version Metadata",
+    "is_favorite": false,
+    "talos_executable": 9,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 142,
+  "fields": {
+    "created": "2026-01-17T02:00:50.152Z",
+    "description": null,
+    "modified": "2026-01-20T16:14:01.054Z",
+    "name": "MP Remotes",
+    "is_favorite": false,
+    "talos_executable": 1,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 143,
+  "fields": {
+    "created": "2026-01-17T02:00:50.156Z",
+    "description": null,
+    "modified": "2026-01-26T17:53:32.250Z",
+    "name": "Pre-Release Run",
+    "is_favorite": false,
+    "talos_executable": 7,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": [
+      23,
+      24,
+      25,
+      40
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 144,
+  "fields": {
+    "created": "2026-01-27T17:25:34.483Z",
+    "description": null,
+    "modified": "2026-01-27T17:26:18.581Z",
+    "name": "Get Agent UUID",
+    "is_favorite": false,
+    "talos_executable": 11,
+    "distribution_mode": 4,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 145,
+  "fields": {
+    "created": "2026-01-27T19:19:00.155Z",
+    "description": null,
+    "modified": "2026-01-27T19:19:00.155Z",
+    "name": "Scan for Agents",
+    "is_favorite": false,
+    "talos_executable": 12,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 146,
+  "fields": {
+    "created": "2026-01-27T23:22:10.133Z",
+    "description": null,
+    "modified": "2026-01-27T23:23:03.205Z",
+    "name": "Launch All",
+    "is_favorite": false,
+    "talos_executable": 7,
+    "distribution_mode": 2,
+    "tags": [],
+    "switches": [
+      23,
+      24,
+      25,
+      28,
+      40
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 147,
+  "fields": {
+    "created": "2026-01-28T16:17:19.220Z",
+    "description": null,
+    "modified": "2026-01-30T19:50:49.527Z",
+    "name": "Retry w/ 5 Second Delay",
+    "is_favorite": false,
+    "talos_executable": 14,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": [
+      58,
+      60
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 148,
+  "fields": {
+    "created": "2026-01-01T00:00:00Z",
+    "description": null,
+    "modified": "2026-02-10T16:22:55.534Z",
+    "name": "Test",
+    "is_favorite": false,
+    "talos_executable": 4,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": [
+      2,
+      4,
+      17,
+      40,
+      41,
+      47,
+      48,
+      49
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 149,
+  "fields": {
+    "created": "2026-01-30T16:34:23.839Z",
+    "description": null,
+    "modified": "2026-01-30T16:34:23.839Z",
+    "name": "Cache Shader Cache",
+    "is_favorite": false,
+    "talos_executable": 13,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 150,
+  "fields": {
+    "created": "2026-01-30T18:37:12.059Z",
+    "description": null,
+    "modified": "2026-01-30T18:39:01.226Z",
+    "name": "Add Shaders to Prerelease",
+    "is_favorite": false,
+    "talos_executable": 13,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 151,
+  "fields": {
+    "created": "2026-01-31T14:37:51.784Z",
+    "description": null,
+    "modified": "2026-02-08T22:50:30.100Z",
+    "name": "Backup SaveGames (Prerelease -> Cache)",
+    "is_favorite": false,
+    "talos_executable": 13,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": [
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      63
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 152,
+  "fields": {
+    "created": "2026-01-31T14:39:35.355Z",
+    "description": null,
+    "modified": "2026-02-08T22:47:28.893Z",
+    "name": "Restore SaveGames (Cache -> Prerelease)",
+    "is_favorite": false,
+    "talos_executable": 13,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": [
+      50,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 153,
+  "fields": {
+    "created": "2026-01-31T15:17:41.419Z",
+    "description": null,
+    "modified": "2026-02-08T18:03:51.164Z",
+    "name": "Remove Pre-Release SaveGames",
+    "is_favorite": false,
+    "talos_executable": 15,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": [
+      61,
+      62
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 154,
+  "fields": {
+    "created": "2026-01-31T15:51:56.896Z",
+    "description": null,
+    "modified": "2026-01-31T15:51:56.896Z",
+    "name": "Remove Intermediate",
+    "is_favorite": false,
+    "talos_executable": 15,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 155,
+  "fields": {
+    "created": "2026-01-31T16:09:07.810Z",
+    "description": null,
+    "modified": "2026-02-12T22:05:47.939Z",
+    "name": "Dump Talos Scripts",
+    "is_favorite": false,
+    "talos_executable": 2,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 156,
+  "fields": {
+    "created": "2026-01-31T20:25:05.728Z",
+    "description": null,
+    "modified": "2026-02-16T20:35:29.308Z",
+    "name": "Ollama Query llama3.2:3b from Path",
+    "is_favorite": false,
+    "talos_executable": 15,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 157,
+  "fields": {
+    "created": "2026-02-02T14:43:47.917Z",
+    "description": null,
+    "modified": "2026-02-03T18:39:52.179Z",
+    "name": "Launch #2 Server",
+    "is_favorite": false,
+    "talos_executable": 7,
+    "distribution_mode": 4,
+    "tags": [],
+    "switches": [
+      23,
+      24,
+      25,
+      28
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 158,
+  "fields": {
+    "created": "2026-02-08T17:47:11.756Z",
+    "description": null,
+    "modified": "2026-02-08T17:47:11.756Z",
+    "name": "Remove Pre-Release Logs",
+    "is_favorite": false,
+    "talos_executable": 15,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": [
+      61,
+      62
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 159,
+  "fields": {
+    "created": "2026-02-08T17:51:13.962Z",
+    "description": null,
+    "modified": "2026-02-08T17:51:31.870Z",
+    "name": "Remove Pre-Release User Config",
+    "is_favorite": false,
+    "talos_executable": 15,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": [
+      61,
+      62
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 160,
+  "fields": {
+    "created": "2026-02-08T17:55:00.040Z",
+    "description": null,
+    "modified": "2026-02-08T22:49:57.630Z",
+    "name": "Backup UserConfig (Prerelease -> Cache)",
+    "is_favorite": false,
+    "talos_executable": 13,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": [
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      63
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 161,
+  "fields": {
+    "created": "2026-02-08T17:56:39.786Z",
+    "description": null,
+    "modified": "2026-02-08T17:56:39.786Z",
+    "name": "Restore UserConfig (Cache -> Prerelease)",
+    "is_favorite": false,
+    "talos_executable": 13,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": [
+      50,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 162,
+  "fields": {
+    "created": "2026-02-08T19:00:18.699Z",
+    "description": null,
+    "modified": "2026-02-08T22:49:22.505Z",
+    "name": "Remote Pre-Release Save to Cache",
+    "is_favorite": false,
+    "talos_executable": 13,
+    "distribution_mode": 2,
+    "tags": [],
+    "switches": [
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      63
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 163,
+  "fields": {
+    "created": "2026-02-08T19:02:16.111Z",
+    "description": null,
+    "modified": "2026-02-08T19:29:25.342Z",
+    "name": "Remote Pre-Release Restore Save",
+    "is_favorite": false,
+    "talos_executable": 13,
+    "distribution_mode": 2,
+    "tags": [],
+    "switches": [
+      50,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 164,
+  "fields": {
+    "created": "2026-02-08T19:33:00.839Z",
+    "description": null,
+    "modified": "2026-02-08T22:48:48.160Z",
+    "name": "Remote Pre-Release Cache UserConfig",
+    "is_favorite": false,
+    "talos_executable": 13,
+    "distribution_mode": 2,
+    "tags": [],
+    "switches": [
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      63
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 165,
+  "fields": {
+    "created": "2026-02-08T19:34:47.032Z",
+    "description": null,
+    "modified": "2026-02-08T19:34:47.032Z",
+    "name": "Remote Restore User Config",
+    "is_favorite": false,
+    "talos_executable": 13,
+    "distribution_mode": 2,
+    "tags": [],
+    "switches": [
+      50,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 166,
+  "fields": {
+    "created": "2026-02-10T18:44:05.324Z",
+    "description": null,
+    "modified": "2026-02-10T18:44:57.240Z",
+    "name": "List Location",
+    "is_favorite": false,
+    "talos_executable": 11,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 167,
+  "fields": {
+    "created": "2026-02-11T16:30:50.618Z",
+    "description": null,
+    "modified": "2026-02-11T23:14:10.176Z",
+    "name": "Switch Resolution Test",
+    "is_favorite": false,
+    "talos_executable": 11,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 168,
+  "fields": {
+    "created": "2026-02-12T22:07:16.774Z",
+    "description": null,
+    "modified": "2026-02-12T22:07:16.774Z",
+    "name": "Dump Project Scripts",
+    "is_favorite": false,
+    "talos_executable": 2,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 169,
+  "fields": {
+    "created": "2026-02-16T18:40:09.814Z",
+    "description": null,
+    "modified": "2026-02-16T18:59:11.608Z",
+    "name": "Generate Prompt Payload",
+    "is_favorite": false,
+    "talos_executable": 3,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 170,
+  "fields": {
+    "created": "2026-02-16T21:53:52.610Z",
+    "description": null,
+    "modified": "2026-02-16T21:53:52.610Z",
+    "name": "Delete Prompt Temp File",
+    "is_favorite": false,
+    "talos_executable": 15,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 171,
+  "fields": {
+    "created": "2026-02-17T18:23:16.500Z",
+    "description": null,
+    "modified": "2026-02-17T18:26:37.884Z",
+    "name": "Frontal Lobe Node",
+    "is_favorite": false,
+    "talos_executable": 17,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 172,
+  "fields": {
+    "created": "2026-03-05T13:35:37.844Z",
+    "description": null,
+    "modified": "2026-03-05T13:35:37.844Z",
+    "name": "Temporal Lobe Effector",
+    "is_favorite": false,
+    "talos_executable": 18,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effectorcontext",
+  "pk": 2,
+  "fields": {
+    "effector": 169,
+    "key": "prompt",
+    "value": "Yo AI dude, do you see this or what? {{provenance.execution_log}}"
+  }
+},
+{
+  "model": "central_nervous_system.effectorcontext",
+  "pk": 3,
+  "fields": {
+    "effector": 171,
+    "key": "prompt",
+    "value": "You are part of the Frontal Lobe"
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 1,
+  "fields": {
+    "effector": 2,
+    "order": 10,
+    "argument": 6
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 2,
+  "fields": {
+    "effector": 1,
+    "order": 10,
+    "argument": 3
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 3,
+  "fields": {
+    "effector": 100,
+    "order": 1,
+    "argument": 3
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 4,
+  "fields": {
+    "effector": 100,
+    "order": 2,
+    "argument": 5
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 5,
+  "fields": {
+    "effector": 100,
+    "order": 3,
+    "argument": 4
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 6,
+  "fields": {
+    "effector": 100,
+    "order": 4,
+    "argument": 1
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 7,
+  "fields": {
+    "effector": 100,
+    "order": 5,
+    "argument": 2
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 8,
+  "fields": {
+    "effector": 110,
+    "order": 10,
+    "argument": 6
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 9,
+  "fields": {
+    "effector": 144,
+    "order": 10,
+    "argument": 9
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 10,
+  "fields": {
+    "effector": 130,
+    "order": 1,
+    "argument": 10
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 11,
+  "fields": {
+    "effector": 130,
+    "order": 2,
+    "argument": 11
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 12,
+  "fields": {
+    "effector": 149,
+    "order": 10,
+    "argument": 16
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 13,
+  "fields": {
+    "effector": 149,
+    "order": 10,
+    "argument": 12
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 14,
+  "fields": {
+    "effector": 149,
+    "order": 10,
+    "argument": 17
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 15,
+  "fields": {
+    "effector": 150,
+    "order": 2,
+    "argument": 18
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 16,
+  "fields": {
+    "effector": 150,
+    "order": 10,
+    "argument": 17
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 17,
+  "fields": {
+    "effector": 150,
+    "order": 1,
+    "argument": 12
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 18,
+  "fields": {
+    "effector": 151,
+    "order": 10,
+    "argument": 20
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 19,
+  "fields": {
+    "effector": 151,
+    "order": 10,
+    "argument": 19
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 20,
+  "fields": {
+    "effector": 152,
+    "order": 10,
+    "argument": 19
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 21,
+  "fields": {
+    "effector": 152,
+    "order": 10,
+    "argument": 20
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 22,
+  "fields": {
+    "effector": 153,
+    "order": 2,
+    "argument": 20
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 23,
+  "fields": {
+    "effector": 153,
+    "order": 1,
+    "argument": 23
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 24,
+  "fields": {
+    "effector": 154,
+    "order": 10,
+    "argument": 23
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 25,
+  "fields": {
+    "effector": 154,
+    "order": 10,
+    "argument": 24
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 26,
+  "fields": {
+    "effector": 155,
+    "order": 10,
+    "argument": 26
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 27,
+  "fields": {
+    "effector": 155,
+    "order": 10,
+    "argument": 21
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 29,
+  "fields": {
+    "effector": 158,
+    "order": 10,
+    "argument": 23
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 30,
+  "fields": {
+    "effector": 158,
+    "order": 10,
+    "argument": 33
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 31,
+  "fields": {
+    "effector": 159,
+    "order": 10,
+    "argument": 23
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 32,
+  "fields": {
+    "effector": 159,
+    "order": 10,
+    "argument": 34
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 33,
+  "fields": {
+    "effector": 160,
+    "order": 10,
+    "argument": 34
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 34,
+  "fields": {
+    "effector": 160,
+    "order": 10,
+    "argument": 35
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 35,
+  "fields": {
+    "effector": 161,
+    "order": 10,
+    "argument": 35
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 36,
+  "fields": {
+    "effector": 161,
+    "order": 10,
+    "argument": 34
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 37,
+  "fields": {
+    "effector": 162,
+    "order": 10,
+    "argument": 20
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 38,
+  "fields": {
+    "effector": 162,
+    "order": 10,
+    "argument": 19
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 39,
+  "fields": {
+    "effector": 163,
+    "order": 10,
+    "argument": 19
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 40,
+  "fields": {
+    "effector": 163,
+    "order": 10,
+    "argument": 20
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 41,
+  "fields": {
+    "effector": 164,
+    "order": 10,
+    "argument": 34
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 42,
+  "fields": {
+    "effector": 164,
+    "order": 10,
+    "argument": 35
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 43,
+  "fields": {
+    "effector": 165,
+    "order": 10,
+    "argument": 35
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 44,
+  "fields": {
+    "effector": 165,
+    "order": 10,
+    "argument": 34
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 45,
+  "fields": {
+    "effector": 148,
+    "order": 10,
+    "argument": 3
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 46,
+  "fields": {
+    "effector": 166,
+    "order": 10,
+    "argument": 36
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 47,
+  "fields": {
+    "effector": 167,
+    "order": 10,
+    "argument": 37
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 48,
+  "fields": {
+    "effector": 168,
+    "order": 10,
+    "argument": 26
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 49,
+  "fields": {
+    "effector": 168,
+    "order": 10,
+    "argument": 38
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 50,
+  "fields": {
+    "effector": 169,
+    "order": 10,
+    "argument": 39
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 51,
+  "fields": {
+    "effector": 169,
+    "order": 10,
+    "argument": 40
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 52,
+  "fields": {
+    "effector": 156,
+    "order": 4,
+    "argument": 41
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 53,
+  "fields": {
+    "effector": 156,
+    "order": 3,
+    "argument": 42
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 54,
+  "fields": {
+    "effector": 169,
+    "order": 10,
+    "argument": 43
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 55,
+  "fields": {
+    "effector": 156,
+    "order": 0,
+    "argument": 44
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 56,
+  "fields": {
+    "effector": 156,
+    "order": 2,
+    "argument": 31
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 57,
+  "fields": {
+    "effector": 156,
+    "order": 1,
+    "argument": 28
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 58,
+  "fields": {
+    "effector": 170,
+    "order": 10,
+    "argument": 45
+  }
+},
+{
+  "model": "central_nervous_system.effectorargumentassignment",
+  "pk": 59,
+  "fields": {
+    "effector": 170,
+    "order": 10,
+    "argument": 41
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+  "fields": {
+    "created": "2026-01-08T16:10:00Z",
+    "description": "Full Chain: Test -> UAT",
+    "modified": "2026-01-20T16:19:19.230Z",
+    "name": "Full",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "0245b699-5b9a-43ec-9391-b788b578d25f",
+  "fields": {
+    "created": "2026-01-09T20:16:00.695Z",
+    "description": "Create and place Version Metadata.",
+    "modified": "2026-01-20T16:15:44.857Z",
+    "name": "Version Meta",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "04c3997f-d5f3-402f-952a-519bbd7e4dee",
+  "fields": {
+    "created": "2026-03-17T20:50:47.832Z",
+    "description": "",
+    "modified": "2026-03-17T20:50:47.832Z",
+    "name": "Corpus Callosum",
+    "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": [
+      3
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "123bc9f0-5c8f-4410-a6e5-a49725fbb375",
+  "fields": {
+    "created": "2026-02-10T18:43:05.690Z",
+    "description": null,
+    "modified": "2026-02-10T18:43:05.690Z",
+    "name": "List Location R",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "22334455-6677-8899-0011-aabbccddeeff",
+  "fields": {
+    "created": "2026-01-08T16:40:00Z",
+    "description": "Compile Shaders",
+    "modified": "2026-01-20T16:16:24.355Z",
+    "name": "Compile Shaders",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+  "fields": {
+    "created": "2026-01-08T21:58:00.568Z",
+    "description": "Distribute to Agents",
+    "modified": "2026-01-27T23:05:17.105Z",
+    "name": "Deploy",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+  "fields": {
+    "created": "2026-01-27T19:19:26.787Z",
+    "description": null,
+    "modified": "2026-02-04T20:43:22.223Z",
+    "name": "Scan For Agents",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": [
+      1
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "4e52e554-f7b3-4adc-96f2-f80da0329774",
+  "fields": {
+    "created": "2026-02-04T22:04:12.822Z",
+    "description": null,
+    "modified": "2026-02-04T22:04:12.822Z",
+    "name": "Process Test 2",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "52b62ed2-7752-4d16-ba29-4810a54815d0",
+  "fields": {
+    "created": "2026-01-31T14:40:15.233Z",
+    "description": null,
+    "modified": "2026-02-05T15:33:05.105Z",
+    "name": "Restore Save",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": [
+      2
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "559cecbd-2128-478a-be50-436ba30b7396",
+  "fields": {
+    "created": "2026-01-20T00:54:46.432Z",
+    "description": "Local Game Launcher",
+    "modified": "2026-02-05T15:32:32.421Z",
+    "name": "Pre-Release Run",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": [
+      2
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "596804db-1566-4388-a7e7-dafa7ab2f4fb",
+  "fields": {
+    "created": "2026-02-06T17:31:36.055Z",
+    "description": null,
+    "modified": "2026-02-06T17:31:36.055Z",
+    "name": "Debug Protocol",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "5aedec3f-df9d-4149-b62b-6bd17c8ca8a3",
+  "fields": {
+    "created": "2026-01-31T16:07:02.726Z",
+    "description": null,
+    "modified": "2026-01-31T16:13:18.776Z",
+    "name": "Dump Talos Scripts",
+    "environment": null,
+    "is_favorite": true,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "5b5bebe0-be34-4614-b40f-b78bd3a1c269",
+  "fields": {
+    "created": "2026-01-31T15:50:39.700Z",
+    "description": null,
+    "modified": "2026-01-31T15:50:39.700Z",
+    "name": "Remove Intermediate",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "8686149a-8b56-4a47-b5df-7d8cf7635dbc",
+  "fields": {
+    "created": "2026-01-27T23:23:20.836Z",
+    "description": null,
+    "modified": "2026-01-27T23:23:20.836Z",
+    "name": "All Remotes",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "925c871c-618e-4de8-a9d2-6978aed216e8",
+  "fields": {
+    "created": "2026-02-04T20:51:27.826Z",
+    "description": null,
+    "modified": "2026-02-04T20:51:27.826Z",
+    "name": "Process Test",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "94a67ded-0d4b-4060-b79a-6f895b2373a3",
+  "fields": {
+    "created": "2026-02-12T22:39:57.776Z",
+    "description": null,
+    "modified": "2026-02-12T22:39:57.776Z",
+    "name": "Dump Project Scripts",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
+  "fields": {
+    "created": "2026-02-01T16:37:12.246Z",
+    "description": null,
+    "modified": "2026-02-01T16:37:12.246Z",
+    "name": "Scan2ax",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+  "fields": {
+    "created": "2026-01-01T00:00:00Z",
+    "description": null,
+    "modified": "2026-01-23T20:00:48.967Z",
+    "name": "Stage",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "b7b1017e-0e5f-4e3d-b91a-13270b41b4b3",
+  "fields": {
+    "created": "2026-01-23T22:01:37.231Z",
+    "description": "RecordPSOs",
+    "modified": "2026-01-23T22:01:37.231Z",
+    "name": "RecordPSOs",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "b8e9f0a1-2c3d-4e5f-6a7b-8c9d0e1f2b3c",
+  "fields": {
+    "created": "2026-01-01T00:00:00Z",
+    "description": "Headless Test Only",
+    "modified": "2026-01-09T15:05:55.848Z",
+    "name": "CPPTests",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "c3dd041a-20eb-4414-b571-2a5fdbeb9b86",
+  "fields": {
+    "created": "2026-03-05T13:33:15.232Z",
+    "description": "",
+    "modified": "2026-03-05T13:33:15.232Z",
+    "name": "Engage Temporal Lobe",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+  "fields": {
+    "created": "2026-01-01T00:00:00Z",
+    "description": "Run Staging Game (Smoke Test)",
+    "modified": "2026-01-01T00:00:00Z",
+    "name": "Staging Run Only",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "e94a9c50-5baa-4cae-808e-b17367c11fc6",
+  "fields": {
+    "created": "2026-01-31T20:25:45.813Z",
+    "description": null,
+    "modified": "2026-01-31T20:25:45.813Z",
+    "name": "Ollama Query",
+    "environment": null,
+    "is_favorite": false,
+    "ui_json": "{}",
+    "tags": []
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
+  "fields": {
+    "created": "2026-01-17T02:00:50.162Z",
+    "description": "Side-by-side Live Debugging (Remote Server + Local Client)",
+    "modified": "2026-02-05T15:33:25.493Z",
+    "name": "Multiplayer (C&S)",
+    "environment": null,
+    "is_favorite": true,
+    "ui_json": "{}",
+    "tags": [
+      2
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.neuralpathway",
+  "pk": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+  "fields": {
+    "created": "2026-01-08T16:00:00Z",
+    "description": "Step 4 Standalone: UAT BuildCookRun with Archive.",
+    "modified": "2026-02-05T15:33:35.343Z",
+    "name": "Pre-Release",
+    "environment": null,
+    "is_favorite": true,
+    "ui_json": "{}",
+    "tags": [
+      2
+    ]
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 1,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "b8e9f0a1-2c3d-4e5f-6a7b-8c9d0e1f2b3c",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 2,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "0245b699-5b9a-43ec-9391-b788b578d25f",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 4,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "b8e9f0a1-2c3d-4e5f-6a7b-8c9d0e1f2b3c",
+    "effector": 148,
+    "ui_json": "{\"x\": 446, \"y\": 97}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 5,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 6,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+    "effector": 110,
+    "ui_json": "{\"x\": 938, \"y\": 222}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 7,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 9,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
+    "effector": 143,
+    "ui_json": "{\"x\": 1074, \"y\": 147}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 10,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 11,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+    "effector": 145,
+    "ui_json": "{\"x\": 468, \"y\": 115}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 13,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+    "effector": 147,
+    "ui_json": "{\"x\": 797, \"y\": 43}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 14,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+    "effector": 145,
+    "ui_json": "{\"x\": 1150, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 15,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 16,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+    "effector": 2,
+    "ui_json": "{\"x\": 456, \"y\": 90}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 17,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+    "effector": 3,
+    "ui_json": "{\"x\": 790, \"y\": 137}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 18,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 20,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "8686149a-8b56-4a47-b5df-7d8cf7635dbc",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 21,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "22334455-6677-8899-0011-aabbccddeeff",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 22,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "22334455-6677-8899-0011-aabbccddeeff",
+    "effector": 100,
+    "ui_json": "{\"x\": 350, \"y\": 103}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 23,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "0245b699-5b9a-43ec-9391-b788b578d25f",
+    "effector": 140,
+    "ui_json": "{\"x\": 418, \"y\": 82}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 24,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "22334455-6677-8899-0011-aabbccddeeff",
+    "effector": 149,
+    "ui_json": "{\"x\": 758, \"y\": 148}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 25,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+    "effector": 145,
+    "ui_json": "{\"x\": 464, \"y\": 366}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 27,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
+    "effector": 150,
+    "ui_json": "{\"x\": 717, \"y\": 232}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 28,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "52b62ed2-7752-4d16-ba29-4810a54815d0",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 29,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "52b62ed2-7752-4d16-ba29-4810a54815d0",
+    "effector": 152,
+    "ui_json": "{\"x\": 459, \"y\": 233}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 32,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "5aedec3f-df9d-4149-b62b-6bd17c8ca8a3",
+    "effector": 155,
+    "ui_json": "{\"x\": 589, \"y\": 234}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 33,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "5aedec3f-df9d-4149-b62b-6bd17c8ca8a3",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 34,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "e94a9c50-5baa-4cae-808e-b17367c11fc6",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 35,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "e94a9c50-5baa-4cae-808e-b17367c11fc6",
+    "effector": 156,
+    "ui_json": "{\"x\":434,\"y\":102}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 37,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 48,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
+    "effector": 145,
+    "ui_json": "{\"x\": 240, \"y\": 319}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 49,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
+    "effector": 1,
+    "ui_json": "{\"x\": 605, \"y\": 206}",
+    "invoked_pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 50,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
+    "effector": 145,
+    "ui_json": "{\"x\": 1127, \"y\": 258}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 51,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
+    "effector": 147,
+    "ui_json": "{\"x\": 560, \"y\": 583}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 52,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
+    "effector": 156,
+    "ui_json": "{\"x\": 930, \"y\": 439}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 53,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "b7b1017e-0e5f-4e3d-b91a-13270b41b4b3",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 54,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "8686149a-8b56-4a47-b5df-7d8cf7635dbc",
+    "effector": 146,
+    "ui_json": "{\"x\": 749, \"y\": 101}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 55,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "8686149a-8b56-4a47-b5df-7d8cf7635dbc",
+    "effector": 145,
+    "ui_json": "{\"x\": 461, \"y\": 93}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 56,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 58,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
+    "effector": 157,
+    "ui_json": "{\"x\": 948, \"y\": 275}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 60,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "effector": 1,
+    "ui_json": "{\"x\":-156.00674795840493,\"y\":-62.8468245995866}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 61,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "effector": 130,
+    "ui_json": "{\"x\": 1412, \"y\": 824}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 63,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
+    "effector": 143,
+    "ui_json": "{\"x\": 950, \"y\": 52}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 64,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
+    "effector": 147,
+    "ui_json": "{\"x\": 430, \"y\": 3}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 65,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
+    "effector": 147,
+    "ui_json": "{\"x\": 742, \"y\": 9}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 70,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+    "effector": 151,
+    "ui_json": "{\"x\": 630, \"y\": 128}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 73,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
+    "effector": 152,
+    "ui_json": "{\"x\": 428, \"y\": 72}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 74,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+    "effector": 1,
+    "ui_json": "{\"x\": 1236, \"y\": 93}",
+    "invoked_pathway": "559cecbd-2128-478a-be50-436ba30b7396",
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 76,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+    "effector": 100,
+    "ui_json": "{\"x\": 1093, \"y\": 118}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 77,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+    "effector": 149,
+    "ui_json": "{\"x\": 1392, \"y\": 117}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 78,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+    "effector": 1,
+    "ui_json": "{\"x\": 398, \"y\": 76}",
+    "invoked_pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 79,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+    "effector": 1,
+    "ui_json": "{\"x\": 695, \"y\": 137}",
+    "invoked_pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 82,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+    "effector": 140,
+    "ui_json": "{\"x\": 366, \"y\": 108}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 83,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+    "effector": 147,
+    "ui_json": "{\"x\": 157, \"y\": 394}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 84,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "effector": 1,
+    "ui_json": "{\"x\":151.96227231444107,\"y\":82.07605970077542}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 89,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
+    "effector": 1,
+    "ui_json": "{\"x\":-176,\"y\":122}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 90,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
+    "effector": 1,
+    "ui_json": "{\"x\":501,\"y\":137}",
+    "invoked_pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 91,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
+    "effector": 1,
+    "ui_json": "{\"x\": 398, \"y\": 345}",
+    "invoked_pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 92,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "effector": 151,
+    "ui_json": "{\"x\":698.8034767565144,\"y\":-166.31407072567237}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 93,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "effector": 153,
+    "ui_json": "{\"x\": 358, \"y\": 350}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 94,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "effector": 150,
+    "ui_json": "{\"x\":1714.8574325204145,\"y\":34.55780177465279}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 95,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
+    "effector": 1,
+    "ui_json": "{\"x\": 484, \"y\": 262}",
+    "invoked_pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 96,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "effector": 160,
+    "ui_json": "{\"x\":0.32273471361884276,\"y\":288.2601149617725}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 97,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "effector": 159,
+    "ui_json": "{\"x\": 614, \"y\": 347}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 98,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "effector": 158,
+    "ui_json": "{\"x\":1057.7842048477403,\"y\":249.5953736257606}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 99,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "effector": 162,
+    "ui_json": "{\"x\": 1101, \"y\": 582}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 100,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "effector": 164,
+    "ui_json": "{\"x\": 1085, \"y\": 768}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 101,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "effector": 165,
+    "ui_json": "{\"x\": 1643, \"y\": 986}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 102,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "effector": 163,
+    "ui_json": "{\"x\": 1767, \"y\": 769}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 105,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "effector": 161,
+    "ui_json": "{\"x\": 2347, \"y\": 933}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 106,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "effector": 152,
+    "ui_json": "{\"x\": 2059, \"y\": 962}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 107,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "123bc9f0-5c8f-4410-a6e5-a49725fbb375",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 108,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "123bc9f0-5c8f-4410-a6e5-a49725fbb375",
+    "effector": 166,
+    "ui_json": "{\"x\": 808, \"y\": 112}",
+    "invoked_pathway": null,
+    "distribution_mode": 2
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 109,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "123bc9f0-5c8f-4410-a6e5-a49725fbb375",
+    "effector": 145,
+    "ui_json": "{\"x\": 475, \"y\": 109}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 113,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "effector": 156,
+    "ui_json": "{\"x\":853.1668914870171,\"y\":-177.1872927255}",
+    "invoked_pathway": null,
+    "distribution_mode": 1
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 116,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "5aedec3f-df9d-4149-b62b-6bd17c8ca8a3",
+    "effector": 168,
+    "ui_json": "{\"x\": 349, \"y\": 404}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 117,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "94a67ded-0d4b-4060-b79a-6f895b2373a3",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 118,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "94a67ded-0d4b-4060-b79a-6f895b2373a3",
+    "effector": 168,
+    "ui_json": "{\"x\":493.74194909366236,\"y\":46.58326452216804}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 119,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
+    "effector": 1,
+    "ui_json": "{\"x\": 392, \"y\": 561}",
+    "invoked_pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 120,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
+    "effector": 1,
+    "ui_json": "{\"x\": 783, \"y\": 324}",
+    "invoked_pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 121,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
+    "effector": 1,
+    "ui_json": "{\"x\": 776, \"y\": 554}",
+    "invoked_pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 122,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "effector": 169,
+    "ui_json": "{\"x\":376.91187521579616,\"y\":-212.89778601703435}",
+    "invoked_pathway": null,
+    "distribution_mode": 1
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 123,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "effector": 166,
+    "ui_json": "{\"x\":662.6721544094712,\"y\":198.18400850954632}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 124,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "effector": 170,
+    "ui_json": "{\"x\":1225,\"y\":131}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 125,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "effector": 171,
+    "ui_json": "{\"x\":77.79952264876295,\"y\":-399.88026690225996}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 127,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
+    "effector": 171,
+    "ui_json": "{\"x\": 1511, \"y\": 255}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 128,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "effector": 145,
+    "ui_json": "{\"x\":335.19749520992616,\"y\":80.02504790073853}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 129,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "c3dd041a-20eb-4414-b571-2a5fdbeb9b86",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 130,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "c3dd041a-20eb-4414-b571-2a5fdbeb9b86",
+    "effector": 172,
+    "ui_json": "{\"x\":380,\"y\":80}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 134,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "effector": 166,
+    "ui_json": "{\"x\":160.02699307159975,\"y\":313.98576488813706}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 136,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "effector": 110,
+    "ui_json": "{\"x\":1101.1529521195198,\"y\":-533.4724452343838}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 138,
+  "fields": {
+    "environment": null,
+    "is_root": true,
+    "pathway": "04c3997f-d5f3-402f-952a-519bbd7e4dee",
+    "effector": 1,
+    "ui_json": "{\"x\": 100, \"y\": 100}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuron",
+  "pk": 139,
+  "fields": {
+    "environment": null,
+    "is_root": false,
+    "pathway": "04c3997f-d5f3-402f-952a-519bbd7e4dee",
+    "effector": 171,
+    "ui_json": "{\"x\": 506, \"y\": 151}",
+    "invoked_pathway": null,
+    "distribution_mode": null
+  }
+},
+{
+  "model": "central_nervous_system.neuroncontext",
+  "pk": 5,
+  "fields": {
+    "neuron": 122,
+    "key": "prompt",
+    "value": "Please attempt to count the number of files in this list {{provenance.application_log}}"
+  }
+},
+{
+  "model": "central_nervous_system.neuroncontext",
+  "pk": 6,
+  "fields": {
+    "neuron": 125,
+    "key": "prompt",
+    "value": "I would like to know what you can learn about yourself and what level you can achieve.... you time out at 10 minutes so be careful of your context window, enjoy the game.... you live at c:/talos/\nEnjoy please."
+  }
+},
+{
+  "model": "central_nervous_system.neuroncontext",
+  "pk": 7,
+  "fields": {
+    "neuron": 127,
+    "key": "prompt",
+    "value": "use the unreal parsing tool mcp_run_unreal_diagnostic_parser\non the provenance spike\n{{spike.provenance.id}}\n\nwhich is the output of our Unreal 5.6.1 application.\n\nyou should also inspect the record\n\nmcp_inspect_record cns Spike {{spike.provenance.id}}\n\nEach turn enhance the Engrams of known issues, as well as create Engrams for new issues.\nOnce you think you have tagged all issues, use mcp_done to file a report and end."
+  }
+},
+{
+  "model": "central_nervous_system.neuroncontext",
+  "pk": 8,
+  "fields": {
+    "neuron": 122,
+    "key": "prompt",
+    "value": "Please attempt to count the number of files in this list {{provenance.application_log}}\ntest"
+  }
+},
+{
+  "model": "central_nervous_system.neuroncontext",
+  "pk": 9,
+  "fields": {
+    "neuron": 122,
+    "key": "prompt",
+    "value": "Please attempt to count the number of files in this list {{provenance.application_log}}"
+  }
+},
+{
+  "model": "central_nervous_system.neuroncontext",
+  "pk": 10,
+  "fields": {
+    "neuron": 125,
+    "key": "prompt",
+    "value": "Please attempt to count the number of files in this list {{provenance.application_log}}"
+  }
+},
+{
+  "model": "central_nervous_system.axontype",
+  "pk": 1,
+  "fields": {
+    "name": "Flow"
+  }
+},
+{
+  "model": "central_nervous_system.axontype",
+  "pk": 2,
+  "fields": {
+    "name": "Success"
+  }
+},
+{
+  "model": "central_nervous_system.axontype",
+  "pk": 3,
+  "fields": {
+    "name": "Failure"
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 2,
+  "fields": {
+    "modified": "2026-01-28T23:21:26.029Z",
+    "type": 1,
+    "pathway": "b8e9f0a1-2c3d-4e5f-6a7b-8c9d0e1f2b3c",
+    "source": 1,
+    "target": 4
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 13,
+  "fields": {
+    "modified": "2026-01-30T15:30:57.936Z",
+    "type": 1,
+    "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+    "source": 15,
+    "target": 16
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 16,
+  "fields": {
+    "modified": "2026-01-30T16:06:52.977Z",
+    "type": 1,
+    "pathway": "0245b699-5b9a-43ec-9391-b788b578d25f",
+    "source": 2,
+    "target": 23
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 18,
+  "fields": {
+    "modified": "2026-01-30T16:38:50.108Z",
+    "type": 1,
+    "pathway": "22334455-6677-8899-0011-aabbccddeeff",
+    "source": 21,
+    "target": 22
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 20,
+  "fields": {
+    "modified": "2026-01-30T16:39:09.204Z",
+    "type": 2,
+    "pathway": "22334455-6677-8899-0011-aabbccddeeff",
+    "source": 22,
+    "target": 24
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 24,
+  "fields": {
+    "modified": "2026-01-31T14:40:38.352Z",
+    "type": 1,
+    "pathway": "52b62ed2-7752-4d16-ba29-4810a54815d0",
+    "source": 28,
+    "target": 29
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 27,
+  "fields": {
+    "modified": "2026-01-31T20:26:04.533Z",
+    "type": 1,
+    "pathway": "e94a9c50-5baa-4cae-808e-b17367c11fc6",
+    "source": 34,
+    "target": 35
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 37,
+  "fields": {
+    "modified": "2026-02-01T18:15:36.464Z",
+    "type": 1,
+    "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
+    "source": 48,
+    "target": 49
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 38,
+  "fields": {
+    "modified": "2026-02-01T18:53:40.638Z",
+    "type": 1,
+    "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
+    "source": 49,
+    "target": 50
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 39,
+  "fields": {
+    "modified": "2026-02-02T02:17:56.315Z",
+    "type": 1,
+    "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
+    "source": 51,
+    "target": 49
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 40,
+  "fields": {
+    "modified": "2026-02-02T02:18:00.651Z",
+    "type": 3,
+    "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
+    "source": 49,
+    "target": 51
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 41,
+  "fields": {
+    "modified": "2026-02-02T02:18:56.725Z",
+    "type": 3,
+    "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
+    "source": 49,
+    "target": 52
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 42,
+  "fields": {
+    "modified": "2026-02-02T14:16:14.679Z",
+    "type": 1,
+    "pathway": "8686149a-8b56-4a47-b5df-7d8cf7635dbc",
+    "source": 20,
+    "target": 55
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 43,
+  "fields": {
+    "modified": "2026-02-02T14:16:17.684Z",
+    "type": 1,
+    "pathway": "8686149a-8b56-4a47-b5df-7d8cf7635dbc",
+    "source": 55,
+    "target": 54
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 49,
+  "fields": {
+    "modified": "2026-02-02T15:58:31.820Z",
+    "type": 1,
+    "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
+    "source": 64,
+    "target": 65
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 50,
+  "fields": {
+    "modified": "2026-02-02T15:58:34.533Z",
+    "type": 1,
+    "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
+    "source": 37,
+    "target": 64
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 51,
+  "fields": {
+    "modified": "2026-02-02T15:58:38.712Z",
+    "type": 1,
+    "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
+    "source": 65,
+    "target": 48
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 55,
+  "fields": {
+    "modified": "2026-02-03T15:50:24.531Z",
+    "type": 2,
+    "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+    "source": 16,
+    "target": 17
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 57,
+  "fields": {
+    "modified": "2026-02-03T15:54:33.608Z",
+    "type": 2,
+    "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+    "source": 70,
+    "target": 6
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 63,
+  "fields": {
+    "modified": "2026-02-03T16:02:26.746Z",
+    "type": 2,
+    "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
+    "source": 73,
+    "target": 27
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 64,
+  "fields": {
+    "modified": "2026-02-03T16:02:32.752Z",
+    "type": 2,
+    "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
+    "source": 27,
+    "target": 9
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 65,
+  "fields": {
+    "modified": "2026-02-03T16:03:20.650Z",
+    "type": 2,
+    "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+    "source": 6,
+    "target": 74
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 67,
+  "fields": {
+    "modified": "2026-02-03T16:24:31.489Z",
+    "type": 2,
+    "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+    "source": 17,
+    "target": 76
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 68,
+  "fields": {
+    "modified": "2026-02-03T16:24:37.058Z",
+    "type": 2,
+    "pathway": "a7d8e9f0-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+    "source": 76,
+    "target": 77
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 69,
+  "fields": {
+    "modified": "2026-02-03T16:25:05.489Z",
+    "type": 1,
+    "pathway": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+    "source": 18,
+    "target": 78
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 70,
+  "fields": {
+    "modified": "2026-02-03T16:26:11.380Z",
+    "type": 2,
+    "pathway": "007d8e9f-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
+    "source": 78,
+    "target": 79
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 71,
+  "fields": {
+    "modified": "2026-02-03T16:45:13.985Z",
+    "type": 1,
+    "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+    "source": 5,
+    "target": 82
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 72,
+  "fields": {
+    "modified": "2026-02-03T16:45:17.281Z",
+    "type": 2,
+    "pathway": "f2a3b4c5-6d7e-8f9a-0b1c-2d3e4f5a6b7c",
+    "source": 82,
+    "target": 70
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 76,
+  "fields": {
+    "modified": "2026-02-04T16:20:27.635Z",
+    "type": 1,
+    "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+    "source": 10,
+    "target": 83
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 78,
+  "fields": {
+    "modified": "2026-02-04T16:20:39.813Z",
+    "type": 2,
+    "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+    "source": 83,
+    "target": 25
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 79,
+  "fields": {
+    "modified": "2026-02-04T16:20:42.423Z",
+    "type": 2,
+    "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+    "source": 83,
+    "target": 11
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 80,
+  "fields": {
+    "modified": "2026-02-04T16:20:47.805Z",
+    "type": 2,
+    "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+    "source": 11,
+    "target": 13
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 81,
+  "fields": {
+    "modified": "2026-02-04T16:20:53.226Z",
+    "type": 2,
+    "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+    "source": 13,
+    "target": 14
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 86,
+  "fields": {
+    "modified": "2026-02-04T22:04:45.242Z",
+    "type": 1,
+    "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
+    "source": 89,
+    "target": 90
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 87,
+  "fields": {
+    "modified": "2026-02-04T22:04:48.170Z",
+    "type": 1,
+    "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
+    "source": 89,
+    "target": 91
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 89,
+  "fields": {
+    "modified": "2026-02-08T16:51:52.152Z",
+    "type": 1,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "source": 60,
+    "target": 92
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 94,
+  "fields": {
+    "modified": "2026-02-08T16:59:06.071Z",
+    "type": 1,
+    "pathway": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
+    "source": 56,
+    "target": 95
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 103,
+  "fields": {
+    "modified": "2026-02-08T19:37:00.755Z",
+    "type": 2,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "source": 94,
+    "target": 99
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 114,
+  "fields": {
+    "modified": "2026-02-08T20:10:54.643Z",
+    "type": 1,
+    "pathway": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
+    "source": 95,
+    "target": 58
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 115,
+  "fields": {
+    "modified": "2026-02-08T20:10:57.977Z",
+    "type": 1,
+    "pathway": "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0",
+    "source": 95,
+    "target": 63
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 116,
+  "fields": {
+    "modified": "2026-02-08T20:22:51.649Z",
+    "type": 1,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "source": 92,
+    "target": 96
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 117,
+  "fields": {
+    "modified": "2026-02-08T20:22:54.581Z",
+    "type": 1,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "source": 96,
+    "target": 93
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 118,
+  "fields": {
+    "modified": "2026-02-08T20:22:56.485Z",
+    "type": 1,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "source": 93,
+    "target": 97
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 119,
+  "fields": {
+    "modified": "2026-02-08T20:22:58.396Z",
+    "type": 1,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "source": 97,
+    "target": 98
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 120,
+  "fields": {
+    "modified": "2026-02-08T20:23:00.837Z",
+    "type": 1,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "source": 98,
+    "target": 94
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 121,
+  "fields": {
+    "modified": "2026-02-08T20:23:33.968Z",
+    "type": 1,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "source": 99,
+    "target": 100
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 122,
+  "fields": {
+    "modified": "2026-02-08T20:23:39.902Z",
+    "type": 1,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "source": 100,
+    "target": 61
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 123,
+  "fields": {
+    "modified": "2026-02-08T20:23:51.248Z",
+    "type": 1,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "source": 61,
+    "target": 102
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 124,
+  "fields": {
+    "modified": "2026-02-08T20:23:55.848Z",
+    "type": 1,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "source": 102,
+    "target": 101
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 125,
+  "fields": {
+    "modified": "2026-02-08T20:32:22.140Z",
+    "type": 1,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "source": 101,
+    "target": 106
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 126,
+  "fields": {
+    "modified": "2026-02-08T20:32:41.980Z",
+    "type": 1,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "source": 106,
+    "target": 105
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 128,
+  "fields": {
+    "modified": "2026-02-10T18:47:03.088Z",
+    "type": 1,
+    "pathway": "123bc9f0-5c8f-4410-a6e5-a49725fbb375",
+    "source": 107,
+    "target": 109
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 129,
+  "fields": {
+    "modified": "2026-02-10T18:47:06.150Z",
+    "type": 1,
+    "pathway": "123bc9f0-5c8f-4410-a6e5-a49725fbb375",
+    "source": 109,
+    "target": 108
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 137,
+  "fields": {
+    "modified": "2026-02-12T22:39:06.961Z",
+    "type": 1,
+    "pathway": "5aedec3f-df9d-4149-b62b-6bd17c8ca8a3",
+    "source": 33,
+    "target": 32
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 138,
+  "fields": {
+    "modified": "2026-02-12T22:40:25.021Z",
+    "type": 1,
+    "pathway": "94a67ded-0d4b-4060-b79a-6f895b2373a3",
+    "source": 117,
+    "target": 118
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 139,
+  "fields": {
+    "modified": "2026-02-14T13:36:05.076Z",
+    "type": 1,
+    "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
+    "source": 89,
+    "target": 119
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 140,
+  "fields": {
+    "modified": "2026-02-14T13:43:26.881Z",
+    "type": 1,
+    "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
+    "source": 91,
+    "target": 120
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 141,
+  "fields": {
+    "modified": "2026-02-14T13:43:33.234Z",
+    "type": 1,
+    "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
+    "source": 91,
+    "target": 121
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 143,
+  "fields": {
+    "modified": "2026-02-16T18:52:31.213Z",
+    "type": 1,
+    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "source": 122,
+    "target": 113
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 146,
+  "fields": {
+    "modified": "2026-02-16T21:54:32.244Z",
+    "type": 1,
+    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "source": 113,
+    "target": 124
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 152,
+  "fields": {
+    "modified": "2026-02-18T15:16:41.739Z",
+    "type": 1,
+    "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
+    "source": 9,
+    "target": 127
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 153,
+  "fields": {
+    "modified": "2026-02-19T15:45:50.142Z",
+    "type": 1,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "source": 60,
+    "target": 128
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 154,
+  "fields": {
+    "modified": "2026-02-19T15:45:57.373Z",
+    "type": 1,
+    "pathway": "2a2a2425-08ff-46d2-b652-adb4153554bf",
+    "source": 128,
+    "target": 92
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 155,
+  "fields": {
+    "modified": "2026-02-19T15:46:52.464Z",
+    "type": 1,
+    "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
+    "source": 10,
+    "target": 11
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 160,
+  "fields": {
+    "modified": "2026-03-01T16:29:30.878Z",
+    "type": 1,
+    "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
+    "source": 7,
+    "target": 73
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 161,
+  "fields": {
+    "modified": "2026-03-05T13:35:51.252Z",
+    "type": 1,
+    "pathway": "c3dd041a-20eb-4414-b571-2a5fdbeb9b86",
+    "source": 129,
+    "target": 130
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 166,
+  "fields": {
+    "modified": "2026-03-07T23:49:03.534Z",
+    "type": 1,
+    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
+    "source": 84,
+    "target": 123
+  }
+},
+{
+  "model": "central_nervous_system.axon",
+  "pk": 168,
+  "fields": {
+    "modified": "2026-03-17T20:55:09.403Z",
+    "type": 1,
+    "pathway": "04c3997f-d5f3-402f-952a-519bbd7e4dee",
+    "source": 138,
+    "target": 139
+  }
+}
 ]

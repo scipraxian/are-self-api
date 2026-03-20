@@ -1,257 +1,257 @@
 [
-  {
-    "model": "frontal_lobe.reasoningstatus",
-    "pk": 1,
-    "fields": {
-      "name": "Pending"
-    }
-  },
-  {
-    "model": "frontal_lobe.reasoningstatus",
-    "pk": 2,
-    "fields": {
-      "name": "Active"
-    }
-  },
-  {
-    "model": "frontal_lobe.reasoningstatus",
-    "pk": 3,
-    "fields": {
-      "name": "Paused"
-    }
-  },
-  {
-    "model": "frontal_lobe.reasoningstatus",
-    "pk": 4,
-    "fields": {
-      "name": "Completed"
-    }
-  },
-  {
-    "model": "frontal_lobe.reasoningstatus",
-    "pk": 5,
-    "fields": {
-      "name": "Maxed Out"
-    }
-  },
-  {
-    "model": "frontal_lobe.reasoningstatus",
-    "pk": 6,
-    "fields": {
-      "name": "Error"
-    }
-  },
-  {
-    "model": "frontal_lobe.reasoningstatus",
-    "pk": 7,
-    "fields": {
-      "name": "Attention Required"
-    }
-  },
-  {
-    "model": "frontal_lobe.reasoningstatus",
-    "pk": 8,
-    "fields": {
-      "name": "Stopped"
-    }
-  },
-  {
-    "model": "frontal_lobe.modelprovider",
-    "pk": 1,
-    "fields": {
-      "created": "2026-02-17T12:00:00Z",
-      "description": "Local Ollama provider",
-      "modified": "2026-03-14T19:48:21.595Z",
-      "name": "Ollama Local",
-      "key": "ollama",
-      "base_url": "http://localhost:11434",
-      "chat_path": "/api/chat",
-      "requires_api_key": false,
-      "api_key_header": "Authorization",
-      "api_key_env_var": null
-    }
-  },
-  {
-    "model": "frontal_lobe.modelprovider",
-    "pk": 2,
-    "fields": {
-      "created": "2026-02-17T12:00:00Z",
-      "description": "OpenRouter provider",
-      "modified": "2026-03-14T19:48:47.600Z",
-      "name": "Open Router",
-      "key": "openrouter",
-      "base_url": "https://openrouter.ai/api",
-      "chat_path": "/v1/chat/completions",
-      "requires_api_key": true,
-      "api_key_header": "Authorization",
-      "api_key_env_var": "OPENROUTER_API_KEY"
-    }
-  },
-  {
-    "model": "frontal_lobe.modelregistry",
-    "pk": 1,
-    "fields": {
-      "created": "2026-02-17T12:00:00Z",
-      "description": "Default Coder Model via Ollama",
-      "modified": "2026-02-17T12:00:00Z",
-      "name": "qwen3-coder:30b",
-      "api_variant": "ollama",
-      "context_window_size": 262144,
-      "cost_per_1k_input": "0.000000",
-      "cost_per_1k_output": "0.000000",
-      "provider": 1
-    }
-  },
-  {
-    "model": "frontal_lobe.modelregistry",
-    "pk": 2,
-    "fields": {
-      "created": "2026-02-17T12:00:00Z",
-      "description": "High-Intelligence General Reasoning",
-      "modified": "2026-02-17T12:00:00Z",
-      "name": "gemma3:27b",
-      "api_variant": "ollama",
-      "context_window_size": 131072,
-      "cost_per_1k_input": "0.000000",
-      "cost_per_1k_output": "0.000000",
-      "provider": 1
-    }
-  },
-  {
-    "model": "frontal_lobe.modelregistry",
-    "pk": 3,
-    "fields": {
-      "created": "2026-02-17T12:00:00Z",
-      "description": "Lightweight Llama 3 Model. Recommended for low-resource environments.",
-      "modified": "2026-02-17T12:00:00Z",
-      "name": "llama3:latest",
-      "api_variant": "ollama",
-      "context_window_size": 8192,
-      "cost_per_1k_input": "0.000000",
-      "cost_per_1k_output": "0.000000",
-      "provider": 1
-    }
-  },
-  {
-    "model": "frontal_lobe.modelregistry",
-    "pk": 4,
-    "fields": {
-      "created": "2026-02-17T12:00:00Z",
-      "description": "Flyweight Llama 3 Model. Recommended for medium-resource environments.",
-      "modified": "2026-02-17T12:00:00Z",
-      "name": "llama3.2:3b",
-      "api_variant": "ollama",
-      "context_window_size": 131072,
-      "cost_per_1k_input": "0.000000",
-      "cost_per_1k_output": "0.000000",
-      "provider": 1
-    }
-  },
-  {
-    "model": "frontal_lobe.modelregistry",
-    "pk": 5,
-    "fields": {
-      "created": "2026-02-26T12:00:00Z",
-      "description": "Nomic Embedding Model for vectorized memory similarity.",
-      "modified": "2026-02-26T12:00:00Z",
-      "name": "nomic-embed-text",
-      "api_variant": "ollama",
-      "context_window_size": 2048,
-      "cost_per_1k_input": "0.000000",
-      "cost_per_1k_output": "0.000000",
-      "provider": 1
-    }
-  },
-  {
-    "model": "frontal_lobe.modelregistry",
-    "pk": 6,
-    "fields": {
-      "created": "2026-02-26T12:00:00Z",
-      "description": "GPT Powerful reasoning, agentic tasks, and versatile developer use cases",
-      "modified": "2026-02-26T12:00:00Z",
-      "name": "gpt-oss:latest",
-      "api_variant": "ollama",
-      "context_window_size": 131072,
-      "cost_per_1k_input": "0.000000",
-      "cost_per_1k_output": "0.000000",
-      "provider": 1
-    }
-  },
-  {
-    "model": "frontal_lobe.modelregistry",
-    "pk": 7,
-    "fields": {
-      "created": "2026-02-26T12:00:00Z",
-      "description": "Qwen 3.5 is a family of open-source multimodal models that delivers exceptional utility and performance.",
-      "modified": "2026-02-26T12:00:00Z",
-      "name": "qwen:latest",
-      "api_variant": "ollama",
-      "context_window_size": 131072,
-      "cost_per_1k_input": "0.000000",
-      "cost_per_1k_output": "0.000000",
-      "provider": 1
-    }
-  },
-  {
-    "model": "frontal_lobe.modelregistry",
-    "pk": 8,
-    "fields": {
-      "created": "2026-02-26T12:00:00Z",
-      "description": "GLM-4.7-Flash offers a new option for lightweight deployment that balances performance and efficiency.",
-      "modified": "2026-02-26T12:00:00Z",
-      "name": "glm-4.7-flash:latest",
-      "api_variant": "ollama",
-      "context_window_size": 131072,
-      "cost_per_1k_input": "0.000000",
-      "cost_per_1k_output": "0.000000",
-      "provider": null
-    }
-  },
-  {
-    "model": "frontal_lobe.modelregistry",
-    "pk": 9,
-    "fields": {
-      "created": "2026-03-14T20:26:35.851Z",
-      "description": "",
-      "modified": "2026-03-14T21:06:34.866Z",
-      "name": "openrouter/hunter-alpha",
-      "api_variant": null,
-      "context_window_size": 1048576,
-      "cost_per_1k_input": "0.000000",
-      "cost_per_1k_output": "0.000000",
-      "provider": 2
-    }
-  },
-  {
-    "model": "frontal_lobe.chatmessagerole",
-    "pk": 1,
-    "fields": {
-      "created": "2026-03-12T15:38:42.606Z",
-      "name": "system"
-    }
-  },
-  {
-    "model": "frontal_lobe.chatmessagerole",
-    "pk": 2,
-    "fields": {
-      "created": "2026-03-12T15:38:48.946Z",
-      "name": "user"
-    }
-  },
-  {
-    "model": "frontal_lobe.chatmessagerole",
-    "pk": 3,
-    "fields": {
-      "created": "2026-03-12T15:38:57.804Z",
-      "name": "assistant"
-    }
-  },
-  {
-    "model": "frontal_lobe.chatmessagerole",
-    "pk": 4,
-    "fields": {
-      "created": "2026-03-12T15:39:06.536Z",
-      "name": "tool"
-    }
+{
+  "model": "frontal_lobe.reasoningstatus",
+  "pk": 1,
+  "fields": {
+    "name": "Pending"
   }
+},
+{
+  "model": "frontal_lobe.reasoningstatus",
+  "pk": 2,
+  "fields": {
+    "name": "Active"
+  }
+},
+{
+  "model": "frontal_lobe.reasoningstatus",
+  "pk": 3,
+  "fields": {
+    "name": "Paused"
+  }
+},
+{
+  "model": "frontal_lobe.reasoningstatus",
+  "pk": 4,
+  "fields": {
+    "name": "Completed"
+  }
+},
+{
+  "model": "frontal_lobe.reasoningstatus",
+  "pk": 5,
+  "fields": {
+    "name": "Maxed Out"
+  }
+},
+{
+  "model": "frontal_lobe.reasoningstatus",
+  "pk": 6,
+  "fields": {
+    "name": "Error"
+  }
+},
+{
+  "model": "frontal_lobe.reasoningstatus",
+  "pk": 7,
+  "fields": {
+    "name": "Attention Required"
+  }
+},
+{
+  "model": "frontal_lobe.reasoningstatus",
+  "pk": 8,
+  "fields": {
+    "name": "Stopped"
+  }
+},
+{
+  "model": "frontal_lobe.modelprovider",
+  "pk": 1,
+  "fields": {
+    "created": "2026-02-17T12:00:00Z",
+    "description": "Local Ollama provider",
+    "modified": "2026-03-14T19:48:21.595Z",
+    "name": "Ollama Local",
+    "key": "ollama",
+    "base_url": "http://localhost:11434",
+    "chat_path": "/api/chat",
+    "requires_api_key": false,
+    "api_key_header": "Authorization",
+    "api_key_env_var": null
+  }
+},
+{
+  "model": "frontal_lobe.modelprovider",
+  "pk": 2,
+  "fields": {
+    "created": "2026-02-17T12:00:00Z",
+    "description": "OpenRouter provider",
+    "modified": "2026-03-14T19:48:47.600Z",
+    "name": "Open Router",
+    "key": "openrouter",
+    "base_url": "https://openrouter.ai/api",
+    "chat_path": "/v1/chat/completions",
+    "requires_api_key": true,
+    "api_key_header": "Authorization",
+    "api_key_env_var": "OPENROUTER_API_KEY"
+  }
+},
+{
+  "model": "frontal_lobe.modelregistry",
+  "pk": 1,
+  "fields": {
+    "created": "2026-02-17T12:00:00Z",
+    "description": "Default Coder Model via Ollama",
+    "modified": "2026-02-17T12:00:00Z",
+    "name": "qwen3-coder:30b",
+    "api_variant": "ollama",
+    "context_window_size": 262144,
+    "cost_per_1k_input": "0.000000",
+    "cost_per_1k_output": "0.000000",
+    "provider": 1
+  }
+},
+{
+  "model": "frontal_lobe.modelregistry",
+  "pk": 2,
+  "fields": {
+    "created": "2026-02-17T12:00:00Z",
+    "description": "High-Intelligence General Reasoning",
+    "modified": "2026-02-17T12:00:00Z",
+    "name": "gemma3:27b",
+    "api_variant": "ollama",
+    "context_window_size": 131072,
+    "cost_per_1k_input": "0.000000",
+    "cost_per_1k_output": "0.000000",
+    "provider": 1
+  }
+},
+{
+  "model": "frontal_lobe.modelregistry",
+  "pk": 3,
+  "fields": {
+    "created": "2026-02-17T12:00:00Z",
+    "description": "Lightweight Llama 3 Model. Recommended for low-resource environments.",
+    "modified": "2026-02-17T12:00:00Z",
+    "name": "llama3:latest",
+    "api_variant": "ollama",
+    "context_window_size": 8192,
+    "cost_per_1k_input": "0.000000",
+    "cost_per_1k_output": "0.000000",
+    "provider": 1
+  }
+},
+{
+  "model": "frontal_lobe.modelregistry",
+  "pk": 4,
+  "fields": {
+    "created": "2026-02-17T12:00:00Z",
+    "description": "Flyweight Llama 3 Model. Recommended for medium-resource environments.",
+    "modified": "2026-02-17T12:00:00Z",
+    "name": "llama3.2:3b",
+    "api_variant": "ollama",
+    "context_window_size": 131072,
+    "cost_per_1k_input": "0.000000",
+    "cost_per_1k_output": "0.000000",
+    "provider": 1
+  }
+},
+{
+  "model": "frontal_lobe.modelregistry",
+  "pk": 5,
+  "fields": {
+    "created": "2026-02-26T12:00:00Z",
+    "description": "Nomic Embedding Model for vectorized memory similarity.",
+    "modified": "2026-02-26T12:00:00Z",
+    "name": "nomic-embed-text",
+    "api_variant": "ollama",
+    "context_window_size": 2048,
+    "cost_per_1k_input": "0.000000",
+    "cost_per_1k_output": "0.000000",
+    "provider": 1
+  }
+},
+{
+  "model": "frontal_lobe.modelregistry",
+  "pk": 6,
+  "fields": {
+    "created": "2026-02-26T12:00:00Z",
+    "description": "GPT Powerful reasoning, agentic tasks, and versatile developer use cases",
+    "modified": "2026-02-26T12:00:00Z",
+    "name": "gpt-oss:latest",
+    "api_variant": "ollama",
+    "context_window_size": 131072,
+    "cost_per_1k_input": "0.000000",
+    "cost_per_1k_output": "0.000000",
+    "provider": 1
+  }
+},
+{
+  "model": "frontal_lobe.modelregistry",
+  "pk": 7,
+  "fields": {
+    "created": "2026-02-26T12:00:00Z",
+    "description": "Qwen 3.5 is a family of open-source multimodal models that delivers exceptional utility and performance.",
+    "modified": "2026-02-26T12:00:00Z",
+    "name": "qwen:latest",
+    "api_variant": "ollama",
+    "context_window_size": 131072,
+    "cost_per_1k_input": "0.000000",
+    "cost_per_1k_output": "0.000000",
+    "provider": 1
+  }
+},
+{
+  "model": "frontal_lobe.modelregistry",
+  "pk": 8,
+  "fields": {
+    "created": "2026-02-26T12:00:00Z",
+    "description": "GLM-4.7-Flash offers a new option for lightweight deployment that balances performance and efficiency.",
+    "modified": "2026-02-26T12:00:00Z",
+    "name": "glm-4.7-flash:latest",
+    "api_variant": "ollama",
+    "context_window_size": 131072,
+    "cost_per_1k_input": "0.000000",
+    "cost_per_1k_output": "0.000000",
+    "provider": null
+  }
+},
+{
+  "model": "frontal_lobe.modelregistry",
+  "pk": 9,
+  "fields": {
+    "created": "2026-03-14T20:26:35.851Z",
+    "description": "",
+    "modified": "2026-03-14T21:06:34.866Z",
+    "name": "openrouter/hunter-alpha",
+    "api_variant": null,
+    "context_window_size": 1048576,
+    "cost_per_1k_input": "0.000000",
+    "cost_per_1k_output": "0.000000",
+    "provider": 2
+  }
+},
+{
+  "model": "frontal_lobe.chatmessagerole",
+  "pk": 1,
+  "fields": {
+    "created": "2026-03-12T15:38:42.606Z",
+    "name": "system"
+  }
+},
+{
+  "model": "frontal_lobe.chatmessagerole",
+  "pk": 2,
+  "fields": {
+    "created": "2026-03-12T15:38:48.946Z",
+    "name": "user"
+  }
+},
+{
+  "model": "frontal_lobe.chatmessagerole",
+  "pk": 3,
+  "fields": {
+    "created": "2026-03-12T15:38:57.804Z",
+    "name": "assistant"
+  }
+},
+{
+  "model": "frontal_lobe.chatmessagerole",
+  "pk": 4,
+  "fields": {
+    "created": "2026-03-12T15:39:06.536Z",
+    "name": "tool"
+  }
+}
 ]

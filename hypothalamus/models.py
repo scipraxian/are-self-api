@@ -55,9 +55,6 @@ class LLMProvider(DefaultFieldsMixin, DescriptionMixin):
     class Meta:
         verbose_name_plural = 'Model Providers'
 
-    def __str__(self):
-        return self.name
-
     def natural_key(self):
         return self.name
 
@@ -82,15 +79,23 @@ class LLMProvider(DefaultFieldsMixin, DescriptionMixin):
 class AIModelCategory(NameMixin, DescriptionMixin):
     """Category for AI models, e.g., 'Text Generation', 'Vision', 'Coding'."""
 
-    def __str__(self):
-        return self.name
+    pass
 
 
 class AIMode(NameMixin, DescriptionMixin):
     """Mode for AI models, e.g., 'chat', 'embedding', 'completion'."""
 
-    def __str__(self):
-        return self.name
+    pass
+
+
+class AIModelFamily(NameMixin, DescriptionMixin):
+    """
+    Groups models into conceptual lineages (e.g., 'Claude 3.5', 'Llama 3').
+    Allows the Swarm to understand that different physical endpoints are the same 'Brain'.
+    """
+
+    class Meta:
+        verbose_name_plural = 'AI Model Families'
 
 
 class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
@@ -98,6 +103,16 @@ class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
     The Semantic Model Catalog. Represents the mathematical 'Brain' conceptually
     (e.g., "Llama 3 70B"), regardless of who is hosting it.
     """
+
+    RELATED_NAME = 'ai_models'
+
+    family = models.ForeignKey(
+        AIModelFamily,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name=RELATED_NAME,
+    )
 
     # Hard Constraints (The Filters)
     context_length = models.IntegerField(db_index=True)
@@ -271,3 +286,17 @@ class AIModelSyncLog(CreatedAndModifiedWithDelta):
 
     def __str__(self):
         return f'Sync {self.created.strftime("%Y-%m-%d %H:%M")} - {self.status}'
+
+
+class AIModelRating(CreatedMixin):
+    ai_model = models.ForeignKey(
+        AIModel, on_delete=models.CASCADE, related_name='elo_ratings'
+    )
+    elo_score = models.FloatField()
+    arena_battles = models.IntegerField(default=0)
+    confidence_interval = models.FloatField(null=True, blank=True)
+    source_leaderboard = models.CharField(max_length=100, default='lmsys')
+    is_current = models.BooleanField(default=True, db_index=True)
+
+    class Meta:
+        indexes = [models.Index(fields=['ai_model', 'is_current'])]

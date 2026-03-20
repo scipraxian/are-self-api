@@ -11,7 +11,6 @@ from common.models import (
 )
 from frontal_lobe.models import ModelRegistry, ReasoningTurn
 from hippocampus.models import TalosEngram
-from hypothalamus.hypothalamus import Hypothalamus, ModelSelection
 from parietal_lobe.models import ToolDefinition
 
 
@@ -77,7 +76,10 @@ class IdentityFields(models.Model):
         IdentityBudget, on_delete=models.SET_NULL, blank=True, null=True
     )
     category = models.ForeignKey(
-        'hypothalamus.AIModelCategory', on_delete=models.PROTECT
+        'hypothalamus.AIModelCategory',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
     )
 
     class Meta:
@@ -97,7 +99,7 @@ class IdentityDisc(
 ):
     """This is a persistent implementation of an identity."""
 
-    THALAMUS = UUID('2e50d62a-e6ec-489e-84ce-0a1ea2101a73')
+    THALAMUS = UUID('15ca85b8-59a9-4cb6-9fd8-bfd2be47b838')
 
     available = models.BooleanField(default=True)
     last_message_to_self = models.TextField(blank=True, default='')
@@ -135,6 +137,7 @@ class IdentityDisc(
         self.vector = client.embed(rich_text)
         self.save(update_fields=['vector'])
 
-    def ai_model(self, payload_size: int) -> ModelSelection:
-        """Returns the optimal AI model for this IdentityDisc."""
-        return Hypothalamus.pick_optimal_model(self, payload_size)
+    def ai_model(self, payload_size: int):
+        raise NotImplementedError(
+            'AI model selection should be handled by Hypothalamus'
+        )
