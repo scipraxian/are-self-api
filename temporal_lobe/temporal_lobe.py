@@ -1,13 +1,13 @@
 import logging
 from datetime import timedelta
-from typing import Any, Optional, Tuple
+from typing import Optional, Tuple
 from uuid import UUID
 
 from asgiref.sync import sync_to_async
 from celery import current_app, states
 from celery.result import AsyncResult
 from django.db import transaction
-from django.db.models import Q, QuerySet
+from django.db.models import Q
 from django.utils import timezone
 from django_celery_results.models import TaskResult
 
@@ -47,7 +47,7 @@ def get_or_create_environment_trains(
             PrefrontalCortex.has_actionable_work_in_environment
         )(env_id)
         if not has_work:
-            logger.info(
+            logger.debug(
                 f'[TemporalLobe] Environment {env_id} board is empty. Skipping metronome.'
             )
             continue
@@ -60,7 +60,7 @@ def get_or_create_environment_trains(
         )
         is_already_running = trains.exists()
         if is_already_running:
-            logger.info(
+            logger.debug(
                 f'[TemporalLobe] SpikeTrain for Environment {env_id} is already running.'
             )
             train_list.extend(trains.values_list('id', flat=True))
@@ -71,7 +71,7 @@ def get_or_create_environment_trains(
             environment_id=env_id,
             status_id=SpikeTrainStatus.CREATED,
         )
-        logger.info(
+        logger.debug(
             f'[TemporalLobe] Created new SpikeTrain {spike_train.id} for Environment {env_id}'
         )
 
@@ -88,11 +88,11 @@ class TemporalLobe:
     def __init__(self, spike_id: str):
         self.spike_id = spike_id
         self.max_concurrent_workers = 1
-        logger.info(f'[TemporalLobe] Temporal Lobe engaged for {spike_id}.')
+        logger.debug(f'[TemporalLobe] Temporal Lobe engaged for {spike_id}.')
 
     async def tick(self) -> Tuple[int, str]:
         """The TemporalLobe. Cleans up, checks capacity, and dispatches workers."""
-        logger.info(
+        logger.debug(
             f'[TemporalLobe] Ticking Temporal Lobe for {self.spike_id}.'
         )
         spike = await sync_to_async(
@@ -195,7 +195,7 @@ class TemporalLobe:
                 if iteration.status_id == IterationStatus.WAITING:
                     iteration.status_id = IterationStatus.RUNNING
                 iteration.save(update_fields=['current_shift', 'status'])
-                logger.info(
+                logger.debug(
                     f'[TemporalLobe] Iteration {iteration.id} advanced to shift: {next_shift.shift.name}'
                 )
                 return next_shift
@@ -215,7 +215,7 @@ class TemporalLobe:
                     id__in=[p for p in participants if p]
                 ).update(available=True)
 
-                logger.info(
+                logger.debug(
                     f'[TemporalLobe] Iteration {iteration.id} completely finished.'
                 )
 
@@ -229,7 +229,7 @@ class TemporalLobe:
                     environment_id=iteration.environment_id,
                 )
 
-                logger.info(
+                logger.debug(
                     f'[TemporalLobe] Ouroboros Protocol: Auto-incepted new Iteration loop {new_iteration.id}'
                 )
                 return None
@@ -256,7 +256,7 @@ class TemporalLobe:
                 )
                 iteration_shift_participant.save(update_fields=['status'])
                 dispatched_ids.append(iteration_shift_participant.id)
-                logger.info(
+                logger.debug(
                     f'[TemporalLobe] Locked {
                         iteration_shift_participant.iteration_participant.name
                     } for dispatch.'
@@ -267,7 +267,7 @@ class TemporalLobe:
     async def _dispatch_pending_workers(
         self, shift, slots, parent_spike
     ) -> int:
-        logger.info(
+        logger.debug(
             f'[TemporalLobe] Dispatching pending workers for {parent_spike.id}.'
         )
 
@@ -293,13 +293,13 @@ class TemporalLobe:
             session_id = await pfc.dispatch(worker_id, env_id)
 
             if session_id:
-                logger.info(
+                logger.debug(
                     f'[TemporalLobe] Dispatched disc {worker_id} to the PFC.'
                 )
                 dispatched_count += 1
             else:
                 # The Bouncer hit. No work available. Revert the worker status.
-                logger.info(
+                logger.debug(
                     f'[TemporalLobe] Worker {worker_id} stood down (No tasks available).'
                 )
                 await self._stand_down_worker(worker_id)
@@ -384,14 +384,14 @@ class TemporalLobe:
             if is_done:
                 p.status_id = IterationShiftParticipantStatus.COMPLETED
                 p.save(update_fields=['status'])
-                logger.info(
+                logger.debug(
                     f'[TemporalLobe] Worker {p.id} verified finished. Marked COMPLETED.'
                 )
             else:
                 # They crashed or ghosted without completing. Demote them so the queue can grab them again!
                 p.status_id = IterationShiftParticipantStatus.SELECTED
                 p.save(update_fields=['status'])
-                logger.info(
+                logger.debug(
                     f'[TemporalLobe] Ghost Worker {p.id} fully cleaned up and reverted to SELECTED.'
                 )
 
@@ -419,11 +419,11 @@ def trigger_temporal_metronomes() -> list:
         .values_list('environment_id', flat=True)
         .distinct()
     )
-    logger.info(
+    logger.debug(
         f'[TemporalLobe] Found {len(active_iteration_environments)} environments with iterations.'
     )
     if not active_iteration_environments:
-        logger.info(
+        logger.debug(
             f'[TemporalLobe] No active iterations found, skipping metronome spawning.'
         )
         return []
@@ -447,7 +447,7 @@ def get_or_create_environment_trains(
         is_already_running = trains.exists()
         if is_already_running:
             # TODO: Check that celery task is actually still running.
-            logger.info(
+            logger.debug(
                 f'[TemporalLobe] SpikeTrain for Environment {env_id} is already running.'
             )
             train_list.extend(trains.values_list('id', flat=True))
@@ -460,18 +460,18 @@ def get_or_create_environment_trains(
             environment_id=env_id,
             status_id=SpikeTrainStatus.CREATED,
         )
-        logger.info(
+        logger.debug(
             f'[TemporalLobe] Created new SpikeTrain {spike_train.id} for Environment {env_id}'
         )
 
         cns = CNS(spike_train_id=spike_train.id)
-        logger.info(
+        logger.debug(
             f'[TemporalLobe] Starting CNS for SpikeTrain {spike_train.id}'
         )
         cns.start()
 
         train_list.append(spike_train.id)
-        logger.info(
+        logger.debug(
             f'[TemporalLobe] Fired for Environment {env_id}: SpikeTrain {spike_train.id}'
         )
 
@@ -494,7 +494,7 @@ def _is_spike_alive(spike: Spike) -> bool:
         task_result = TaskResult.objects.get(task_id=task_id)
         db_status = task_result.status
         if db_status in states.READY_STATES:
-            logger.info(
+            logger.debug(
                 f'[TemporalLobe] DB confirms task {task_id} is dead ({db_status}).'
             )
             return False
@@ -503,7 +503,7 @@ def _is_spike_alive(spike: Spike) -> bool:
 
     res = AsyncResult(task_id)
     if res.state in states.READY_STATES:
-        logger.info(
+        logger.debug(
             f'[TemporalLobe] Broker confirms task {task_id} is dead ({res.state}).'
         )
         return False
@@ -518,7 +518,7 @@ def _is_spike_alive(spike: Spike) -> bool:
             inspector_succeeded = True
             for worker_name, tasks in active_tasks.items():
                 if any(t['id'] == task_id for t in tasks):
-                    logger.info(
+                    logger.debug(
                         f'[TemporalLobe] Inspector caught {task_id} running on {worker_name}.'
                     )
                     return True
@@ -528,7 +528,7 @@ def _is_spike_alive(spike: Spike) -> bool:
             inspector_succeeded = True
             for worker_name, tasks in reserved_tasks.items():
                 if any(t['id'] == task_id for t in tasks):
-                    logger.info(
+                    logger.debug(
                         f'[TemporalLobe] Inspector caught {task_id} reserved by {worker_name}.'
                     )
                     return True
@@ -556,7 +556,7 @@ def _is_spike_alive(spike: Spike) -> bool:
         )
         return False
 
-    logger.info(
+    logger.debug(
         f'[TemporalLobe] Task {task_id} is unassigned but new. '
         f"Assuming it's safely waiting in the queue."
     )
@@ -570,15 +570,15 @@ def lobe_garbage_collection() -> NeuralPathway:
         pathway=pathway,
         status_id__in=[SpikeTrainStatus.CREATED, SpikeTrainStatus.RUNNING],
     )
-    logger.info(f'[TemporalLobe] Found {active_trains.count()} active trains.')
+    logger.debug(f'[TemporalLobe] Found {active_trains.count()} active trains.')
 
     for train in active_trains:
-        logger.info(f'[TemporalLobe] Processing metronome {train.id}.')
+        logger.debug(f'[TemporalLobe] Processing metronome {train.id}.')
 
         active_spikes = train.spikes.filter(
             status_id__in=[SpikeStatus.RUNNING, SpikeStatus.PENDING]
         )
-        logger.info(
+        logger.debug(
             f'[TemporalLobe] Found {active_spikes.count()} active spikes '
             f'for metronome {train.id}.'
         )
@@ -587,7 +587,7 @@ def lobe_garbage_collection() -> NeuralPathway:
         train_is_alive = any(_is_spike_alive(spike) for spike in active_spikes)
 
         if train_is_alive:
-            logger.info(
+            logger.debug(
                 f'[TemporalLobe] SpikeTrain {train.id} has a pulse — leaving it alone.'
             )
             continue

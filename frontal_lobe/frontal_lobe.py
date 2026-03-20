@@ -7,6 +7,8 @@ from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
 from asgiref.sync import sync_to_async
+from django.utils import timezone
+from litellm.exceptions import APIConnectionError, RateLimitError
 
 from central_nervous_system.models import Spike, SpikeStatus
 from central_nervous_system.utils import resolve_environment_context
@@ -20,11 +22,13 @@ from frontal_lobe.models import (
     ReasoningTurn,
 )
 from frontal_lobe.serializers import LLMFunctionCall, LLMToolCall
-from frontal_lobe.synapse_client import SynapseResponse
-from hypothalamus.hypothalamus import ModelSelection
+from frontal_lobe.synapse_client import SynapseClient, SynapseResponse
+from hypothalamus.hypothalamus import Hypothalamus
 from hypothalamus.models import AIModelProvider, AIModelProviderUsageRecord
+from hypothalamus.serializers import ModelSelection
 from identity.addons.addon_package import AddonPackage
 from identity.addons.addon_registry import ADDON_REGISTRY
+from identity.models import IdentityDisc
 from parietal_lobe.parietal_lobe import ParietalLobe
 from temporal_lobe.models import IterationShiftParticipant
 
@@ -43,7 +47,6 @@ def _serialize_messages_sync(turn_record, all_messages):
 
 
 def _fetch_disc_sync(session_id):
-    # We no longer fetch a static ai_model here. Just the disc and its budget constraint.
     s = ReasoningSession.objects.select_related(
         'identity_disc', 'identity_disc__budget'
     ).get(id=session_id)
@@ -74,6 +77,7 @@ def _mint_usage_record_sync(
     if provider_record:
         AIModelProviderUsageRecord.objects.create(
             ai_model_provider=provider_record,
+            model_provider=provider_record,
             ai_model=provider_record.ai_model,
             identity_disc=identity_disc,
             query_time=duration,
@@ -229,7 +233,7 @@ class FrontalLobe:
             # --- NATIVE TEXT INJECTION (No Python Function Required) ---
             if not addon_model.function_slug:
                 if addon_model.description:
-                    logger.info(
+                    logger.debug(
                         f'Injecting native text addon: {addon_model.name}'
                     )
                     native_msg = ChatMessage(
@@ -245,7 +249,7 @@ class FrontalLobe:
             # --- DYNAMIC PYTHON EXECUTION ---
             addon_func = ADDON_REGISTRY.get(addon_model.function_slug)
             if addon_func:
-                logger.info(f'Executing addon: {addon_model.function_slug}')
+                logger.debug(f'Executing addon: {addon_model.function_slug}')
                 addon_messages = await sync_to_async(addon_func)(package)
                 if addon_messages:
                     all_messages.extend(addon_messages)
@@ -287,97 +291,139 @@ class FrontalLobe:
     async def _execute_turn(
         self,
         turn_index: int,
-        ollama_tools: List[Dict[str, Any]],
-        previous_turn: Optional[ReasoningTurn] = None,
-    ) -> Tuple[bool, Optional[ReasoningTurn]]:
-        await self._log_live(f'\n--- Turn {turn_index + 1} (Awakening) ---')
-
-        # 1. Start the turn record
+        ollama_tools: list,
+        previous_turn: Optional[ReasoningTurn],
+    ) -> Tuple[bool, ReasoningTurn]:
+        """
+        Executes a single conversational turn with an 8-attempt hot-swap failover loop.
+        """
+        # 1. Start Turn
         turn_record = await self._record_turn_start(turn_index, previous_turn)
 
-        # 2. Build the context window for the LLM
+        # 2. Build Payload
         messages = await self._build_turn_payload(turn_record)
+        tools = ollama_tools if ollama_tools else None
 
-        # 3. Dynamic Model Routing (The Hypothalamus)
-        # Estimate token mass (~4 chars per token)
-        estimated_mass = sum(len(str(m)) for m in messages) // 4
+        # Rough token estimation for the context filter
+        estimated_tokens = len(str(messages)) // 4
 
-        # Pick the perfect brain based on this specific payload mass
-        model_selection = await sync_to_async(
-            self.session.identity_disc.ai_model
-        )(estimated_mass)
+        MAX_FAILOVERS = 8
+        response = None
+        model_selection = None
+        start_time = timezone.now()
 
-        await self._log_live(
-            f'[Thalamus] Routed to {model_selection.ai_model_name} '
-            f'(Input Cost: ${model_selection.input_cost_per_token:.6f}/token)'
-        )
+        # THE HOT-SWAP LOOP
+        for attempt in range(MAX_FAILOVERS):
+            # Ask Hypothalamus for a brain
+            model_selection = await sync_to_async(
+                Hypothalamus().pick_optimal_model
+            )(self.session.identity_disc, payload_size=estimated_tokens)
 
-        turn_record.request_payload = {
-            'messages': messages,
-            'provider_model_id': model_selection.provider_model_id,
-        }
-        await sync_to_async(turn_record.save)(update_fields=['request_payload'])
+            if not model_selection:
+                logger.error(
+                    '[FrontalLobe] SWARM PARALYSIS: Hypothalamus returned NO valid models. All brains rate-limited or budget exhausted.'
+                )
+                raise Exception(
+                    'No available AI models found in the routing pool.'
+                )
 
-        # 4. Execute Inference
-        start_time = time.time()
-
-        # We pass the dynamic selection directly to the Parietal Lobe
-        response: SynapseResponse = await self.parietal_lobe.chat(
-            messages=messages,
-            tools=ollama_tools,
-            model_selection=model_selection,
-        )
-        inf_duration = timedelta(seconds=time.time() - start_time)
-
-        # --- THE SAFETY CATCH ---
-        if response.is_error:
-            await self._log_live(f'\n[SYSTEM ERROR] {response.error_message}')
-            turn_record.status_id = ReasoningStatusID.ERROR
-            await sync_to_async(turn_record.save)(update_fields=['status_id'])
-
-            # Pause the Swarm and wait for human intervention on an API crash
-            self.session.status_id = ReasoningStatusID.ATTENTION_REQUIRED
-            await sync_to_async(self.session.save)(update_fields=['status_id'])
-            return False, turn_record
-
-        # 5. Save AI Response to ChatMessage (Persistent)
-        if response.content:
-            await sync_to_async(ChatMessage.objects.create)(
-                session=self.session,
-                turn=turn_record,
-                role_id=ChatMessageRole.ASSISTANT,
-                content=response.content.strip(),
-                is_volatile=False,
+            logger.info(
+                f'[FrontalLobe] Attempt {attempt + 1}/{MAX_FAILOVERS}: Routing thought to {model_selection.provider_model_id}'
             )
-            await self._log_live(f'Thought: {response.content.strip()}')
 
-        # 6. Record Completion & Mint FinOps Ledger
+            # Ensure we spin up a new SynapseClient inside the loop so it attaches to the new model
+            synapse = await sync_to_async(SynapseClient)(model_selection)
+
+            try:
+                # Fire the Synapse
+                response = await sync_to_async(synapse.chat)(
+                    messages=messages, tools=tools
+                )
+
+                # Success! Break the loop immediately.
+                break
+
+            except (RateLimitError, APIConnectionError) as e:
+                logger.warning(
+                    f'[FrontalLobe] BRAIN REJECTED ({model_selection.provider_model_id}): {str(e)}'
+                )
+
+                if attempt == MAX_FAILOVERS - 1:
+                    logger.error(
+                        '[FrontalLobe] Critical Failure: Max failovers reached. Terminating Spike.'
+                    )
+                    raise e
+
+                logger.info(
+                    '[FrontalLobe] Circuit Breaker tripped. Hot-swapping to a new brain...'
+                )
+                continue  # Instantly restarts loop. Hypothalamus provides the NEXT best model.
+
+            except Exception as e:
+                # Catch logic errors (like bad JSON schemas) so we don't infinitely retry bad code
+                logger.error(f'[FrontalLobe] Fatal Inference Error: {str(e)}')
+                raise e
+
+        # Calculate exact duration
+        duration = timezone.now() - start_time
+
+        # 3. Save to the ledger
         await _record_turn_completion(
-            turn_record,
-            response,
-            model_selection,
-            inf_duration,
-            self.session.identity_disc,
+            turn_record=turn_record,
+            response=response,
+            model_selection=model_selection,
+            inference_duration=duration,
+            identity_disc=self.session.identity_disc,
         )
 
-        if not response.tool_calls:
+        # 4. Save Assistant Message to History
+        await sync_to_async(ChatMessage.objects.create)(
+            session=self.session,
+            turn=turn_record,
+            role_id=ChatMessageRole.ASSISTANT,
+            content=response.content or '',
+        )
+
+        if response.content:
             await self._log_live(
-                '\n[SYSTEM] No tools invoked. Yielding to Human.'
+                f'[{model_selection.ai_model_name}] {response.content}'
             )
+
+        # 5. Handle Tool Calls or Yield
+        if response.tool_calls and self.parietal_lobe:
+            await self._log_live(
+                f'[ParietalLobe] Processing {len(response.tool_calls)} tool calls in parallel...'
+            )
+
+            # Serialize LiteLLM tool calls to raw dicts for the Parietal Lobe
+            tool_calls_data = []
+            for tc in response.tool_calls:
+                if isinstance(tc, dict):
+                    tool_calls_data.append(tc)
+                elif hasattr(tc, 'model_dump'):
+                    tool_calls_data.append(tc.model_dump())
+                elif hasattr(tc, 'dict'):
+                    tool_calls_data.append(tc.dict())
+                else:
+                    try:
+                        tool_calls_data.append(dict(tc))
+                    except (TypeError, ValueError):
+                        continue
+
+            # Call the ORIGINAL method signature from your working Parietal Lobe
+            await self.parietal_lobe.process_tool_calls(
+                turn_record=turn_record, tool_calls_data=tool_calls_data
+            )
+            return True, turn_record
+        else:
+            # AI didn't call tools, yield to user
             self.session.status_id = ReasoningStatusID.ATTENTION_REQUIRED
-            await sync_to_async(self.session.save)(update_fields=['status_id'])
+            await sync_to_async(self.session.save)(update_fields=[STATUS_ID])
             return False, turn_record
-
-        # 7. Fire Tools
-        await self.parietal_lobe.process_tool_calls(
-            turn_record, response.tool_calls
-        )
-
-        return True, turn_record
 
     async def run(self) -> Tuple[int, str]:
         """Main asynchronous execution orchestrator."""
-        logger.info(f'[FrontalLobe] Waking up for Spike {self.spike_id}')
+        logger.debug(f'[FrontalLobe] Waking up for Spike {self.spike_id}')
 
         self.spike.application_log = ''
         await sync_to_async(self.spike.save)(update_fields=['application_log'])

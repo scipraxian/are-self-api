@@ -1,10 +1,11 @@
 import logging
-from dataclasses import dataclass
 from decimal import Decimal
 from typing import Optional
 
 import requests
 from django.db import transaction
+from django.db.models import Q
+from django.utils import timezone
 from pgvector.django import CosineDistance
 
 from hypothalamus.models import (
@@ -16,50 +17,16 @@ from hypothalamus.models import (
     LLMProvider,
     SyncStatus,
 )
-from identity.models import IdentityDisc
-
-logger = logging.getLogger(__name__)
+from hypothalamus.serializers import ModelSelection
 
 LITELLM_CATALOG_URL = (
     'https://raw.githubusercontent.com/BerriAI/litellm/main'
     '/model_prices_and_context_window.json'
 )
-FALLBACK_MODEL_ID = 'ollama/qwen2.5-coder:8b'
 CATALOG_SKIP_KEYS = frozenset({'sample_spec'})
 CHAT_MODE = 'chat'
 
-
-@dataclass(frozen=True)
-class ModelSelection:
-    """The result of a Hypothalamus routing decision."""
-
-    provider_model_id: str
-    ai_model_name: str
-    distance: float
-    input_cost_per_token: Decimal
-    is_fallback: bool = False
-
-    @classmethod
-    def fallback(cls) -> 'ModelSelection':
-        return cls(
-            provider_model_id=FALLBACK_MODEL_ID,
-            ai_model_name=FALLBACK_MODEL_ID,
-            distance=1.0,
-            input_cost_per_token=Decimal('0'),
-            is_fallback=True,
-        )
-
-
-@dataclass(frozen=True)
-class SyncResult:
-    """Summary of a catalog sync run."""
-
-    models_added: int
-    providers_added: int
-    prices_updated: int
-    models_deactivated: int
-    status: str
-    error: Optional[str] = None
+logger = logging.getLogger(__name__)
 
 
 def _dec(key: str, data: dict) -> Decimal:
@@ -68,69 +35,61 @@ def _dec(key: str, data: dict) -> Decimal:
 
 class Hypothalamus:
     @staticmethod
-    def pick_optimal_model(
-        disc: IdentityDisc,
-        payload_size: int,
-        require_function_calling: bool = False,
-        require_vision: bool = False,
-    ) -> ModelSelection:
+    def pick_optimal_model(disc, payload_size: int):
         """
-        Selects the best-fit AIModelProvider for a given IdentityDisc and payload.
-        Uses cosine distance between the disc's vector and each candidate model's
-        vector, filtered by budget, context window, mode, and capability flags.
+        Finds the closest mathematical match to the Persona, constrained by budget, context window, and API rate limits.
         """
-        if not disc.vector:
-            logger.warning(
-                '[Hypothalamus] Disc %s has no vector. Using fallback.', disc.id
-            )
-            return ModelSelection.fallback()
 
+        # Get budget constraint
         max_cost = (
             disc.budget.max_input_cost_per_token
-            if disc.budget
-            else Decimal('0.0')
+            if hasattr(disc, 'budget')
+            else 0
+        )
+        valid_provider_ids = [
+            p.id
+            for p in LLMProvider.objects.all()
+            if not p.requires_api_key or p.has_active_key
+        ]
+        # THE CIRCUIT BREAKER FILTER:
+        # Only allow models where reset_time is NULL, or the reset_time has already passed.
+        breaker_filter = Q(rate_limit_reset_time__isnull=True) | Q(
+            rate_limit_reset_time__lte=timezone.now()
         )
 
+        # Base active filters
         filters = {
-            'mode__name': CHAT_MODE,
+            'provider_id__in': valid_provider_ids,
+            'mode__name': 'chat',
             'aimodelpricing__is_current': True,
             'aimodelpricing__is_active': True,
             'aimodelpricing__input_cost_per_token__lte': max_cost,
             'ai_model__context_length__gte': payload_size,
         }
-        if require_function_calling:
-            filters['ai_model__supports_function_calling'] = True
-        if require_vision:
-            filters['ai_model__supports_vision'] = True
 
+        # Execute Vector Math routing
         best = (
-            AIModelProvider.objects.filter(**filters)
+            AIModelProvider.objects.filter(breaker_filter, **filters)
             .annotate(distance=CosineDistance('ai_model__vector', disc.vector))
-            .select_related('ai_model', 'aimodelpricing')
-            .order_by('distance')
-            .values(
-                'provider_unique_model_id',
-                'ai_model__name',
-                'distance',
-                'aimodelpricing__input_cost_per_token',
-            )
+            .select_related('ai_model')
+            .order_by('distance', 'aimodelpricing__input_cost_per_token')
             .first()
         )
 
         if not best:
-            logger.warning(
-                '[Hypothalamus] No model fit budget=%.15f context=%d for disc %s.',
-                max_cost,
-                payload_size,
-                disc.id,
-            )
-            return ModelSelection.fallback()
+            return None
 
+        # Return structured selection
+        pricing = best.aimodelpricing_set.filter(is_current=True).first()
+        cost = pricing.input_cost_per_token if pricing else 0
+
+        # Assuming you have a ModelSelection dataclass or similar structure
         return ModelSelection(
-            provider_model_id=best['provider_unique_model_id'],
-            ai_model_name=best['ai_model__name'],
-            distance=best['distance'],
-            input_cost_per_token=best['aimodelpricing__input_cost_per_token'],
+            provider_model_id=best.provider_unique_model_id,
+            ai_model_name=best.ai_model.name,
+            distance=getattr(best, 'distance', 0.0),
+            input_cost_per_token=cost,
+            is_fallback=False,
         )
 
     @classmethod

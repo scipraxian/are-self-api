@@ -22,10 +22,11 @@ logger = logging.getLogger(__name__)
 def lock_ticket(ticket, identity_disc):
     ticket.owning_disc = identity_disc
     ticket.save(update_fields=['owning_disc'])
-    logger.info(
+    logger.debug(
         f'[PFC] Locked {ticket.__class__.__name__} {ticket.id} to {identity_disc.name}'
     )
     return True
+
 
 class PrefrontalCortex:
     def __init__(self, spike_id: uuid.UUID = None):
@@ -98,7 +99,7 @@ class PrefrontalCortex:
         PFCTask.objects.filter(owning_disc=identity_disc).update(
             owning_disc=None
         )
-        logger.info(
+        logger.debug(
             f'[PFC] Garbage collected old locks for {identity_disc.name}.'
         )
 
@@ -111,7 +112,6 @@ class PrefrontalCortex:
         environment_id: uuid.UUID,
     ) -> bool:
         """Finds the highest priority ticket for the shift and strictly locks it to the disc."""
-
 
         if shift_id == Shift.SIFTING:
             if identity_type_id == IdentityType.PM:
@@ -189,7 +189,7 @@ class PrefrontalCortex:
     async def dispatch(
         self, iteration_shift_participant_id: int, environment_id: uuid.UUID
     ):
-        logger.info(
+        logger.debug(
             f'[PFC] Dispatching for {iteration_shift_participant_id} in spike {self.spike_id}.'
         )
 
@@ -219,7 +219,7 @@ class PrefrontalCortex:
 
         # 3. The Bouncer
         if not is_assigned:
-            logger.info(
+            logger.debug(
                 f'[PFC] No actionable work found for {identity_disc.name}. Standing down.'
             )
             return None
@@ -232,6 +232,7 @@ class PrefrontalCortex:
     async def _create_session_and_run(
         self, iteration_shift, identity_disc, participant
     ):
+        logger.info(f'[PFC] Starting Session for {identity_disc.name}.')
         lobe = FrontalLobe(self.spike)
         lobe.session = await sync_to_async(ReasoningSession.objects.create)(
             spike=self.spike,

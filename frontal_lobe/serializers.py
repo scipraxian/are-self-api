@@ -103,7 +103,20 @@ class SessionConclusionSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
-class ReasoningSessionSerializer(serializers.ModelSerializer):
+class ReasoningSessionLiteSerializer(serializers.ModelSerializer):
+    from identity.serializers import IdentityDiscSerializer
+
+    status_name = serializers.CharField(source='status.name', read_only=True)
+    identity_disc_name = serializers.CharField(
+        source='identity_disc.name', read_only=True
+    )
+
+    class Meta:
+        model = ReasoningSession
+        fields = ALL_FIELDS
+
+
+class ReasoningSessionGraphSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     turns = ReasoningTurnSerializer(many=True, read_only=True)
     engrams = TalosEngramSerializer(many=True, read_only=True)

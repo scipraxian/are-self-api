@@ -50,3 +50,4 @@ pydantic
 channels-redis
 
 litellm
+tenacity

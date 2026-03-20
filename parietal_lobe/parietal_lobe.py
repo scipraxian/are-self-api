@@ -13,7 +13,7 @@ from frontal_lobe.models import (
     ReasoningTurn,
 )
 from frontal_lobe.synapse_client import SynapseClient, SynapseResponse
-from hypothalamus.hypothalamus import ModelSelection
+from hypothalamus.serializers import ModelSelection
 from parietal_lobe.models import ToolCall, ToolDefinition
 from parietal_lobe.parietal_mcp.gateway import ParietalMCP
 

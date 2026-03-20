@@ -6,9 +6,10 @@ from typing import Any, Dict, List, Optional
 import litellm
 from django.conf import settings
 from litellm import ModelResponse
+from litellm.exceptions import APIConnectionError, RateLimitError
 
-from hypothalamus.hypothalamus import ModelSelection
 from hypothalamus.models import AIModelProvider
+from hypothalamus.serializers import ModelSelection
 
 # ------------------------------------------------------------------ #
 #  LiteLLM Global Config                                             #
@@ -193,30 +194,50 @@ class SynapseClient:
         self.network_config = self.provider_record.provider
 
     def chat(
-        self,
-        messages: List[Dict[str, Any]],
-        tools: Optional[List[Dict[str, Any]]] = None,
-        options: Optional[Dict[str, Any]] = None,
+        self, messages: list, tools: list = None, **kwargs
     ) -> SynapseResponse:
-
-        kwargs = self._build_kwargs(messages, tools, options or {})
+        """
+        Executes inference using LiteLLM.
+        Trips the Postgres Circuit Breaker on a 429 Rate Limit.
+        """
+        # 1. Properly build the litellm payload using your existing helper
+        litellm_kwargs = self._build_kwargs(messages, tools, kwargs)
 
         try:
-            logger.info('[Synapse] Executing inference on %s', self.model_id)
-            response: ModelResponse = litellm.completion(**kwargs)
+            # 2. Execute inference
+            response = litellm.completion(**litellm_kwargs)
+
+            # --- SUCCESS: CLEAR THE BREAKER ---
+            if (
+                self.provider_record
+                and self.provider_record.rate_limit_counter > 0
+            ):
+                self.provider_record.reset_circuit_breaker()
+                logger.info(
+                    f'[Synapse] Circuit Breaker reset for {self.model_id}'
+                )
+
+            # 3. Process into your dataclass
             return self._process_response(response)
 
-        except litellm.exceptions.ContextWindowExceededError as exc:
-            logger.error(
-                '[Synapse] Context limit breached for %s: %s',
-                self.model_id,
-                exc,
-            )
-            return SynapseResponse.error(self.model_id, ERR_CONTEXT_WINDOW)
+        except (RateLimitError, APIConnectionError) as e:
+            # --- FAILURE: TRIP THE BREAKER ---
+            error_str = str(e).lower()
 
-        except Exception as exc:
-            logger.exception('[Synapse] Inference misfire on %s', self.model_id)
-            return SynapseResponse.error(self.model_id, str(exc))
+            if (
+                '429' in error_str
+                or 'rate limit' in error_str
+                or isinstance(e, RateLimitError)
+            ):
+                if self.provider_record:
+                    self.provider_record.trip_circuit_breaker()
+                    logger.warning(
+                        f'[Synapse] RATE LIMIT HIT. Circuit Breaker tripped for {self.model_id}. '
+                        f'Cooldown until: {self.provider_record.rate_limit_reset_time}'
+                    )
+
+            # Re-raise the exception so the Frontal Lobe knows the inference misfired
+            raise e
 
     def unload(self) -> None:
         """Issues an explicit VRAM drop command for local hardware models."""

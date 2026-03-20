@@ -1,10 +1,8 @@
 from common.tests.common_test_case import CommonFixturesAPITestCase
-
-from identity.models import IdentityDisc, IdentityType
 from frontal_lobe.models import ModelProvider, ModelRegistry, ReasoningSession
 from frontal_lobe.synapse import OllamaClient
 from frontal_lobe.synapse_open_router import OpenRouterClient
-from parietal_lobe.parietal_lobe import _create_synapse_client
+from identity.models import IdentityDisc, IdentityType
 
 
 class RoutingTest(CommonFixturesAPITestCase):

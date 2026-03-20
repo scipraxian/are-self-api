@@ -1,6 +1,8 @@
 from uuid import UUID
 
 from django.db import models
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
 from pgvector.django import VectorField
 
 from common.models import (
@@ -118,26 +120,76 @@ class IdentityDisc(
         blank=True,
     )
 
-    @classmethod
-    def get_or_create_thalamus(cls):
-        return IdentityDisc.objects.get_or_create(id=cls.THALAMUS)
-
-    def update_vector(self):
-        """Generates a vector for this IdentityDisc."""
-        from frontal_lobe.synapse import OllamaClient
-
-        registry = ModelRegistry.objects.get(id=ModelRegistry.NOMIC_EMBED_TEXT)
-        client = OllamaClient(registry.name)
-        tag_names = ', '.join(self.tags.values_list('name', flat=True))
-        rich_text = (
-            f'Tags: {tag_names}.'
-            f'Type: {self.identity_type.name}.'
-            f'Prompt: {self.system_prompt_template}'
-        )
-        self.vector = client.embed(rich_text)
-        self.save(update_fields=['vector'])
-
     def ai_model(self, payload_size: int):
         raise NotImplementedError(
             'AI model selection should be handled by Hypothalamus'
         )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Track the original state of the prompt so we know if it changes
+        self._original_prompt = self.system_prompt_template
+        self._original_type_id = self.identity_type_id
+
+    def save(self, *args, **kwargs):
+        # 1. Check if this is an existing record being updated
+        needs_vector = False
+        if self.pk:
+            if (
+                self.system_prompt_template != self._original_prompt
+                or self.identity_type_id != self._original_type_id
+            ):
+                needs_vector = True
+
+        # 2. Save the object normally first (so it gets a PK if it's new)
+        super().save(*args, **kwargs)
+
+        # 3. Update the tracking state
+        self._original_prompt = self.system_prompt_template
+        self._original_type_id = self.identity_type_id
+
+        # 4. Fire the vector update if a base field changed
+        if needs_vector:
+            self.update_vector()
+
+    def update_vector(self):
+        """Generates a vector for this IdentityDisc, including Addon gravity."""
+        from frontal_lobe.synapse import OllamaClient
+        # TODO: repurpose the OllamaClient to be just Embedder.
+
+        # Guard clause: Can't do M2M queries without a PK
+        if not self.pk:
+            return
+
+        registry = ModelRegistry.objects.get(id=ModelRegistry.NOMIC_EMBED_TEXT)
+        client = OllamaClient(registry.name)
+
+        tag_names = ', '.join(self.tags.values_list('name', flat=True))
+
+        # Grab all addon descriptions to create that "Semantic Gravity"
+        addon_descriptions = ' '.join(
+            filter(None, self.addons.values_list('description', flat=True))
+        )
+
+        type_name = self.identity_type.name if self.identity_type else 'Unknown'
+
+        rich_text = (
+            f'Tags: {tag_names}. '
+            f'Type: {type_name}. '
+            f'Addons: {addon_descriptions} '
+            f'Prompt: {self.system_prompt_template or ""}'
+        )
+
+        self.vector = client.embed(rich_text)
+        self.save(update_fields=['vector'])
+
+
+@receiver(m2m_changed, sender=IdentityDisc.addons.through)
+@receiver(m2m_changed, sender=IdentityDisc.tags.through)
+def identity_disc_m2m_changed(sender, instance, action, **kwargs):
+    """
+    Automatically recalculate the Disc's vector if Addons or Tags are added, removed, or cleared.
+    """
+    # Only fire after the database has actually finished adding/removing the relations
+    if action in ['post_add', 'post_remove', 'post_clear']:
+        instance.update_vector()

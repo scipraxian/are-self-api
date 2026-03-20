@@ -99,7 +99,7 @@ def check_channel_layer_config():
                 '[CHANNEL_LAYER] CHANNEL_LAYERS not found in settings'
             )
         else:
-            logger.info(
+            logger.debug(
                 f'[CHANNEL_LAYER] CHANNEL_LAYERS config: {settings.CHANNEL_LAYERS}'
             )
 
@@ -113,7 +113,7 @@ def check_channel_layer_config():
                     'across processes (Celery workers need Redis or similar)'
                 )
     else:
-        logger.info(
+        logger.debug(
             f'[CHANNEL_LAYER] Channel layer initialized: {type(channel_layer).__name__}'
         )
 
@@ -159,7 +159,7 @@ class AsyncLogManager:
         if text:
             text = text.replace('\x00', '')
         # Double Log: Ensures we see it in the Server Console (Celery) AND the DB
-        logger.info(f'[HEAD {self.spike.id}] {text.strip()}')
+        logger.debug(f'[HEAD {self.spike.id}] {text.strip()}')
         async with self._lock:
             await self._flush_unsafe()
             self.spike.execution_log += text
@@ -282,7 +282,7 @@ class GenericEffectorCaster:
 
     def execute(self):
         """Public Synchronous Entry Point."""
-        logger.info(f'Initializing execution for Spike ID: {self.spike_id}')
+        logger.debug(f'Initializing execution for Spike ID: {self.spike_id}')
         try:
             self._load_head_sync()
         except Exception as e:
@@ -559,7 +559,7 @@ class GenericEffectorCaster:
 
     def _log_info(self, message: str):
         if self.verbose_logging:
-            logger.info(message)
+            logger.debug(message)
 
     async def _save_head(self, fields: List[str]):
         """Async wrapper for saving specific fields."""

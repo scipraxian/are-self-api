@@ -33,7 +33,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
     """
 
     queryset = ReasoningSession.objects.all().order_by('-created')
-    serializer_class = serializers.ReasoningSessionSerializer
+    serializer_class = serializers.ReasoningSessionLiteSerializer
     filter_backends = [
         DjangoFilterBackend,
         filters.OrderingFilter,
@@ -64,7 +64,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
             .get(pk=pk)
         )
 
-        serializer = serializers.ReasoningSessionSerializer(session)
+        serializer = serializers.ReasoningSessionGraphSerializer(session)
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])

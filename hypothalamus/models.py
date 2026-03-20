@@ -1,8 +1,10 @@
+import datetime
 import os
 from uuid import UUID
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from pgvector.django import VectorField
 
 from common.models import (
@@ -30,6 +32,8 @@ class LLMProvider(DefaultFieldsMixin, DescriptionMixin):
     base_url = models.URLField(
         max_length=255,
         help_text='Base URL for this provider, e.g. https://openrouter.ai/api',
+        blank=True,
+        null=True,
     )
     chat_path = models.CharField(
         max_length=255,
@@ -37,7 +41,7 @@ class LLMProvider(DefaultFieldsMixin, DescriptionMixin):
         help_text='Path segment for chat completions, appended to base_url.',
     )
     requires_api_key = models.BooleanField(
-        default=False,
+        default=True,
         help_text='Whether this provider requires an API key for requests.',
     )
     api_key_header = models.CharField(
@@ -122,6 +126,8 @@ class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
     # Hard Constraints (The Filters)
     context_length = models.IntegerField(db_index=True)
 
+    enabled = models.BooleanField(default=True, db_index=True)
+
     # Connect to the LiteLLM Categories
     categories = models.ManyToManyField(AIModelCategory, blank=True)
     supports_vision = models.BooleanField(default=False, db_index=True)
@@ -159,7 +165,77 @@ class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
         self.save(update_fields=['vector'])
 
 
-class AIModelProvider(models.Model):
+class AIModelProviderRateLimitMixin(models.Model):
+    """Rate limit tracking for AI model providers."""
+
+    rate_limited_on = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='When the 429 Too Many Requests was hit.',
+    )
+    rate_limit_reset_time = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='The exact time this model is allowed back into the routing pool.',
+    )
+    rate_limit_reset_interval = models.DurationField(
+        null=True,
+        blank=True,
+        default=datetime.timedelta(seconds=60),
+        help_text='Base cooldown duration.',
+    )
+    rate_limit_counter = models.IntegerField(
+        default=0,
+        help_text='Tracks consecutive failures for Exponential Backoff.',
+    )
+    rate_limit_total_failures = models.IntegerField(
+        default=0, help_text='Tracks total failures for this model.'
+    )
+
+    class Meta:
+        abstract = True
+
+    def trip_circuit_breaker(self):
+        """
+        Calculates exponential backoff and evicts the model from the routing pool.
+        Fail 1: 1 min, Fail 2: 2 mins, Fail 3: 4 mins...
+        """
+        self.rate_limited_on = timezone.now()
+        self.rate_limit_counter += 1
+        self.rate_limit_total_failures += 1
+
+        # Exponential backoff math: interval * (2 ^ (failures - 1))
+        multiplier = 2 ** (self.rate_limit_counter - 1)
+        cooldown = self.rate_limit_reset_interval * multiplier
+
+        self.rate_limit_reset_time = self.rate_limited_on + cooldown
+        self.save(
+            update_fields=[
+                'rate_limited_on',
+                'rate_limit_counter',
+                'rate_limit_reset_time',
+                'rate_limit_total_failures',
+            ]
+        )
+
+    def reset_circuit_breaker(self):
+        """Called upon a successful request to clear the breaker state."""
+        if self.rate_limit_counter > 0:
+            self.rate_limited_on = None
+            self.rate_limit_reset_time = None
+            self.rate_limit_counter = 0
+            self.save(
+                update_fields=[
+                    'rate_limited_on',
+                    'rate_limit_counter',
+                    'rate_limit_reset_time',
+                ]
+            )
+
+
+class AIModelProvider(
+    CreatedMixin, ModifiedMixin, AIModelProviderRateLimitMixin
+):
     """The physical routing string and token limits."""
 
     ai_model = models.ForeignKey(AIModel, on_delete=models.CASCADE)
@@ -173,6 +249,9 @@ class AIModelProvider(models.Model):
     max_tokens = models.IntegerField(null=True, blank=True)
     max_input_tokens = models.IntegerField(null=True, blank=True)
     max_output_tokens = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.ai_model} via {self.provider} ({self.provider_unique_model_id})'
 
 
 class AIModelPricingAbstract(CreatedMixin, ModifiedMixin):
