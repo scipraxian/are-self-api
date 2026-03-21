@@ -111,7 +111,9 @@ class PFCEpic(
     RELATED_NAME = 'epics'
 
     status = models.ForeignKey(
-        PFCItemStatus, on_delete=models.PROTECT, default=PFCItemStatus.BACKLOG
+        PFCItemStatus,
+        on_delete=models.PROTECT,
+        default=PFCItemStatus.BLOCKED_BY_USER,
     )
     environment = models.ForeignKey(
         ProjectEnvironment,
@@ -143,7 +145,9 @@ class PFCStory(
         PFCEpic, on_delete=models.CASCADE, related_name=RELATED_NAME
     )
     status = models.ForeignKey(
-        PFCItemStatus, on_delete=models.PROTECT, default=PFCItemStatus.BACKLOG
+        PFCItemStatus,
+        on_delete=models.PROTECT,
+        default=PFCItemStatus.NEEDS_REFINEMENT,
     )
     complexity = models.IntegerField(default=0, help_text='Worker Calculated.')
 
@@ -163,7 +167,9 @@ class PFCTask(
         PFCStory, on_delete=models.CASCADE, related_name='tasks'
     )
     status = models.ForeignKey(
-        PFCItemStatus, on_delete=models.PROTECT, default=PFCItemStatus.BACKLOG
+        PFCItemStatus,
+        on_delete=models.PROTECT,
+        default=PFCItemStatus.SELECTED_FOR_DEVELOPMENT,
     )
 
 
