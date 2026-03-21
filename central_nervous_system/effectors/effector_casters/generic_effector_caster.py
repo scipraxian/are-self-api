@@ -584,17 +584,22 @@ class GenericEffectorCaster:
         self.spike.status_id = status_id
         await self._save_head(fields=[self.STATUS_FIELD])
 
+        # Convert the integer status_id to a string to satisfy Pydantic's new_status requirement
+        status_str = str(status_id)
+
         # Decide which neurotransmitter to release based on the status
         if status_id in self.STATUSES_WHICH_HALT:
             transmitter = Cortisol(
                 receptor_class='Spike',
                 dendrite_id=str(self.spike.id),
+                new_status=status_str,
                 vesicle={'status_id': status_id},
             )
         else:
             transmitter = Dopamine(
                 receptor_class='Spike',
                 dendrite_id=str(self.spike.id),
+                new_status=status_str,
                 vesicle={'status_id': status_id},
             )
 
