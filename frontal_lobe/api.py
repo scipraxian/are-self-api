@@ -6,20 +6,21 @@ from rest_framework.response import Response
 
 from central_nervous_system.models import SpikeStatus
 from central_nervous_system.tasks import cast_cns_spell
-from frontal_lobe.models import ChatMessage, ChatMessageRole, ReasoningStatusID
+from frontal_lobe.models import ReasoningStatusID
 from frontal_lobe.serializers import (
     KEY_REPLY,
     ResumeSessionRequestSerializer,
     ResumeSessionResponseDTO,
     ResumeSessionResponseSerializer,
 )
+from thalamus.serializers import (
+    ThalamusMessageListDTO,
+    ThalamusMessageListSerializer,
+)
+from thalamus.thalamus import get_chat_history, inject_human_reply
 
 from . import serializers
-from .models import (
-    ModelRegistry,
-    ReasoningSession,
-    ReasoningTurn,
-)
+from .models import ModelRegistry, ReasoningSession, ReasoningTurn
 
 MSG_REIGNITED = 'Neural pathway re-ignited.'
 MSG_INVALID_STATE = (
@@ -28,9 +29,7 @@ MSG_INVALID_STATE = (
 
 
 class ReasoningSessionViewSet(viewsets.ModelViewSet):
-    """
-    Command Center for Talos AGI Reasoning Sessions.
-    """
+    """Command Center for Talos AGI Reasoning Sessions."""
 
     queryset = ReasoningSession.objects.all().order_by('-created')
     serializer_class = serializers.ReasoningSessionLiteSerializer
@@ -44,10 +43,6 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='graph_data')
     def graph_data(self, request, pk=None):
-        """
-        Serves the pure, nested JSON tree of the Reasoning Session.
-        The frontend JS is responsible for squashing this into D3 neurons and links.
-        """
         session = (
             self.get_queryset()
             .select_related('status', 'conclusion', 'conclusion__status')
@@ -63,7 +58,6 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
             )
             .get(pk=pk)
         )
-
         serializer = serializers.ReasoningSessionGraphSerializer(session)
         return Response(serializer.data)
 
@@ -76,14 +70,10 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         if not spike:
             return Response({'error': 'No associated Spike found.'}, status=400)
 
-        # 1. Reset the spike state
         spike.status_id = SpikeStatus.PENDING
         spike.save(update_fields=['status'])
-
-        # 2. Fire the Celery task to run the AI loop again
         cast_cns_spell.delay(spike.id)
 
-        # 3. Return the SpikeTrain ID so the frontend can redirect to the Monitor
         return Response(
             {
                 'status': 'Rebooting',
@@ -93,19 +83,50 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
             }
         )
 
+    @action(detail=True, methods=['post'])
+    def attention_required(self, request, pk=None):
+        """The graceful pause trigger."""
+        session = self.get_object()
+        session.status_id = ReasoningStatusID.ATTENTION_REQUIRED
+
+        # NOTE: saving this triggers the broadcast_session_status signal in Thalamus!
+        session.save(update_fields=['status_id'])
+
+        return Response({'status': 'Attention required'})
+
+    @action(detail=True, methods=['get'])
+    def messages(self, request, pk=None):
+        """The flat chat pipeline for assistant-ui."""
+        session = self.get_object()
+        include_volatile = (
+            request.query_params.get('volatile', 'false').lower() == 'true'
+        )
+
+        messages_payload = get_chat_history(
+            session, include_volatile=include_volatile
+        )
+        response_dto = ThalamusMessageListDTO(messages=messages_payload)
+
+        return Response(
+            ThalamusMessageListSerializer(instance=response_dto).data
+        )
+
     @action(
         detail=True,
         methods=['post'],
         serializer_class=ResumeSessionRequestSerializer,
     )
     def resume(self, request, pk=None):
-        """
-        Resumes a paused ReasoningSession, attaching the human's reply.
-        """
+        """Resumes a paused ReasoningSession, attaching the human's reply."""
         session = self.get_object()
 
-        # 1. Validate State
-        if session.status_id != ReasoningStatusID.ATTENTION_REQUIRED:
+        request_serializer = self.get_serializer(data=request.data)
+        request_serializer.is_valid(raise_exception=True)
+        user_reply = request_serializer.validated_data.get(KEY_REPLY, '')
+
+        success = inject_human_reply(session, user_reply)
+
+        if not success:
             error_dto = ResumeSessionResponseDTO(
                 ok=False,
                 message=MSG_INVALID_STATE.format(status_id=session.status_id),
@@ -115,31 +136,6 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # 2. Parse payload using strict serializer
-        request_serializer = self.get_serializer(data=request.data)
-        request_serializer.is_valid(raise_exception=True)
-
-        user_reply = request_serializer.validated_data.get(KEY_REPLY)
-
-        # 3. Attach the human memory
-        if user_reply:
-            last_turn = session.turns.order_by('-turn_number').first()
-            if last_turn:
-                ChatMessage.objects.create(
-                    session=session,
-                    turn=last_turn,
-                    role_id=ChatMessageRole.USER,
-                    content=user_reply,
-                )
-
-        # 4. Update status natively
-        session.status_id = ReasoningStatusID.ACTIVE
-        session.save(update_fields=['status_id'])
-
-        # 5. Re-ignite the async execution queue
-        cast_cns_spell.delay(session.spike_id)
-
-        # 6. Return strictly typed response
         success_dto = ResumeSessionResponseDTO(ok=True, message=MSG_REIGNITED)
         return Response(
             ResumeSessionResponseSerializer(instance=success_dto).data,
@@ -151,13 +147,11 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         """Gracefully signals the Frontal Lobe loop to halt at the next turn."""
         session = self.get_object()
         spike = session.spike
-
         if not spike:
             return Response({'error': 'No associated Spike found.'}, status=400)
 
         spike.status_id = SpikeStatus.STOPPING
         spike.save(update_fields=['status'])
-
         return Response(
             {
                 'status': 'Halt signal sent. The Cortex will spin down after the current turn.'

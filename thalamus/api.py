@@ -14,8 +14,6 @@ from central_nervous_system.models import (
 )
 from central_nervous_system.tasks import cast_cns_spell
 from frontal_lobe.models import (
-    ChatMessage,
-    ChatMessageRole,
     ReasoningSession,
     ReasoningStatusID,
     ReasoningTurn,
@@ -23,13 +21,13 @@ from frontal_lobe.models import (
 from identity.models import IdentityDisc
 
 from .serializers import (
-    ThalamusMessageDTO,
     ThalamusMessageListDTO,
     ThalamusMessageListSerializer,
     ThalamusRequestSerializer,
     ThalamusResponseDTO,
     ThalamusResponseSerializer,
 )
+from .thalamus import get_chat_history, inject_human_reply
 
 logger = logging.getLogger(__name__)
 
@@ -42,10 +40,7 @@ class ThalamusViewSet(viewsets.ViewSet):
 
     permission_classes = [AllowAny]
 
-    @action(
-        detail=False,
-        methods=['post'],
-    )
+    @action(detail=False, methods=['post'])
     def interact(self, request):
         serializer = ThalamusRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -77,21 +72,13 @@ class ThalamusViewSet(viewsets.ViewSet):
             .first()
         )
 
+        # 3A. RE-IGNITION: The AI was paused waiting for you.
         if (
             session
             and session.status_id == ReasoningStatusID.ATTENTION_REQUIRED
         ):
-            # 3A. RE-IGNITION: The AI was paused waiting for you.
-            last_turn = session.turns.order_by('-turn_number').first()
-
-            ChatMessage.objects.create(
-                session=session,
-                turn=last_turn,
-                role_id=ChatMessageRole.USER,
-                content=user_message,
-            )
-
-            cast_cns_spell.delay(session.spike_id)
+            # Hand off to the DRY operation
+            inject_human_reply(session, user_message)
 
             dto = ThalamusResponseDTO(
                 ok=True, message='Neural pathway re-ignited.'
@@ -101,23 +88,24 @@ class ThalamusViewSet(viewsets.ViewSet):
                 status=status.HTTP_200_OK,
             )
 
+        # 3B. BUSY STATE
         elif session and session.status_id in [
             ReasoningStatusID.ACTIVE,
             ReasoningStatusID.PENDING,
         ]:
+            # Now properly using your DTOs instead of raw dicts!
+            dto = ThalamusResponseDTO(
+                ok=False, message='Thalamus is currently thinking.'
+            )
             return Response(
-                {
-                    'ok': False,
-                    'message': 'Thalamus is currently thinking.',
-                },
+                ThalamusResponseSerializer(instance=dto).data,
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # 3B. GENESIS / FRESH START: No active session exists. We build it and pre-seed your message.
+        # 3C. GENESIS / FRESH START
         cc_neuron = Neuron.objects.filter(
             pathway_id=pathway_id, is_root=False
         ).first()
-
         spike = Spike.objects.create(
             spike_train=standing_train,
             neuron=cc_neuron,
@@ -126,7 +114,6 @@ class ThalamusViewSet(viewsets.ViewSet):
             blackboard={},
         )
 
-        # Pre-seed as ATTENTION_REQUIRED so FrontalLobe natively adopts it
         new_session = ReasoningSession.objects.create(
             spike=spike,
             status_id=ReasoningStatusID.ATTENTION_REQUIRED,
@@ -134,20 +121,14 @@ class ThalamusViewSet(viewsets.ViewSet):
             identity_disc_id=IdentityDisc.THALAMUS,
         )
 
-        first_turn = ReasoningTurn.objects.create(
+        ReasoningTurn.objects.create(
             session=new_session,
             turn_number=1,
             status_id=ReasoningStatusID.ACTIVE,
         )
 
-        ChatMessage.objects.create(
-            session=new_session,
-            turn=first_turn,
-            role_id=ChatMessageRole.USER,
-            content=user_message,
-        )
-
-        cast_cns_spell.delay(spike.id)
+        # Pre-seed your message using the exact same injection logic
+        inject_human_reply(new_session, user_message)
 
         dto = ThalamusResponseDTO(
             ok=True, message='Fresh Spike spawned with user prompt.'
@@ -160,7 +141,7 @@ class ThalamusViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'])
     def messages(self, request):
         """
-        Hydrates the assistant-ui chat thread and handles polling.
+        Hydrates the assistant-ui chat thread.
         Returns the clean 'user' and 'assistant' history of the Standing Train.
         """
         pathway_id = NeuralPathway.THALAMUS
@@ -171,9 +152,10 @@ class ThalamusViewSet(viewsets.ViewSet):
         )
 
         if not standing_train:
-            empty_dto = ThalamusMessageListDTO(messages=[])
             return Response(
-                ThalamusMessageListSerializer(instance=empty_dto).data,
+                ThalamusMessageListSerializer(
+                    instance=ThalamusMessageListDTO(messages=[])
+                ).data,
                 status=status.HTTP_200_OK,
             )
 
@@ -184,35 +166,16 @@ class ThalamusViewSet(viewsets.ViewSet):
         )
 
         if not session:
-            empty_dto = ThalamusMessageListDTO(messages=[])
             return Response(
-                ThalamusMessageListSerializer(instance=empty_dto).data,
+                ThalamusMessageListSerializer(
+                    instance=ThalamusMessageListDTO(messages=[])
+                ).data,
                 status=status.HTTP_200_OK,
             )
 
-        # 1. Fetch non-volatile chat messages natively
-        # We strictly filter for 'user' and 'assistant' roles to match the assistant-ui schema perfectly.
-        chat_msgs = (
-            ChatMessage.objects.filter(
-                session=session,
-                is_volatile=False,
-                role__name__in=['user', 'assistant'],
-            )
-            .select_related('role')
-            .order_by('created')
-        )
+        # Hand off to the DRY operation
+        messages_payload = get_chat_history(session, include_volatile=False)
 
-        # 2. Map directly to DTOs
-        messages_payload = []
-        for msg in chat_msgs:
-            if msg.content and msg.content.strip():
-                messages_payload.append(
-                    ThalamusMessageDTO(
-                        role=msg.role.name.lower(), content=msg.content.strip()
-                    )
-                )
-
-        # 3. Return the strongly typed response
         response_dto = ThalamusMessageListDTO(messages=messages_payload)
         return Response(
             ThalamusMessageListSerializer(instance=response_dto).data,

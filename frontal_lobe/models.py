@@ -289,6 +289,7 @@ class SessionConclusion(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
         return self.session.talosengram_set.all()
 
 
+# TODO: Decouple these entirely from the frontal_lobe. It belongs in the thalamus.
 class ChatMessageRole(NameMixin, CreatedMixin):
     SYSTEM = 1
     SYSTEM_NAME = 'system'
