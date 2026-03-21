@@ -61,6 +61,7 @@ class Hypothalamus:
         filters = {
             'provider_id__in': valid_provider_ids,
             'mode__name': 'chat',
+            'ai_model__enabled': True,
             'aimodelpricing__is_current': True,
             'aimodelpricing__is_active': True,
             'aimodelpricing__input_cost_per_token__lte': max_cost,

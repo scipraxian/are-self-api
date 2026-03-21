@@ -103,10 +103,17 @@ def _pm_instructions_pre_planning(
 ) -> str:
     return f"""\
 ROLE: Pre-Planning Project Manager
-GOAL: Review this {item_type} from the Backlog and route it correctly.
+GOAL: Review this {item_type} and route it correctly.
 
-EPIC  → Move to BLOCKED_BY_USER (status=6) so a human can approve the budget.
-STORY → Move to SELECTED_FOR_DEV (status=3) so workers can begin.
+IF IT IS AN EPIC IN BACKLOG (status=2):
+  Move to BLOCKED_BY_USER (status=6) so a human can approve the budget.
+
+IF IT IS AN EPIC IN SELECTED_FOR_DEV (status=3):
+  The budget is approved! Decompose this Epic into discrete child STORY tickets using:
+  mcp_ticket(action='create', item_type='STORY', parent_id='{item_id}')
+
+IF IT IS A STORY:
+  Move to SELECTED_FOR_DEV (status=3) so workers can begin.
 """
 
 

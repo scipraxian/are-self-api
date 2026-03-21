@@ -139,7 +139,12 @@ class PrefrontalCortex:
         elif shift_id == Shift.PRE_PLANNING:
             if identity_type_id == IdentityType.PM:
                 target = PFCEpic.objects.filter(
-                    status_id=PFCItemStatus.BACKLOG, environment=environment_id
+                    Q(status_id=PFCItemStatus.BACKLOG)
+                    | Q(
+                        status_id=PFCItemStatus.SELECTED_FOR_DEVELOPMENT,
+                        stories__isnull=True,
+                    ),
+                    environment=environment_id,
                 ).first()
                 if not target:
                     target = PFCStory.objects.filter(
@@ -153,6 +158,7 @@ class PrefrontalCortex:
                     status_id=PFCItemStatus.SELECTED_FOR_DEVELOPMENT,
                     owning_disc__isnull=True,
                     epic__environment_id=environment_id,
+                    tasks__isnull=True,
                 ).first()
                 if target:
                     return lock_ticket(target, identity_disc)

@@ -3,7 +3,7 @@ import uuid
 from asgiref.sync import sync_to_async
 from django.core.exceptions import ValidationError
 
-from prefrontal_cortex.models import PFCEpic, PFCStory, PFCTask
+from prefrontal_cortex.models import PFCEpic, PFCItemStatus, PFCStory, PFCTask
 from prefrontal_cortex.serializers import (
     PFCEpicSerializer,
     PFCStorySerializer,
@@ -12,11 +12,68 @@ from prefrontal_cortex.serializers import (
     make_action_response,
 )
 
+from .constants import EPIC, STATUS_ID, STATUS_KEY, STORY, TASK
+
 MODEL_SERIALIZER_SEQ = [
-    ('EPIC', PFCEpic, PFCEpicSerializer),
-    ('STORY', PFCStory, PFCStorySerializer),
-    ('TASK', PFCTask, PFCTaskSerializer),
+    (EPIC, PFCEpic, PFCEpicSerializer),
+    (STORY, PFCStory, PFCStorySerializer),
+    (TASK, PFCTask, PFCTaskSerializer),
 ]
+
+
+def _auto_status_update(instance, type_name: str):
+    """
+    Bubbles up status changes to parent tickets after a successful MCP update.
+    """
+    current_status_id = instance.status_id
+
+    if type_name == TASK:
+        story = instance.story
+        # 1. Bubbling UP 'IN_PROGRESS'
+        if (
+            current_status_id == PFCItemStatus.IN_PROGRESS
+            and story.status_id == PFCItemStatus.SELECTED_FOR_DEVELOPMENT
+        ):
+            story.status_id = PFCItemStatus.IN_PROGRESS
+            story.save(update_fields=[STATUS_KEY])
+
+        # 2. Bubbling UP 'DONE' -> 'IN_REVIEW'
+        elif current_status_id == PFCItemStatus.DONE:
+            # GUARD: Only bubble up if the story hasn't already advanced past IN_PROGRESS
+            if story.status_id in [
+                PFCItemStatus.SELECTED_FOR_DEVELOPMENT,
+                PFCItemStatus.IN_PROGRESS,
+            ]:
+                pending = story.tasks.exclude(
+                    status_id=PFCItemStatus.DONE
+                ).exists()
+                if not pending:
+                    story.status_id = PFCItemStatus.IN_REVIEW
+                    story.save(update_fields=[STATUS_KEY])
+
+    elif type_name == STORY:
+        epic = instance.epic
+        # 1. Bubbling UP 'IN_PROGRESS'
+        if (
+            current_status_id == PFCItemStatus.IN_PROGRESS
+            and epic.status_id == PFCItemStatus.SELECTED_FOR_DEVELOPMENT
+        ):
+            epic.status_id = PFCItemStatus.IN_PROGRESS
+            epic.save(update_fields=[STATUS_KEY])
+
+        # 2. Bubbling UP 'DONE' -> 'BLOCKED_BY_USER'
+        elif current_status_id == PFCItemStatus.DONE:
+            # GUARD: Only bubble up if the epic hasn't already advanced past IN_PROGRESS
+            if epic.status_id in [
+                PFCItemStatus.SELECTED_FOR_DEVELOPMENT,
+                PFCItemStatus.IN_PROGRESS,
+            ]:
+                pending = epic.stories.exclude(
+                    status_id=PFCItemStatus.DONE
+                ).exists()
+                if not pending:
+                    epic.status_id = PFCItemStatus.BLOCKED_BY_USER
+                    epic.save(update_fields=[STATUS_KEY])
 
 
 @sync_to_async
@@ -88,6 +145,7 @@ def _update_sync(item_id: str, field_name: str, field_value: str) -> str:
                 error=f'VALIDATION ERROR: {e.messages}',
             )
 
+        _auto_status_update(instance, type_name)
         serializer = serializer_class(instance)
         return make_action_response(
             action=TicketAction.UPDATE,

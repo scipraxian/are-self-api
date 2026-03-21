@@ -142,9 +142,14 @@ class TemporalLobe:
             # Everyone is COMPLETED
             next_shift = await self._advance_shift(iteration)
             if next_shift:
+                message = (
+                    f'[TemporalLobe] Shift complete. '
+                    f'Advancing to {next_shift.shift.name}.'
+                )
+                logger.info(message)
                 return (
                     200,
-                    f'Shift complete. Advanced to {next_shift.shift.name}.',
+                    message,
                 )
             else:
                 return 200, 'Iteration complete. Pipeline finished.'
