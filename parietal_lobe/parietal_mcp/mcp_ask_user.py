@@ -3,11 +3,7 @@ import logging
 
 from asgiref.sync import sync_to_async
 
-from central_nervous_system.signals import spike_status_changed
 from frontal_lobe.models import ReasoningSession, ReasoningStatusID
-from synaptic_cleft.axon_hillok import fire_neurotransmitter
-from synaptic_cleft.constants import NeurotransmitterEvent
-from synaptic_cleft.neurotransmitters import Dopamine
 
 logger = logging.getLogger(__name__)
 

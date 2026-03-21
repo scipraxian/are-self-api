@@ -219,18 +219,24 @@ class AsyncLogManager:
         if execution_chunk:
             await fire_neurotransmitter(
                 Glutamate(
-                    spike_id=self.spike.id,
-                    channel=LogChannel.EXECUTION,
-                    message=execution_chunk,
+                    receptor_class='Spike',
+                    dendrite_id=str(self.spike.id),
+                    vesicle={
+                        'channel': LogChannel.EXECUTION,
+                        'message': execution_chunk,
+                    },
                 )
             )
 
         if application_chunk:
             await fire_neurotransmitter(
                 Glutamate(
-                    spike_id=self.spike.id,
-                    channel=LogChannel.APPLICATION,
-                    message=application_chunk,
+                    receptor_class='Spike',
+                    dendrite_id=str(self.spike.id),
+                    vesicle={
+                        'channel': LogChannel.APPLICATION,
+                        'message': application_chunk,
+                    },
                 )
             )
 
@@ -456,9 +462,13 @@ class GenericEffectorCaster:
                             # Release Acetylcholine for memory updates!
                             await fire_neurotransmitter(
                                 Acetylcholine(
-                                    spike_id=self.spike.id,
-                                    key=key,
-                                    value=val,
+                                    receptor_class='Spike',
+                                    dendrite_id=str(self.spike.id),
+                                    activity='blackboard_updated',
+                                    vesicle={
+                                        'key': key,
+                                        'value': val,
+                                    },
                                 )
                             )
                         text_to_log = BLACKBOARD_SET_STRIPPER.sub(
@@ -576,9 +586,17 @@ class GenericEffectorCaster:
 
         # Decide which neurotransmitter to release based on the status
         if status_id in self.STATUSES_WHICH_HALT:
-            transmitter = Cortisol(spike_id=self.spike.id, status_id=status_id)
+            transmitter = Cortisol(
+                receptor_class='Spike',
+                dendrite_id=str(self.spike.id),
+                vesicle={'status_id': status_id},
+            )
         else:
-            transmitter = Dopamine(spike_id=self.spike.id, status_id=status_id)
+            transmitter = Dopamine(
+                receptor_class='Spike',
+                dendrite_id=str(self.spike.id),
+                vesicle={'status_id': status_id},
+            )
 
         await fire_neurotransmitter(transmitter)
 
