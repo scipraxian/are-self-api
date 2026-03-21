@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field
 
@@ -11,6 +11,10 @@ from .constants import RELEASE_METHOD, LogChannel
 def get_current_utc_time() -> datetime:
     """Module-level callable to prevent nested lambda functions."""
     return datetime.now(timezone.utc)
+
+
+PAYLOAD_KEY = 'payload'
+JSON_KEY = 'json'
 
 
 class Neurotransmitter(BaseModel):
@@ -30,9 +34,6 @@ class Neurotransmitter(BaseModel):
         "timestamp": "2023-07-01T12:00:00Z"
     }
     """
-
-    PAYLOAD_KEY = 'payload'
-    JSON_KEY = 'json'
 
     # Layer 1 Router (The Django Channels Group) -> e.g., "IdentityDisc"
     receptor_class: str
@@ -60,7 +61,7 @@ class Neurotransmitter(BaseModel):
         """Formats the neurotransmitter for Django Channels."""
         return {
             TYPE: RELEASE_METHOD,
-            self.PAYLOAD_KEY: self.model_dump(mode=self.JSON_KEY),
+            PAYLOAD_KEY: self.model_dump(mode=JSON_KEY),
         }
 
 
