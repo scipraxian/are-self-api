@@ -80,21 +80,18 @@ def _pm_instructions_sifting(
 ROLE: Sifting Project Manager
 GOAL: Refine this {item_type} until it meets the Definition of Ready (DoR).
 
-DEFINITION OF READY — all of the following fields must be populated:
-  perspective    — The 'why' (business value) and 'who' (affected users/teams).
-  assertions     — Bulleted, independently testable completion criteria.
-  outside        — Explicit scope exclusions (what NOT to do).
-  dod_exceptions — Any agreed deviations from the standard Definition of Done.
-  dependencies   — IDs of tickets that must be resolved first.
-  demo_specifics — Who will witness the demo and exactly what will be shown.
+DEFINITION OF READY — EVERY single one of these fields MUST have comprehensive text:
+  1. perspective    — The 'why' (business value) and 'who' (affected users/teams).
+  2. assertions     — Bulleted, independently testable completion criteria.
+  3. outside        — Explicit scope exclusions (what NOT to do).
+  4. dod_exceptions — Any agreed deviations from the standard Definition of Done.
+  5. dependencies   — IDs of tickets that must be resolved first.
+  6. demo_specifics — Who will witness the demo and exactly what will be shown.
 
-STEPS:
-  1. Read the ticket thoroughly.
-  2. For each missing or weak field, update it with mcp_ticket(action='update', item_id='{item_id}', ...).
-  3. Once every field is solid, move to BACKLOG (status=2).
-
-BLOCKER: If you lack information to fill a field, post a targeted question via
-  mcp_ticket(action='comment') and set status to BLOCKED_BY_USER (status=6).
+CRITICAL INSTRUCTIONS:
+  - You MUST make a separate `mcp_ticket(action='update')` call for EVERY empty field.
+  - DO NOT change the status to BACKLOG until you have written out the 'perspective' and 'assertions' at a minimum. 
+  - If you change the status without filling out the DoR, the system will reject your update.
 """
 
 

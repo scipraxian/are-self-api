@@ -116,7 +116,18 @@ def _update_sync(item_id: str, field_name: str, field_value: str) -> str:
                 item_id=val_uuid,
                 error=f"Field '{field_name}' does not exist on {type_name}.",
             )
-
+        if field_name in [STATUS_KEY, STATUS_ID] and str(field_value) == str(
+            PFCItemStatus.BACKLOG
+        ):
+            if type_name == STORY:
+                if not instance.perspective or not instance.assertions:
+                    return make_action_response(
+                        action=TicketAction.UPDATE,
+                        ok=False,
+                        item_type=type_name,
+                        item_id=val_uuid,
+                        error="SYSTEM REJECTION: Definition of Ready (DoR) is not met. You MUST populate 'perspective' and 'assertions' before moving this Story to BACKLOG.",
+                    )
         try:
             setattr(instance, field_name, field_value)
         except ValueError as e:

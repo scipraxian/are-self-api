@@ -303,6 +303,8 @@ class SynapseClient:
 
     def _process_response(self, response: ModelResponse) -> SynapseResponse:
         """Transforms a successful LiteLLM response into our immutable FinOps receipt."""
+
+        # TODO: Return multiple choices. IMPORTANT!
         message = response.choices[0].message
         usage = getattr(response, 'usage', None)
 
