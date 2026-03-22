@@ -78,6 +78,7 @@ def broadcast_chat_message(sender, instance, created, **kwargs):
     msg_data = {
         'id': str(instance.id),
         'role': role_name,
+        'session_id': str(instance.session_id),
         'content': instance.content,
         'is_volatile': instance.is_volatile,
     }

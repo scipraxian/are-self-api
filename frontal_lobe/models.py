@@ -51,6 +51,7 @@ class ReasoningStatusMixin(models.Model):
         abstract = True
 
 
+# ATTENTION: DEPRECIATED.
 class ModelProvider(DefaultFieldsMixin, DescriptionMixin):
     """
     Provider-level network configuration for LLM backends.
@@ -59,6 +60,7 @@ class ModelProvider(DefaultFieldsMixin, DescriptionMixin):
     allows dynamic switching between providers like Ollama and OpenRouter.
     """
 
+    # ATTENTION: DEPRECIATED.
     # Use id keys for stable FK references (see fixtures).
     OLLAMA = 1
     OPENROUTER = 2
@@ -108,6 +110,7 @@ class ModelProvider(DefaultFieldsMixin, DescriptionMixin):
         return self.name
 
 
+# ATTENTION: DEPRECIATED.
 class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
     """
     Database-driven LLM definition.
@@ -115,6 +118,7 @@ class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
     without redeploying code.
     """
 
+    # ATTENTION: DEPRECIATED.
     DEFAULT_MODEL_ID = 1
     QUEN3_CODER = 1
     GEMMA3 = 2
@@ -218,14 +222,19 @@ class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
     )
     turn_number = models.IntegerField()
 
+    # REQUEST
     request_payload = models.JSONField(blank=True, default=dict)
     tokens_input = models.IntegerField(default=0)
     inference_time = models.DurationField(default=timedelta)
 
+    # RESPONSE
+    response_payload = models.JSONField(blank=True, default=dict)
+    tokens_output = models.IntegerField(default=0)
+
+    # Set by mcp_internal_monologue.
     thought_process = models.TextField(
         help_text='The internal monologue of the AI.'
     )
-    tokens_output = models.IntegerField(default=0)
 
     last_turn = models.ForeignKey(
         'self', on_delete=models.SET_NULL, null=True, blank=True

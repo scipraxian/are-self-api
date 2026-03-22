@@ -334,6 +334,16 @@ class AIModelProviderUsageRecord(AIModelPricingAbstract):
         null=True,
         blank=True,
     )
+
+    # TODO: reasoning_turn
+    reasoning_turn = models.ForeignKey(
+        'frontal_lobe.ReasoningTurn',
+        on_delete=models.SET_NULL,
+        related_name=RELATED_NAME,
+        null=True,
+        blank=True,
+    )
+
     query_time = models.DurationField(null=True, blank=True)
     input_tokens = models.IntegerField(default=0)
     output_tokens = models.IntegerField(default=0)

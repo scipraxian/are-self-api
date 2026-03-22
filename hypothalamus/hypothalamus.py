@@ -35,7 +35,7 @@ def _dec(key: str, data: dict) -> Decimal:
 
 class Hypothalamus:
     @staticmethod
-    def pick_optimal_model(disc, payload_size: int):
+    def pick_optimal_model(disc, payload_size: int) -> Optional[ModelSelection]:
         """
         Finds the closest mathematical match to the Persona, constrained by budget, context window, and API rate limits.
         """
