@@ -222,22 +222,15 @@ class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
     )
     turn_number = models.IntegerField()
 
-    # REQUEST
-    request_payload = models.JSONField(blank=True, default=dict)
-    tokens_input = models.IntegerField(default=0)
-    inference_time = models.DurationField(default=timedelta)
-
-    # RESPONSE
-    response_payload = models.JSONField(blank=True, default=dict)
-    tokens_output = models.IntegerField(default=0)
-
-    # Set by mcp_internal_monologue.
-    thought_process = models.TextField(
-        help_text='The internal monologue of the AI.'
-    )
-
     last_turn = models.ForeignKey(
         'self', on_delete=models.SET_NULL, null=True, blank=True
+    )
+
+    model_usage_record = models.ForeignKey(
+        'hypothalamus.AIModelProviderUsageRecord',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
     )
 
     class Meta:
@@ -257,21 +250,23 @@ class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
         return last_output_len <= target_capacity
 
     def apply_efficiency_bonus(self) -> (bool, str):
-        was_efficient = self.was_efficient_last_turn
-        focus = 1
-        xp = 5
-        if was_efficient:
-            self.session.current_focus = min(
-                self.session.max_focus, self.session.current_focus + focus
-            )
-            self.session.total_xp += xp
-
-        efficiency_status = (
-            f'SUCCESS (+{focus} Focus, +{xp} XP)'
-            if was_efficient
-            else 'FAILED (Data footprint too large)'
-        )
-        return was_efficient, efficiency_status
+        return False, ''
+        # THIS IS REMOVED UNTIL WE REFACTOR THE EFFICIENCY LOGIC.
+        # was_efficient = self.was_efficient_last_turn
+        # focus = 1
+        # xp = 5
+        # if was_efficient:
+        #     self.session.current_focus = min(
+        #         self.session.max_focus, self.session.current_focus + focus
+        #     )
+        #     self.session.total_xp += xp
+        #
+        # efficiency_status = (
+        #     f'SUCCESS (+{focus} Focus, +{xp} XP)'
+        #     if was_efficient
+        #     else 'FAILED (Data footprint too large)'
+        # )
+        # return was_efficient, efficiency_status
 
 
 class SessionConclusion(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):

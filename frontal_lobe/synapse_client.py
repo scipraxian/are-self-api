@@ -100,6 +100,8 @@ class SynapseResponse:
     metrics: TelemetryMetrics = field(default_factory=TelemetryMetrics)
     is_error: bool = False
     error_message: str = ''
+    request_payload: Dict[str, Any] = field(default_factory=dict)
+    response_payload: Dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def error(cls, model_id: str, message: str) -> 'SynapseResponse':
@@ -217,8 +219,8 @@ class SynapseClient:
                     f'[Synapse] Circuit Breaker reset for {self.model_id}'
                 )
 
-            # 3. Process into your dataclass
-            return self._process_response(response)
+            # 3. Process into dataclass
+            return self._process_response(response, litellm_kwargs)
 
         except (RateLimitError, APIConnectionError) as e:
             # --- FAILURE: TRIP THE BREAKER ---
@@ -301,8 +303,19 @@ class SynapseClient:
 
         return kwargs
 
-    def _process_response(self, response: ModelResponse) -> SynapseResponse:
+    def _process_response(
+        self, response: ModelResponse, request_kwargs: Dict[str, Any]
+    ) -> SynapseResponse:
         """Transforms a successful LiteLLM response into our immutable FinOps receipt."""
+        response_payload = (
+            response.model_dump()
+            if hasattr(response, 'model_dump')
+            else (
+                response.dict() if hasattr(response, 'dict') else dict(response)
+            )
+        )
+
+        # TODO: REPLACE WITH AIModelProviderUsageRecord
 
         # TODO: Return multiple choices. IMPORTANT!
         message = response.choices[0].message
@@ -317,4 +330,6 @@ class SynapseClient:
             else 0,
             tool_calls=normalize_tool_calls(message),
             metrics=parse_telemetry(usage),
+            request_payload=request_kwargs,
+            response_payload=response_payload,
         )

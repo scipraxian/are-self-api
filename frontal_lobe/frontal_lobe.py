@@ -54,7 +54,8 @@ def _fetch_disc_sync(session_id):
 
 
 def _mint_usage_record_sync(
-    identity_disc,
+    turn_record: ReasoningTurn,
+    identity_disc: 'IdentityDisc',
     model_selection: ModelSelection,
     response: SynapseResponse,
     estimated_cost: Decimal,
@@ -80,6 +81,7 @@ def _mint_usage_record_sync(
             model_provider=provider_record,
             ai_model=provider_record.ai_model,
             identity_disc=identity_disc,
+            reasoning_turn=turn_record,
             query_time=duration,
             input_tokens=response.tokens_input,
             output_tokens=response.tokens_output,
@@ -549,6 +551,8 @@ async def _record_turn_completion(
     turn_record.tokens_output = response.tokens_output
     turn_record.inference_time = inference_duration
     turn_record.status_id = ReasoningStatusID.COMPLETED
+    turn_record.request_payload = response.request_payload
+    turn_record.response_payload = response.response_payload
     await sync_to_async(turn_record.save)()
 
     # 2. Calculate the estimated cost based on the Selection
@@ -558,6 +562,7 @@ async def _record_turn_completion(
 
     # 3. Mint Usage Record
     await sync_to_async(_mint_usage_record_sync)(
+        turn_record,
         identity_disc,
         model_selection,
         response,

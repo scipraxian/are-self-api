@@ -321,6 +321,8 @@ class AIModelPricing(AIModelPricingAbstract):
 class AIModelProviderUsageRecord(AIModelPricingAbstract):
     RELATED_NAME = 'usage_records'
 
+    # References.
+
     ai_model_provider = models.ForeignKey(
         AIModelProvider, on_delete=models.CASCADE, related_name=RELATED_NAME
     )
@@ -335,26 +337,26 @@ class AIModelProviderUsageRecord(AIModelPricingAbstract):
         blank=True,
     )
 
-    # TODO: reasoning_turn
-    reasoning_turn = models.ForeignKey(
-        'frontal_lobe.ReasoningTurn',
-        on_delete=models.SET_NULL,
-        related_name=RELATED_NAME,
-        null=True,
-        blank=True,
-    )
-
-    query_time = models.DurationField(null=True, blank=True)
-    input_tokens = models.IntegerField(default=0)
-    output_tokens = models.IntegerField(default=0)
-    reasoning_tokens = models.IntegerField(default=0)
-    audio_tokens = models.IntegerField(default=0)
-    cache_read_input_tokens = models.IntegerField(default=0)
-    cache_creation_input_tokens = models.IntegerField(default=0)
-
+    # PRE-SEND
+    request_payload = models.JSONField(blank=True, default=dict)
     estimated_cost = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
     )
+
+    # POST-SEND
+    query_time = models.DurationField(null=True, blank=True)
+    response_payload = models.JSONField(blank=True, default=dict)
+
+    # Provider INPUT Token Usage
+    input_tokens = models.IntegerField(default=0)
+    cache_read_input_tokens = models.IntegerField(default=0)
+    cache_creation_input_tokens = models.IntegerField(default=0)
+
+    # Provider OUTPUT Token Usage
+    output_tokens = models.IntegerField(default=0)
+    reasoning_tokens = models.IntegerField(default=0)
+    audio_tokens = models.IntegerField(default=0)
+
     actual_cost = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
     )
