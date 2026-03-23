@@ -4,8 +4,6 @@ from typing import List
 from central_nervous_system.tasks import cast_cns_spell
 from frontal_lobe.constants import FrontalLobeConstants
 from frontal_lobe.models import (
-    ChatMessage,
-    ChatMessageRole,
     ReasoningSession,
     ReasoningStatusID,
 )
@@ -24,28 +22,17 @@ def get_chat_history(
     Extracts the conversational history from a ReasoningSession.
     Maps the raw ChatMessage records into the strict ThalamusMessageDTO schema.
     """
-    # Base queryset: only grab human and AI messages, ordered chronologically
-    qs = (
-        ChatMessage.objects.filter(
-            session=session, role__name__in=[ROLE_USER, ROLE_ASSISTANT]
-        )
-        .select_related(ChatMessage.ROLE_KEY)
-        .order_by('created')
-    )
-
-    # Filter out system/volatile noise unless explicitly requested
-    if not include_volatile:
-        qs = qs.filter(is_volatile=False)
+    qs = session.turns.filter(model_usage_record__isnull=False).select_related('model_usage_record').order_by('turn_number')
 
     messages_payload = []
-    for msg in qs:
-        if msg.content and msg.content.strip():
-            # DTO expects lowercase 'user' or 'assistant'
-            role_name = msg.role.name.lower()
-            messages_payload.append(
-                ThalamusMessageDTO(role=role_name, content=msg.content.strip())
-            )
-
+    for turn in qs:
+        res = turn.model_usage_record.response_payload or {}
+        if isinstance(res, dict):
+            content = res.get('content', '') or ''
+            if content.strip():
+                messages_payload.append(
+                    ThalamusMessageDTO(role='assistant', content=content.strip())
+                )
     return messages_payload
 
 
@@ -67,13 +54,12 @@ def inject_human_reply(session: ReasoningSession, user_text: str) -> bool:
         logger.error(f'Cannot inject reply: Session {session.id} has no turns.')
         return False
 
-    # 3. Save the human memory
-    # Note: is_volatile defaults to False, ensuring it shows up in the UI
-    ChatMessage.objects.create(
-        session=session,
+    from parietal_lobe.models import ToolCall
+    ToolCall.objects.create(
         turn=last_turn,
-        role_id=ChatMessageRole.USER,
-        content=user_text.strip(),
+        status_id=ReasoningStatusID.COMPLETED,
+        result_payload=f"[HUMAN INTERVENTION]: {user_text.strip()}",
+        arguments="{}",
     )
 
     # 4. Flip the session state back to active natively

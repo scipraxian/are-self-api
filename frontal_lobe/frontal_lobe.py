@@ -15,8 +15,6 @@ from central_nervous_system.utils import resolve_environment_context
 from environments.variable_renderer import VariableRenderer
 from frontal_lobe.constants import FrontalLobeConstants
 from frontal_lobe.models import (
-    ChatMessage,
-    ChatMessageRole,
     ReasoningSession,
     ReasoningStatusID,
     ReasoningTurn,
@@ -26,7 +24,6 @@ from frontal_lobe.synapse_client import SynapseClient, SynapseResponse
 from hypothalamus.hypothalamus import Hypothalamus
 from hypothalamus.models import AIModelProvider, AIModelProviderUsageRecord
 from hypothalamus.serializers import ModelSelection
-from identity.addons.addon_package import AddonPackage
 from identity.addons.addon_registry import ADDON_REGISTRY
 from identity.models import IdentityDisc
 from parietal_lobe.parietal_lobe import ParietalLobe
@@ -38,12 +35,6 @@ STATUS_ID = 'status_id'
 ROLE = 'role'
 CONTENT = 'content'
 
-
-def _serialize_messages_sync(turn_record, all_messages):
-    return [
-        chat_message_to_llm_dict(msg, current_turn=turn_record.turn_number)
-        for msg in all_messages
-    ]
 
 
 def _fetch_disc_sync(session_id):
@@ -213,85 +204,78 @@ class FrontalLobe:
         """
         Assembles the Turn payload by purely orchestrating Addons.
         """
-        all_messages: list[ChatMessage] = []
+        all_messages: list[dict] = []
 
-        # 1. Build the unified context package
-        package = AddonPackage(
-            session_id=self.session.id,
-            spike_id=self.spike.id,
-            identity_disc=self.session.identity_disc.id
-            if self.session.identity_disc
-            else None,
-            turn_number=turn_record.turn_number,
-            reasoning_turn_id=turn_record.id,
-            iteration=self._cached_iteration_id,
-            environment_id=self._cached_environment_id,
-            shift_id=self._cached_shift_id,
+        # 1. Provide Base History from AIModelProviderUsageRecord chain
+        recent_turns = await sync_to_async(list)(
+            ReasoningTurn.objects.filter(
+                session=self.session,
+                turn_number__lt=turn_record.turn_number,
+                model_usage_record__isnull=False
+            ).select_related('model_usage_record').order_by('turn_number')
         )
+        for t in recent_turns:
+            req_payload = t.model_usage_record.request_payload or []
+            res_payload = t.model_usage_record.response_payload or {}
+            
+            if isinstance(req_payload, list):
+                all_messages.extend(req_payload)
+            elif isinstance(req_payload, dict):
+                all_messages.append(req_payload)
+                
+            if isinstance(res_payload, list):
+                all_messages.extend(res_payload)
+            elif isinstance(res_payload, dict):
+                if "role" in res_payload:
+                    all_messages.append(res_payload)
+                elif "choices" in res_payload and len(res_payload["choices"]) > 0:
+                    all_messages.append(res_payload["choices"][0].get("message", {}))
 
-        # 2. Fetch active addons ordered by Phase
+        # 2. Extract THIS turn's base inputs (tools outputs from last turn)
+        current_req_payload = []
+        if turn_record.last_turn:
+            prev_tools = await sync_to_async(list)(turn_record.last_turn.tool_calls.select_related('tool').all())
+            for tc in prev_tools:
+                current_req_payload.append({
+                    "role": "tool",
+                    "content": str(tc.result_payload or ''),
+                    "tool_call_id": f"call_{tc.id}",
+                    "name": tc.tool.name
+                })
+        
+        turn_record._transient_request_payload = current_req_payload
+        all_messages.extend(current_req_payload)
+
+        # 3. Addon Context (Transient)
         active_addons = await sync_to_async(list)(
-            self.session.identity_disc.addons.select_related('phase').order_by(
-                'phase__id'
-            )
+            self.session.identity_disc.addons.select_related('phase').order_by('phase__id')
         )
 
-        # 3. Execute addons and collect ChatMessage instances
         for addon_model in active_addons:
-            # --- NATIVE TEXT INJECTION (No Python Function Required) ---
             if not addon_model.function_slug:
                 if addon_model.description:
-                    logger.debug(
-                        f'Injecting native text addon: {addon_model.name}'
-                    )
-                    native_msg = ChatMessage(
-                        session_id=self.session.id,
-                        turn_id=turn_record.id,
-                        role_id=ChatMessageRole.SYSTEM,
-                        content=addon_model.description,
-                        is_volatile=True,
-                    )
-                    all_messages.append(native_msg)
+                    logger.debug(f'Injecting native text addon: {addon_model.name}')
+                    all_messages.append({
+                        "role": "system",
+                        "content": addon_model.description
+                    })
                 continue
 
-            # --- DYNAMIC PYTHON EXECUTION ---
             addon_func = ADDON_REGISTRY.get(addon_model.function_slug)
             if addon_func:
                 logger.debug(f'Executing addon: {addon_model.function_slug}')
-                addon_messages = await sync_to_async(addon_func)(package)
+                addon_messages = await sync_to_async(addon_func)(turn_record)
                 if addon_messages:
                     all_messages.extend(addon_messages)
             else:
-                logger.warning(
-                    f'Addon {addon_model.function_slug} not found in registry.'
-                )
+                logger.warning(f'Addon {addon_model.function_slug} not found in registry.')
 
-        # 4. Bulk save ONLY the new, volatile messages (so they appear in your DB timeline)
-        unsaved_volatile = [
-            m for m in all_messages if m._state.adding and m.is_volatile
-        ]
-        if unsaved_volatile:
-            for msg in unsaved_volatile:
-                msg.session_id = self.session.id
-                msg.turn_id = turn_record.id
-            await sync_to_async(ChatMessage.objects.bulk_create)(
-                unsaved_volatile
-            )
+        llm_payload = all_messages
 
-            # 5. Translate the final sequence to LLM dictionaries
-            llm_payload = await sync_to_async(_serialize_messages_sync)(
-                turn_record, all_messages
-            )
-
-        # Logging output for debug
-        await self._log_live(
-            f'\n--- TURN {turn_record.turn_number} PAYLOAD ({len(llm_payload)} messages) ---'
-        )
+        await self._log_live(f'\n--- TURN {turn_record.turn_number} PAYLOAD ({len(llm_payload)} messages) ---')
         for msg in llm_payload:
-            content_str = msg.get(ChatMessage.CONTENT_KEY, '') or ''
-            await self._log_live(
-                f'[{msg.get(ChatMessage.ROLE_KEY)}] {content_str[:150]}...'
-            )
+            content_str = str(msg.get("content", ""))
+            await self._log_live(f'[{msg.get("role")}] {content_str[:150]}...')
         await self._log_live('------------------------\n')
 
         return llm_payload
@@ -384,13 +368,6 @@ class FrontalLobe:
             identity_disc=self.session.identity_disc,
         )
 
-        # 4. Save Assistant Message to History
-        await sync_to_async(ChatMessage.objects.create)(
-            session=self.session,
-            turn=turn_record,
-            role_id=ChatMessageRole.ASSISTANT,
-            content=response.content or '',
-        )
 
         if response.content:
             await self._log_live(
@@ -551,7 +528,7 @@ async def _record_turn_completion(
     turn_record.tokens_output = response.tokens_output
     turn_record.inference_time = inference_duration
     turn_record.status_id = ReasoningStatusID.COMPLETED
-    turn_record.request_payload = response.request_payload
+    turn_record.request_payload = getattr(turn_record, '_transient_request_payload', [])
     turn_record.response_payload = response.response_payload
     await sync_to_async(turn_record.save)()
 
@@ -571,55 +548,3 @@ async def _record_turn_completion(
     )
 
 
-def chat_message_to_llm_dict(
-    chat_message: ChatMessage, current_turn: Optional[int] = None
-) -> dict:
-    role_map = dict(ChatMessageRole.ROLE_CHOICES)
-    role_name = role_map.get(chat_message.role_id, ChatMessageRole.USER_NAME)
-
-    payload = {
-        chat_message.ROLE_KEY: role_name,
-        chat_message.CONTENT_KEY: chat_message.content,
-    }
-
-    if (
-        chat_message.role_id == ChatMessageRole.TOOL
-        and chat_message.tool_call_id
-    ):
-        if chat_message.tool_call and getattr(
-            chat_message.tool_call, chat_message.TOOL_KEY, None
-        ):
-            payload[chat_message.NAME_KEY] = chat_message.tool_call.tool.name
-        payload[chat_message.TOOL_CALL_ID_KEY] = (
-            f'call_{chat_message.tool_call_id}'
-        )
-
-    elif chat_message.role_id == ChatMessageRole.ASSISTANT:
-        tool_calls_payload = []
-        for tc in chat_message.turn.tool_calls.all():
-            raw_args = tc.arguments or '{}'
-            parsed_args = (
-                json.loads(raw_args) if isinstance(raw_args, str) else raw_args
-            )
-            if current_turn:
-                age = current_turn - chat_message.turn.turn_number
-                for assignment in tc.tool.assignments.all():
-                    if (
-                        assignment.prune_after_turns
-                        and age >= assignment.prune_after_turns
-                    ):
-                        param_name = assignment.parameter.name
-                        if param_name in parsed_args:
-                            parsed_args[param_name] = '[PRUNED TO SAVE TOKENS]'
-            llm_tc = LLMToolCall(
-                id=f'call_{tc.id}',
-                function=LLMFunctionCall(
-                    name=tc.tool.name, arguments=json.dumps(parsed_args)
-                ),
-            )
-            tool_calls_payload.append(llm_tc.to_dict())
-
-        if tool_calls_payload:
-            payload[chat_message.TOOL_CALLS_KEY] = tool_calls_payload
-
-    return payload

@@ -1,43 +1,35 @@
-from typing import List
+import json
+from typing import Any, Dict, List
 
-from django.db.models import Sum
-from django.db.models.functions import Length
-
-from frontal_lobe.models import ChatMessage, ChatMessageRole, ReasoningTurn
-from identity.addons.addon_package import AddonPackage
+from frontal_lobe.models import ReasoningTurn
 
 
-def telemetry_addon(package: AddonPackage) -> List[ChatMessage]:
+def telemetry_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
     """
     Identity Addon (Phase: CONTEXT)
     Constructs system diagnostics, latency reports, and cognitive load warnings.
     """
-    if not package.reasoning_turn_id or not package.session_id:
+    if not turn or not turn.session:
         return []
 
-    turn_record = ReasoningTurn.objects.select_related(
-        'last_turn', 'session'
-    ).get(id=package.reasoning_turn_id)
-    session = turn_record.session
-    last_turn = turn_record.last_turn
+    session = turn.session
+    last_turn = turn.last_turn
+    current_turn = turn.turn_number
 
-    current_turn = package.turn_number
     max_turns = session.max_turns
     remaining_turns = max_turns - current_turn
     target_capacity = session.current_level * 1000
 
-    # 1. Self-Derive Efficiency and Level Status
     last_output_len = 0
     efficiency_status = 'N/A'
-    if last_turn and last_turn.thought_process:
-        last_output_len = len(last_turn.thought_process)
+    if last_turn and last_turn.model_usage_record and last_turn.model_usage_record.response_payload:
+        last_output_len = len(str(last_turn.model_usage_record.response_payload))
         efficiency_status = (
             'OPTIMAL'
             if last_output_len <= target_capacity
             else 'INEFFICIENT (XP PENALTY)'
         )
 
-    # 2. Calculate Latency & Bandwidth
     latency_str = ''
     input_bandwidth = 0
     if last_turn:
@@ -52,22 +44,21 @@ def telemetry_addon(package: AddonPackage) -> List[ChatMessage]:
                 ' (WARNING: SYSTEM LAG DETECTED - REDUCE CONTEXT FOOTPRINT)'
             )
 
-        # Sum up the payload sizes of the tools fired last turn
-        for tc in last_turn.tool_calls.all():
-            input_bandwidth += len(tc.result_payload or '')
-
     input_bandwidth_str = f'L1 Input Payload: {input_bandwidth} chars pulled.'
 
-    # 3. Calculate Cognitive Load (L1 Cache Size)
-    # Estimate the size of the active memory window (last 6 turns)
     cutoff_turn = max(1, current_turn - 6)
-    l1_cache_agg = ChatMessage.objects.filter(
-        session_id=package.session_id,
-        turn__turn_number__gte=cutoff_turn,
-        is_volatile=False,
-    ).aggregate(total_chars=Sum(Length('content')))
-
-    l1_cache_size = l1_cache_agg.get('total_chars') or 0
+    
+    recent_turns = list(ReasoningTurn.objects.filter(
+        session_id=session.id,
+        turn_number__gte=cutoff_turn,
+        turn_number__lt=current_turn,
+        model_usage_record__isnull=False
+    ).select_related('model_usage_record'))
+    
+    l1_cache_size = 0
+    for t in recent_turns:
+        l1_cache_size += len(json.dumps(t.model_usage_record.request_payload)) if t.model_usage_record.request_payload else 0
+        l1_cache_size += len(json.dumps(t.model_usage_record.response_payload)) if t.model_usage_record.response_payload else 0
 
     pressure_warning = ''
     if l1_cache_size > 20000:
@@ -84,7 +75,6 @@ def telemetry_addon(package: AddonPackage) -> List[ChatMessage]:
             'Consider saving your findings to Engrams and using `mcp_pass` to clear your cache.\n'
         )
 
-    # 4. Build Final String
     diagnostics = (
         f'[SYSTEM DIAGNOSTICS]\n'
         f'[CYCLE {current_turn} / {max_turns}] | Speedrun Bounty: {remaining_turns * 1000} XP\n'
@@ -94,12 +84,4 @@ def telemetry_addon(package: AddonPackage) -> List[ChatMessage]:
         f'\n{input_bandwidth_str}\n'
     )
 
-    return [
-        ChatMessage(
-            session_id=package.session_id,
-            turn_id=package.reasoning_turn_id,
-            role_id=ChatMessageRole.USER,
-            content=diagnostics,
-            is_volatile=True,
-        )
-    ]
+    return [{"role": "user", "content": diagnostics}]

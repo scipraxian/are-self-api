@@ -2,8 +2,6 @@
 # from django.utils.html import format_html
 #
 # from .models import (
-#     ChatMessage,
-#     ChatMessageRole,
 #     ModelProvider,
 #     ModelRegistry,
 #     ReasoningSession,
@@ -31,21 +29,7 @@
 #     )
 #     show_change_link = True
 #
-#
-# class ChatMessageInline(admin.TabularInline):
-#     model = ChatMessage
-#     fk_name = 'turn'
-#     extra = 0
-#     fields = (
-#         'role',
-#         'session',
-#         'content',
-#         'tool_call',
-#         'is_volatile',
-#         'created',
-#     )
-#     readonly_fields = ('created',)
-#
+
 #
 # @admin.register(ReasoningSession)
 # class ReasoningSessionAdmin(admin.ModelAdmin):
@@ -91,8 +75,6 @@
 #     search_fields = ('thought_process', 'session__id')
 #     list_select_related = ('session', 'status', 'last_turn')
 #     readonly_fields = ('created', 'modified', 'delta')
-#     inlines = [ChatMessageInline]
-#
 #
 # @admin.register(SessionConclusion)
 # class SessionConclusionAdmin(admin.ModelAdmin):
@@ -126,24 +108,4 @@
 #     list_display = ('id', 'name', 'api_variant')
 #     search_fields = ('name', 'api_variant')
 #
-#
-# @admin.register(ChatMessageRole)
-# class ChatMessageRoleAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'name', 'created')
-#     search_fields = ('name',)
-#
-#
-# @admin.register(ChatMessage)
-# class ChatMessageAdmin(admin.ModelAdmin):
-#     list_display = (
-#         'id',
-#         'session',
-#         'turn',
-#         'role',
-#         'is_volatile',
-#         'created',
-#     )
-#     list_filter = ('role', 'is_volatile')
-#     search_fields = ('content', 'session__id', 'turn__id')
-#     list_select_related = ('session', 'turn', 'role', 'tool_call')
-#     readonly_fields = ('created',)
+

@@ -6,7 +6,7 @@ from django.dispatch import receiver
 
 from central_nervous_system.models import Spike, SpikeTrain
 from central_nervous_system.signals import spawn_failed, spawn_success
-from frontal_lobe.models import ChatMessage, ReasoningSession, ReasoningTurn
+from frontal_lobe.models import ReasoningSession, ReasoningTurn
 from identity.models import IdentityDisc
 from parietal_lobe.models import ToolCall
 from prefrontal_cortex.models import PFCEpic, PFCStory, PFCTask
@@ -65,31 +65,6 @@ def broadcast_status(sender, instance, **kwargs):
 # ==========================================
 
 
-@receiver(post_save, sender=ChatMessage)
-def broadcast_chat_message(sender, instance, created, **kwargs):
-    if not created:
-        return
-
-    try:
-        role_name = instance.role.name.lower()
-    except AttributeError:
-        role_name = str(instance.role_id)
-
-    msg_data = {
-        'id': str(instance.id),
-        'role': role_name,
-        'session_id': str(instance.session_id),
-        'content': instance.content,
-        'is_volatile': instance.is_volatile,
-    }
-
-    transmitter = Acetylcholine(
-        receptor_class=sender.__name__,
-        dendrite_id=str(instance.id),
-        activity='created',
-        vesicle=msg_data,
-    )
-    async_to_sync(fire_neurotransmitter)(transmitter)
 
 
 @receiver(post_save, sender=ToolCall)

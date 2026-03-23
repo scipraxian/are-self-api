@@ -11,7 +11,7 @@ from common.models import (
     NameMixin,
     UUIDIdMixin,
 )
-from frontal_lobe.models import ModelRegistry, ReasoningTurn
+from frontal_lobe.models import ReasoningTurn
 from hippocampus.models import TalosEngram
 from parietal_lobe.models import ToolDefinition
 
@@ -161,8 +161,7 @@ class IdentityDisc(
         if not self.pk:
             return
 
-        registry = ModelRegistry.objects.get(id=ModelRegistry.NOMIC_EMBED_TEXT)
-        client = OllamaClient(registry.name)
+        client = OllamaClient('nomic-embed-text')
 
         tag_names = ', '.join(self.tags.values_list('name', flat=True))
 

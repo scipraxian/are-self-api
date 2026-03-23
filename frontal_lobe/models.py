@@ -210,7 +210,7 @@ class ReasoningSession(
 
 
 # TODO: consider uuid.
-class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
+class ReasoningTurn(UUIDIdMixin, CreatedAndModifiedWithDelta, ReasoningStatusMixin):
     """
     A single 'tick' or step in the reasoning process.
     """
@@ -293,60 +293,4 @@ class SessionConclusion(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
         return self.session.talosengram_set.all()
 
 
-# TODO: Decouple these entirely from the frontal_lobe. It belongs in the thalamus.
-class ChatMessageRole(NameMixin, CreatedMixin):
-    SYSTEM = 1
-    SYSTEM_NAME = 'system'
-    USER = 2
-    USER_NAME = 'user'
-    ASSISTANT = 3
-    ASSISTANT_NAME = 'assistant'
-    TOOL = 4
-    TOOL_NAME = 'tool'
 
-    ROLE_CHOICES = (
-        (SYSTEM, SYSTEM_NAME),
-        (USER, USER_NAME),
-        (ASSISTANT, ASSISTANT_NAME),
-        (TOOL, TOOL_NAME),
-    )
-
-    ROLE_NAMES = [ROLE_NAME for _, ROLE_NAME in ROLE_CHOICES]
-
-    class Meta:
-        verbose_name_plural = 'Chat Message Roles'
-        ordering = ['id']
-
-
-class ChatMessage(UUIDIdMixin, CreatedMixin):
-    RELATED_NAME = 'messages'
-    ROLE_KEY = 'role'
-    CONTENT_KEY = 'content'
-    NAME_KEY = 'name'
-    TOOL_CALL_ID_KEY = 'tool_call_id'
-    TOOL_CALLS_KEY = 'tool_calls'
-    TOOL_KEY = 'tool'
-
-    session = models.ForeignKey(
-        ReasoningSession, on_delete=models.CASCADE, related_name=RELATED_NAME
-    )
-    turn = models.ForeignKey(
-        ReasoningTurn, on_delete=models.CASCADE, related_name=RELATED_NAME
-    )
-    role = models.ForeignKey(ChatMessageRole, on_delete=models.CASCADE)
-    content = models.TextField()
-    tool_call = models.ForeignKey(
-        'parietal_lobe.ToolCall',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-    )
-    is_volatile = models.BooleanField(
-        default=False,
-        help_text='If True, this message (like an Addon) is excluded from historical memory.',
-    )
-
-    class Meta:
-        ordering = ['-created']
-        verbose_name = 'Chat Message'
-        verbose_name_plural = 'Chat Messages'

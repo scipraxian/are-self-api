@@ -1,22 +1,18 @@
 import os
 
-import pytest
-
-from identity.models import IdentityType, IdentityDisc
-from identity.addons.addon_package import AddonPackage
 from identity.addons import agile_addon as agile_module
 from identity.addons.agile_addon import agile_addon
-from prefrontal_cortex.models import PFCItemStatus, PFCEpic, PFCStory
+from identity.models import IdentityType
+from prefrontal_cortex.models import PFCItemStatus
 from temporal_lobe.models import Shift
 
-
-os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+os.environ['DJANGO_ALLOW_ASYNC_UNSAFE'] = 'true'
 
 
 class _FakeDisc:
     def __init__(self, identity_type_id):
         self.identity_type_id = identity_type_id
-        self.id = "fake-disc-id"
+        self.id = 'fake-disc-id'
         self.identity_type = None
 
 
@@ -56,17 +52,17 @@ class _FakeStatus:
 class _StatusManager:
     def all(self):
         return [
-            _FakeStatus(pk=PFCItemStatus.BACKLOG, name="Backlog"),
+            _FakeStatus(pk=PFCItemStatus.BACKLOG, name='Backlog'),
         ]
 
 
 def _make_package(
     iteration=1,
-    identity="fake-identity-id",
-    identity_disc="fake-disc-id",
+    identity='fake-identity-id',
+    identity_disc='fake-disc-id',
     turn_number=1,
     reasoning_turn_id=1,
-    environment_id="env-123",
+    environment_id='env-123',
     shift_id=None,
 ):
     return AddonPackage(
@@ -96,7 +92,7 @@ def test_agile_addon_preview_mode_without_disc():
 
     assert (
         prompt
-        == "[AGILE BOARD CONTEXT: UI Preview Mode - No Active Disc Assigned]"
+        == '[AGILE BOARD CONTEXT: UI Preview Mode - No Active Disc Assigned]'
     )
 
 
@@ -105,7 +101,7 @@ def test_agile_addon_preview_mode_without_shift(monkeypatch):
     # Avoid hitting the real DB for IdentityDisc
     monkeypatch.setattr(
         agile_module.IdentityDisc,
-        "objects",
+        'objects',
         _FakeDiscManager(identity_type_id=IdentityType.PM),
     )
 
@@ -113,7 +109,7 @@ def test_agile_addon_preview_mode_without_shift(monkeypatch):
 
     prompt = agile_addon(package)
 
-    assert "No Active Shift or Disc Assigned" in prompt
+    assert 'No Active Shift or Disc Assigned' in prompt
 
 
 def test_agile_addon_sifting_pm_context_for_pm(monkeypatch):
@@ -124,22 +120,22 @@ def test_agile_addon_sifting_pm_context_for_pm(monkeypatch):
     # Patch ORM access so we do not require a database
     monkeypatch.setattr(
         agile_module.IdentityDisc,
-        "objects",
+        'objects',
         _FakeDiscManager(identity_type_id=IdentityType.PM),
     )
     monkeypatch.setattr(
         agile_module.PFCEpic,
-        "objects",
+        'objects',
         _EmptyManager(),
     )
     monkeypatch.setattr(
         agile_module.PFCStory,
-        "objects",
+        'objects',
         _EmptyManager(),
     )
     monkeypatch.setattr(
         agile_module.PFCItemStatus,
-        "objects",
+        'objects',
         _StatusManager(),
     )
 
@@ -148,9 +144,9 @@ def test_agile_addon_sifting_pm_context_for_pm(monkeypatch):
     prompt = agile_addon(package)
 
     # Header & environment
-    assert "AGILE BOARD CONTEXT" in prompt
-    assert "SHIFT:" in prompt
-    assert "ENVIRONMENT: env-123" in prompt
+    assert 'AGILE BOARD CONTEXT' in prompt
+    assert 'SHIFT:' in prompt
+    assert 'ENVIRONMENT: env-123' in prompt
 
     # Sifting PM guidance text
-    assert "Definition of Ready (DoR)" in prompt
+    assert 'Definition of Ready (DoR)' in prompt

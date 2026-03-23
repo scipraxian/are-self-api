@@ -2,7 +2,7 @@ import logging
 
 from asgiref.sync import sync_to_async
 
-from frontal_lobe.models import ChatMessage, ChatMessageRole, ReasoningTurn
+from frontal_lobe.models import ReasoningTurn
 
 logger = logging.getLogger(__name__)
 
@@ -21,18 +21,6 @@ async def mcp_internal_monologue(
     """
     logger.info(f'[INTERNAL MONOLOGUE] Turn {turn_id} Thinking...')
 
-    # 1. Save the user message ONLY if it exists
-    if message_to_user and session_id and turn_id:
-        try:
-            await sync_to_async(ChatMessage.objects.create)(
-                session_id=session_id,
-                turn_id=turn_id,
-                role_id=ChatMessageRole.ASSISTANT,
-                content=message_to_user.strip(),
-                is_volatile=False,
-            )
-        except Exception as e:
-            logger.error(f'Failed to save message_to_user to DB: {e}')
 
     # 2. Save the thought process to the Turn record EVERY time
     if turn_id:
