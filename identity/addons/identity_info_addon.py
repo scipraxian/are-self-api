@@ -18,10 +18,15 @@ def identity_info_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
 
     # Fetch the actual Disc object for the prompt builder
     disc = turn.session.identity_disc
+    iteration_id = None
+    if turn.session.participant_id:
+        iteration_id = (
+            turn.session.participant.iteration_shift.shift_iteration_id
+        )
 
     prompt_text = build_identity_prompt(
         identity_disc=disc,
-        iteration_id=turn.session.participant.iteration_id if turn.session.participant else None,
+        iteration_id=iteration_id,
         turn_number=turn.turn_number,
         reasoning_turn_id=turn.id,
     )
@@ -29,4 +34,4 @@ def identity_info_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
     if not prompt_text:
         return []
 
-    return [{"role": "system", "content": prompt_text}]
+    return [{'role': 'system', 'content': prompt_text}]
