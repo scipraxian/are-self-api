@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 STATUS_ID = 'status_id'
 ROLE = 'role'
 CONTENT = 'content'
-
+MODEL_USAGE_RECORD = 'model_usage_record'
 
 
 def _fetch_disc_sync(session_id):
@@ -51,12 +51,12 @@ def _mint_usage_record_sync(
     response: SynapseResponse,
     estimated_cost: Decimal,
     duration: timedelta,
-):
+) -> Optional[AIModelProviderUsageRecord]:
     """Synchronously creates the immutable FinOps ledger entry."""
 
     # Safety Check: If the API crashed before processing tokens, don't mint a blank ledger
     if response.is_error and response.tokens_input == 0:
-        return
+        return None
 
     provider_record = (
         AIModelProvider.objects.filter(
@@ -67,13 +67,16 @@ def _mint_usage_record_sync(
     )
 
     if provider_record:
-        AIModelProviderUsageRecord.objects.create(
+        return AIModelProviderUsageRecord.objects.create(
             ai_model_provider=provider_record,
             model_provider=provider_record,
             ai_model=provider_record.ai_model,
             identity_disc=identity_disc,
-            reasoning_turn=turn_record,
             query_time=duration,
+            request_payload=getattr(
+                turn_record, '_transient_request_payload', []
+            ),
+            response_payload=response.response_payload,
             input_tokens=response.tokens_input,
             output_tokens=response.tokens_output,
             reasoning_tokens=response.metrics.reasoning_tokens,
@@ -82,6 +85,7 @@ def _mint_usage_record_sync(
             audio_tokens=response.metrics.audio_tokens,
             estimated_cost=estimated_cost,
         )
+    return None
 
 
 class FrontalLobe:
@@ -211,54 +215,67 @@ class FrontalLobe:
             ReasoningTurn.objects.filter(
                 session=self.session,
                 turn_number__lt=turn_record.turn_number,
-                model_usage_record__isnull=False
-            ).select_related('model_usage_record').order_by('turn_number')
+                model_usage_record__isnull=False,
+            )
+            .select_related('model_usage_record')
+            .order_by('turn_number')
         )
         for t in recent_turns:
             req_payload = t.model_usage_record.request_payload or []
             res_payload = t.model_usage_record.response_payload or {}
-            
+
             if isinstance(req_payload, list):
                 all_messages.extend(req_payload)
             elif isinstance(req_payload, dict):
                 all_messages.append(req_payload)
-                
+
             if isinstance(res_payload, list):
                 all_messages.extend(res_payload)
             elif isinstance(res_payload, dict):
-                if "role" in res_payload:
+                if 'role' in res_payload:
                     all_messages.append(res_payload)
-                elif "choices" in res_payload and len(res_payload["choices"]) > 0:
-                    all_messages.append(res_payload["choices"][0].get("message", {}))
+                elif (
+                    'choices' in res_payload and len(res_payload['choices']) > 0
+                ):
+                    all_messages.append(
+                        res_payload['choices'][0].get('message', {})
+                    )
 
         # 2. Extract THIS turn's base inputs (tools outputs from last turn)
         current_req_payload = []
         if turn_record.last_turn:
-            prev_tools = await sync_to_async(list)(turn_record.last_turn.tool_calls.select_related('tool').all())
+            prev_tools = await sync_to_async(list)(
+                turn_record.last_turn.tool_calls.select_related('tool').all()
+            )
             for tc in prev_tools:
-                current_req_payload.append({
-                    "role": "tool",
-                    "content": str(tc.result_payload or ''),
-                    "tool_call_id": f"call_{tc.id}",
-                    "name": tc.tool.name
-                })
-        
+                current_req_payload.append(
+                    {
+                        'role': 'tool',
+                        'content': str(tc.result_payload or ''),
+                        'tool_call_id': f'call_{tc.id}',
+                        'name': tc.tool.name,
+                    }
+                )
+
         turn_record._transient_request_payload = current_req_payload
         all_messages.extend(current_req_payload)
 
         # 3. Addon Context (Transient)
         active_addons = await sync_to_async(list)(
-            self.session.identity_disc.addons.select_related('phase').order_by('phase__id')
+            self.session.identity_disc.addons.select_related('phase').order_by(
+                'phase__id'
+            )
         )
 
         for addon_model in active_addons:
             if not addon_model.function_slug:
                 if addon_model.description:
-                    logger.debug(f'Injecting native text addon: {addon_model.name}')
-                    all_messages.append({
-                        "role": "system",
-                        "content": addon_model.description
-                    })
+                    logger.debug(
+                        f'Injecting native text addon: {addon_model.name}'
+                    )
+                    all_messages.append(
+                        {'role': 'system', 'content': addon_model.description}
+                    )
                 continue
 
             addon_func = ADDON_REGISTRY.get(addon_model.function_slug)
@@ -268,13 +285,17 @@ class FrontalLobe:
                 if addon_messages:
                     all_messages.extend(addon_messages)
             else:
-                logger.warning(f'Addon {addon_model.function_slug} not found in registry.')
+                logger.warning(
+                    f'Addon {addon_model.function_slug} not found in registry.'
+                )
 
         llm_payload = all_messages
 
-        await self._log_live(f'\n--- TURN {turn_record.turn_number} PAYLOAD ({len(llm_payload)} messages) ---')
+        await self._log_live(
+            f'\n--- TURN {turn_record.turn_number} PAYLOAD ({len(llm_payload)} messages) ---'
+        )
         for msg in llm_payload:
-            content_str = str(msg.get("content", ""))
+            content_str = str(msg.get('content', ''))
             await self._log_live(f'[{msg.get("role")}] {content_str[:150]}...')
         await self._log_live('------------------------\n')
 
@@ -367,7 +388,6 @@ class FrontalLobe:
             inference_duration=duration,
             identity_disc=self.session.identity_disc,
         )
-
 
         if response.content:
             await self._log_live(
@@ -524,13 +544,7 @@ async def _record_turn_completion(
     identity_disc: 'IdentityDisc',
 ) -> None:
     # 1. Update Turn
-    turn_record.tokens_input = response.tokens_input
-    turn_record.tokens_output = response.tokens_output
-    turn_record.inference_time = inference_duration
     turn_record.status_id = ReasoningStatusID.COMPLETED
-    turn_record.request_payload = getattr(turn_record, '_transient_request_payload', [])
-    turn_record.response_payload = response.response_payload
-    await sync_to_async(turn_record.save)()
 
     # 2. Calculate the estimated cost based on the Selection
     estimated_cost = (
@@ -538,7 +552,7 @@ async def _record_turn_completion(
     )
 
     # 3. Mint Usage Record
-    await sync_to_async(_mint_usage_record_sync)(
+    usage_record = await sync_to_async(_mint_usage_record_sync)(
         turn_record,
         identity_disc,
         model_selection,
@@ -546,5 +560,9 @@ async def _record_turn_completion(
         estimated_cost,
         inference_duration,
     )
+    if usage_record:
+        turn_record.model_usage_record = usage_record
 
-
+    await sync_to_async(turn_record.save)(
+        update_fields=[STATUS_ID, MODEL_USAGE_RECORD]
+    )

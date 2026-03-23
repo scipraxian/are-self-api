@@ -210,7 +210,9 @@ class ReasoningSession(
 
 
 # TODO: consider uuid.
-class ReasoningTurn(UUIDIdMixin, CreatedAndModifiedWithDelta, ReasoningStatusMixin):
+class ReasoningTurn(
+    UUIDIdMixin, CreatedAndModifiedWithDelta, ReasoningStatusMixin
+):
     """
     A single 'tick' or step in the reasoning process.
     """
@@ -240,12 +242,35 @@ class ReasoningTurn(UUIDIdMixin, CreatedAndModifiedWithDelta, ReasoningStatusMix
         return f'Turn {self.turn_number} (Session: {self.session_id})'
 
     @property
+    def thought_process(self) -> str:
+        """Proxy to the ledger for legacy compatibility."""
+        if self.model_usage_record and self.model_usage_record.response_payload:
+            return self.model_usage_record.response_payload.get('content', '')
+        return ''
+
+    @property
+    def request_payload(self):
+        if self.model_usage_record:
+            return self.model_usage_record.request_payload
+        return None
+
+    @property
+    def response_payload(self):
+        if self.model_usage_record:
+            return self.model_usage_record.response_payload
+        return None
+
+    @property
+    def inference_time(self) -> timedelta:
+        if self.model_usage_record:
+            return self.model_usage_record.query_time or timedelta()
+        return timedelta()
+
+    @property
     def was_efficient_last_turn(self) -> bool:
         target_capacity = self.session.current_level * 1000
         last_output_len = (
-            len(self.last_turn.thought_process)
-            if self.last_turn and self.last_turn.thought_process
-            else 0
+            len(self.last_turn.thought_process) if self.last_turn else 0
         )
         return last_output_len <= target_capacity
 
@@ -291,6 +316,3 @@ class SessionConclusion(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
     @property
     def engrams(self):
         return self.session.talosengram_set.all()
-
-
-

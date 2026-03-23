@@ -182,7 +182,7 @@ class ParietalLobe:
         raw_args = func_data.get(self.T_ARGS, {})
         args = _json_str_to_dict(raw_args)
         args[self.SESSION_ID] = str(self.session.id)
-        args[self.TURN_ID] = turn_record.id
+        args[self.TURN_ID] = str(turn_record.id)
         await self._log_live(f'Tool Call: {tool_name}({args})')
 
         try:

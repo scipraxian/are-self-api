@@ -97,7 +97,7 @@ class TestHippocampusVectors:
                 return mock_embed_inner
 
             if hasattr(func,
-                       "__name__") and func.__name__ == "_get_existing_sync":
+                       "__name__") and func.__name__ == "_get_existing_desc_sync":
                 return mock_first_call
 
             return mock_second_call

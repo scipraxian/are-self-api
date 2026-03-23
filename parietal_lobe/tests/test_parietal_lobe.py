@@ -82,25 +82,27 @@ class ParietalLobeTest(CommonFixturesAPITestCase):
         self.parietal_lobe = ParietalLobe(self.session, mock_callback)
 
     @pytest.mark.asyncio
-    @patch('parietal_lobe.parietal_lobe.OllamaClient')
-    async def test_initialize_and_chat(self, mock_client_cls):
-        """Test inference flow wrapper."""
-        mock_instance = mock_client_cls.return_value
-        mock_instance.chat = MagicMock(return_value='test_response')
+    @patch('parietal_lobe.parietal_lobe.asyncio.to_thread')
+    async def test_chat_conduit(self, mock_thread):
+        """Test the stateless chat conduit."""
+        from hypothalamus.serializers import ModelSelection
+        from decimal import Decimal
 
-        await self.parietal_lobe.initialize_client('test_model')
+        mock_selection = ModelSelection(
+            provider_model_id='test-model-id',
+            ai_model_name='test-model',
+            distance=0.0,
+            input_cost_per_token=Decimal('0.0001')
+        )
+        mock_thread.return_value = 'DUMMY_SYNAPSE_RESPONSE'
 
-        self.assertEqual(self.parietal_lobe.client, mock_instance)
-
-        resp = await self.parietal_lobe.chat([{
-            'role': 'user',
-            'content': 'hello'
-        }], [])
-        self.assertEqual(resp, 'test_response')
-        mock_instance.chat.assert_called_once()
-
-        await self.parietal_lobe.unload_client()
-        mock_instance.unload.assert_called_once()
+        resp = await self.parietal_lobe.chat(
+            [{'role': 'user', 'content': 'hello'}],
+            [],
+            mock_selection
+        )
+        self.assertEqual(resp, 'DUMMY_SYNAPSE_RESPONSE')
+        mock_thread.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_build_tool_schemas(self):
