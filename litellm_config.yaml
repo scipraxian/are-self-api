@@ -1,0 +1,24 @@
+model_list:
+  # --- TIER 1: The Free Workers ---
+  # If Django asks for "swarm-worker", it hits Llama Free first.
+  - model_name: swarm-worker
+    litellm_params:
+      model: openrouter/meta-llama/llama-3.3-70b-instruct:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  # If Llama Free fails (rate limit), it automatically falls back to Qwen Free.
+  - model_name: swarm-worker
+    litellm_params:
+      model: openrouter/qwen/qwen-2.5-72b-instruct:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  # --- TIER 2: The Premium PMs / Oversight ---
+  # If Django asks for "swarm-premium", it routes to the heavy hitters.
+  - model_name: swarm-premium
+    litellm_params:
+      model: openrouter/google/gemini-2.5-flash
+      api_key: os.environ/OPENROUTER_API_KEY
+
+router_settings:
+  # This tells the proxy: "If priority 1 fails, try priority 2"
+  routing_strategy: simple-shuffle

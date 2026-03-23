@@ -2,7 +2,6 @@ import logging
 
 from channels.layers import get_channel_layer
 
-from .constants import SYNAPSE_GROUP_PREFIX
 from .neurotransmitters import Neurotransmitter
 
 logger = logging.getLogger(__name__)
@@ -18,7 +17,8 @@ async def fire_neurotransmitter(transmitter: Neurotransmitter):
         logger.warning('No channel layer found; neurotransmitter dropped.')
         return
 
-    group_name = f'{SYNAPSE_GROUP_PREFIX}{transmitter.spike_id}'
+    # e.g., "synapse_identitydisc" or "synapse_chatmessage"
+    group_name = f'synapse_{str(transmitter.receptor_class).lower()}'
 
     try:
         await channel_layer.group_send(
@@ -26,7 +26,7 @@ async def fire_neurotransmitter(transmitter: Neurotransmitter):
         )
     except Exception as e:
         logger.error(
-            f'Failed to fire neurotransmitter {transmitter.event.value} '
-            f'for spike {transmitter.spike_id}: {e}',
+            f'Failed to fire neurotransmitter {transmitter.receptor_class} '
+            f'for dendrite {transmitter.dendrite_id}: {e}',
             exc_info=True,
         )

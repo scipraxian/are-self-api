@@ -1,0 +1,320 @@
+import logging
+import os
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
+
+import litellm
+from django.conf import settings
+from litellm import ModelResponse
+from litellm.exceptions import APIConnectionError, RateLimitError
+
+from hypothalamus.models import AIModelProvider
+from hypothalamus.serializers import ModelSelection
+
+# ------------------------------------------------------------------ #
+#  LiteLLM Global Config                                             #
+# ------------------------------------------------------------------ #
+
+litellm.telemetry = False
+litellm.set_verbose = False
+litellm.drop_params = True
+
+logger = logging.getLogger(__name__)
+
+# ------------------------------------------------------------------ #
+#  Provider Identity                                                  #
+# ------------------------------------------------------------------ #
+
+PROVIDER_OLLAMA = 'ollama'
+
+# ------------------------------------------------------------------ #
+#  LiteLLM kwarg keys                                                #
+# ------------------------------------------------------------------ #
+
+KWARG_MODEL = 'model'
+KWARG_MESSAGES = 'messages'
+KWARG_STREAM = 'stream'
+KWARG_API_KEY = 'api_key'
+KWARG_API_BASE = 'api_base'
+KWARG_TOOLS = 'tools'
+KWARG_TOOL_CHOICE = 'tool_choice'
+KWARG_MAX_TOKENS = 'max_tokens'
+KWARG_NUM_KEEP_ALIVE = 'num_keep_alive'
+
+TOOL_CHOICE_AUTO = 'auto'
+
+# ------------------------------------------------------------------ #
+#  LiteLLM Usage / Telemetry dict keys                               #
+# ------------------------------------------------------------------ #
+
+USAGE_PROMPT_TOKENS = 'prompt_tokens'
+USAGE_COMPLETION_TOKENS = 'completion_tokens'
+USAGE_PROMPT_TOKENS_DETAILS = 'prompt_tokens_details'
+USAGE_COMPLETION_TOKENS_DETAILS = 'completion_tokens_details'
+USAGE_CACHE_CREATION_INPUT_TOKENS = 'cache_creation_input_tokens'
+
+DETAIL_REASONING_TOKENS = 'reasoning_tokens'
+DETAIL_CACHED_TOKENS = 'cached_tokens'
+DETAIL_AUDIO_TOKENS = 'audio_tokens'
+
+# ------------------------------------------------------------------ #
+#  Unload Sentinel Payload                                           #
+# ------------------------------------------------------------------ #
+
+UNLOAD_ROLE = 'system'
+UNLOAD_CONTENT = 'unload'
+UNLOAD_MAX_TOKENS = 1
+UNLOAD_KEEP_ALIVE = 0
+
+# ------------------------------------------------------------------ #
+#  Error Messages                                                    #
+# ------------------------------------------------------------------ #
+
+ERR_CONTEXT_WINDOW = 'Context Window Exceeded.'
+
+
+# ------------------------------------------------------------------ #
+#  Dataclasses                                                       #
+# ------------------------------------------------------------------ #
+
+
+@dataclass(frozen=True)
+class TelemetryMetrics:
+    """Strictly maps to AIModelProviderUsageRecord fields."""
+
+    reasoning_tokens: int = 0
+    cache_read_input_tokens: int = 0
+    cache_creation_input_tokens: int = 0
+    audio_tokens: int = 0
+
+
+@dataclass(frozen=True)
+class SynapseResponse:
+    """Immutable FinOps receipt and content payload."""
+
+    content: str
+    model: str
+    tokens_input: int
+    tokens_output: int
+    tool_calls: List[Dict[str, Any]] = field(default_factory=list)
+    metrics: TelemetryMetrics = field(default_factory=TelemetryMetrics)
+    is_error: bool = False
+    error_message: str = ''
+
+    @classmethod
+    def error(cls, model_id: str, message: str) -> 'SynapseResponse':
+        return cls(
+            content='',
+            model=model_id,
+            tokens_input=0,
+            tokens_output=0,
+            is_error=True,
+            error_message=message,
+        )
+
+
+# ------------------------------------------------------------------ #
+#  Testable Pure Functions (Zero side-effects, Zero DB hits)         #
+# ------------------------------------------------------------------ #
+
+
+def resolve_api_key(env_var_name: Optional[str]) -> Optional[str]:
+    """Resolves an OS or Django setting environment variable cleanly."""
+    if not env_var_name:
+        return None
+    return getattr(settings, env_var_name, None) or os.environ.get(env_var_name)
+
+
+def normalize_tool_calls(message: Any) -> List[Dict[str, Any]]:
+    """Normalizes unpredictable Pydantic/Dict objects from LiteLLM into flat dicts."""
+    tool_calls = getattr(message, 'tool_calls', None)
+    if not tool_calls:
+        return []
+
+    return [
+        tc.model_dump()
+        if hasattr(tc, 'model_dump')
+        else tc.dict()
+        if hasattr(tc, 'dict')
+        else tc
+        for tc in tool_calls
+    ]
+
+
+def parse_telemetry(usage: Any) -> TelemetryMetrics:
+    """Safely extracts granular FinOps data from the LiteLLM usage block."""
+    if not usage:
+        return TelemetryMetrics()
+
+    usage_dict = (
+        usage.model_dump()
+        if hasattr(usage, 'model_dump')
+        else (usage.dict() if hasattr(usage, 'dict') else dict(usage))
+    )
+
+    prompt_details: Dict[str, Any] = (
+        usage_dict.get(USAGE_PROMPT_TOKENS_DETAILS) or {}
+    )
+    comp_details: Dict[str, Any] = (
+        usage_dict.get(USAGE_COMPLETION_TOKENS_DETAILS) or {}
+    )
+
+    return TelemetryMetrics(
+        reasoning_tokens=comp_details.get(DETAIL_REASONING_TOKENS, 0),
+        cache_read_input_tokens=prompt_details.get(DETAIL_CACHED_TOKENS, 0),
+        cache_creation_input_tokens=usage_dict.get(
+            USAGE_CACHE_CREATION_INPUT_TOKENS, 0
+        ),
+        audio_tokens=(
+            prompt_details.get(DETAIL_AUDIO_TOKENS, 0)
+            + comp_details.get(DETAIL_AUDIO_TOKENS, 0)
+        ),
+    )
+
+
+# ------------------------------------------------------------------ #
+#  The Client                                                        #
+# ------------------------------------------------------------------ #
+
+
+class SynapseClient:
+    """
+    Stateful execution conduit.
+    Fails fast on init if DB configuration is missing.
+    """
+
+    def __init__(self, model_selection: ModelSelection):
+        self.model_id = model_selection.provider_model_id
+
+        self.provider_record: AIModelProvider = (
+            AIModelProvider.objects.select_related('provider').get(
+                provider_unique_model_id=self.model_id
+            )
+        )
+        self.network_config = self.provider_record.provider
+
+    def chat(
+        self, messages: list, tools: list = None, **kwargs
+    ) -> SynapseResponse:
+        """
+        Executes inference using LiteLLM.
+        Trips the Postgres Circuit Breaker on a 429 Rate Limit.
+        """
+        # 1. Properly build the litellm payload using your existing helper
+        litellm_kwargs = self._build_kwargs(messages, tools, kwargs)
+
+        try:
+            # 2. Execute inference
+            response = litellm.completion(**litellm_kwargs)
+
+            # --- SUCCESS: CLEAR THE BREAKER ---
+            if (
+                self.provider_record
+                and self.provider_record.rate_limit_counter > 0
+            ):
+                self.provider_record.reset_circuit_breaker()
+                logger.info(
+                    f'[Synapse] Circuit Breaker reset for {self.model_id}'
+                )
+
+            # 3. Process into your dataclass
+            return self._process_response(response)
+
+        except (RateLimitError, APIConnectionError) as e:
+            # --- FAILURE: TRIP THE BREAKER ---
+            error_str = str(e).lower()
+
+            if (
+                '429' in error_str
+                or 'rate limit' in error_str
+                or isinstance(e, RateLimitError)
+            ):
+                if self.provider_record:
+                    self.provider_record.trip_circuit_breaker()
+                    logger.warning(
+                        f'[Synapse] RATE LIMIT HIT. Circuit Breaker tripped for {self.model_id}. '
+                        f'Cooldown until: {self.provider_record.rate_limit_reset_time}'
+                    )
+
+            # Re-raise the exception so the Frontal Lobe knows the inference misfired
+            raise e
+
+    def unload(self) -> None:
+        """Issues an explicit VRAM drop command for local hardware models."""
+        if self.network_config.key.lower() != PROVIDER_OLLAMA:
+            return
+
+        try:
+            litellm.completion(
+                **{
+                    KWARG_MODEL: self.model_id,
+                    KWARG_MESSAGES: [
+                        {
+                            'role': UNLOAD_ROLE,
+                            'content': UNLOAD_CONTENT,
+                        }
+                    ],
+                    KWARG_MAX_TOKENS: UNLOAD_MAX_TOKENS,
+                    KWARG_NUM_KEEP_ALIVE: UNLOAD_KEEP_ALIVE,
+                    KWARG_API_BASE: (
+                        self.network_config.base_url.rstrip('/')
+                        if self.network_config.base_url
+                        else None
+                    ),
+                    KWARG_API_KEY: resolve_api_key(
+                        self.network_config.api_key_env_var
+                    ),
+                }
+            )
+        except Exception as exc:
+            logger.warning(
+                '[Synapse] VRAM unload signal failed for %s: %s',
+                self.model_id,
+                exc,
+            )
+
+    def _build_kwargs(
+        self,
+        messages: List[Dict[str, Any]],
+        tools: Optional[List[Dict[str, Any]]],
+        options: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Maps standard inputs and DB configuration to LiteLLM kwargs."""
+        kwargs: Dict[str, Any] = {
+            KWARG_MODEL: self.model_id,
+            KWARG_MESSAGES: messages,
+            KWARG_STREAM: False,
+            **options,
+        }
+
+        if self.network_config.requires_api_key:
+            kwargs[KWARG_API_KEY] = resolve_api_key(
+                self.network_config.api_key_env_var
+            )
+
+        if self.network_config.base_url:
+            kwargs[KWARG_API_BASE] = self.network_config.base_url.rstrip('/')
+
+        if tools:
+            kwargs[KWARG_TOOLS] = tools
+            kwargs[KWARG_TOOL_CHOICE] = TOOL_CHOICE_AUTO
+
+        return kwargs
+
+    def _process_response(self, response: ModelResponse) -> SynapseResponse:
+        """Transforms a successful LiteLLM response into our immutable FinOps receipt."""
+
+        # TODO: Return multiple choices. IMPORTANT!
+        message = response.choices[0].message
+        usage = getattr(response, 'usage', None)
+
+        return SynapseResponse(
+            content=message.content or '',
+            model=response.model or self.model_id,
+            tokens_input=getattr(usage, USAGE_PROMPT_TOKENS, 0) if usage else 0,
+            tokens_output=getattr(usage, USAGE_COMPLETION_TOKENS, 0)
+            if usage
+            else 0,
+            tool_calls=normalize_tool_calls(message),
+            metrics=parse_telemetry(usage),
+        )

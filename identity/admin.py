@@ -5,6 +5,7 @@ from .identity_prompt import build_identity_prompt, render_base_identity
 from .models import (
     Identity,
     IdentityAddon,
+    IdentityAddonPhase,
     IdentityDisc,
     IdentityTag,
     IdentityType,
@@ -36,14 +37,15 @@ class IdentityTagAdmin(admin.ModelAdmin):
 
 @admin.register(IdentityAddon)
 class IdentityAddonAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description')
+    list_display = ('name', 'phase', 'description')
     search_fields = ('name',)
+    list_filter = ('phase',)
 
 
 @admin.register(Identity)
 class IdentityAdmin(admin.ModelAdmin):
     list_display = ('name', 'identity_type', 'created')
-    list_filter = ('identity_type', 'ai_model')
+    list_filter = ('identity_type',)
     search_fields = ('name', 'system_prompt_template')
     filter_horizontal = ('tags', 'addons', 'enabled_tools')
     readonly_fields = ('created', 'modified', 'delta', 'prompt_preview')
@@ -55,7 +57,6 @@ class IdentityAdmin(admin.ModelAdmin):
                 'fields': (
                     'name',
                     'identity_type',
-                    'ai_model',
                     'system_prompt_template',
                 )
             },
@@ -98,16 +99,26 @@ class IdentityAdmin(admin.ModelAdmin):
 @admin.register(IdentityDisc)
 class IdentityDiscAdmin(admin.ModelAdmin):
     list_display = ('name', 'identity_type', 'level', 'xp', 'available')
-    list_filter = ('available', 'level', 'identity_type', 'ai_model')
+    list_filter = (
+        'available',
+        'level',
+        'identity_type',
+    )
     search_fields = ('name', 'system_prompt_template')
-    readonly_fields = ('created', 'modified', 'delta', 'prompt_preview')
+    readonly_fields = (
+        'created',
+        'modified',
+        'delta',
+        'prompt_preview',
+        'vector_display',
+    )
     filter_horizontal = ('tags', 'addons', 'enabled_tools', 'memories')
 
     fieldsets = (
         ('Disc Profile', {'fields': ('name', 'identity_type', 'available')}),
         (
             'Persona Core',
-            {'fields': ('ai_model', 'system_prompt_template')},
+            {'fields': ('system_prompt_template',)},
         ),
         (
             'Capabilities & Flavor',
@@ -132,7 +143,12 @@ class IdentityDiscAdmin(admin.ModelAdmin):
         (
             'Memory state',
             {
-                'fields': ('last_message_to_self', 'last_turn', 'memories'),
+                'fields': (
+                    'last_message_to_self',
+                    'last_turn',
+                    'memories',
+                    'vector_display',
+                ),
                 'classes': ('collapse',),
             },
         ),
@@ -145,6 +161,18 @@ class IdentityDiscAdmin(admin.ModelAdmin):
         ),
     )
 
+    def vector_display(self, obj):
+        """Displays the vector in a format that avoids truthiness ambiguity."""
+        if obj.vector is None:
+            return 'None'
+        try:
+            length = len(obj.vector)
+            return f'Vector({length} dimensions)'
+        except (TypeError, ValueError):
+            return 'Invalid Vector'
+
+    vector_display.short_description = 'Vector'
+
     def prompt_preview(self, obj):
         if not obj.pk:
             return format_html(
@@ -156,3 +184,8 @@ class IdentityDiscAdmin(admin.ModelAdmin):
         return _render_terminal_preview(prompt)
 
     prompt_preview.short_description = 'Resolved Output'
+
+
+@admin.register(IdentityAddonPhase)
+class IdentityAddonPhaseAdmin(admin.ModelAdmin):
+    pass

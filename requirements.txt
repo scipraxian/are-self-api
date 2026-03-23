@@ -46,3 +46,8 @@ django-celery-beat
 django-cors-headers
 
 pydantic
+
+channels-redis
+
+litellm
+tenacity

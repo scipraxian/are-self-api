@@ -15,14 +15,14 @@ def check_next_wave(spike_train_id):
     """
     from .central_nervous_system import CNS  # circular import
 
-    logger.info(f'[CELERY] Checking next wave for SpikeTrain {spike_train_id}')
+    logger.debug(f'[CNS] Checking next wave for SpikeTrain {spike_train_id}')
     try:
         controller = CNS(spike_train_id=spike_train_id)
         # Accessing internal dispatch logic directly for task efficiency
         controller.dispatch_next_wave()
     except Exception as e:
         logger.exception(
-            f'[CELERY] Check Wave Failed for SpikeTrain {spike_train_id}: {e}'
+            f'[CNS] Check Wave Failed for SpikeTrain {spike_train_id}: {e}'
         )
         raise
 
@@ -33,7 +33,7 @@ def cast_cns_spell(self, spike_id):
     The Main Execution Task.
     Instantiates the GenericEffectorCaster to run the pipeline.
     """
-    logger.info(f'Task starting for Spike ID: {spike_id}')
+    logger.debug(f'Task starting for Spike ID: {spike_id}')
 
     # Store spike_train_id for the finally block
     spike_train_id = None
@@ -59,7 +59,7 @@ def cast_cns_spell(self, spike_id):
         # 2. Run the Logic (Loads DB -> runs Async Pipeline)
         caster.execute()
 
-        logger.info(f'Task completed successfully for Spike ID: {spike_id}')
+        logger.debug(f'Task completed successfully for Spike ID: {spike_id}')
 
     except Exception as e:
         logger.exception(
@@ -80,8 +80,8 @@ def cast_cns_spell(self, spike_id):
     finally:
         # 3. SELF-DRIVING ENGINE: Trigger the next wave automatically
         if spike_train_id:
-            logger.info(
-                f'[CELERY] Effector finished. Triggering next wave for SpikeTrain {spike_train_id}'
+            logger.debug(
+                f'[CNS] Effector finished. Triggering next wave for SpikeTrain {spike_train_id}'
             )
             # Use on_commit if in a transaction, otherwise call immediately
             transaction.on_commit(lambda: check_next_wave.delay(spike_train_id))

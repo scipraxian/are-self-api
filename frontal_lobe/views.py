@@ -1,7 +1,7 @@
 from django.views.generic import DetailView
 
 from .models import ReasoningSession, ReasoningStatusID
-from .serializers import ReasoningSessionSerializer
+from .serializers import ReasoningSessionGraphSerializer
 
 
 class ReasoningInterfaceView(DetailView):
@@ -28,7 +28,7 @@ class ReasoningInterfaceView(DetailView):
         session = self.object
 
         # 1. Let the DRF Serializer do the heavy lifting!
-        serialized_data = ReasoningSessionSerializer(session).data
+        serialized_data = ReasoningSessionGraphSerializer(session).data
 
         # 2. Unpack the deeply nested JSON tree directly into the template context
         context.update(serialized_data)

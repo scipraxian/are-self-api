@@ -12,7 +12,6 @@ from frontal_lobe.serializers import (
     ModelRegistrySerializer,
     TalosEngramSerializer,
 )
-from hippocampus.models import TalosEngram
 from parietal_lobe.models import ToolDefinition
 
 from .models import (
@@ -55,7 +54,6 @@ class IdentitySerializer(serializers.ModelSerializer):
     identity_type = IdentityTypeSerializer(read_only=True)
 
     rendered = serializers.SerializerMethodField()
-    ai_model = ModelRegistrySerializer()
 
     class Meta:
         model = Identity
@@ -105,9 +103,6 @@ class IdentityDiscReasoningSerializer(serializers.ModelSerializer):
 
 
 class IdentityDiscSerializer(serializers.ModelSerializer):
-    ai_model = serializers.PrimaryKeyRelatedField(
-        queryset=ModelRegistry.objects.all(), allow_null=True, required=False
-    )
     enabled_tools = ToolDefinitionSerializer(many=True, read_only=True)
     tags = IdentityTagSerializer(many=True, read_only=True)
     addons = IdentityAddonSerializer(many=True, read_only=True)
@@ -143,16 +138,3 @@ class IdentityDiscSerializer(serializers.ModelSerializer):
             identity_disc.engrams.distinct(),
             many=True,
         ).data
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-
-        # Replace the flat ID with the nested dictionary representation
-        if instance.ai_model:
-            representation['ai_model'] = ModelRegistrySerializer(
-                instance.ai_model
-            ).data
-        else:
-            representation['ai_model'] = None
-
-        return representation

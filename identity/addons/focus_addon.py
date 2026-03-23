@@ -1,11 +1,13 @@
-from frontal_lobe.models import ReasoningTurn
+from typing import List
+
+from frontal_lobe.models import ChatMessage, ChatMessageRole, ReasoningTurn
 from identity.addons.addon_package import AddonPackage
 from identity.models import IdentityDisc
 
 
-def focus_addon(package: AddonPackage) -> str:
+def focus_addon(package: AddonPackage) -> List[ChatMessage]:
     """
-    Example Addon: Modifies the Focus Game rules based on how long the AI has been thinking.
+    Modifies the Focus Game rules based on how long the AI has been thinking.
     """
     prompt_blocks = []
 
@@ -16,10 +18,13 @@ def focus_addon(package: AddonPackage) -> str:
             f'Level: {identity_disc.level} | XP: {identity_disc.xp}'
         )
     else:
-        prompt_blocks.append(f'Focus Addon Preview Mode (No Identity Disc)')
+        prompt_blocks.append('Focus Addon Preview Mode (No Identity Disc)')
 
     if package.reasoning_turn_id:
         turn_record = ReasoningTurn.objects.get(id=package.reasoning_turn_id)
+
+        # Apply the bonus (updates session focus natively)
+        turn_record.apply_efficiency_bonus()
         session = turn_record.session
 
         current_turn = turn_record.turn_number
@@ -28,16 +33,25 @@ def focus_addon(package: AddonPackage) -> str:
             if session.current_focus == session.max_focus and current_turn > 1
             else ''
         )
-        prompt_blocks.append(f'### Focus Pool Statistics ###\n')
+        prompt_blocks.append('### Focus Pool Statistics ###')
         prompt_blocks.append(
             f'Focus Pool: {session.current_focus} / {session.max_focus}{level_up_str}'
         )
 
         if session.current_focus == 0:
             prompt_blocks.append(
-                f'DANGER: FOCUS POOL EMPTY. Use a generator if you can or mcp_pass to restore.'
+                'DANGER: FOCUS POOL EMPTY. Use a generator if you can or mcp_pass to restore.'
             )
     else:
-        prompt_blocks.append(f'Focus Addon Preview Mode (No Reasoning Turn)')
+        prompt_blocks.append('Focus Addon Preview Mode (No Reasoning Turn)')
 
-    return '\n\n'.join(prompt_blocks)
+    # Return as a Volatile User message
+    return [
+        ChatMessage(
+            session_id=package.session_id,
+            turn_id=package.reasoning_turn_id,
+            role_id=ChatMessageRole.USER,
+            content='\n\n'.join(prompt_blocks),
+            is_volatile=True,
+        )
+    ]

@@ -19,7 +19,7 @@ class Command(BaseCommand):
         'environments': [],
         'peripheral_nervous_system': ['nerveterminalregistry'],
         'central_nervous_system': ['spiketrain', 'spike'],
-        'identity': ['identitydisc'],
+        'identity': [],
         'frontal_lobe': [
             'reasoningsession',
             'reasoningengram',
