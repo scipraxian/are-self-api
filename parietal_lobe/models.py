@@ -77,6 +77,10 @@ class ToolParameterAssignment(CreatedMixin, ModifiedMixin):
         ToolParameter, on_delete=models.CASCADE, related_name='tool_assignments'
     )
     required = models.BooleanField(default=True)
+    prune_after_turns = models.IntegerField(
+        default=0,
+        help_text='If set, this parameter is replaced with [PRUNED] in the LLM context window after N turns.',
+    )
 
     class Meta:
         ordering = ['tool', 'parameter__name']

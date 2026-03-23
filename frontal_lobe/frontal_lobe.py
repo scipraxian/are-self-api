@@ -1,12 +1,14 @@
 import json
 import logging
-import re
 import time
 from datetime import timedelta
+from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
 from asgiref.sync import sync_to_async
+from django.utils import timezone
+from litellm.exceptions import APIConnectionError, RateLimitError
 
 from central_nervous_system.models import Spike, SpikeStatus
 from central_nervous_system.utils import resolve_environment_context
@@ -19,8 +21,14 @@ from frontal_lobe.models import (
     ReasoningStatusID,
     ReasoningTurn,
 )
-from frontal_lobe.thalamus import relay_sensory_state
-from identity.identity_prompt import build_identity_prompt, collect_addon_blocks
+from frontal_lobe.serializers import LLMFunctionCall, LLMToolCall
+from frontal_lobe.synapse_client import SynapseClient, SynapseResponse
+from hypothalamus.hypothalamus import Hypothalamus
+from hypothalamus.models import AIModelProvider, AIModelProviderUsageRecord
+from hypothalamus.serializers import ModelSelection
+from identity.addons.addon_package import AddonPackage
+from identity.addons.addon_registry import ADDON_REGISTRY
+from identity.models import IdentityDisc
 from parietal_lobe.parietal_lobe import ParietalLobe
 from temporal_lobe.models import IterationShiftParticipant
 
@@ -29,6 +37,58 @@ logger = logging.getLogger(__name__)
 STATUS_ID = 'status_id'
 ROLE = 'role'
 CONTENT = 'content'
+
+
+def _serialize_messages_sync(turn_record, all_messages):
+    return [
+        chat_message_to_llm_dict(msg, current_turn=turn_record.turn_number)
+        for msg in all_messages
+    ]
+
+
+def _fetch_disc_sync(session_id):
+    s = ReasoningSession.objects.select_related(
+        'identity_disc', 'identity_disc__budget'
+    ).get(id=session_id)
+    return s.identity_disc
+
+
+def _mint_usage_record_sync(
+    identity_disc,
+    model_selection: ModelSelection,
+    response: SynapseResponse,
+    estimated_cost: Decimal,
+    duration: timedelta,
+):
+    """Synchronously creates the immutable FinOps ledger entry."""
+
+    # Safety Check: If the API crashed before processing tokens, don't mint a blank ledger
+    if response.is_error and response.tokens_input == 0:
+        return
+
+    provider_record = (
+        AIModelProvider.objects.filter(
+            provider_unique_model_id=model_selection.provider_model_id
+        )
+        .select_related('ai_model')
+        .first()
+    )
+
+    if provider_record:
+        AIModelProviderUsageRecord.objects.create(
+            ai_model_provider=provider_record,
+            model_provider=provider_record,
+            ai_model=provider_record.ai_model,
+            identity_disc=identity_disc,
+            query_time=duration,
+            input_tokens=response.tokens_input,
+            output_tokens=response.tokens_output,
+            reasoning_tokens=response.metrics.reasoning_tokens,
+            cache_read_input_tokens=response.metrics.cache_read_input_tokens,
+            cache_creation_input_tokens=response.metrics.cache_creation_input_tokens,
+            audio_tokens=response.metrics.audio_tokens,
+            estimated_cost=estimated_cost,
+        )
 
 
 class FrontalLobe:
@@ -75,16 +135,40 @@ class FrontalLobe:
     async def _initialize_session(
         self, rendered_objective: str, max_turns: int
     ) -> None:
-        """Creates the ReasoningSession in the DB."""
+        """Creates or resumes the ReasoningSession in the DB."""
         if not self.session:
-            self.session = await sync_to_async(ReasoningSession.objects.create)(
-                spike=self.spike,
-                status_id=ReasoningStatusID.ACTIVE,
-                max_turns=max_turns,
-            )
+            existing = await sync_to_async(
+                lambda: (
+                    ReasoningSession.objects.filter(
+                        spike=self.spike,
+                        status_id__in=[
+                            ReasoningStatusID.ATTENTION_REQUIRED,
+                            ReasoningStatusID.ACTIVE,
+                        ],
+                    )
+                    .order_by('-created')
+                    .first()
+                )
+            )()
+
+            if existing:
+                # Ensure it's active before proceeding
+                if existing.status_id != ReasoningStatusID.ACTIVE:
+                    existing.status_id = ReasoningStatusID.ACTIVE
+                    await sync_to_async(existing.save)(
+                        update_fields=['status_id']
+                    )
+                self.session = existing
+            else:
+                self.session = await sync_to_async(
+                    ReasoningSession.objects.create
+                )(
+                    spike=self.spike,
+                    status_id=ReasoningStatusID.ACTIVE,
+                    max_turns=max_turns,
+                )
 
         await self.cache_ids()
-
         await self._log_live(f'Session ID: {self.session.id}')
 
     async def cache_ids(self):
@@ -121,299 +205,231 @@ class FrontalLobe:
         )
         return turn
 
-    def _get_identity_prompt(self, turn_record: ReasoningTurn):
-        iteration_id = None
-        if self.session.participant_id:
-            from temporal_lobe.models import IterationShiftParticipant
-
-            try:
-                p = IterationShiftParticipant.objects.select_related(
-                    'iteration_shift'
-                ).get(id=self.session.participant_id)
-                iteration_id = p.iteration_shift.shift_iteration_id
-            except IterationShiftParticipant.DoesNotExist:
-                pass
-
-        return build_identity_prompt(
-            identity_disc=self.session.identity_disc,
-            iteration_id=iteration_id,
-            turn_number=turn_record.turn_number,
-            reasoning_turn_id=turn_record.id,
-        )
-
-    async def _build_history_messages(
-        self, turn_record: ReasoningTurn
-    ) -> List[Dict[str, Any]]:
-        """
-        Rebuilds the recent conversational history from native ChatMessage records.
-        L1 (Previous 2 turns): Full data.
-        L2 (Turns 3-6 prior): Truncated tool data.
-        """
-        if not self.session:
-            return []
-
-        current_turn_num = turn_record.turn_number
-        cutoff_turn = max(1, current_turn_num - 6)
-
-        # Retrieve strictly non-volatile messages from the last 6 turns, ordered chronologically
-        history_qs = await sync_to_async(list)(
-            ChatMessage.objects.filter(
-                session=self.session,
-                turn__turn_number__gte=cutoff_turn,
-                turn__turn_number__lt=current_turn_num,
-                is_volatile=False,
-            )
-            .select_related('turn', 'role', 'tool_call__tool')
-            .prefetch_related('turn__tool_calls__tool')  # <-- ADD THIS PREFETCH
-            .order_by('created')
-        )
-
-        messages_for_llm = []
-
-        for msg in history_qs:
-            role_name = 'system'
-            if msg.role_id == ChatMessageRole.USER:
-                role_name = 'user'
-            elif msg.role_id == ChatMessageRole.ASSISTANT:
-                role_name = 'assistant'
-            elif msg.role_id == ChatMessageRole.TOOL:
-                role_name = 'tool'
-
-            content = msg.content
-            message_dict: Dict[str, Any] = {ROLE: role_name}
-
-            # 2. FIX ASSISTANT FORMATTING
-            if msg.role_id == ChatMessageRole.ASSISTANT:
-                tool_calls_payload = []
-                for tc in msg.turn.tool_calls.all():
-                    raw_args = tc.arguments or '{}'
-
-                    # 1. Parse into a dictionary
-                    if isinstance(raw_args, str):
-                        try:
-                            parsed_args = json.loads(raw_args)
-                        except json.JSONDecodeError:
-                            parsed_args = {}
-                    elif isinstance(raw_args, dict):
-                        parsed_args = raw_args
-                    else:
-                        parsed_args = {}
-
-                    # 2. Prune the heavy context for older turns
-                    if (
-                        tc.tool.name == 'mcp_internal_monologue'
-                        and msg.turn.turn_number < current_turn_num
-                    ):
-                        if 'thought' in parsed_args:
-                            parsed_args['thought'] = '[PRUNED TO SAVE TOKENS]'
-                        if 'message_to_user' in parsed_args:
-                            parsed_args['message_to_user'] = (
-                                '[PRUNED - DELIVERED TO USER]'
-                            )
-
-                    # 3. Append to payload (CRITICAL FIX: Use json.dumps here!)
-                    tool_calls_payload.append(
-                        {
-                            'id': f'call_{tc.id}',
-                            'type': 'function',
-                            'function': {
-                                'name': tc.tool.name,
-                                'arguments': json.dumps(parsed_args),
-                                # <--- MUST BE A STRING
-                            },
-                        }
-                    )
-
-                if tool_calls_payload:
-                    message_dict['tool_calls'] = tool_calls_payload
-
-            # Handle Tool Results formatting & L2 Eviction logic (Unchanged, this was correct)
-            elif msg.role_id == ChatMessageRole.TOOL:
-                age = current_turn_num - msg.turn.turn_number
-
-                # L2 Eviction: If older than 2 turns, strip the heavy data
-                if age > 2:
-                    content = '[DATA EVICTED FROM L1 CACHE. REQUIRES ENGRAM RETRIEVAL.]'
-                elif age == 2:
-                    content += '\n\n[SYSTEM WARNING: L1 EVICTION IMMINENT. FLUSH TO ENGRAMS.]'
-
-                if msg.tool_call_id:
-                    message_dict['name'] = msg.tool_call.tool.name
-                    message_dict['tool_call_id'] = f'call_{msg.tool_call_id}'
-
-            message_dict[CONTENT] = content
-            messages_for_llm.append(message_dict)
-
-        return messages_for_llm
-
-    def _get_iteration_id(self) -> Optional[int]:
-        from temporal_lobe.models import IterationShiftParticipant
-
-        try:
-            p = IterationShiftParticipant.objects.select_related(
-                'iteration_shift'
-            ).get(id=self.session.participant_id)
-            return p.iteration_shift.shift_iteration_id
-        except IterationShiftParticipant.DoesNotExist:
-            return None
-
-    async def _inject_addons(self, turn_record: ReasoningTurn) -> None:
-        """
-        Executes Identity Addons for the current turn and saves them directly
-        to the database as Volatile user messages.
-        """
-        if not self.session or not self.session.identity_disc:
-            return
-
-        iteration_id = None
-        if self.session.participant_id:
-            iteration_id = await sync_to_async(self._get_iteration_id)()
-
-        addon_blocks = await sync_to_async(collect_addon_blocks)(
-            identity_disc=self.session.identity_disc,
-            iteration_id=iteration_id,
-            turn_number=turn_record.turn_number,
-            reasoning_turn_id=turn_record.id,
-            environment_id=self._cached_environment_id,
-            shift_id=self._cached_shift_id,
-        )
-
-        for addon_name, addon_text in addon_blocks:
-            await sync_to_async(ChatMessage.objects.create)(
-                session=self.session,
-                turn=turn_record,
-                role_id=ChatMessageRole.USER,
-                content=f'[{addon_name.upper()} ADDON]:\n{addon_text}',
-                is_volatile=True,
-            )
-
     async def _build_turn_payload(
         self, turn_record: ReasoningTurn
     ) -> list[dict]:
         """
-        Assembles the Turn payload as a Living Chatroom array.
-        Fetches the static core, historical context, and volatile context from the DB.
+        Assembles the Turn payload by purely orchestrating Addons.
         """
-        messages: List[Dict[str, Any]] = []
+        all_messages: list[ChatMessage] = []
 
-        # Phase 1: Immutable laws (System Prompt)
-        system_instruction = await sync_to_async(self._get_identity_prompt)(
-            turn_record
-        )
-        messages.append(
-            {
-                ROLE: 'system',
-                CONTENT: system_instruction,
-            }
+        # 1. Build the unified context package
+        package = AddonPackage(
+            session_id=self.session.id,
+            spike_id=self.spike.id,
+            identity_disc=self.session.identity_disc.id
+            if self.session.identity_disc
+            else None,
+            turn_number=turn_record.turn_number,
+            reasoning_turn_id=turn_record.id,
+            iteration=self._cached_iteration_id,
+            environment_id=self._cached_environment_id,
+            shift_id=self._cached_shift_id,
         )
 
-        # Phase 2: Timeline reconstruction (L1/L2 cache from DB)
-        history_messages = await self._build_history_messages(turn_record)
-        messages.extend(history_messages)
+        # 2. Fetch active addons ordered by Phase
+        active_addons = await sync_to_async(list)(
+            self.session.identity_disc.addons.select_related('phase').order_by(
+                'phase__id'
+            )
+        )
 
-        # Phase 3: Living chatroom (Fetch the Volatile Addons we just created for this turn)
-        current_turn_volatile_qs = await sync_to_async(list)(
-            ChatMessage.objects.filter(
-                turn=turn_record, is_volatile=True
-            ).order_by('created')
-        )
-        for volatile_msg in current_turn_volatile_qs:
-            messages.append({ROLE: 'user', CONTENT: volatile_msg.content})
+        # 3. Execute addons and collect ChatMessage instances
+        for addon_model in active_addons:
+            # --- NATIVE TEXT INJECTION (No Python Function Required) ---
+            if not addon_model.function_slug:
+                if addon_model.description:
+                    logger.debug(
+                        f'Injecting native text addon: {addon_model.name}'
+                    )
+                    native_msg = ChatMessage(
+                        session_id=self.session.id,
+                        turn_id=turn_record.id,
+                        role_id=ChatMessageRole.SYSTEM,
+                        content=addon_model.description,
+                        is_volatile=True,
+                    )
+                    all_messages.append(native_msg)
+                continue
 
-        # Phase 4: Final sensory trigger for this turn (Saved as volatile)
-        sensory_trigger = await relay_sensory_state(turn_record)
-        await sync_to_async(ChatMessage.objects.create)(
-            session=self.session,
-            turn=turn_record,
-            role_id=ChatMessageRole.USER,
-            content=sensory_trigger,
-            is_volatile=True,
-        )
-        messages.append(
-            {
-                ROLE: 'user',
-                CONTENT: sensory_trigger,
-            }
-        )
+            # --- DYNAMIC PYTHON EXECUTION ---
+            addon_func = ADDON_REGISTRY.get(addon_model.function_slug)
+            if addon_func:
+                logger.debug(f'Executing addon: {addon_model.function_slug}')
+                addon_messages = await sync_to_async(addon_func)(package)
+                if addon_messages:
+                    all_messages.extend(addon_messages)
+            else:
+                logger.warning(
+                    f'Addon {addon_model.function_slug} not found in registry.'
+                )
+
+        # 4. Bulk save ONLY the new, volatile messages (so they appear in your DB timeline)
+        unsaved_volatile = [
+            m for m in all_messages if m._state.adding and m.is_volatile
+        ]
+        if unsaved_volatile:
+            for msg in unsaved_volatile:
+                msg.session_id = self.session.id
+                msg.turn_id = turn_record.id
+            await sync_to_async(ChatMessage.objects.bulk_create)(
+                unsaved_volatile
+            )
+
+            # 5. Translate the final sequence to LLM dictionaries
+            llm_payload = await sync_to_async(_serialize_messages_sync)(
+                turn_record, all_messages
+            )
 
         # Logging output for debug
         await self._log_live(
-            f'\n--- TURN {turn_record.turn_number} PAYLOAD ({len(messages)} messages) ---'
+            f'\n--- TURN {turn_record.turn_number} PAYLOAD ({len(llm_payload)} messages) ---'
         )
-        for msg in messages:
-            content_str = msg.get(CONTENT, '') or ''
-            await self._log_live(f'[{msg.get(ROLE)}] {content_str[:500]}')
+        for msg in llm_payload:
+            content_str = msg.get(ChatMessage.CONTENT_KEY, '') or ''
+            await self._log_live(
+                f'[{msg.get(ChatMessage.ROLE_KEY)}] {content_str[:150]}...'
+            )
         await self._log_live('------------------------\n')
 
-        return messages
+        return llm_payload
 
     async def _execute_turn(
         self,
         turn_index: int,
-        ollama_tools: List[Dict[str, Any]],
-        previous_turn: Optional[ReasoningTurn] = None,
-    ) -> Tuple[bool, Optional[ReasoningTurn]]:
-        await self._log_live(f'\n--- Turn {turn_index + 1} (Awakening) ---')
-
-        # 1. Start the turn record
+        ollama_tools: list,
+        previous_turn: Optional[ReasoningTurn],
+    ) -> Tuple[bool, ReasoningTurn]:
+        """
+        Executes a single conversational turn with an 8-attempt hot-swap failover loop.
+        """
+        # 1. Start Turn
         turn_record = await self._record_turn_start(turn_index, previous_turn)
 
-        # 2. Trigger the RPG progression logic (The Ding!)
-        await sync_to_async(turn_record.apply_efficiency_bonus)()
-
-        # 3. Inject Volatile Context (Addons & Sensory triggers) directly into DB for this turn
-        await self._inject_addons(turn_record)
-
-        # 4. Build the context window for the LLM
+        # 2. Build Payload
         messages = await self._build_turn_payload(turn_record)
+        tools = ollama_tools if ollama_tools else None
 
-        turn_record.request_payload = {'messages': messages}
-        await sync_to_async(turn_record.save)(update_fields=['request_payload'])
+        # Rough token estimation for the context filter
+        estimated_tokens = len(str(messages)) // 4
 
-        # 5. Execute Inference
-        start_time = time.time()
-        response = await self.parietal_lobe.chat(messages, ollama_tools)
-        inf_duration = timedelta(seconds=time.time() - start_time)
+        MAX_FAILOVERS = 8
+        response = None
+        model_selection = None
+        start_time = timezone.now()
 
-        # 6. Save AI Response to ChatMessage (Persistent)
-        if response.content:
-            await sync_to_async(ChatMessage.objects.create)(
-                session=self.session,
-                turn=turn_record,
-                role_id=ChatMessageRole.ASSISTANT,
-                content=response.content.strip(),
-                is_volatile=False,
+        # THE HOT-SWAP LOOP
+        for attempt in range(MAX_FAILOVERS):
+            # Ask Hypothalamus for a brain
+            model_selection = await sync_to_async(
+                Hypothalamus().pick_optimal_model
+            )(self.session.identity_disc, payload_size=estimated_tokens)
+
+            if not model_selection:
+                logger.error(
+                    '[FrontalLobe] SWARM PARALYSIS: Hypothalamus returned NO valid models. All brains rate-limited or budget exhausted.'
+                )
+                raise Exception(
+                    'No available AI models found in the routing pool.'
+                )
+
+            logger.info(
+                f'[FrontalLobe] Attempt {attempt + 1}/{MAX_FAILOVERS}: Routing thought to {model_selection.provider_model_id}'
             )
-            await self._log_live(f'Thought: {response.content.strip()}')
 
-        # Note: Tool execution will happen in ParietalLobe, and those results
-        # MUST be saved as ChatMessage objects with role=TOOL and is_volatile=False
-        # inside process_tool_calls() to ensure they enter the history properly.
+            # Ensure we spin up a new SynapseClient inside the loop so it attaches to the new model
+            synapse = await sync_to_async(SynapseClient)(model_selection)
 
+            try:
+                # Fire the Synapse
+                response = await sync_to_async(synapse.chat)(
+                    messages=messages, tools=tools
+                )
+
+                # Success! Break the loop immediately.
+                break
+
+            except (RateLimitError, APIConnectionError) as e:
+                logger.warning(
+                    f'[FrontalLobe] BRAIN REJECTED ({model_selection.provider_model_id}): {str(e)}'
+                )
+
+                if attempt == MAX_FAILOVERS - 1:
+                    logger.error(
+                        '[FrontalLobe] Critical Failure: Max failovers reached. Terminating Spike.'
+                    )
+                    raise e
+
+                logger.info(
+                    '[FrontalLobe] Circuit Breaker tripped. Hot-swapping to a new brain...'
+                )
+                continue  # Instantly restarts loop. Hypothalamus provides the NEXT best model.
+
+            except Exception as e:
+                # Catch logic errors (like bad JSON schemas) so we don't infinitely retry bad code
+                logger.error(f'[FrontalLobe] Fatal Inference Error: {str(e)}')
+                raise e
+
+        # Calculate exact duration
+        duration = timezone.now() - start_time
+
+        # 3. Save to the ledger
         await _record_turn_completion(
-            turn_record,
-            response.tokens_input,
-            response.tokens_output,
-            inf_duration,
+            turn_record=turn_record,
+            response=response,
+            model_selection=model_selection,
+            inference_duration=duration,
+            identity_disc=self.session.identity_disc,
         )
 
-        if not response.tool_calls:
+        # 4. Save Assistant Message to History
+        await sync_to_async(ChatMessage.objects.create)(
+            session=self.session,
+            turn=turn_record,
+            role_id=ChatMessageRole.ASSISTANT,
+            content=response.content or '',
+        )
+
+        if response.content:
             await self._log_live(
-                '\nNo further actions requested. Permanent Sleep Initiated.'
+                f'[{model_selection.ai_model_name}] {response.content}'
             )
+
+        # 5. Handle Tool Calls or Yield
+        if response.tool_calls and self.parietal_lobe:
+            await self._log_live(
+                f'[ParietalLobe] Processing {len(response.tool_calls)} tool calls in parallel...'
+            )
+
+            # Serialize LiteLLM tool calls to raw dicts for the Parietal Lobe
+            tool_calls_data = []
+            for tc in response.tool_calls:
+                if isinstance(tc, dict):
+                    tool_calls_data.append(tc)
+                elif hasattr(tc, 'model_dump'):
+                    tool_calls_data.append(tc.model_dump())
+                elif hasattr(tc, 'dict'):
+                    tool_calls_data.append(tc.dict())
+                else:
+                    try:
+                        tool_calls_data.append(dict(tc))
+                    except (TypeError, ValueError):
+                        continue
+
+            # Call the ORIGINAL method signature from your working Parietal Lobe
+            await self.parietal_lobe.process_tool_calls(
+                turn_record=turn_record, tool_calls_data=tool_calls_data
+            )
+            return True, turn_record
+        else:
+            # AI didn't call tools, yield to user
+            self.session.status_id = ReasoningStatusID.ATTENTION_REQUIRED
+            await sync_to_async(self.session.save)(update_fields=[STATUS_ID])
             return False, turn_record
-
-        # 7. Fire Tools
-        # Ensure parietal_lobe.process_tool_calls is updated to save ChatMessages!
-        await self.parietal_lobe.process_tool_calls(
-            turn_record, response.tool_calls
-        )
-
-        return True, turn_record
 
     async def run(self) -> Tuple[int, str]:
         """Main asynchronous execution orchestrator."""
-        logger.info(f'[FrontalLobe] Waking up for Spike {self.spike_id}')
+        logger.debug(f'[FrontalLobe] Waking up for Spike {self.spike_id}')
 
         self.spike.application_log = ''
         await sync_to_async(self.spike.save)(update_fields=['application_log'])
@@ -434,23 +450,19 @@ class FrontalLobe:
             )
             await self._initialize_session(rendered_objective, max_turns)
 
-            # 3. Resolve model from IdentityDisc and initialize Parietal Lobe
-            identity_disc = self.session.identity_disc
-            ai_model = (
-                await sync_to_async(getattr)(identity_disc, 'ai_model', None)
-                if identity_disc
-                else None
+            # 3. Resolve IdentityDisc and prep Parietal Lobe
+            identity_disc = await sync_to_async(_fetch_disc_sync)(
+                self.session.id
             )
-            if not identity_disc or not ai_model:
+            if not identity_disc:
                 raise ValueError(
-                    'ReasoningSession.identity_disc.ai_model must be set before FrontalLobe.run().'
+                    f'Session {self.session.id} missing IdentityDisc.'
                 )
 
+            self.session.identity_disc = identity_disc
             self.parietal_lobe = ParietalLobe(self.session, self._log_live)
-            await self.parietal_lobe.initialize_client(identity_disc)
-            await self._log_live(f'Model: {ai_model.name}')
 
-            # 4. Build Synapse Payload
+            # 4. Build Tool Schemas
             ollama_tools = await self.parietal_lobe.build_tool_schemas()
             await self._log_live(f'[[[[[Loaded {len(ollama_tools)} tools.]]]]]')
 
@@ -505,7 +517,7 @@ class FrontalLobe:
             return 500, '\n'.join(self.log_output)
 
         finally:
-            await self._log_live('\n[SYSTEM] Unloading model to free VRAM...')
+            await self._log_live('\n[SYSTEM] Requesting VRAM cleanup...')
             if self.parietal_lobe:
                 await self.parietal_lobe.unload_client()
             await self._log_live(FrontalLobeConstants.LOG_END)
@@ -514,10 +526,6 @@ class FrontalLobe:
 
 
 async def run_frontal_lobe(spike_id: UUID) -> Tuple[int, str]:
-    """Asynchronous entry point for the generic effector caster.
-
-    # Used by GEC.
-    """
     try:
         spike = await sync_to_async(
             lambda: Spike.objects.select_related('spike_train').get(id=spike_id)
@@ -531,12 +539,82 @@ async def run_frontal_lobe(spike_id: UUID) -> Tuple[int, str]:
 
 async def _record_turn_completion(
     turn_record: ReasoningTurn,
-    tokens_in: int,
-    tokens_out: int,
+    response: SynapseResponse,
+    model_selection: ModelSelection,
     inference_duration: timedelta,
+    identity_disc: 'IdentityDisc',
 ) -> None:
-    turn_record.tokens_input = tokens_in
-    turn_record.tokens_output = tokens_out
+    # 1. Update Turn
+    turn_record.tokens_input = response.tokens_input
+    turn_record.tokens_output = response.tokens_output
     turn_record.inference_time = inference_duration
     turn_record.status_id = ReasoningStatusID.COMPLETED
     await sync_to_async(turn_record.save)()
+
+    # 2. Calculate the estimated cost based on the Selection
+    estimated_cost = (
+        Decimal(response.tokens_input) * model_selection.input_cost_per_token
+    )
+
+    # 3. Mint Usage Record
+    await sync_to_async(_mint_usage_record_sync)(
+        identity_disc,
+        model_selection,
+        response,
+        estimated_cost,
+        inference_duration,
+    )
+
+
+def chat_message_to_llm_dict(
+    chat_message: ChatMessage, current_turn: Optional[int] = None
+) -> dict:
+    role_map = dict(ChatMessageRole.ROLE_CHOICES)
+    role_name = role_map.get(chat_message.role_id, ChatMessageRole.USER_NAME)
+
+    payload = {
+        chat_message.ROLE_KEY: role_name,
+        chat_message.CONTENT_KEY: chat_message.content,
+    }
+
+    if (
+        chat_message.role_id == ChatMessageRole.TOOL
+        and chat_message.tool_call_id
+    ):
+        if chat_message.tool_call and getattr(
+            chat_message.tool_call, chat_message.TOOL_KEY, None
+        ):
+            payload[chat_message.NAME_KEY] = chat_message.tool_call.tool.name
+        payload[chat_message.TOOL_CALL_ID_KEY] = (
+            f'call_{chat_message.tool_call_id}'
+        )
+
+    elif chat_message.role_id == ChatMessageRole.ASSISTANT:
+        tool_calls_payload = []
+        for tc in chat_message.turn.tool_calls.all():
+            raw_args = tc.arguments or '{}'
+            parsed_args = (
+                json.loads(raw_args) if isinstance(raw_args, str) else raw_args
+            )
+            if current_turn:
+                age = current_turn - chat_message.turn.turn_number
+                for assignment in tc.tool.assignments.all():
+                    if (
+                        assignment.prune_after_turns
+                        and age >= assignment.prune_after_turns
+                    ):
+                        param_name = assignment.parameter.name
+                        if param_name in parsed_args:
+                            parsed_args[param_name] = '[PRUNED TO SAVE TOKENS]'
+            llm_tc = LLMToolCall(
+                id=f'call_{tc.id}',
+                function=LLMFunctionCall(
+                    name=tc.tool.name, arguments=json.dumps(parsed_args)
+                ),
+            )
+            tool_calls_payload.append(llm_tc.to_dict())
+
+        if tool_calls_payload:
+            payload[chat_message.TOOL_CALLS_KEY] = tool_calls_payload
+
+    return payload

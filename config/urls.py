@@ -16,6 +16,7 @@ from parietal_lobe.api_urls import V2_PARIETAL_LOBE
 from peripheral_nervous_system.api_urls import V2_PNS_ROUTER
 from prefrontal_cortex.urls import V2_PREFRONTAL_CORTEX_ROUTER
 from temporal_lobe.urls import V2_TEMPORAL_LOBE_ROUTER
+from thalamus.urls import V2_THALAMUS
 
 v1_router = routers.DefaultRouter()
 v1_router.registry.extend(ENVIRONMENTS_ROUTER.registry)
@@ -34,6 +35,7 @@ V2_ROUTER.registry.extend(V2_HIPPOCAMPUS_ROUTER.registry)
 V2_ROUTER.registry.extend(V2_REASONING_ROUTER.registry)
 V2_ROUTER.registry.extend(V2_PARIETAL_LOBE.registry)
 V2_ROUTER.registry.extend(V2_PNS_ROUTER.registry)
+V2_ROUTER.registry.extend(V2_THALAMUS.registry)
 
 urlpatterns = [
     path('', include('dashboard.urls')),

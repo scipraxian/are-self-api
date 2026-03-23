@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
@@ -11,6 +13,33 @@ from frontal_lobe.models import (
 )
 from hippocampus.models import TalosEngram
 from parietal_lobe.models import ToolCall, ToolDefinition
+
+KEY_REPLY = 'reply'
+KEY_OK = 'ok'
+
+
+@dataclass
+class ResumeSessionRequestDTO:
+    reply: str
+
+
+class ResumeSessionRequestSerializer(serializers.Serializer):
+    """Strict schema for the incoming human reply."""
+
+    reply = serializers.CharField(allow_blank=True, required=False, default='')
+
+
+@dataclass
+class ResumeSessionResponseDTO:
+    ok: bool
+    message: str
+
+
+class ResumeSessionResponseSerializer(serializers.Serializer):
+    """Strict schema for the API response."""
+
+    ok = serializers.BooleanField()
+    message = serializers.CharField()
 
 
 class ModelRegistrySerializer(serializers.ModelSerializer):
@@ -74,7 +103,20 @@ class SessionConclusionSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
-class ReasoningSessionSerializer(serializers.ModelSerializer):
+class ReasoningSessionLiteSerializer(serializers.ModelSerializer):
+    from identity.serializers import IdentityDiscSerializer
+
+    status_name = serializers.CharField(source='status.name', read_only=True)
+    identity_disc_name = serializers.CharField(
+        source='identity_disc.name', read_only=True
+    )
+
+    class Meta:
+        model = ReasoningSession
+        fields = ALL_FIELDS
+
+
+class ReasoningSessionGraphSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     turns = ReasoningTurnSerializer(many=True, read_only=True)
     engrams = TalosEngramSerializer(many=True, read_only=True)
@@ -86,3 +128,27 @@ class ReasoningSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReasoningSession
         fields = ALL_FIELDS
+
+
+@dataclass
+class LLMFunctionCall:
+    name: str
+    arguments: str  # The LLM API expects this to be a stringified JSON object
+
+
+@dataclass
+class LLMToolCall:
+    id: str
+    function: LLMFunctionCall
+    type: str = 'function'
+
+    def to_dict(self) -> dict:
+        """Serializes exactly to the strict LLM schema."""
+        return {
+            'id': self.id,
+            'type': self.type,
+            'function': {
+                'name': self.function.name,
+                'arguments': self.function.arguments,
+            },
+        }

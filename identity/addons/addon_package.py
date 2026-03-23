@@ -6,9 +6,14 @@ from uuid import UUID
 @dataclass
 class AddonPackage:
     iteration: Optional[int]
-    identity: UUID
     identity_disc: Optional[UUID]
+
+    # --- Turn Context ---
     turn_number: int
-    reasoning_turn_id: Optional[int]
-    environment_id: Optional[UUID]
-    shift_id: Optional[int]
+    reasoning_turn_id: Optional[id]
+    session_id: Optional[UUID] = None
+    spike_id: Optional[UUID] = None
+
+    # --- Agile Context ---
+    environment_id: Optional[UUID] = None
+    shift_id: Optional[int] = None

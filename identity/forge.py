@@ -1,6 +1,10 @@
+import logging
+
 from django.db import transaction
 
 from identity.models import Identity, IdentityDisc
+
+logger = logging.getLogger(__name__)
 
 
 @transaction.atomic
@@ -23,8 +27,6 @@ def forge_identity_disc(
         name=new_name,
         identity_type=base_identity.identity_type,
         system_prompt_template=base_identity.system_prompt_template,
-        ai_model=base_identity.ai_model,
-        # Default state for new forged discs
         level=1,
         xp=0,
         available=True,
@@ -37,5 +39,7 @@ def forge_identity_disc(
     new_disc.tags.set(base_identity.tags.all())
     new_disc.addons.set(base_identity.addons.all())
     new_disc.enabled_tools.set(base_identity.enabled_tools.all())
+
+    logger.info(f'Created new IdentityDisc: {new_disc.name}')
 
     return new_disc

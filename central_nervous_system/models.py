@@ -1,6 +1,7 @@
 """CNS Data Models."""
 
 from typing import Any, Dict, List, Optional
+from uuid import UUID
 
 from django.db import models
 
@@ -244,7 +245,8 @@ class EffectorTarget(models.Model):
         Effector, on_delete=models.CASCADE, related_name='specific_targets'
     )
     target = models.ForeignKey(
-        'peripheral_nervous_system.NerveTerminalRegistry', on_delete=models.CASCADE
+        'peripheral_nervous_system.NerveTerminalRegistry',
+        on_delete=models.CASCADE,
     )
 
     class Meta:
@@ -279,6 +281,9 @@ class NeuralPathway(
     """
     The Container. Now supports a visual JSON layout, Tags, and Favorites.
     """
+
+    # Contains the Thalamus Axon and Neuron.
+    THALAMUS = UUID('04c3997f-d5f3-402f-952a-519bbd7e4dee')
 
     ui_json = models.TextField(blank=True, default='{}')
 

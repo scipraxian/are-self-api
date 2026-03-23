@@ -1,4 +1,6 @@
+import json
 from datetime import timedelta
+from typing import Optional
 
 from django.db import models
 
@@ -49,6 +51,7 @@ class ReasoningStatusMixin(models.Model):
         abstract = True
 
 
+# ATTENTION: DEPRECIATED.
 class ModelProvider(DefaultFieldsMixin, DescriptionMixin):
     """
     Provider-level network configuration for LLM backends.
@@ -57,6 +60,7 @@ class ModelProvider(DefaultFieldsMixin, DescriptionMixin):
     allows dynamic switching between providers like Ollama and OpenRouter.
     """
 
+    # ATTENTION: DEPRECIATED.
     # Use id keys for stable FK references (see fixtures).
     OLLAMA = 1
     OPENROUTER = 2
@@ -106,6 +110,7 @@ class ModelProvider(DefaultFieldsMixin, DescriptionMixin):
         return self.name
 
 
+# ATTENTION: DEPRECIATED.
 class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
     """
     Database-driven LLM definition.
@@ -113,6 +118,7 @@ class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
     without redeploying code.
     """
 
+    # ATTENTION: DEPRECIATED.
     DEFAULT_MODEL_ID = 1
     QUEN3_CODER = 1
     GEMMA3 = 2
@@ -203,6 +209,7 @@ class ReasoningSession(
         return f'Session {self.id} Status: {self.status}'
 
 
+# TODO: consider uuid.
 class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
     """
     A single 'tick' or step in the reasoning process.
@@ -215,14 +222,19 @@ class ReasoningTurn(CreatedAndModifiedWithDelta, ReasoningStatusMixin):
     )
     turn_number = models.IntegerField()
 
+    # REQUEST
     request_payload = models.JSONField(blank=True, default=dict)
     tokens_input = models.IntegerField(default=0)
     inference_time = models.DurationField(default=timedelta)
 
+    # RESPONSE
+    response_payload = models.JSONField(blank=True, default=dict)
+    tokens_output = models.IntegerField(default=0)
+
+    # Set by mcp_internal_monologue.
     thought_process = models.TextField(
         help_text='The internal monologue of the AI.'
     )
-    tokens_output = models.IntegerField(default=0)
 
     last_turn = models.ForeignKey(
         'self', on_delete=models.SET_NULL, null=True, blank=True
@@ -286,15 +298,40 @@ class SessionConclusion(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
         return self.session.talosengram_set.all()
 
 
+# TODO: Decouple these entirely from the frontal_lobe. It belongs in the thalamus.
 class ChatMessageRole(NameMixin, CreatedMixin):
-    SYSTEM = 1  #'system', 'System'
-    USER = 2  #'user', 'User'
-    ASSISTANT = 3  # 'assistant', 'Assistant'
+    SYSTEM = 1
+    SYSTEM_NAME = 'system'
+    USER = 2
+    USER_NAME = 'user'
+    ASSISTANT = 3
+    ASSISTANT_NAME = 'assistant'
     TOOL = 4
+    TOOL_NAME = 'tool'
+
+    ROLE_CHOICES = (
+        (SYSTEM, SYSTEM_NAME),
+        (USER, USER_NAME),
+        (ASSISTANT, ASSISTANT_NAME),
+        (TOOL, TOOL_NAME),
+    )
+
+    ROLE_NAMES = [ROLE_NAME for _, ROLE_NAME in ROLE_CHOICES]
+
+    class Meta:
+        verbose_name_plural = 'Chat Message Roles'
+        ordering = ['id']
 
 
 class ChatMessage(UUIDIdMixin, CreatedMixin):
     RELATED_NAME = 'messages'
+    ROLE_KEY = 'role'
+    CONTENT_KEY = 'content'
+    NAME_KEY = 'name'
+    TOOL_CALL_ID_KEY = 'tool_call_id'
+    TOOL_CALLS_KEY = 'tool_calls'
+    TOOL_KEY = 'tool'
+
     session = models.ForeignKey(
         ReasoningSession, on_delete=models.CASCADE, related_name=RELATED_NAME
     )

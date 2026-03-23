@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'corsheaders',
     'synaptic_cleft.apps.SynapticCleftConfig',
+    'hypothalamus.apps.HypothalamusConfig',
 ]
 
 MIDDLEWARE = [
@@ -211,3 +212,14 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
 ]
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [
+                ('127.0.0.1', 6379)
+            ],  # Connection details for your Redis server
+        },
+    },
+}
