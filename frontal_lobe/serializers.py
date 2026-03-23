@@ -10,6 +10,7 @@ from frontal_lobe.models import (
     SessionConclusion,
 )
 from hippocampus.models import TalosEngram
+from hypothalamus.serializers import AIModelProviderUsageRecordSerializer
 from parietal_lobe.models import ToolCall, ToolDefinition
 
 KEY_REPLY = 'reply'
@@ -64,6 +65,7 @@ class ToolCallSerializer(serializers.ModelSerializer):
 class ReasoningTurnSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     tool_calls = ToolCallSerializer(many=True, read_only=True)
+    model_usage_record = AIModelProviderUsageRecordSerializer(read_only=True)
 
     class Meta:
         model = ReasoningTurn
@@ -87,8 +89,6 @@ class SessionConclusionSerializer(serializers.ModelSerializer):
 
 
 class ReasoningSessionLiteSerializer(serializers.ModelSerializer):
-    from identity.serializers import IdentityDiscSerializer
-
     status_name = serializers.CharField(source='status.name', read_only=True)
     identity_disc_name = serializers.CharField(
         source='identity_disc.name', read_only=True
