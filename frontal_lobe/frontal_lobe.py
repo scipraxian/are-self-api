@@ -1,6 +1,5 @@
 import json
 import logging
-import time
 from datetime import timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
@@ -19,11 +18,9 @@ from frontal_lobe.models import (
     ReasoningStatusID,
     ReasoningTurn,
 )
-from frontal_lobe.serializers import LLMFunctionCall, LLMToolCall
-from frontal_lobe.synapse_client import SynapseClient, SynapseResponse
+from frontal_lobe.synapse_client import SynapseClient
 from hypothalamus.hypothalamus import Hypothalamus
 from hypothalamus.models import AIModelProvider, AIModelProviderUsageRecord
-from hypothalamus.serializers import ModelSelection
 from identity.addons.addon_registry import ADDON_REGISTRY
 from identity.models import IdentityDisc
 from parietal_lobe.parietal_lobe import ParietalLobe
@@ -42,50 +39,6 @@ def _fetch_disc_sync(session_id):
         'identity_disc', 'identity_disc__budget'
     ).get(id=session_id)
     return s.identity_disc
-
-
-def _mint_usage_record_sync(
-    turn_record: ReasoningTurn,
-    identity_disc: 'IdentityDisc',
-    model_selection: ModelSelection,
-    response: SynapseResponse,
-    estimated_cost: Decimal,
-    duration: timedelta,
-) -> Optional[AIModelProviderUsageRecord]:
-    """Synchronously creates the immutable FinOps ledger entry."""
-
-    # Safety Check: If the API crashed before processing tokens, don't mint a blank ledger
-    if response.is_error and response.tokens_input == 0:
-        return None
-
-    provider_record = (
-        AIModelProvider.objects.filter(
-            provider_unique_model_id=model_selection.provider_model_id
-        )
-        .select_related('ai_model')
-        .first()
-    )
-
-    if provider_record:
-        return AIModelProviderUsageRecord.objects.create(
-            ai_model_provider=provider_record,
-            model_provider=provider_record,
-            ai_model=provider_record.ai_model,
-            identity_disc=identity_disc,
-            query_time=duration,
-            request_payload=getattr(
-                turn_record, '_transient_request_payload', []
-            ),
-            response_payload=response.response_payload,
-            input_tokens=response.tokens_input,
-            output_tokens=response.tokens_output,
-            reasoning_tokens=response.metrics.reasoning_tokens,
-            cache_read_input_tokens=response.metrics.cache_read_input_tokens,
-            cache_creation_input_tokens=response.metrics.cache_creation_input_tokens,
-            audio_tokens=response.metrics.audio_tokens,
-            estimated_cost=estimated_cost,
-        )
-    return None
 
 
 class FrontalLobe:
@@ -207,60 +160,10 @@ class FrontalLobe:
     ) -> list[dict]:
         """
         Assembles the Turn payload by purely orchestrating Addons.
+        (Base history is fetched entirely by the History-phase Addons to prevent Double Vision).
         """
         all_messages: list[dict] = []
 
-        # 1. Provide Base History from AIModelProviderUsageRecord chain
-        recent_turns = await sync_to_async(list)(
-            ReasoningTurn.objects.filter(
-                session=self.session,
-                turn_number__lt=turn_record.turn_number,
-                model_usage_record__isnull=False,
-            )
-            .select_related('model_usage_record')
-            .order_by('turn_number')
-        )
-        for t in recent_turns:
-            req_payload = t.model_usage_record.request_payload or []
-            res_payload = t.model_usage_record.response_payload or {}
-
-            if isinstance(req_payload, list):
-                all_messages.extend(req_payload)
-            elif isinstance(req_payload, dict):
-                all_messages.append(req_payload)
-
-            if isinstance(res_payload, list):
-                all_messages.extend(res_payload)
-            elif isinstance(res_payload, dict):
-                if 'role' in res_payload:
-                    all_messages.append(res_payload)
-                elif (
-                    'choices' in res_payload and len(res_payload['choices']) > 0
-                ):
-                    all_messages.append(
-                        res_payload['choices'][0].get('message', {})
-                    )
-
-        # 2. Extract THIS turn's base inputs (tools outputs from last turn)
-        current_req_payload = []
-        if turn_record.last_turn:
-            prev_tools = await sync_to_async(list)(
-                turn_record.last_turn.tool_calls.select_related('tool').all()
-            )
-            for tc in prev_tools:
-                current_req_payload.append(
-                    {
-                        'role': 'tool',
-                        'content': str(tc.result_payload or ''),
-                        'tool_call_id': f'call_{tc.id}',
-                        'name': tc.tool.name,
-                    }
-                )
-
-        turn_record._transient_request_payload = current_req_payload
-        all_messages.extend(current_req_payload)
-
-        # 3. Addon Context (Transient)
         active_addons = await sync_to_async(list)(
             self.session.identity_disc.addons.select_related('phase').order_by(
                 'phase__id'
@@ -289,6 +192,22 @@ class FrontalLobe:
                     f'Addon {addon_model.function_slug} not found in registry.'
                 )
 
+        # Inject THIS turn's base inputs (tools outputs from last turn)
+        # Standard API practice expects these immediately following the history.
+        if turn_record.last_turn:
+            prev_tools = await sync_to_async(list)(
+                turn_record.last_turn.tool_calls.select_related('tool').all()
+            )
+            for tc in prev_tools:
+                all_messages.append(
+                    {
+                        'role': 'tool',
+                        'content': str(tc.result_payload or ''),
+                        'tool_call_id': f'call_{tc.id}',
+                        'name': tc.tool.name,
+                    }
+                )
+
         llm_payload = all_messages
 
         await self._log_live(
@@ -307,124 +226,101 @@ class FrontalLobe:
         ollama_tools: list,
         previous_turn: Optional[ReasoningTurn],
     ) -> Tuple[bool, ReasoningTurn]:
-        """
-        Executes a single conversational turn with an 8-attempt hot-swap failover loop.
-        """
-        # 1. Start Turn
         turn_record = await self._record_turn_start(turn_index, previous_turn)
-
-        # 2. Build Payload
         messages = await self._build_turn_payload(turn_record)
-        tools = ollama_tools if ollama_tools else None
+        tools = ollama_tools if ollama_tools else {}
 
-        # Rough token estimation for the context filter
-        estimated_tokens = len(str(messages)) // 4
+        # 🛒 1. BUILD THE PENDING LEDGER
+        pending_ledger = AIModelProviderUsageRecord(
+            identity_disc=self.session.identity_disc,
+            request_payload=messages,
+            tool_payload=tools,
+        )
 
         MAX_FAILOVERS = 8
-        response = None
-        model_selection = None
+        tool_calls_data = []
         start_time = timezone.now()
 
-        # THE HOT-SWAP LOOP
         for attempt in range(MAX_FAILOVERS):
-            # Ask Hypothalamus for a brain
-            model_selection = await sync_to_async(
+            # 🧠 2. PASS THE LEDGER TO THE HYPOTHALAMUS
+            routing_success = await sync_to_async(
                 Hypothalamus().pick_optimal_model
-            )(self.session.identity_disc, payload_size=estimated_tokens)
+            )(pending_ledger)
 
-            if not model_selection:
+            if not routing_success or not pending_ledger.ai_model_provider:
                 logger.error(
-                    '[FrontalLobe] SWARM PARALYSIS: Hypothalamus returned NO valid models. All brains rate-limited or budget exhausted.'
+                    '[FrontalLobe] SWARM PARALYSIS: Hypothalamus returned NO valid models.'
                 )
                 raise Exception(
                     'No available AI models found in the routing pool.'
                 )
 
-            logger.info(
-                f'[FrontalLobe] Attempt {attempt + 1}/{MAX_FAILOVERS}: Routing thought to {model_selection.provider_model_id}'
-            )
-
-            # Ensure we spin up a new SynapseClient inside the loop so it attaches to the new model
-            synapse = await sync_to_async(SynapseClient)(model_selection)
+            # ⚡ 3. PASS THE LEDGER TO THE SYNAPSE
+            synapse = await sync_to_async(SynapseClient)(pending_ledger)
 
             try:
-                # Fire the Synapse
-                response = await sync_to_async(synapse.chat)(
-                    messages=messages, tools=tools
-                )
-
-                # Success! Break the loop immediately.
-                break
+                # chat() now mutates the ledger and returns the normalized tool calls
+                tool_calls_data = await sync_to_async(synapse.chat)()
+                break  # Success!
 
             except (RateLimitError, APIConnectionError) as e:
+                provider_id = (
+                    pending_ledger.ai_model_provider.provider_unique_model_id
+                )
                 logger.warning(
-                    f'[FrontalLobe] BRAIN REJECTED ({model_selection.provider_model_id}): {str(e)}'
+                    f'[FrontalLobe] BRAIN REJECTED ({provider_id}): {str(e)}'
                 )
-
                 if attempt == MAX_FAILOVERS - 1:
-                    logger.error(
-                        '[FrontalLobe] Critical Failure: Max failovers reached. Terminating Spike.'
-                    )
                     raise e
+                continue
 
-                logger.info(
-                    '[FrontalLobe] Circuit Breaker tripped. Hot-swapping to a new brain...'
-                )
-                continue  # Instantly restarts loop. Hypothalamus provides the NEXT best model.
-
-            except Exception as e:
-                # Catch logic errors (like bad JSON schemas) so we don't infinitely retry bad code
-                logger.error(f'[FrontalLobe] Fatal Inference Error: {str(e)}')
-                raise e
-
-        # Calculate exact duration
         duration = timezone.now() - start_time
 
-        # 3. Save to the ledger
-        await _record_turn_completion(
-            turn_record=turn_record,
-            response=response,
-            model_selection=model_selection,
-            inference_duration=duration,
-            identity_disc=self.session.identity_disc,
+        # 💳 4. CHECKOUT (File the Form)
+        pending_ledger.query_time = duration
+        if pending_ledger.input_tokens and pending_ledger.input_cost_per_token:
+            pending_ledger.estimated_cost = (
+                Decimal(pending_ledger.input_tokens)
+                * pending_ledger.input_cost_per_token
+            )
+        else:
+            pending_ledger.estimated_cost = Decimal(0)
+
+        await sync_to_async(pending_ledger.save)()
+
+        # 5. Update and Save the Turn Record
+        turn_record.status_id = ReasoningStatusID.COMPLETED
+        turn_record.model_usage_record = pending_ledger
+        await sync_to_async(turn_record.save)(
+            update_fields=[STATUS_ID, MODEL_USAGE_RECORD]
         )
 
-        if response.content:
-            await self._log_live(
-                f'[{model_selection.ai_model_name}] {response.content}'
+        # 6. Logging and Tool Execution
+        # Extract the assistant's text from the raw response payload to log it
+        res_payload = pending_ledger.response_payload or {}
+        content = ''
+        if isinstance(res_payload, dict):
+            content = (
+                res_payload.get('choices', [{}])[0]
+                .get('message', {})
+                .get('content', '')
             )
 
-        # 5. Handle Tool Calls or Yield
-        if response.tool_calls and self.parietal_lobe:
+        if content:
+            await self._log_live(f'[{pending_ledger.ai_model.name}] {content}')
+
+        if tool_calls_data and self.parietal_lobe:
             await self._log_live(
-                f'[ParietalLobe] Processing {len(response.tool_calls)} tool calls in parallel...'
+                f'[ParietalLobe] Processing {len(tool_calls_data)} tool calls...'
             )
-
-            # Serialize LiteLLM tool calls to raw dicts for the Parietal Lobe
-            tool_calls_data = []
-            for tc in response.tool_calls:
-                if isinstance(tc, dict):
-                    tool_calls_data.append(tc)
-                elif hasattr(tc, 'model_dump'):
-                    tool_calls_data.append(tc.model_dump())
-                elif hasattr(tc, 'dict'):
-                    tool_calls_data.append(tc.dict())
-                else:
-                    try:
-                        tool_calls_data.append(dict(tc))
-                    except (TypeError, ValueError):
-                        continue
-
-            # Call the ORIGINAL method signature from your working Parietal Lobe
             await self.parietal_lobe.process_tool_calls(
                 turn_record=turn_record, tool_calls_data=tool_calls_data
             )
             return True, turn_record
-        else:
-            # AI didn't call tools, yield to user
-            self.session.status_id = ReasoningStatusID.ATTENTION_REQUIRED
-            await sync_to_async(self.session.save)(update_fields=[STATUS_ID])
-            return False, turn_record
+
+        self.session.status_id = ReasoningStatusID.ATTENTION_REQUIRED
+        await sync_to_async(self.session.save)(update_fields=[STATUS_ID])
+        return False, turn_record
 
     async def run(self) -> Tuple[int, str]:
         """Main asynchronous execution orchestrator."""
@@ -534,35 +430,3 @@ async def run_frontal_lobe(spike_id: UUID) -> Tuple[int, str]:
     except Exception as e:
         logger.exception(f'[FrontalLobe] Fatal crash on init: {e}')
         return 500, f'Fatal Error: {str(e)}'
-
-
-async def _record_turn_completion(
-    turn_record: ReasoningTurn,
-    response: SynapseResponse,
-    model_selection: ModelSelection,
-    inference_duration: timedelta,
-    identity_disc: 'IdentityDisc',
-) -> None:
-    # 1. Update Turn
-    turn_record.status_id = ReasoningStatusID.COMPLETED
-
-    # 2. Calculate the estimated cost based on the Selection
-    estimated_cost = (
-        Decimal(response.tokens_input) * model_selection.input_cost_per_token
-    )
-
-    # 3. Mint Usage Record
-    usage_record = await sync_to_async(_mint_usage_record_sync)(
-        turn_record,
-        identity_disc,
-        model_selection,
-        response,
-        estimated_cost,
-        inference_duration,
-    )
-    if usage_record:
-        turn_record.model_usage_record = usage_record
-
-    await sync_to_async(turn_record.save)(
-        update_fields=[STATUS_ID, MODEL_USAGE_RECORD]
-    )

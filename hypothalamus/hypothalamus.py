@@ -13,6 +13,7 @@ from hypothalamus.models import (
     AIModel,
     AIModelPricing,
     AIModelProvider,
+    AIModelProviderUsageRecord,
     AIModelSyncLog,
     LLMProvider,
     SyncStatus,
@@ -35,29 +36,36 @@ def _dec(key: str, data: dict) -> Decimal:
 
 class Hypothalamus:
     @staticmethod
-    def pick_optimal_model(disc, payload_size: int) -> Optional[ModelSelection]:
+    def pick_optimal_model(ledger: AIModelProviderUsageRecord) -> bool:
         """
         Finds the closest mathematical match to the Persona, constrained by budget, context window, and API rate limits.
+        Mutates the ledger in-place with the selected routing and pricing data.
         """
+        disc = ledger.identity_disc
+
+        # 1. Dynamically calculate the context payload size from the ledger's cart
+        payload_size = (
+            len(str(ledger.request_payload)) + len(str(ledger.tool_payload))
+        ) // 4
 
         # Get budget constraint
         max_cost = (
             disc.budget.max_input_cost_per_token
-            if hasattr(disc, 'budget')
+            if hasattr(disc, 'budget') and disc.budget
             else 0
         )
+
         valid_provider_ids = [
             p.id
             for p in LLMProvider.objects.all()
             if not p.requires_api_key or p.has_active_key
         ]
-        # THE CIRCUIT BREAKER FILTER:
-        # Only allow models where reset_time is NULL, or the reset_time has already passed.
+
+        # THE CIRCUIT BREAKER FILTER
         breaker_filter = Q(rate_limit_reset_time__isnull=True) | Q(
             rate_limit_reset_time__lte=timezone.now()
         )
 
-        # Base active filters
         filters = {
             'provider_id__in': valid_provider_ids,
             'mode__name': 'chat',
@@ -68,7 +76,6 @@ class Hypothalamus:
             'ai_model__context_length__gte': payload_size,
         }
 
-        # Execute Vector Math routing
         best = (
             AIModelProvider.objects.filter(breaker_filter, **filters)
             .annotate(distance=CosineDistance('ai_model__vector', disc.vector))
@@ -78,20 +85,20 @@ class Hypothalamus:
         )
 
         if not best:
-            return None
+            return False
 
-        # Return structured selection
+        # 2. Stamp the routing and pricing onto the Ledger
+        ledger.ai_model_provider = best
+        ledger.ai_model = best.ai_model
+
         pricing = best.aimodelpricing_set.filter(is_current=True).first()
-        cost = pricing.input_cost_per_token if pricing else 0
+        if pricing:
+            # Because UsageRecord inherits AIModelPricingAbstract, we copy the rates over
+            ledger.input_cost_per_token = pricing.input_cost_per_token
+            ledger.output_cost_per_token = pricing.output_cost_per_token
+            # ... (you can copy the rest of the pricing abstract fields here if needed for exact cost math later)
 
-        # Assuming you have a ModelSelection dataclass or similar structure
-        return ModelSelection(
-            provider_model_id=best.provider_unique_model_id,
-            ai_model_name=best.ai_model.name,
-            distance=getattr(best, 'distance', 0.0),
-            input_cost_per_token=cost,
-            is_fallback=False,
-        )
+        return True
 
     @classmethod
     def sync_catalog(cls) -> Optional[AIModelSyncLog]:

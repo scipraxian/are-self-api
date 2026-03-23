@@ -8,8 +8,7 @@ from django.conf import settings
 from litellm import ModelResponse
 from litellm.exceptions import APIConnectionError, RateLimitError
 
-from hypothalamus.models import AIModelProvider
-from hypothalamus.serializers import ModelSelection
+from hypothalamus.models import AIModelProviderUsageRecord
 
 # ------------------------------------------------------------------ #
 #  LiteLLM Global Config                                             #
@@ -182,31 +181,26 @@ def parse_telemetry(usage: Any) -> TelemetryMetrics:
 class SynapseClient:
     """
     Stateful execution conduit.
-    Fails fast on init if DB configuration is missing.
+    Mutates the AIModelProviderUsageRecord in place with exact FinOps and Response data.
     """
 
-    def __init__(self, model_selection: ModelSelection):
-        self.model_id = model_selection.provider_model_id
-
-        self.provider_record: AIModelProvider = (
-            AIModelProvider.objects.select_related('provider').get(
-                provider_unique_model_id=self.model_id
-            )
-        )
+    def __init__(self, ledger: AIModelProviderUsageRecord):
+        self.ledger = ledger
+        self.model_id = self.ledger.ai_model_provider.provider_unique_model_id
+        self.provider_record = self.ledger.ai_model_provider
         self.network_config = self.provider_record.provider
 
-    def chat(
-        self, messages: list, tools: list = None, **kwargs
-    ) -> SynapseResponse:
+    def chat(self, **kwargs) -> List[Dict[str, Any]]:
         """
-        Executes inference using LiteLLM.
-        Trips the Postgres Circuit Breaker on a 429 Rate Limit.
+        Executes inference. Trips Postgres Circuit Breaker on 429.
+        Returns a normalized list of tool_calls (empty list if none).
         """
-        # 1. Properly build the litellm payload using your existing helper
+        messages = self.ledger.request_payload
+        tools = self.ledger.tool_payload if self.ledger.tool_payload else None
+
         litellm_kwargs = self._build_kwargs(messages, tools, kwargs)
 
         try:
-            # 2. Execute inference
             response = litellm.completion(**litellm_kwargs)
 
             # --- SUCCESS: CLEAR THE BREAKER ---
@@ -219,13 +213,12 @@ class SynapseClient:
                     f'[Synapse] Circuit Breaker reset for {self.model_id}'
                 )
 
-            # 3. Process into dataclass
-            return self._process_response(response, litellm_kwargs)
+            # Stamp the ledger and return tool calls
+            return self._process_response(response)
 
         except (RateLimitError, APIConnectionError) as e:
             # --- FAILURE: TRIP THE BREAKER ---
             error_str = str(e).lower()
-
             if (
                 '429' in error_str
                 or 'rate limit' in error_str
@@ -237,9 +230,43 @@ class SynapseClient:
                         f'[Synapse] RATE LIMIT HIT. Circuit Breaker tripped for {self.model_id}. '
                         f'Cooldown until: {self.provider_record.rate_limit_reset_time}'
                     )
-
-            # Re-raise the exception so the Frontal Lobe knows the inference misfired
             raise e
+
+    def _process_response(
+        self, response: ModelResponse
+    ) -> List[Dict[str, Any]]:
+        """Stamps the FinOps receipt directly onto the ledger."""
+
+        # 1. Stamp Raw Output
+        self.ledger.response_payload = (
+            response.model_dump()
+            if hasattr(response, 'model_dump')
+            else (
+                response.dict() if hasattr(response, 'dict') else dict(response)
+            )
+        )
+
+        # 2. Extract Data
+        message = response.choices[0].message
+        usage = getattr(response, 'usage', None)
+        metrics = parse_telemetry(usage)
+
+        # 3. Stamp Token Usage
+        self.ledger.input_tokens = (
+            getattr(usage, USAGE_PROMPT_TOKENS, 0) if usage else 0
+        )
+        self.ledger.output_tokens = (
+            getattr(usage, USAGE_COMPLETION_TOKENS, 0) if usage else 0
+        )
+        self.ledger.reasoning_tokens = metrics.reasoning_tokens
+        self.ledger.cache_read_input_tokens = metrics.cache_read_input_tokens
+        self.ledger.cache_creation_input_tokens = (
+            metrics.cache_creation_input_tokens
+        )
+        self.ledger.audio_tokens = metrics.audio_tokens
+
+        # Return tool calls so the Frontal Lobe can immediately execute them
+        return normalize_tool_calls(message)
 
     def unload(self) -> None:
         """Issues an explicit VRAM drop command for local hardware models."""
