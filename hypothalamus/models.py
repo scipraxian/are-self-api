@@ -324,10 +324,18 @@ class AIModelProviderUsageRecord(AIModelPricingAbstract):
     # References.
 
     ai_model_provider = models.ForeignKey(
-        AIModelProvider, on_delete=models.CASCADE, related_name=RELATED_NAME
+        AIModelProvider,
+        on_delete=models.CASCADE,
+        related_name=RELATED_NAME,
+        blank=True,
+        null=True,
     )
     ai_model = models.ForeignKey(
-        AIModel, on_delete=models.CASCADE, related_name=RELATED_NAME
+        AIModel,
+        on_delete=models.CASCADE,
+        related_name=RELATED_NAME,
+        blank=True,
+        null=True,
     )
     identity_disc = models.ForeignKey(
         'identity.IdentityDisc',
@@ -339,6 +347,7 @@ class AIModelProviderUsageRecord(AIModelPricingAbstract):
 
     # PRE-SEND
     request_payload = models.JSONField(blank=True, default=dict)
+    tool_payload = models.JSONField(blank=True, default=dict)
     estimated_cost = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
     )
