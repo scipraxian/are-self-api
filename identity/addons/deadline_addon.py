@@ -5,7 +5,12 @@ from frontal_lobe.models import ReasoningTurn
 
 def deadline_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
     if not turn:
-        return [{"role": "user", "content": "Deadline Addon Preview Mode (No Reasoning Turn)"}]
+        return [
+            {
+                'role': 'user',
+                'content': 'Deadline Addon Preview Mode (No Reasoning Turn)',
+            }
+        ]
 
     session = turn.session
     current_turn = turn.turn_number
@@ -36,4 +41,4 @@ def deadline_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
         )
 
     text_content = '\n\n'.join(prompt_blocks)
-    return [{"role": "user", "content": text_content}]
+    return [{'role': 'system', 'content': text_content}]

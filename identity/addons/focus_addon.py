@@ -42,4 +42,4 @@ def focus_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
         )
 
     # Return as a Volatile User message
-    return [{"role": "user", "content": '\n\n'.join(prompt_blocks)}]
+    return [{'role': 'system', 'content': '\n\n'.join(prompt_blocks)}]

@@ -272,7 +272,11 @@ def agile_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
     Resolves the ticket locked to this AI disc and injects hyper-focused
     shift instructions as a volatile USER message.
     """
-    if not turn or not turn.session.participant or not turn.session.identity_disc:
+    if (
+        not turn
+        or not turn.session.participant
+        or not turn.session.identity_disc
+    ):
         return []
 
     participant = turn.session.participant
@@ -292,4 +296,4 @@ def agile_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
             is_pm=(disc.identity_type_id == IdentityType.PM),
         )
 
-    return [{"role": "user", "content": content}]
+    return [{'role': 'system', 'content': content}]

@@ -10,4 +10,4 @@ def your_move_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
         '2. You may use your available tools if data or actions are required.\n'
         '3. If no tools are needed, simply provide your response natively.\n'
     )
-    return [{'role': 'user', 'content': content}]
+    return [{'role': 'system', 'content': content}]

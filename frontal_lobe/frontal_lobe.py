@@ -38,6 +38,34 @@ def _fetch_disc_sync(session_id):
     return s.identity_disc
 
 
+def compile_system_messages(messages: list[dict]) -> list[dict]:
+    """
+    Extracts all 'system' messages, concatenates their content into a single
+    master prompt, and hoists it to index 0. Preserves chronological order
+    for all 'user', 'assistant', and 'tool' messages.
+    """
+    system_blocks = []
+    chat_history = []
+
+    for msg in messages:
+        if msg.get('role') == 'system':
+            content = msg.get('content')
+            if content:
+                system_blocks.append(str(content).strip())
+        else:
+            chat_history.append(msg)
+
+    # If there are no system messages, just return the history untouched
+    if not system_blocks:
+        return chat_history
+
+    # Join all system instructions with a clean divider
+    master_system_prompt = '\n\n---\n\n'.join(system_blocks)
+
+    # Return the unified system prompt exactly at index 0
+    return [{'role': 'system', 'content': master_system_prompt}] + chat_history
+
+
 class FrontalLobe:
     """Async execution wrapper for the Frontal Lobe AI loop."""
 
@@ -212,7 +240,7 @@ class FrontalLobe:
                 update_fields=['swarm_message_queue']
             )
 
-        llm_payload = all_messages
+        llm_payload = compile_system_messages(all_messages)
 
         await self._log_live(
             f'\n--- TURN {turn_record.turn_number} PAYLOAD ({len(llm_payload)} messages) ---'

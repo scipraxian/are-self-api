@@ -22,8 +22,14 @@ def telemetry_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
 
     last_output_len = 0
     efficiency_status = 'N/A'
-    if last_turn and last_turn.model_usage_record and last_turn.model_usage_record.response_payload:
-        last_output_len = len(str(last_turn.model_usage_record.response_payload))
+    if (
+        last_turn
+        and last_turn.model_usage_record
+        and last_turn.model_usage_record.response_payload
+    ):
+        last_output_len = len(
+            str(last_turn.model_usage_record.response_payload)
+        )
         efficiency_status = (
             'OPTIMAL'
             if last_output_len <= target_capacity
@@ -47,18 +53,28 @@ def telemetry_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
     input_bandwidth_str = f'L1 Input Payload: {input_bandwidth} chars pulled.'
 
     cutoff_turn = max(1, current_turn - 6)
-    
-    recent_turns = list(ReasoningTurn.objects.filter(
-        session_id=session.id,
-        turn_number__gte=cutoff_turn,
-        turn_number__lt=current_turn,
-        model_usage_record__isnull=False
-    ).select_related('model_usage_record'))
-    
+
+    recent_turns = list(
+        ReasoningTurn.objects.filter(
+            session_id=session.id,
+            turn_number__gte=cutoff_turn,
+            turn_number__lt=current_turn,
+            model_usage_record__isnull=False,
+        ).select_related('model_usage_record')
+    )
+
     l1_cache_size = 0
     for t in recent_turns:
-        l1_cache_size += len(json.dumps(t.model_usage_record.request_payload)) if t.model_usage_record.request_payload else 0
-        l1_cache_size += len(json.dumps(t.model_usage_record.response_payload)) if t.model_usage_record.response_payload else 0
+        l1_cache_size += (
+            len(json.dumps(t.model_usage_record.request_payload))
+            if t.model_usage_record.request_payload
+            else 0
+        )
+        l1_cache_size += (
+            len(json.dumps(t.model_usage_record.response_payload))
+            if t.model_usage_record.response_payload
+            else 0
+        )
 
     pressure_warning = ''
     if l1_cache_size > 20000:
@@ -84,4 +100,4 @@ def telemetry_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
         f'\n{input_bandwidth_str}\n'
     )
 
-    return [{"role": "user", "content": diagnostics}]
+    return [{'role': 'system', 'content': diagnostics}]

@@ -25,4 +25,4 @@ def hippocampus_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
     if not catalog_block:
         return []
 
-    return [{"role": "user", "content": catalog_block}]
+    return [{'role': 'system', 'content': catalog_block}]
