@@ -65,10 +65,7 @@ class IdentityDiscTurnSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'turn_number',
-            'tokens_input',
-            'tokens_output',
             'inference_time',
-            'thought_process',
         )
 
 
@@ -131,6 +128,7 @@ class IdentityDiscSerializer(serializers.ModelSerializer):
         from frontal_lobe.serializers import (
             TalosEngramSerializer,
         )
+
         return TalosEngramSerializer(
             identity_disc.engrams.distinct(),
             many=True,

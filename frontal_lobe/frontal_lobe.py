@@ -1,6 +1,4 @@
-import json
 import logging
-from datetime import timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
@@ -20,9 +18,8 @@ from frontal_lobe.models import (
 )
 from frontal_lobe.synapse_client import SynapseClient
 from hypothalamus.hypothalamus import Hypothalamus
-from hypothalamus.models import AIModelProvider, AIModelProviderUsageRecord
+from hypothalamus.models import AIModelProviderUsageRecord
 from identity.addons.addon_registry import ADDON_REGISTRY
-from identity.models import IdentityDisc
 from parietal_lobe.parietal_lobe import ParietalLobe
 from temporal_lobe.models import IterationShiftParticipant
 
@@ -266,9 +263,10 @@ class FrontalLobe:
             synapse = await sync_to_async(SynapseClient)(pending_ledger)
 
             try:
-                # chat() now mutates the ledger and returns the normalized tool calls
-                tool_calls_data = await sync_to_async(synapse.chat)()
-                break  # Success!
+                # chat()  mutates the ledger, returns normalized tool calls
+                success, tool_calls_data = await sync_to_async(synapse.chat)()
+                if success:
+                    break  # Success! else loop!
 
             except (RateLimitError, APIConnectionError, NotFoundError) as e:
                 provider_id = (

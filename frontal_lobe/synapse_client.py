@@ -6,7 +6,11 @@ from typing import Any, Dict, List, Optional
 import litellm
 from django.conf import settings
 from litellm import ModelResponse
-from litellm.exceptions import APIConnectionError, RateLimitError
+from litellm.exceptions import (
+    APIConnectionError,
+    BadRequestError,
+    RateLimitError,
+)
 
 from hypothalamus.models import AIModelProviderUsageRecord
 
@@ -190,7 +194,7 @@ class SynapseClient:
         self.provider_record = self.ledger.ai_model_provider
         self.network_config = self.provider_record.provider
 
-    def chat(self, **kwargs) -> List[Dict[str, Any]]:
+    def chat(self, **kwargs) -> (bool, List[Dict[str, Any]]):
         """
         Executes inference. Trips Postgres Circuit Breaker on 429.
         Returns a normalized list of tool_calls (empty list if none).
@@ -202,35 +206,40 @@ class SynapseClient:
 
         try:
             response = litellm.completion(**litellm_kwargs)
-
-            # --- SUCCESS: CLEAR THE BREAKER ---
-            if (
-                self.provider_record
-                and self.provider_record.rate_limit_counter > 0
-            ):
-                self.provider_record.reset_circuit_breaker()
-                logger.info(
-                    f'[Synapse] Circuit Breaker reset for {self.model_id}'
-                )
-
-            # Stamp the ledger and return tool calls
-            return self._process_response(response)
-
-        except (RateLimitError, APIConnectionError) as e:
+        except (RateLimitError, APIConnectionError, BadRequestError) as e:
             # --- FAILURE: TRIP THE BREAKER ---
+
             error_str = str(e).lower()
+
+            # Trip the breaker if it's a rate limit OR an upstream provider failure
+
             if (
                 '429' in error_str
                 or 'rate limit' in error_str
-                or isinstance(e, RateLimitError)
+                or '400' in error_str
+                or 'badrequest' in error_str
+                or 'failure' in error_str
+                or isinstance(e, (RateLimitError, BadRequestError))
             ):
                 if self.provider_record:
                     self.provider_record.trip_circuit_breaker()
+
                     logger.warning(
-                        f'[Synapse] RATE LIMIT HIT. Circuit Breaker tripped for {self.model_id}. '
+                        f'[Synapse] ROUTING FAILURE. Circuit Breaker tripped for {self.model_id}. '
+                        f'Reason: {error_str[:100]}... '
                         f'Cooldown until: {self.provider_record.rate_limit_reset_time}'
                     )
+                    return False, []
+
             raise e
+
+        # --- SUCCESS: CLEAR THE BREAKER ---
+        if self.provider_record and self.provider_record.rate_limit_counter > 0:
+            self.provider_record.reset_circuit_breaker()
+            logger.info(f'[Synapse] Circuit Breaker reset for {self.model_id}')
+
+        # Stamp the ledger and return tool calls
+        return True, self._process_response(response)
 
     def _process_response(
         self, response: ModelResponse
