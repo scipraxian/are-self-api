@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils import timezone
 
 from .models import (
     AIMode,
@@ -16,9 +17,35 @@ from .models import (
     SyncStatus,
 )
 
+
 # ------------------------------------------------------------------ #
 #  Network & Classification                                          #
 # ------------------------------------------------------------------ #
+class AIModelProviderInline(admin.TabularInline):
+    model = AIModelProvider
+    extra = 0
+    # Show exactly what you need to debug routing drop-offs
+    fields = (
+        'provider_unique_model_id',
+        'is_enabled',
+        'get_scar_tissue_inline',
+        'rate_limit_reset_time',
+    )
+    readonly_fields = (
+        'provider_unique_model_id',
+        'get_scar_tissue_inline',
+    )
+    show_change_link = (
+        True  # Adds a link to jump into the model's specific config
+    )
+
+    def get_scar_tissue_inline(self, obj):
+        caps = obj.disabled_capabilities.all()
+        if not caps:
+            return '✅'
+        return '❌ ' + ', '.join([c.name for c in caps])
+
+    get_scar_tissue_inline.short_description = 'Benched Caps'
 
 
 @admin.register(LLMProvider)
@@ -32,6 +59,9 @@ class LLMProviderAdmin(admin.ModelAdmin):
     search_fields = ('name', 'key', 'base_url')
     list_filter = ('requires_api_key',)
     readonly_fields = ('has_active_key',)
+
+    # Add the inline here!
+    inlines = [AIModelProviderInline]
 
 
 @admin.register(AIModelCapabilities)
@@ -85,16 +115,28 @@ class AIModelDescriptionInline(admin.StackedInline):
 class AIModelAdmin(admin.ModelAdmin):
     list_display = (
         'name',
-        'context_length',
+        'family',
         'enabled',
+        'get_current_description',  # <-- NEW: Live description peek
+        'context_length',
         'get_capabilities',
         'vector_status',
     )
+    list_editable = ('enabled',)  # <-- NEW: Fast toggling from the grid
     search_fields = ('name', 'description')
-    list_filter = ('enabled', 'capabilities')
+    list_filter = ('enabled', 'family', 'capabilities')
     inlines = [AIModelDescriptionInline]
-
     readonly_fields = ('vector_display',)
+
+    def get_current_description(self, obj):
+        """Pulls the active OpenRouter/Catalog description into the list view."""
+        desc = obj.aimodeldescription_set.filter(is_current=True).first()
+        text = desc.description if desc else obj.description
+        if not text:
+            return 'No description'
+        return (text[:75] + '...') if len(text) > 75 else text
+
+    get_current_description.short_description = 'Active Description'
 
     def get_capabilities(self, obj):
         return ', '.join([c.name for c in obj.capabilities.all()])
@@ -102,7 +144,11 @@ class AIModelAdmin(admin.ModelAdmin):
     get_capabilities.short_description = 'Capabilities'
 
     def vector_status(self, obj):
-        return '✅ Embedded' if obj.vector else '❌ Missing'
+        return (
+            '✅ Embedded'
+            if obj.vector is not None and obj.vector.any()
+            else '❌ Missing'
+        )
 
     vector_status.short_description = 'Vector Status'
 
@@ -122,6 +168,7 @@ class AIModelAdmin(admin.ModelAdmin):
             {
                 'fields': (
                     'name',
+                    'family',
                     'description',
                     'context_length',
                     'enabled',
@@ -173,22 +220,47 @@ class AIModelPricingInline(admin.TabularInline):
 class AIModelProviderAdmin(admin.ModelAdmin):
     list_display = (
         'provider_unique_model_id',
-        'ai_model',
         'provider',
-        'mode',
+        'is_enabled',  # <-- Made highly visible
+        'get_scar_tissue',  # <-- NEW: See broken capabilities instantly
         'is_rate_limited',
     )
+    list_editable = (
+        'is_enabled',
+    )  # <-- NEW: Instantly toggle Ollama/Endpoints
     search_fields = (
         'provider_unique_model_id',
         'ai_model__name',
         'provider__key',
     )
-    list_filter = ('provider', 'mode')
+    list_filter = ('is_enabled', 'provider', 'mode')
     raw_id_fields = (
         'ai_model',
         'provider',
     )
+    filter_horizontal = (
+        'disabled_capabilities',
+    )  # <-- Makes adding/removing M2M fields easy in the form
     inlines = [AIModelPricingInline]
+
+    def get_scar_tissue(self, obj):
+        """Displays capabilities that failed at runtime and were permanently benched."""
+        caps = obj.disabled_capabilities.all()
+        if not caps:
+            return '✅ Healthy'
+        return '❌ ' + ', '.join([c.name for c in caps])
+
+    get_scar_tissue.short_description = 'Scar Tissue (Benched)'
+
+    def is_rate_limited(self, obj):
+        if (
+            obj.rate_limit_reset_time
+            and obj.rate_limit_reset_time > timezone.now()
+        ):
+            return f'⚠️ Breaker Tripped'
+        return '✅ Clear'
+
+    is_rate_limited.short_description = 'Circuit Status'
 
     fieldsets = (
         (
@@ -199,7 +271,15 @@ class AIModelProviderAdmin(admin.ModelAdmin):
                     'provider',
                     'provider_unique_model_id',
                     'mode',
+                    'is_enabled',
                 )
+            },
+        ),
+        (
+            'Health & Routing Overrides',
+            {
+                'fields': ('disabled_capabilities',),
+                'description': 'Capabilities listed here will prevent the Hypothalamus from routing specific tasks to this endpoint.',
             },
         ),
         (
@@ -214,22 +294,11 @@ class AIModelProviderAdmin(admin.ModelAdmin):
                     'rate_limit_reset_time',
                     'rate_limit_counter',
                     'rate_limit_total_failures',
-                )
+                ),
+                'classes': ('collapse',),
             },
         ),
     )
-
-    def is_rate_limited(self, obj):
-        from django.utils import timezone
-
-        if (
-            obj.rate_limit_reset_time
-            and obj.rate_limit_reset_time > timezone.now()
-        ):
-            return '⚠️ YES'
-        return '✅ Clear'
-
-    is_rate_limited.short_description = 'Circuit Breaker'
 
 
 # ------------------------------------------------------------------ #
@@ -261,7 +330,7 @@ class AIModelProviderUsageRecordAdmin(admin.ModelAdmin):
         'output_tokens',
         'estimated_cost',
     )
-    list_filter = ('ai_model_provider__provider', 'created')
+    list_filter = ('created',)
     search_fields = (
         'identity_disc__name',
         'ai_model_provider__provider_unique_model_id',

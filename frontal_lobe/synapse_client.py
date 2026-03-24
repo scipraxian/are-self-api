@@ -9,10 +9,11 @@ from litellm import ModelResponse
 from litellm.exceptions import (
     APIConnectionError,
     BadRequestError,
+    NotFoundError,
     RateLimitError,
 )
 
-from hypothalamus.models import AIModelProviderUsageRecord
+from hypothalamus.models import AIModelCapabilities, AIModelProviderUsageRecord
 
 # ------------------------------------------------------------------ #
 #  LiteLLM Global Config                                             #
@@ -191,8 +192,8 @@ class SynapseClient:
     def __init__(self, ledger: AIModelProviderUsageRecord):
         self.ledger = ledger
         self.model_id = self.ledger.ai_model_provider.provider_unique_model_id
-        self.provider_record = self.ledger.ai_model_provider
-        self.network_config = self.provider_record.provider
+        self.ai_model_provider = self.ledger.ai_model_provider
+        self.network_config = self.ai_model_provider.provider
 
     def chat(self, **kwargs) -> (bool, List[Dict[str, Any]]):
         """
@@ -206,13 +207,32 @@ class SynapseClient:
 
         try:
             response = litellm.completion(**litellm_kwargs)
-        except (RateLimitError, APIConnectionError, BadRequestError) as e:
-            # --- FAILURE: TRIP THE BREAKER ---
-
+        except (
+            RateLimitError,
+            APIConnectionError,
+            BadRequestError,
+            NotFoundError,
+        ) as e:
             error_str = str(e).lower()
 
-            # Trip the breaker if it's a rate limit OR an upstream provider failure
+            # --- NEW: SCAR TISSUE LOGIC (Permanent Bench) ---
+            if isinstance(e, NotFoundError) and (
+                'tool' in error_str or 'function' in error_str
+            ):
+                if self.ai_model_provider:
+                    cap = AIModelCapabilities.objects.filter(
+                        name='function_calling'
+                    ).first()
+                    if cap:
+                        self.ai_model_provider.disabled_capabilities.add(cap)
+                        logger.warning(
+                            f'[Synapse] SCAR TISSUE: Permanently disabled function_calling '
+                            f'for {self.model_id} due to 404 endpoint rejection.'
+                        )
+                # Return False so the Frontal Lobe immediately tries the next model
+                return False, []
 
+            # --- EXISTING: CIRCUIT BREAKER LOGIC (Temporary Bench) ---
             if (
                 '429' in error_str
                 or 'rate limit' in error_str
@@ -221,21 +241,24 @@ class SynapseClient:
                 or 'failure' in error_str
                 or isinstance(e, (RateLimitError, BadRequestError))
             ):
-                if self.provider_record:
-                    self.provider_record.trip_circuit_breaker()
+                if self.ai_model_provider:
+                    self.ai_model_provider.trip_circuit_breaker()
 
                     logger.warning(
                         f'[Synapse] ROUTING FAILURE. Circuit Breaker tripped for {self.model_id}. '
                         f'Reason: {error_str[:100]}... '
-                        f'Cooldown until: {self.provider_record.rate_limit_reset_time}'
+                        f'Cooldown until: {self.ai_model_provider.rate_limit_reset_time}'
                     )
                     return False, []
 
             raise e
 
         # --- SUCCESS: CLEAR THE BREAKER ---
-        if self.provider_record and self.provider_record.rate_limit_counter > 0:
-            self.provider_record.reset_circuit_breaker()
+        if (
+            self.ai_model_provider
+            and self.ai_model_provider.rate_limit_counter > 0
+        ):
+            self.ai_model_provider.reset_circuit_breaker()
             logger.info(f'[Synapse] Circuit Breaker reset for {self.model_id}')
 
         # Stamp the ledger and return tool calls

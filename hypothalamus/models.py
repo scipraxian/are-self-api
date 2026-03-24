@@ -226,6 +226,10 @@ class AIModelProvider(
     max_tokens = models.IntegerField(null=True, blank=True)
     max_input_tokens = models.IntegerField(null=True, blank=True)
     max_output_tokens = models.IntegerField(null=True, blank=True)
+    disabled_capabilities = models.ManyToManyField(
+        AIModelCapabilities, blank=True
+    )
+    is_enabled = models.BooleanField(default=True, db_index=True)
 
     def __str__(self):
         return f'{self.ai_model} via {self.provider} ({self.provider_unique_model_id})'
@@ -378,9 +382,12 @@ class AIModelRating(CreatedMixin):
         indexes = [models.Index(fields=['ai_model', 'is_current'])]
 
 
-class AIModelDescriptionCache(models.Model):
+class LiteLLMCache(CreatedMixin):
+    cached_catalog = models.JSONField(default=dict)
+
+
+class AIModelDescriptionCache(CreatedMixin):
     cached_library = models.JSONField(default=dict)
-    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class AIModelDescription(DescriptionMixin, CreatedAndModifiedWithDelta):

@@ -1,6 +1,7 @@
 import logging
 from decimal import Decimal
 from typing import Optional
+from uuid import UUID
 
 import requests
 from django.db import transaction
@@ -19,6 +20,7 @@ from hypothalamus.models import (
     AIModelProviderUsageRecord,
     AIModelSyncLog,
     AIModelTags,
+    LiteLLMCache,
     LLMProvider,
     SyncStatus,
 )
@@ -68,18 +70,24 @@ class Hypothalamus:
             'provider_id__in': valid_provider_ids,
             'mode__name': 'chat',
             'ai_model__enabled': True,
+            'is_enabled': True,  # <-- NEW: Respect the provider-level toggle
             'aimodelpricing__is_current': True,
             'aimodelpricing__is_active': True,
             'aimodelpricing__input_cost_per_token__lte': max_cost,
             'ai_model__context_length__gte': payload_size,
         }
 
-        # Checking dynamic capabilities instead of hardcoded booleans
+        # --- NEW: Setup exclusions ---
+        excludes = {}
+
         if ledger.tool_payload:
             filters['ai_model__capabilities__name'] = 'function_calling'
+            # Exclude any ai_model_provider that has this capability disabled.
+            excludes['disabled_capabilities__name'] = 'function_calling'
 
         best = (
             AIModelProvider.objects.filter(breaker_filter, **filters)
+            .exclude(**excludes)  # Apply the scar tissue filter
             .annotate(distance=CosineDistance('ai_model__vector', disc.vector))
             .select_related('ai_model')
             .order_by('distance', 'aimodelpricing__input_cost_per_token')
@@ -121,6 +129,7 @@ class Hypothalamus:
     def sync_catalog(
         cls, use_local_cache: bool = False, force_rebuild: bool = False
     ) -> Optional[AIModelSyncLog]:
+        """Orchestrates the lock and state tracking, delegating all business logic."""
         running_status = SyncStatus.objects.get(id=SyncStatus.RUNNING)
 
         if AIModelSyncLog.objects.filter(status=running_status).exists():
@@ -128,76 +137,133 @@ class Hypothalamus:
             return None
 
         sync_log = AIModelSyncLog.objects.create(status=running_status)
-        active_provider_keys: set[str] = set()
-        models_flagged_for_vector_update = set()
 
+        # The strictly necessary state-machine wrapper. No business logic lives here.
         try:
-            logger.info('[Hypothalamus] Fetching LiteLLM catalog...')
-            response = requests.get(LITELLM_CATALOG_URL, timeout=30)
-            response.raise_for_status()
-            catalog: dict = response.json()
-
-            with transaction.atomic():
-                for raw_key, data in catalog.items():
-                    if raw_key in CATALOG_SKIP_KEYS:
-                        continue
-
-                    active_provider_keys.add(raw_key)
-
-                    provider = cls._ensure_provider(data)
-                    mode = cls._ensure_mode(data)
-                    ai_model, model_created = cls._ensure_ai_model(
-                        raw_key, data
-                    )
-
-                    if model_created:
-                        sync_log.models_added += 1
-                        models_flagged_for_vector_update.add(ai_model.id)
-
-                    model_provider = cls._ensure_model_provider(
-                        raw_key, ai_model, provider, mode, data
-                    )
-                    price_updated = cls._update_pricing(model_provider, data)
-                    if price_updated:
-                        sync_log.prices_updated += 1
-
-                dead = AIModelPricing.objects.filter(
-                    is_current=True, is_active=True
-                ).exclude(
-                    model_provider__provider_unique_model_id__in=active_provider_keys
-                )
-                sync_log.models_deactivated = dead.count()
-                dead.update(is_active=False)
-
-            # --- THE SEMANTIC ETL PHASE ---
-            enriched_model_ids = cls.enrich_model_semantics_from_openrouter(
-                use_local_cache=use_local_cache, force_rebuild=force_rebuild
-            )
-            models_flagged_for_vector_update.update(enriched_model_ids)
-
-            # If we are forcing a rebuild, ensure ALL models get re-vectorized
-            if force_rebuild:
-                all_model_ids = set(
-                    AIModel.objects.values_list('id', flat=True)
-                )
-                models_flagged_for_vector_update.update(all_model_ids)
-
-            sync_log.status = SyncStatus.objects.get(id=SyncStatus.SUCCESS)
-
+            cls._execute_sync_pipeline(sync_log, use_local_cache, force_rebuild)
         except Exception as exc:
-            logger.exception('[Hypothalamus] Sync failed.')
+            logger.exception('[Hypothalamus] Fatal pipeline crash.')
             sync_log.status = SyncStatus.objects.get(id=SyncStatus.FAILED)
             sync_log.error_message = str(exc)
-
         finally:
             sync_log.save()
-            if (
-                sync_log.status_id == SyncStatus.SUCCESS
-                and models_flagged_for_vector_update
-            ):
-                cls._trigger_vector_generation(models_flagged_for_vector_update)
 
         return sync_log
+
+    @classmethod
+    def _execute_sync_pipeline(
+        cls,
+        sync_log: AIModelSyncLog,
+        use_local_cache: bool,
+        force_rebuild: bool,
+    ) -> None:
+        """The core ETL pipeline. Fails fast if data is unretrievable."""
+
+        logger.info('[Hypothalamus] Execute Pipeline')
+        catalog = cls._fetch_litellm_catalog(use_local_cache)
+        if not catalog:
+            raise RuntimeError('Catalog fetch returned empty or failed.')
+
+        active_keys, flagged_models = cls._process_litellm_catalog(
+            catalog, sync_log
+        )
+        cls._deactivate_stale_models(active_keys, sync_log)
+
+        enriched_ids = cls.enrich_model_semantics_from_openrouter(
+            use_local_cache=use_local_cache, force_rebuild=force_rebuild
+        )
+        flagged_models.update(enriched_ids)
+
+        if force_rebuild:
+            flagged_models.update(
+                set(AIModel.objects.values_list('id', flat=True))
+            )
+
+        logger.info('[Hypothalamus] Sync Ollama.')
+        cls._sync_local_ollama(sync_log)
+        sync_log.status = SyncStatus.objects.get(id=SyncStatus.SUCCESS)
+
+        if flagged_models:
+            cls._trigger_vector_generation(flagged_models)
+
+    @classmethod
+    def _fetch_litellm_catalog(cls, use_local_cache: bool) -> dict:
+        """Handles network/cache retrieval with surgical, localized exception catching."""
+        cache, _ = LiteLLMCache.objects.get_or_create(id=1)
+
+        if use_local_cache and cache.cached_catalog:
+            logger.info('[Hypothalamus] Using local LiteLLM cache.')
+            return cache.cached_catalog
+
+        logger.info('[Hypothalamus] Fetching LiteLLM catalog from network...')
+
+        try:
+            response = requests.get(LITELLM_CATALOG_URL, timeout=30)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            logger.error(
+                f'[Hypothalamus] Network failure fetching catalog: {e}'
+            )
+            return {}
+
+        try:
+            catalog = response.json()
+        except ValueError as e:
+            logger.error(f'[Hypothalamus] Failed to parse catalog JSON: {e}')
+            return {}
+
+        cache.cached_catalog = catalog
+        cache.save(update_fields=['cached_catalog'])
+        return catalog
+
+    @classmethod
+    def _process_litellm_catalog(
+        cls, catalog: dict, sync_log: AIModelSyncLog
+    ) -> tuple[set, set]:
+        """Iterates the raw dictionary and maps it to the database models."""
+        active_provider_keys = set()
+        models_flagged_for_vector_update = set()
+
+        counter = 0
+        catalog_size = len(catalog)
+        with transaction.atomic():
+            for raw_key, data in catalog.items():
+                counter += 1
+                logger.info(
+                    f'Processing model {counter}/{catalog_size}: {raw_key}'
+                )
+                if raw_key in CATALOG_SKIP_KEYS:
+                    continue
+
+                active_provider_keys.add(raw_key)
+
+                provider = cls._ensure_provider(data)
+                mode = cls._ensure_mode(data)
+                ai_model, model_created = cls._ensure_ai_model(raw_key, data)
+
+                if model_created:
+                    sync_log.models_added += 1
+                    models_flagged_for_vector_update.add(ai_model.id)
+
+                model_provider = cls._ensure_model_provider(
+                    raw_key, ai_model, provider, mode, data
+                )
+
+                if cls._update_pricing(model_provider, data):
+                    sync_log.prices_updated += 1
+
+        return active_provider_keys, models_flagged_for_vector_update
+
+    @classmethod
+    def _deactivate_stale_models(
+        cls, active_keys: set, sync_log: AIModelSyncLog
+    ) -> None:
+        """Sweeps and removes models that are no longer in the upstream catalog."""
+        dead = AIModelPricing.objects.filter(
+            is_current=True, is_active=True
+        ).exclude(model_provider__provider_unique_model_id__in=active_keys)
+        sync_log.models_deactivated = dead.count()
+        dead.update(is_active=False)
 
     # ------------------------------------------------------------------ #
     #  Private helpers                                                   #
@@ -277,11 +343,16 @@ class Hypothalamus:
             model_provider=model_provider, is_current=True
         ).first()
 
+        # THE FIX: If the price matches BUT it was deactivated by the stale sweep, resurrect it!
         if (
             current
             and current.input_cost_per_token == in_cost
             and current.output_cost_per_token == out_cost
         ):
+            if not current.is_active:
+                current.is_active = True
+                current.save(update_fields=['is_active'])
+                return True  # We did make an update
             return False
 
         if current:
@@ -317,167 +388,186 @@ class Hypothalamus:
     def enrich_model_semantics_from_openrouter(
         cls, use_local_cache: bool = False, force_rebuild: bool = False
     ) -> set:
-        """
-        Hits OpenRouter, extracts descriptions AND architecture data.
-        UPGRADE: Now acts as an authoritative source for OpenRouter models,
-        creating missing models and enforcing OpenRouter's live pricing.
-        """
-        logger.info(
-            '[Hypothalamus] Enriching and syncing OpenRouter authoritative data...'
-        )
+        """Main orchestrator for OpenRouter data ingestion and semantic updates."""
+        logger.info('[Hypothalamus] Enriching OpenRouter authoritative data...')
         modified_model_ids = set()
 
+        payload = cls._fetch_openrouter_catalog(use_local_cache)
+        openrouter_models = payload.get('data', [])
+
+        if not openrouter_models:
+            return modified_model_ids
+
+        or_llm_provider, _ = LLMProvider.objects.get_or_create(
+            key='openrouter', defaults={'name': 'OpenRouter'}
+        )
+        chat_mode, _ = AIMode.objects.get_or_create(name=CHAT_MODE)
+
+        # --- THE HEALING MECHANIC ---
+        if force_rebuild:
+            cls._rehabilitate_openrouter_models(or_llm_provider)
+
+        length = len(openrouter_models)
+
         try:
-            payload = None
-
-            if use_local_cache:
-                latest_cache = AIModelDescriptionCache.objects.order_by(
-                    '-created_at'
-                ).first()
-                if latest_cache:
-                    logger.info('[Hypothalamus] Using local OpenRouter cache.')
-                    payload = latest_cache.cached_library
-                else:
-                    logger.warning(
-                        '[Hypothalamus] No local cache found. Falling back to network.'
-                    )
-
-            if not payload:
-                logger.info(
-                    '[Hypothalamus] Fetching OpenRouter models from network...'
-                )
-                response = requests.get(OPENROUTER_MODELS_URL, timeout=15)
-                response.raise_for_status()
-                payload = response.json()
-                AIModelDescriptionCache.objects.create(cached_library=payload)
-
-            openrouter_models = payload.get('data', [])
-
-            # Ensure we have the OpenRouter LLMProvider and Chat Mode ready
-            or_llm_provider, _ = LLMProvider.objects.get_or_create(
-                key='openrouter', defaults={'name': 'OpenRouter'}
-            )
-            chat_mode, _ = AIMode.objects.get_or_create(name=CHAT_MODE)
-
-            length = len(openrouter_models)
-            counter = 0
-            for or_data in openrouter_models:
-                counter += 1
-                logger.info(
-                    f'Processing OpenRouter model {counter} of {length}'
-                )
-                stripped_id = or_data['id']
-                provider_unique_id = f'openrouter/{stripped_id}'
-                new_desc = or_data.get('description', '')
-
-                # 1. Ensure AIModel exists
-                ai_model, model_created = AIModel.objects.get_or_create(
-                    name=or_data.get('name', stripped_id),
-                    defaults={
-                        'context_length': or_data.get('context_length', 4096),
-                    },
-                )
-
-                # --- NEW: Capability Inheritance for OpenRouter Variants ---
-                # If this model has a suffix (e.g. google/gemini-2.5-flash:free)
-                # it inherits the capabilities (like function_calling) of its parent.
-                if ':' in stripped_id:
-                    base_id = stripped_id.split(':')[0]
-                    base_provider_unique_id = f'openrouter/{base_id}'
-
-                    base_provider = (
-                        AIModelProvider.objects.filter(
-                            provider_unique_model_id=base_provider_unique_id
+            with transaction.atomic():
+                for counter, or_data in enumerate(openrouter_models, start=1):
+                    if counter % 50 == 0:
+                        logger.info(
+                            f'[Hypothalamus] Processing OpenRouter model {counter} of {length}'
                         )
-                        .select_related('ai_model')
-                        .first()
+
+                    modified_id = cls._process_openrouter_model(
+                        or_data, or_llm_provider, chat_mode, force_rebuild
                     )
-
-                    if base_provider and base_provider.ai_model:
-                        base_caps = base_provider.ai_model.capabilities.all()
-                        if base_caps.exists():
-                            # M2M .add() is idempotent, it won't duplicate them
-                            ai_model.capabilities.add(*base_caps)
-
-                # Fallback: Guess from the OpenRouter description
-                if not ai_model.capabilities.filter(
-                    name='function_calling'
-                ).exists():
-                    desc_lower = new_desc.lower()
-                    if (
-                        'function calling' in desc_lower
-                        or 'tool use' in desc_lower
-                        or 'tools' in desc_lower
-                    ):
-                        fc_cap, _ = AIModelCapabilities.objects.get_or_create(
-                            name='function_calling'
-                        )
-                        ai_model.capabilities.add(fc_cap)
-                # ---------------------------------------------------------
-
-                # 2. Ensure AIModelProvider exists
-                provider, _ = AIModelProvider.objects.update_or_create(
-                    provider_unique_model_id=provider_unique_id,
-                    defaults={
-                        'ai_model': ai_model,
-                        'provider': or_llm_provider,
-                        'mode': chat_mode,
-                        'max_input_tokens': or_data.get('context_length'),
-                    },
-                )
-
-                # 3. ENFORCE OPENROUTER PRICING
-                or_pricing = or_data.get('pricing', {})
-                in_cost = _dec('prompt', or_pricing)
-                out_cost = _dec('completion', or_pricing)
-
-                mocked_price_data = {
-                    'input_cost_per_token': in_cost,
-                    'output_cost_per_token': out_cost,
-                }
-                cls._update_pricing(provider, mocked_price_data)
-
-                # 4. SEMANTIC ENRICHMENT (Tags and Description)
-                arch = or_data.get('architecture', {})
-                extracted_tags = []
-                if arch.get('modality'):
-                    extracted_tags.append(f'modality:{arch["modality"]}')
-                if arch.get('instruct_type'):
-                    extracted_tags.append(f'instruct:{arch["instruct_type"]}')
-
-                current_desc_obj = AIModelDescription.objects.filter(
-                    ai_models=ai_model, is_current=True
-                ).first()
-
-                is_different = (
-                    not current_desc_obj
-                    or current_desc_obj.description != new_desc
-                )
-
-                if new_desc and (is_different or force_rebuild):
-                    if current_desc_obj:
-                        current_desc_obj.is_current = False
-                        current_desc_obj.save(update_fields=['is_current'])
-
-                    desc_obj = AIModelDescription.objects.create(
-                        description=new_desc, is_current=True
-                    )
-                    desc_obj.ai_models.add(ai_model)
-
-                    for tag_string in extracted_tags:
-                        tag_obj, _ = AIModelTags.objects.get_or_create(
-                            name=tag_string
-                        )
-                        desc_obj.tags.add(tag_obj)
-
-                    modified_model_ids.add(ai_model.id)
+                    if modified_id:
+                        modified_model_ids.add(modified_id)
 
         except Exception:
             logger.exception(
-                '[Hypothalamus] OpenRouter semantic enrichment failed.'
+                '[Hypothalamus] OpenRouter semantic enrichment failed during processing loop.'
             )
 
         return modified_model_ids
+
+    @classmethod
+    def _fetch_openrouter_catalog(cls, use_local_cache: bool) -> dict:
+        """Handles network/cache retrieval with strict boundary exceptions."""
+        if use_local_cache:
+            latest_cache = AIModelDescriptionCache.objects.order_by(
+                '-created'
+            ).first()
+            if latest_cache and latest_cache.cached_library:
+                logger.info('[Hypothalamus] Using local OpenRouter cache.')
+                return latest_cache.cached_library
+
+        logger.info('[Hypothalamus] Fetching OpenRouter models from network...')
+
+        try:
+            response = requests.get(OPENROUTER_MODELS_URL, timeout=15)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            logger.error(
+                f'[Hypothalamus] Network failure fetching OpenRouter catalog: {e}'
+            )
+            return {}
+
+        try:
+            payload = response.json()
+        except ValueError as e:
+            logger.error(f'[Hypothalamus] Failed to parse OpenRouter JSON: {e}')
+            return {}
+
+        AIModelDescriptionCache.objects.create(cached_library=payload)
+        return payload
+
+    @classmethod
+    def _rehabilitate_openrouter_models(cls, provider: LLMProvider) -> None:
+        """Wipes the scar tissue (disabled_capabilities) for a fresh start on force rebuilds."""
+        logger.info(
+            '[Hypothalamus] Force rebuild active: Rehabilitating OpenRouter models.'
+        )
+        providers = AIModelProvider.objects.filter(provider=provider)
+        for p in providers:
+            p.disabled_capabilities.clear()
+
+    @classmethod
+    def _process_openrouter_model(
+        cls,
+        or_data: dict,
+        provider: LLMProvider,
+        mode: AIMode,
+        force_rebuild: bool,
+    ) -> Optional[int]:
+        """Handles the ingestion of a single model's routing, capability, and pricing data."""
+        stripped_id = or_data['id']
+        provider_unique_id = f'openrouter/{stripped_id}'
+
+        # 1. Ensure AIModel
+        ai_model, _ = AIModel.objects.get_or_create(
+            name=or_data.get('name', stripped_id),
+            defaults={'context_length': or_data.get('context_length', 4096)},
+        )
+
+        # 2. Optimistic Inheritance (No string-matching guesswork!)
+        if ':' in stripped_id:
+            base_id = stripped_id.split(':')[0]
+            base_provider = (
+                AIModelProvider.objects.filter(
+                    provider_unique_model_id=f'openrouter/{base_id}'
+                )
+                .select_related('ai_model')
+                .first()
+            )
+
+            if base_provider and base_provider.ai_model:
+                base_caps = base_provider.ai_model.capabilities.all()
+                if base_caps.exists():
+                    ai_model.capabilities.add(*base_caps)
+
+        # 3. Ensure Provider Record
+        model_provider, _ = AIModelProvider.objects.update_or_create(
+            provider_unique_model_id=provider_unique_id,
+            defaults={
+                'ai_model': ai_model,
+                'provider': provider,
+                'mode': mode,
+                'max_input_tokens': or_data.get('context_length'),
+            },
+        )
+
+        # 4. Enforce Pricing
+        or_pricing = or_data.get('pricing', {})
+        mocked_price_data = {
+            'input_cost_per_token': _dec('prompt', or_pricing),
+            'output_cost_per_token': _dec('completion', or_pricing),
+        }
+        cls._update_pricing(model_provider, mocked_price_data)
+
+        # 5. Semantic Enrichment
+        return cls._enrich_openrouter_semantics(
+            ai_model, or_data, force_rebuild
+        )
+
+    @classmethod
+    def _enrich_openrouter_semantics(
+        cls, ai_model: AIModel, or_data: dict, force_rebuild: bool
+    ) -> Optional[UUID]:
+        """Handles descriptions and tags. Returns the AIModel ID if updated, else None."""
+        new_desc = or_data.get('description', '')
+        arch = or_data.get('architecture', {})
+
+        extracted_tags = []
+        if arch.get('modality'):
+            extracted_tags.append(f'modality:{arch["modality"]}')
+        if arch.get('instruct_type'):
+            extracted_tags.append(f'instruct:{arch["instruct_type"]}')
+
+        current_desc_obj = AIModelDescription.objects.filter(
+            ai_models=ai_model, is_current=True
+        ).first()
+
+        is_different = (not current_desc_obj) or (
+            current_desc_obj.description != new_desc
+        )
+
+        if new_desc and (is_different or force_rebuild):
+            if current_desc_obj:
+                current_desc_obj.is_current = False
+                current_desc_obj.save(update_fields=['is_current'])
+
+            desc_obj = AIModelDescription.objects.create(
+                description=new_desc, is_current=True
+            )
+            desc_obj.ai_models.add(ai_model)
+
+            for tag_string in extracted_tags:
+                tag_obj, _ = AIModelTags.objects.get_or_create(name=tag_string)
+                desc_obj.tags.add(tag_obj)
+
+            return ai_model.id
+
+        return None
 
     @classmethod
     def _trigger_vector_generation(cls, target_model_ids: set):
@@ -494,3 +584,96 @@ class Hypothalamus:
             counter += 1
             logger.info(f'Processing model {counter} of {count}')
             model.update_vector()
+
+    @classmethod
+    def _sync_local_ollama(cls, sync_log: AIModelSyncLog) -> None:
+        """Mirrors the local hard drive state using the provider's is_enabled flag."""
+        logger.info('[Hypothalamus] Syncing local Ollama instance...')
+
+        ollama_provider, _ = LLMProvider.objects.get_or_create(
+            key='ollama',
+            defaults={'name': 'Ollama', 'base_url': 'http://localhost:11434'},
+        )
+
+        if not ollama_provider.base_url:
+            logger.warning(
+                '[Hypothalamus] Ollama provider missing base_url. Skipping.'
+            )
+            return
+
+        # 1. Discover what is physically on the hard drive
+        installed_models = cls._fetch_ollama_tags(ollama_provider.base_url)
+        installed_names = {
+            m.get('name') for m in installed_models if m.get('name')
+        }
+        installed_provider_ids = set()
+
+        chat_mode, _ = AIMode.objects.get_or_create(name=CHAT_MODE)
+
+        with transaction.atomic():
+            # 2. Activate what is on the hard drive
+            for model_name in installed_names:
+                provider_id = f'ollama/{model_name}'
+                installed_provider_ids.add(provider_id)
+                cls._process_installed_ollama_model(
+                    model_name, provider_id, ollama_provider, chat_mode
+                )
+
+            # 3. Bench what is NOT on the hard drive (The Ghost Models)
+            dead_ollama_providers = AIModelProvider.objects.filter(
+                provider=ollama_provider,
+                is_enabled=True,  # Only grab ones that think they are active
+            ).exclude(provider_unique_model_id__in=installed_provider_ids)
+
+            deactivated_count = dead_ollama_providers.count()
+            if deactivated_count > 0:
+                logger.info(
+                    f'[Hypothalamus] Benched {deactivated_count} missing local Ollama models.'
+                )
+                dead_ollama_providers.update(is_enabled=False)
+
+    @classmethod
+    def _process_installed_ollama_model(
+        cls,
+        model_name: str,
+        provider_unique_id: str,
+        provider: LLMProvider,
+        mode: AIMode,
+    ) -> None:
+        """Registers and enables a verified local model into the routing pool."""
+        ai_model, _ = AIModel.objects.get_or_create(
+            name=model_name,
+            defaults={'context_length': 8192},  # Safe default for local models
+        )
+
+        model_provider, _ = AIModelProvider.objects.update_or_create(
+            provider_unique_model_id=provider_unique_id,
+            defaults={
+                'ai_model': ai_model,
+                'provider': provider,
+                'mode': mode,
+                'is_enabled': True,
+                # <-- NEW: Force it on because we physically found it
+            },
+        )
+
+        # Ollama is always $0.00. Enforce that reality.
+        mocked_free_pricing = {
+            'input_cost_per_token': Decimal('0.0'),
+            'output_cost_per_token': Decimal('0.0'),
+        }
+        cls._update_pricing(model_provider, mocked_free_pricing)
+
+    @classmethod
+    def _fetch_ollama_tags(cls, base_url: str) -> list:
+        """Safely fetches the list of installed models from the local Ollama API."""
+        try:
+            url = f'{base_url.rstrip("/")}/api/tags'
+            response = requests.get(url, timeout=5)
+            response.raise_for_status()
+            return response.json().get('models', [])
+        except (requests.RequestException, ValueError) as e:
+            logger.warning(
+                f'[Hypothalamus] Could not reach local Ollama at {base_url}: {e}'
+            )
+            return []

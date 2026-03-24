@@ -161,7 +161,23 @@ class ThalamusViewSet(viewsets.ViewSet):
         # Hand off to the DRY operation
         messages_payload = get_chat_history(session, include_volatile=False)
 
-        response_dto = ThalamusMessageListDTO(messages=messages_payload)
+        # 🧹 SHIELD: Sanitize internal system prompts at the source
+        clean_messages = []
+        for m in messages_payload:
+            role = m.get('role')
+            content = m.get('content') or m.get('text') or ''
+
+            if role == 'user' and isinstance(content, str):
+                if (
+                    'YOUR MOVE:' in content
+                    or '[SYSTEM DIAGNOSTICS]' in content
+                    or '[YOUR CARD CATALOG' in content
+                ):
+                    continue
+
+            clean_messages.append(m)
+
+        response_dto = ThalamusMessageListDTO(messages=clean_messages)
         return Response(
             ThalamusMessageListSerializer(instance=response_dto).data,
             status=status.HTTP_200_OK,
