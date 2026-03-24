@@ -254,11 +254,23 @@ class FrontalLobe:
 
     async def _execute_turn(
         self,
-        turn_index: int,
         ollama_tools: list,
         previous_turn: Optional[ReasoningTurn],
     ) -> Tuple[bool, ReasoningTurn]:
-        turn_record = await self._record_turn_start(turn_index, previous_turn)
+
+        # Check for an active turn created by the API, otherwise create the next chronological turn
+        turn_record = await sync_to_async(
+            lambda: self.session.turns.filter(
+                status_id=ReasoningStatusID.ACTIVE
+            ).first()
+        )()
+
+        if not turn_record:
+            current_count = await sync_to_async(self.session.turns.count)()
+            turn_record = await self._record_turn_start(
+                current_count, previous_turn
+            )
+
         messages = await self._build_turn_payload(turn_record)
         tools = ollama_tools if ollama_tools else {}
 
@@ -291,10 +303,10 @@ class FrontalLobe:
             synapse = await sync_to_async(SynapseClient)(pending_ledger)
 
             try:
-                # chat()  mutates the ledger, returns normalized tool calls
+                # chat() mutates the ledger, returns normalized tool calls
                 success, tool_calls_data = await sync_to_async(synapse.chat)()
                 if success:
-                    break  # Success! else loop!
+                    break  # Success! escape loop!
 
             except (RateLimitError, APIConnectionError, NotFoundError) as e:
                 provider_id = (
@@ -329,7 +341,6 @@ class FrontalLobe:
         )
 
         # 6. Logging and Tool Execution
-        # Extract the assistant's text from the raw response payload to log it
         res_payload = pending_ledger.response_payload or {}
         content = ''
         if isinstance(res_payload, dict):
@@ -395,8 +406,24 @@ class FrontalLobe:
             await self._log_live(f'[[[[[Loaded {len(ollama_tools)} tools.]]]]]')
 
             # 5. The Loop
-            previous_turn = None
-            for turn in range(self.session.max_turns):
+            previous_turn = await sync_to_async(
+                lambda: (
+                    self.session.turns.exclude(
+                        status_id=ReasoningStatusID.ACTIVE
+                    )
+                    .order_by('-turn_number')
+                    .first()
+                )
+            )()
+
+            while True:
+                current_turn_count = await sync_to_async(
+                    self.session.turns.count
+                )()
+                if current_turn_count >= self.session.max_turns:
+                    await self._log_live('\n[WARNING] Max turns reached.')
+                    break
+
                 await sync_to_async(self.spike.refresh_from_db)(
                     fields=['status']
                 )
@@ -404,8 +431,9 @@ class FrontalLobe:
                     await self._log_live('\n[WARNING] Stop Signal. Halting.')
                     break
 
+                # The clean, 2-argument call
                 should_continue, previous_turn = await self._execute_turn(
-                    turn, ollama_tools, previous_turn
+                    ollama_tools, previous_turn
                 )
 
                 await sync_to_async(self.session.refresh_from_db)(
@@ -419,12 +447,6 @@ class FrontalLobe:
 
                 if not should_continue:
                     break
-
-                if turn == self.session.max_turns - 1:
-                    await self._log_live('\n[WARNING] Max turns reached.')
-                    if self.session:
-                        self.session.status_id = ReasoningStatusID.MAXED_OUT
-                        await sync_to_async(self.session.save)()
 
             if self.session:
                 await sync_to_async(self.session.refresh_from_db)(

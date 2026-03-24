@@ -1,5 +1,7 @@
 from typing import Any, Dict, List
+
 from frontal_lobe.models import ReasoningTurn
+
 
 def normal_chat_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
     """
@@ -9,32 +11,32 @@ def normal_chat_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
     if not turn or not turn.session:
         return []
 
-    history_qs = list(
+    # Get the single most recent completed turn
+    last_turn = (
         ReasoningTurn.objects.filter(
             session_id=turn.session.id,
             turn_number__lt=turn.turn_number,
-            model_usage_record__isnull=False
+            model_usage_record__isnull=False,
         )
         .select_related('model_usage_record')
-        .order_by('turn_number')
+        .order_by('-turn_number')
+        .first()
     )
 
-    history_array = []
-    for prev_turn in history_qs:
-        req_payload = prev_turn.model_usage_record.request_payload or []
-        res_payload = prev_turn.model_usage_record.response_payload or {}
-        
-        if isinstance(req_payload, list):
-            history_array.extend(req_payload)
-        elif isinstance(req_payload, dict):
-            history_array.append(req_payload)
-            
-        if isinstance(res_payload, list):
-            history_array.extend(res_payload)
-        elif isinstance(res_payload, dict):
-            if "role" in res_payload:
-                history_array.append(res_payload)
-            elif "choices" in res_payload and len(res_payload["choices"]) > 0:
-                history_array.append(res_payload["choices"][0].get("message", {}))
+    if not last_turn:
+        return []
 
-    return history_array
+    req = last_turn.model_usage_record.request_payload or []
+    res = last_turn.model_usage_record.response_payload or {}
+
+    # Clean the cumulative history (drop all system prompts to prevent duplication)
+    clean_history = [m for m in req if m.get('role') != 'system']
+
+    # Append the assistant's final answer from that turn
+    if isinstance(res, dict):
+        if 'role' in res:
+            clean_history.append(res)
+        elif 'choices' in res and len(res['choices']) > 0:
+            clean_history.append(res['choices'][0].get('message', {}))
+
+    return clean_history

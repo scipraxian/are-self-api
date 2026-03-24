@@ -10,6 +10,7 @@ from litellm.exceptions import (
     APIConnectionError,
     BadRequestError,
     NotFoundError,
+    OpenAIError,
     RateLimitError,
 )
 
@@ -212,10 +213,11 @@ class SynapseClient:
             APIConnectionError,
             BadRequestError,
             NotFoundError,
+            OpenAIError,
         ) as e:
             error_str = str(e).lower()
 
-            # --- NEW: SCAR TISSUE LOGIC (Permanent Bench) ---
+            # --- SCAR TISSUE LOGIC (Permanent Bench) ---
             if isinstance(e, NotFoundError) and (
                 'tool' in error_str or 'function' in error_str
             ):
@@ -229,29 +231,22 @@ class SynapseClient:
                             f'[Synapse] SCAR TISSUE: Permanently disabled function_calling '
                             f'for {self.model_id} due to 404 endpoint rejection.'
                         )
-                # Return False so the Frontal Lobe immediately tries the next model
+                # Failover
                 return False, []
 
-            # --- EXISTING: CIRCUIT BREAKER LOGIC (Temporary Bench) ---
-            if (
-                '429' in error_str
-                or 'rate limit' in error_str
-                or '400' in error_str
-                or 'badrequest' in error_str
-                or 'failure' in error_str
-                or isinstance(e, (RateLimitError, BadRequestError))
-            ):
-                if self.ai_model_provider:
-                    self.ai_model_provider.trip_circuit_breaker()
+            # --- CIRCUIT BREAKER LOGIC (Temporary Bench - Catch-All) ---
+            # If the API failed for ANY other reason (guardrails, 429, 500, etc.), bench it and failover.
+            if self.ai_model_provider:
+                self.ai_model_provider.trip_circuit_breaker()
 
-                    logger.warning(
-                        f'[Synapse] ROUTING FAILURE. Circuit Breaker tripped for {self.model_id}. '
-                        f'Reason: {error_str[:100]}... '
-                        f'Cooldown until: {self.ai_model_provider.rate_limit_reset_time}'
-                    )
-                    return False, []
+                logger.warning(
+                    f'[Synapse] ROUTING FAILURE. Circuit Breaker tripped for {self.model_id}. '
+                    f'Reason: {error_str[:100]}... '
+                    f'Cooldown until: {self.ai_model_provider.rate_limit_reset_time}'
+                )
 
-            raise e
+            # Failover
+            return False, []
 
         # --- SUCCESS: CLEAR THE BREAKER ---
         if (
