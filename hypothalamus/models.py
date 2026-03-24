@@ -1,6 +1,5 @@
 import datetime
 import os
-from uuid import UUID
 
 from django.conf import settings
 from django.db import models
@@ -20,9 +19,7 @@ from frontal_lobe.models import ModelRegistry
 
 
 class LLMProvider(DefaultFieldsMixin, DescriptionMixin):
-    """
-    Provider-level network configuration for LLM backends (LiteLLM).
-    """
+    """Provider-level network configuration for LLM backends (LiteLLM)."""
 
     key = models.CharField(
         max_length=50,
@@ -53,7 +50,7 @@ class LLMProvider(DefaultFieldsMixin, DescriptionMixin):
         max_length=100,
         blank=True,
         null=True,
-        help_text='Environment variable name that stores the API key (e.g. OPENROUTER_API_KEY).',
+        help_text='Environment variable name that stores the API key.',
     )
 
     class Meta:
@@ -64,16 +61,11 @@ class LLMProvider(DefaultFieldsMixin, DescriptionMixin):
 
     @property
     def has_active_key(self) -> bool:
-        """
-        Dynamically checks if the server actually possesses the funds/keys
-        required to use this provider at this exact moment.
-        """
         if not self.requires_api_key:
             return True
         if not self.api_key_env_var:
             return False
 
-        # Check Django settings first, then fall back to OS environment
         key = getattr(settings, self.api_key_env_var, None) or os.environ.get(
             self.api_key_env_var
         )
@@ -81,7 +73,19 @@ class LLMProvider(DefaultFieldsMixin, DescriptionMixin):
 
 
 class AIModelCategory(NameMixin, DescriptionMixin):
-    """Category for AI models, e.g., 'Text Generation', 'Vision', 'Coding'."""
+    """I saw this word."""
+
+    pass
+
+
+class AIModelCapabilities(NameMixin, DescriptionMixin):
+    """Dynamically tracks things like 'vision', 'function_calling', 'reasoning'."""
+
+    pass
+
+
+class AIModelTags(NameMixin, DescriptionMixin):
+    """Everything Else we come across, tag it."""
 
     pass
 
@@ -93,13 +97,7 @@ class AIMode(NameMixin, DescriptionMixin):
 
 
 class AIModelFamily(NameMixin, DescriptionMixin):
-    """
-    Groups models into conceptual lineages (e.g., 'Claude 3.5', 'Llama 3').
-    Allows the Swarm to understand that different physical endpoints are the same 'Brain'.
-
-    NOTE Name must be unique AND slug must be unique.
-    slug is what we use to help identify the family.
-    """
+    """Groups models into conceptual lineages (e.g., 'Claude 3.5', 'Llama 3')."""
 
     slug = models.SlugField(unique=True, default='llama-3-70b-instruct')
 
@@ -108,10 +106,7 @@ class AIModelFamily(NameMixin, DescriptionMixin):
 
 
 class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
-    """
-    The Semantic Model Catalog. Represents the mathematical 'Brain' conceptually
-    (e.g., "Llama 3 70B"), regardless of who is hosting it.
-    """
+    """The Semantic Model Catalog. Represents the mathematical 'Brain' conceptually."""
 
     RELATED_NAME = 'ai_models'
 
@@ -123,43 +118,49 @@ class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
         related_name=RELATED_NAME,
     )
 
-    # Hard Constraints (The Filters)
     context_length = models.IntegerField(db_index=True)
-
     enabled = models.BooleanField(default=True, db_index=True)
 
-    # Connect to the LiteLLM Categories
-    categories = models.ManyToManyField(AIModelCategory, blank=True)
-    supports_vision = models.BooleanField(default=False, db_index=True)
-    supports_function_calling = models.BooleanField(
-        default=False, db_index=True
-    )
-    supports_parallel_function_calling = models.BooleanField(default=False)
-    supports_response_schema = models.BooleanField(default=False)
-    supports_system_messages = models.BooleanField(default=True)
-    supports_prompt_caching = models.BooleanField(default=False)
-    supports_reasoning = models.BooleanField(default=False)
-    supports_audio_input = models.BooleanField(default=False)
-    supports_audio_output = models.BooleanField(default=False)
-    supports_web_search = models.BooleanField(default=False)
+    capabilities = models.ManyToManyField(AIModelCapabilities, blank=True)
 
     deprecation_date = models.DateField(null=True, blank=True)
 
-    # Semantic Constraints (The Math)
     # Using 768 dimensions (standard for nomic-embed-text)
     vector = VectorField(dimensions=768, null=True, blank=True)
 
     def update_vector(self):
         from frontal_lobe.synapse import OllamaClient
 
-        registry = ModelRegistry.objects.get(id=ModelRegistry.NOMIC_EMBED_TEXT)
-        client = OllamaClient(registry.name)
+        client = OllamaClient('nomic-embed-text')
 
-        cat_names = ', '.join(self.categories.values_list('name', flat=True))
+        cap_names = ', '.join(self.capabilities.values_list('name', flat=True))
+
+        # Traverse backwards to get the currently active description block
+        current_desc = self.aimodeldescription_set.filter(
+            is_current=True
+        ).first()
+
+        if current_desc:
+            cat_names = ', '.join(
+                current_desc.categories.values_list('name', flat=True)
+            )
+            tag_names = ', '.join(
+                current_desc.tags.values_list('name', flat=True)
+            )
+            desc_text = (
+                current_desc.description or 'General AI inference model.'
+            )
+        else:
+            cat_names = ''
+            tag_names = ''
+            desc_text = self.description or 'General AI inference model.'
+
         rich_text = (
             f'Model Name: {self.name}. '
             f'Categories: {cat_names}. '
-            f'Description: {self.description or "General AI inference model."}'
+            f'Tags: {tag_names}. '
+            f'Capabilities: {cap_names}. '
+            f'Description: {desc_text}'
         )
         self.vector = client.embed(rich_text)
         self.save(update_fields=['vector'])
@@ -168,43 +169,22 @@ class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
 class AIModelProviderRateLimitMixin(models.Model):
     """Rate limit tracking for AI model providers."""
 
-    rate_limited_on = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text='When the 429 Too Many Requests was hit.',
-    )
-    rate_limit_reset_time = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text='The exact time this model is allowed back into the routing pool.',
-    )
+    rate_limited_on = models.DateTimeField(null=True, blank=True)
+    rate_limit_reset_time = models.DateTimeField(null=True, blank=True)
     rate_limit_reset_interval = models.DurationField(
-        null=True,
-        blank=True,
-        default=datetime.timedelta(seconds=60),
-        help_text='Base cooldown duration.',
+        null=True, blank=True, default=datetime.timedelta(seconds=60)
     )
-    rate_limit_counter = models.IntegerField(
-        default=0,
-        help_text='Tracks consecutive failures for Exponential Backoff.',
-    )
-    rate_limit_total_failures = models.IntegerField(
-        default=0, help_text='Tracks total failures for this model.'
-    )
+    rate_limit_counter = models.IntegerField(default=0)
+    rate_limit_total_failures = models.IntegerField(default=0)
 
     class Meta:
         abstract = True
 
     def trip_circuit_breaker(self):
-        """
-        Calculates exponential backoff and evicts the model from the routing pool.
-        Fail 1: 1 min, Fail 2: 2 mins, Fail 3: 4 mins...
-        """
         self.rate_limited_on = timezone.now()
         self.rate_limit_counter += 1
         self.rate_limit_total_failures += 1
 
-        # Exponential backoff math: interval * (2 ^ (failures - 1))
         multiplier = 2 ** (self.rate_limit_counter - 1)
         cooldown = self.rate_limit_reset_interval * multiplier
 
@@ -219,7 +199,6 @@ class AIModelProviderRateLimitMixin(models.Model):
         )
 
     def reset_circuit_breaker(self):
-        """Called upon a successful request to clear the breaker state."""
         if self.rate_limit_counter > 0:
             self.rate_limited_on = None
             self.rate_limit_reset_time = None
@@ -236,8 +215,6 @@ class AIModelProviderRateLimitMixin(models.Model):
 class AIModelProvider(
     CreatedMixin, ModifiedMixin, AIModelProviderRateLimitMixin
 ):
-    """The physical routing string and token limits."""
-
     ai_model = models.ForeignKey(AIModel, on_delete=models.CASCADE)
     provider = models.ForeignKey(LLMProvider, on_delete=models.CASCADE)
     provider_unique_model_id = models.CharField(
@@ -254,19 +231,9 @@ class AIModelProvider(
         return f'{self.ai_model} via {self.provider} ({self.provider_unique_model_id})'
 
 
-class AIModelPricingAbstract(CreatedMixin, ModifiedMixin):
-    """
-    1:1 map of the LiteLLM Cost spec.
-    Massive decimal precision to handle scientific notation (3e-05).
-    """
+class AIModelFinOpsAbstract(CreatedMixin, ModifiedMixin):
+    """Shared financial fields for both Pricing ledgers and Usage receipts."""
 
-    is_current = models.BooleanField(default=False, db_index=True)
-    model_provider = models.ForeignKey(
-        AIModelProvider, on_delete=models.CASCADE
-    )
-    is_active = models.BooleanField(default=True, db_index=True)
-
-    # STANDARD COSTS
     input_cost_per_token = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True, db_index=True
     )
@@ -274,7 +241,6 @@ class AIModelPricingAbstract(CreatedMixin, ModifiedMixin):
         max_digits=25, decimal_places=15, null=True, blank=True
     )
 
-    # CHARACTER COSTS (For older models or specific providers like Vertex)
     input_cost_per_character = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
     )
@@ -282,7 +248,6 @@ class AIModelPricingAbstract(CreatedMixin, ModifiedMixin):
         max_digits=25, decimal_places=15, null=True, blank=True
     )
 
-    # OVERAGE COSTS (The > 128k context penalty tier)
     input_cost_per_token_above_128k_tokens = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
     )
@@ -295,19 +260,31 @@ class AIModelPricingAbstract(CreatedMixin, ModifiedMixin):
 
     output_cost_per_reasoning_token = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
-    )  # for o1/o3 models
+    )
     cache_read_input_token_cost = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
-    )  # Claude/Gemini prompt caching
+    )
     cache_creation_input_token_cost = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
-    )  # Claude/Gemini prompt caching
+    )
     input_cost_per_audio_token = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
-    )  # Whisper / Gemini audio
+    )
 
-    # EMBEDDING SPECIFIC
     output_vector_size = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class AIModelPricingAbstract(AIModelFinOpsAbstract):
+    """The authoritative pricing catalog."""
+
+    is_current = models.BooleanField(default=False, db_index=True)
+    model_provider = models.ForeignKey(
+        AIModelProvider, on_delete=models.CASCADE
+    )
+    is_active = models.BooleanField(default=True, db_index=True)
 
     class Meta:
         abstract = True
@@ -318,10 +295,10 @@ class AIModelPricing(AIModelPricingAbstract):
     pass
 
 
-class AIModelProviderUsageRecord(AIModelPricingAbstract):
-    RELATED_NAME = 'usage_records'
+class AIModelProviderUsageRecord(AIModelFinOpsAbstract):
+    """The individual transaction receipt."""
 
-    # References.
+    RELATED_NAME = 'usage_records'
 
     ai_model_provider = models.ForeignKey(
         AIModelProvider,
@@ -345,23 +322,19 @@ class AIModelProviderUsageRecord(AIModelPricingAbstract):
         blank=True,
     )
 
-    # PRE-SEND
     request_payload = models.JSONField(blank=True, default=dict)
     tool_payload = models.JSONField(blank=True, default=dict)
     estimated_cost = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
     )
 
-    # POST-SEND
     query_time = models.DurationField(null=True, blank=True)
     response_payload = models.JSONField(blank=True, default=dict)
 
-    # Provider INPUT Token Usage
     input_tokens = models.IntegerField(default=0)
     cache_read_input_tokens = models.IntegerField(default=0)
     cache_creation_input_tokens = models.IntegerField(default=0)
 
-    # Provider OUTPUT Token Usage
     output_tokens = models.IntegerField(default=0)
     reasoning_tokens = models.IntegerField(default=0)
     audio_tokens = models.IntegerField(default=0)
@@ -372,14 +345,12 @@ class AIModelProviderUsageRecord(AIModelPricingAbstract):
 
 
 class SyncStatus(NameMixin):
-    RUNNING = 1  # 'RUNNING', 'Running'
-    SUCCESS = 2  # 'SUCCESS', 'Success'
-    FAILED = 3  # 'FAILED', 'Failed'
+    RUNNING = 1
+    SUCCESS = 2
+    FAILED = 3
 
 
 class AIModelSyncLog(CreatedAndModifiedWithDelta):
-    """Audit trail and mutex lock for the Hypothalamus sync job."""
-
     status = models.ForeignKey(
         SyncStatus, on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -405,3 +376,18 @@ class AIModelRating(CreatedMixin):
 
     class Meta:
         indexes = [models.Index(fields=['ai_model', 'is_current'])]
+
+
+class AIModelDescriptionCache(models.Model):
+    cached_library = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class AIModelDescription(DescriptionMixin, CreatedAndModifiedWithDelta):
+    """Parsed from Description Cache."""
+
+    ai_models = models.ManyToManyField(AIModel, blank=True)
+    families = models.ManyToManyField(AIModelFamily, blank=True)
+    categories = models.ManyToManyField(AIModelCategory, blank=True)
+    tags = models.ManyToManyField(AIModelTags, blank=True)
+    is_current = models.BooleanField(default=True, db_index=True)

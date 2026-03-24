@@ -7,6 +7,7 @@ from django.dispatch import receiver
 from central_nervous_system.models import Spike, SpikeTrain
 from central_nervous_system.signals import spawn_failed, spawn_success
 from frontal_lobe.models import ReasoningSession, ReasoningTurn
+from hypothalamus.models import AIModelProviderUsageRecord
 from identity.models import IdentityDisc
 from parietal_lobe.models import ToolCall
 from prefrontal_cortex.models import PFCEpic, PFCStory, PFCTask
@@ -65,8 +66,6 @@ def broadcast_status(sender, instance, **kwargs):
 # ==========================================
 
 
-
-
 @receiver(post_save, sender=ToolCall)
 def broadcast_tool_call(sender, instance, **kwargs):
     msg_data = {
@@ -100,6 +99,9 @@ def broadcast_tool_call(sender, instance, **kwargs):
 @receiver(post_save, sender=Iteration)
 @receiver(post_save, sender=IterationShift)
 @receiver(post_save, sender=IterationShiftParticipant)
+@receiver(post_save, sender=AIModelProviderUsageRecord)
+@receiver(post_save, sender=ReasoningSession)
+@receiver(post_save, sender=ReasoningTurn)
 def broadcast_global_entity(sender, instance, **kwargs):
     """
     Tells the frontend an entity was saved.

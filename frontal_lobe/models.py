@@ -191,6 +191,9 @@ class ReasoningSession(
     total_xp = models.IntegerField(default=0)
     current_focus = models.IntegerField(default=5)
 
+    # Queued messages from users or other agents during a turn.
+    swarm_message_queue = models.JSONField(default=list, blank=True)
+
     @property
     def current_level(self):
         """Fast Leveling: Every 100 XP is a new level."""
@@ -209,7 +212,6 @@ class ReasoningSession(
         return f'Session {self.id} Status: {self.status}'
 
 
-# TODO: consider uuid.
 class ReasoningTurn(
     UUIDIdMixin, CreatedAndModifiedWithDelta, ReasoningStatusMixin
 ):

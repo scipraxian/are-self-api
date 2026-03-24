@@ -329,34 +329,3 @@ class SynapseClient:
             kwargs[KWARG_TOOL_CHOICE] = TOOL_CHOICE_AUTO
 
         return kwargs
-
-    def _process_response(
-        self, response: ModelResponse, request_kwargs: Dict[str, Any]
-    ) -> SynapseResponse:
-        """Transforms a successful LiteLLM response into our immutable FinOps receipt."""
-        response_payload = (
-            response.model_dump()
-            if hasattr(response, 'model_dump')
-            else (
-                response.dict() if hasattr(response, 'dict') else dict(response)
-            )
-        )
-
-        # TODO: REPLACE WITH AIModelProviderUsageRecord
-
-        # TODO: Return multiple choices. IMPORTANT!
-        message = response.choices[0].message
-        usage = getattr(response, 'usage', None)
-
-        return SynapseResponse(
-            content=message.content or '',
-            model=response.model or self.model_id,
-            tokens_input=getattr(usage, USAGE_PROMPT_TOKENS, 0) if usage else 0,
-            tokens_output=getattr(usage, USAGE_COMPLETION_TOKENS, 0)
-            if usage
-            else 0,
-            tool_calls=normalize_tool_calls(message),
-            metrics=parse_telemetry(usage),
-            request_payload=request_kwargs,
-            response_payload=response_payload,
-        )

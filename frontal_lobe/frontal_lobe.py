@@ -7,7 +7,7 @@ from uuid import UUID
 
 from asgiref.sync import sync_to_async
 from django.utils import timezone
-from litellm.exceptions import APIConnectionError, RateLimitError
+from litellm.exceptions import APIConnectionError, NotFoundError, RateLimitError
 
 from central_nervous_system.models import Spike, SpikeStatus
 from central_nervous_system.utils import resolve_environment_context
@@ -207,6 +207,13 @@ class FrontalLobe:
                         'name': tc.tool.name,
                     }
                 )
+        if self.session.swarm_message_queue:
+            # Append all queued messages to this turn's context
+            all_messages.extend(self.session.swarm_message_queue)
+            self.session.swarm_message_queue = []
+            await sync_to_async(self.session.save)(
+                update_fields=['swarm_message_queue']
+            )
 
         llm_payload = all_messages
 
@@ -263,7 +270,7 @@ class FrontalLobe:
                 tool_calls_data = await sync_to_async(synapse.chat)()
                 break  # Success!
 
-            except (RateLimitError, APIConnectionError) as e:
+            except (RateLimitError, APIConnectionError, NotFoundError) as e:
                 provider_id = (
                     pending_ledger.ai_model_provider.provider_unique_model_id
                 )

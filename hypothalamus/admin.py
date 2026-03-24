@@ -3,11 +3,15 @@ from django.contrib import admin
 from .models import (
     AIMode,
     AIModel,
+    AIModelCapabilities,
     AIModelCategory,
+    AIModelDescription,
+    AIModelFamily,
     AIModelPricing,
     AIModelProvider,
     AIModelProviderUsageRecord,
     AIModelSyncLog,
+    AIModelTags,
     LLMProvider,
     SyncStatus,
 )
@@ -22,30 +26,24 @@ class LLMProviderAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'key',
-        'base_url',
         'requires_api_key',
         'has_active_key',
     )
     search_fields = ('name', 'key', 'base_url')
     list_filter = ('requires_api_key',)
     readonly_fields = ('has_active_key',)
-    fieldsets = (
-        (
-            'Basic Info',
-            {'fields': ('name', 'description', 'key', 'base_url', 'chat_path')},
-        ),
-        (
-            'Authentication',
-            {
-                'fields': (
-                    'requires_api_key',
-                    'api_key_header',
-                    'api_key_env_var',
-                    'has_active_key',
-                )
-            },
-        ),
-    )
+
+
+@admin.register(AIModelCapabilities)
+class AIModelCapabilitiesAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
+
+
+@admin.register(AIModelTags)
+class AIModelTagsAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
 
 
 @admin.register(AIModelCategory)
@@ -54,10 +52,15 @@ class AIModelCategoryAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
+@admin.register(AIModelFamily)
+class AIModelFamilyAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug')
+    search_fields = ('name', 'slug')
+
+
 @admin.register(AIMode)
 class AIModeAdmin(admin.ModelAdmin):
     list_display = ('name',)
-    search_fields = ('name',)
 
 
 @admin.register(SyncStatus)
@@ -71,34 +74,43 @@ class SyncStatusAdmin(admin.ModelAdmin):
 # ------------------------------------------------------------------ #
 
 
+class AIModelDescriptionInline(admin.StackedInline):
+    model = AIModelDescription.ai_models.through
+    extra = 0
+    verbose_name = 'Semantic Profile'
+    verbose_name_plural = 'Semantic Profiles'
+
+
 @admin.register(AIModel)
 class AIModelAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'context_length',
         'enabled',
-        'supports_vision',
-        'supports_function_calling',
-        'supports_reasoning',
+        'get_capabilities',
+        'vector_status',
     )
     search_fields = ('name', 'description')
-    list_filter = (
-        'supports_vision',
-        'supports_function_calling',
-        'supports_reasoning',
-        'categories',
-    )
-    filter_horizontal = ('categories',)
-    # Vectors are massive arrays. Do not let the admin try to render/edit them as text.
+    list_filter = ('enabled', 'capabilities')
+    inlines = [AIModelDescriptionInline]
+
     readonly_fields = ('vector_display',)
 
+    def get_capabilities(self, obj):
+        return ', '.join([c.name for c in obj.capabilities.all()])
+
+    get_capabilities.short_description = 'Capabilities'
+
+    def vector_status(self, obj):
+        return '✅ Embedded' if obj.vector else '❌ Missing'
+
+    vector_status.short_description = 'Vector Status'
+
     def vector_display(self, obj):
-        """Displays the vector in a format that avoids truthiness ambiguity."""
         if obj.vector is None:
             return 'None'
         try:
-            length = len(obj.vector)
-            return f'Vector({length} dimensions)'
+            return f'Vector({len(obj.vector)} dimensions)'
         except (TypeError, ValueError):
             return 'Invalid Vector'
 
@@ -113,51 +125,111 @@ class AIModelAdmin(admin.ModelAdmin):
                     'description',
                     'context_length',
                     'enabled',
-                    'categories',
                     'deprecation_date',
                 )
             },
         ),
-        (
-            'Capabilities',
-            {
-                'fields': (
-                    'supports_vision',
-                    'supports_function_calling',
-                    'supports_parallel_function_calling',
-                    'supports_response_schema',
-                    'supports_system_messages',
-                    'supports_prompt_caching',
-                    'supports_reasoning',
-                    'supports_audio_input',
-                    'supports_audio_output',
-                    'supports_web_search',
-                )
-            },
-        ),
+        ('Capabilities', {'fields': ('capabilities',)}),
         (
             'Vector Math',
-            {
-                'fields': ('vector_display',),
-                'classes': ('collapse',),
-            },
+            {'fields': ('vector_display',), 'classes': ('collapse',)},
         ),
     )
 
 
+@admin.register(AIModelDescription)
+class AIModelDescriptionAdmin(admin.ModelAdmin):
+    list_display = ('get_models', 'is_current', 'created')
+    list_filter = ('is_current', 'tags', 'categories')
+    search_fields = ('description', 'ai_models__name')
+    filter_horizontal = ('ai_models', 'families', 'categories', 'tags')
+
+    def get_models(self, obj):
+        return ', '.join([m.name for m in obj.ai_models.all()[:3]]) + (
+            '...' if obj.ai_models.count() > 3 else ''
+        )
+
+    get_models.short_description = 'Attached Models'
+
+
+class AIModelPricingInline(admin.TabularInline):
+    """
+    CRITICAL FOR DEBUGGING: The router filters out providers without active/current pricing.
+    This lets you see immediately if pricing is attached.
+    """
+
+    model = AIModelPricing
+    extra = 0
+    fields = (
+        'is_current',
+        'is_active',
+        'input_cost_per_token',
+        'output_cost_per_token',
+    )
+    readonly_fields = ('input_cost_per_token', 'output_cost_per_token')
+
+
 @admin.register(AIModelProvider)
 class AIModelProviderAdmin(admin.ModelAdmin):
-    list_display = ('provider_unique_model_id', 'ai_model', 'provider', 'mode')
+    list_display = (
+        'provider_unique_model_id',
+        'ai_model',
+        'provider',
+        'mode',
+        'is_rate_limited',
+    )
     search_fields = (
         'provider_unique_model_id',
         'ai_model__name',
-        'provider__name',
+        'provider__key',
     )
     list_filter = ('provider', 'mode')
     raw_id_fields = (
         'ai_model',
         'provider',
-    )  # Prevents massive dropdowns if you have 10,000 models
+    )
+    inlines = [AIModelPricingInline]
+
+    fieldsets = (
+        (
+            'Routing Specs',
+            {
+                'fields': (
+                    'ai_model',
+                    'provider',
+                    'provider_unique_model_id',
+                    'mode',
+                )
+            },
+        ),
+        (
+            'Token Limits',
+            {'fields': ('max_tokens', 'max_input_tokens', 'max_output_tokens')},
+        ),
+        (
+            'Circuit Breaker',
+            {
+                'fields': (
+                    'rate_limited_on',
+                    'rate_limit_reset_time',
+                    'rate_limit_counter',
+                    'rate_limit_total_failures',
+                )
+            },
+        ),
+    )
+
+    def is_rate_limited(self, obj):
+        from django.utils import timezone
+
+        if (
+            obj.rate_limit_reset_time
+            and obj.rate_limit_reset_time > timezone.now()
+        ):
+            return '⚠️ YES'
+        return '✅ Clear'
+
+    is_rate_limited.short_description = 'Circuit Breaker'
 
 
 # ------------------------------------------------------------------ #
@@ -176,7 +248,6 @@ class AIModelPricingAdmin(admin.ModelAdmin):
     )
     list_filter = ('is_current', 'is_active', 'model_provider__provider')
     search_fields = ('model_provider__provider_unique_model_id',)
-    readonly_fields = ('created', 'modified')
     raw_id_fields = ('model_provider',)
 
 
@@ -195,11 +266,8 @@ class AIModelProviderUsageRecordAdmin(admin.ModelAdmin):
         'identity_disc__name',
         'ai_model_provider__provider_unique_model_id',
     )
-    readonly_fields = ('created', 'modified')
     raw_id_fields = ('ai_model_provider', 'ai_model', 'identity_disc')
-    date_hierarchy = (
-        'created'  # Adds a nice date drill-down breadcrumb at the top
-    )
+    date_hierarchy = 'created'
 
 
 @admin.register(AIModelSyncLog)
