@@ -3,7 +3,7 @@ import os
 import pytest
 from django.test import TestCase
 
-from hypothalamus.model_symantic_parser import parse_model_string
+from hypothalamus.model_semantic_parser import parse_model_string
 
 
 class SemanticParserTestCase(TestCase):

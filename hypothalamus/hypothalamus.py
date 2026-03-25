@@ -9,7 +9,7 @@ from django.db.models import Q
 from django.utils import timezone
 from pgvector.django import CosineDistance
 
-from hypothalamus.model_symantic_parser import parse_model_string
+from hypothalamus.model_semantic_parser import parse_model_string
 from hypothalamus.models import (
     AIMode,
     AIModel,
