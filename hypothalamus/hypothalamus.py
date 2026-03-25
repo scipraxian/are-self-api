@@ -285,21 +285,21 @@ class Hypothalamus:
         mode, _ = AIMode.objects.get_or_create(name=slug)
         return mode
 
-    @staticmethod
-    def _ensure_ai_model(raw_key: str, data: dict) -> tuple[AIModel, bool]:
+    @classmethod
+    def _ensure_ai_model(cls, raw_key: str, data: dict) -> tuple[AIModel, bool]:
         model_name = raw_key.split('/')[-1] if '/' in raw_key else raw_key
-
-        ai_model, created = AIModel.objects.get_or_create(
-            name=model_name,
-            defaults={
-                'context_length': (
-                    data.get('max_input_tokens')
-                    or data.get('max_tokens')
-                    or 4096
-                ),
-            },
+        context_length = (
+            data.get('max_input_tokens') or data.get('max_tokens') or 4096
         )
 
+        # 1. Route through the semantic parser and guarantee a Description is generated
+        ai_model, created = cls._get_or_create_enriched_model(
+            raw_slug=raw_key,
+            display_name=model_name,
+            context_length=context_length,
+        )
+
+        # 2. Retain the LiteLLM-specific capability flags
         capabilities_to_add = []
         for key, value in data.items():
             if key.startswith('supports_') and value is True:
