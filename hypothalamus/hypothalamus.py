@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.utils import timezone
 from pgvector.django import CosineDistance
 
+from hypothalamus.model_symantic_parser import parse_model_string
 from hypothalamus.models import (
     AIMode,
     AIModel,
@@ -313,6 +314,50 @@ class Hypothalamus:
 
         return ai_model, created
 
+    @classmethod
+    def _get_or_create_enriched_model(
+        cls, raw_slug: str, display_name: str, context_length: int
+    ) -> tuple[AIModel, bool]:
+        """Centralized factory that runs the semantic parser and UPDATES existing models."""
+        parsed = parse_model_string(raw_slug)
+
+        ai_model, created = AIModel.objects.get_or_create(
+            name=display_name, defaults={'context_length': context_length}
+        )
+        needs_save = False
+        update_fields = []
+        if parsed.parameter_size and not ai_model.parameter_size:
+            ai_model.parameter_size = parsed.parameter_size
+            update_fields.append('parameter_size')
+            needs_save = True
+        if parsed.family and not ai_model.family_id:
+            ai_model.family = parsed.family
+            update_fields.append('family')
+            needs_save = True
+        if parsed.version and not ai_model.version_id:
+            ai_model.version = parsed.version
+            update_fields.append('version')
+            needs_save = True
+        if parsed.creator and not ai_model.creator_id:
+            ai_model.creator = parsed.creator
+            update_fields.append('creator')
+            needs_save = True
+        if needs_save:
+            ai_model.save(update_fields=update_fields)
+        if parsed.roles:
+            ai_model.roles.add(*parsed.roles)
+        if parsed.quantizations:
+            ai_model.quantizations.add(*parsed.quantizations)
+        current_desc = ai_model.aimodeldescription_set.first()
+        if not current_desc:
+            current_desc = AIModelDescription.objects.create(is_current=True)
+            current_desc.ai_models.add(ai_model)
+        if parsed.tags:
+            current_desc.tags.add(*parsed.tags)
+        if parsed.family:
+            current_desc.families.add(parsed.family)
+        return ai_model, created
+
     @staticmethod
     def _ensure_model_provider(
         raw_key: str,
@@ -482,11 +527,14 @@ class Hypothalamus:
         """Handles the ingestion of a single model's routing, capability, and pricing data."""
         stripped_id = or_data['id']
         provider_unique_id = f'openrouter/{stripped_id}'
+        display_name = or_data.get('name', stripped_id)
+        context_length = or_data.get('context_length', 4096)
 
-        # 1. Ensure AIModel
-        ai_model, _ = AIModel.objects.get_or_create(
-            name=or_data.get('name', stripped_id),
-            defaults={'context_length': or_data.get('context_length', 4096)},
+        # 1. Ensure AIModel via our new Semantic Parser
+        ai_model, _ = cls._get_or_create_enriched_model(
+            raw_slug=provider_unique_id,
+            display_name=display_name,
+            context_length=context_length,
         )
 
         # 2. Optimistic Inheritance (No string-matching guesswork!)
@@ -533,7 +581,6 @@ class Hypothalamus:
     def _enrich_openrouter_semantics(
         cls, ai_model: AIModel, or_data: dict, force_rebuild: bool
     ) -> Optional[UUID]:
-        """Handles descriptions and tags. Returns the AIModel ID if updated, else None."""
         new_desc = or_data.get('description', '')
         arch = or_data.get('architecture', {})
 
@@ -543,27 +590,25 @@ class Hypothalamus:
         if arch.get('instruct_type'):
             extracted_tags.append(f'instruct:{arch["instruct_type"]}')
 
-        current_desc_obj = AIModelDescription.objects.filter(
-            ai_models=ai_model, is_current=True
-        ).first()
+        current_desc_obj = ai_model.aimodeldescription_set.first()
 
         is_different = (not current_desc_obj) or (
             current_desc_obj.description != new_desc
         )
 
         if new_desc and (is_different or force_rebuild):
-            if current_desc_obj:
-                current_desc_obj.is_current = False
-                current_desc_obj.save(update_fields=['is_current'])
-
-            desc_obj = AIModelDescription.objects.create(
-                description=new_desc, is_current=True
-            )
-            desc_obj.ai_models.add(ai_model)
+            if not current_desc_obj:
+                current_desc_obj = AIModelDescription.objects.create(
+                    description=new_desc, is_current=True
+                )
+                current_desc_obj.ai_models.add(ai_model)
+            else:
+                current_desc_obj.description = new_desc
+                current_desc_obj.save(update_fields=['description'])
 
             for tag_string in extracted_tags:
                 tag_obj, _ = AIModelTags.objects.get_or_create(name=tag_string)
-                desc_obj.tags.add(tag_obj)
+                current_desc_obj.tags.add(tag_obj)
 
             return ai_model.id
 
@@ -641,9 +686,13 @@ class Hypothalamus:
         mode: AIMode,
     ) -> None:
         """Registers and enables a verified local model into the routing pool."""
-        ai_model, _ = AIModel.objects.get_or_create(
-            name=model_name,
-            defaults={'context_length': 8192},  # Safe default for local models
+
+        # --- THE INJECTION ---
+        ai_model, _ = cls._get_or_create_enriched_model(
+            raw_slug=provider_unique_id,
+            # e.g. ollama/llama3.1:8b-instruct-q4_K_M
+            display_name=model_name,
+            context_length=8192,  # Safe default for local models
         )
 
         model_provider, _ = AIModelProvider.objects.update_or_create(
@@ -653,7 +702,6 @@ class Hypothalamus:
                 'provider': provider,
                 'mode': mode,
                 'is_enabled': True,
-                # <-- NEW: Force it on because we physically found it
             },
         )
 

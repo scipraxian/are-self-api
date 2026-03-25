@@ -134,8 +134,6 @@ class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
     """The Semantic Model Catalog. Represents the mathematical 'Brain' conceptually."""
 
     RELATED_NAME = 'ai_models'
-
-    # --- NEW TAXONOMY FIELDS ---
     creator = models.ForeignKey(
         AIModelCreator,
         on_delete=models.SET_NULL,
@@ -143,17 +141,13 @@ class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
         blank=True,
         related_name=RELATED_NAME,
     )
-    role = models.ForeignKey(
+    roles = models.ManyToManyField(
         AIModelRole,
-        on_delete=models.SET_NULL,
-        null=True,
         blank=True,
         related_name=RELATED_NAME,
     )
-    quantization = models.ForeignKey(
+    quantizations = models.ManyToManyField(
         AIModelQuantization,
-        on_delete=models.SET_NULL,
-        null=True,
         blank=True,
         related_name=RELATED_NAME,
     )
@@ -163,10 +157,15 @@ class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
         db_index=True,
         help_text='Parameter count in billions (e.g., 70.0 for 70B, 0.5 for 500M).',
     )
-    # ---------------------------
-
     family = models.ForeignKey(
         AIModelFamily,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name=RELATED_NAME,
+    )
+    version = models.ForeignKey(
+        AIModelVersion,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -206,15 +205,16 @@ class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
             tag_names = ''
             desc_text = self.description or 'General AI inference model.'
 
-        # Extract the new semantic values safely
+        role_names = (
+            ', '.join(self.roles.values_list('name', flat=True)) or 'General'
+        )
+        quant_names = (
+            ', '.join(self.quantizations.values_list('name', flat=True))
+            or 'Unquantized/Unknown'
+        )
+
         creator_name = self.creator.name if self.creator else 'Unknown Creator'
         family_name = self.family.name if self.family else 'Unknown Family'
-        role_name = self.role.name if self.role else 'General'
-        quant_name = (
-            self.quantization.name
-            if self.quantization
-            else 'Unquantized/Unknown'
-        )
         size_str = (
             f'{self.parameter_size}B' if self.parameter_size else 'Unknown Size'
         )
@@ -225,8 +225,8 @@ class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
             f'Creator: {creator_name}. '
             f'Family: {family_name}. '
             f'Size: {size_str}. '
-            f'Role: {role_name}. '
-            f'Quantization: {quant_name}. '
+            f'Roles: {role_names}. '
+            f'Quantizations: {quant_names}. '
             f'Categories: {cat_names}. '
             f'Tags: {tag_names}. '
             f'Capabilities: {cap_names}. '

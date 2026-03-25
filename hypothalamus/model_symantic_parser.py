@@ -2,6 +2,7 @@ import re
 from dataclasses import dataclass
 
 from hypothalamus.models import (
+    AIModelCreator,
     AIModelFamily,
     AIModelQuantization,
     AIModelRole,
@@ -16,6 +17,7 @@ class AIModelSemanticParseResult:
     parameter_size: float | None
     family: AIModelFamily | None
     version: AIModelVersion | None
+    creator: AIModelCreator | None
     roles: list[AIModelRole]
     quantizations: list[AIModelQuantization]
     tags: list[AIModelTags]
@@ -72,7 +74,6 @@ def parse_model_string(raw_string: str) -> AIModelSemanticParseResult:
         )
 
     # 4. Database Queries (Fast Mapping)
-    # To catch 'llama3', we isolate the alpha slug 'llama' to check the DB
     search_slugs = set(tokens)
     for t in tokens:
         alpha_only = re.sub(r'\d+$', '', t)
@@ -82,10 +83,8 @@ def parse_model_string(raw_string: str) -> AIModelSemanticParseResult:
     families = list(AIModelFamily.objects.filter(slug__in=search_slugs))
     found_family = None
     if families:
-        # If both 'deepseek' and 'qwen' are in string, grab the one that appears first
         found_family = min(families, key=lambda f: clean_name.find(f.slug))
     else:
-        # Deduce Missing Family using the first token's alpha chars
         family_slug = re.sub(r'\d+$', '', tokens[0])
         if family_slug:
             found_family, _ = AIModelFamily.objects.get_or_create(
@@ -95,6 +94,9 @@ def parse_model_string(raw_string: str) -> AIModelSemanticParseResult:
     capitalized_tokens = [t.title() for t in tokens]
     found_roles = list(AIModelRole.objects.filter(name__in=capitalized_tokens))
     found_quants = list(AIModelQuantization.objects.filter(name__in=tokens))
+    found_creator = AIModelCreator.objects.filter(
+        name__in=capitalized_tokens
+    ).first()
 
     # 5. Deduce Version
     version_obj = None
@@ -176,6 +178,7 @@ def parse_model_string(raw_string: str) -> AIModelSemanticParseResult:
         parameter_size=parameter_size,
         family=found_family,
         version=version_obj,
+        creator=found_creator,
         roles=found_roles,
         quantizations=found_quants,
         tags=tags,
