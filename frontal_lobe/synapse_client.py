@@ -198,7 +198,7 @@ class SynapseClient:
 
     def chat(self, **kwargs) -> (bool, List[Dict[str, Any]]):
         """
-        Executes inference. Trips Postgres Circuit Breaker on 429.
+        Executes inference. Trips Postgres Circuit Breaker on ANY failure.
         Returns a normalized list of tool_calls (empty list if none).
         """
         messages = self.ledger.request_payload
@@ -208,17 +208,13 @@ class SynapseClient:
 
         try:
             response = litellm.completion(**litellm_kwargs)
-        except (
-            RateLimitError,
-            APIConnectionError,
-            BadRequestError,
-            NotFoundError,
-            OpenAIError,
-        ) as e:
+        except Exception as e:  # YES. CATCH EVERYTHING.
             error_str = str(e).lower()
+            error_type = e.__class__.__name__.lower()
 
             # --- SCAR TISSUE LOGIC (Permanent Bench) ---
-            if isinstance(e, NotFoundError) and (
+            # We use the class name to mimic your old isinstance(e, NotFoundError) check
+            if 'notfound' in error_type and (
                 'tool' in error_str or 'function' in error_str
             ):
                 if self.ai_model_provider:
@@ -235,19 +231,18 @@ class SynapseClient:
                 return False, []
 
             # --- CIRCUIT BREAKER LOGIC (Temporary Bench - Catch-All) ---
-            # If the API failed for ANY other reason (guardrails, 429, 500, etc.), bench it and failover.
+            # If the API failed for ANY other reason (502, 429, timeouts, parsing errors), bench it.
             if self.ai_model_provider:
                 self.ai_model_provider.trip_circuit_breaker()
 
                 logger.warning(
-                    f'[Synapse] ROUTING FAILURE. Circuit Breaker tripped for {self.model_id}. '
-                    f'Reason: {error_str[:100]}... '
-                    f'Cooldown until: {self.ai_model_provider.rate_limit_reset_time}'
+                    f'[Synapse] ROUTING FAILURE. Circuit Breaker tripped for {self.model_id}.\r'
+                    f'Error: {error_type} | Reason: {error_str}...\r'
+                    f'Cooldown until: {self.ai_model_provider.rate_limit_reset_time}\r\r'
                 )
 
             # Failover
             return False, []
-
         # --- SUCCESS: CLEAR THE BREAKER ---
         if (
             self.ai_model_provider

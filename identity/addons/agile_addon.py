@@ -280,7 +280,7 @@ def agile_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
         return []
 
     participant = turn.session.participant
-    shift_id = participant.shift_id
+    shift_id = participant.iteration_shift.shift_id
     disc = turn.session.identity_disc
 
     item_type, item_id, item_json = _get_locked_ticket(disc.id)
