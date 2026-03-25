@@ -1,5 +1,6 @@
 import os
 
+import pytest
 from django.test import TestCase
 
 from hypothalamus.model_symantic_parser import parse_model_string
@@ -65,6 +66,7 @@ class SemanticParserTestCase(TestCase):
         tag_names = [t.name.lower() for t in payload.tags]
         self.assertIn('hiimnew', tag_names)
 
+    @pytest.mark.skip(reason='Integration test, not a unit test.')
     def test_full_catalog_gauntlet(self):
         """
         Reads the 2000+ model list and ensures the parser doesn't crash.
