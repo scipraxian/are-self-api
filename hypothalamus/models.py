@@ -105,10 +105,65 @@ class AIModelFamily(NameMixin, DescriptionMixin):
         verbose_name_plural = 'AI Model Families'
 
 
+class AIModelVersion(NameMixin, DescriptionMixin):
+    """Version of an AI model, e.g., '1.0', '2.0', '3.0'."""
+
+    pass
+
+
+class AIModelCreator(NameMixin, DescriptionMixin):
+    """The organization or group that trained the model (e.g., Meta, Alibaba, Mistral)."""
+
+    class Meta:
+        verbose_name_plural = 'AI Model Creators'
+
+
+class AIModelRole(NameMixin, DescriptionMixin):
+    """The intended use-case or fine-tuning style (e.g., instruct, base, coder, uncensored)."""
+
+    pass
+
+
+class AIModelQuantization(NameMixin, DescriptionMixin):
+    """The compression format, crucial for local hardware routing (e.g., q4_0, awq, fp16)."""
+
+    pass
+
+
 class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
     """The Semantic Model Catalog. Represents the mathematical 'Brain' conceptually."""
 
     RELATED_NAME = 'ai_models'
+
+    # --- NEW TAXONOMY FIELDS ---
+    creator = models.ForeignKey(
+        AIModelCreator,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name=RELATED_NAME,
+    )
+    role = models.ForeignKey(
+        AIModelRole,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name=RELATED_NAME,
+    )
+    quantization = models.ForeignKey(
+        AIModelQuantization,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name=RELATED_NAME,
+    )
+    parameter_size = models.FloatField(
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text='Parameter count in billions (e.g., 70.0 for 70B, 0.5 for 500M).',
+    )
+    # ---------------------------
 
     family = models.ForeignKey(
         AIModelFamily,
@@ -120,9 +175,7 @@ class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
 
     context_length = models.IntegerField(db_index=True)
     enabled = models.BooleanField(default=True, db_index=True)
-
     capabilities = models.ManyToManyField(AIModelCapabilities, blank=True)
-
     deprecation_date = models.DateField(null=True, blank=True)
 
     # Using 768 dimensions (standard for nomic-embed-text)
@@ -132,10 +185,8 @@ class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
         from frontal_lobe.synapse import OllamaClient
 
         client = OllamaClient('nomic-embed-text')
-
         cap_names = ', '.join(self.capabilities.values_list('name', flat=True))
 
-        # Traverse backwards to get the currently active description block
         current_desc = self.aimodeldescription_set.filter(
             is_current=True
         ).first()
@@ -155,8 +206,27 @@ class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
             tag_names = ''
             desc_text = self.description or 'General AI inference model.'
 
+        # Extract the new semantic values safely
+        creator_name = self.creator.name if self.creator else 'Unknown Creator'
+        family_name = self.family.name if self.family else 'Unknown Family'
+        role_name = self.role.name if self.role else 'General'
+        quant_name = (
+            self.quantization.name
+            if self.quantization
+            else 'Unquantized/Unknown'
+        )
+        size_str = (
+            f'{self.parameter_size}B' if self.parameter_size else 'Unknown Size'
+        )
+
+        # The new, hyper-enriched vector payload!
         rich_text = (
             f'Model Name: {self.name}. '
+            f'Creator: {creator_name}. '
+            f'Family: {family_name}. '
+            f'Size: {size_str}. '
+            f'Role: {role_name}. '
+            f'Quantization: {quant_name}. '
             f'Categories: {cat_names}. '
             f'Tags: {tag_names}. '
             f'Capabilities: {cap_names}. '

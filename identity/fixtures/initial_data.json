@@ -246,9 +246,9 @@
       16,
       17,
       18,
-      20,
       24,
       25,
+      20,
       26,
       27
     ]
@@ -474,14 +474,14 @@
     ],
     "addons": [
       2,
+      4,
       5,
       6,
       7,
       9,
+      10,
       11,
       12,
-      4,
-      10,
       13
     ],
     "enabled_tools": [
@@ -511,8 +511,8 @@
   "pk": "15ca85b8-59a9-4cb6-9fd8-bfd2be47b838",
   "fields": {
     "created": "2026-03-20T17:04:11.046Z",
-    "modified": "2026-03-21T14:57:04.494Z",
-    "delta": "21:52:53.447916",
+    "modified": "2026-03-24T15:44:22.158Z",
+    "delta": "3 22:40:11.112211",
     "name": "Thalamus [Program]",
     "identity_type": 3,
     "system_prompt_template": "[ROLE & PRIMARY DIRECTIVE]\r\nYou are the Thalamus of Are-Self - the direct conversational bridge between the system and the human User. Your absolute highest priority is addressing the User's immediate input. Do not engage in unsolicited backlog sifting, agile refinement, or system exploration.\r\n\r\n[RULES OF ENGAGEMENT]\r\n1. CONVERSE NATURALLY: You are a conversational agent first. \r\nOnly execute effector tools (like `mcp_fs` or `mcp_ticket`) if the User explicitly requests data or actions that require them.\r\nYou MUST execute `mcp_ask_user` to yield the floor back to the User as soon as you have answered them or need their input. If the user's overall goal is completely finished, execute `mcp_done`.\r\n2. IGNORE THE ECONOMY: You are entirely exempt from the Focus Economy, Speedrun Bounties, and XP farming. Do not attempt to optimize for points or act as a Project Manager. \r\n3. TURN MANAGEMENT: Answer the User as efficiently and quickly as possible. If you are running dangerously low on turns, do not rush or panic. Simply use your tools to pause the session and ask the User to allocate more turns.",
@@ -535,9 +535,9 @@
       7,
       8,
       9,
+      10,
       11,
-      12,
-      10
+      12
     ],
     "enabled_tools": [
       4,
@@ -554,10 +554,9 @@
       16,
       17,
       18,
-      20,
       24,
       25,
-      26,
+      20,
       27
     ],
     "memories": []
@@ -594,9 +593,9 @@
       6,
       7,
       9,
+      10,
       11,
       12,
-      10,
       13
     ],
     "enabled_tools": [
@@ -648,14 +647,14 @@
     ],
     "addons": [
       2,
+      4,
       5,
       6,
       7,
       9,
+      10,
       11,
       12,
-      4,
-      10,
       13
     ],
     "enabled_tools": [
@@ -711,9 +710,9 @@
       6,
       7,
       9,
+      10,
       11,
       12,
-      10,
       13
     ],
     "enabled_tools": [
@@ -770,9 +769,9 @@
       6,
       7,
       9,
+      10,
       11,
       12,
-      10,
       13
     ],
     "enabled_tools": [
@@ -824,14 +823,14 @@
     ],
     "addons": [
       2,
+      4,
       5,
       6,
       7,
       9,
+      10,
       11,
       12,
-      4,
-      10,
       13
     ],
     "enabled_tools": [
@@ -887,9 +886,9 @@
       6,
       7,
       9,
+      10,
       11,
       12,
-      10,
       13
     ],
     "enabled_tools": [
@@ -941,14 +940,14 @@
     ],
     "addons": [
       2,
+      4,
       5,
       6,
       7,
       9,
+      10,
       11,
       12,
-      4,
-      10,
       13
     ],
     "enabled_tools": [
