@@ -411,6 +411,11 @@ class FailoverStrategyStepInline(admin.TabularInline):
     autocomplete_fields = ('failover_type',)
 
 
+@admin.register(FailoverStrategyStep)
+class FailoverStrategyStepAdmin(admin.ModelAdmin):
+    pass
+
+
 @admin.register(FailoverStrategy)
 class FailoverStrategyAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')

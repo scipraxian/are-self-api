@@ -44,18 +44,18 @@ def _dec(key: str, data: dict) -> Decimal:
 
 class Hypothalamus:
     @staticmethod
-    def pick_optimal_model(ledger: AIModelProviderUsageRecord) -> bool:
+    def pick_optimal_model(
+        ledger: AIModelProviderUsageRecord, attempt: int = 0
+    ) -> bool:
         disc = ledger.identity_disc
+        # 1. Resolve Selection Policy (Identity-level or default)
+        filter_obj = disc.selection_filter if disc else None
+        strategy_obj = filter_obj.failover_strategy if filter_obj else None
 
+        # 2. Extract baseline constraints
         payload_size = (
             len(str(ledger.request_payload)) + len(str(ledger.tool_payload))
         ) // 4
-
-        max_cost = (
-            disc.budget.max_input_cost_per_token
-            if hasattr(disc, 'budget') and disc.budget
-            else 0
-        )
 
         valid_provider_ids = [
             p.id
@@ -67,40 +67,189 @@ class Hypothalamus:
             rate_limit_reset_time__lte=timezone.now()
         )
 
+        # Baseline filters matching all candidate models (Pricing removed!)
         filters = {
             'provider_id__in': valid_provider_ids,
             'mode__name': 'chat',
             'ai_model__enabled': True,
-            'is_enabled': True,  # <-- NEW: Respect the provider-level toggle
-            'aimodelpricing__is_current': True,
-            'aimodelpricing__is_active': True,
-            'aimodelpricing__input_cost_per_token__lte': max_cost,
+            'is_enabled': True,
             'ai_model__context_length__gte': payload_size,
         }
 
-        # --- NEW: Setup exclusions ---
-        excludes = {}
+        # FIX 1 (Updated): Dynamically apply pricing filters ONLY if a budget is enforced
+        max_cost = None
+        if disc and hasattr(disc, 'identitybudgetassignment_set'):
+            assignment = disc.identitybudgetassignment_set.filter(
+                is_active=True
+            ).first()
+            if assignment and assignment.budget:
+                max_cost = assignment.budget.max_input_cost_per_token
 
+        if max_cost is not None:
+            filters['aimodelpricing__is_current'] = True
+            filters['aimodelpricing__is_active'] = True
+            filters['aimodelpricing__input_cost_per_token__lte'] = max_cost
+
+        # Hard Exclusions (Global + Filter-specific)
+        excludes = {}
         if ledger.tool_payload:
             filters['ai_model__capabilities__name'] = 'function_calling'
-            # Exclude any ai_model_provider that has this capability disabled.
             excludes['disabled_capabilities__name'] = 'function_calling'
 
-        best = (
-            AIModelProvider.objects.filter(breaker_filter, **filters)
-            .exclude(**excludes)  # Apply the scar tissue filter
-            .annotate(distance=CosineDistance('ai_model__vector', disc.vector))
-            .select_related('ai_model')
-            .order_by('distance', 'aimodelpricing__input_cost_per_token')
-            .first()
-        )
+        if filter_obj:
+            banned = filter_obj.banned_providers.values_list('id', flat=True)
+            if banned:
+                excludes['provider_id__in'] = list(banned)
+
+        # Compile into a Base QuerySet to allow chained capability filtering
+        base_qs = AIModelProvider.objects.filter(
+            breaker_filter, **filters
+        ).exclude(**excludes)
+
+        if filter_obj:
+            req_caps = filter_obj.required_capabilities.values_list(
+                'id', flat=True
+            )
+            for cap_id in req_caps:
+                base_qs = base_qs.filter(ai_model__capabilities__id=cap_id)
+
+        # 3. Determine the Current Selection Strategy Step
+        best = None
+
+        # PRIORITY 0: The Preferred Model (Locked to attempt 0)
+        if attempt == 0 and filter_obj and filter_obj.preferred_model:
+            best = base_qs.filter(id=filter_obj.preferred_model_id).first()
+            if best:
+                ledger.ai_model_provider = best
+                ledger.ai_model = best.ai_model
+                return Hypothalamus._finalize_ledger(ledger, best)
+
+        # 4. Strategy Dispatch Loop (If no hit yet)
+        if not best and strategy_obj:
+            step_index = (
+                attempt - 1
+                if (filter_obj and filter_obj.preferred_model)
+                else attempt
+            )
+            step = (
+                strategy_obj.steps.filter(order=step_index)
+                .select_related('failover_type')
+                .first()
+            )
+
+            if not step:
+                return False
+
+            fail_type = step.failover_type.name.lower()
+
+            if 'strict' in fail_type:
+                return False
+
+            elif 'local' in fail_type:
+                if filter_obj and filter_obj.local_failover:
+                    best = base_qs.filter(
+                        id=filter_obj.local_failover_id
+                    ).first()
+
+            elif 'family' in fail_type:
+                ref_family_id = None
+                if filter_obj and filter_obj.preferred_model:
+                    ref_family_id = (
+                        filter_obj.preferred_model.ai_model.family_id
+                    )
+
+                if not ref_family_id:
+                    v_match = None
+                    if disc and getattr(disc, 'vector', None) is not None:
+                        v_match = (
+                            base_qs.annotate(
+                                distance=CosineDistance(
+                                    'ai_model__vector_node__embeddings',
+                                    disc.vector,
+                                )
+                            )
+                            .order_by('distance')
+                            .first()
+                        )
+                    else:
+                        v_match = base_qs.first()
+
+                    if v_match:
+                        ref_family_id = v_match.ai_model.family_id
+
+                if ref_family_id:
+                    qs_fam = base_qs.filter(ai_model__family_id=ref_family_id)
+                    if disc and getattr(disc, 'vector', None) is not None:
+                        best = (
+                            qs_fam.annotate(
+                                distance=CosineDistance(
+                                    'ai_model__vector_node__embeddings',
+                                    disc.vector,
+                                )
+                            )
+                            .order_by(
+                                'distance',
+                                'aimodelpricing__input_cost_per_token',
+                            )
+                            .first()
+                        )
+                    else:
+                        best = qs_fam.order_by(
+                            'aimodelpricing__input_cost_per_token'
+                        ).first()
+
+            elif 'vector' in fail_type or not fail_type:
+                if disc and getattr(disc, 'vector', None) is not None:
+                    best = (
+                        base_qs.annotate(
+                            distance=CosineDistance(
+                                'ai_model__vector_node__embeddings', disc.vector
+                            )
+                        )
+                        .select_related('ai_model')
+                        .order_by(
+                            'distance', 'aimodelpricing__input_cost_per_token'
+                        )
+                        .first()
+                    )
+                else:
+                    best = (
+                        base_qs.select_related('ai_model')
+                        .order_by('aimodelpricing__input_cost_per_token')
+                        .first()
+                    )
+
+        # 5. Final Fallback
+        if not best and not strategy_obj:
+            if disc and getattr(disc, 'vector', None) is not None:
+                best = (
+                    base_qs.annotate(
+                        distance=CosineDistance(
+                            'ai_model__vector_node__embeddings', disc.vector
+                        )
+                    )
+                    .select_related('ai_model')
+                    .order_by(
+                        'distance', 'aimodelpricing__input_cost_per_token'
+                    )
+                    .first()
+                )
+            else:
+                best = (
+                    base_qs.select_related('ai_model')
+                    .order_by('aimodelpricing__input_cost_per_token')
+                    .first()
+                )
 
         if not best:
             return False
 
         ledger.ai_model_provider = best
         ledger.ai_model = best.ai_model
+        return Hypothalamus._finalize_ledger(ledger, best)
 
+    @staticmethod
+    def _finalize_ledger(ledger, best):
         pricing = best.aimodelpricing_set.filter(is_current=True).first()
         if pricing:
             ledger.input_cost_per_token = pricing.input_cost_per_token
