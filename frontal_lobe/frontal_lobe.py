@@ -32,9 +32,9 @@ MODEL_USAGE_RECORD = 'model_usage_record'
 
 
 def _fetch_disc_sync(session_id):
-    s = ReasoningSession.objects.select_related(
-        'identity_disc', 'identity_disc__budget'
-    ).get(id=session_id)
+    s = ReasoningSession.objects.select_related('identity_disc').get(
+        id=session_id
+    )
     return s.identity_disc
 
 
@@ -289,7 +289,7 @@ class FrontalLobe:
             # 🧠 2. PASS THE LEDGER TO THE HYPOTHALAMUS
             routing_success = await sync_to_async(
                 Hypothalamus().pick_optimal_model
-            )(pending_ledger)
+            )(pending_ledger, attempt=attempt)
 
             if not routing_success or not pending_ledger.ai_model_provider:
                 logger.error(
