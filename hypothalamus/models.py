@@ -177,8 +177,21 @@ class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
     capabilities = models.ManyToManyField(AIModelCapabilities, blank=True)
     deprecation_date = models.DateField(null=True, blank=True)
 
-    # Using 768 dimensions (standard for nomic-embed-text)
-    vector = VectorField(dimensions=768, null=True, blank=True)
+    @property
+    def vector(self):
+        """Silently fetches the vector from the 1:1 table."""
+        if hasattr(self, 'vector_node'):
+            return self.vector_node.embeddings
+        return None
+
+    @vector.setter
+    def vector(self, value):
+        """Silently updates or creates the 1:1 record."""
+        if not hasattr(self, 'vector_node'):
+            AIModelVector.objects.create(ai_model=self, embeddings=value)
+        else:
+            self.vector_node.embeddings = value
+            self.vector_node.save(update_fields=['embeddings'])
 
     def update_vector(self):
         from frontal_lobe.synapse import OllamaClient
@@ -234,6 +247,17 @@ class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
         )
         self.vector = client.embed(rich_text)
         self.save(update_fields=['vector'])
+
+
+class AIModelVector(models.Model):
+    """Offloads the heavy 768-dimensional vector to keep AIModel queries and fixtures clean."""
+
+    ai_model = models.OneToOneField(
+        'hypothalamus.AIModel',
+        on_delete=models.CASCADE,
+        related_name='vector_node',
+    )
+    embeddings = VectorField(dimensions=768, null=True, blank=True)
 
 
 class AIModelProviderRateLimitMixin(models.Model):

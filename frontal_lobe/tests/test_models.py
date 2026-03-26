@@ -25,13 +25,11 @@ class FrontalLobeTest(CommonFixturesAPITestCase):
 
         usage_1 = AIModelProviderUsageRecord.objects.create(
             ai_model_provider=ai_model_provider,
-            model_provider=ai_model_provider,
             ai_model=model,
             response_payload={'content': "Short thought"}
         )
         usage_2 = AIModelProviderUsageRecord.objects.create(
             ai_model_provider=ai_model_provider,
-            model_provider=ai_model_provider,
             ai_model=model,
             response_payload={'content': "Currently thinking"}
         )

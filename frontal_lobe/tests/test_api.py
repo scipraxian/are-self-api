@@ -58,7 +58,6 @@ class ReasoningAPITest(TestCase):
 
         self.usage_record = AIModelProviderUsageRecord.objects.create(
             ai_model_provider=self.ai_model_provider,
-            model_provider=self.ai_model_provider,
             ai_model=self.model,
             request_payload={'test': 'data'},
             response_payload={'content': 'Thinking 1'},

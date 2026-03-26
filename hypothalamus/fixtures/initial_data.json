@@ -1,1014 +1,6 @@
 [
 {
   "model": "hypothalamus.llmprovider",
-  "pk": 1,
-  "fields": {
-    "created": "2026-03-23T17:33:59.884Z",
-    "description": null,
-    "modified": "2026-03-23T17:33:59.884Z",
-    "name": "Bedrock",
-    "key": "bedrock",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 2,
-  "fields": {
-    "created": "2026-03-23T17:33:59.946Z",
-    "description": null,
-    "modified": "2026-03-23T17:33:59.946Z",
-    "name": "Openai",
-    "key": "openai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 3,
-  "fields": {
-    "created": "2026-03-23T17:34:00.062Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:00.062Z",
-    "name": "Aiml",
-    "key": "aiml",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 4,
-  "fields": {
-    "created": "2026-03-23T17:34:00.187Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:00.187Z",
-    "name": "Bedrock_Converse",
-    "key": "bedrock_converse",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 5,
-  "fields": {
-    "created": "2026-03-23T17:34:00.692Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:00.692Z",
-    "name": "Anyscale",
-    "key": "anyscale",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 6,
-  "fields": {
-    "created": "2026-03-23T17:34:00.863Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:00.863Z",
-    "name": "Assemblyai",
-    "key": "assemblyai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 7,
-  "fields": {
-    "created": "2026-03-23T17:34:00.890Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:00.890Z",
-    "name": "Azure",
-    "key": "azure",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 8,
-  "fields": {
-    "created": "2026-03-23T17:34:00.917Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:00.917Z",
-    "name": "Azure_Ai",
-    "key": "azure_ai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 9,
-  "fields": {
-    "created": "2026-03-23T17:34:01.213Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:01.213Z",
-    "name": "Azure_Text",
-    "key": "azure_text",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 10,
-  "fields": {
-    "created": "2026-03-23T17:34:02.933Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:02.933Z",
-    "name": "Text-Completion-Openai",
-    "key": "text-completion-openai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 11,
-  "fields": {
-    "created": "2026-03-23T17:34:03.877Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:03.877Z",
-    "name": "Black_Forest_Labs",
-    "key": "black_forest_labs",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 12,
-  "fields": {
-    "created": "2026-03-23T17:34:03.940Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:03.940Z",
-    "name": "Cerebras",
-    "key": "cerebras",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 13,
-  "fields": {
-    "created": "2026-03-23T17:34:03.993Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:03.993Z",
-    "name": "Nlp_Cloud",
-    "key": "nlp_cloud",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 14,
-  "fields": {
-    "created": "2026-03-23T17:34:04.017Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:04.017Z",
-    "name": "Anthropic",
-    "key": "anthropic",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 15,
-  "fields": {
-    "created": "2026-03-23T17:34:04.158Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:04.158Z",
-    "name": "Cloudflare",
-    "key": "cloudflare",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 16,
-  "fields": {
-    "created": "2026-03-23T17:34:04.190Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:04.190Z",
-    "name": "Codestral",
-    "key": "codestral",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 17,
-  "fields": {
-    "created": "2026-03-23T17:34:04.268Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:04.268Z",
-    "name": "Cohere",
-    "key": "cohere",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 18,
-  "fields": {
-    "created": "2026-03-23T17:34:04.293Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:04.293Z",
-    "name": "Cohere_Chat",
-    "key": "cohere_chat",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 19,
-  "fields": {
-    "created": "2026-03-23T17:34:04.377Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:04.377Z",
-    "name": "Deepseek",
-    "key": "deepseek",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 20,
-  "fields": {
-    "created": "2026-03-23T17:34:04.394Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:04.394Z",
-    "name": "Dashscope",
-    "key": "dashscope",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 21,
-  "fields": {
-    "created": "2026-03-23T17:34:04.652Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:04.652Z",
-    "name": "Databricks",
-    "key": "databricks",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 22,
-  "fields": {
-    "created": "2026-03-23T17:34:04.868Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:04.868Z",
-    "name": "Dataforseo",
-    "key": "dataforseo",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 23,
-  "fields": {
-    "created": "2026-03-23T17:34:04.886Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:04.886Z",
-    "name": "Deepgram",
-    "key": "deepgram",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 24,
-  "fields": {
-    "created": "2026-03-23T17:34:05.166Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:05.166Z",
-    "name": "Deepinfra",
-    "key": "deepinfra",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 25,
-  "fields": {
-    "created": "2026-03-23T17:34:05.749Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:05.749Z",
-    "name": "Volcengine",
-    "key": "volcengine",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 26,
-  "fields": {
-    "created": "2026-03-23T17:34:05.811Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:05.811Z",
-    "name": "Exa_Ai",
-    "key": "exa_ai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 27,
-  "fields": {
-    "created": "2026-03-23T17:34:05.819Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:05.819Z",
-    "name": "Firecrawl",
-    "key": "firecrawl",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 28,
-  "fields": {
-    "created": "2026-03-23T17:34:05.826Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:05.826Z",
-    "name": "Perplexity",
-    "key": "perplexity",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 29,
-  "fields": {
-    "created": "2026-03-23T17:34:05.834Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:05.834Z",
-    "name": "Searxng",
-    "key": "searxng",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 30,
-  "fields": {
-    "created": "2026-03-23T17:34:05.842Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:05.842Z",
-    "name": "Serper",
-    "key": "serper",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 31,
-  "fields": {
-    "created": "2026-03-23T17:34:05.850Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:05.850Z",
-    "name": "Elevenlabs",
-    "key": "elevenlabs",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 32,
-  "fields": {
-    "created": "2026-03-23T17:34:06.103Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:06.103Z",
-    "name": "Fal_Ai",
-    "key": "fal_ai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 33,
-  "fields": {
-    "created": "2026-03-23T17:34:06.192Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:06.192Z",
-    "name": "Featherless_Ai",
-    "key": "featherless_ai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 34,
-  "fields": {
-    "created": "2026-03-23T17:34:06.208Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:06.208Z",
-    "name": "Fireworks_Ai",
-    "key": "fireworks_ai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 35,
-  "fields": {
-    "created": "2026-03-23T17:34:06.242Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:06.242Z",
-    "name": "Fireworks_Ai-Embedding-Models",
-    "key": "fireworks_ai-embedding-models",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 36,
-  "fields": {
-    "created": "2026-03-23T17:34:06.590Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:06.590Z",
-    "name": "Friendliai",
-    "key": "friendliai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 37,
-  "fields": {
-    "created": "2026-03-23T17:34:06.717Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:06.717Z",
-    "name": "Vertex_Ai-Language-Models",
-    "key": "vertex_ai-language-models",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 38,
-  "fields": {
-    "created": "2026-03-23T17:34:06.826Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:06.826Z",
-    "name": "Gemini",
-    "key": "gemini",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 39,
-  "fields": {
-    "created": "2026-03-23T17:34:06.871Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:06.871Z",
-    "name": "Vertex_Ai",
-    "key": "vertex_ai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 40,
-  "fields": {
-    "created": "2026-03-23T17:34:06.929Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:06.929Z",
-    "name": "Vertex_Ai-Embedding-Models",
-    "key": "vertex_ai-embedding-models",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 41,
-  "fields": {
-    "created": "2026-03-23T17:34:07.274Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:07.274Z",
-    "name": "Github_Copilot",
-    "key": "github_copilot",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 42,
-  "fields": {
-    "created": "2026-03-23T17:34:07.491Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:07.491Z",
-    "name": "Chatgpt",
-    "key": "chatgpt",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 43,
-  "fields": {
-    "created": "2026-03-23T17:34:07.561Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:07.561Z",
-    "name": "Gigachat",
-    "key": "gigachat",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 44,
-  "fields": {
-    "created": "2026-03-23T17:34:07.610Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:07.610Z",
-    "name": "Gmi",
-    "key": "gmi",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 45,
-  "fields": {
-    "created": "2026-03-23T17:34:07.754Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:07.754Z",
-    "name": "Google_Pse",
-    "key": "google_pse",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 46,
-  "fields": {
-    "created": "2026-03-23T17:34:08.592Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:08.592Z",
-    "name": "Gradient_Ai",
-    "key": "gradient_ai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 47,
-  "fields": {
-    "created": "2026-03-23T17:34:08.699Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:08.699Z",
-    "name": "Lemonade",
-    "key": "lemonade",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 48,
-  "fields": {
-    "created": "2026-03-23T17:34:08.740Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:08.740Z",
-    "name": "Amazon_Nova",
-    "key": "amazon_nova",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 49,
-  "fields": {
-    "created": "2026-03-23T17:34:08.774Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:08.774Z",
-    "name": "Groq",
-    "key": "groq",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 50,
-  "fields": {
-    "created": "2026-03-23T17:34:08.897Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:08.897Z",
-    "name": "Heroku",
-    "key": "heroku",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 51,
-  "fields": {
-    "created": "2026-03-23T17:34:08.947Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:08.947Z",
-    "name": "Hyperbolic",
-    "key": "hyperbolic",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 52,
-  "fields": {
-    "created": "2026-03-23T17:34:09.055Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:09.055Z",
-    "name": "Ai21",
-    "key": "ai21",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 53,
-  "fields": {
-    "created": "2026-03-23T17:34:09.150Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:09.150Z",
-    "name": "Jina_Ai",
-    "key": "jina_ai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 54,
-  "fields": {
-    "created": "2026-03-23T17:34:09.175Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:09.175Z",
-    "name": "Lambda_Ai",
-    "key": "lambda_ai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 55,
-  "fields": {
-    "created": "2026-03-23T17:34:09.351Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:09.351Z",
-    "name": "Aleph_Alpha",
-    "key": "aleph_alpha",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 56,
-  "fields": {
-    "created": "2026-03-23T17:34:09.598Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:09.598Z",
-    "name": "Meta_Llama",
-    "key": "meta_llama",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 57,
-  "fields": {
-    "created": "2026-03-23T17:34:09.643Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:09.643Z",
-    "name": "Minimax",
-    "key": "minimax",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 58,
-  "fields": {
-    "created": "2026-03-23T17:34:09.813Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:09.813Z",
-    "name": "Mistral",
-    "key": "mistral",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 59,
-  "fields": {
-    "created": "2026-03-23T17:34:10.215Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:10.215Z",
-    "name": "Moonshot",
-    "key": "moonshot",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 60,
-  "fields": {
-    "created": "2026-03-23T17:34:10.382Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:10.382Z",
-    "name": "Morph",
-    "key": "morph",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 61,
-  "fields": {
-    "created": "2026-03-23T17:34:10.415Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:10.415Z",
-    "name": "Nscale",
-    "key": "nscale",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 62,
-  "fields": {
-    "created": "2026-03-23T17:34:10.533Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:10.533Z",
-    "name": "Nebius",
-    "key": "nebius",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 63,
-  "fields": {
-    "created": "2026-03-23T17:34:10.878Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:10.878Z",
-    "name": "Oci",
-    "key": "oci",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
   "pk": 64,
   "fields": {
     "created": "2026-03-23T17:34:10.978Z",
@@ -1024,691 +16,219 @@
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 65,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 1,
   "fields": {
-    "created": "2026-03-23T17:34:11.256Z",
-    "description": "",
-    "modified": "2026-03-25T00:15:49.224Z",
-    "name": "Openrouter",
-    "key": "openrouter",
-    "base_url": null,
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "description": null,
+    "name": "system_messages"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 66,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 2,
   "fields": {
-    "created": "2026-03-23T17:34:11.904Z",
     "description": null,
-    "modified": "2026-03-23T17:34:11.904Z",
-    "name": "Ovhcloud",
-    "key": "ovhcloud",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "function_calling"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 67,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 3,
   "fields": {
-    "created": "2026-03-23T17:34:12.010Z",
     "description": null,
-    "modified": "2026-03-23T17:34:12.010Z",
-    "name": "Palm",
-    "key": "palm",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "pdf_input"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 68,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 4,
   "fields": {
-    "created": "2026-03-23T17:34:12.059Z",
     "description": null,
-    "modified": "2026-03-23T17:34:12.059Z",
-    "name": "Parallel_Ai",
-    "key": "parallel_ai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "prompt_caching"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 69,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 5,
   "fields": {
-    "created": "2026-03-23T17:34:12.229Z",
     "description": null,
-    "modified": "2026-03-23T17:34:12.229Z",
-    "name": "Publicai",
-    "key": "publicai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "response_schema"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 70,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 6,
   "fields": {
-    "created": "2026-03-23T17:34:12.491Z",
     "description": null,
-    "modified": "2026-03-23T17:34:12.491Z",
-    "name": "Recraft",
-    "key": "recraft",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "vision"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 71,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 7,
   "fields": {
-    "created": "2026-03-23T17:34:12.508Z",
     "description": null,
-    "modified": "2026-03-23T17:34:12.508Z",
-    "name": "Replicate",
-    "key": "replicate",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "reasoning"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 72,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 8,
   "fields": {
-    "created": "2026-03-23T17:34:12.834Z",
     "description": null,
-    "modified": "2026-03-23T17:34:12.834Z",
-    "name": "Nvidia_Nim",
-    "key": "nvidia_nim",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "video_input"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 73,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 9,
   "fields": {
-    "created": "2026-03-23T17:34:12.860Z",
     "description": null,
-    "modified": "2026-03-23T17:34:12.860Z",
-    "name": "Sagemaker",
-    "key": "sagemaker",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "embedding_image_input"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 74,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 10,
   "fields": {
-    "created": "2026-03-23T17:34:12.909Z",
     "description": null,
-    "modified": "2026-03-23T17:34:12.909Z",
-    "name": "Sambanova",
-    "key": "sambanova",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "image_input"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 75,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 11,
   "fields": {
-    "created": "2026-03-23T17:34:13.026Z",
     "description": null,
-    "modified": "2026-03-23T17:34:13.026Z",
-    "name": "Snowflake",
-    "key": "snowflake",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "audio_input"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 76,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 12,
   "fields": {
-    "created": "2026-03-23T17:34:13.216Z",
     "description": null,
-    "modified": "2026-03-23T17:34:13.216Z",
-    "name": "Stability",
-    "key": "stability",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "assistant_prefill"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 77,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 13,
   "fields": {
-    "created": "2026-03-23T17:34:13.584Z",
     "description": null,
-    "modified": "2026-03-23T17:34:13.584Z",
-    "name": "Linkup",
-    "key": "linkup",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "tool_choice"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 78,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 14,
   "fields": {
-    "created": "2026-03-23T17:34:13.602Z",
     "description": null,
-    "modified": "2026-03-23T17:34:13.602Z",
-    "name": "Tavily",
-    "key": "tavily",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "computer_use"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 79,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 15,
   "fields": {
-    "created": "2026-03-23T17:34:13.618Z",
     "description": null,
-    "modified": "2026-03-23T17:34:13.618Z",
-    "name": "Text-Completion-Codestral",
-    "key": "text-completion-codestral",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "native_streaming"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 80,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 16,
   "fields": {
-    "created": "2026-03-23T17:34:13.726Z",
     "description": null,
-    "modified": "2026-03-23T17:34:13.726Z",
-    "name": "Vertex_Ai-Text-Models",
-    "key": "vertex_ai-text-models",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "parallel_function_calling"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 81,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 17,
   "fields": {
-    "created": "2026-03-23T17:34:13.744Z",
     "description": null,
-    "modified": "2026-03-23T17:34:13.744Z",
-    "name": "Together_Ai",
-    "key": "together_ai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "audio_output"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 82,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 18,
   "fields": {
-    "created": "2026-03-23T17:34:14.079Z",
     "description": null,
-    "modified": "2026-03-23T17:34:14.079Z",
-    "name": "Aws_Polly",
-    "key": "aws_polly",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "none_reasoning_effort"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 83,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 19,
   "fields": {
-    "created": "2026-03-23T17:34:14.395Z",
     "description": null,
-    "modified": "2026-03-23T17:34:14.395Z",
-    "name": "V0",
-    "key": "v0",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "service_tier"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 84,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 20,
   "fields": {
-    "created": "2026-03-23T17:34:14.422Z",
     "description": null,
-    "modified": "2026-03-23T17:34:14.422Z",
-    "name": "Vercel_Ai_Gateway",
-    "key": "vercel_ai_gateway",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "minimal_reasoning_effort"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 85,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 21,
   "fields": {
-    "created": "2026-03-23T17:34:15.146Z",
     "description": null,
-    "modified": "2026-03-23T17:34:15.146Z",
-    "name": "Vertex_Ai-Anthropic_Models",
-    "key": "vertex_ai-anthropic_models",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "web_search"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 86,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 22,
   "fields": {
-    "created": "2026-03-23T17:34:15.330Z",
     "description": null,
-    "modified": "2026-03-23T17:34:15.330Z",
-    "name": "Vertex_Ai-Mistral_Models",
-    "key": "vertex_ai-mistral_models",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "url_context"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 87,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 23,
   "fields": {
-    "created": "2026-03-23T17:34:15.385Z",
     "description": null,
-    "modified": "2026-03-23T17:34:15.385Z",
-    "name": "Vertex_Ai-Deepseek_Models",
-    "key": "vertex_ai-deepseek_models",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "code_execution"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 88,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 24,
   "fields": {
-    "created": "2026-03-23T17:34:15.444Z",
     "description": null,
-    "modified": "2026-03-23T17:34:15.444Z",
-    "name": "Vertex_Ai-Image-Models",
-    "key": "vertex_ai-image-models",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "file_search"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 89,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 25,
   "fields": {
-    "created": "2026-03-23T17:34:15.500Z",
     "description": null,
-    "modified": "2026-03-23T17:34:15.500Z",
-    "name": "Vertex_Ai-Ai21_Models",
-    "key": "vertex_ai-ai21_models",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "multimodal"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 90,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 26,
   "fields": {
-    "created": "2026-03-23T17:34:15.533Z",
     "description": null,
-    "modified": "2026-03-23T17:34:15.533Z",
-    "name": "Vertex_Ai-Llama_Models",
-    "key": "vertex_ai-llama_models",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "xhigh_reasoning_effort"
   }
 },
 {
-  "model": "hypothalamus.llmprovider",
-  "pk": 91,
+  "model": "hypothalamus.aimodelcapabilities",
+  "pk": 27,
   "fields": {
-    "created": "2026-03-23T17:34:15.620Z",
     "description": null,
-    "modified": "2026-03-23T17:34:15.620Z",
-    "name": "Vertex_Ai-Minimax_Models",
-    "key": "vertex_ai-minimax_models",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 92,
-  "fields": {
-    "created": "2026-03-23T17:34:15.630Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:15.630Z",
-    "name": "Vertex_Ai-Moonshot_Models",
-    "key": "vertex_ai-moonshot_models",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 93,
-  "fields": {
-    "created": "2026-03-23T17:34:15.639Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:15.639Z",
-    "name": "Vertex_Ai-Zai_Models",
-    "key": "vertex_ai-zai_models",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 94,
-  "fields": {
-    "created": "2026-03-23T17:34:15.759Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:15.759Z",
-    "name": "Vertex_Ai-Openai_Models",
-    "key": "vertex_ai-openai_models",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 95,
-  "fields": {
-    "created": "2026-03-23T17:34:15.776Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:15.776Z",
-    "name": "Vertex_Ai-Qwen_Models",
-    "key": "vertex_ai-qwen_models",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 96,
-  "fields": {
-    "created": "2026-03-23T17:34:15.808Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:15.808Z",
-    "name": "Vertex_Ai-Video-Models",
-    "key": "vertex_ai-video-models",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 97,
-  "fields": {
-    "created": "2026-03-23T17:34:15.857Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:15.857Z",
-    "name": "Voyage",
-    "key": "voyage",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 98,
-  "fields": {
-    "created": "2026-03-23T17:34:16.007Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:16.007Z",
-    "name": "Wandb",
-    "key": "wandb",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 99,
-  "fields": {
-    "created": "2026-03-23T17:34:16.098Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:16.098Z",
-    "name": "Watsonx",
-    "key": "watsonx",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 100,
-  "fields": {
-    "created": "2026-03-23T17:34:16.329Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:16.329Z",
-    "name": "Xai",
-    "key": "xai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 101,
-  "fields": {
-    "created": "2026-03-23T17:34:16.620Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:16.620Z",
-    "name": "Zai",
-    "key": "zai",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 102,
-  "fields": {
-    "created": "2026-03-23T17:34:16.767Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:16.767Z",
-    "name": "Runwayml",
-    "key": "runwayml",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 103,
-  "fields": {
-    "created": "2026-03-23T17:34:18.662Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:18.662Z",
-    "name": "Novita",
-    "key": "novita",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 104,
-  "fields": {
-    "created": "2026-03-23T17:34:19.307Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:19.307Z",
-    "name": "Llamagate",
-    "key": "llamagate",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 105,
-  "fields": {
-    "created": "2026-03-23T17:34:19.440Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:19.440Z",
-    "name": "Sarvam",
-    "key": "sarvam",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 106,
-  "fields": {
-    "created": "2026-03-23T17:34:19.683Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:19.683Z",
-    "name": "Duckduckgo",
-    "key": "duckduckgo",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
-  }
-},
-{
-  "model": "hypothalamus.llmprovider",
-  "pk": 107,
-  "fields": {
-    "created": "2026-03-23T17:34:19.691Z",
-    "description": null,
-    "modified": "2026-03-23T17:34:19.691Z",
-    "name": "Bedrock_Mantle",
-    "key": "bedrock_mantle",
-    "base_url": "",
-    "chat_path": "/v1/chat/completions",
-    "requires_api_key": true,
-    "api_key_header": "Authorization",
-    "api_key_env_var": null
+    "name": "preset"
   }
 },
 {
@@ -1829,4888 +349,6 @@
   "fields": {
     "description": null,
     "name": "vector_store"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 1,
-  "fields": {
-    "description": null,
-    "name": "Llama",
-    "slug": "llama"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 2,
-  "fields": {
-    "description": null,
-    "name": "Qwen",
-    "slug": "qwen"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 3,
-  "fields": {
-    "description": null,
-    "name": "Mistral",
-    "slug": "mistral"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 4,
-  "fields": {
-    "description": null,
-    "name": "Mixtral",
-    "slug": "mixtral"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 5,
-  "fields": {
-    "description": null,
-    "name": "GPT",
-    "slug": "gpt"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 6,
-  "fields": {
-    "description": null,
-    "name": "Gemini",
-    "slug": "gemini"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 7,
-  "fields": {
-    "description": null,
-    "name": "Gemma",
-    "slug": "gemma"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 8,
-  "fields": {
-    "description": null,
-    "name": "Claude",
-    "slug": "claude"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 9,
-  "fields": {
-    "description": null,
-    "name": "DeepSeek",
-    "slug": "deepseek"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 10,
-  "fields": {
-    "description": null,
-    "name": "Phi",
-    "slug": "phi"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 11,
-  "fields": {
-    "description": null,
-    "name": "GLM",
-    "slug": "glm"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 12,
-  "fields": {
-    "description": null,
-    "name": "Grok",
-    "slug": "grok"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 13,
-  "fields": {
-    "description": null,
-    "name": "Flux",
-    "slug": "flux"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 14,
-  "fields": {
-    "description": null,
-    "name": "Bria",
-    "slug": "bria"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 15,
-  "fields": {
-    "description": null,
-    "name": "Amazon",
-    "slug": "amazon"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 16,
-  "fields": {
-    "description": null,
-    "name": "Stability",
-    "slug": "stability"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 17,
-  "fields": {
-    "description": null,
-    "name": "Dall",
-    "slug": "dall"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 18,
-  "fields": {
-    "description": null,
-    "name": "Ai",
-    "slug": "ai"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 19,
-  "fields": {
-    "description": null,
-    "name": "Dev",
-    "slug": "dev"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 20,
-  "fields": {
-    "description": null,
-    "name": "Text",
-    "slug": "text"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 21,
-  "fields": {
-    "description": null,
-    "name": "Schnell",
-    "slug": "schnell"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 22,
-  "fields": {
-    "description": null,
-    "name": "Imagen",
-    "slug": "imagen"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 23,
-  "fields": {
-    "description": null,
-    "name": "Nano",
-    "slug": "nano"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 24,
-  "fields": {
-    "description": null,
-    "name": "Us",
-    "slug": "us"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 25,
-  "fields": {
-    "description": null,
-    "name": "Writer",
-    "slug": "writer"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 26,
-  "fields": {
-    "description": null,
-    "name": "Twelvelabs",
-    "slug": "twelvelabs"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 27,
-  "fields": {
-    "description": null,
-    "name": "Zephyr",
-    "slug": "zephyr"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 28,
-  "fields": {
-    "description": null,
-    "name": "Codellama",
-    "slug": "codellama"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 29,
-  "fields": {
-    "description": null,
-    "name": "Best",
-    "slug": "best"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 30,
-  "fields": {
-    "description": null,
-    "name": "Ada",
-    "slug": "ada"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 31,
-  "fields": {
-    "description": null,
-    "name": "Codex",
-    "slug": "codex"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 32,
-  "fields": {
-    "description": null,
-    "name": "Command",
-    "slug": "command"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 33,
-  "fields": {
-    "description": null,
-    "name": "Computer",
-    "slug": "computer"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 34,
-  "fields": {
-    "description": null,
-    "name": "Container",
-    "slug": "container"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 35,
-  "fields": {
-    "description": null,
-    "name": "Model_Router",
-    "slug": "model_router"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 36,
-  "fields": {
-    "description": null,
-    "name": "O",
-    "slug": "o"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 37,
-  "fields": {
-    "description": null,
-    "name": "Azure",
-    "slug": "azure"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 38,
-  "fields": {
-    "description": null,
-    "name": "Tts",
-    "slug": "tts"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 39,
-  "fields": {
-    "description": null,
-    "name": "Whisper",
-    "slug": "whisper"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 40,
-  "fields": {
-    "description": null,
-    "name": "Cohere",
-    "slug": "cohere"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 41,
-  "fields": {
-    "description": null,
-    "name": "Prebuilt",
-    "slug": "prebuilt"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 42,
-  "fields": {
-    "description": null,
-    "name": "Mai",
-    "slug": "mai"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 43,
-  "fields": {
-    "description": null,
-    "name": "Embed",
-    "slug": "embed"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 44,
-  "fields": {
-    "description": null,
-    "name": "Jais",
-    "slug": "jais"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 45,
-  "fields": {
-    "description": null,
-    "name": "Jamba",
-    "slug": "jamba"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 46,
-  "fields": {
-    "description": null,
-    "name": "Kimi",
-    "slug": "kimi"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 47,
-  "fields": {
-    "description": null,
-    "name": "Ministral",
-    "slug": "ministral"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 48,
-  "fields": {
-    "description": null,
-    "name": "Babbage",
-    "slug": "babbage"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 49,
-  "fields": {
-    "description": null,
-    "name": "Minimax",
-    "slug": "minimax"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 50,
-  "fields": {
-    "description": null,
-    "name": "Chatdolphin",
-    "slug": "chatdolphin"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 51,
-  "fields": {
-    "description": null,
-    "name": "Chatgpt",
-    "slug": "chatgpt"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 52,
-  "fields": {
-    "description": null,
-    "name": "Codestral",
-    "slug": "codestral"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 53,
-  "fields": {
-    "description": null,
-    "name": "Qwq",
-    "slug": "qwq"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 54,
-  "fields": {
-    "description": null,
-    "name": "Databricks",
-    "slug": "databricks"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 55,
-  "fields": {
-    "description": null,
-    "name": "Search",
-    "slug": "search"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 56,
-  "fields": {
-    "description": null,
-    "name": "Davinci",
-    "slug": "davinci"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 57,
-  "fields": {
-    "description": null,
-    "name": "Base",
-    "slug": "base"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 58,
-  "fields": {
-    "description": null,
-    "name": "Enhanced",
-    "slug": "enhanced"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 59,
-  "fields": {
-    "description": null,
-    "name": "Nova",
-    "slug": "nova"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 60,
-  "fields": {
-    "description": null,
-    "name": "Mythomax",
-    "slug": "mythomax"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 61,
-  "fields": {
-    "description": null,
-    "name": "L",
-    "slug": "l"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 62,
-  "fields": {
-    "description": null,
-    "name": "Olmocr",
-    "slug": "olmocr"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 63,
-  "fields": {
-    "description": null,
-    "name": "Wizardlm",
-    "slug": "wizardlm"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 64,
-  "fields": {
-    "description": null,
-    "name": "Dolphin",
-    "slug": "dolphin"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 65,
-  "fields": {
-    "description": null,
-    "name": "Doubao",
-    "slug": "doubao"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 66,
-  "fields": {
-    "description": null,
-    "name": "Scribe_V",
-    "slug": "scribe_v"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 67,
-  "fields": {
-    "description": null,
-    "name": "Scribe_V1_Experimental",
-    "slug": "scribe_v1_experimental"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 68,
-  "fields": {
-    "description": null,
-    "name": "Eleven_V",
-    "slug": "eleven_v"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 69,
-  "fields": {
-    "description": null,
-    "name": "Eleven_Multilingual_V",
-    "slug": "eleven_multilingual_v"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 70,
-  "fields": {
-    "description": null,
-    "name": "Preview",
-    "slug": "preview"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 71,
-  "fields": {
-    "description": null,
-    "name": "Fast",
-    "slug": "fast"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 72,
-  "fields": {
-    "description": null,
-    "name": "Ultra",
-    "slug": "ultra"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 73,
-  "fields": {
-    "description": null,
-    "name": "Stable",
-    "slug": "stable"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 74,
-  "fields": {
-    "description": null,
-    "name": "Qwerky",
-    "slug": "qwerky"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 75,
-  "fields": {
-    "description": null,
-    "name": "Uae",
-    "slug": "uae"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 76,
-  "fields": {
-    "description": null,
-    "name": "Firefunction",
-    "slug": "firefunction"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 77,
-  "fields": {
-    "description": null,
-    "name": "Qwen2P",
-    "slug": "qwen2p"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 78,
-  "fields": {
-    "description": null,
-    "name": "Yi",
-    "slug": "yi"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 79,
-  "fields": {
-    "description": null,
-    "name": "Gte",
-    "slug": "gte"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 80,
-  "fields": {
-    "description": null,
-    "name": "Learnlm",
-    "slug": "learnlm"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 81,
-  "fields": {
-    "description": null,
-    "name": "Veo",
-    "slug": "veo"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 82,
-  "fields": {
-    "description": null,
-    "name": "Gigachat",
-    "slug": "gigachat"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 83,
-  "fields": {
-    "description": null,
-    "name": "Embeddings",
-    "slug": "embeddings"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 84,
-  "fields": {
-    "description": null,
-    "name": "Embeddingsgigar",
-    "slug": "embeddingsgigar"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 85,
-  "fields": {
-    "description": null,
-    "name": "J",
-    "slug": "j"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 86,
-  "fields": {
-    "description": null,
-    "name": "Hermes",
-    "slug": "hermes"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 87,
-  "fields": {
-    "description": null,
-    "name": "Lfm",
-    "slug": "lfm"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 88,
-  "fields": {
-    "description": null,
-    "name": "Luminous",
-    "slug": "luminous"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 89,
-  "fields": {
-    "description": null,
-    "name": "Medlm",
-    "slug": "medlm"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 90,
-  "fields": {
-    "description": null,
-    "name": "Speech",
-    "slug": "speech"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 91,
-  "fields": {
-    "description": null,
-    "name": "Devstral",
-    "slug": "devstral"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 92,
-  "fields": {
-    "description": null,
-    "name": "Magistral",
-    "slug": "magistral"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 93,
-  "fields": {
-    "description": null,
-    "name": "Pixtral",
-    "slug": "pixtral"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 94,
-  "fields": {
-    "description": null,
-    "name": "Moonshot",
-    "slug": "moonshot"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 95,
-  "fields": {
-    "description": null,
-    "name": "Morph",
-    "slug": "morph"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 96,
-  "fields": {
-    "description": null,
-    "name": "Multimodalembedding",
-    "slug": "multimodalembedding"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 97,
-  "fields": {
-    "description": null,
-    "name": "Bge",
-    "slug": "bge"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 98,
-  "fields": {
-    "description": null,
-    "name": "Codegeex",
-    "slug": "codegeex"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 99,
-  "fields": {
-    "description": null,
-    "name": "Codegemma",
-    "slug": "codegemma"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 100,
-  "fields": {
-    "description": null,
-    "name": "Internlm2_",
-    "slug": "internlm2_"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 101,
-  "fields": {
-    "description": null,
-    "name": "Orca",
-    "slug": "orca"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 102,
-  "fields": {
-    "description": null,
-    "name": "Vicuna",
-    "slug": "vicuna"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 103,
-  "fields": {
-    "description": null,
-    "name": "Omni",
-    "slug": "omni"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 104,
-  "fields": {
-    "description": null,
-    "name": "Ui",
-    "slug": "ui"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 105,
-  "fields": {
-    "description": null,
-    "name": "Weaver",
-    "slug": "weaver"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 106,
-  "fields": {
-    "description": null,
-    "name": "Router",
-    "slug": "router"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 107,
-  "fields": {
-    "description": null,
-    "name": "Mimo",
-    "slug": "mimo"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 108,
-  "fields": {
-    "description": null,
-    "name": "Auto",
-    "slug": "auto"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 109,
-  "fields": {
-    "description": null,
-    "name": "Free",
-    "slug": "free"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 110,
-  "fields": {
-    "description": null,
-    "name": "Bodybuilder",
-    "slug": "bodybuilder"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 111,
-  "fields": {
-    "description": null,
-    "name": "Chat",
-    "slug": "chat"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 112,
-  "fields": {
-    "description": null,
-    "name": "Pplx",
-    "slug": "pplx"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 113,
-  "fields": {
-    "description": null,
-    "name": "Sonar",
-    "slug": "sonar"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 114,
-  "fields": {
-    "description": null,
-    "name": "Apertus",
-    "slug": "apertus"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 115,
-  "fields": {
-    "description": null,
-    "name": "Salamandra",
-    "slug": "salamandra"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 116,
-  "fields": {
-    "description": null,
-    "name": "Alia",
-    "slug": "alia"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 117,
-  "fields": {
-    "description": null,
-    "name": "Olmo",
-    "slug": "olmo"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 118,
-  "fields": {
-    "description": null,
-    "name": "Deep",
-    "slug": "deep"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 119,
-  "fields": {
-    "description": null,
-    "name": "Recraftv",
-    "slug": "recraftv"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 120,
-  "fields": {
-    "description": null,
-    "name": "Granite",
-    "slug": "granite"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 121,
-  "fields": {
-    "description": null,
-    "name": "Rerank",
-    "slug": "rerank"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 122,
-  "fields": {
-    "description": null,
-    "name": "Reka",
-    "slug": "reka"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 123,
-  "fields": {
-    "description": null,
-    "name": "Snowflake",
-    "slug": "snowflake"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 124,
-  "fields": {
-    "description": null,
-    "name": "Sd",
-    "slug": "sd"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 125,
-  "fields": {
-    "description": null,
-    "name": "Inpaint",
-    "slug": "inpaint"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 126,
-  "fields": {
-    "description": null,
-    "name": "Outpaint",
-    "slug": "outpaint"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 127,
-  "fields": {
-    "description": null,
-    "name": "Erase",
-    "slug": "erase"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 128,
-  "fields": {
-    "description": null,
-    "name": "Remove",
-    "slug": "remove"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 129,
-  "fields": {
-    "description": null,
-    "name": "Replace",
-    "slug": "replace"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 130,
-  "fields": {
-    "description": null,
-    "name": "Sketch",
-    "slug": "sketch"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 131,
-  "fields": {
-    "description": null,
-    "name": "Structure",
-    "slug": "structure"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 132,
-  "fields": {
-    "description": null,
-    "name": "Style",
-    "slug": "style"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 133,
-  "fields": {
-    "description": null,
-    "name": "Conservative",
-    "slug": "conservative"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 134,
-  "fields": {
-    "description": null,
-    "name": "Creative",
-    "slug": "creative"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 135,
-  "fields": {
-    "description": null,
-    "name": "Standard",
-    "slug": "standard"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 136,
-  "fields": {
-    "description": null,
-    "name": "Neural",
-    "slug": "neural"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 137,
-  "fields": {
-    "description": null,
-    "name": "Long",
-    "slug": "long"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 138,
-  "fields": {
-    "description": null,
-    "name": "Generative",
-    "slug": "generative"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 139,
-  "fields": {
-    "description": null,
-    "name": "V",
-    "slug": "v"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 140,
-  "fields": {
-    "description": null,
-    "name": "Mercury",
-    "slug": "mercury"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 141,
-  "fields": {
-    "description": null,
-    "name": "Chirp",
-    "slug": "chirp"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 142,
-  "fields": {
-    "description": null,
-    "name": "Imagegeneration",
-    "slug": "imagegeneration"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 143,
-  "fields": {
-    "description": null,
-    "name": "Voyage",
-    "slug": "voyage"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 144,
-  "fields": {
-    "description": null,
-    "name": "Mt",
-    "slug": "mt"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 145,
-  "fields": {
-    "description": null,
-    "name": "Flan",
-    "slug": "flan"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 146,
-  "fields": {
-    "description": null,
-    "name": "Allam",
-    "slug": "allam"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 147,
-  "fields": {
-    "description": null,
-    "name": "Search_Api",
-    "slug": "search_api"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 148,
-  "fields": {
-    "description": null,
-    "name": "Sora",
-    "slug": "sora"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 149,
-  "fields": {
-    "description": null,
-    "name": "Gen4_Turbo",
-    "slug": "gen4_turbo"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 150,
-  "fields": {
-    "description": null,
-    "name": "Gen4_Aleph",
-    "slug": "gen4_aleph"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 151,
-  "fields": {
-    "description": null,
-    "name": "Gen3A_Turbo",
-    "slug": "gen3a_turbo"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 152,
-  "fields": {
-    "description": null,
-    "name": "Gen4_Image",
-    "slug": "gen4_image"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 153,
-  "fields": {
-    "description": null,
-    "name": "Gen4_Image_Turbo",
-    "slug": "gen4_image_turbo"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 154,
-  "fields": {
-    "description": null,
-    "name": "Ssd",
-    "slug": "ssd"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 155,
-  "fields": {
-    "description": null,
-    "name": "Cogito",
-    "slug": "cogito"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 156,
-  "fields": {
-    "description": null,
-    "name": "Dbrx",
-    "slug": "dbrx"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 157,
-  "fields": {
-    "description": null,
-    "name": "Ernie",
-    "slug": "ernie"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 158,
-  "fields": {
-    "description": null,
-    "name": "Fare",
-    "slug": "fare"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 159,
-  "fields": {
-    "description": null,
-    "name": "Firellava",
-    "slug": "firellava"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 160,
-  "fields": {
-    "description": null,
-    "name": "Fireworks",
-    "slug": "fireworks"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 161,
-  "fields": {
-    "description": null,
-    "name": "Internvl",
-    "slug": "internvl"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 162,
-  "fields": {
-    "description": null,
-    "name": "Kat",
-    "slug": "kat"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 163,
-  "fields": {
-    "description": null,
-    "name": "Llamaguard",
-    "slug": "llamaguard"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 164,
-  "fields": {
-    "description": null,
-    "name": "Nous",
-    "slug": "nous"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 165,
-  "fields": {
-    "description": null,
-    "name": "Openchat",
-    "slug": "openchat"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 166,
-  "fields": {
-    "description": null,
-    "name": "Openorca",
-    "slug": "openorca"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 167,
-  "fields": {
-    "description": null,
-    "name": "Playground",
-    "slug": "playground"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 168,
-  "fields": {
-    "description": null,
-    "name": "Pythia",
-    "slug": "pythia"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 169,
-  "fields": {
-    "description": null,
-    "name": "Rolm",
-    "slug": "rolm"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 170,
-  "fields": {
-    "description": null,
-    "name": "Stablecode",
-    "slug": "stablecode"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 171,
-  "fields": {
-    "description": null,
-    "name": "Starcoder",
-    "slug": "starcoder"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 172,
-  "fields": {
-    "description": null,
-    "name": "Toppy",
-    "slug": "toppy"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 173,
-  "fields": {
-    "description": null,
-    "name": "Autoglm",
-    "slug": "autoglm"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 174,
-  "fields": {
-    "description": null,
-    "name": "Paddleocr",
-    "slug": "paddleocr"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 175,
-  "fields": {
-    "description": null,
-    "name": "R1V",
-    "slug": "r1v"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 176,
-  "fields": {
-    "description": null,
-    "name": "Baichuan",
-    "slug": "baichuan"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 177,
-  "fields": {
-    "description": null,
-    "name": "Openthinker",
-    "slug": "openthinker"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 178,
-  "fields": {
-    "description": null,
-    "name": "Llava",
-    "slug": "llava"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 179,
-  "fields": {
-    "description": null,
-    "name": "Sarvam",
-    "slug": "sarvam"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 180,
-  "fields": {
-    "description": null,
-    "name": "Nemotron",
-    "slug": "nemotron"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 181,
-  "fields": {
-    "description": null,
-    "name": "Seed",
-    "slug": "seed"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 182,
-  "fields": {
-    "description": null,
-    "name": "Aion",
-    "slug": "aion"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 183,
-  "fields": {
-    "description": null,
-    "name": "Step",
-    "slug": "step"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 184,
-  "fields": {
-    "description": null,
-    "name": "Solar",
-    "slug": "solar"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 185,
-  "fields": {
-    "description": null,
-    "name": "Palmyra",
-    "slug": "palmyra"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 186,
-  "fields": {
-    "description": null,
-    "name": "Rnj",
-    "slug": "rnj"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 187,
-  "fields": {
-    "description": null,
-    "name": "Trinity",
-    "slug": "trinity"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 188,
-  "fields": {
-    "description": null,
-    "name": "Intellect",
-    "slug": "intellect"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 189,
-  "fields": {
-    "description": null,
-    "name": "Voxtral",
-    "slug": "voxtral"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 190,
-  "fields": {
-    "description": null,
-    "name": "Relace",
-    "slug": "relace"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 191,
-  "fields": {
-    "description": null,
-    "name": "Tongyi",
-    "slug": "tongyi"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 192,
-  "fields": {
-    "description": null,
-    "name": "Hunyuan",
-    "slug": "hunyuan"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 193,
-  "fields": {
-    "description": null,
-    "name": "Spotlight",
-    "slug": "spotlight"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 194,
-  "fields": {
-    "description": null,
-    "name": "Maestro",
-    "slug": "maestro"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 195,
-  "fields": {
-    "description": null,
-    "name": "Virtuoso",
-    "slug": "virtuoso"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 196,
-  "fields": {
-    "description": null,
-    "name": "Coder",
-    "slug": "coder"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 197,
-  "fields": {
-    "description": null,
-    "name": "Llemma_7B",
-    "slug": "llemma_7b"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 198,
-  "fields": {
-    "description": null,
-    "name": "Skyfall",
-    "slug": "skyfall"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 199,
-  "fields": {
-    "description": null,
-    "name": "Unslopnemo",
-    "slug": "unslopnemo"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 200,
-  "fields": {
-    "description": null,
-    "name": "Inflection",
-    "slug": "inflection"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 201,
-  "fields": {
-    "description": null,
-    "name": "Rocinante",
-    "slug": "rocinante"
-  }
-},
-{
-  "model": "hypothalamus.aimodelfamily",
-  "pk": 202,
-  "fields": {
-    "description": null,
-    "name": "Goliath",
-    "slug": "goliath"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 1,
-  "fields": {
-    "description": null,
-    "name": "21"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 2,
-  "fields": {
-    "description": null,
-    "name": "4.0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 3,
-  "fields": {
-    "description": null,
-    "name": "1.2"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 4,
-  "fields": {
-    "description": null,
-    "name": "3.5"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 5,
-  "fields": {
-    "description": null,
-    "name": "3.7"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 6,
-  "fields": {
-    "description": null,
-    "name": "3"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 7,
-  "fields": {
-    "description": null,
-    "name": "4.6"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 8,
-  "fields": {
-    "description": null,
-    "name": "v1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 9,
-  "fields": {
-    "description": null,
-    "name": "v2"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 10,
-  "fields": {
-    "description": null,
-    "name": "2"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 11,
-  "fields": {
-    "description": null,
-    "name": "4o"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 12,
-  "fields": {
-    "description": null,
-    "name": "5"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 13,
-  "fields": {
-    "description": null,
-    "name": "5.1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 14,
-  "fields": {
-    "description": null,
-    "name": "1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 15,
-  "fields": {
-    "description": null,
-    "name": "35"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 16,
-  "fields": {
-    "description": null,
-    "name": "4"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 17,
-  "fields": {
-    "description": null,
-    "name": "4.32k"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 18,
-  "fields": {
-    "description": null,
-    "name": "4.1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 19,
-  "fields": {
-    "description": null,
-    "name": "4.5"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 20,
-  "fields": {
-    "description": null,
-    "name": "5.2"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 21,
-  "fields": {
-    "description": null,
-    "name": "5.3"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 22,
-  "fields": {
-    "description": null,
-    "name": "5.4"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 23,
-  "fields": {
-    "description": null,
-    "name": "1.1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 24,
-  "fields": {
-    "description": null,
-    "name": "3.2"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 25,
-  "fields": {
-    "description": null,
-    "name": "3.3"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 26,
-  "fields": {
-    "description": null,
-    "name": "3.1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 27,
-  "fields": {
-    "description": null,
-    "name": "v3.2"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 28,
-  "fields": {
-    "description": null,
-    "name": "r1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 29,
-  "fields": {
-    "description": null,
-    "name": "v3"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 30,
-  "fields": {
-    "description": null,
-    "name": "002"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 31,
-  "fields": {
-    "description": null,
-    "name": "4.7"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 32,
-  "fields": {
-    "description": null,
-    "name": "2405"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 33,
-  "fields": {
-    "description": null,
-    "name": "v4.0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 34,
-  "fields": {
-    "description": null,
-    "name": "2.5"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 35,
-  "fields": {
-    "description": null,
-    "name": "v3.1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 36,
-  "fields": {
-    "description": null,
-    "name": "2.0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 37,
-  "fields": {
-    "description": null,
-    "name": "12"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 38,
-  "fields": {
-    "description": null,
-    "name": "1.5"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 39,
-  "fields": {
-    "description": null,
-    "name": "3.0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 40,
-  "fields": {
-    "description": null,
-    "name": "41"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 41,
-  "fields": {
-    "description": null,
-    "name": "25"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 42,
-  "fields": {
-    "description": null,
-    "name": "02"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 43,
-  "fields": {
-    "description": null,
-    "name": "2.6"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 44,
-  "fields": {
-    "description": null,
-    "name": "2508"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 45,
-  "fields": {
-    "description": null,
-    "name": "2512"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 46,
-  "fields": {
-    "description": null,
-    "name": "v1.32k"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 47,
-  "fields": {
-    "description": null,
-    "name": "v1.8k"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 48,
-  "fields": {
-    "description": null,
-    "name": "v3.5"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 49,
-  "fields": {
-    "description": null,
-    "name": "20240229"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 50,
-  "fields": {
-    "description": null,
-    "name": "0.1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 51,
-  "fields": {
-    "description": null,
-    "name": "2501"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 52,
-  "fields": {
-    "description": null,
-    "name": "0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 53,
-  "fields": {
-    "description": null,
-    "name": "4.20"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 54,
-  "fields": {
-    "description": null,
-    "name": "4.5v"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 55,
-  "fields": {
-    "description": null,
-    "name": "v2.5"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 56,
-  "fields": {
-    "description": null,
-    "name": "2.9"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 57,
-  "fields": {
-    "description": null,
-    "name": "6"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 58,
-  "fields": {
-    "description": null,
-    "name": "v3.3"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 59,
-  "fields": {
-    "description": null,
-    "name": "5.0."
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 60,
-  "fields": {
-    "description": null,
-    "name": "5.1."
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 61,
-  "fields": {
-    "description": null,
-    "name": "3.0."
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 62,
-  "fields": {
-    "description": null,
-    "name": "3.1."
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 63,
-  "fields": {
-    "description": null,
-    "name": "4.6v"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 64,
-  "fields": {
-    "description": null,
-    "name": "31"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 65,
-  "fields": {
-    "description": null,
-    "name": "1.6"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 66,
-  "fields": {
-    "description": null,
-    "name": "v2.1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 67,
-  "fields": {
-    "description": null,
-    "name": "2.2"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 68,
-  "fields": {
-    "description": null,
-    "name": "3n"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 69,
-  "fields": {
-    "description": null,
-    "name": "1.0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 70,
-  "fields": {
-    "description": null,
-    "name": "01"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 71,
-  "fields": {
-    "description": null,
-    "name": "v2.omni"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 72,
-  "fields": {
-    "description": null,
-    "name": "v2..ro"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 73,
-  "fields": {
-    "description": null,
-    "name": "7"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 74,
-  "fields": {
-    "description": null,
-    "name": "5.4.mini"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 75,
-  "fields": {
-    "description": null,
-    "name": "2603"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 76,
-  "fields": {
-    "description": null,
-    "name": "5.turbo"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 77,
-  "fields": {
-    "description": null,
-    "name": "4.20.multi"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 78,
-  "fields": {
-    "description": null,
-    "name": "4.20.beta"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 79,
-  "fields": {
-    "description": null,
-    "name": "3.su.er"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 80,
-  "fields": {
-    "description": null,
-    "name": "2.0.lite"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 81,
-  "fields": {
-    "description": null,
-    "name": "5.4..ro"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 82,
-  "fields": {
-    "description": null,
-    "name": "3.1.flash"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 83,
-  "fields": {
-    "description": null,
-    "name": "2.0.mini"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 84,
-  "fields": {
-    "description": null,
-    "name": "5.flash"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 85,
-  "fields": {
-    "description": null,
-    "name": "3.1..ro"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 86,
-  "fields": {
-    "description": null,
-    "name": "5..lus"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 87,
-  "fields": {
-    "description": null,
-    "name": "3.5.flash"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 88,
-  "fields": {
-    "description": null,
-    "name": "4.7.flash"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 89,
-  "fields": {
-    "description": null,
-    "name": "1.6.flash"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 90,
-  "fields": {
-    "description": null,
-    "name": "3.flash"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 91,
-  "fields": {
-    "description": null,
-    "name": "v2.flash"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 92,
-  "fields": {
-    "description": null,
-    "name": "3.nano"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 93,
-  "fields": {
-    "description": null,
-    "name": "5.2..ro"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 94,
-  "fields": {
-    "description": null,
-    "name": "v3.1.nex"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 95,
-  "fields": {
-    "description": null,
-    "name": "2.lite"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 96,
-  "fields": {
-    "description": null,
-    "name": "v3.2.s.eciale"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 97,
-  "fields": {
-    "description": null,
-    "name": "3..ro"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 98,
-  "fields": {
-    "description": null,
-    "name": "4.1.fast"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 99,
-  "fields": {
-    "description": null,
-    "name": "2507"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 100,
-  "fields": {
-    "description": null,
-    "name": "v2.vl"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 101,
-  "fields": {
-    "description": null,
-    "name": "4.0.h"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 102,
-  "fields": {
-    "description": null,
-    "name": "5.image"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 103,
-  "fields": {
-    "description": null,
-    "name": "2.5.flash"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 104,
-  "fields": {
-    "description": null,
-    "name": "5..ro"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 105,
-  "fields": {
-    "description": null,
-    "name": "v3.2.ex."
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 106,
-  "fields": {
-    "description": null,
-    "name": "v4.1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 107,
-  "fields": {
-    "description": null,
-    "name": "v3.1.terminus"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 108,
-  "fields": {
-    "description": null,
-    "name": "4.fast"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 109,
-  "fields": {
-    "description": null,
-    "name": "2025.07.28"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 110,
-  "fields": {
-    "description": null,
-    "name": "0905"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 111,
-  "fields": {
-    "description": null,
-    "name": "4.5.vl"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 112,
-  "fields": {
-    "description": null,
-    "name": "1.7"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 113,
-  "fields": {
-    "description": null,
-    "name": "5.mini"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 114,
-  "fields": {
-    "description": null,
-    "name": "4.5.air"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 115,
-  "fields": {
-    "description": null,
-    "name": "v3.large"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 116,
-  "fields": {
-    "description": null,
-    "name": "2.5..ro"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 117,
-  "fields": {
-    "description": null,
-    "name": "3.mini"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 118,
-  "fields": {
-    "description": null,
-    "name": "r1.0528"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 119,
-  "fields": {
-    "description": null,
-    "name": "4.1.mini"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 120,
-  "fields": {
-    "description": null,
-    "name": "3.beta"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 121,
-  "fields": {
-    "description": null,
-    "name": "4.maverick"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 122,
-  "fields": {
-    "description": null,
-    "name": "4.scout"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 123,
-  "fields": {
-    "description": null,
-    "name": "5.vl"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 124,
-  "fields": {
-    "description": null,
-    "name": "v3.0324"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 125,
-  "fields": {
-    "description": null,
-    "name": "2.0325"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 126,
-  "fields": {
-    "description": null,
-    "name": "2.0.flash"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 127,
-  "fields": {
-    "description": null,
-    "name": "3.7.sonnet"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 128,
-  "fields": {
-    "description": null,
-    "name": "1.0.mini"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 129,
-  "fields": {
-    "description": null,
-    "name": "r1.distill"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 130,
-  "fields": {
-    "description": null,
-    "name": "3.euryale"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 131,
-  "fields": {
-    "description": null,
-    "name": "12.2024"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 132,
-  "fields": {
-    "description": null,
-    "name": "2024.11.20"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 133,
-  "fields": {
-    "description": null,
-    "name": "2411"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 134,
-  "fields": {
-    "description": null,
-    "name": "2407"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 135,
-  "fields": {
-    "description": null,
-    "name": "3.5.haiku"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 136,
-  "fields": {
-    "description": null,
-    "name": "3.5.sonnet"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 137,
-  "fields": {
-    "description": null,
-    "name": "v4"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 138,
-  "fields": {
-    "description": null,
-    "name": "3..roductivity"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 139,
-  "fields": {
-    "description": null,
-    "name": "3..i"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 140,
-  "fields": {
-    "description": null,
-    "name": "08.2024"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 141,
-  "fields": {
-    "description": null,
-    "name": "1.euryale"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 142,
-  "fields": {
-    "description": null,
-    "name": "3.llama"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 143,
-  "fields": {
-    "description": null,
-    "name": "2024.08.06"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 144,
-  "fields": {
-    "description": null,
-    "name": "2024.07.18"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 145,
-  "fields": {
-    "description": null,
-    "name": "2..ro"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 146,
-  "fields": {
-    "description": null,
-    "name": "2024.05.13"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 147,
-  "fields": {
-    "description": null,
-    "name": "4.turbo"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 148,
-  "fields": {
-    "description": null,
-    "name": "3.haiku"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 149,
-  "fields": {
-    "description": null,
-    "name": "3.5.turbo"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 150,
-  "fields": {
-    "description": null,
-    "name": "4.1106"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 151,
-  "fields": {
-    "description": null,
-    "name": "4.0314"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 152,
-  "fields": {
-    "description": null,
-    "name": "3.5..lus"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 153,
-  "fields": {
-    "description": null,
-    "name": "3.max"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 154,
-  "fields": {
-    "description": null,
-    "name": "3.vl"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 155,
-  "fields": {
-    "description": null,
-    "name": "3.next"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 156,
-  "fields": {
-    "description": null,
-    "name": "v3.fast"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 157,
-  "fields": {
-    "description": null,
-    "name": "3..r"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 158,
-  "fields": {
-    "description": null,
-    "name": "4.mini"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 159,
-  "fields": {
-    "description": null,
-    "name": "2.5.vl"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 160,
-  "fields": {
-    "description": null,
-    "name": "1..r"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 161,
-  "fields": {
-    "description": null,
-    "name": "3.3.eurya"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 162,
-  "fields": {
-    "description": null,
-    "name": "3.1.eurya"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 163,
-  "fields": {
-    "description": null,
-    "name": "3.eurya"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 164,
-  "fields": {
-    "description": null,
-    "name": "2.mid"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 165,
-  "fields": {
-    "description": null,
-    "name": "2.light"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 166,
-  "fields": {
-    "description": null,
-    "name": "1.hd"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 167,
-  "fields": {
-    "description": null,
-    "name": "4.0613"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 168,
-  "fields": {
-    "description": null,
-    "name": "1.1106"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 169,
-  "fields": {
-    "description": null,
-    "name": "0.1.0.md"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 170,
-  "fields": {
-    "description": null,
-    "name": "0.1.5.lg"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 171,
-  "fields": {
-    "description": null,
-    "name": "0.1.5.md"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 172,
-  "fields": {
-    "description": null,
-    "name": "1.mini"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 173,
-  "fields": {
-    "description": null,
-    "name": "1.2024.12.17"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 174,
-  "fields": {
-    "description": null,
-    "name": "3.2025.04.16"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 175,
-  "fields": {
-    "description": null,
-    "name": "4.5.x"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 176,
-  "fields": {
-    "description": null,
-    "name": "4.7.251222"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 177,
-  "fields": {
-    "description": null,
-    "name": "1.5.mini"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 178,
-  "fields": {
-    "description": null,
-    "name": "5.code"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 179,
-  "fields": {
-    "description": null,
-    "name": "1206"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 180,
-  "fields": {
-    "description": null,
-    "name": "1.5.large"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 181,
-  "fields": {
-    "description": null,
-    "name": "2.1212"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 182,
-  "fields": {
-    "description": null,
-    "name": "4.0709"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 183,
-  "fields": {
-    "description": null,
-    "name": "v3.v1:0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 184,
-  "fields": {
-    "description": null,
-    "name": "5.2025.08.07"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 185,
-  "fields": {
-    "description": null,
-    "name": "001"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 186,
-  "fields": {
-    "description": null,
-    "name": "4.5.airx"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 187,
-  "fields": {
-    "description": null,
-    "name": "v4:0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 188,
-  "fields": {
-    "description": null,
-    "name": "03.2025"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 189,
-  "fields": {
-    "description": null,
-    "name": "2.latest"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 190,
-  "fields": {
-    "description": null,
-    "name": "2.vision"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 191,
-  "fields": {
-    "description": null,
-    "name": "3.latest"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 192,
-  "fields": {
-    "description": null,
-    "name": "4.latest"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 193,
-  "fields": {
-    "description": null,
-    "name": "4.5.flash"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 194,
-  "fields": {
-    "description": null,
-    "name": "v1:0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 195,
-  "fields": {
-    "description": null,
-    "name": "35.turbo"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 196,
-  "fields": {
-    "description": null,
-    "name": "v2.0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 197,
-  "fields": {
-    "description": null,
-    "name": "v3.0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 198,
-  "fields": {
-    "description": null,
-    "name": "4.0125"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 199,
-  "fields": {
-    "description": null,
-    "name": "4.1.2025.04.14"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 200,
-  "fields": {
-    "description": null,
-    "name": "5.1.2025.11.13"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 201,
-  "fields": {
-    "description": null,
-    "name": "5.2.2025.12.11"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 202,
-  "fields": {
-    "description": null,
-    "name": "5.4.2026.03.05"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 203,
-  "fields": {
-    "description": null,
-    "name": "004"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 204,
-  "fields": {
-    "description": null,
-    "name": "005"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 205,
-  "fields": {
-    "description": null,
-    "name": "2.atc"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 206,
-  "fields": {
-    "description": null,
-    "name": "3.fast"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 207,
-  "fields": {
-    "description": null,
-    "name": "3.large"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 208,
-  "fields": {
-    "description": null,
-    "name": "007"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 209,
-  "fields": {
-    "description": null,
-    "name": "r1.v1:0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 210,
-  "fields": {
-    "description": null,
-    "name": "v3.5:0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 211,
-  "fields": {
-    "description": null,
-    "name": "v3.2.251201"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 212,
-  "fields": {
-    "description": null,
-    "name": "2025.08.28"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 213,
-  "fields": {
-    "description": null,
-    "name": "02.hd"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 214,
-  "fields": {
-    "description": null,
-    "name": "3.medium"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 215,
-  "fields": {
-    "description": null,
-    "name": "3.lite"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 216,
-  "fields": {
-    "description": null,
-    "name": "v2:1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 217,
-  "fields": {
-    "description": null,
-    "name": "1.1..ro"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 218,
-  "fields": {
-    "description": null,
-    "name": "2.video"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 219,
-  "fields": {
-    "description": null,
-    "name": "2.6.hd"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 220,
-  "fields": {
-    "description": null,
-    "name": "3.5.large"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 221,
-  "fields": {
-    "description": null,
-    "name": "3.o.us"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 222,
-  "fields": {
-    "description": null,
-    "name": "4.o.us"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 223,
-  "fields": {
-    "description": null,
-    "name": "4.20250514"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 224,
-  "fields": {
-    "description": null,
-    "name": "1114"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 225,
-  "fields": {
-    "description": null,
-    "name": "4.sonnet"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 226,
-  "fields": {
-    "description": null,
-    "name": "1:0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 227,
-  "fields": {
-    "description": null,
-    "name": "3.5.medium"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 228,
-  "fields": {
-    "description": null,
-    "name": "3.small"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 229,
-  "fields": {
-    "description": null,
-    "name": "2.5.lite"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 230,
-  "fields": {
-    "description": null,
-    "name": "3.5.lite"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 231,
-  "fields": {
-    "description": null,
-    "name": "5.3.instant"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 232,
-  "fields": {
-    "description": null,
-    "name": "v14"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 233,
-  "fields": {
-    "description": null,
-    "name": "2.finance"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 234,
-  "fields": {
-    "description": null,
-    "name": "2.general"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 235,
-  "fields": {
-    "description": null,
-    "name": "2.meeting"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 236,
-  "fields": {
-    "description": null,
-    "name": "3.general"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 237,
-  "fields": {
-    "description": null,
-    "name": "3.medical"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 238,
-  "fields": {
-    "description": null,
-    "name": "1.5.flash"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 239,
-  "fields": {
-    "description": null,
-    "name": "2.max"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 240,
-  "fields": {
-    "description": null,
-    "name": "251104"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 241,
-  "fields": {
-    "description": null,
-    "name": "02.turbo"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 242,
-  "fields": {
-    "description": null,
-    "name": "v1.1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 243,
-  "fields": {
-    "description": null,
-    "name": "2402"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 244,
-  "fields": {
-    "description": null,
-    "name": "4.1.20250805"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 245,
-  "fields": {
-    "description": null,
-    "name": "4.5.20251101"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 246,
-  "fields": {
-    "description": null,
-    "name": "4.6.20260205"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 247,
-  "fields": {
-    "description": null,
-    "name": "1.5.2025.12.16"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 248,
-  "fields": {
-    "description": null,
-    "name": "2.6.turbo"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 249,
-  "fields": {
-    "description": null,
-    "name": "2409"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 250,
-  "fields": {
-    "description": null,
-    "name": "4.lite"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 251,
-  "fields": {
-    "description": null,
-    "name": "4.5.20251001"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 252,
-  "fields": {
-    "description": null,
-    "name": "2.drivethru"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 253,
-  "fields": {
-    "description": null,
-    "name": "2..honecall"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 254,
-  "fields": {
-    "description": null,
-    "name": "2.voicemail"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 255,
-  "fields": {
-    "description": null,
-    "name": "2025.10.06"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 256,
-  "fields": {
-    "description": null,
-    "name": "2025.12.15"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 257,
-  "fields": {
-    "description": null,
-    "name": "v1.128k"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 258,
-  "fields": {
-    "description": null,
-    "name": "v1.auto"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 259,
-  "fields": {
-    "description": null,
-    "name": "002.v2"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 260,
-  "fields": {
-    "description": null,
-    "name": "3.sonnet"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 261,
-  "fields": {
-    "description": null,
-    "name": "1.0825"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 262,
-  "fields": {
-    "description": null,
-    "name": "4.5.20250929"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 263,
-  "fields": {
-    "description": null,
-    "name": "2.automotive"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 264,
-  "fields": {
-    "description": null,
-    "name": "2025.03.20"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 265,
-  "fields": {
-    "description": null,
-    "name": "2024.09.26"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 266,
-  "fields": {
-    "description": null,
-    "name": "5.large"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 267,
-  "fields": {
-    "description": null,
-    "name": "2505"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 268,
-  "fields": {
-    "description": null,
-    "name": "2024.09.12"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 269,
-  "fields": {
-    "description": null,
-    "name": "1.kon"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 270,
-  "fields": {
-    "description": null,
-    "name": "2503"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 271,
-  "fields": {
-    "description": null,
-    "name": "2.0.generate"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 272,
-  "fields": {
-    "description": null,
-    "name": "3.1.generate"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 273,
-  "fields": {
-    "description": null,
-    "name": "v3.turbo"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 274,
-  "fields": {
-    "description": null,
-    "name": "2312"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 275,
-  "fields": {
-    "description": null,
-    "name": "2025.06.26"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 276,
-  "fields": {
-    "description": null,
-    "name": "0409"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 277,
-  "fields": {
-    "description": null,
-    "name": "1.2.v1:0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 278,
-  "fields": {
-    "description": null,
-    "name": "v2:0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 279,
-  "fields": {
-    "description": null,
-    "name": "4.6.v1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 280,
-  "fields": {
-    "description": null,
-    "name": "240715"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 281,
-  "fields": {
-    "description": null,
-    "name": "2509"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 282,
-  "fields": {
-    "description": null,
-    "name": "2506"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 283,
-  "fields": {
-    "description": null,
-    "name": "5.maas"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 284,
-  "fields": {
-    "description": null,
-    "name": "3.5.moe"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 285,
-  "fields": {
-    "description": null,
-    "name": "41.co.ilot"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 286,
-  "fields": {
-    "description": null,
-    "name": "0711"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 287,
-  "fields": {
-    "description": null,
-    "name": "v2.base"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 288,
-  "fields": {
-    "description": null,
-    "name": "006"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 289,
-  "fields": {
-    "description": null,
-    "name": "4.h"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 290,
-  "fields": {
-    "description": null,
-    "name": "1.5.2026.02.23"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 291,
-  "fields": {
-    "description": null,
-    "name": "3.5.mini"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 292,
-  "fields": {
-    "description": null,
-    "name": "2025.01.25"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 293,
-  "fields": {
-    "description": null,
-    "name": "2025.04.28"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 294,
-  "fields": {
-    "description": null,
-    "name": "2025.07.14"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 295,
-  "fields": {
-    "description": null,
-    "name": "2025.09.11"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 296,
-  "fields": {
-    "description": null,
-    "name": "3.0.generate"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 297,
-  "fields": {
-    "description": null,
-    "name": "4.0.generate"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 298,
-  "fields": {
-    "description": null,
-    "name": "4.o"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 299,
-  "fields": {
-    "description": null,
-    "name": "1.lightning"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 300,
-  "fields": {
-    "description": null,
-    "name": "5.lightning"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 301,
-  "fields": {
-    "description": null,
-    "name": "3.2.2506"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 302,
-  "fields": {
-    "description": null,
-    "name": "v2.m3"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 303,
-  "fields": {
-    "description": null,
-    "name": "03.07"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 304,
-  "fields": {
-    "description": null,
-    "name": "4.7.maas"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 305,
-  "fields": {
-    "description": null,
-    "name": "0.xxl"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 306,
-  "fields": {
-    "description": null,
-    "name": "v4.0..ro"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 307,
-  "fields": {
-    "description": null,
-    "name": "4.5.20250929.v1:0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 308,
-  "fields": {
-    "description": null,
-    "name": "2024.11.01"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 309,
-  "fields": {
-    "description": null,
-    "name": "2024.12.17"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 310,
-  "fields": {
-    "description": null,
-    "name": "2025.06.03"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 311,
-  "fields": {
-    "description": null,
-    "name": "2402.v1:0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 312,
-  "fields": {
-    "description": null,
-    "name": "2407.v1:0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 313,
-  "fields": {
-    "description": null,
-    "name": "3.1.2508"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 314,
-  "fields": {
-    "description": null,
-    "name": "v3.english"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 315,
-  "fields": {
-    "description": null,
-    "name": "3.5.vision"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 316,
-  "fields": {
-    "description": null,
-    "name": "v4.0.fast"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 317,
-  "fields": {
-    "description": null,
-    "name": "5.nano"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 318,
-  "fields": {
-    "description": null,
-    "name": "2.conversationalai"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 319,
-  "fields": {
-    "description": null,
-    "name": "2025.03.11"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 320,
-  "fields": {
-    "description": null,
-    "name": "1.2.2509"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 321,
-  "fields": {
-    "description": null,
-    "name": "2.vl"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 322,
-  "fields": {
-    "description": null,
-    "name": "v1:1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 323,
-  "fields": {
-    "description": null,
-    "name": "2411.001"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 324,
-  "fields": {
-    "description": null,
-    "name": "12.2025"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 325,
-  "fields": {
-    "description": null,
-    "name": "r1.turbo"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 326,
-  "fields": {
-    "description": null,
-    "name": "2.1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 327,
-  "fields": {
-    "description": null,
-    "name": "v1.6"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 328,
-  "fields": {
-    "description": null,
-    "name": "2.audio"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 329,
-  "fields": {
-    "description": null,
-    "name": "v1.5"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 330,
-  "fields": {
-    "description": null,
-    "name": "2.7.v1:0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 331,
-  "fields": {
-    "description": null,
-    "name": "512.96.r2"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 332,
-  "fields": {
-    "description": null,
-    "name": "240915"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 333,
-  "fields": {
-    "description": null,
-    "name": "250515"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 334,
-  "fields": {
-    "description": null,
-    "name": "2502.v1:0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 335,
-  "fields": {
-    "description": null,
-    "name": "v2.lite"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 336,
-  "fields": {
-    "description": null,
-    "name": "1024.96.r2"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 337,
-  "fields": {
-    "description": null,
-    "name": "1536.96.r2"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 338,
-  "fields": {
-    "description": null,
-    "name": "1.0.fill"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 339,
-  "fields": {
-    "description": null,
-    "name": "3.0.fast"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 340,
-  "fields": {
-    "description": null,
-    "name": "4.0.fast"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 341,
-  "fields": {
-    "description": null,
-    "name": "1.5..ro"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 342,
-  "fields": {
-    "description": null,
-    "name": "4.6.fast"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 343,
-  "fields": {
-    "description": null,
-    "name": "2505.com.letion"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 344,
-  "fields": {
-    "description": null,
-    "name": "3.0.ca.ability"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 345,
-  "fields": {
-    "description": null,
-    "name": "0725"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 346,
-  "fields": {
-    "description": null,
-    "name": "4.0.ultra"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 347,
-  "fields": {
-    "description": null,
-    "name": "3.1.fast"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 348,
-  "fields": {
-    "description": null,
-    "name": "4.5.haiku"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 349,
-  "fields": {
-    "description": null,
-    "name": "4.20250514.v1:0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 350,
-  "fields": {
-    "description": null,
-    "name": "v3.multilingual"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 351,
-  "fields": {
-    "description": null,
-    "name": "1.0.ex.and"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 352,
-  "fields": {
-    "description": null,
-    "name": "2025.07.22"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 353,
-  "fields": {
-    "description": null,
-    "name": "4.5.sonnet"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 354,
-  "fields": {
-    "description": null,
-    "name": "2.0..ro"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 355,
-  "fields": {
-    "description": null,
-    "name": "4.1.20250805.v1:0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 356,
-  "fields": {
-    "description": null,
-    "name": "4.5.20251101.v1:0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 357,
-  "fields": {
-    "description": null,
-    "name": "v1.turb"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 358,
-  "fields": {
-    "description": null,
-    "name": "3.omni"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 359,
-  "fields": {
-    "description": null,
-    "name": "4.5.20251001.v1:0"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 360,
-  "fields": {
-    "description": null,
-    "name": "2024.10.01"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 361,
-  "fields": {
-    "description": null,
-    "name": "v3.1.maas"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 362,
-  "fields": {
-    "description": null,
-    "name": "v3.2.maas"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 363,
-  "fields": {
-    "description": null,
-    "name": "v35.medium"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 364,
-  "fields": {
-    "description": null,
-    "name": "r1.0528.qwen3"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 365,
-  "fields": {
-    "description": null,
-    "name": "r1.0528.maas"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 366,
-  "fields": {
-    "description": null,
-    "name": "r1.0528.turbo"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 367,
-  "fields": {
-    "description": null,
-    "name": "r1.0528.t.ut"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 368,
-  "fields": {
-    "description": null,
-    "name": "2.0.code"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 369,
-  "fields": {
-    "description": null,
-    "name": "1.dev"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 370,
-  "fields": {
-    "description": null,
-    "name": "3.2.nv"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 371,
-  "fields": {
-    "description": null,
-    "name": "v2..1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 372,
-  "fields": {
-    "description": null,
-    "name": "r1.basic"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 373,
-  "fields": {
-    "description": null,
-    "name": "v6"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 374,
-  "fields": {
-    "description": null,
-    "name": "2.yi"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 375,
-  "fields": {
-    "description": null,
-    "name": "3.5.0106"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 376,
-  "fields": {
-    "description": null,
-    "name": "v1.9"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 377,
-  "fields": {
-    "description": null,
-    "name": "2.9.2.qwen2"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 378,
-  "fields": {
-    "description": null,
-    "name": "5.math"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 379,
-  "fields": {
-    "description": null,
-    "name": "3.vision"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 380,
-  "fields": {
-    "description": null,
-    "name": "1024.v1"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 381,
-  "fields": {
-    "description": null,
-    "name": "v2.1024.x"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 382,
-  "fields": {
-    "description": null,
-    "name": "v2.5.1024.x"
-  }
-},
-{
-  "model": "hypothalamus.aimodelversion",
-  "pk": 383,
-  "fields": {
-    "description": null,
-    "name": "r1.0528.distill"
   }
 },
 {
@@ -6895,6 +533,1588 @@
   "fields": {
     "description": "Standard format for local CPU/GPU inference via llama.cpp.",
     "name": "gguf"
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "02f2e3bd-cc54-445f-a445-28b6cc83f229",
+  "fields": {
+    "description": null,
+    "name": "deepseek-coder-v2-lite-instruct",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 32768,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [
+      1,
+      3
+    ],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "0487416c-be26-4d3d-bb2d-7089931e446a",
+  "fields": {
+    "description": null,
+    "name": "llama3.2:3b",
+    "creator": null,
+    "parameter_size": 3.0,
+    "family": null,
+    "version": null,
+    "context_length": 8192,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "09ff5eba-ef06-4cdc-af19-d85086ec30e9",
+  "fields": {
+    "description": null,
+    "name": "llama3:8b",
+    "creator": null,
+    "parameter_size": 8.0,
+    "family": null,
+    "version": null,
+    "context_length": 8192,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "0f48bb43-baea-413b-936e-a0d3a32af264",
+  "fields": {
+    "description": null,
+    "name": "llama3.1",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 8192,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "13bf70ea-7cb2-4ae4-b0f6-a89c65ecedd9",
+  "fields": {
+    "description": null,
+    "name": "mixtral-8x7B-Instruct-v0.1",
+    "creator": null,
+    "parameter_size": 56.0,
+    "family": null,
+    "version": null,
+    "context_length": 32768,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [
+      1
+    ],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "1b70e233-b035-4d38-8324-f9923b9db1a3",
+  "fields": {
+    "description": null,
+    "name": "deepseek-coder-v2-base",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 8192,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [
+      3
+    ],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "1ececdc6-8175-4e03-9d45-b83b038f8b26",
+  "fields": {
+    "description": null,
+    "name": "qwen3-coder:480b-cloud",
+    "creator": null,
+    "parameter_size": 480.0,
+    "family": null,
+    "version": null,
+    "context_length": 262144,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "254fbd93-1f96-4109-b8f8-976cc8dc4084",
+  "fields": {
+    "description": null,
+    "name": "gemma3:27b",
+    "creator": null,
+    "parameter_size": 27.0,
+    "family": null,
+    "version": null,
+    "context_length": 8192,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "26d5bbce-2a22-4772-bd06-2f8f8e83854e",
+  "fields": {
+    "description": null,
+    "name": "deepseek-coder-v2-instruct",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 65536,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [
+      1,
+      3
+    ],
+    "quantizations": [],
+    "capabilities": [
+      2,
+      5
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "26d66b73-3a23-42c0-9c05-f23dedbfb51b",
+  "fields": {
+    "description": null,
+    "name": "llama3:70b",
+    "creator": null,
+    "parameter_size": 70.0,
+    "family": null,
+    "version": null,
+    "context_length": 8192,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "34bd4dec-66a0-47e4-8650-ba73ca62b28b",
+  "fields": {
+    "description": "EMBED ONLY",
+    "name": "nomic-embed-text:latest",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 8192,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "3527611d-caa5-4cc2-a6c6-f4d18238a9c4",
+  "fields": {
+    "description": null,
+    "name": "mistral-large-instruct-2407",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 65536,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [
+      1
+    ],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "38ab218b-fab1-455b-8824-ad6342d3a33d",
+  "fields": {
+    "description": null,
+    "name": "llama2",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 4096,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "3e8d13ef-9007-4a66-9c61-58bf918e5f7f",
+  "fields": {
+    "description": null,
+    "name": "glm-4.7-flash:latest",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 8192,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "56c22e36-c520-4bba-b7a8-99c77bc99cf6",
+  "fields": {
+    "description": null,
+    "name": "mixtral-8x22B-Instruct-v0.1",
+    "creator": null,
+    "parameter_size": 176.0,
+    "family": null,
+    "version": null,
+    "context_length": 65536,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [
+      1
+    ],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "5fa7542c-54de-4e45-a980-03d55386278c",
+  "fields": {
+    "description": null,
+    "name": "mistral",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 8192,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "6e5ef533-a7d1-4950-8d7a-f267f3701897",
+  "fields": {
+    "description": null,
+    "name": "gpt-oss:latest",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 8192,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "71f17abf-3a0e-4228-b849-4c317f447049",
+  "fields": {
+    "description": null,
+    "name": "gpt-oss:20b-cloud",
+    "creator": null,
+    "parameter_size": 20.0,
+    "family": null,
+    "version": null,
+    "context_length": 131072,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "7458f485-f17c-4f7c-b2d0-717aa7cf7ee8",
+  "fields": {
+    "description": null,
+    "name": "mistral-7B-Instruct-v0.2",
+    "creator": null,
+    "parameter_size": 7.0,
+    "family": null,
+    "version": null,
+    "context_length": 32768,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [
+      1
+    ],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "7f91aa78-4199-448e-8dc6-9520f28354d4",
+  "fields": {
+    "description": null,
+    "name": "llama2-uncensored",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 4096,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [
+      7
+    ],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "8220d81c-4982-4ec0-881a-cd5636bff443",
+  "fields": {
+    "description": null,
+    "name": "qwen3:latest",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 8192,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "8e75e6c2-0dc3-4bf7-8455-6b21c77c79bc",
+  "fields": {
+    "description": null,
+    "name": "gpt-oss:120b-cloud",
+    "creator": null,
+    "parameter_size": 120.0,
+    "family": null,
+    "version": null,
+    "context_length": 131072,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "925b3bc7-b81f-485e-acaf-06543c365036",
+  "fields": {
+    "description": null,
+    "name": "llama3",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 8192,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "b04179e4-74d3-4951-99ad-5887107e52de",
+  "fields": {
+    "description": null,
+    "name": "orca-mini",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 4096,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "b1cd7627-2bbc-42bc-8723-f1ce435a7c39",
+  "fields": {
+    "description": null,
+    "name": "llama2:13b",
+    "creator": null,
+    "parameter_size": 13.0,
+    "family": null,
+    "version": null,
+    "context_length": 4096,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "b27f949b-5ed7-4b5e-8c9b-0b852c464adf",
+  "fields": {
+    "description": null,
+    "name": "codegemma",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 8192,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "b6d062ba-5963-45ad-8c76-60e5090467d5",
+  "fields": {
+    "description": null,
+    "name": "codellama",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 4096,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "c31a0052-8ad2-481c-b6ac-4ba2a8c9396f",
+  "fields": {
+    "description": null,
+    "name": "codegeex4",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 32768,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "c3e2b333-67af-4c11-b979-5c8e0d1b2778",
+  "fields": {
+    "description": null,
+    "name": "mistral-7B-Instruct-v0.1",
+    "creator": null,
+    "parameter_size": 7.0,
+    "family": null,
+    "version": null,
+    "context_length": 8192,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [
+      1
+    ],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "d1edaba2-27ef-4940-a5a3-36cce943ccc6",
+  "fields": {
+    "description": null,
+    "name": "deepseek-coder-v2-lite-base",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 8192,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [
+      3
+    ],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "ddd1d728-248a-4390-a107-d9155dfd7b1f",
+  "fields": {
+    "description": null,
+    "name": "internlm2_5-20b-chat",
+    "creator": null,
+    "parameter_size": 20.0,
+    "family": null,
+    "version": null,
+    "context_length": 32768,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [
+      2
+    ],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "e88c22a0-46bf-4910-b995-9362e1fd985a",
+  "fields": {
+    "description": null,
+    "name": "deepseek-v3.1:671b-cloud",
+    "creator": null,
+    "parameter_size": 671.0,
+    "family": null,
+    "version": null,
+    "context_length": 163840,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "e9ccd63e-e23e-4e88-83f6-e402cf5b7349",
+  "fields": {
+    "description": null,
+    "name": "llama2:7b",
+    "creator": null,
+    "parameter_size": 7.0,
+    "family": null,
+    "version": null,
+    "context_length": 4096,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "f41a12f9-3103-4ec1-b807-dd6c526f016d",
+  "fields": {
+    "description": null,
+    "name": "qwen3-coder:30b",
+    "creator": null,
+    "parameter_size": 30.0,
+    "family": null,
+    "version": null,
+    "context_length": 8192,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [
+      3
+    ],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "f8513759-1983-4a13-abd3-5be590dbe930",
+  "fields": {
+    "description": null,
+    "name": "llama2:70b",
+    "creator": null,
+    "parameter_size": 70.0,
+    "family": null,
+    "version": null,
+    "context_length": 4096,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "f888f1b5-138d-48b5-8020-c37a64235802",
+  "fields": {
+    "description": null,
+    "name": "llama3:latest",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 8192,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodel",
+  "pk": "fee257ee-d474-40fc-a291-34980b69f03a",
+  "fields": {
+    "description": null,
+    "name": "vicuna",
+    "creator": null,
+    "parameter_size": null,
+    "family": null,
+    "version": null,
+    "context_length": 2048,
+    "enabled": true,
+    "deprecation_date": null,
+    "roles": [],
+    "quantizations": [],
+    "capabilities": [
+      2
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1455,
+  "fields": {
+    "created": "2026-03-23T17:34:10.984Z",
+    "modified": "2026-03-25T18:47:26.172Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "c31a0052-8ad2-481c-b6ac-4ba2a8c9396f",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/codegeex4",
+    "mode": 2,
+    "max_tokens": 8192,
+    "max_input_tokens": 32768,
+    "max_output_tokens": 8192,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1456,
+  "fields": {
+    "created": "2026-03-23T17:34:10.991Z",
+    "modified": "2026-03-25T18:47:26.184Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "b27f949b-5ed7-4b5e-8c9b-0b852c464adf",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/codegemma",
+    "mode": 7,
+    "max_tokens": 8192,
+    "max_input_tokens": 8192,
+    "max_output_tokens": 8192,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1457,
+  "fields": {
+    "created": "2026-03-23T17:34:10.999Z",
+    "modified": "2026-03-25T18:47:26.197Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "b6d062ba-5963-45ad-8c76-60e5090467d5",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/codellama",
+    "mode": 7,
+    "max_tokens": 4096,
+    "max_input_tokens": 4096,
+    "max_output_tokens": 4096,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1458,
+  "fields": {
+    "created": "2026-03-23T17:34:11.007Z",
+    "modified": "2026-03-25T18:47:40.515Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "1b70e233-b035-4d38-8324-f9923b9db1a3",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/deepseek-coder-v2-base",
+    "mode": 7,
+    "max_tokens": 8192,
+    "max_input_tokens": 8192,
+    "max_output_tokens": 8192,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1459,
+  "fields": {
+    "created": "2026-03-23T17:34:11.014Z",
+    "modified": "2026-03-25T18:47:45.699Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "26d5bbce-2a22-4772-bd06-2f8f8e83854e",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/deepseek-coder-v2-instruct",
+    "mode": 2,
+    "max_tokens": 8192,
+    "max_input_tokens": 32768,
+    "max_output_tokens": 8192,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1460,
+  "fields": {
+    "created": "2026-03-23T17:34:11.021Z",
+    "modified": "2026-03-25T18:47:46.826Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "d1edaba2-27ef-4940-a5a3-36cce943ccc6",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/deepseek-coder-v2-lite-base",
+    "mode": 7,
+    "max_tokens": 8192,
+    "max_input_tokens": 8192,
+    "max_output_tokens": 8192,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1461,
+  "fields": {
+    "created": "2026-03-23T17:34:11.029Z",
+    "modified": "2026-03-25T18:47:51.160Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "02f2e3bd-cc54-445f-a445-28b6cc83f229",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/deepseek-coder-v2-lite-instruct",
+    "mode": 2,
+    "max_tokens": 8192,
+    "max_input_tokens": 32768,
+    "max_output_tokens": 8192,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1462,
+  "fields": {
+    "created": "2026-03-23T17:34:11.037Z",
+    "modified": "2026-03-25T18:47:43.482Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "e88c22a0-46bf-4910-b995-9362e1fd985a",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/deepseek-v3.1:671b-cloud",
+    "mode": 2,
+    "max_tokens": 163840,
+    "max_input_tokens": 163840,
+    "max_output_tokens": 163840,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1463,
+  "fields": {
+    "created": "2026-03-23T17:34:11.045Z",
+    "modified": "2026-03-25T18:47:35.605Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "8e75e6c2-0dc3-4bf7-8455-6b21c77c79bc",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/gpt-oss:120b-cloud",
+    "mode": 2,
+    "max_tokens": 131072,
+    "max_input_tokens": 131072,
+    "max_output_tokens": 131072,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1464,
+  "fields": {
+    "created": "2026-03-23T17:34:11.053Z",
+    "modified": "2026-03-25T18:47:34.463Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "71f17abf-3a0e-4228-b849-4c317f447049",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/gpt-oss:20b-cloud",
+    "mode": 2,
+    "max_tokens": 131072,
+    "max_input_tokens": 131072,
+    "max_output_tokens": 131072,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1465,
+  "fields": {
+    "created": "2026-03-23T17:34:11.061Z",
+    "modified": "2026-03-25T18:47:38.166Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "ddd1d728-248a-4390-a107-d9155dfd7b1f",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/internlm2_5-20b-chat",
+    "mode": 2,
+    "max_tokens": 8192,
+    "max_input_tokens": 32768,
+    "max_output_tokens": 8192,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1466,
+  "fields": {
+    "created": "2026-03-23T17:34:11.068Z",
+    "modified": "2026-03-25T18:47:24.698Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "38ab218b-fab1-455b-8824-ad6342d3a33d",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/llama2",
+    "mode": 2,
+    "max_tokens": 4096,
+    "max_input_tokens": 4096,
+    "max_output_tokens": 4096,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1467,
+  "fields": {
+    "created": "2026-03-23T17:34:11.076Z",
+    "modified": "2026-03-25T18:47:34.476Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "7f91aa78-4199-448e-8dc6-9520f28354d4",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/llama2-uncensored",
+    "mode": 7,
+    "max_tokens": 4096,
+    "max_input_tokens": 4096,
+    "max_output_tokens": 4096,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1468,
+  "fields": {
+    "created": "2026-03-23T17:34:11.084Z",
+    "modified": "2026-03-25T18:47:26.933Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "b1cd7627-2bbc-42bc-8723-f1ce435a7c39",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/llama2:13b",
+    "mode": 2,
+    "max_tokens": 4096,
+    "max_input_tokens": 4096,
+    "max_output_tokens": 4096,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1469,
+  "fields": {
+    "created": "2026-03-23T17:34:11.092Z",
+    "modified": "2026-03-25T18:47:26.948Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "f8513759-1983-4a13-abd3-5be590dbe930",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/llama2:70b",
+    "mode": 2,
+    "max_tokens": 4096,
+    "max_input_tokens": 4096,
+    "max_output_tokens": 4096,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1470,
+  "fields": {
+    "created": "2026-03-23T17:34:11.099Z",
+    "modified": "2026-03-25T18:47:26.210Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "e9ccd63e-e23e-4e88-83f6-e402cf5b7349",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/llama2:7b",
+    "mode": 2,
+    "max_tokens": 4096,
+    "max_input_tokens": 4096,
+    "max_output_tokens": 4096,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1471,
+  "fields": {
+    "created": "2026-03-23T17:34:11.107Z",
+    "modified": "2026-03-25T18:47:24.711Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "925b3bc7-b81f-485e-acaf-06543c365036",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/llama3",
+    "mode": 2,
+    "max_tokens": 8192,
+    "max_input_tokens": 8192,
+    "max_output_tokens": 8192,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1472,
+  "fields": {
+    "created": "2026-03-23T17:34:11.115Z",
+    "modified": "2026-03-25T18:47:25.464Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "0f48bb43-baea-413b-936e-a0d3a32af264",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/llama3.1",
+    "mode": 2,
+    "max_tokens": 8192,
+    "max_input_tokens": 8192,
+    "max_output_tokens": 8192,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1473,
+  "fields": {
+    "created": "2026-03-23T17:34:11.123Z",
+    "modified": "2026-03-25T18:47:26.963Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "26d66b73-3a23-42c0-9c05-f23dedbfb51b",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/llama3:70b",
+    "mode": 2,
+    "max_tokens": 8192,
+    "max_input_tokens": 8192,
+    "max_output_tokens": 8192,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1474,
+  "fields": {
+    "created": "2026-03-23T17:34:11.131Z",
+    "modified": "2026-03-25T18:47:26.224Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "09ff5eba-ef06-4cdc-af19-d85086ec30e9",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/llama3:8b",
+    "mode": 2,
+    "max_tokens": 8192,
+    "max_input_tokens": 8192,
+    "max_output_tokens": 8192,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1475,
+  "fields": {
+    "created": "2026-03-23T17:34:11.138Z",
+    "modified": "2026-03-25T18:47:25.058Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "5fa7542c-54de-4e45-a980-03d55386278c",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/mistral",
+    "mode": 7,
+    "max_tokens": 8192,
+    "max_input_tokens": 8192,
+    "max_output_tokens": 8192,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1476,
+  "fields": {
+    "created": "2026-03-23T17:34:11.146Z",
+    "modified": "2026-03-25T18:47:43.497Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "c3e2b333-67af-4c11-b979-5c8e0d1b2778",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/mistral-7B-Instruct-v0.1",
+    "mode": 2,
+    "max_tokens": 8192,
+    "max_input_tokens": 8192,
+    "max_output_tokens": 8192,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1477,
+  "fields": {
+    "created": "2026-03-23T17:34:11.154Z",
+    "modified": "2026-03-25T18:47:43.512Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "7458f485-f17c-4f7c-b2d0-717aa7cf7ee8",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/mistral-7B-Instruct-v0.2",
+    "mode": 2,
+    "max_tokens": 32768,
+    "max_input_tokens": 32768,
+    "max_output_tokens": 32768,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1478,
+  "fields": {
+    "created": "2026-03-23T17:34:11.162Z",
+    "modified": "2026-03-25T18:47:46.842Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "3527611d-caa5-4cc2-a6c6-f4d18238a9c4",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/mistral-large-instruct-2407",
+    "mode": 2,
+    "max_tokens": 8192,
+    "max_input_tokens": 65536,
+    "max_output_tokens": 8192,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1479,
+  "fields": {
+    "created": "2026-03-23T17:34:11.170Z",
+    "modified": "2026-03-25T18:47:46.857Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "56c22e36-c520-4bba-b7a8-99c77bc99cf6",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/mixtral-8x22B-Instruct-v0.1",
+    "mode": 2,
+    "max_tokens": 65536,
+    "max_input_tokens": 65536,
+    "max_output_tokens": 65536,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1480,
+  "fields": {
+    "created": "2026-03-23T17:34:11.178Z",
+    "modified": "2026-03-25T18:47:45.713Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "13bf70ea-7cb2-4ae4-b0f6-a89c65ecedd9",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/mixtral-8x7B-Instruct-v0.1",
+    "mode": 2,
+    "max_tokens": 32768,
+    "max_input_tokens": 32768,
+    "max_output_tokens": 32768,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1481,
+  "fields": {
+    "created": "2026-03-23T17:34:11.185Z",
+    "modified": "2026-03-25T18:47:26.240Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "b04179e4-74d3-4951-99ad-5887107e52de",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/orca-mini",
+    "mode": 7,
+    "max_tokens": 4096,
+    "max_input_tokens": 4096,
+    "max_output_tokens": 4096,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1482,
+  "fields": {
+    "created": "2026-03-23T17:34:11.193Z",
+    "modified": "2026-03-25T18:47:40.530Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "1ececdc6-8175-4e03-9d45-b83b038f8b26",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/qwen3-coder:480b-cloud",
+    "mode": 2,
+    "max_tokens": 262144,
+    "max_input_tokens": 262144,
+    "max_output_tokens": 262144,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 1483,
+  "fields": {
+    "created": "2026-03-23T17:34:11.201Z",
+    "modified": "2026-03-25T18:47:24.723Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": false,
+    "ai_model": "fee257ee-d474-40fc-a291-34980b69f03a",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/vicuna",
+    "mode": 7,
+    "max_tokens": 2048,
+    "max_input_tokens": 2048,
+    "max_output_tokens": 2048,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 2856,
+  "fields": {
+    "created": "2026-03-24T17:56:09.963Z",
+    "modified": "2026-03-25T18:48:08.607Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": true,
+    "ai_model": "34bd4dec-66a0-47e4-8650-ba73ca62b28b",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/nomic-embed-text:latest",
+    "mode": 2,
+    "max_tokens": null,
+    "max_input_tokens": null,
+    "max_output_tokens": null,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 2857,
+  "fields": {
+    "created": "2026-03-24T17:56:09.973Z",
+    "modified": "2026-03-25T18:48:08.637Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": true,
+    "ai_model": "0487416c-be26-4d3d-bb2d-7089931e446a",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/llama3.2:3b",
+    "mode": 2,
+    "max_tokens": null,
+    "max_input_tokens": null,
+    "max_output_tokens": null,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 2858,
+  "fields": {
+    "created": "2026-03-24T17:56:09.981Z",
+    "modified": "2026-03-25T18:48:08.647Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": true,
+    "ai_model": "254fbd93-1f96-4109-b8f8-976cc8dc4084",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/gemma3:27b",
+    "mode": 2,
+    "max_tokens": null,
+    "max_input_tokens": null,
+    "max_output_tokens": null,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 2859,
+  "fields": {
+    "created": "2026-03-24T17:56:09.988Z",
+    "modified": "2026-03-25T18:48:08.678Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": true,
+    "ai_model": "f41a12f9-3103-4ec1-b807-dd6c526f016d",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/qwen3-coder:30b",
+    "mode": 2,
+    "max_tokens": null,
+    "max_input_tokens": null,
+    "max_output_tokens": null,
+    "disabled_capabilities": [
+      2,
+      13
+    ]
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 2860,
+  "fields": {
+    "created": "2026-03-24T17:56:09.996Z",
+    "modified": "2026-03-25T18:48:08.617Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": true,
+    "ai_model": "8220d81c-4982-4ec0-881a-cd5636bff443",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/qwen3:latest",
+    "mode": 2,
+    "max_tokens": null,
+    "max_input_tokens": null,
+    "max_output_tokens": null,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 2861,
+  "fields": {
+    "created": "2026-03-24T17:56:10.003Z",
+    "modified": "2026-03-25T18:48:08.668Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": true,
+    "ai_model": "f888f1b5-138d-48b5-8020-c37a64235802",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/llama3:latest",
+    "mode": 2,
+    "max_tokens": null,
+    "max_input_tokens": null,
+    "max_output_tokens": null,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 2862,
+  "fields": {
+    "created": "2026-03-24T17:56:10.011Z",
+    "modified": "2026-03-25T18:48:08.658Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": true,
+    "ai_model": "6e5ef533-a7d1-4950-8d7a-f267f3701897",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/gpt-oss:latest",
+    "mode": 2,
+    "max_tokens": null,
+    "max_input_tokens": null,
+    "max_output_tokens": null,
+    "disabled_capabilities": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelprovider",
+  "pk": 2863,
+  "fields": {
+    "created": "2026-03-24T17:56:10.019Z",
+    "modified": "2026-03-25T18:48:08.627Z",
+    "rate_limited_on": null,
+    "rate_limit_reset_time": null,
+    "rate_limit_reset_interval": "00:01:00",
+    "rate_limit_counter": 0,
+    "rate_limit_total_failures": 0,
+    "is_enabled": true,
+    "ai_model": "3e8d13ef-9007-4a66-9c61-58bf918e5f7f",
+    "provider": 64,
+    "provider_unique_model_id": "ollama/glm-4.7-flash:latest",
+    "mode": 2,
+    "max_tokens": null,
+    "max_input_tokens": null,
+    "max_output_tokens": null,
+    "disabled_capabilities": []
   }
 },
 {

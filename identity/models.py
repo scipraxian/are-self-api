@@ -156,6 +156,15 @@ class Identity(
     THALAMUS = UUID('14148e25-283d-4547-a17d-e28d021eba07')
 
 
+class IdentityDiscVector(models.Model):
+    identity_disc = models.OneToOneField(
+        'identity.IdentityDisc',
+        on_delete=models.CASCADE,
+        related_name='vector_node',
+    )
+    embeddings = VectorField(dimensions=768, null=True, blank=True)
+
+
 class IdentityDisc(
     UUIDIdMixin, NameMixin, CreatedAndModifiedWithDelta, IdentityFields
 ):
@@ -174,16 +183,25 @@ class IdentityDisc(
     )
     timeouts = models.IntegerField(default=0)
     memories = models.ManyToManyField(TalosEngram, blank=True)
-    vector = VectorField(
-        dimensions=768,
-        null=True,
-        blank=True,
-    )
 
-    def ai_model(self, payload_size: int):
-        raise NotImplementedError(
-            'AI model selection should be handled by Hypothalamus'
-        )
+    @property
+    def vector(self):
+        """Silently fetches the vector from the 1:1 table."""
+        # hasattr check is necessary because the reverse 1:1 raises RelatedObjectDoesNotExist if missing
+        if hasattr(self, 'vector_node'):
+            return self.vector_node.embeddings
+        return None
+
+    @vector.setter
+    def vector(self, value):
+        """Silently updates or creates the 1:1 record when you do `disc.vector = new_array`."""
+        if not hasattr(self, 'vector_node'):
+            IdentityDiscVector.objects.create(
+                identity_disc=self, embeddings=value
+            )
+        else:
+            self.vector_node.embeddings = value
+            self.vector_node.save(update_fields=['embeddings'])
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -240,7 +258,6 @@ class IdentityDisc(
         )
 
         self.vector = client.embed(rich_text)
-        self.save(update_fields=['vector'])
 
 
 @receiver(m2m_changed, sender=IdentityDisc.addons.through)
@@ -249,6 +266,10 @@ def identity_disc_m2m_changed(sender, instance, action, **kwargs):
     """
     Automatically recalculate the Disc's vector if Addons or Tags are added, removed, or cleared.
     """
+    # If Django is loading fixtures (raw=True), do nothing.
+    if kwargs.get('raw', False):
+        return
+
     # Only fire after the database has actually finished adding/removing the relations
     if action in ['post_add', 'post_remove', 'post_clear']:
         instance.update_vector()
