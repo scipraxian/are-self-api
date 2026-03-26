@@ -200,11 +200,82 @@
   }
 },
 {
+  "model": "identity.budgetperiod",
+  "pk": 4,
+  "fields": {
+    "description": "Standard working shift reset.",
+    "name": "8-Hour Shift",
+    "duration": "08:00:00"
+  }
+},
+{
+  "model": "identity.budgetperiod",
+  "pk": 5,
+  "fields": {
+    "description": "24-hour rolling reset.",
+    "name": "Daily",
+    "duration": "1 00:00:00"
+  }
+},
+{
+  "model": "identity.budgetperiod",
+  "pk": 6,
+  "fields": {
+    "description": "Never resets. Hard ceiling.",
+    "name": "Lifetime",
+    "duration": null
+  }
+},
+{
   "model": "identity.identitybudget",
   "pk": 1,
   "fields": {
     "name": "",
-    "max_input_cost_per_token": "0E-15"
+    "period": null,
+    "max_input_cost_per_token": "0E-15",
+    "max_output_cost_per_token": "0E-15",
+    "max_spend_per_period": null,
+    "max_spend_per_request": null,
+    "warn_at_percent": 80
+  }
+},
+{
+  "model": "identity.identitybudget",
+  "pk": 5,
+  "fields": {
+    "name": "Intern / Free Tier",
+    "period": 5,
+    "max_input_cost_per_token": "0E-15",
+    "max_output_cost_per_token": "0E-15",
+    "max_spend_per_period": "0E-15",
+    "max_spend_per_request": null,
+    "warn_at_percent": 80
+  }
+},
+{
+  "model": "identity.identitybudget",
+  "pk": 6,
+  "fields": {
+    "name": "Senior Engineer Shift",
+    "period": 4,
+    "max_input_cost_per_token": "0.000030000000000",
+    "max_output_cost_per_token": "0.000150000000000",
+    "max_spend_per_period": "5.000000000000000",
+    "max_spend_per_request": null,
+    "warn_at_percent": 80
+  }
+},
+{
+  "model": "identity.identitybudget",
+  "pk": 7,
+  "fields": {
+    "name": "Executive Synthesis",
+    "period": 5,
+    "max_input_cost_per_token": "0.000010000000000",
+    "max_output_cost_per_token": "0E-15",
+    "max_spend_per_period": "20.000000000000000",
+    "max_spend_per_request": null,
+    "warn_at_percent": 90
   }
 },
 {
@@ -212,13 +283,13 @@
   "pk": "14148e25-283d-4547-a17d-e28d021eba07",
   "fields": {
     "created": "2026-03-17T19:41:44.516Z",
-    "modified": "2026-03-21T14:56:55.069Z",
-    "delta": "3 19:15:10.553556",
+    "modified": "2026-03-26T13:25:25.996Z",
+    "delta": "8 17:43:41.480759",
     "name": "Thalamus",
     "identity_type": 3,
     "system_prompt_template": "[ROLE & PRIMARY DIRECTIVE]\r\nYou are the Thalamus of Are-Self - the direct conversational bridge between the system and the human User. Your absolute highest priority is addressing the User's immediate input. Do not engage in unsolicited backlog sifting, agile refinement, or system exploration.\r\n[RULES OF ENGAGEMENT]\r\nCONVERSE NATURALLY: You are a conversational agent first. \r\nOnly execute effector tools (like `mcp_fs` or `mcp_ticket`) if the User explicitly requests data or actions that require them. Otherwise, bypass tools and respond directly.\r\n2. IGNORE THE ECONOMY: You are entirely exempt from the Focus Economy, Speedrun Bounties, and XP farming. Do not attempt to optimize for points or act as a Project Manager. \r\n3. TURN MANAGEMENT: Answer the User as efficiently and quickly as possible. If you are running dangerously low on turns, do not rush or panic. Simply use your tools to pause the session and ask the User to allocate more turns.",
-    "budget": 1,
     "category": null,
+    "selection_filter": null,
     "tags": [
       3
     ],
@@ -232,7 +303,6 @@
       12
     ],
     "enabled_tools": [
-      4,
       5,
       6,
       7,
@@ -264,8 +334,8 @@
     "name": "Local Worker",
     "identity_type": 2,
     "system_prompt_template": ".",
-    "budget": 1,
     "category": null,
+    "selection_filter": null,
     "tags": [
       2
     ],
@@ -313,8 +383,8 @@
     "name": "Local PM",
     "identity_type": 1,
     "system_prompt_template": ".",
-    "budget": 1,
     "category": null,
+    "selection_filter": null,
     "tags": [
       1
     ],
@@ -361,8 +431,8 @@
     "name": "Remote Worker",
     "identity_type": 2,
     "system_prompt_template": "",
-    "budget": 1,
     "category": null,
+    "selection_filter": null,
     "tags": [
       2
     ],
@@ -410,8 +480,8 @@
     "name": "Remote PM",
     "identity_type": 1,
     "system_prompt_template": "",
-    "budget": 1,
     "category": null,
+    "selection_filter": null,
     "tags": [
       1
     ],
@@ -458,8 +528,8 @@
     "name": "Remote PM [Program] [Mk. 1] [Mk. 2] [Mk. 3]",
     "identity_type": 1,
     "system_prompt_template": "",
-    "budget": 1,
     "category": null,
+    "selection_filter": null,
     "available": true,
     "last_message_to_self": "",
     "level": 1,
@@ -511,13 +581,13 @@
   "pk": "15ca85b8-59a9-4cb6-9fd8-bfd2be47b838",
   "fields": {
     "created": "2026-03-20T17:04:11.046Z",
-    "modified": "2026-03-24T15:44:22.158Z",
-    "delta": "3 22:40:11.112211",
+    "modified": "2026-03-26T14:27:04.339Z",
+    "delta": "5 21:22:53.293507",
     "name": "Thalamus [Program]",
     "identity_type": 3,
     "system_prompt_template": "[ROLE & PRIMARY DIRECTIVE]\r\nYou are the Thalamus of Are-Self - the direct conversational bridge between the system and the human User. Your absolute highest priority is addressing the User's immediate input. Do not engage in unsolicited backlog sifting, agile refinement, or system exploration.\r\n\r\n[RULES OF ENGAGEMENT]\r\n1. CONVERSE NATURALLY: You are a conversational agent first. \r\nOnly execute effector tools (like `mcp_fs` or `mcp_ticket`) if the User explicitly requests data or actions that require them.\r\nYou MUST execute `mcp_ask_user` to yield the floor back to the User as soon as you have answered them or need their input. If the user's overall goal is completely finished, execute `mcp_done`.\r\n2. IGNORE THE ECONOMY: You are entirely exempt from the Focus Economy, Speedrun Bounties, and XP farming. Do not attempt to optimize for points or act as a Project Manager. \r\n3. TURN MANAGEMENT: Answer the User as efficiently and quickly as possible. If you are running dangerously low on turns, do not rush or panic. Simply use your tools to pause the session and ask the User to allocate more turns.",
-    "budget": 1,
     "category": null,
+    "selection_filter": 2,
     "available": true,
     "last_message_to_self": "",
     "level": 1,
@@ -540,7 +610,6 @@
       12
     ],
     "enabled_tools": [
-      4,
       5,
       6,
       7,
@@ -572,8 +641,8 @@
     "name": "Remote Worker [Program] [Mk. 1] [Mk. 2] [Mk. 3]",
     "identity_type": 2,
     "system_prompt_template": "",
-    "budget": 1,
     "category": null,
+    "selection_filter": null,
     "available": true,
     "last_message_to_self": "",
     "level": 1,
@@ -631,8 +700,8 @@
     "name": "Remote PM [Program]",
     "identity_type": 1,
     "system_prompt_template": "",
-    "budget": 1,
     "category": null,
+    "selection_filter": null,
     "available": true,
     "last_message_to_self": "",
     "level": 1,
@@ -689,8 +758,8 @@
     "name": "Remote Worker [Program] [Mk. 1]",
     "identity_type": 2,
     "system_prompt_template": "",
-    "budget": 1,
     "category": null,
+    "selection_filter": null,
     "available": true,
     "last_message_to_self": "",
     "level": 1,
@@ -748,8 +817,8 @@
     "name": "Remote Worker [Program] [Mk. 1] [Mk. 2]",
     "identity_type": 2,
     "system_prompt_template": "",
-    "budget": 1,
     "category": null,
+    "selection_filter": null,
     "available": true,
     "last_message_to_self": "",
     "level": 1,
@@ -807,8 +876,8 @@
     "name": "Remote PM [Program] [Mk. 1]",
     "identity_type": 1,
     "system_prompt_template": "",
-    "budget": 1,
     "category": null,
+    "selection_filter": null,
     "available": true,
     "last_message_to_self": "",
     "level": 1,
@@ -865,8 +934,8 @@
     "name": "Remote Worker [Program]",
     "identity_type": 2,
     "system_prompt_template": "",
-    "budget": 1,
     "category": null,
+    "selection_filter": null,
     "available": true,
     "last_message_to_self": "",
     "level": 1,
@@ -924,8 +993,8 @@
     "name": "Remote PM [Program] [Mk. 1] [Mk. 2]",
     "identity_type": 1,
     "system_prompt_template": "",
-    "budget": 1,
     "category": null,
+    "selection_filter": null,
     "available": true,
     "last_message_to_self": "",
     "level": 1,

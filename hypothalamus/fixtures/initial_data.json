@@ -1958,6 +1958,4762 @@
   }
 },
 {
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 15,
+  "fields": {
+    "description": null,
+    "name": "Amazon",
+    "slug": "amazon"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 16,
+  "fields": {
+    "description": null,
+    "name": "Stability",
+    "slug": "stability"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 17,
+  "fields": {
+    "description": null,
+    "name": "Dall",
+    "slug": "dall"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 18,
+  "fields": {
+    "description": null,
+    "name": "Ai",
+    "slug": "ai"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 19,
+  "fields": {
+    "description": null,
+    "name": "Dev",
+    "slug": "dev"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 20,
+  "fields": {
+    "description": null,
+    "name": "Text",
+    "slug": "text"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 21,
+  "fields": {
+    "description": null,
+    "name": "Schnell",
+    "slug": "schnell"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 22,
+  "fields": {
+    "description": null,
+    "name": "Imagen",
+    "slug": "imagen"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 23,
+  "fields": {
+    "description": null,
+    "name": "Nano",
+    "slug": "nano"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 24,
+  "fields": {
+    "description": null,
+    "name": "Us",
+    "slug": "us"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 25,
+  "fields": {
+    "description": null,
+    "name": "Writer",
+    "slug": "writer"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 26,
+  "fields": {
+    "description": null,
+    "name": "Twelvelabs",
+    "slug": "twelvelabs"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 27,
+  "fields": {
+    "description": null,
+    "name": "Zephyr",
+    "slug": "zephyr"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 28,
+  "fields": {
+    "description": null,
+    "name": "Codellama",
+    "slug": "codellama"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 29,
+  "fields": {
+    "description": null,
+    "name": "Best",
+    "slug": "best"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 30,
+  "fields": {
+    "description": null,
+    "name": "Ada",
+    "slug": "ada"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 31,
+  "fields": {
+    "description": null,
+    "name": "Codex",
+    "slug": "codex"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 32,
+  "fields": {
+    "description": null,
+    "name": "Command",
+    "slug": "command"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 33,
+  "fields": {
+    "description": null,
+    "name": "Computer",
+    "slug": "computer"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 34,
+  "fields": {
+    "description": null,
+    "name": "Container",
+    "slug": "container"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 35,
+  "fields": {
+    "description": null,
+    "name": "Model_Router",
+    "slug": "model_router"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 36,
+  "fields": {
+    "description": null,
+    "name": "O",
+    "slug": "o"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 37,
+  "fields": {
+    "description": null,
+    "name": "Azure",
+    "slug": "azure"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 38,
+  "fields": {
+    "description": null,
+    "name": "Tts",
+    "slug": "tts"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 39,
+  "fields": {
+    "description": null,
+    "name": "Whisper",
+    "slug": "whisper"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 40,
+  "fields": {
+    "description": null,
+    "name": "Cohere",
+    "slug": "cohere"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 41,
+  "fields": {
+    "description": null,
+    "name": "Prebuilt",
+    "slug": "prebuilt"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 42,
+  "fields": {
+    "description": null,
+    "name": "Mai",
+    "slug": "mai"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 43,
+  "fields": {
+    "description": null,
+    "name": "Embed",
+    "slug": "embed"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 44,
+  "fields": {
+    "description": null,
+    "name": "Jais",
+    "slug": "jais"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 45,
+  "fields": {
+    "description": null,
+    "name": "Jamba",
+    "slug": "jamba"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 46,
+  "fields": {
+    "description": null,
+    "name": "Kimi",
+    "slug": "kimi"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 47,
+  "fields": {
+    "description": null,
+    "name": "Ministral",
+    "slug": "ministral"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 48,
+  "fields": {
+    "description": null,
+    "name": "Babbage",
+    "slug": "babbage"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 49,
+  "fields": {
+    "description": null,
+    "name": "Minimax",
+    "slug": "minimax"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 50,
+  "fields": {
+    "description": null,
+    "name": "Chatdolphin",
+    "slug": "chatdolphin"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 51,
+  "fields": {
+    "description": null,
+    "name": "Chatgpt",
+    "slug": "chatgpt"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 52,
+  "fields": {
+    "description": null,
+    "name": "Codestral",
+    "slug": "codestral"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 53,
+  "fields": {
+    "description": null,
+    "name": "Qwq",
+    "slug": "qwq"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 54,
+  "fields": {
+    "description": null,
+    "name": "Databricks",
+    "slug": "databricks"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 55,
+  "fields": {
+    "description": null,
+    "name": "Search",
+    "slug": "search"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 56,
+  "fields": {
+    "description": null,
+    "name": "Davinci",
+    "slug": "davinci"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 57,
+  "fields": {
+    "description": null,
+    "name": "Base",
+    "slug": "base"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 58,
+  "fields": {
+    "description": null,
+    "name": "Enhanced",
+    "slug": "enhanced"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 59,
+  "fields": {
+    "description": null,
+    "name": "Nova",
+    "slug": "nova"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 60,
+  "fields": {
+    "description": null,
+    "name": "Mythomax",
+    "slug": "mythomax"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 61,
+  "fields": {
+    "description": null,
+    "name": "L",
+    "slug": "l"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 62,
+  "fields": {
+    "description": null,
+    "name": "Olmocr",
+    "slug": "olmocr"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 63,
+  "fields": {
+    "description": null,
+    "name": "Wizardlm",
+    "slug": "wizardlm"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 64,
+  "fields": {
+    "description": null,
+    "name": "Dolphin",
+    "slug": "dolphin"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 65,
+  "fields": {
+    "description": null,
+    "name": "Doubao",
+    "slug": "doubao"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 66,
+  "fields": {
+    "description": null,
+    "name": "Scribe_V",
+    "slug": "scribe_v"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 67,
+  "fields": {
+    "description": null,
+    "name": "Scribe_V1_Experimental",
+    "slug": "scribe_v1_experimental"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 68,
+  "fields": {
+    "description": null,
+    "name": "Eleven_V",
+    "slug": "eleven_v"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 69,
+  "fields": {
+    "description": null,
+    "name": "Eleven_Multilingual_V",
+    "slug": "eleven_multilingual_v"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 70,
+  "fields": {
+    "description": null,
+    "name": "Preview",
+    "slug": "preview"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 71,
+  "fields": {
+    "description": null,
+    "name": "Fast",
+    "slug": "fast"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 72,
+  "fields": {
+    "description": null,
+    "name": "Ultra",
+    "slug": "ultra"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 73,
+  "fields": {
+    "description": null,
+    "name": "Stable",
+    "slug": "stable"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 74,
+  "fields": {
+    "description": null,
+    "name": "Qwerky",
+    "slug": "qwerky"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 75,
+  "fields": {
+    "description": null,
+    "name": "Uae",
+    "slug": "uae"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 76,
+  "fields": {
+    "description": null,
+    "name": "Firefunction",
+    "slug": "firefunction"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 77,
+  "fields": {
+    "description": null,
+    "name": "Qwen2P",
+    "slug": "qwen2p"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 78,
+  "fields": {
+    "description": null,
+    "name": "Yi",
+    "slug": "yi"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 79,
+  "fields": {
+    "description": null,
+    "name": "Gte",
+    "slug": "gte"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 80,
+  "fields": {
+    "description": null,
+    "name": "Learnlm",
+    "slug": "learnlm"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 81,
+  "fields": {
+    "description": null,
+    "name": "Veo",
+    "slug": "veo"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 82,
+  "fields": {
+    "description": null,
+    "name": "Gigachat",
+    "slug": "gigachat"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 83,
+  "fields": {
+    "description": null,
+    "name": "Embeddings",
+    "slug": "embeddings"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 84,
+  "fields": {
+    "description": null,
+    "name": "Embeddingsgigar",
+    "slug": "embeddingsgigar"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 85,
+  "fields": {
+    "description": null,
+    "name": "J",
+    "slug": "j"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 86,
+  "fields": {
+    "description": null,
+    "name": "Hermes",
+    "slug": "hermes"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 87,
+  "fields": {
+    "description": null,
+    "name": "Lfm",
+    "slug": "lfm"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 88,
+  "fields": {
+    "description": null,
+    "name": "Luminous",
+    "slug": "luminous"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 89,
+  "fields": {
+    "description": null,
+    "name": "Medlm",
+    "slug": "medlm"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 90,
+  "fields": {
+    "description": null,
+    "name": "Speech",
+    "slug": "speech"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 91,
+  "fields": {
+    "description": null,
+    "name": "Devstral",
+    "slug": "devstral"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 92,
+  "fields": {
+    "description": null,
+    "name": "Magistral",
+    "slug": "magistral"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 93,
+  "fields": {
+    "description": null,
+    "name": "Pixtral",
+    "slug": "pixtral"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 94,
+  "fields": {
+    "description": null,
+    "name": "Moonshot",
+    "slug": "moonshot"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 95,
+  "fields": {
+    "description": null,
+    "name": "Morph",
+    "slug": "morph"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 96,
+  "fields": {
+    "description": null,
+    "name": "Multimodalembedding",
+    "slug": "multimodalembedding"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 97,
+  "fields": {
+    "description": null,
+    "name": "Bge",
+    "slug": "bge"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 98,
+  "fields": {
+    "description": null,
+    "name": "Codegeex",
+    "slug": "codegeex"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 99,
+  "fields": {
+    "description": null,
+    "name": "Codegemma",
+    "slug": "codegemma"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 100,
+  "fields": {
+    "description": null,
+    "name": "Internlm2_",
+    "slug": "internlm2_"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 101,
+  "fields": {
+    "description": null,
+    "name": "Orca",
+    "slug": "orca"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 102,
+  "fields": {
+    "description": null,
+    "name": "Vicuna",
+    "slug": "vicuna"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 103,
+  "fields": {
+    "description": null,
+    "name": "Omni",
+    "slug": "omni"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 104,
+  "fields": {
+    "description": null,
+    "name": "Ui",
+    "slug": "ui"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 105,
+  "fields": {
+    "description": null,
+    "name": "Weaver",
+    "slug": "weaver"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 106,
+  "fields": {
+    "description": null,
+    "name": "Router",
+    "slug": "router"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 107,
+  "fields": {
+    "description": null,
+    "name": "Mimo",
+    "slug": "mimo"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 108,
+  "fields": {
+    "description": null,
+    "name": "Auto",
+    "slug": "auto"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 109,
+  "fields": {
+    "description": null,
+    "name": "Free",
+    "slug": "free"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 110,
+  "fields": {
+    "description": null,
+    "name": "Bodybuilder",
+    "slug": "bodybuilder"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 111,
+  "fields": {
+    "description": null,
+    "name": "Chat",
+    "slug": "chat"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 112,
+  "fields": {
+    "description": null,
+    "name": "Pplx",
+    "slug": "pplx"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 113,
+  "fields": {
+    "description": null,
+    "name": "Sonar",
+    "slug": "sonar"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 114,
+  "fields": {
+    "description": null,
+    "name": "Apertus",
+    "slug": "apertus"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 115,
+  "fields": {
+    "description": null,
+    "name": "Salamandra",
+    "slug": "salamandra"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 116,
+  "fields": {
+    "description": null,
+    "name": "Alia",
+    "slug": "alia"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 117,
+  "fields": {
+    "description": null,
+    "name": "Olmo",
+    "slug": "olmo"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 118,
+  "fields": {
+    "description": null,
+    "name": "Deep",
+    "slug": "deep"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 119,
+  "fields": {
+    "description": null,
+    "name": "Recraftv",
+    "slug": "recraftv"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 120,
+  "fields": {
+    "description": null,
+    "name": "Granite",
+    "slug": "granite"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 121,
+  "fields": {
+    "description": null,
+    "name": "Rerank",
+    "slug": "rerank"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 122,
+  "fields": {
+    "description": null,
+    "name": "Reka",
+    "slug": "reka"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 123,
+  "fields": {
+    "description": null,
+    "name": "Snowflake",
+    "slug": "snowflake"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 124,
+  "fields": {
+    "description": null,
+    "name": "Sd",
+    "slug": "sd"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 125,
+  "fields": {
+    "description": null,
+    "name": "Inpaint",
+    "slug": "inpaint"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 126,
+  "fields": {
+    "description": null,
+    "name": "Outpaint",
+    "slug": "outpaint"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 127,
+  "fields": {
+    "description": null,
+    "name": "Erase",
+    "slug": "erase"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 128,
+  "fields": {
+    "description": null,
+    "name": "Remove",
+    "slug": "remove"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 129,
+  "fields": {
+    "description": null,
+    "name": "Replace",
+    "slug": "replace"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 130,
+  "fields": {
+    "description": null,
+    "name": "Sketch",
+    "slug": "sketch"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 131,
+  "fields": {
+    "description": null,
+    "name": "Structure",
+    "slug": "structure"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 132,
+  "fields": {
+    "description": null,
+    "name": "Style",
+    "slug": "style"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 133,
+  "fields": {
+    "description": null,
+    "name": "Conservative",
+    "slug": "conservative"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 134,
+  "fields": {
+    "description": null,
+    "name": "Creative",
+    "slug": "creative"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 135,
+  "fields": {
+    "description": null,
+    "name": "Standard",
+    "slug": "standard"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 136,
+  "fields": {
+    "description": null,
+    "name": "Neural",
+    "slug": "neural"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 137,
+  "fields": {
+    "description": null,
+    "name": "Long",
+    "slug": "long"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 138,
+  "fields": {
+    "description": null,
+    "name": "Generative",
+    "slug": "generative"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 139,
+  "fields": {
+    "description": null,
+    "name": "V",
+    "slug": "v"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 140,
+  "fields": {
+    "description": null,
+    "name": "Mercury",
+    "slug": "mercury"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 141,
+  "fields": {
+    "description": null,
+    "name": "Chirp",
+    "slug": "chirp"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 142,
+  "fields": {
+    "description": null,
+    "name": "Imagegeneration",
+    "slug": "imagegeneration"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 143,
+  "fields": {
+    "description": null,
+    "name": "Voyage",
+    "slug": "voyage"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 144,
+  "fields": {
+    "description": null,
+    "name": "Mt",
+    "slug": "mt"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 145,
+  "fields": {
+    "description": null,
+    "name": "Flan",
+    "slug": "flan"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 146,
+  "fields": {
+    "description": null,
+    "name": "Allam",
+    "slug": "allam"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 147,
+  "fields": {
+    "description": null,
+    "name": "Search_Api",
+    "slug": "search_api"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 148,
+  "fields": {
+    "description": null,
+    "name": "Sora",
+    "slug": "sora"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 149,
+  "fields": {
+    "description": null,
+    "name": "Gen4_Turbo",
+    "slug": "gen4_turbo"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 150,
+  "fields": {
+    "description": null,
+    "name": "Gen4_Aleph",
+    "slug": "gen4_aleph"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 151,
+  "fields": {
+    "description": null,
+    "name": "Gen3A_Turbo",
+    "slug": "gen3a_turbo"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 152,
+  "fields": {
+    "description": null,
+    "name": "Gen4_Image",
+    "slug": "gen4_image"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 153,
+  "fields": {
+    "description": null,
+    "name": "Gen4_Image_Turbo",
+    "slug": "gen4_image_turbo"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 154,
+  "fields": {
+    "description": null,
+    "name": "Ssd",
+    "slug": "ssd"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 155,
+  "fields": {
+    "description": null,
+    "name": "Cogito",
+    "slug": "cogito"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 156,
+  "fields": {
+    "description": null,
+    "name": "Dbrx",
+    "slug": "dbrx"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 157,
+  "fields": {
+    "description": null,
+    "name": "Ernie",
+    "slug": "ernie"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 158,
+  "fields": {
+    "description": null,
+    "name": "Fare",
+    "slug": "fare"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 159,
+  "fields": {
+    "description": null,
+    "name": "Firellava",
+    "slug": "firellava"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 160,
+  "fields": {
+    "description": null,
+    "name": "Fireworks",
+    "slug": "fireworks"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 161,
+  "fields": {
+    "description": null,
+    "name": "Internvl",
+    "slug": "internvl"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 162,
+  "fields": {
+    "description": null,
+    "name": "Kat",
+    "slug": "kat"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 163,
+  "fields": {
+    "description": null,
+    "name": "Llamaguard",
+    "slug": "llamaguard"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 164,
+  "fields": {
+    "description": null,
+    "name": "Nous",
+    "slug": "nous"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 165,
+  "fields": {
+    "description": null,
+    "name": "Openchat",
+    "slug": "openchat"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 166,
+  "fields": {
+    "description": null,
+    "name": "Openorca",
+    "slug": "openorca"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 167,
+  "fields": {
+    "description": null,
+    "name": "Playground",
+    "slug": "playground"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 168,
+  "fields": {
+    "description": null,
+    "name": "Pythia",
+    "slug": "pythia"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 169,
+  "fields": {
+    "description": null,
+    "name": "Rolm",
+    "slug": "rolm"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 170,
+  "fields": {
+    "description": null,
+    "name": "Stablecode",
+    "slug": "stablecode"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 171,
+  "fields": {
+    "description": null,
+    "name": "Starcoder",
+    "slug": "starcoder"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 172,
+  "fields": {
+    "description": null,
+    "name": "Toppy",
+    "slug": "toppy"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 173,
+  "fields": {
+    "description": null,
+    "name": "Autoglm",
+    "slug": "autoglm"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 174,
+  "fields": {
+    "description": null,
+    "name": "Paddleocr",
+    "slug": "paddleocr"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 175,
+  "fields": {
+    "description": null,
+    "name": "R1V",
+    "slug": "r1v"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 176,
+  "fields": {
+    "description": null,
+    "name": "Baichuan",
+    "slug": "baichuan"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 177,
+  "fields": {
+    "description": null,
+    "name": "Openthinker",
+    "slug": "openthinker"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 178,
+  "fields": {
+    "description": null,
+    "name": "Llava",
+    "slug": "llava"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 179,
+  "fields": {
+    "description": null,
+    "name": "Sarvam",
+    "slug": "sarvam"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 180,
+  "fields": {
+    "description": null,
+    "name": "Nemotron",
+    "slug": "nemotron"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 181,
+  "fields": {
+    "description": null,
+    "name": "Seed",
+    "slug": "seed"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 182,
+  "fields": {
+    "description": null,
+    "name": "Aion",
+    "slug": "aion"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 183,
+  "fields": {
+    "description": null,
+    "name": "Step",
+    "slug": "step"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 184,
+  "fields": {
+    "description": null,
+    "name": "Solar",
+    "slug": "solar"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 185,
+  "fields": {
+    "description": null,
+    "name": "Palmyra",
+    "slug": "palmyra"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 186,
+  "fields": {
+    "description": null,
+    "name": "Rnj",
+    "slug": "rnj"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 187,
+  "fields": {
+    "description": null,
+    "name": "Trinity",
+    "slug": "trinity"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 188,
+  "fields": {
+    "description": null,
+    "name": "Intellect",
+    "slug": "intellect"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 189,
+  "fields": {
+    "description": null,
+    "name": "Voxtral",
+    "slug": "voxtral"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 190,
+  "fields": {
+    "description": null,
+    "name": "Relace",
+    "slug": "relace"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 191,
+  "fields": {
+    "description": null,
+    "name": "Tongyi",
+    "slug": "tongyi"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 192,
+  "fields": {
+    "description": null,
+    "name": "Hunyuan",
+    "slug": "hunyuan"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 193,
+  "fields": {
+    "description": null,
+    "name": "Spotlight",
+    "slug": "spotlight"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 194,
+  "fields": {
+    "description": null,
+    "name": "Maestro",
+    "slug": "maestro"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 195,
+  "fields": {
+    "description": null,
+    "name": "Virtuoso",
+    "slug": "virtuoso"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 196,
+  "fields": {
+    "description": null,
+    "name": "Coder",
+    "slug": "coder"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 197,
+  "fields": {
+    "description": null,
+    "name": "Llemma_7B",
+    "slug": "llemma_7b"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 198,
+  "fields": {
+    "description": null,
+    "name": "Skyfall",
+    "slug": "skyfall"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 199,
+  "fields": {
+    "description": null,
+    "name": "Unslopnemo",
+    "slug": "unslopnemo"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 200,
+  "fields": {
+    "description": null,
+    "name": "Inflection",
+    "slug": "inflection"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 201,
+  "fields": {
+    "description": null,
+    "name": "Rocinante",
+    "slug": "rocinante"
+  }
+},
+{
+  "model": "hypothalamus.aimodelfamily",
+  "pk": 202,
+  "fields": {
+    "description": null,
+    "name": "Goliath",
+    "slug": "goliath"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 1,
+  "fields": {
+    "description": null,
+    "name": "21"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 2,
+  "fields": {
+    "description": null,
+    "name": "4.0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 3,
+  "fields": {
+    "description": null,
+    "name": "1.2"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 4,
+  "fields": {
+    "description": null,
+    "name": "3.5"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 5,
+  "fields": {
+    "description": null,
+    "name": "3.7"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 6,
+  "fields": {
+    "description": null,
+    "name": "3"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 7,
+  "fields": {
+    "description": null,
+    "name": "4.6"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 8,
+  "fields": {
+    "description": null,
+    "name": "v1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 9,
+  "fields": {
+    "description": null,
+    "name": "v2"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 10,
+  "fields": {
+    "description": null,
+    "name": "2"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 11,
+  "fields": {
+    "description": null,
+    "name": "4o"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 12,
+  "fields": {
+    "description": null,
+    "name": "5"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 13,
+  "fields": {
+    "description": null,
+    "name": "5.1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 14,
+  "fields": {
+    "description": null,
+    "name": "1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 15,
+  "fields": {
+    "description": null,
+    "name": "35"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 16,
+  "fields": {
+    "description": null,
+    "name": "4"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 17,
+  "fields": {
+    "description": null,
+    "name": "4.32k"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 18,
+  "fields": {
+    "description": null,
+    "name": "4.1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 19,
+  "fields": {
+    "description": null,
+    "name": "4.5"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 20,
+  "fields": {
+    "description": null,
+    "name": "5.2"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 21,
+  "fields": {
+    "description": null,
+    "name": "5.3"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 22,
+  "fields": {
+    "description": null,
+    "name": "5.4"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 23,
+  "fields": {
+    "description": null,
+    "name": "1.1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 24,
+  "fields": {
+    "description": null,
+    "name": "3.2"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 25,
+  "fields": {
+    "description": null,
+    "name": "3.3"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 26,
+  "fields": {
+    "description": null,
+    "name": "3.1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 27,
+  "fields": {
+    "description": null,
+    "name": "v3.2"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 28,
+  "fields": {
+    "description": null,
+    "name": "r1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 29,
+  "fields": {
+    "description": null,
+    "name": "v3"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 30,
+  "fields": {
+    "description": null,
+    "name": "002"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 31,
+  "fields": {
+    "description": null,
+    "name": "4.7"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 32,
+  "fields": {
+    "description": null,
+    "name": "2405"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 33,
+  "fields": {
+    "description": null,
+    "name": "v4.0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 34,
+  "fields": {
+    "description": null,
+    "name": "2.5"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 35,
+  "fields": {
+    "description": null,
+    "name": "v3.1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 36,
+  "fields": {
+    "description": null,
+    "name": "2.0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 37,
+  "fields": {
+    "description": null,
+    "name": "12"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 38,
+  "fields": {
+    "description": null,
+    "name": "1.5"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 39,
+  "fields": {
+    "description": null,
+    "name": "3.0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 40,
+  "fields": {
+    "description": null,
+    "name": "41"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 41,
+  "fields": {
+    "description": null,
+    "name": "25"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 42,
+  "fields": {
+    "description": null,
+    "name": "02"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 43,
+  "fields": {
+    "description": null,
+    "name": "2.6"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 44,
+  "fields": {
+    "description": null,
+    "name": "2508"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 45,
+  "fields": {
+    "description": null,
+    "name": "2512"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 46,
+  "fields": {
+    "description": null,
+    "name": "v1.32k"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 47,
+  "fields": {
+    "description": null,
+    "name": "v1.8k"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 48,
+  "fields": {
+    "description": null,
+    "name": "v3.5"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 49,
+  "fields": {
+    "description": null,
+    "name": "20240229"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 50,
+  "fields": {
+    "description": null,
+    "name": "0.1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 51,
+  "fields": {
+    "description": null,
+    "name": "2501"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 52,
+  "fields": {
+    "description": null,
+    "name": "0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 53,
+  "fields": {
+    "description": null,
+    "name": "4.20"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 54,
+  "fields": {
+    "description": null,
+    "name": "4.5v"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 55,
+  "fields": {
+    "description": null,
+    "name": "v2.5"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 56,
+  "fields": {
+    "description": null,
+    "name": "2.9"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 57,
+  "fields": {
+    "description": null,
+    "name": "6"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 58,
+  "fields": {
+    "description": null,
+    "name": "v3.3"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 59,
+  "fields": {
+    "description": null,
+    "name": "5.0."
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 60,
+  "fields": {
+    "description": null,
+    "name": "5.1."
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 61,
+  "fields": {
+    "description": null,
+    "name": "3.0."
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 62,
+  "fields": {
+    "description": null,
+    "name": "3.1."
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 63,
+  "fields": {
+    "description": null,
+    "name": "4.6v"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 64,
+  "fields": {
+    "description": null,
+    "name": "31"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 65,
+  "fields": {
+    "description": null,
+    "name": "1.6"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 66,
+  "fields": {
+    "description": null,
+    "name": "v2.1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 67,
+  "fields": {
+    "description": null,
+    "name": "2.2"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 68,
+  "fields": {
+    "description": null,
+    "name": "3n"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 69,
+  "fields": {
+    "description": null,
+    "name": "1.0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 70,
+  "fields": {
+    "description": null,
+    "name": "01"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 71,
+  "fields": {
+    "description": null,
+    "name": "v2.omni"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 72,
+  "fields": {
+    "description": null,
+    "name": "v2..ro"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 73,
+  "fields": {
+    "description": null,
+    "name": "7"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 74,
+  "fields": {
+    "description": null,
+    "name": "5.4.mini"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 75,
+  "fields": {
+    "description": null,
+    "name": "2603"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 76,
+  "fields": {
+    "description": null,
+    "name": "5.turbo"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 77,
+  "fields": {
+    "description": null,
+    "name": "4.20.multi"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 78,
+  "fields": {
+    "description": null,
+    "name": "4.20.beta"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 79,
+  "fields": {
+    "description": null,
+    "name": "3.su.er"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 80,
+  "fields": {
+    "description": null,
+    "name": "2.0.lite"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 81,
+  "fields": {
+    "description": null,
+    "name": "5.4..ro"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 82,
+  "fields": {
+    "description": null,
+    "name": "3.1.flash"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 83,
+  "fields": {
+    "description": null,
+    "name": "2.0.mini"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 84,
+  "fields": {
+    "description": null,
+    "name": "5.flash"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 85,
+  "fields": {
+    "description": null,
+    "name": "3.1..ro"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 86,
+  "fields": {
+    "description": null,
+    "name": "5..lus"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 87,
+  "fields": {
+    "description": null,
+    "name": "3.5.flash"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 88,
+  "fields": {
+    "description": null,
+    "name": "4.7.flash"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 89,
+  "fields": {
+    "description": null,
+    "name": "1.6.flash"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 90,
+  "fields": {
+    "description": null,
+    "name": "3.flash"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 91,
+  "fields": {
+    "description": null,
+    "name": "v2.flash"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 92,
+  "fields": {
+    "description": null,
+    "name": "3.nano"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 93,
+  "fields": {
+    "description": null,
+    "name": "5.2..ro"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 94,
+  "fields": {
+    "description": null,
+    "name": "v3.1.nex"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 95,
+  "fields": {
+    "description": null,
+    "name": "2.lite"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 96,
+  "fields": {
+    "description": null,
+    "name": "v3.2.s.eciale"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 97,
+  "fields": {
+    "description": null,
+    "name": "3..ro"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 98,
+  "fields": {
+    "description": null,
+    "name": "4.1.fast"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 99,
+  "fields": {
+    "description": null,
+    "name": "2507"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 100,
+  "fields": {
+    "description": null,
+    "name": "v2.vl"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 101,
+  "fields": {
+    "description": null,
+    "name": "4.0.h"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 102,
+  "fields": {
+    "description": null,
+    "name": "5.image"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 103,
+  "fields": {
+    "description": null,
+    "name": "2.5.flash"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 104,
+  "fields": {
+    "description": null,
+    "name": "5..ro"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 105,
+  "fields": {
+    "description": null,
+    "name": "v3.2.ex."
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 106,
+  "fields": {
+    "description": null,
+    "name": "v4.1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 107,
+  "fields": {
+    "description": null,
+    "name": "v3.1.terminus"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 108,
+  "fields": {
+    "description": null,
+    "name": "4.fast"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 109,
+  "fields": {
+    "description": null,
+    "name": "2025.07.28"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 110,
+  "fields": {
+    "description": null,
+    "name": "0905"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 111,
+  "fields": {
+    "description": null,
+    "name": "4.5.vl"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 112,
+  "fields": {
+    "description": null,
+    "name": "1.7"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 113,
+  "fields": {
+    "description": null,
+    "name": "5.mini"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 114,
+  "fields": {
+    "description": null,
+    "name": "4.5.air"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 115,
+  "fields": {
+    "description": null,
+    "name": "v3.large"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 116,
+  "fields": {
+    "description": null,
+    "name": "2.5..ro"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 117,
+  "fields": {
+    "description": null,
+    "name": "3.mini"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 118,
+  "fields": {
+    "description": null,
+    "name": "r1.0528"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 119,
+  "fields": {
+    "description": null,
+    "name": "4.1.mini"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 120,
+  "fields": {
+    "description": null,
+    "name": "3.beta"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 121,
+  "fields": {
+    "description": null,
+    "name": "4.maverick"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 122,
+  "fields": {
+    "description": null,
+    "name": "4.scout"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 123,
+  "fields": {
+    "description": null,
+    "name": "5.vl"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 124,
+  "fields": {
+    "description": null,
+    "name": "v3.0324"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 125,
+  "fields": {
+    "description": null,
+    "name": "2.0325"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 126,
+  "fields": {
+    "description": null,
+    "name": "2.0.flash"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 127,
+  "fields": {
+    "description": null,
+    "name": "3.7.sonnet"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 128,
+  "fields": {
+    "description": null,
+    "name": "1.0.mini"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 129,
+  "fields": {
+    "description": null,
+    "name": "r1.distill"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 130,
+  "fields": {
+    "description": null,
+    "name": "3.euryale"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 131,
+  "fields": {
+    "description": null,
+    "name": "12.2024"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 132,
+  "fields": {
+    "description": null,
+    "name": "2024.11.20"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 133,
+  "fields": {
+    "description": null,
+    "name": "2411"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 134,
+  "fields": {
+    "description": null,
+    "name": "2407"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 135,
+  "fields": {
+    "description": null,
+    "name": "3.5.haiku"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 136,
+  "fields": {
+    "description": null,
+    "name": "3.5.sonnet"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 137,
+  "fields": {
+    "description": null,
+    "name": "v4"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 138,
+  "fields": {
+    "description": null,
+    "name": "3..roductivity"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 139,
+  "fields": {
+    "description": null,
+    "name": "3..i"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 140,
+  "fields": {
+    "description": null,
+    "name": "08.2024"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 141,
+  "fields": {
+    "description": null,
+    "name": "1.euryale"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 142,
+  "fields": {
+    "description": null,
+    "name": "3.llama"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 143,
+  "fields": {
+    "description": null,
+    "name": "2024.08.06"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 144,
+  "fields": {
+    "description": null,
+    "name": "2024.07.18"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 145,
+  "fields": {
+    "description": null,
+    "name": "2..ro"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 146,
+  "fields": {
+    "description": null,
+    "name": "2024.05.13"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 147,
+  "fields": {
+    "description": null,
+    "name": "4.turbo"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 148,
+  "fields": {
+    "description": null,
+    "name": "3.haiku"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 149,
+  "fields": {
+    "description": null,
+    "name": "3.5.turbo"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 150,
+  "fields": {
+    "description": null,
+    "name": "4.1106"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 151,
+  "fields": {
+    "description": null,
+    "name": "4.0314"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 152,
+  "fields": {
+    "description": null,
+    "name": "3.5..lus"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 153,
+  "fields": {
+    "description": null,
+    "name": "3.max"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 154,
+  "fields": {
+    "description": null,
+    "name": "3.vl"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 155,
+  "fields": {
+    "description": null,
+    "name": "3.next"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 156,
+  "fields": {
+    "description": null,
+    "name": "v3.fast"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 157,
+  "fields": {
+    "description": null,
+    "name": "3..r"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 158,
+  "fields": {
+    "description": null,
+    "name": "4.mini"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 159,
+  "fields": {
+    "description": null,
+    "name": "2.5.vl"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 160,
+  "fields": {
+    "description": null,
+    "name": "1..r"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 161,
+  "fields": {
+    "description": null,
+    "name": "3.3.eurya"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 162,
+  "fields": {
+    "description": null,
+    "name": "3.1.eurya"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 163,
+  "fields": {
+    "description": null,
+    "name": "3.eurya"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 164,
+  "fields": {
+    "description": null,
+    "name": "2.mid"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 165,
+  "fields": {
+    "description": null,
+    "name": "2.light"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 166,
+  "fields": {
+    "description": null,
+    "name": "1.hd"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 167,
+  "fields": {
+    "description": null,
+    "name": "4.0613"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 168,
+  "fields": {
+    "description": null,
+    "name": "1.1106"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 169,
+  "fields": {
+    "description": null,
+    "name": "0.1.0.md"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 170,
+  "fields": {
+    "description": null,
+    "name": "0.1.5.lg"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 171,
+  "fields": {
+    "description": null,
+    "name": "0.1.5.md"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 172,
+  "fields": {
+    "description": null,
+    "name": "1.mini"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 173,
+  "fields": {
+    "description": null,
+    "name": "1.2024.12.17"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 174,
+  "fields": {
+    "description": null,
+    "name": "3.2025.04.16"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 175,
+  "fields": {
+    "description": null,
+    "name": "4.5.x"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 176,
+  "fields": {
+    "description": null,
+    "name": "4.7.251222"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 177,
+  "fields": {
+    "description": null,
+    "name": "1.5.mini"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 178,
+  "fields": {
+    "description": null,
+    "name": "5.code"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 179,
+  "fields": {
+    "description": null,
+    "name": "1206"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 180,
+  "fields": {
+    "description": null,
+    "name": "1.5.large"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 181,
+  "fields": {
+    "description": null,
+    "name": "2.1212"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 182,
+  "fields": {
+    "description": null,
+    "name": "4.0709"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 183,
+  "fields": {
+    "description": null,
+    "name": "v3.v1:0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 184,
+  "fields": {
+    "description": null,
+    "name": "5.2025.08.07"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 185,
+  "fields": {
+    "description": null,
+    "name": "001"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 186,
+  "fields": {
+    "description": null,
+    "name": "4.5.airx"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 187,
+  "fields": {
+    "description": null,
+    "name": "v4:0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 188,
+  "fields": {
+    "description": null,
+    "name": "03.2025"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 189,
+  "fields": {
+    "description": null,
+    "name": "2.latest"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 190,
+  "fields": {
+    "description": null,
+    "name": "2.vision"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 191,
+  "fields": {
+    "description": null,
+    "name": "3.latest"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 192,
+  "fields": {
+    "description": null,
+    "name": "4.latest"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 193,
+  "fields": {
+    "description": null,
+    "name": "4.5.flash"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 194,
+  "fields": {
+    "description": null,
+    "name": "v1:0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 195,
+  "fields": {
+    "description": null,
+    "name": "35.turbo"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 196,
+  "fields": {
+    "description": null,
+    "name": "v2.0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 197,
+  "fields": {
+    "description": null,
+    "name": "v3.0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 198,
+  "fields": {
+    "description": null,
+    "name": "4.0125"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 199,
+  "fields": {
+    "description": null,
+    "name": "4.1.2025.04.14"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 200,
+  "fields": {
+    "description": null,
+    "name": "5.1.2025.11.13"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 201,
+  "fields": {
+    "description": null,
+    "name": "5.2.2025.12.11"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 202,
+  "fields": {
+    "description": null,
+    "name": "5.4.2026.03.05"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 203,
+  "fields": {
+    "description": null,
+    "name": "004"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 204,
+  "fields": {
+    "description": null,
+    "name": "005"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 205,
+  "fields": {
+    "description": null,
+    "name": "2.atc"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 206,
+  "fields": {
+    "description": null,
+    "name": "3.fast"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 207,
+  "fields": {
+    "description": null,
+    "name": "3.large"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 208,
+  "fields": {
+    "description": null,
+    "name": "007"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 209,
+  "fields": {
+    "description": null,
+    "name": "r1.v1:0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 210,
+  "fields": {
+    "description": null,
+    "name": "v3.5:0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 211,
+  "fields": {
+    "description": null,
+    "name": "v3.2.251201"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 212,
+  "fields": {
+    "description": null,
+    "name": "2025.08.28"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 213,
+  "fields": {
+    "description": null,
+    "name": "02.hd"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 214,
+  "fields": {
+    "description": null,
+    "name": "3.medium"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 215,
+  "fields": {
+    "description": null,
+    "name": "3.lite"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 216,
+  "fields": {
+    "description": null,
+    "name": "v2:1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 217,
+  "fields": {
+    "description": null,
+    "name": "1.1..ro"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 218,
+  "fields": {
+    "description": null,
+    "name": "2.video"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 219,
+  "fields": {
+    "description": null,
+    "name": "2.6.hd"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 220,
+  "fields": {
+    "description": null,
+    "name": "3.5.large"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 221,
+  "fields": {
+    "description": null,
+    "name": "3.o.us"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 222,
+  "fields": {
+    "description": null,
+    "name": "4.o.us"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 223,
+  "fields": {
+    "description": null,
+    "name": "4.20250514"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 224,
+  "fields": {
+    "description": null,
+    "name": "1114"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 225,
+  "fields": {
+    "description": null,
+    "name": "4.sonnet"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 226,
+  "fields": {
+    "description": null,
+    "name": "1:0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 227,
+  "fields": {
+    "description": null,
+    "name": "3.5.medium"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 228,
+  "fields": {
+    "description": null,
+    "name": "3.small"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 229,
+  "fields": {
+    "description": null,
+    "name": "2.5.lite"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 230,
+  "fields": {
+    "description": null,
+    "name": "3.5.lite"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 231,
+  "fields": {
+    "description": null,
+    "name": "5.3.instant"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 232,
+  "fields": {
+    "description": null,
+    "name": "v14"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 233,
+  "fields": {
+    "description": null,
+    "name": "2.finance"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 234,
+  "fields": {
+    "description": null,
+    "name": "2.general"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 235,
+  "fields": {
+    "description": null,
+    "name": "2.meeting"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 236,
+  "fields": {
+    "description": null,
+    "name": "3.general"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 237,
+  "fields": {
+    "description": null,
+    "name": "3.medical"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 238,
+  "fields": {
+    "description": null,
+    "name": "1.5.flash"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 239,
+  "fields": {
+    "description": null,
+    "name": "2.max"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 240,
+  "fields": {
+    "description": null,
+    "name": "251104"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 241,
+  "fields": {
+    "description": null,
+    "name": "02.turbo"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 242,
+  "fields": {
+    "description": null,
+    "name": "v1.1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 243,
+  "fields": {
+    "description": null,
+    "name": "2402"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 244,
+  "fields": {
+    "description": null,
+    "name": "4.1.20250805"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 245,
+  "fields": {
+    "description": null,
+    "name": "4.5.20251101"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 246,
+  "fields": {
+    "description": null,
+    "name": "4.6.20260205"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 247,
+  "fields": {
+    "description": null,
+    "name": "1.5.2025.12.16"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 248,
+  "fields": {
+    "description": null,
+    "name": "2.6.turbo"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 249,
+  "fields": {
+    "description": null,
+    "name": "2409"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 250,
+  "fields": {
+    "description": null,
+    "name": "4.lite"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 251,
+  "fields": {
+    "description": null,
+    "name": "4.5.20251001"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 252,
+  "fields": {
+    "description": null,
+    "name": "2.drivethru"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 253,
+  "fields": {
+    "description": null,
+    "name": "2..honecall"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 254,
+  "fields": {
+    "description": null,
+    "name": "2.voicemail"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 255,
+  "fields": {
+    "description": null,
+    "name": "2025.10.06"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 256,
+  "fields": {
+    "description": null,
+    "name": "2025.12.15"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 257,
+  "fields": {
+    "description": null,
+    "name": "v1.128k"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 258,
+  "fields": {
+    "description": null,
+    "name": "v1.auto"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 259,
+  "fields": {
+    "description": null,
+    "name": "002.v2"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 260,
+  "fields": {
+    "description": null,
+    "name": "3.sonnet"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 261,
+  "fields": {
+    "description": null,
+    "name": "1.0825"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 262,
+  "fields": {
+    "description": null,
+    "name": "4.5.20250929"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 263,
+  "fields": {
+    "description": null,
+    "name": "2.automotive"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 264,
+  "fields": {
+    "description": null,
+    "name": "2025.03.20"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 265,
+  "fields": {
+    "description": null,
+    "name": "2024.09.26"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 266,
+  "fields": {
+    "description": null,
+    "name": "5.large"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 267,
+  "fields": {
+    "description": null,
+    "name": "2505"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 268,
+  "fields": {
+    "description": null,
+    "name": "2024.09.12"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 269,
+  "fields": {
+    "description": null,
+    "name": "1.kon"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 270,
+  "fields": {
+    "description": null,
+    "name": "2503"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 271,
+  "fields": {
+    "description": null,
+    "name": "2.0.generate"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 272,
+  "fields": {
+    "description": null,
+    "name": "3.1.generate"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 273,
+  "fields": {
+    "description": null,
+    "name": "v3.turbo"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 274,
+  "fields": {
+    "description": null,
+    "name": "2312"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 275,
+  "fields": {
+    "description": null,
+    "name": "2025.06.26"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 276,
+  "fields": {
+    "description": null,
+    "name": "0409"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 277,
+  "fields": {
+    "description": null,
+    "name": "1.2.v1:0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 278,
+  "fields": {
+    "description": null,
+    "name": "v2:0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 279,
+  "fields": {
+    "description": null,
+    "name": "4.6.v1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 280,
+  "fields": {
+    "description": null,
+    "name": "240715"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 281,
+  "fields": {
+    "description": null,
+    "name": "2509"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 282,
+  "fields": {
+    "description": null,
+    "name": "2506"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 283,
+  "fields": {
+    "description": null,
+    "name": "5.maas"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 284,
+  "fields": {
+    "description": null,
+    "name": "3.5.moe"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 285,
+  "fields": {
+    "description": null,
+    "name": "41.co.ilot"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 286,
+  "fields": {
+    "description": null,
+    "name": "0711"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 287,
+  "fields": {
+    "description": null,
+    "name": "v2.base"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 288,
+  "fields": {
+    "description": null,
+    "name": "006"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 289,
+  "fields": {
+    "description": null,
+    "name": "4.h"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 290,
+  "fields": {
+    "description": null,
+    "name": "1.5.2026.02.23"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 291,
+  "fields": {
+    "description": null,
+    "name": "3.5.mini"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 292,
+  "fields": {
+    "description": null,
+    "name": "2025.01.25"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 293,
+  "fields": {
+    "description": null,
+    "name": "2025.04.28"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 294,
+  "fields": {
+    "description": null,
+    "name": "2025.07.14"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 295,
+  "fields": {
+    "description": null,
+    "name": "2025.09.11"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 296,
+  "fields": {
+    "description": null,
+    "name": "3.0.generate"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 297,
+  "fields": {
+    "description": null,
+    "name": "4.0.generate"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 298,
+  "fields": {
+    "description": null,
+    "name": "4.o"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 299,
+  "fields": {
+    "description": null,
+    "name": "1.lightning"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 300,
+  "fields": {
+    "description": null,
+    "name": "5.lightning"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 301,
+  "fields": {
+    "description": null,
+    "name": "3.2.2506"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 302,
+  "fields": {
+    "description": null,
+    "name": "v2.m3"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 303,
+  "fields": {
+    "description": null,
+    "name": "03.07"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 304,
+  "fields": {
+    "description": null,
+    "name": "4.7.maas"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 305,
+  "fields": {
+    "description": null,
+    "name": "0.xxl"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 306,
+  "fields": {
+    "description": null,
+    "name": "v4.0..ro"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 307,
+  "fields": {
+    "description": null,
+    "name": "4.5.20250929.v1:0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 308,
+  "fields": {
+    "description": null,
+    "name": "2024.11.01"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 309,
+  "fields": {
+    "description": null,
+    "name": "2024.12.17"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 310,
+  "fields": {
+    "description": null,
+    "name": "2025.06.03"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 311,
+  "fields": {
+    "description": null,
+    "name": "2402.v1:0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 312,
+  "fields": {
+    "description": null,
+    "name": "2407.v1:0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 313,
+  "fields": {
+    "description": null,
+    "name": "3.1.2508"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 314,
+  "fields": {
+    "description": null,
+    "name": "v3.english"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 315,
+  "fields": {
+    "description": null,
+    "name": "3.5.vision"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 316,
+  "fields": {
+    "description": null,
+    "name": "v4.0.fast"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 317,
+  "fields": {
+    "description": null,
+    "name": "5.nano"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 318,
+  "fields": {
+    "description": null,
+    "name": "2.conversationalai"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 319,
+  "fields": {
+    "description": null,
+    "name": "2025.03.11"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 320,
+  "fields": {
+    "description": null,
+    "name": "1.2.2509"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 321,
+  "fields": {
+    "description": null,
+    "name": "2.vl"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 322,
+  "fields": {
+    "description": null,
+    "name": "v1:1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 323,
+  "fields": {
+    "description": null,
+    "name": "2411.001"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 324,
+  "fields": {
+    "description": null,
+    "name": "12.2025"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 325,
+  "fields": {
+    "description": null,
+    "name": "r1.turbo"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 326,
+  "fields": {
+    "description": null,
+    "name": "2.1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 327,
+  "fields": {
+    "description": null,
+    "name": "v1.6"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 328,
+  "fields": {
+    "description": null,
+    "name": "2.audio"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 329,
+  "fields": {
+    "description": null,
+    "name": "v1.5"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 330,
+  "fields": {
+    "description": null,
+    "name": "2.7.v1:0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 331,
+  "fields": {
+    "description": null,
+    "name": "512.96.r2"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 332,
+  "fields": {
+    "description": null,
+    "name": "240915"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 333,
+  "fields": {
+    "description": null,
+    "name": "250515"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 334,
+  "fields": {
+    "description": null,
+    "name": "2502.v1:0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 335,
+  "fields": {
+    "description": null,
+    "name": "v2.lite"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 336,
+  "fields": {
+    "description": null,
+    "name": "1024.96.r2"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 337,
+  "fields": {
+    "description": null,
+    "name": "1536.96.r2"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 338,
+  "fields": {
+    "description": null,
+    "name": "1.0.fill"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 339,
+  "fields": {
+    "description": null,
+    "name": "3.0.fast"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 340,
+  "fields": {
+    "description": null,
+    "name": "4.0.fast"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 341,
+  "fields": {
+    "description": null,
+    "name": "1.5..ro"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 342,
+  "fields": {
+    "description": null,
+    "name": "4.6.fast"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 343,
+  "fields": {
+    "description": null,
+    "name": "2505.com.letion"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 344,
+  "fields": {
+    "description": null,
+    "name": "3.0.ca.ability"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 345,
+  "fields": {
+    "description": null,
+    "name": "0725"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 346,
+  "fields": {
+    "description": null,
+    "name": "4.0.ultra"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 347,
+  "fields": {
+    "description": null,
+    "name": "3.1.fast"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 348,
+  "fields": {
+    "description": null,
+    "name": "4.5.haiku"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 349,
+  "fields": {
+    "description": null,
+    "name": "4.20250514.v1:0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 350,
+  "fields": {
+    "description": null,
+    "name": "v3.multilingual"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 351,
+  "fields": {
+    "description": null,
+    "name": "1.0.ex.and"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 352,
+  "fields": {
+    "description": null,
+    "name": "2025.07.22"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 353,
+  "fields": {
+    "description": null,
+    "name": "4.5.sonnet"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 354,
+  "fields": {
+    "description": null,
+    "name": "2.0..ro"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 355,
+  "fields": {
+    "description": null,
+    "name": "4.1.20250805.v1:0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 356,
+  "fields": {
+    "description": null,
+    "name": "4.5.20251101.v1:0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 357,
+  "fields": {
+    "description": null,
+    "name": "v1.turb"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 358,
+  "fields": {
+    "description": null,
+    "name": "3.omni"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 359,
+  "fields": {
+    "description": null,
+    "name": "4.5.20251001.v1:0"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 360,
+  "fields": {
+    "description": null,
+    "name": "2024.10.01"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 361,
+  "fields": {
+    "description": null,
+    "name": "v3.1.maas"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 362,
+  "fields": {
+    "description": null,
+    "name": "v3.2.maas"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 363,
+  "fields": {
+    "description": null,
+    "name": "v35.medium"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 364,
+  "fields": {
+    "description": null,
+    "name": "r1.0528.qwen3"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 365,
+  "fields": {
+    "description": null,
+    "name": "r1.0528.maas"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 366,
+  "fields": {
+    "description": null,
+    "name": "r1.0528.turbo"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 367,
+  "fields": {
+    "description": null,
+    "name": "r1.0528.t.ut"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 368,
+  "fields": {
+    "description": null,
+    "name": "2.0.code"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 369,
+  "fields": {
+    "description": null,
+    "name": "1.dev"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 370,
+  "fields": {
+    "description": null,
+    "name": "3.2.nv"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 371,
+  "fields": {
+    "description": null,
+    "name": "v2..1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 372,
+  "fields": {
+    "description": null,
+    "name": "r1.basic"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 373,
+  "fields": {
+    "description": null,
+    "name": "v6"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 374,
+  "fields": {
+    "description": null,
+    "name": "2.yi"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 375,
+  "fields": {
+    "description": null,
+    "name": "3.5.0106"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 376,
+  "fields": {
+    "description": null,
+    "name": "v1.9"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 377,
+  "fields": {
+    "description": null,
+    "name": "2.9.2.qwen2"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 378,
+  "fields": {
+    "description": null,
+    "name": "5.math"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 379,
+  "fields": {
+    "description": null,
+    "name": "3.vision"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 380,
+  "fields": {
+    "description": null,
+    "name": "1024.v1"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 381,
+  "fields": {
+    "description": null,
+    "name": "v2.1024.x"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 382,
+  "fields": {
+    "description": null,
+    "name": "v2.5.1024.x"
+  }
+},
+{
+  "model": "hypothalamus.aimodelversion",
+  "pk": 383,
+  "fields": {
+    "description": null,
+    "name": "r1.0528.distill"
+  }
+},
+{
   "model": "hypothalamus.aimodelcreator",
   "pk": 1,
   "fields": {
@@ -2139,6 +6895,170 @@
   "fields": {
     "description": "Standard format for local CPU/GPU inference via llama.cpp.",
     "name": "gguf"
+  }
+},
+{
+  "model": "hypothalamus.failoverstrategy",
+  "pk": 4,
+  "fields": {
+    "description": "Standard API routing with semantic fallback.",
+    "name": "Standard Cloud"
+  }
+},
+{
+  "model": "hypothalamus.failoverstrategy",
+  "pk": 5,
+  "fields": {
+    "description": "Prioritize free local models before touching the cloud.",
+    "name": "Local First"
+  }
+},
+{
+  "model": "hypothalamus.failoverstrategy",
+  "pk": 6,
+  "fields": {
+    "description": "Do not deviate from the requested model family.",
+    "name": "Strict Requirement"
+  }
+},
+{
+  "model": "hypothalamus.failovertype",
+  "pk": 5,
+  "fields": {
+    "description": "Attempt to route to a verified local Ollama model.",
+    "name": "Local Fallback"
+  }
+},
+{
+  "model": "hypothalamus.failovertype",
+  "pk": 6,
+  "fields": {
+    "description": "Attempt to route to a sibling model in the same family (e.g., Llama 3 8B -> Llama 3 70B).",
+    "name": "Family Failover"
+  }
+},
+{
+  "model": "hypothalamus.failovertype",
+  "pk": 7,
+  "fields": {
+    "description": "Use Hypothalamus pgvector to find the closest conceptual match.",
+    "name": "Semantic Vector Search"
+  }
+},
+{
+  "model": "hypothalamus.failovertype",
+  "pk": 8,
+  "fields": {
+    "description": "Halt execution and return a routing error.",
+    "name": "Strict Fail"
+  }
+},
+{
+  "model": "hypothalamus.failoverstrategystep",
+  "pk": 9,
+  "fields": {
+    "strategy": 4,
+    "failover_type": 6,
+    "order": 1
+  }
+},
+{
+  "model": "hypothalamus.failoverstrategystep",
+  "pk": 10,
+  "fields": {
+    "strategy": 4,
+    "failover_type": 7,
+    "order": 2
+  }
+},
+{
+  "model": "hypothalamus.failoverstrategystep",
+  "pk": 11,
+  "fields": {
+    "strategy": 4,
+    "failover_type": 8,
+    "order": 3
+  }
+},
+{
+  "model": "hypothalamus.failoverstrategystep",
+  "pk": 12,
+  "fields": {
+    "strategy": 5,
+    "failover_type": 5,
+    "order": 1
+  }
+},
+{
+  "model": "hypothalamus.failoverstrategystep",
+  "pk": 13,
+  "fields": {
+    "strategy": 5,
+    "failover_type": 7,
+    "order": 2
+  }
+},
+{
+  "model": "hypothalamus.failoverstrategystep",
+  "pk": 14,
+  "fields": {
+    "strategy": 5,
+    "failover_type": 8,
+    "order": 3
+  }
+},
+{
+  "model": "hypothalamus.failoverstrategystep",
+  "pk": 15,
+  "fields": {
+    "strategy": 6,
+    "failover_type": 6,
+    "order": 1
+  }
+},
+{
+  "model": "hypothalamus.failoverstrategystep",
+  "pk": 16,
+  "fields": {
+    "strategy": 6,
+    "failover_type": 8,
+    "order": 2
+  }
+},
+{
+  "model": "hypothalamus.aimodelselectionfilter",
+  "pk": 1,
+  "fields": {
+    "name": "Core Engineering Task",
+    "failover_strategy": 4,
+    "preferred_model": null,
+    "local_failover": null,
+    "required_capabilities": [],
+    "banned_providers": [],
+    "preferred_categories": [],
+    "preferred_tags": [],
+    "preferred_roles": []
+  }
+},
+{
+  "model": "hypothalamus.aimodelselectionfilter",
+  "pk": 2,
+  "fields": {
+    "name": "Local Coder",
+    "failover_strategy": 6,
+    "preferred_model": 2859,
+    "local_failover": 2859,
+    "required_capabilities": [
+      2
+    ],
+    "banned_providers": [],
+    "preferred_categories": [],
+    "preferred_tags": [],
+    "preferred_roles": [
+      2,
+      3,
+      4
+    ]
   }
 },
 {

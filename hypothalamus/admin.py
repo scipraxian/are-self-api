@@ -14,9 +14,13 @@ from .models import (
     AIModelProviderUsageRecord,
     AIModelQuantization,
     AIModelRole,
+    AIModelSelectionFilter,
     AIModelSyncLog,
     AIModelTags,
     AIModelVersion,
+    FailoverStrategy,
+    FailoverStrategyStep,
+    FailoverType,
     LLMProvider,
     SyncStatus,
 )
@@ -392,3 +396,75 @@ class AIModelSyncLogAdmin(admin.ModelAdmin):
     list_filter = ('status', 'created')
     readonly_fields = ('created', 'modified')
     date_hierarchy = 'created'
+
+
+@admin.register(FailoverType)
+class FailoverTypeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description')
+    search_fields = ('name',)
+
+
+class FailoverStrategyStepInline(admin.TabularInline):
+    model = FailoverStrategyStep
+    extra = 0
+    ordering = ('order',)
+    autocomplete_fields = ('failover_type',)
+
+
+@admin.register(FailoverStrategy)
+class FailoverStrategyAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description')
+    search_fields = ('name',)
+    inlines = [FailoverStrategyStepInline]
+
+
+@admin.register(AIModelSelectionFilter)
+class AIModelSelectionFilterAdmin(admin.ModelAdmin):
+    list_display = (
+        'name',
+        'failover_strategy',
+        'preferred_model',
+        'local_failover',
+    )
+    list_filter = ('failover_strategy',)
+    search_fields = ('name',)
+    raw_id_fields = ('preferred_model', 'local_failover')
+    filter_horizontal = (
+        'required_capabilities',
+        'banned_providers',
+        'preferred_categories',
+        'preferred_tags',
+        'preferred_roles',
+    )
+
+    fieldsets = (
+        (
+            'Routing Profile',
+            {
+                'fields': (
+                    'name',
+                    'failover_strategy',
+                    'preferred_model',
+                    'local_failover',
+                )
+            },
+        ),
+        (
+            'Hard Constraints (Gates)',
+            {
+                'fields': ('required_capabilities', 'banned_providers'),
+                'description': 'Candidate models MUST have these capabilities and MUST NOT belong to these providers.',
+            },
+        ),
+        (
+            'Semantic Soft-Weights (Gravity)',
+            {
+                'fields': (
+                    'preferred_categories',
+                    'preferred_tags',
+                    'preferred_roles',
+                ),
+                'description': 'These do not filter out models. Instead, they boost the pgvector similarity score if the vector search step is triggered.',
+            },
+        ),
+    )

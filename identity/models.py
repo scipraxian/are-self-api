@@ -1,3 +1,4 @@
+from decimal import Decimal
 from uuid import UUID
 
 from django.db import models
@@ -47,16 +48,71 @@ class IdentityType(NameMixin):
     WORKER = 2
 
 
+class BudgetPeriod(NameMixin, DescriptionMixin):
+    """
+    The cadence at which spend resets.
+    e.g. 'Daily', 'Monthly', 'Lifetime'
+    duration=None signals a lifetime/never-reset budget.
+    zero duration signals a one-time budget.
+    """
+
+    duration = models.DurationField(
+        null=True,
+        blank=True,
+        help_text='Reset interval. Null = lifetime, never resets.',
+    )
+
+
 class IdentityBudget(NameMixin):
     """
     Limits for a persona, mapped strictly to per-token reality.
+    Per-token fields gate MODEL SELECTION — only models priced within
+    these bounds are eligible candidates.
+    Total spend fields gate REQUEST EXECUTION — once hit, requests halt.
     """
 
+    period = models.ForeignKey(
+        BudgetPeriod,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text='How often spend counters reset. Null = lifetime.',
+    )
+
+    # --- Model Selection Gates ---
+    # These feed directly into the Hypothalamus pre-filter.
+    # 0.0 = free-tier only.
     max_input_cost_per_token = models.DecimalField(
-        max_digits=25,  # Massive precision to handle things like 0.00000015
+        max_digits=25,
         decimal_places=15,
-        default=0.000000000000000,
-        help_text='Max Input Cost Per 1 Token. Set to 0.0 for strict Free only. (e.g., 0.00003 for GPT-4 level)',
+        default=Decimal('0'),
+        help_text='Candidate models with higher input cost are excluded entirely.',
+    )
+    max_output_cost_per_token = models.DecimalField(
+        max_digits=25,
+        decimal_places=15,
+        default=Decimal('0'),
+        help_text='Candidate models with higher output cost are excluded entirely.',
+    )
+
+    # --- Execution Gates ---
+    max_spend_per_period = models.DecimalField(
+        max_digits=25,
+        decimal_places=15,
+        null=True,
+        blank=True,
+        help_text='Hard ceiling on total spend within the budget period. Null = unlimited.',
+    )
+    max_spend_per_request = models.DecimalField(
+        max_digits=25,
+        decimal_places=15,
+        null=True,
+        blank=True,
+        help_text='Single-request cost ceiling. Null = unlimited.',
+    )
+    warn_at_percent = models.PositiveSmallIntegerField(
+        default=80,
+        help_text='Emit a warning signal when spend reaches this % of max_spend_per_period.',
     )
 
 
@@ -74,14 +130,18 @@ class IdentityFields(models.Model):
         null=True,
     )
     enabled_tools = models.ManyToManyField(ToolDefinition, blank=True)
-    budget = models.ForeignKey(
-        IdentityBudget, on_delete=models.SET_NULL, blank=True, null=True
-    )
     category = models.ForeignKey(
         'hypothalamus.AIModelCategory',
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
+    )
+    selection_filter = models.ForeignKey(
+        'hypothalamus.AIModelSelectionFilter',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text='Scope this budget to a specific filter. Null = applies globally.',
     )
 
     class Meta:
@@ -192,3 +252,48 @@ def identity_disc_m2m_changed(sender, instance, action, **kwargs):
     # Only fire after the database has actually finished adding/removing the relations
     if action in ['post_add', 'post_remove', 'post_clear']:
         instance.update_vector()
+
+
+class IdentityBudgetAssignment(CreatedAndModifiedWithDelta):
+    """
+    Binds an Identity to a Budget, optionally scoped to a specific SelectionFilter.
+
+    Scoping logic:
+      - selection_filter=None  →  budget applies to ALL requests from this identity.
+      - selection_filter=<obj> →  budget applies only when that filter is active
+                                  (e.g., a specific Persona or Task type).
+
+    This lets you give an identity a global budget AND per-persona sub-budgets
+    without any ambiguity — just create two assignments.
+    """
+
+    identity_disc = models.OneToOneField(
+        IdentityDisc,
+        on_delete=models.CASCADE,
+        related_name='budget_assignments',
+    )
+    budget = models.ForeignKey(
+        IdentityBudget,
+        on_delete=models.PROTECT,  # Never silently remove a financial constraint
+        related_name='assignments',
+    )
+    selection_filter = models.ForeignKey(
+        'hypothalamus.AIModelSelectionFilter',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='budget_assignments',
+        help_text='Scope this budget to a specific filter. Null = applies globally.',
+    )
+    is_active = models.BooleanField(default=True, db_index=True)
+    period_spend_start = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='When the current period started. Used to compute rolling spend against AIModelProviderUsageRecord.',
+    )
+
+    class Meta:
+        verbose_name = 'Identity Budget Assignment'
+        verbose_name_plural = 'Identity Budget Assignments'
+        # An identity can have one active budget per filter scope at a time
+        unique_together = [('identity_disc', 'selection_filter', 'is_active')]

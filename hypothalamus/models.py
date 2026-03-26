@@ -285,21 +285,30 @@ class AIModelProviderRateLimitMixin(models.Model):
 class AIModelProvider(
     CreatedMixin, ModifiedMixin, AIModelProviderRateLimitMixin
 ):
+    is_enabled = models.BooleanField(default=True, db_index=True)
+
+    # References
     ai_model = models.ForeignKey(AIModel, on_delete=models.CASCADE)
     provider = models.ForeignKey(LLMProvider, on_delete=models.CASCADE)
+
+    # PROVIDER + MODEL
     provider_unique_model_id = models.CharField(
         max_length=255, unique=True, db_index=True
     )
+    # MODE 'image_generation', 'chat', 'embedding'
+    # CANONICAL MODE CHOICE FOR THIS MODEL PROVIDER NO MODE NO WORK.
     mode = models.ForeignKey(
         AIMode, on_delete=models.SET_NULL, null=True, blank=True
     )
+
+    # Occasional provider specific token limiters.
     max_tokens = models.IntegerField(null=True, blank=True)
     max_input_tokens = models.IntegerField(null=True, blank=True)
     max_output_tokens = models.IntegerField(null=True, blank=True)
+
     disabled_capabilities = models.ManyToManyField(
         AIModelCapabilities, blank=True
     )
-    is_enabled = models.BooleanField(default=True, db_index=True)
 
     def __str__(self):
         return f'{self.ai_model} via {self.provider} ({self.provider_unique_model_id})'
@@ -416,6 +425,106 @@ class AIModelProviderUsageRecord(AIModelFinOpsAbstract):
     actual_cost = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
     )
+
+
+class FailoverStrategy(NameMixin, DescriptionMixin):
+    """
+    A reusable, ordered sequence of failover steps.
+    The strategy is defined entirely by its assignments — no scalar flags needed.
+    e.g. 'Standard Cloud' = [family_failover(1), vector_search(2)]
+         'Local First'    = [local_fallback(1), family_failover(2), strict_fail(3)]
+    """
+
+    class Meta:
+        verbose_name = 'Failover Strategy'
+        verbose_name_plural = 'Failover Strategies'
+
+
+class FailoverType(NameMixin, DescriptionMixin):
+    """
+    A discrete failover step, e.g.:
+    'family_failover', 'vector_search', 'local_fallback', 'strict_fail'
+    'force_filters', etc?
+    """
+
+    class Meta:
+        verbose_name = 'Failover Type'
+        verbose_name_plural = 'Failover Types'
+
+
+class FailoverStrategyStep(models.Model):
+    """
+    One step in a FailoverStrategy's execution chain.
+    """
+
+    strategy = models.ForeignKey(
+        FailoverStrategy,
+        on_delete=models.CASCADE,
+        related_name='steps',
+    )
+    failover_type = models.ForeignKey(
+        FailoverType,
+        on_delete=models.PROTECT,  # Don't silently orphan steps
+    )
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        verbose_name = 'Failover Strategy Step'
+        verbose_name_plural = 'Failover Strategy Steps'
+        ordering = ['order']
+        unique_together = [
+            ('strategy', 'order')
+        ]  # Prevent duplicate priority slots
+
+
+class AIModelSelectionFilter(NameMixin):
+    """
+    Defines the routing policy for a Persona or Task.
+    Acts as a pre-filter before Hypothalamus vector selection.
+    """
+
+    # Drives the full degradation chain when preferred_model is unavailable
+    failover_strategy = models.ForeignKey(
+        FailoverStrategy,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    # Sets the MODE, Provider, and Model baseline in one FK
+    preferred_model = models.ForeignKey(
+        AIModelProvider,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='selection_filter_preferred',
+        help_text='Bypass vector search and use this specific provider+model first.',
+    )
+    local_failover = models.ForeignKey(
+        AIModelProvider,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='selection_filter_local',
+        help_text='Explicit local model to try when the failover strategy permits it.',
+    )
+
+    required_capabilities = models.ManyToManyField(
+        AIModelCapabilities,
+        blank=True,
+        help_text='Hard requirement — candidate models MUST have all of these.',
+    )
+    banned_providers = models.ManyToManyField(
+        LLMProvider,
+        blank=True,
+        help_text='Never route to these providers, even as a fallback.',
+    )
+
+    # --- Semantic Weights (Vector Boosters) ---
+    # Soft signals that bias the Hypothalamus query, not hard filters.
+    preferred_categories = models.ManyToManyField(AIModelCategory, blank=True)
+    preferred_tags = models.ManyToManyField(AIModelTags, blank=True)
+    preferred_roles = models.ManyToManyField(AIModelRole, blank=True)
 
 
 class SyncStatus(NameMixin):
