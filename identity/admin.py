@@ -113,7 +113,7 @@ class IdentityBudgetAssignmentInline(admin.TabularInline):
 
 @admin.register(Identity)
 class IdentityAdmin(admin.ModelAdmin):
-    list_display = ('name', 'identity_type', 'created')
+    list_display = ('name', 'identity_type', 'created', 'selection_filter')
     list_filter = ('identity_type',)
     search_fields = ('name', 'system_prompt_template')
     filter_horizontal = ('tags', 'addons', 'enabled_tools')
@@ -168,7 +168,14 @@ class IdentityAdmin(admin.ModelAdmin):
 
 @admin.register(IdentityDisc)
 class IdentityDiscAdmin(admin.ModelAdmin):
-    list_display = ('name', 'identity_type', 'level', 'xp', 'available')
+    list_display = (
+        'name',
+        'identity_type',
+        'level',
+        'xp',
+        'available',
+        'selection_filter',
+    )
     list_filter = (
         'available',
         'level',
