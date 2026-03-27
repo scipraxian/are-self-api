@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Any, Dict, List
 
@@ -37,6 +38,16 @@ def get_chat_history(
             user_messages = [m for m in req if m.get('role') == 'user']
             if user_messages:
                 last_user_msg = user_messages[-1].get('content', '')
+
+                # 🧹 SHIELD: Sanitize internal system prompts at the source
+                if isinstance(last_user_msg, str):
+                    if (
+                        'YOUR MOVE:' in last_user_msg
+                        or '[SYSTEM DIAGNOSTICS]' in last_user_msg
+                        or '[YOUR CARD CATALOG' in last_user_msg
+                    ):
+                        last_user_msg = ''
+
                 if last_user_msg:
                     messages_payload.append(
                         {'role': 'user', 'content': last_user_msg.strip()}
@@ -49,10 +60,12 @@ def get_chat_history(
 
             if choices and isinstance(choices, list):
                 for choice in choices:
+                    # ... inside the choices loop ...
                     message = choice.get('message', {})
                     content = message.get('content', '') or ''
+                    tool_calls = message.get('tool_calls', [])
 
-                    # Extract native reasoning
+                    # 1. Grab native reasoning if the model supports it out of the box
                     reasoning = message.get('reasoning_content', '') or ''
                     if not reasoning:
                         provider_fields = message.get(
@@ -62,24 +75,64 @@ def get_chat_history(
                             provider_fields.get('reasoning_content', '') or ''
                         )
 
-                    # Build the strict Vercel AI SDK 'parts' array
+                    # 2. FLATTEN TOOL CALLS
+                    if tool_calls:
+                        for tool in tool_calls:
+                            try:
+                                func_name = tool.get('function', {}).get(
+                                    'name', ''
+                                )
+                                args_str = tool.get('function', {}).get(
+                                    'arguments', '{}'
+                                )
+                                args = json.loads(args_str)
+
+                                if func_name == 'mcp_ask_user':
+                                    extracted_msg = args.get('message', '')
+                                    if extracted_msg:
+                                        content += f'\n{extracted_msg}'
+
+                                elif func_name == 'mcp_internal_monologue':
+                                    # Route the user message to standard content
+                                    extracted_msg = args.get(
+                                        'message_to_user', ''
+                                    )
+                                    if extracted_msg:
+                                        content += f'\n{extracted_msg}'
+
+                                    # Route the thought to the reasoning block for assistant-ui!
+                                    extracted_thought = args.get('thought', '')
+                                    if extracted_thought:
+                                        reasoning += f'\n{extracted_thought}'
+
+                            except json.JSONDecodeError:
+                                continue
+                            except Exception as e:
+                                logger.warning(
+                                    f'Error parsing tool call in history: {e}'
+                                )
+                                continue
+
+                    content = content.strip()
+                    reasoning = reasoning.strip()
+
+                    # 3. Build the strict Vercel AI SDK 'parts' array
                     parts = []
 
-                    if reasoning.strip():
-                        parts.append(
-                            {'type': 'reasoning', 'text': reasoning.strip()}
-                        )
+                    # This triggers the thought bubble in assistant-ui
+                    if reasoning:
+                        parts.append({'type': 'reasoning', 'text': reasoning})
 
-                    if content.strip():
-                        parts.append({'type': 'text', 'text': content.strip()})
+                    # This is the standard text output
+                    if content:
+                        parts.append({'type': 'text', 'text': content})
 
                     # If we have any parts, append the pristine message object
                     if parts:
                         messages_payload.append(
                             {
                                 'role': 'assistant',
-                                'content': content.strip(),
-                                # Fallback for base content
+                                'content': content,
                                 'parts': parts,
                             }
                         )

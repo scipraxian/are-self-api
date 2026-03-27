@@ -149,10 +149,10 @@ class ParietalLobe:
                     required_fields.append(param_def.name)
 
             mechanics = t.use_type
-            if mechanics:
+            if mechanics is not None:
                 cost_str = f'[COST: {mechanics.focus_modifier} Focus | REWARD: +{mechanics.xp_reward} XP] '
             else:
-                cost_str = '[COST: 0 Focus | REWARD: +0 XP] '
+                cost_str = ''
 
             full_description = f'{cost_str}{t.description}'
 
