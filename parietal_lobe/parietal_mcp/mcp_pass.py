@@ -3,7 +3,7 @@ from asgiref.sync import sync_to_async
 from frontal_lobe.models import ReasoningSession
 
 
-async def mcp_pass(session_id: str = None) -> str:
+async def mcp_pass(thought: str = '', session_id: str = None) -> str:
     """Passes the turn. Focus pool fully restored."""
     if not session_id:
         return 'Turn passed, but no Session ID provided to restore Focus.'

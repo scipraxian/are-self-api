@@ -31,6 +31,8 @@ def _update_bb_sync(spike_id: str, key: str, value: str) -> str:
         return f"Error updating blackboard: {str(e)}"
 
 
-async def mcp_update_blackboard(spike_id: str, key: str, value: str) -> str:
+async def mcp_update_blackboard(
+    spike_id: str, key: str, value: str, thought: str = ''
+) -> str:
     """MCP Tool: Updates a value in the Spike blackboard."""
     return await _update_bb_sync(spike_id, key, value)

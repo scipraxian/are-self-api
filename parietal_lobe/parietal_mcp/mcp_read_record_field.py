@@ -49,6 +49,7 @@ async def mcp_read_record_field(
     record_id: str,
     field_name: str,
     page: int = 1,
+    thought: str = '',
 ) -> str:
     """MCP Tool: Reads a specific database text field via pagination."""
     return await _read_field_sync(model_name, record_id, field_name, page)

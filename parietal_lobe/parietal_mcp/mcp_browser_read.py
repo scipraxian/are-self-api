@@ -3,7 +3,7 @@ import html2text
 from playwright.async_api import async_playwright
 
 
-async def mcp_browser_read(url: str) -> str:
+async def mcp_browser_read(url: str, thought: str = '') -> str:
     """MCP Tool: Read a webpage and return clean Markdown."""
     try:
         async with async_playwright() as p:

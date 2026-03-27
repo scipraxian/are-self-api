@@ -1,7 +1,7 @@
 from parietal_lobe.parietal_mcp.mcp_fs_functions.mcp_fs__router import route
 
 
-async def mcp_fs(action: str, params: dict) -> str:
+async def mcp_fs(action: str, params: dict, thought: str = '') -> str:
     """MCP Tool: Unified filesystem operations.
 
     Actions: read, list, grep, patch.

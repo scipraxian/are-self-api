@@ -85,6 +85,8 @@ def _parse_spike_log(spike_id: str, page: int = 1) -> str:
         return f"Failed to parse log: {str(e)}"
 
 
-async def mcp_run_unreal_diagnostic_parser(spike_id: str, page: int = 1) -> str:
+async def mcp_run_unreal_diagnostic_parser(
+    spike_id: str, page: int = 1, thought: str = ''
+) -> str:
     """MCP Tool: Parse Unreal Engine logs for a specific Spike and return a structural summary."""
     return await _parse_spike_log(spike_id, page)

@@ -51,7 +51,9 @@ def _get_record_stats(model_name: str, record_id: str) -> Dict[str, Any]:
     return stats
 
 
-async def mcp_inspect_record(model_name: str, record_id: str) -> str:
+async def mcp_inspect_record(
+    model_name: str, record_id: str, thought: str = ''
+) -> str:
     """
     MCP Tool: Inspects a database record, returning its schema and field sizes.
     """
