@@ -360,7 +360,11 @@ class FrontalLobe:
             await self.parietal_lobe.process_tool_calls(
                 turn_record=turn_record, tool_calls_data=tool_calls_data
             )
-            return True, turn_record
+            await sync_to_async(self.session.refresh_from_db)(
+                fields=[STATUS_ID]
+            )
+            should_continue = self.session.status_id == ReasoningStatusID.ACTIVE
+            return should_continue, turn_record
 
         self.session.status_id = ReasoningStatusID.ATTENTION_REQUIRED
         await sync_to_async(self.session.save)(update_fields=[STATUS_ID])

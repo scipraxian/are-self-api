@@ -92,7 +92,10 @@ def get_chat_history(
                                     if extracted_msg:
                                         content += f'\n{extracted_msg}'
 
-                                elif func_name == 'mcp_internal_monologue':
+                                elif func_name in (
+                                    'mcp_internal_monologue',
+                                    'mcp_respond_to_user',
+                                ):
                                     # Route the user message to standard content
                                     extracted_msg = args.get(
                                         'message_to_user', ''

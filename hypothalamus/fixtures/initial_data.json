@@ -1987,12 +1987,12 @@
   "pk": 2858,
   "fields": {
     "created": "2026-03-24T17:56:09.981Z",
-    "modified": "2026-03-25T18:48:08.647Z",
+    "modified": "2026-03-27T01:44:12.392Z",
     "rate_limited_on": null,
     "rate_limit_reset_time": null,
     "rate_limit_reset_interval": "00:01:00",
     "rate_limit_counter": 0,
-    "rate_limit_total_failures": 0,
+    "rate_limit_total_failures": 2,
     "is_enabled": true,
     "ai_model": "254fbd93-1f96-4109-b8f8-976cc8dc4084",
     "provider": 64,
@@ -2009,12 +2009,12 @@
   "pk": 2859,
   "fields": {
     "created": "2026-03-24T17:56:09.988Z",
-    "modified": "2026-03-25T18:48:08.678Z",
+    "modified": "2026-03-26T19:23:17.070Z",
     "rate_limited_on": null,
     "rate_limit_reset_time": null,
     "rate_limit_reset_interval": "00:01:00",
     "rate_limit_counter": 0,
-    "rate_limit_total_failures": 0,
+    "rate_limit_total_failures": 2,
     "is_enabled": true,
     "ai_model": "f41a12f9-3103-4ec1-b807-dd6c526f016d",
     "provider": 64,
@@ -2023,10 +2023,7 @@
     "max_tokens": null,
     "max_input_tokens": null,
     "max_output_tokens": null,
-    "disabled_capabilities": [
-      2,
-      13
-    ]
+    "disabled_capabilities": []
   }
 },
 {
@@ -2034,12 +2031,12 @@
   "pk": 2860,
   "fields": {
     "created": "2026-03-24T17:56:09.996Z",
-    "modified": "2026-03-25T18:48:08.617Z",
-    "rate_limited_on": null,
-    "rate_limit_reset_time": null,
+    "modified": "2026-03-26T20:52:42.028Z",
+    "rate_limited_on": "2026-03-26T20:52:42.028Z",
+    "rate_limit_reset_time": "2026-03-26T20:53:42.028Z",
     "rate_limit_reset_interval": "00:01:00",
-    "rate_limit_counter": 0,
-    "rate_limit_total_failures": 0,
+    "rate_limit_counter": 1,
+    "rate_limit_total_failures": 1,
     "is_enabled": true,
     "ai_model": "8220d81c-4982-4ec0-881a-cd5636bff443",
     "provider": 64,
@@ -2279,6 +2276,21 @@
       3,
       4
     ]
+  }
+},
+{
+  "model": "hypothalamus.aimodelselectionfilter",
+  "pk": 3,
+  "fields": {
+    "name": "Thalamus",
+    "failover_strategy": 6,
+    "preferred_model": 2858,
+    "local_failover": 2859,
+    "required_capabilities": [],
+    "banned_providers": [],
+    "preferred_categories": [],
+    "preferred_tags": [],
+    "preferred_roles": []
   }
 },
 {
