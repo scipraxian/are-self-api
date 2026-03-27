@@ -1,6 +1,8 @@
 import logging
 import os
+import time
 from dataclasses import dataclass, field
+from datetime import timedelta
 from typing import Any, Dict, List, Optional
 
 import litellm
@@ -206,11 +208,20 @@ class SynapseClient:
 
         litellm_kwargs = self._build_kwargs(messages, tools, kwargs)
 
+        start_time = time.time()
+        logger.info(f'[Synapse] >>>>>>>>>>>>>Sending request to Provider...')
         try:
             response = litellm.completion(**litellm_kwargs)
+            inf_duration = timedelta(seconds=time.time() - start_time)
+            logger.info(
+                f'[Synapse] <<<<<<<<<<<<<Response from Provider {inf_duration}s.'
+            )
         except Exception as e:  # YES. CATCH EVERYTHING.
             error_str = str(e).lower()
             error_type = e.__class__.__name__.lower()
+            logger.error(
+                f'[Synapse] Provider Error: {error_type} | {error_str}'
+            )
 
             # --- SCAR TISSUE LOGIC (Permanent Bench) ---
             # We use the class name to mimic your old isinstance(e, NotFoundError) check
@@ -229,7 +240,6 @@ class SynapseClient:
                         )
                 # Failover
                 return False, []
-
             # --- CIRCUIT BREAKER LOGIC (Temporary Bench - Catch-All) ---
             # If the API failed for ANY other reason (502, 429, timeouts, parsing errors), bench it.
             if self.ai_model_provider:

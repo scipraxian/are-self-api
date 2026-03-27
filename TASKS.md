@@ -77,3 +77,4 @@ Tracked priorities for pushing Are-Self to MIT release. Updated as work complete
   budgets are enforced, not just defined.
 
 consolodate and improve the mcp engram functions.
+fix the linters or ruff or whatever so they are consistent.

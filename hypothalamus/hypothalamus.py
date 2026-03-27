@@ -246,6 +246,11 @@ class Hypothalamus:
 
         ledger.ai_model_provider = best
         ledger.ai_model = best.ai_model
+        logger.info(
+            f'Selected AI model {best.ai_model.name} from '
+            f'provider {best.provider.name} for '
+            f'{disc.name if disc else "unknown"}'
+        )
         return Hypothalamus._finalize_ledger(ledger, best)
 
     @staticmethod

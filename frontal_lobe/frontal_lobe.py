@@ -89,6 +89,7 @@ class FrontalLobe:
         current_log = self.spike.application_log or ''
         self.spike.application_log = current_log + message + '\n'
         await sync_to_async(self.spike.save)(update_fields=['application_log'])
+        logger.info(message)
 
     # --- Initialization ---
 
@@ -291,6 +292,8 @@ class FrontalLobe:
                 Hypothalamus().pick_optimal_model
             )(pending_ledger, attempt=attempt)
 
+            # TODO: Save the ledger here.
+
             if not routing_success or not pending_ledger.ai_model_provider:
                 logger.error(
                     '[FrontalLobe] SWARM PARALYSIS: Hypothalamus returned NO valid models.'
@@ -302,6 +305,8 @@ class FrontalLobe:
             # ⚡ 3. PASS THE LEDGER TO THE SYNAPSE
             synapse = await sync_to_async(SynapseClient)(pending_ledger)
 
+            # TODO: Save the ledger here. maybe new status?
+
             try:
                 # chat() mutates the ledger, returns normalized tool calls
                 success, tool_calls_data = await sync_to_async(synapse.chat)()
@@ -312,6 +317,7 @@ class FrontalLobe:
                 provider_id = (
                     pending_ledger.ai_model_provider.provider_unique_model_id
                 )
+                # TODO: we should consider minting an error log for this.
                 logger.warning(
                     f'[FrontalLobe] BRAIN REJECTED ({provider_id}): {str(e)}'
                 )
