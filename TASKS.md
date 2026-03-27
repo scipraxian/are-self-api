@@ -75,3 +75,5 @@ Tracked priorities for pushing Are-Self to MIT release. Updated as work complete
 - [ ] **Budget enforcement at request time.** The `IdentityBudget` and `IdentityBudgetAssignment` models exist. Wire
   actual spend tracking (sum `AIModelProviderUsageRecord.estimated_cost` per period) into the Hypothalamus pre-filter so
   budgets are enforced, not just defined.
+
+consolodate and improve the mcp engram functions.
