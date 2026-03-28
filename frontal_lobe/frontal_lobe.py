@@ -218,21 +218,6 @@ class FrontalLobe:
                     f'Addon {addon_model.function_slug} not found in registry.'
                 )
 
-        # Inject THIS turn's base inputs (tools outputs from last turn)
-        # Standard API practice expects these immediately following the history.
-        if turn_record.last_turn:
-            prev_tools = await sync_to_async(list)(
-                turn_record.last_turn.tool_calls.select_related('tool').all()
-            )
-            for tc in prev_tools:
-                all_messages.append(
-                    {
-                        'role': 'tool',
-                        'content': str(tc.result_payload or ''),
-                        'tool_call_id': f'call_{tc.id}',
-                        'name': tc.tool.name,
-                    }
-                )
         if self.session.swarm_message_queue:
             # Append all queued messages to this turn's context
             all_messages.extend(self.session.swarm_message_queue)
@@ -296,11 +281,20 @@ class FrontalLobe:
 
             if not routing_success or not pending_ledger.ai_model_provider:
                 logger.error(
-                    '[FrontalLobe] SWARM PARALYSIS: Hypothalamus returned NO valid models.'
+                    '[FrontalLobe] SWARM PARALYSIS: Hypothalamus returned '
+                    'NO valid models for session %s, turn %s.',
+                    self.session.id,
+                    turn_record.turn_number,
                 )
-                raise Exception(
-                    'No available AI models found in the routing pool.'
+                self.session.status_id = ReasoningStatusID.MAXED_OUT
+                await sync_to_async(self.session.save)(
+                    update_fields=[STATUS_ID]
                 )
+                turn_record.status_id = ReasoningStatusID.ERROR
+                await sync_to_async(turn_record.save)(
+                    update_fields=[STATUS_ID]
+                )
+                return False, turn_record
 
             # ⚡ 3. PASS THE LEDGER TO THE SYNAPSE
             synapse = await sync_to_async(SynapseClient)(pending_ledger)

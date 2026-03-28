@@ -846,7 +846,7 @@ class Hypothalamus:
             raw_slug=provider_unique_id,
             # e.g. ollama/llama3.1:8b-instruct-q4_K_M
             display_name=model_name,
-            context_length=8192,  # Safe default for local models
+            context_length=131072,  # 128K — modern Ollama models support 32K-256K
         )
 
         model_provider, _ = AIModelProvider.objects.update_or_create(
