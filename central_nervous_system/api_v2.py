@@ -1,8 +1,10 @@
-from rest_framework import status, viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from central_nervous_system.central_nervous_system import CNS
+from central_nervous_system.filters import SpikeTrainFilter
 from central_nervous_system.models import (
     Axon,
     Effector,
@@ -37,6 +39,12 @@ class SpikeTrainViewSetV2(viewsets.ModelViewSet):
     )
 
     serializer_class = SpikeTrainSerializer
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+    ]
+    filterset_class = SpikeTrainFilter
+    ordering_fields = '__all__'
 
     @action(detail=False, methods=['post'])
     def launch(self, request):

@@ -2980,19 +2980,6 @@
 },
 {
   "model": "central_nervous_system.neuron",
-  "pk": 134,
-  "fields": {
-    "environment": null,
-    "is_root": false,
-    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-    "effector": 166,
-    "ui_json": "{\"x\":160.02699307159975,\"y\":313.98576488813706}",
-    "invoked_pathway": null,
-    "distribution_mode": null
-  }
-},
-{
-  "model": "central_nervous_system.neuron",
   "pk": 136,
   "fields": {
     "environment": null,

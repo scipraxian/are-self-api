@@ -1228,7 +1228,7 @@
     "parameter_size": 30.0,
     "family": null,
     "version": null,
-    "context_length": 8192,
+    "context_length": 256000,
     "enabled": true,
     "deprecation_date": null,
     "roles": [

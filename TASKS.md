@@ -16,13 +16,13 @@ Tracked priorities for pushing Are-Self to MIT release. Updated as work complete
 - [ ] **"Spell" / "Cast" naming sweep.** Rename: `cast_cns_spell` → `dispatch_cns_spike` (or similar), `spell_buffer` /
   `append_spell` → `application_buffer` / `append_application`, `GenericEffectorCaster` → `SpikeExecutor` (or similar).
   Touch all references in tasks.py, the effector caster, and templates/views.
-- [ ] **Style guide in repo.** Drop `STYLE_GUIDE.md` in project root. Pin in Claude Project.
-- [ ] **Claude Project setup.** Create a Claude Project with the architecture prompt and style guide pinned as project
+- [X] **Style guide in repo.** Drop `STYLE_GUIDE.md` in project root. Pin in Claude Project.
+- [X] **Claude Project setup.** Create a Claude Project with the architecture prompt and style guide pinned as project
   knowledge.
 
 ## P1 — Architectural Improvements
 
-- [ ] **Propagate `thought` parameter to work tools.** Add an optional `thought` string parameter to all MCP tools (
+- [X] **Propagate `thought` parameter to work tools.** Add an optional `thought` string parameter to all MCP tools (
   mcp_git, mcp_fs, mcp_ticket, mcp_engram_save, mcp_engram_update, mcp_query_model, etc.). Update fixture
   `ToolParameterAssignment` records accordingly. The `thought` is logged but not functionally consumed — it forces the
   local model to reason inline with every action.
