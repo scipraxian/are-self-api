@@ -38,6 +38,7 @@ V2_ROUTER.registry.extend(V2_PARIETAL_LOBE.registry)
 V2_ROUTER.registry.extend(V2_PNS_ROUTER.registry)
 V2_ROUTER.registry.extend(V2_THALAMUS.registry)
 V2_ROUTER.registry.extend(V2_HYPOTHALAMUS_ROUTER.registry)
+V2_ROUTER.registry.extend(ENVIRONMENTS_ROUTER.registry)
 
 urlpatterns = [
     path('', include('dashboard.urls')),
