@@ -217,9 +217,7 @@ class SpikeTrainLightSerializer(DynamicFieldsModelSerializer):
     """
 
     status_name = serializers.CharField(source='status.name', read_only=True)
-    pathway_name = serializers.CharField(
-        source='pathway.name', read_only=True
-    )
+    pathway_name = serializers.CharField(source='pathway.name', read_only=True)
     is_active = serializers.BooleanField(read_only=True)
 
     class Meta:
@@ -238,9 +236,7 @@ class SpikeTrainLightSerializer(DynamicFieldsModelSerializer):
 
 class SpikeTrainSerializer(DynamicFieldsModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
-    pathway_name = serializers.CharField(
-        source='pathway.name', read_only=True
-    )
+    pathway_name = serializers.CharField(source='pathway.name', read_only=True)
     environment_name = serializers.CharField(
         source='environment.name', read_only=True
     )
@@ -344,7 +340,9 @@ class CNSNeuralPathwayConnectionWireSerializer(serializers.ModelSerializer):
 
 
 class CNSNeuralPathwayNodeSerializer(serializers.ModelSerializer):
-    effector_name = serializers.CharField(source='effector.name', read_only=True)
+    effector_name = serializers.CharField(
+        source='effector.name', read_only=True
+    )
     invoked_pathway_name = serializers.CharField(
         source='invoked_pathway.name', read_only=True
     )
@@ -529,7 +527,9 @@ class SpikeSerializer(serializers.ModelSerializer):
     target_name = serializers.CharField(
         source='target.hostname', read_only=True
     )
-    effector_name = serializers.CharField(source='effector.name', read_only=True)
+    effector_name = serializers.CharField(
+        source='effector.name', read_only=True
+    )
     average_delta = serializers.SerializerMethodField()
 
     class Meta:
@@ -569,6 +569,7 @@ class NeuronTelemetrySerializer(serializers.ModelSerializer):
             'blackboard',
             'context_matrix',
             'reasoning_session_id',
+            'spike_train',
         ]
 
     def get_agent(self, obj):
@@ -644,9 +645,7 @@ class CNSSwimlaneSerializer(serializers.ModelSerializer):
     is_stopping = serializers.BooleanField(read_only=True)
     ended_badly = serializers.BooleanField(read_only=True)
     ended_successfully = serializers.BooleanField(read_only=True)
-    pathway_name = serializers.CharField(
-        source='pathway.name', read_only=True
-    )
+    pathway_name = serializers.CharField(source='pathway.name', read_only=True)
 
     class Meta:
         model = SpikeTrain
