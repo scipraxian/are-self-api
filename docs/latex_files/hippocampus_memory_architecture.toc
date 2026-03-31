@@ -1,0 +1,22 @@
+\contentsline {section}{\numberline {1}Introduction and Architectural Context}{3}{section.1}%
+\contentsline {section}{\numberline {2}Current Architecture: pgvector-Based Hippocampus}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Core Data Model: TalosEngram}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Embedding Function and Vector Space}{4}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Similarity, Intercept, and Novelty}{4}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Memory Operations (MCP Tool Interface)}{5}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Catalog Injection Pattern}{6}{subsection.2.5}%
+\contentsline {subsection}{\numberline {2.6}Data Flow Summary}{6}{subsection.2.6}%
+\contentsline {section}{\numberline {3}Target Architecture: Typed Directed Hypergraph}{6}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Core Hypergraph Definition}{6}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Retrieval: Geodesic Traversal}{7}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Discrete Novelty and Graph-Theoretic Deduplication}{7}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Neo4j Compatibility: Bipartite Reduction Middleware}{8}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Sleep Cycle Consolidation}{8}{subsection.3.5}%
+\contentsline {subsection}{\numberline {3.6}Planned Module Architecture}{9}{subsection.3.6}%
+\contentsline {section}{\numberline {4}The Continuous--Discrete Bridge}{9}{section.4}%
+\contentsline {section}{\numberline {5}Migration Strategy}{10}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Legacy Data Migration}{10}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Rollback Strategy}{10}{subsection.5.2}%
+\contentsline {section}{\numberline {6}Architectural Delta Summary}{11}{section.6}%
+\contentsline {section}{\numberline {7}Open Questions and Future Work}{12}{section.7}%
+\contentsline {section}{\numberline {8}References}{12}{section.8}%

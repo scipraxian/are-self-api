@@ -1,0 +1,58 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction and Architectural Context}{3}{section.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Biomimetic module decomposition of Talos.}}{3}{table.1}\protected@file@percent }
+\newlabel{tab:modules}{{1}{3}{Biomimetic module decomposition of Talos}{table.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Current Architecture: pgvector-Based Hippocampus}{3}{section.2}\protected@file@percent }
+\newlabel{sec:current}{{2}{3}{Current Architecture: pgvector-Based Hippocampus}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Core Data Model: TalosEngram}{3}{subsection.2.1}\protected@file@percent }
+\newlabel{def:engram}{{2.1}{3}{TalosEngram}{definition.2.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Relational links of TalosEngram.}}{4}{table.2}\protected@file@percent }
+\newlabel{tab:engram-relations}{{2}{4}{Relational links of TalosEngram}{table.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Embedding Function and Vector Space}{4}{subsection.2.2}\protected@file@percent }
+\newlabel{def:embedding}{{2.2}{4}{Embedding Function}{definition.2.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Similarity, Intercept, and Novelty}{4}{subsection.2.3}\protected@file@percent }
+\newlabel{def:cosine}{{2.3}{4}{Cosine Distance and Similarity}{definition.2.3}{}}
+\newlabel{def:intercept}{{2.4}{5}{Intercept Condition --- Auto-Recall Defense}{definition.2.4}{}}
+\newlabel{def:novelty}{{2.5}{5}{Novelty and Reward Functions}{definition.2.5}{}}
+\newlabel{inv:current}{{2.1}{5}{Current System Invariants}{invariant.2.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Memory Operations (MCP Tool Interface)}{5}{subsection.2.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Parietal MCP memory tools.}}{5}{table.3}\protected@file@percent }
+\newlabel{tab:mcp-tools}{{3}{5}{Parietal MCP memory tools}{table.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Catalog Injection Pattern}{6}{subsection.2.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.6}Data Flow Summary}{6}{subsection.2.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Target Architecture: Typed Directed Hypergraph}{6}{section.3}\protected@file@percent }
+\newlabel{sec:target}{{3}{6}{Target Architecture: Typed Directed Hypergraph}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Core Hypergraph Definition}{6}{subsection.3.1}\protected@file@percent }
+\newlabel{def:hypergraph}{{3.1}{6}{Directed Hypergraph}{definition.3.1}{}}
+\newlabel{def:ternary}{{3.2}{6}{Ternary Engram Hyperedge}{definition.3.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Retrieval: Geodesic Traversal}{7}{subsection.3.2}\protected@file@percent }
+\newlabel{def:geodesic}{{3.3}{7}{Geodesic Distance}{definition.3.3}{}}
+\newlabel{alg:retrieve}{{3.2}{7}{Retrieval: Geodesic Traversal}{definition.3.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Discrete Novelty and Graph-Theoretic Deduplication}{7}{subsection.3.3}\protected@file@percent }
+\newlabel{def:discrete-novelty}{{3.4}{7}{Discrete Novelty}{definition.3.4}{}}
+\newlabel{alg:add}{{3.3}{8}{Discrete Novelty and Graph-Theoretic Deduplication}{definition.3.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Neo4j Compatibility: Bipartite Reduction Middleware}{8}{subsection.3.4}\protected@file@percent }
+\newlabel{def:bipartite}{{3.5}{8}{Bipartite Reduction}{definition.3.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Sleep Cycle Consolidation}{8}{subsection.3.5}\protected@file@percent }
+\newlabel{alg:sleep}{{3.5}{8}{Sleep Cycle Consolidation}{subsection.3.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}Planned Module Architecture}{9}{subsection.3.6}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces New core modules for the hypergraph Hippocampus.}}{9}{table.4}\protected@file@percent }
+\newlabel{tab:new-modules}{{4}{9}{New core modules for the hypergraph Hippocampus}{table.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}The Continuous--Discrete Bridge}{9}{section.4}\protected@file@percent }
+\newlabel{sec:bridge}{{4}{9}{The Continuous--Discrete Bridge}{section.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Migration Strategy}{10}{section.5}\protected@file@percent }
+\newlabel{sec:migration}{{5}{10}{Migration Strategy}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Legacy Data Migration}{10}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Rollback Strategy}{10}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Architectural Delta Summary}{11}{section.6}\protected@file@percent }
+\newlabel{sec:delta}{{6}{11}{Architectural Delta Summary}{section.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Architectural delta: current vs.\ target Hippocampus.}}{11}{table.5}\protected@file@percent }
+\newlabel{tab:delta}{{5}{11}{Architectural delta: current vs.\ target Hippocampus}{table.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Open Questions and Future Work}{12}{section.7}\protected@file@percent }
+\newlabel{sec:open}{{7}{12}{Open Questions and Future Work}{section.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}References}{12}{section.8}\protected@file@percent }
+\newlabel{sec:references}{{8}{12}{References}{section.8}{}}
+\gdef \@abspage@last{12}

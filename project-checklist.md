@@ -1,0 +1,1 @@
+- [ ] \\wsl.localhost\\Ubuntu-24.04\\home\\far_cdx\\.hermes\\hermes-agent\\acp_registry
