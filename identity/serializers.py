@@ -126,10 +126,10 @@ class IdentityDiscSerializer(serializers.ModelSerializer):
 
     def get_memories(self, identity_disc):
         from frontal_lobe.serializers import (
-            TalosEngramSerializer,
+            EngramSerializer,
         )
 
-        return TalosEngramSerializer(
+        return EngramSerializer(
             identity_disc.engrams.distinct(),
             many=True,
         ).data

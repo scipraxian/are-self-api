@@ -4,7 +4,7 @@ import pytest
 
 from hippocampus.hippocampus import (
     HippocampusMemoryYield,
-    TalosHippocampus,
+    Hippocampus,
 )
 
 
@@ -52,7 +52,7 @@ class TestHippocampusVectors:
 
         mock_sync_to_async.side_effect = side_effect_func
 
-        result = await TalosHippocampus.save_engram("session_123", "Concept",
+        result = await Hippocampus.save_engram("session_123", "Concept",
                                                     "Fact about concept", 1)
 
         assert isinstance(result, HippocampusMemoryYield)
@@ -104,7 +104,7 @@ class TestHippocampusVectors:
 
         mock_sync_to_async.side_effect = side_effect_func
 
-        result = await TalosHippocampus.update_engram("session_123", "Concept",
+        result = await Hippocampus.update_engram("session_123", "Concept",
                                                       "Additional fact", 1)
 
         assert isinstance(result, HippocampusMemoryYield)

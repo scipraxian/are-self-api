@@ -9,7 +9,7 @@ from central_nervous_system.models import (
     SpikeTrain,
     SpikeTrainStatus,
 )
-from hippocampus.models import TalosEngram
+from hippocampus.models import Engram
 from parietal_lobe.models import ToolCall, ToolDefinition
 from frontal_lobe import constants
 from frontal_lobe.models import (
@@ -77,7 +77,7 @@ class ReasoningAPITest(TestCase):
             turn=self.turn, tool=self.tool, arguments='{}', call_id='call_123'
         )
 
-        self.engram = TalosEngram.objects.create(
+        self.engram = Engram.objects.create(
             description='Test Engram', relevance_score=0.9
         )
         self.engram.sessions.add(self.session)

@@ -10,7 +10,7 @@ from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
 from environments.serializers import ProjectEnvironmentSerializer
-from frontal_lobe.serializers import TalosEngramSerializer
+from frontal_lobe.serializers import EngramSerializer
 from identity.serializers import IdentityDiscSerializer
 
 from .models import (
@@ -129,7 +129,7 @@ class PFCEpicDetailSerializer(serializers.ModelSerializer):
     status = PFCItemStatusSerializer(read_only=True)
     environment = ProjectEnvironmentSerializer(read_only=True)
     tags = PFCTagSerializer(many=True, read_only=True)
-    source_engrams = TalosEngramSerializer(many=True, read_only=True)
+    source_engrams = EngramSerializer(many=True, read_only=True)
     owning_disc = IdentityDiscSerializer(read_only=True)
     previous_owners = IdentityDiscSerializer(many=True, read_only=True)
     comments = serializers.SerializerMethodField()
@@ -147,7 +147,7 @@ class PFCEpicDetailSerializer(serializers.ModelSerializer):
 class PFCStoryDetailSerializer(serializers.ModelSerializer):
     status = PFCItemStatusSerializer(read_only=True)
     tags = PFCTagSerializer(many=True, read_only=True)
-    source_engrams = TalosEngramSerializer(many=True, read_only=True)
+    source_engrams = EngramSerializer(many=True, read_only=True)
     owning_disc = IdentityDiscSerializer(read_only=True)
     comments = serializers.SerializerMethodField()
 

@@ -1,16 +1,16 @@
 from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
-from hippocampus.models import TalosEngram, TalosEngramTag
+from hippocampus.models import Engram, EngramTag
 
 
-class TalosEngramTagSerializer(serializers.ModelSerializer):
+class EngramTagSerializer(serializers.ModelSerializer):
     class Meta:
-        model = TalosEngramTag
+        model = EngramTag
         fields = ALL_FIELDS
 
 
-class TalosEngramSerializer(serializers.ModelSerializer):
+class EngramSerializer(serializers.ModelSerializer):
     class Meta:
-        model = TalosEngram
+        model = Engram
         fields = ALL_FIELDS

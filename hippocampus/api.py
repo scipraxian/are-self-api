@@ -1,17 +1,17 @@
 from rest_framework.viewsets import ModelViewSet
 
-from hippocampus.models import TalosEngram, TalosEngramTag
+from hippocampus.models import Engram, EngramTag
 from hippocampus.serializers import (
-    TalosEngramSerializer,
-    TalosEngramTagSerializer,
+    EngramSerializer,
+    EngramTagSerializer,
 )
 
 
-class TalosEngramTagViewSet(ModelViewSet):
-    queryset = TalosEngramTag.objects.all()
-    serializer_class = TalosEngramTagSerializer
+class EngramTagViewSet(ModelViewSet):
+    queryset = EngramTag.objects.all()
+    serializer_class = EngramTagSerializer
 
 
-class TalosEngramViewSet(ModelViewSet):
-    queryset = TalosEngram.objects.all()
-    serializer_class = TalosEngramSerializer
+class EngramViewSet(ModelViewSet):
+    queryset = Engram.objects.all()
+    serializer_class = EngramSerializer

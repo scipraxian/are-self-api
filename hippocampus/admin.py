@@ -1,16 +1,16 @@
 from django.contrib import admin
 
-from .models import TalosEngram, TalosEngramTag
+from .models import Engram, EngramTag
 
 
-@admin.register(TalosEngramTag)
-class TalosEngramTagAdmin(admin.ModelAdmin):
+@admin.register(EngramTag)
+class EngramTagAdmin(admin.ModelAdmin):
     list_display = ('name',)
     search_fields = ('name',)
 
 
-@admin.register(TalosEngram)
-class TalosEngramAdmin(admin.ModelAdmin):
+@admin.register(Engram)
+class EngramAdmin(admin.ModelAdmin):
     # Core list view for quick scanning of memory entropy
     list_display = ('name', 'relevance_score', 'is_active', 'created')
     list_filter = ('is_active', 'tags', 'created')

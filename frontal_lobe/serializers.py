@@ -9,7 +9,7 @@ from frontal_lobe.models import (
     ReasoningTurn,
     SessionConclusion,
 )
-from hippocampus.models import TalosEngram
+from hippocampus.models import Engram
 from hypothalamus.serializers import AIModelProviderUsageRecordSerializer
 from parietal_lobe.models import ToolCall, ToolDefinition
 
@@ -72,11 +72,11 @@ class ReasoningTurnSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
-class TalosEngramSerializer(serializers.ModelSerializer):
+class EngramSerializer(serializers.ModelSerializer):
     source_turns = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
-        model = TalosEngram
+        model = Engram
         fields = ALL_FIELDS
 
 
@@ -102,7 +102,7 @@ class ReasoningSessionLiteSerializer(serializers.ModelSerializer):
 class ReasoningSessionGraphSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     turns = ReasoningTurnSerializer(many=True, read_only=True)
-    engrams = TalosEngramSerializer(many=True, read_only=True)
+    engrams = EngramSerializer(many=True, read_only=True)
     conclusion = SessionConclusionSerializer(read_only=True)
 
     current_level = serializers.IntegerField(read_only=True)

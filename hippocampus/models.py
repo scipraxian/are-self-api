@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
 from pgvector.django import VectorField
 
 from central_nervous_system.models import Spike
@@ -12,11 +14,11 @@ from frontal_lobe.models import ReasoningSession, ReasoningTurn
 from prefrontal_cortex.models import PFCTask
 
 
-class TalosEngramTag(NameMixin):
-    """A tag for a Talos engram."""
+class EngramTag(NameMixin):
+    """A tag for categorizing engrams."""
 
 
-class TalosEngram(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
+class Engram(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     """A single memory extracted during reasoning.
 
     args:
@@ -41,7 +43,7 @@ class TalosEngram(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
         Spike, related_name=RELATED_NAME, blank=True
     )
     tags = models.ManyToManyField(
-        TalosEngramTag, related_name=RELATED_NAME, blank=True
+        EngramTag, related_name=RELATED_NAME, blank=True
     )
     tasks = models.ManyToManyField(
         PFCTask, related_name=RELATED_NAME, blank=True
@@ -60,3 +62,43 @@ class TalosEngram(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     is_active = models.BooleanField(default=True)
     relevance_score = models.FloatField(default=0.0)
     vector = VectorField(dimensions=768, null=True, blank=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_description = self.description
+
+    def save(self, *args, **kwargs):
+        needs_vector = (
+            self.pk
+            and self.description != self._original_description
+        )
+        super().save(*args, **kwargs)
+        self._original_description = self.description
+        if needs_vector:
+            self.update_vector()
+
+    def update_vector(self):
+        """Generates a 768-dim embedding from name + description + tags."""
+        from frontal_lobe.synapse import OllamaClient
+
+        if not self.pk:
+            return
+
+        client = OllamaClient('nomic-embed-text')
+        tag_names = ', '.join(self.tags.values_list('name', flat=True))
+        text_payload = (
+            f'Title: {self.name}\n'
+            f'Tags: {tag_names}\n'
+            f'Fact: {self.description}'
+        )
+        self.vector = client.embed(text_payload)
+        super().save(update_fields=['vector'])
+
+
+@receiver(m2m_changed, sender=Engram.tags.through)
+def engram_tags_changed(sender, instance, action, **kwargs):
+    """Recalculate the Engram vector when tags change."""
+    if kwargs.get('raw', False):
+        return
+    if action in ['post_add', 'post_remove', 'post_clear']:
+        instance.update_vector()
