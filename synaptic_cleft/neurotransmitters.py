@@ -101,3 +101,10 @@ class Acetylcholine(Neurotransmitter):
         'updated'  # Can be overridden with 'created', 'deleted', etc.
     )
     # vesicle holds the serialized model data
+
+
+class Norepinephrine(Neurotransmitter):
+    """Worker monitoring, alertness, and fleet awareness."""
+
+    activity: str = 'event'
+    # vesicle holds structured Celery event data or worker log lines

@@ -1,5 +1,6 @@
 """Autonomic Nervous System API: control Django Celery Beat (heartbeat) via REST."""
 
+import logging
 import os
 import signal
 import subprocess
@@ -10,6 +11,10 @@ from django.conf import settings
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
+from config.celery import app as celery_app
+
+logger = logging.getLogger(__name__)
 
 # PID file for the Beat process we spawn (so we can stop it from another request)
 BEAT_PID_FILE = 'celery_beat.pid'
@@ -181,3 +186,42 @@ class CeleryBeatViewSet(viewsets.ViewSet):
             {'status': 'stop_failed', 'pid': pid},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+class CeleryWorkerViewSet(viewsets.ViewSet):
+    """API to inspect active Celery workers and their current tasks."""
+
+    def list(self, request):
+        """Return active Celery workers and their current tasks."""
+        inspect = celery_app.control.inspect()
+
+        try:
+            active = inspect.active() or {}
+            stats = inspect.stats() or {}
+            reserved = inspect.reserved() or {}
+        except Exception:
+            logger.exception('[PNS] Could not reach Celery workers.')
+            return Response(
+                {'error': 'Could not reach workers'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        workers = []
+        for hostname, tasks in active.items():
+            worker_stats = stats.get(hostname, {})
+            worker_reserved = reserved.get(hostname, [])
+            workers.append({
+                'hostname': hostname,
+                'active_tasks': tasks,
+                'reserved_tasks': worker_reserved,
+                'pool': worker_stats.get('pool', {}),
+                'broker': worker_stats.get('broker', {}),
+                'prefetch_count': worker_stats.get(
+                    'prefetch_count', 0
+                ),
+                'rusage': worker_stats.get('rusage', {}),
+                'total': worker_stats.get('total', {}),
+                'pid': worker_stats.get('pid'),
+            })
+
+        return Response({'workers': workers})
