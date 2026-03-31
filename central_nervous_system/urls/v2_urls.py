@@ -8,6 +8,9 @@ from central_nervous_system.api_v2 import (
     SpikeTrainViewSetV2,
     SpikeViewSetV2,
 )
+from central_nervous_system.views.spike_merge_viewset import (
+    SpikeLogMergeViewSet,
+)
 from central_nervous_system.views.v2_viewsets import Pathway3DViewSet
 
 V2_CNS_ROUTER = routers.SimpleRouter()
@@ -24,3 +27,6 @@ V2_CNS_ROUTER.register(
 V2_CNS_ROUTER.register(r'neurons', NeuronViewSetV2, basename='v2-neuron')
 V2_CNS_ROUTER.register(r'axons', AxonViewSetV2, basename='v2-axon')
 V2_CNS_ROUTER.register(r'effectors', EffectorViewSetV2, basename='v2-effector')
+V2_CNS_ROUTER.register(
+    r'spike-logs', SpikeLogMergeViewSet, basename='v2-spike-log'
+)
