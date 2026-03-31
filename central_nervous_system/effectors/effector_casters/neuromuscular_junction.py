@@ -100,7 +100,7 @@ def check_channel_layer_config():
             )
         else:
             logger.debug(
-                f'[CHANNEL_LAYER] CHANNEL_LAYERS config: {settings.CHANNEL_LAYERS}'
+                '[CHANNEL_LAYER] CHANNEL_LAYERS config: %s', settings.CHANNEL_LAYERS
             )
 
             # Check if using InMemoryChannelLayer (won't work across processes)
@@ -114,7 +114,7 @@ def check_channel_layer_config():
                 )
     else:
         logger.debug(
-            f'[CHANNEL_LAYER] Channel layer initialized: {type(channel_layer).__name__}'
+            '[CHANNEL_LAYER] Channel layer initialized: %s', type(channel_layer).__name__
         )
 
     return channel_layer
@@ -159,7 +159,7 @@ class AsyncLogManager:
         if text:
             text = text.replace('\x00', '')
         # Double Log: Ensures we see it in the Server Console (Celery) AND the DB
-        logger.debug(f'[HEAD {self.spike.id}] {text.strip()}')
+        logger.debug('[HEAD %s] %s', self.spike.id, text.strip())
         async with self._lock:
             await self._flush_unsafe()
             self.spike.execution_log += text
@@ -255,7 +255,7 @@ class AsyncLogManager:
             raise
         except Exception as e:
             logger.error(
-                f'Failed to save execution log for Spike {self.spike.id}: {e}'
+                'Failed to save execution log for Spike %s: %s', self.spike.id, e
             )
 
 
@@ -288,11 +288,11 @@ class NeuroMuscularJunction:
 
     def execute(self):
         """Public Synchronous Entry Point."""
-        logger.debug(f'Initializing execution for Spike ID: {self.spike_id}')
+        logger.debug('Initializing execution for Spike ID: %s', self.spike_id)
         try:
             self._load_head_sync()
         except Exception as e:
-            logger.error(f'FATAL: Could not load Spike {self.spike_id}: {e}')
+            logger.error('FATAL: Could not load Spike %s: %s', self.spike_id, e)
             return
 
         if sys.platform == 'win32':
@@ -333,7 +333,7 @@ class NeuroMuscularJunction:
                         raise exc
                 except ConnectionAbortedError:
                     logger.warning(
-                        f'Spike {self.spike_id} execution aborted by user.'
+                        'Spike %s execution aborted by user.', self.spike_id
                     )
                     return
 
@@ -577,7 +577,7 @@ class NeuroMuscularJunction:
             await sync_to_async(self.spike.save)(update_fields=fields)
         except Exception as e:
             logger.error(
-                f'Failed to save Spike {self.spike.id} fields {fields}: {e}'
+                'Failed to save Spike %s fields %s: %s', self.spike.id, fields, e
             )
 
     async def _update_status(self, status_id: int):
@@ -611,7 +611,7 @@ class NeuroMuscularJunction:
 
     def _handle_fatal_error_sync(self, e: Exception):
         """Synchronous fallback for loop crashes."""
-        logger.error(f'Critical Caster Failure: {e}')
+        logger.error('Critical NMJ Failure: %s', e)
         trace = traceback.format_exc()
         if self.spike:
             try:
@@ -622,12 +622,12 @@ class NeuroMuscularJunction:
                 self.spike.save(update_fields=['execution_log', 'status'])
             except Exception as db_err:
                 logger.error(
-                    f'Double Fault: Failed to write error to DB: {db_err}'
+                    'Double Fault: Failed to write error to DB: %s', db_err
                 )
 
     async def _handle_fatal_error(self, e: Exception):
         """Async error handler for pipeline logic."""
-        logger.error(f'Pipeline execution failed: {e}')
+        logger.error('Pipeline execution failed: %s', e)
         error_msg = f'\n[FATAL] Pipeline Error: {e}\n'
         if self.logger:
             try:
@@ -640,16 +640,3 @@ class NeuroMuscularJunction:
             except Exception:
                 pass
         self.status = SpikeStatus.FAILED
-
-
-# --- QUALITY REVIEW (rename pass, not yet addressed) ---
-# 1. f-string logger calls: 11 instances (style guide requires %s)
-#    Lines: 103, 117, 162, 258, 291, 295, 336, 580, 614, 625, 630
-# 2. Methods that could be module-level: none found — all methods use self
-# 3. Legacy naming in comments/docstrings:
-#    - Line 614: log message "Critical Caster Failure" contains "Caster"
-#    - Note: talos_executable references are Django model field names, not renameable here
-# 4. TODOs:
-#    - Line 60: "TODO: these should only be internal neurons like begin_play,logic_node,sequence."
-#    - Line 65: "TODO: move to management" (update_version_metadata)
-#    - Line 66: "TODO: move to management" (scan_and_register)
