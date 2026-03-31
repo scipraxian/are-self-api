@@ -4,6 +4,7 @@ from temporal_lobe.api import (
     IterationDefinitionViewSet,
     IterationShiftDefinitionViewSet,
     IterationViewSet,
+    ShiftViewSet,
     TemporalViewSet,
 )
 
@@ -23,4 +24,7 @@ V2_TEMPORAL_LOBE_ROUTER.register(
     r'iteration-shift-definitions',
     IterationShiftDefinitionViewSet,
     basename='iteration-shift-definitions',
+)
+V2_TEMPORAL_LOBE_ROUTER.register(
+    r'shifts', ShiftViewSet, basename='shifts'
 )

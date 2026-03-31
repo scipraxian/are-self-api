@@ -15,12 +15,14 @@ from temporal_lobe.models import (
     IterationShiftParticipant,
     IterationShiftParticipantStatus,
     IterationStatus,
+    Shift,
 )
 from temporal_lobe.serializers import (
     IterationDefinitionSerializer,
     IterationSerializer,
     IterationShiftDefinitionSerializer,
     IterationShiftDetailSerializer,
+    ShiftSerializer,
 )
 from temporal_lobe.temporal_lobe import (
     fetch_canonical_temporal_pathway,
@@ -342,6 +344,14 @@ class IterationViewSet(viewsets.ModelViewSet):
         )
 
 
+class ShiftViewSet(viewsets.ReadOnlyModelViewSet):
+    """Read-only reference data for the 6 shift types."""
+
+    queryset = Shift.objects.all().order_by('id')
+    serializer_class = ShiftSerializer
+    permission_classes = [AllowAny]
+
+
 class IterationDefinitionViewSet(viewsets.ModelViewSet):
     """Provides the UI with the available blueprints for Inception. Supports editing
     definition participants (slot_disc / remove_disc) and incepting a new iteration.
@@ -353,6 +363,29 @@ class IterationDefinitionViewSet(viewsets.ModelViewSet):
         'iterationshiftdefinition_set__iterationshiftdefinitionparticipant_set__identity_disc',
     ).all()
     serializer_class = IterationDefinitionSerializer
+
+    def perform_create(self, serializer: IterationDefinitionSerializer) -> None:
+        """Auto-populate one IterationShiftDefinition per Shift type."""
+        definition = serializer.save()
+        shifts = Shift.objects.all().order_by('id')
+        for i, shift in enumerate(shifts):
+            IterationShiftDefinition.objects.create(
+                definition=definition,
+                shift=shift,
+                order=i,
+                turn_limit=shift.default_turn_limit,
+            )
+
+    def create(self, request, *args, **kwargs) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        # Re-fetch with prefetch to include the new shift definitions
+        fresh = self.get_queryset().get(pk=serializer.instance.pk)
+        return Response(
+            self.get_serializer(fresh).data,
+            status=status.HTTP_201_CREATED,
+        )
 
     @action(detail=True, methods=['post'], url_path='incept')
     def incept(self, request, pk=None):
