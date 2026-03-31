@@ -6,7 +6,7 @@ import uuid  # <--- RESTORED
 from django.conf import settings
 
 from central_nervous_system.models import Spike
-from central_nervous_system.tasks import cast_cns_spell
+from central_nervous_system.tasks import fire_spike
 
 logger = logging.getLogger(__name__)
 
@@ -157,7 +157,7 @@ def ai_execute_task(spike_id):
     except ValueError:
         return f"Error: Invalid Spike ID '{spike_id}'. Must be a UUID."
     try:
-        cast_cns_spell.delay(str(spike_id))
+        fire_spike.delay(str(spike_id))
         return f'Successfully queued effector for Spike {spike_id}.'
     except Exception as e:
         return f'Error casting effector: {str(e)}'

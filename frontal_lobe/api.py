@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from central_nervous_system.models import SpikeStatus
-from central_nervous_system.tasks import cast_cns_spell
+from central_nervous_system.tasks import fire_spike
 from frontal_lobe.models import ReasoningStatusID
 from frontal_lobe.serializers import (
     KEY_REPLY,
@@ -75,7 +75,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
 
         spike.status_id = SpikeStatus.PENDING
         spike.save(update_fields=['status'])
-        cast_cns_spell.delay(spike.id)
+        fire_spike.delay(spike.id)
 
         return Response(
             {

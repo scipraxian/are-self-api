@@ -28,10 +28,9 @@ def check_next_wave(spike_train_id):
 
 
 @shared_task(bind=True)
-def cast_cns_spell(self, spike_id):
+def fire_spike(self, spike_id):
     """
     The Main Execution Task.
-    Instantiates the GenericEffectorCaster to run the pipeline.
     """
     logger.debug(f'Task starting for Spike ID: {spike_id}')
 
