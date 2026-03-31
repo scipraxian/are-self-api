@@ -1,9 +1,8 @@
 import json
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
-from frontal_lobe.models import ChatMessage, ChatMessageRole
-from identity.addons.addon_package import AddonPackage
+from frontal_lobe.models import ReasoningTurn
 from identity.models import IdentityDisc, IdentityType
 from prefrontal_cortex.models import PFCEpic, PFCItemStatus, PFCStory, PFCTask
 from prefrontal_cortex.serializers import (
@@ -266,38 +265,35 @@ def _build_assignment_content(
 # ---------------------------------------------------------------------------
 
 
-def agile_addon(package: AddonPackage) -> List[ChatMessage]:
+def agile_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
     """
     Identity Addon (Phase: CONTEXT)
 
     Resolves the ticket locked to this AI disc and injects hyper-focused
     shift instructions as a volatile USER message.
     """
-    if not package.shift_id or not package.identity_disc:
+    if (
+        not turn
+        or not turn.session.participant
+        or not turn.session.identity_disc
+    ):
         return []
 
-    item_type, item_id, item_json = _get_locked_ticket(package.identity_disc)
+    participant = turn.session.participant
+    shift_id = participant.iteration_shift.shift_id
+    disc = turn.session.identity_disc
+
+    item_type, item_id, item_json = _get_locked_ticket(disc.id)
 
     if item_type is None:
         content = _NO_ASSIGNMENT_MESSAGE
     else:
-        disc = IdentityDisc.objects.select_related('identity_type').get(
-            id=package.identity_disc
-        )
         content = _build_assignment_content(
-            shift_id=package.shift_id,
+            shift_id=shift_id,
             item_type=item_type,
             item_id=item_id,
             item_json=item_json,
             is_pm=(disc.identity_type_id == IdentityType.PM),
         )
 
-    return [
-        ChatMessage(
-            session_id=package.session_id,
-            turn_id=package.reasoning_turn_id,
-            role_id=ChatMessageRole.USER,
-            content=content,
-            is_volatile=True,
-        )
-    ]
+    return [{'role': 'system', 'content': content}]

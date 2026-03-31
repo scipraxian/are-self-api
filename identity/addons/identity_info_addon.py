@@ -1,11 +1,10 @@
-from typing import List
+from typing import Any, Dict, List
 
-from frontal_lobe.models import ChatMessage, ChatMessageRole
-from identity.addons.addon_package import AddonPackage
+from frontal_lobe.models import ReasoningTurn
 from identity.models import IdentityDisc
 
 
-def identity_info_addon(package: AddonPackage) -> List[ChatMessage]:
+def identity_info_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
     """
     Identity Addon (Phase: IDENTIFY)
     Injects the core system prompt, persona, and environmental rules.
@@ -14,30 +13,25 @@ def identity_info_addon(package: AddonPackage) -> List[ChatMessage]:
     # it forced a local import.
     from identity.identity_prompt import build_identity_prompt
 
-    if not package.identity_disc or not package.reasoning_turn_id:
+    if not turn.session.identity_disc:
         return []
 
     # Fetch the actual Disc object for the prompt builder
-    disc = IdentityDisc.objects.get(id=package.identity_disc)
+    disc = turn.session.identity_disc
+    iteration_id = None
+    if turn.session.participant_id:
+        iteration_id = (
+            turn.session.participant.iteration_shift.shift_iteration_id
+        )
 
-    # Everything you used to get from `self` and `turn_record`
-    # is perfectly cached inside `package`!
     prompt_text = build_identity_prompt(
         identity_disc=disc,
-        iteration_id=package.iteration,
-        turn_number=package.turn_number,
-        reasoning_turn_id=package.reasoning_turn_id,
+        iteration_id=iteration_id,
+        turn_number=turn.turn_number,
+        reasoning_turn_id=turn.id,
     )
 
     if not prompt_text:
         return []
 
-    return [
-        ChatMessage(
-            session_id=package.session_id,
-            turn_id=package.reasoning_turn_id,
-            role_id=ChatMessageRole.SYSTEM,  # Core Identity is usually SYSTEM
-            content=prompt_text,
-            is_volatile=True,
-        )
-    ]
+    return [{'role': 'system', 'content': prompt_text}]

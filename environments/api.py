@@ -1,14 +1,26 @@
 from django.db import transaction
-from djangorestframework_mcp.decorators import mcp_viewset
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .models import ProjectEnvironment, TalosExecutable
-from .serializers import ProjectEnvironmentSerializer, TalosExecutableSerializer
+from .models import (
+    ContextVariable,
+    ProjectEnvironment,
+    ProjectEnvironmentContextKey,
+    ProjectEnvironmentStatus,
+    ProjectEnvironmentType,
+    TalosExecutable,
+)
+from .serializers import (
+    ContextVariableSerializer,
+    ProjectEnvironmentContextKeySerializer,
+    ProjectEnvironmentSerializer,
+    ProjectEnvironmentStatusSerializer,
+    ProjectEnvironmentTypeSerializer,
+    TalosExecutableSerializer,
+)
 
 
-@mcp_viewset()
 class ProjectEnvironmentViewSet(viewsets.ModelViewSet):
     """
     Manages Project Contexts.
@@ -41,7 +53,6 @@ class ProjectEnvironmentViewSet(viewsets.ModelViewSet):
         return Response({'status': f'Active Environment set to: {env.name}'})
 
 
-@mcp_viewset()
 class TalosExecutableViewSet(viewsets.ModelViewSet):
     """
     Registry of Tools/Executables.
@@ -52,3 +63,24 @@ class TalosExecutableViewSet(viewsets.ModelViewSet):
     serializer_class = TalosExecutableSerializer
     # Executable updates are rare/dangerous; restricting to admin or explicit PATCH
     http_method_names = ['get', 'head', 'options', 'patch']
+
+
+class ContextVariableViewSet(viewsets.ModelViewSet):
+    queryset = ContextVariable.objects.all().select_related('key')
+    serializer_class = ContextVariableSerializer
+    filterset_fields = ['environment']
+
+
+class ContextKeyViewSet(viewsets.ModelViewSet):
+    queryset = ProjectEnvironmentContextKey.objects.all().order_by('name')
+    serializer_class = ProjectEnvironmentContextKeySerializer
+
+
+class EnvironmentTypeViewSet(viewsets.ModelViewSet):
+    queryset = ProjectEnvironmentType.objects.all()
+    serializer_class = ProjectEnvironmentTypeSerializer
+
+
+class EnvironmentStatusViewSet(viewsets.ModelViewSet):
+    queryset = ProjectEnvironmentStatus.objects.all()
+    serializer_class = ProjectEnvironmentStatusSerializer

@@ -56,7 +56,8 @@ def _search_field_sync(
 
 
 async def mcp_search_record_field(
-    model_name: str, record_id: str, field_name: str, pattern: str
+    model_name: str, record_id: str, field_name: str, pattern: str,
+    thought: str = ''
 ) -> str:
     """MCP Tool: Searches a specific text field in the database for a regex pattern."""
     return await _search_field_sync(model_name, record_id, field_name, pattern)

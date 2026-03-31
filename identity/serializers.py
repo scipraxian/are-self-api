@@ -1,16 +1,10 @@
-from django.db.models import Q
 from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
 from frontal_lobe.models import (
-    ModelRegistry,
     ReasoningSession,
     ReasoningStatus,
     ReasoningTurn,
-)
-from frontal_lobe.serializers import (
-    ModelRegistrySerializer,
-    TalosEngramSerializer,
 )
 from parietal_lobe.models import ToolDefinition
 
@@ -71,10 +65,7 @@ class IdentityDiscTurnSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'turn_number',
-            'tokens_input',
-            'tokens_output',
             'inference_time',
-            'thought_process',
         )
 
 
@@ -134,6 +125,10 @@ class IdentityDiscSerializer(serializers.ModelSerializer):
         )
 
     def get_memories(self, identity_disc):
+        from frontal_lobe.serializers import (
+            TalosEngramSerializer,
+        )
+
         return TalosEngramSerializer(
             identity_disc.engrams.distinct(),
             many=True,

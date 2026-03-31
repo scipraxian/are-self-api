@@ -350,11 +350,11 @@
   "pk": 26,
   "fields": {
     "created": "2026-03-15T19:19:37.350Z",
-    "description": "MANDATORY: You must call this tool on EVERY turn to log your thoughts, speak to the user, and pass state.",
-    "modified": "2026-03-18T17:05:19.598Z",
+    "description": "Enjoy keeping the user and yourself in the loop by stating your thoughts as you continue to work.",
+    "modified": "2026-03-27T14:50:18.919Z",
     "name": "mcp_internal_monologue",
     "is_async": true,
-    "use_type": 6
+    "use_type": null
   }
 },
 {
@@ -362,9 +362,21 @@
   "pk": 27,
   "fields": {
     "created": "2026-03-17T12:00:00Z",
-    "description": "Request human input and pause the current reasoning session. Use this anytime you want immediate organic feedback.",
-    "modified": "2026-03-17T12:00:00Z",
+    "description": "Block for Human. Wait for User. The question has been answered. You are waiting.",
+    "modified": "2026-03-27T14:50:08.032Z",
     "name": "mcp_ask_user",
+    "is_async": true,
+    "use_type": null
+  }
+},
+{
+  "model": "parietal_lobe.tooldefinition",
+  "pk": 28,
+  "fields": {
+    "created": "2026-03-27T12:00:00Z",
+    "description": "Your voice, your thoughts, your control over the conversation. Speak to the user, record your reasoning, and decide whether to keep working or yield the turn to the human.",
+    "modified": "2026-03-27T12:00:00Z",
+    "name": "mcp_respond_to_user",
     "is_async": true,
     "use_type": 6
   }
@@ -990,7 +1002,7 @@
   "pk": 57,
   "fields": {
     "created": "2026-03-15T19:19:37.356Z",
-    "description": "Reason through your current state, focus economy, and Agile goals.",
+    "description": "State your reasoning for using this tool.",
     "modified": "2026-03-15T19:19:37.356Z",
     "name": "thought",
     "type": 1
@@ -1001,7 +1013,7 @@
   "pk": 58,
   "fields": {
     "created": "2026-03-15T19:19:37.363Z",
-    "description": "Text to display directly to the human user. Leave empty if you have nothing to say.",
+    "description": "Text to display directly to the human user.",
     "modified": "2026-03-15T19:19:37.363Z",
     "name": "message_to_user",
     "type": 1
@@ -1038,6 +1050,17 @@
     "modified": "2026-03-17T12:00:00Z",
     "name": "details",
     "type": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameter",
+  "pk": 62,
+  "fields": {
+    "created": "2026-03-27T12:00:00Z",
+    "description": "When true, pause the session and wait for the human. When false, keep working.",
+    "modified": "2026-03-27T12:00:00Z",
+    "name": "yield_turn",
+    "type": 4
   }
 },
 {
@@ -1746,6 +1769,246 @@
     "parameter": 18,
     "required": true,
     "prune_after_turns": 0
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 153,
+  "fields": {
+    "created": "2026-03-27T12:00:00Z",
+    "modified": "2026-03-27T12:00:00Z",
+    "tool": 28,
+    "parameter": 57,
+    "required": true,
+    "prune_after_turns": 2
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 154,
+  "fields": {
+    "created": "2026-03-27T12:00:00Z",
+    "modified": "2026-03-27T12:00:00Z",
+    "tool": 28,
+    "parameter": 58,
+    "required": true,
+    "prune_after_turns": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 155,
+  "fields": {
+    "created": "2026-03-27T12:00:00Z",
+    "modified": "2026-03-27T12:00:00Z",
+    "tool": 28,
+    "parameter": 59,
+    "required": true,
+    "prune_after_turns": 6
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 156,
+  "fields": {
+    "created": "2026-03-27T12:00:00Z",
+    "modified": "2026-03-27T12:00:00Z",
+    "tool": 28,
+    "parameter": 62,
+    "required": true,
+    "prune_after_turns": 0
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 157,
+  "fields": {
+    "created": "2026-03-27T18:00:00Z",
+    "modified": "2026-03-27T18:00:00Z",
+    "tool": 4,
+    "parameter": 57,
+    "required": false,
+    "prune_after_turns": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 158,
+  "fields": {
+    "created": "2026-03-27T18:00:00Z",
+    "modified": "2026-03-27T18:00:00Z",
+    "tool": 5,
+    "parameter": 57,
+    "required": false,
+    "prune_after_turns": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 159,
+  "fields": {
+    "created": "2026-03-27T18:00:00Z",
+    "modified": "2026-03-27T18:00:00Z",
+    "tool": 6,
+    "parameter": 57,
+    "required": false,
+    "prune_after_turns": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 160,
+  "fields": {
+    "created": "2026-03-27T18:00:00Z",
+    "modified": "2026-03-27T18:00:00Z",
+    "tool": 7,
+    "parameter": 57,
+    "required": false,
+    "prune_after_turns": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 161,
+  "fields": {
+    "created": "2026-03-27T18:00:00Z",
+    "modified": "2026-03-27T18:00:00Z",
+    "tool": 8,
+    "parameter": 57,
+    "required": false,
+    "prune_after_turns": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 162,
+  "fields": {
+    "created": "2026-03-27T18:00:00Z",
+    "modified": "2026-03-27T18:00:00Z",
+    "tool": 9,
+    "parameter": 57,
+    "required": false,
+    "prune_after_turns": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 163,
+  "fields": {
+    "created": "2026-03-27T18:00:00Z",
+    "modified": "2026-03-27T18:00:00Z",
+    "tool": 10,
+    "parameter": 57,
+    "required": false,
+    "prune_after_turns": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 164,
+  "fields": {
+    "created": "2026-03-27T18:00:00Z",
+    "modified": "2026-03-27T18:00:00Z",
+    "tool": 13,
+    "parameter": 57,
+    "required": false,
+    "prune_after_turns": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 165,
+  "fields": {
+    "created": "2026-03-27T18:00:00Z",
+    "modified": "2026-03-27T18:00:00Z",
+    "tool": 14,
+    "parameter": 57,
+    "required": false,
+    "prune_after_turns": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 166,
+  "fields": {
+    "created": "2026-03-27T18:00:00Z",
+    "modified": "2026-03-27T18:00:00Z",
+    "tool": 15,
+    "parameter": 57,
+    "required": false,
+    "prune_after_turns": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 167,
+  "fields": {
+    "created": "2026-03-27T18:00:00Z",
+    "modified": "2026-03-27T18:00:00Z",
+    "tool": 16,
+    "parameter": 57,
+    "required": false,
+    "prune_after_turns": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 168,
+  "fields": {
+    "created": "2026-03-27T18:00:00Z",
+    "modified": "2026-03-27T18:00:00Z",
+    "tool": 17,
+    "parameter": 57,
+    "required": false,
+    "prune_after_turns": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 169,
+  "fields": {
+    "created": "2026-03-27T18:00:00Z",
+    "modified": "2026-03-27T18:00:00Z",
+    "tool": 18,
+    "parameter": 57,
+    "required": false,
+    "prune_after_turns": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 170,
+  "fields": {
+    "created": "2026-03-27T18:00:00Z",
+    "modified": "2026-03-27T18:00:00Z",
+    "tool": 20,
+    "parameter": 57,
+    "required": false,
+    "prune_after_turns": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 171,
+  "fields": {
+    "created": "2026-03-27T18:00:00Z",
+    "modified": "2026-03-27T18:00:00Z",
+    "tool": 24,
+    "parameter": 57,
+    "required": false,
+    "prune_after_turns": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 172,
+  "fields": {
+    "created": "2026-03-27T18:00:00Z",
+    "modified": "2026-03-27T18:00:00Z",
+    "tool": 25,
+    "parameter": 57,
+    "required": false,
+    "prune_after_turns": 1
   }
 },
 {

@@ -1,5 +1,6 @@
 import logging
 from typing import Optional
+from uuid import UUID
 
 from django.template import Context, Template
 from django.template.exceptions import TemplateSyntaxError
@@ -76,7 +77,7 @@ def build_identity_prompt(
     identity_disc: Optional['IdentityDisc'],
     iteration_id: Optional[int] = None,
     turn_number: int = 1,
-    reasoning_turn_id: Optional[int] = None,
+    reasoning_turn_id: Optional[UUID] = None,
 ) -> str:
     """
     Dynamically compiles the system prompt based on the mounted IdentityDisc.

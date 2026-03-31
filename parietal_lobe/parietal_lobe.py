@@ -6,8 +6,6 @@ from typing import Any, Callable, Dict, List, Optional
 from asgiref.sync import sync_to_async
 
 from frontal_lobe.models import (
-    ChatMessage,
-    ChatMessageRole,
     ReasoningSession,
     ReasoningStatusID,
     ReasoningTurn,
@@ -151,10 +149,10 @@ class ParietalLobe:
                     required_fields.append(param_def.name)
 
             mechanics = t.use_type
-            if mechanics:
+            if mechanics is not None:
                 cost_str = f'[COST: {mechanics.focus_modifier} Focus | REWARD: +{mechanics.xp_reward} XP] '
             else:
-                cost_str = '[COST: 0 Focus | REWARD: +0 XP] '
+                cost_str = ''
 
             full_description = f'{cost_str}{t.description}'
 
@@ -184,7 +182,7 @@ class ParietalLobe:
         raw_args = func_data.get(self.T_ARGS, {})
         args = _json_str_to_dict(raw_args)
         args[self.SESSION_ID] = str(self.session.id)
-        args[self.TURN_ID] = turn_record.id
+        args[self.TURN_ID] = str(turn_record.id)
         await self._log_live(f'Tool Call: {tool_name}({args})')
 
         try:
@@ -199,13 +197,6 @@ class ParietalLobe:
 
             error_msg = f"Error: Unknown tool '{tool_name}'"
             await self._log_live(f'Result: {error_msg}')
-            await sync_to_async(ChatMessage.objects.create)(
-                session=self.session,
-                turn=turn_record,
-                role_id=ChatMessageRole.TOOL,
-                content=error_msg,
-                is_volatile=False,
-            )
             return {
                 'role': 'tool',
                 'name': tool_name,
@@ -232,15 +223,6 @@ class ParietalLobe:
                 status_id=ReasoningStatusID.ERROR,
                 result_payload=fizzle_msg,
                 traceback='Insufficient Focus.',
-            )
-
-            await sync_to_async(ChatMessage.objects.create)(
-                session=self.session,
-                turn=turn_record,
-                role_id=ChatMessageRole.TOOL,
-                content=fizzle_msg,
-                tool_call=db_tool_call,
-                is_volatile=False,
             )
             return {
                 'role': 'tool',
@@ -287,15 +269,7 @@ class ParietalLobe:
 
         await self._log_live(f'Result: {tool_result[:200]}...')
 
-        # --- SAVE RESULT TO HISTORY ---
-        await sync_to_async(ChatMessage.objects.create)(
-            session=self.session,
-            turn=turn_record,
-            role_id=ChatMessageRole.TOOL,
-            content=tool_result,
-            tool_call=db_tool_call,
-            is_volatile=False,
-        )
+        # --- NO MORE CHAT MESSAGE CREATION ---
         return {
             'role': 'tool',
             'name': tool_name,

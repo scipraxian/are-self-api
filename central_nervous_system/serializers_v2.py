@@ -82,10 +82,18 @@ class SpikeSerializer(serializers.ModelSerializer):
     target_hostname = serializers.CharField(
         source='target.hostname', read_only=True, default=None
     )
+    pathway = serializers.CharField(
+        source='neuron.pathway.id', read_only=True, default=None
+    )
+    invoked_pathway = serializers.CharField(
+        source='neuron.invoked_pathway.id', read_only=True, default=None
+    )
+    provenance_train = serializers.CharField(
+        source='provenance.spike_train.id', read_only=True, default=None
+    )
 
     class Meta:
         model = Spike
-        # Send raw 'created' and 'modified'. React does the duration math.
         fields = [
             'id',
             'status',
@@ -97,6 +105,12 @@ class SpikeSerializer(serializers.ModelSerializer):
             'modified',
             'target_hostname',
             'result_code',
+            'spike_train',
+            'pathway',
+            'invoked_pathway',
+            'child_trains',
+            'provenance',
+            'provenance_train',
         ]
 
 

@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import List
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
 
 from rest_framework import serializers
 
@@ -28,13 +28,19 @@ class ThalamusResponseSerializer(serializers.Serializer):
 class ThalamusMessageDTO:
     role: str
     content: str
+    # Add the parts array to support assistant-ui ChainOfThought primitives
+    parts: Optional[List[Dict[str, Any]]] = field(default=None)
 
 
 class ThalamusMessageSerializer(serializers.Serializer):
     """Schema for a single chat message."""
 
     role = serializers.CharField()
-    content = serializers.CharField()
+    # allow_blank=True ensures DRF doesn't crash if the model ONLY outputs parts
+    content = serializers.CharField(allow_blank=True)
+
+    # Allow the arbitrary Vercel AI SDK 'parts' dictionaries to pass through to the frontend
+    parts = serializers.ListField(child=serializers.DictField(), required=False)
 
 
 @dataclass

@@ -294,22 +294,22 @@
     "distribution_mode": 1,
     "tags": [],
     "switches": [
-      32,
-      33,
-      34,
       3,
-      35,
       5,
-      37,
-      38,
       9,
       10,
       11,
-      44,
       13,
       15,
       19,
-      20
+      20,
+      32,
+      33,
+      34,
+      35,
+      37,
+      38,
+      44
     ]
   }
 },
@@ -583,8 +583,8 @@
     "distribution_mode": 1,
     "tags": [],
     "switches": [
-      61,
-      62
+      62,
+      61
     ]
   }
 },
@@ -666,8 +666,8 @@
     "distribution_mode": 1,
     "tags": [],
     "switches": [
-      61,
-      62
+      62,
+      61
     ]
   }
 },
@@ -684,8 +684,8 @@
     "distribution_mode": 1,
     "tags": [],
     "switches": [
-      61,
-      62
+      62,
+      61
     ]
   }
 },
@@ -2974,19 +2974,6 @@
     "pathway": "c3dd041a-20eb-4414-b571-2a5fdbeb9b86",
     "effector": 172,
     "ui_json": "{\"x\":380,\"y\":80}",
-    "invoked_pathway": null,
-    "distribution_mode": null
-  }
-},
-{
-  "model": "central_nervous_system.neuron",
-  "pk": 134,
-  "fields": {
-    "environment": null,
-    "is_root": false,
-    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-    "effector": 166,
-    "ui_json": "{\"x\":160.02699307159975,\"y\":313.98576488813706}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
