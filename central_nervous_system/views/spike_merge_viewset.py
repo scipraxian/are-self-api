@@ -76,7 +76,7 @@ class SpikeLogMergeViewSet(ViewSet):
                 ).get(id=spike_id))
             except Spike.DoesNotExist:
                 logger.warning(
-                    '[SpikeLogMerge] %s', ERR_SPIKE_NOT_FOUND, spike_id
+                    '[SpikeLogMerge] %s', ERR_SPIKE_NOT_FOUND % spike_id
                 )
                 return Response(
                     {'error': ERR_SPIKE_NOT_FOUND % spike_id},

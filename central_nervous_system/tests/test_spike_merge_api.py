@@ -11,16 +11,11 @@ from central_nervous_system.models import (
 )
 from common.tests.common_test_case import CommonFixturesAPITestCase
 
-
 MERGE_URL = reverse('v2-spike-log-merge')
 MERGE_DELTA_URL = reverse('v2-spike-log-merge-delta')
 
-LOG_CONTENT_A = (
-    '[2026.01.08-10.13.29:000][  0]LogTemp: Display: Alpha line\n'
-)
-LOG_CONTENT_B = (
-    '[2026.01.08-10.13.30:000][  0]LogTemp: Display: Bravo line\n'
-)
+LOG_CONTENT_A = '[2026.01.08-10.13.29:000][  0]LogTemp: Display: Alpha line\n'
+LOG_CONTENT_B = '[2026.01.08-10.13.30:000][  0]LogTemp: Display: Bravo line\n'
 
 
 class TestSpikeLogMergeAPI(CommonFixturesAPITestCase):
@@ -28,7 +23,9 @@ class TestSpikeLogMergeAPI(CommonFixturesAPITestCase):
 
     def setUp(self):
         super().setUp()
-        spike_train = SpikeTrain.objects.first()
+        spike_train = SpikeTrain.objects.create(
+            status_id=SpikeTrainStatus.RUNNING,
+        )
         self.spike_a = Spike.objects.create(
             spike_train=spike_train,
             status_id=SpikeStatus.SUCCESS,
@@ -61,9 +58,7 @@ class TestSpikeLogMergeAPI(CommonFixturesAPITestCase):
 
     def test_merge_requires_two_spikes(self):
         """Assert merge returns 400 when fewer than 2 spike IDs provided."""
-        response = self.test_client.get(
-            MERGE_URL, {'s1': str(self.spike_a.id)}
-        )
+        response = self.test_client.get(MERGE_URL, {'s1': str(self.spike_a.id)})
         self.assertEqual(response.status_code, 400)
 
     def test_merge_404_on_invalid_spike(self):
