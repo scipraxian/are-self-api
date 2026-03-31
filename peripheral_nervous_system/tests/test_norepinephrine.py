@@ -6,6 +6,11 @@ from unittest.mock import MagicMock, patch
 from rest_framework import status
 
 from common.tests.common_test_case import CommonTestCase
+from peripheral_nervous_system.celery_signals import (
+    on_task_postrun,
+    on_task_prerun,
+    on_worker_ready,
+)
 from synaptic_cleft.neurotransmitters import Norepinephrine
 from synaptic_cleft.norepinephrine_handler import NorepinephrineHandler
 
@@ -175,3 +180,70 @@ class CeleryWorkerAPITests(CommonTestCase):
 
         response = self.test_client.get('/api/v2/celery-workers/')
         assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+
+class TestCelerySignals(CommonTestCase):
+    """Tests for Celery in-process signal handlers."""
+
+    @patch('peripheral_nervous_system.celery_signals._fire')
+    def test_worker_ready_fires_norepinephrine(self, mock_fire):
+        """Assert worker_ready signal fires worker_online Norepinephrine."""
+        on_worker_ready(sender='celery@TESTHOST')
+        mock_fire.assert_called_once()
+        args = mock_fire.call_args
+        assert args[0][0] == 'worker_online'
+        assert args[0][1] == 'celery@TESTHOST'
+
+    @patch('peripheral_nervous_system.celery_signals._fire')
+    def test_task_prerun_fires_norepinephrine(self, mock_fire):
+        """Assert task_prerun signal fires task_started Norepinephrine."""
+        mock_task = MagicMock()
+        mock_task.name = 'central_nervous_system.tasks.run_session'
+        on_task_prerun(
+            sender=mock_task,
+            task_id='abc-123',
+            task=mock_task,
+            args=[],
+            kwargs={},
+        )
+        mock_fire.assert_called_once()
+        args = mock_fire.call_args
+        assert args[0][0] == 'task_started'
+        assert args[0][2]['name'] == (
+            'central_nervous_system.tasks.run_session'
+        )
+
+    @patch('peripheral_nervous_system.celery_signals._fire')
+    def test_task_postrun_success(self, mock_fire):
+        """Assert task_postrun with SUCCESS state fires task_succeeded."""
+        mock_task = MagicMock()
+        mock_task.name = 'run_session'
+        on_task_postrun(
+            sender=mock_task,
+            task_id='abc-123',
+            task=mock_task,
+            args=[],
+            kwargs={},
+            retval=None,
+            state='SUCCESS',
+        )
+        args = mock_fire.call_args
+        assert args[0][0] == 'task_succeeded'
+
+    @patch('peripheral_nervous_system.celery_signals._fire')
+    def test_task_postrun_failure(self, mock_fire):
+        """Assert task_postrun with FAILURE state fires task_failed."""
+        mock_task = MagicMock()
+        mock_task.name = 'run_session'
+        on_task_postrun(
+            sender=mock_task,
+            task_id='abc-123',
+            task=mock_task,
+            args=[],
+            kwargs={},
+            retval=Exception('boom'),
+            state='FAILURE',
+        )
+        args = mock_fire.call_args
+        assert args[0][0] == 'task_failed'
+        assert args[0][2]['exception'] == 'boom'
