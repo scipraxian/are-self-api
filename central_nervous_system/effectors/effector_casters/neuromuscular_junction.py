@@ -129,7 +129,7 @@ class AsyncLogManager:
     def __init__(self, spike: Spike, flush_size=50, flush_interval=1.0):
         self.spike = spike
         self.exec_buffer: List[str] = []
-        self.spell_buffer: List[str] = []
+        self.application_buffer: List[str] = []
         self._lock = asyncio.Lock()
         self._last_flush_time = time.time()
         self._flush_size = flush_size
@@ -145,12 +145,12 @@ class AsyncLogManager:
             if self._should_flush():
                 await self._flush_unsafe()
 
-    async def append_spell(self, text: str):
+    async def append_application(self, text: str):
         """Appends to Effector Log (Game Logs/File)."""
         if text:
             text = text.replace('\x00', '')
         async with self._lock:
-            self.spell_buffer.append(text)
+            self.application_buffer.append(text)
             if self._should_flush():
                 await self._flush_unsafe()
 
@@ -174,31 +174,31 @@ class AsyncLogManager:
             await self._flush_unsafe()
 
     def _should_flush(self) -> bool:
-        total_size = len(self.exec_buffer) + len(self.spell_buffer)
+        total_size = len(self.exec_buffer) + len(self.application_buffer)
         return (
             total_size > self._flush_size
             or (time.time() - self._last_flush_time) > self._flush_interval
         )
 
     async def _flush_unsafe(self):
-        if not self.exec_buffer and not self.spell_buffer:
+        if not self.exec_buffer and not self.application_buffer:
             return
 
         # Capture current buffered chunks before mutating spike fields
         exec_chunk = ''.join(self.exec_buffer) if self.exec_buffer else ''
-        spell_chunk = ''.join(self.spell_buffer) if self.spell_buffer else ''
+        application_chunk = ''.join(self.application_buffer) if self.application_buffer else ''
 
         if self.exec_buffer:
             self.spike.execution_log += exec_chunk
             self.exec_buffer.clear()
 
-        if self.spell_buffer:
-            self.spike.application_log += spell_chunk
-            self.spell_buffer.clear()
+        if self.application_buffer:
+            self.spike.application_log += application_chunk
+            self.application_buffer.clear()
 
         await self._mirror_to_socket(
             execution_chunk=exec_chunk,
-            application_chunk=spell_chunk,
+            application_chunk=application_chunk,
         )
 
         await self._save_to_db()
@@ -259,7 +259,7 @@ class AsyncLogManager:
             )
 
 
-class GenericEffectorCaster:
+class NeuroMuscularJunction:
     """The Orchestrator for Are-Self Executables."""
 
     LOG_START_MESSAGE = 'Starting effector execution.\n'
@@ -311,11 +311,11 @@ class GenericEffectorCaster:
             self.logger = AsyncLogManager(self.spike)
             await self._preflight()
 
-            spell_task = asyncio.create_task(self._cast_spell())
+            spike_task = asyncio.create_task(self._execute_spike())
             monitor_task = asyncio.create_task(self._monitor_abort_signal())
 
             done, pending = await asyncio.wait(
-                [spell_task, monitor_task],
+                [spike_task, monitor_task],
                 return_when=asyncio.FIRST_COMPLETED,
             )
 
@@ -337,8 +337,8 @@ class GenericEffectorCaster:
                     )
                     return
 
-            if spell_task in done:
-                exc = spell_task.exception()
+            if spike_task in done:
+                exc = spike_task.exception()
                 if exc:
                     raise exc
 
@@ -375,7 +375,7 @@ class GenericEffectorCaster:
             if check_interval < max_interval:
                 check_interval = min(check_interval + 0.5, max_interval)
 
-    async def _cast_spell(self):
+    async def _execute_spike(self):
         self._log_info(f'Launching {self.effector.name}')
         await self._update_status(SpikeStatus.RUNNING)
 
@@ -475,7 +475,7 @@ class GenericEffectorCaster:
                             '', text_to_log
                         )
                     if text_to_log:
-                        await self.logger.append_spell(text_to_log)
+                        await self.logger.append_application(text_to_log)
                 elif event.type == NerveTerminalConstants.T_EXIT:
                     exit_code = event.code
         except Exception as e:
@@ -547,7 +547,7 @@ class GenericEffectorCaster:
             return
 
         if output_log:
-            await self.logger.append_spell(output_log)
+            await self.logger.append_application(output_log)
             await self.logger.flush()
 
         new_status = (
@@ -640,3 +640,16 @@ class GenericEffectorCaster:
             except Exception:
                 pass
         self.status = SpikeStatus.FAILED
+
+
+# --- QUALITY REVIEW (rename pass, not yet addressed) ---
+# 1. f-string logger calls: 11 instances (style guide requires %s)
+#    Lines: 103, 117, 162, 258, 291, 295, 336, 580, 614, 625, 630
+# 2. Methods that could be module-level: none found — all methods use self
+# 3. Legacy naming in comments/docstrings:
+#    - Line 614: log message "Critical Caster Failure" contains "Caster"
+#    - Note: talos_executable references are Django model field names, not renameable here
+# 4. TODOs:
+#    - Line 60: "TODO: these should only be internal neurons like begin_play,logic_node,sequence."
+#    - Line 65: "TODO: move to management" (update_version_metadata)
+#    - Line 66: "TODO: move to management" (scan_and_register)
