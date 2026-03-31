@@ -4,6 +4,7 @@ from common.tests.common_test_case import CommonFixturesAPITestCase
 from identity.models import Identity, IdentityDisc
 from temporal_lobe.models import (Shift, ShiftDefaultParticipant,
                                   IterationDefinition, IterationShiftDefinition,
+                                  IterationShiftDefinitionParticipant,
                                   IterationStatus, Iteration, IterationShift,
                                   IterationShiftParticipantStatus,
                                   IterationShiftParticipant)
@@ -64,3 +65,24 @@ class TemporalLobeModelsTest(CommonFixturesAPITestCase):
             self.assertEqual(sd['shift']['id'], shifts_in_order[i])
             expected_limit = Shift.objects.get(id=shifts_in_order[i]).default_turn_limit
             self.assertEqual(sd['turn_limit'], expected_limit)
+
+    def test_post_iteration_shift_definition_with_shift_id(self):
+        """Assert POST to iteration-shift-definitions with shift_id writes the FK correctly."""
+        definition = IterationDefinition.objects.create(name='PostTest')
+        shift = Shift.objects.first()
+        response = self.test_client.post(
+            '/api/v2/iteration-shift-definitions/',
+            {
+                'definition': definition.id,
+                'shift_id': shift.id,
+                'order': 0,
+                'turn_limit': 1,
+            },
+            format='json',
+        )
+        self.assertEqual(response.status_code, drf_status.HTTP_201_CREATED)
+        data = response.json()
+        self.assertEqual(data['shift']['id'], shift.id)
+        self.assertEqual(data['definition'], definition.id)
+        self.assertEqual(data['order'], 0)
+        self.assertEqual(data['turn_limit'], 1)
