@@ -4,6 +4,7 @@ import re
 import requests as http_requests
 from asgiref.sync import async_to_sync
 from django.utils.text import slugify
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -11,6 +12,7 @@ from rest_framework.response import Response
 from synaptic_cleft.axon_hillok import fire_neurotransmitter
 from synaptic_cleft.neurotransmitters import Acetylcholine
 
+from .filters import AIModelDescriptionFilter
 from .models import (
     AIMode,
     AIModel,
@@ -39,6 +41,7 @@ from .parsing_tools.llm_provider_parser.model_semantic_parser import (
     parse_model_string,
 )
 from .serializers import (
+    AIModelCapabilitiesSerializer,
     AIModelCategorySerializer,
     AIModelDescriptionSerializer,
     AIModelFamilySerializer,
@@ -46,9 +49,11 @@ from .serializers import (
     AIModelProviderSerializer,
     AIModelProviderUsageRecordSerializer,
     AIModelRatingSerializer,
+    AIModelRoleSerializer,
     AIModelSelectionFilterSerializer,
     AIModelSerializer,
     AIModelSyncLogSerializer,
+    AIModelTagsSerializer,
     AIModeSerializer,
     FailoverStrategySerializer,
     FailoverTypeSerializer,
@@ -136,7 +141,9 @@ def scrape_ollama_library(html_text: str) -> list[dict]:
     return results
 
 
-def _enrich_from_parser(ai_model: AIModel, parsed: AIModelSemanticParseResult) -> None:
+def _enrich_from_parser(
+    ai_model: AIModel, parsed: AIModelSemanticParseResult
+) -> None:
     """Apply parsed semantic data to an AIModel, creating missing reference rows."""
     if not parsed.success:
         return
@@ -671,5 +678,24 @@ class AIModelSelectionFilterViewSet(viewsets.ModelViewSet):
 
 
 class AIModelDescriptionViewSet(viewsets.ModelViewSet):
+    """ViewSet for AIModelDescription with M2M filtering."""
+
     queryset = AIModelDescription.objects.all()
     serializer_class = AIModelDescriptionSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = AIModelDescriptionFilter
+
+
+class AIModelTagsViewSet(viewsets.ModelViewSet):
+    queryset = AIModelTags.objects.all()
+    serializer_class = AIModelTagsSerializer
+
+
+class AIModelCapabilitiesViewSet(viewsets.ModelViewSet):
+    queryset = AIModelCapabilities.objects.all()
+    serializer_class = AIModelCapabilitiesSerializer
+
+
+class AIModelRolesViewSet(viewsets.ModelViewSet):
+    queryset = AIModelRole.objects.all()
+    serializer_class = AIModelRoleSerializer
