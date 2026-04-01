@@ -4,9 +4,16 @@ from unittest.mock import MagicMock, patch
 from rest_framework import status
 
 from common.tests.common_test_case import CommonFixturesAPITestCase
+from hypothalamus.api import _enrich_from_parser
+from hypothalamus.parsing_tools.llm_provider_parser.model_semantic_parser import (
+    parse_model_string,
+)
 from hypothalamus.models import (
     AIMode,
     AIModel,
+    AIModelCreator,
+    AIModelDescription,
+    AIModelFamily,
     AIModelPricing,
     AIModelProvider,
     AIModelSelectionFilter,
@@ -228,3 +235,59 @@ class TestSelectionFilterEndpoint(CommonFixturesAPITestCase):
             f for f in resp.data if f['name'] == 'Test Filter'
         )
         assert filter_data['failover_strategy']['name'] == 'Filter Strategy'
+
+
+class TestEnrichFromParser(CommonFixturesAPITestCase):
+
+    def test_enrich_creates_missing_family(self):
+        """Assert parser-identified family that isn't in fixtures gets created."""
+        model = AIModel.objects.create(
+            name='test-model', context_length=4096
+        )
+        _enrich_from_parser(model, parse_model_string('ollama/llama3.2:3b'))
+        model.refresh_from_db()
+        assert model.family is not None
+        assert model.family.name == 'Llama'
+
+    def test_enrich_creates_subfamily_with_parent(self):
+        """Assert Qwen Coder gets parent link to Qwen."""
+        model = AIModel.objects.create(
+            name='test-qwen-coder', context_length=4096
+        )
+        _enrich_from_parser(model, parse_model_string('ollama/qwen2.5-coder:7b'))
+        model.refresh_from_db()
+        assert model.family is not None
+        assert model.family.name == 'Qwen Coder'
+        assert model.family.parent is not None
+        assert model.family.parent.name == 'Qwen'
+
+    def test_enrich_creates_missing_creator(self):
+        """Assert parser-identified creator gets created."""
+        model = AIModel.objects.create(
+            name='test-model', context_length=4096
+        )
+        _enrich_from_parser(model, parse_model_string('ollama/gemma3:4b'))
+        model.refresh_from_db()
+        assert model.creator is not None
+        assert model.creator.name == 'Google'
+
+    def test_enrich_does_not_overwrite_existing(self):
+        """Assert existing family is not replaced by parser."""
+        existing_family = AIModelFamily.objects.create(
+            name='Custom', slug='custom'
+        )
+        model = AIModel.objects.create(
+            name='test', context_length=4096, family=existing_family
+        )
+        _enrich_from_parser(model, parse_model_string('ollama/llama3:8b'))
+        model.refresh_from_db()
+        assert model.family.name == 'Custom'
+
+    def test_enrich_parameter_size_float(self):
+        """Assert parameter_size is parsed to float."""
+        model = AIModel.objects.create(
+            name='test', context_length=4096
+        )
+        _enrich_from_parser(model, parse_model_string('ollama/llama3:8b'))
+        model.refresh_from_db()
+        assert model.parameter_size == 8.0

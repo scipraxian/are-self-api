@@ -3,6 +3,7 @@ import re
 
 import requests as http_requests
 from asgiref.sync import async_to_sync
+from django.utils.text import slugify
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -27,12 +28,14 @@ from .models import (
     AIModelSelectionFilter,
     AIModelSyncLog,
     AIModelTags,
+    AIModelVersion,
     FailoverStrategy,
     FailoverType,
     LLMProvider,
     SyncStatus,
 )
 from .parsing_tools.llm_provider_parser.model_semantic_parser import (
+    AIModelSemanticParseResult,
     parse_model_string,
 )
 from .serializers import (
@@ -88,15 +91,6 @@ def parse_parameter_size(raw: str) -> float | None:
         return None
 
 
-def match_family_by_slug(slug: str) -> AIModelFamily | None:
-    """Match a lowercase family string against AIModelFamily.slug values."""
-    slug_lower = slug.lower()
-    try:
-        return AIModelFamily.objects.get(slug=slug_lower)
-    except AIModelFamily.DoesNotExist:
-        return None
-
-
 LINK_RE = re.compile(
     r'<a\s[^>]*href="/library/([a-zA-Z0-9._-]+)"[^>]*>(.*?)</a>',
     re.DOTALL,
@@ -104,9 +98,7 @@ LINK_RE = re.compile(
 DESC_RE = re.compile(r'<p[^>]*>(.*?)</p>', re.DOTALL)
 SPAN_RE = re.compile(r'<span[^>]*>(.*?)</span>', re.DOTALL)
 SIZE_RE = re.compile(r'^\d+(\.\d+)?[bm]$', re.IGNORECASE)
-BADGE_VALUES = frozenset(
-    {'tools', 'vision', 'thinking', 'embedding', 'cloud'}
-)
+BADGE_VALUES = frozenset({'tools', 'vision', 'thinking', 'embedding', 'cloud'})
 
 
 def scrape_ollama_library(html_text: str) -> list[dict]:
@@ -132,63 +124,105 @@ def scrape_ollama_library(html_text: str) -> list[dict]:
             elif SIZE_RE.match(text):
                 sizes.append(text)
 
-        results.append({
-            'name': slug,
-            'description': description,
-            'badges': badges,
-            'sizes': sizes,
-        })
+        results.append(
+            {
+                'name': slug,
+                'description': description,
+                'badges': badges,
+                'sizes': sizes,
+            }
+        )
 
     return results
 
 
-def _enrich_from_parser(ai_model: AIModel, model_name: str) -> None:
-    """Apply parsed semantic data to an AIModel if fields are empty."""
-    parsed = parse_model_string(model_name)
+def _enrich_from_parser(ai_model: AIModel, parsed: AIModelSemanticParseResult) -> None:
+    """Apply parsed semantic data to an AIModel, creating missing reference rows."""
     if not parsed.success:
         return
 
-    if not ai_model.family_id and parsed.family:
-        try:
-            family = AIModelFamily.objects.get(
-                name__iexact=parsed.family
-            )
-            ai_model.family = family
-            ai_model.save(update_fields=['family'])
-        except AIModelFamily.DoesNotExist:
-            pass
+    update_fields = []
+    family_obj = None
 
-    if not ai_model.creator_id and parsed.creator:
-        try:
-            creator = AIModelCreator.objects.get(
-                name__iexact=parsed.creator
-            )
-            ai_model.creator = creator
-            ai_model.save(update_fields=['creator'])
-        except AIModelCreator.DoesNotExist:
-            pass
+    # Family resolution (with parent support)
+    parent_obj = None
+    if parsed.parent_family:
+        parent_obj, _ = AIModelFamily.objects.get_or_create(
+            slug=slugify(parsed.parent_family),
+            defaults={'name': parsed.parent_family},
+        )
 
-    if not ai_model.parameter_size and parsed.parameter_size:
+    if parsed.family:
+        family_obj, _ = AIModelFamily.objects.get_or_create(
+            slug=slugify(parsed.family),
+            defaults={'name': parsed.family},
+        )
+        if parent_obj and family_obj.parent is None:
+            family_obj.parent = parent_obj
+            family_obj.save(update_fields=['parent'])
+        if not ai_model.family_id:
+            ai_model.family = family_obj
+            update_fields.append('family')
+
+    # Creator resolution
+    if parsed.creator and not ai_model.creator_id:
+        creator_obj, _ = AIModelCreator.objects.get_or_create(
+            name__iexact=parsed.creator,
+            defaults={'name': parsed.creator},
+        )
+        ai_model.creator = creator_obj
+        update_fields.append('creator')
+
+    # Parameter size
+    if parsed.parameter_size and not ai_model.parameter_size:
         size = parse_parameter_size(parsed.parameter_size)
         if size:
             ai_model.parameter_size = size
-            ai_model.save(update_fields=['parameter_size'])
+            update_fields.append('parameter_size')
 
+    # Version
+    if parsed.version and not ai_model.version_id:
+        version_obj, _ = AIModelVersion.objects.get_or_create(
+            name=parsed.version,
+        )
+        ai_model.version = version_obj
+        update_fields.append('version')
+
+    # Batch save all scalar fields
+    if update_fields:
+        ai_model.save(update_fields=update_fields)
+
+    # Roles (M2M)
     for role_name in parsed.roles:
-        try:
-            role = AIModelRole.objects.get(name__iexact=role_name)
-            ai_model.roles.add(role)
-        except AIModelRole.DoesNotExist:
-            pass
+        role_obj, _ = AIModelRole.objects.get_or_create(
+            name__iexact=role_name,
+            defaults={'name': role_name},
+        )
+        ai_model.roles.add(role_obj)
 
+    # Quantizations (M2M)
     for quant_name in parsed.quantizations:
-        try:
-            quant = AIModelQuantization.objects.get(
-                name__iexact=quant_name
+        quant_obj, _ = AIModelQuantization.objects.get_or_create(
+            name__iexact=quant_name,
+            defaults={'name': quant_name},
+        )
+        ai_model.quantizations.add(quant_obj)
+
+    # Tags → AIModelDescription
+    if parsed.tags:
+        desc = AIModelDescription.objects.filter(
+            ai_models=ai_model, is_current=True
+        ).first()
+        if not desc:
+            desc = AIModelDescription.objects.create(is_current=True)
+            desc.ai_models.add(ai_model)
+        for tag_name in parsed.tags:
+            tag_obj, _ = AIModelTags.objects.get_or_create(
+                name=tag_name,
             )
-            ai_model.quantizations.add(quant)
-        except AIModelQuantization.DoesNotExist:
-            pass
+            desc.tags.add(tag_obj)
+        if family_obj:
+            desc.families.add(family_obj)
 
 
 def _process_catalog_entry(entry: dict) -> bool:
@@ -198,6 +232,8 @@ def _process_catalog_entry(entry: dict) -> bool:
     badges = entry.get('badges', [])
     sizes = entry.get('sizes', [])
 
+    parsed = parse_model_string(f'ollama/{model_name}')
+
     ai_model, created = AIModel.objects.get_or_create(
         name=model_name,
         defaults={
@@ -206,7 +242,7 @@ def _process_catalog_entry(entry: dict) -> bool:
         },
     )
 
-    _enrich_from_parser(ai_model, model_name)
+    _enrich_from_parser(ai_model, parsed)
 
     for badge in badges:
         cap_name = CAPABILITY_BADGE_MAP.get(badge)
@@ -418,39 +454,33 @@ class AIModelViewSet(viewsets.ModelViewSet):
             if not raw_name:
                 continue
 
-            # Run through the parser — cleans :latest, extracts family/creator/size/roles
             parsed = parse_model_string(f'ollama/{raw_name}')
-
-            # Derive clean name: strip :latest (parser does this), but keep real tags like :3b
-            clean_name = raw_name
-            if clean_name.endswith(':latest'):
-                clean_name = clean_name[:-7]
-
-            provider_unique_id = f'ollama/{clean_name}'
+            provider_unique_id = f'ollama/{raw_name}'
             installed_provider_ids.add(provider_unique_id)
 
             ai_model, _ = AIModel.objects.get_or_create(
-                name=clean_name,
+                name=raw_name,
                 defaults={
                     'context_length': DEFAULT_CONTEXT_LENGTH,
                     'enabled': True,
                 },
             )
 
-            # Enrich from parser (family, creator, size, roles, quantizations)
-            _enrich_from_parser(ai_model, f'ollama/{raw_name}')
+            _enrich_from_parser(ai_model, parsed)
 
-            # Also apply parameter_size from Ollama's own details if parser didn't get it
+            # Ollama's reported parameter_size is more precise than the parser's
+            # (27.2B from metadata vs 27B extracted from the name string).
+            # Always prefer Ollama's value when available.
             details = model_data.get('details', {})
-            if not ai_model.parameter_size:
-                param_size = parse_parameter_size(
-                    details.get('parameter_size', '')
-                )
-                if param_size:
-                    ai_model.parameter_size = param_size
+            ollama_param_size = parse_parameter_size(
+                details.get('parameter_size', '')
+            )
+            if ollama_param_size:
+                if ai_model.parameter_size != ollama_param_size:
+                    ai_model.parameter_size = ollama_param_size
                     ai_model.save(update_fields=['parameter_size'])
 
-            is_embedding = EMBED_KEYWORD in clean_name.lower()
+            is_embedding = EMBED_KEYWORD in raw_name.lower()
             mode_name = 'embedding' if is_embedding else 'chat'
             mode, _ = AIMode.objects.get_or_create(name=mode_name)
 
@@ -474,19 +504,21 @@ class AIModelViewSet(viewsets.ModelViewSet):
                 },
             )
 
-            synced_names.append(clean_name)
+            synced_names.append(raw_name)
 
-        disabled_count = AIModelProvider.objects.filter(
-            provider=ollama_provider,
-            is_enabled=True,
-        ).exclude(
-            provider_unique_model_id__in=installed_provider_ids
-        ).update(is_enabled=False)
+        disabled_count = (
+            AIModelProvider.objects.filter(
+                provider=ollama_provider,
+                is_enabled=True,
+            )
+            .exclude(provider_unique_model_id__in=installed_provider_ids)
+            .update(is_enabled=False)
+        )
 
         async_to_sync(fire_neurotransmitter)(
             Acetylcholine(
                 receptor_class='AIModel',
-                dendrite_id='sync_local',
+                dendrite_id='hypothalamus',
                 activity='updated',
                 vesicle={'action': 'sync_local'},
             )
@@ -498,11 +530,13 @@ class AIModelViewSet(viewsets.ModelViewSet):
             disabled_count,
         )
 
-        return Response({
-            'synced': len(synced_names),
-            'disabled': disabled_count,
-            'models': synced_names,
-        })
+        return Response(
+            {
+                'synced': len(synced_names),
+                'disabled': disabled_count,
+                'models': synced_names,
+            }
+        )
 
     @action(detail=False, methods=['post'], url_path='fetch_catalog')
     def fetch_catalog(self, request):
@@ -519,9 +553,7 @@ class AIModelViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_502_BAD_GATEWAY,
             )
         except http_requests.RequestException as exc:
-            logger.error(
-                '[Hypothalamus] fetch_catalog failed: %s', exc
-            )
+            logger.error('[Hypothalamus] fetch_catalog failed: %s', exc)
             return Response(
                 {'error': f'Could not reach ollama.com: {exc}'},
                 status=status.HTTP_502_BAD_GATEWAY,
@@ -551,7 +583,7 @@ class AIModelViewSet(viewsets.ModelViewSet):
         async_to_sync(fire_neurotransmitter)(
             Acetylcholine(
                 receptor_class='AIModel',
-                dendrite_id='fetch_catalog',
+                dendrite_id='hypothalamus',
                 activity='updated',
                 vesicle={'action': 'fetch_catalog'},
             )
@@ -566,12 +598,14 @@ class AIModelViewSet(viewsets.ModelViewSet):
             updated_count,
         )
 
-        return Response({
-            'fetched': total_fetched,
-            'created': created_count,
-            'updated': updated_count,
-            'errors': errors,
-        })
+        return Response(
+            {
+                'fetched': total_fetched,
+                'created': created_count,
+                'updated': updated_count,
+                'errors': errors,
+            }
+        )
 
 
 class AIModelProviderViewSet(viewsets.ModelViewSet):
