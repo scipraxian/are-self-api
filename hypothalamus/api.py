@@ -13,6 +13,7 @@ from .models import (
     AIMode,
     AIModel,
     AIModelCategory,
+    AIModelDescription,
     AIModelFamily,
     AIModelPricing,
     AIModelProvider,
@@ -28,6 +29,7 @@ from .models import (
 from .serializers import (
     AIModeSerializer,
     AIModelCategorySerializer,
+    AIModelDescriptionSerializer,
     AIModelFamilySerializer,
     AIModelPricingSerializer,
     AIModelProviderSerializer,
@@ -256,3 +258,8 @@ class FailoverStrategyViewSet(viewsets.ModelViewSet):
 class AIModelSelectionFilterViewSet(viewsets.ModelViewSet):
     queryset = AIModelSelectionFilter.objects.all()
     serializer_class = AIModelSelectionFilterSerializer
+
+
+class AIModelDescriptionViewSet(viewsets.ModelViewSet):
+    queryset = AIModelDescription.objects.all()
+    serializer_class = AIModelDescriptionSerializer

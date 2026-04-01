@@ -3,6 +3,7 @@ from rest_framework import routers
 from .api import (
     AIModeViewSet,
     AIModelCategoryViewSet,
+    AIModelDescriptionViewSet,
     AIModelFamilyViewSet,
     AIModelPricingViewSet,
     AIModelProviderUsageRecordViewSet,
@@ -37,4 +38,7 @@ V2_HYPOTHALAMUS_ROUTER.register(
 )
 V2_HYPOTHALAMUS_ROUTER.register(
     'selection-filters', AIModelSelectionFilterViewSet
+)
+V2_HYPOTHALAMUS_ROUTER.register(
+    'model-descriptions', AIModelDescriptionViewSet
 )

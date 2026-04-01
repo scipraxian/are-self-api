@@ -105,7 +105,8 @@ class AIModelFamily(NameMixin, DescriptionMixin):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='children',
+        related_name='subfamilies',
+        help_text='Parent family. E.g., "Qwen Coder" parent is "Qwen".',
     )
 
     class Meta:
