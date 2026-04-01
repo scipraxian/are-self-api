@@ -28,10 +28,9 @@ def check_next_wave(spike_train_id):
 
 
 @shared_task(bind=True)
-def cast_cns_spell(self, spike_id):
+def fire_spike(self, spike_id):
     """
     The Main Execution Task.
-    Instantiates the GenericEffectorCaster to run the pipeline.
     """
     logger.debug(f'Task starting for Spike ID: {spike_id}')
 
@@ -50,11 +49,11 @@ def cast_cns_spell(self, spike_id):
             return
 
         # 1. Instantiate the Caster (forced local)
-        from .effectors.effector_casters.generic_effector_caster import (
-            GenericEffectorCaster,
+        from .effectors.effector_casters.neuromuscular_junction import (
+            NeuroMuscularJunction,
         )
 
-        caster = GenericEffectorCaster(spike_id=spike_id)
+        caster = NeuroMuscularJunction(spike_id=spike_id)
 
         # 2. Run the Logic (Loads DB -> runs Async Pipeline)
         caster.execute()
@@ -63,7 +62,7 @@ def cast_cns_spell(self, spike_id):
 
     except Exception as e:
         logger.exception(
-            f'GenericEffectorCaster crashed for Spike ID {spike_id}'
+            f'NeuroMuscularJunction crashed for Spike ID {spike_id}'
         )
 
         # Emergency DB Update to prevent "Pending Forever" state

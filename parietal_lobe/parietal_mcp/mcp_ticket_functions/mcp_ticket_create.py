@@ -86,7 +86,6 @@ def _create_sync(
             action=TicketAction.CREATE,
             item_type=item_type_normalized,
             item_id=instance.id,
-            data=serializer.data,
         )
 
     return make_action_response(

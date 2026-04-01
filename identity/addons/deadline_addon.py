@@ -1,23 +1,19 @@
-from typing import List
+from typing import Any, Dict, List
 
-from frontal_lobe.models import ChatMessage, ChatMessageRole, ReasoningTurn
-from identity.addons.addon_package import AddonPackage
+from frontal_lobe.models import ReasoningTurn
 
 
-def deadline_addon(package: AddonPackage) -> List[ChatMessage]:
-    if not package.reasoning_turn_id:
+def deadline_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
+    if not turn:
         return [
-            ChatMessage(
-                session_id=package.session_id,
-                turn_id=package.reasoning_turn_id,
-                role_id=ChatMessageRole.USER,
-                content='Deadline Addon Preview Mode (No Reasoning Turn)',
-                is_volatile=True,
-            )
+            {
+                'role': 'user',
+                'content': 'Deadline Addon Preview Mode (No Reasoning Turn)',
+            }
         ]
-    session = ReasoningTurn.objects.get(id=package.reasoning_turn_id).session
 
-    current_turn = package.turn_number
+    session = turn.session
+    current_turn = turn.turn_number
     max_turns = session.max_turns
     remaining_turns = max_turns - current_turn
     progress = current_turn / max_turns
@@ -45,12 +41,4 @@ def deadline_addon(package: AddonPackage) -> List[ChatMessage]:
         )
 
     text_content = '\n\n'.join(prompt_blocks)
-    return [
-        ChatMessage(
-            session_id=package.session_id,
-            turn_id=package.reasoning_turn_id,
-            role_id=ChatMessageRole.USER,
-            content=text_content,
-            is_volatile=True,
-        )
-    ]
+    return [{'role': 'system', 'content': text_content}]

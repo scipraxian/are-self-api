@@ -4,14 +4,13 @@ from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
 from frontal_lobe.models import (
-    ChatMessage,
-    ChatMessageRole,
     ModelRegistry,
     ReasoningSession,
     ReasoningTurn,
     SessionConclusion,
 )
-from hippocampus.models import TalosEngram
+from hippocampus.models import Engram
+from hypothalamus.serializers import AIModelProviderUsageRecordSerializer
 from parietal_lobe.models import ToolCall, ToolDefinition
 
 KEY_REPLY = 'reply'
@@ -63,35 +62,21 @@ class ToolCallSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
-class ChatMessageRoleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ChatMessageRole
-        fields = ALL_FIELDS
-
-
-class ChatMessageSerializer(serializers.ModelSerializer):
-    role = ChatMessageRoleSerializer(read_only=True)
-
-    class Meta:
-        model = ChatMessage
-        fields = ALL_FIELDS
-
-
 class ReasoningTurnSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     tool_calls = ToolCallSerializer(many=True, read_only=True)
-    messages = ChatMessageSerializer(many=True, read_only=True)
+    model_usage_record = AIModelProviderUsageRecordSerializer(read_only=True)
 
     class Meta:
         model = ReasoningTurn
         fields = ALL_FIELDS
 
 
-class TalosEngramSerializer(serializers.ModelSerializer):
+class EngramSerializer(serializers.ModelSerializer):
     source_turns = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
-        model = TalosEngram
+        model = Engram
         fields = ALL_FIELDS
 
 
@@ -104,8 +89,6 @@ class SessionConclusionSerializer(serializers.ModelSerializer):
 
 
 class ReasoningSessionLiteSerializer(serializers.ModelSerializer):
-    from identity.serializers import IdentityDiscSerializer
-
     status_name = serializers.CharField(source='status.name', read_only=True)
     identity_disc_name = serializers.CharField(
         source='identity_disc.name', read_only=True
@@ -119,7 +102,7 @@ class ReasoningSessionLiteSerializer(serializers.ModelSerializer):
 class ReasoningSessionGraphSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     turns = ReasoningTurnSerializer(many=True, read_only=True)
-    engrams = TalosEngramSerializer(many=True, read_only=True)
+    engrams = EngramSerializer(many=True, read_only=True)
     conclusion = SessionConclusionSerializer(read_only=True)
 
     current_level = serializers.IntegerField(read_only=True)

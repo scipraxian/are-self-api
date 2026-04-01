@@ -27,7 +27,7 @@ docker compose up -d
 
 :: 1. Start Celery Worker in a new window
 echo Starting Celery Worker...
-start "Are-Self Worker" cmd /c ".\venv\Scripts\celery -A config worker --loglevel=info --concurrency=4 -P threads"
+start "Are-Self Worker" cmd /c ".\venv\Scripts\celery -A config worker --loglevel=info --concurrency=4 -P threads -E"
 :: 1.5 Start Celery Beats Worker
 echo Starting Celery Beats Worker...
 :: start "Are-Self Heartbeat" cmd /c ".\venv\Scripts\celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler"

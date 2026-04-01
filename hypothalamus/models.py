@@ -1,6 +1,5 @@
 import datetime
 import os
-from uuid import UUID
 
 from django.conf import settings
 from django.db import models
@@ -20,9 +19,7 @@ from frontal_lobe.models import ModelRegistry
 
 
 class LLMProvider(DefaultFieldsMixin, DescriptionMixin):
-    """
-    Provider-level network configuration for LLM backends (LiteLLM).
-    """
+    """Provider-level network configuration for LLM backends (LiteLLM)."""
 
     key = models.CharField(
         max_length=50,
@@ -53,7 +50,7 @@ class LLMProvider(DefaultFieldsMixin, DescriptionMixin):
         max_length=100,
         blank=True,
         null=True,
-        help_text='Environment variable name that stores the API key (e.g. OPENROUTER_API_KEY).',
+        help_text='Environment variable name that stores the API key.',
     )
 
     class Meta:
@@ -64,16 +61,11 @@ class LLMProvider(DefaultFieldsMixin, DescriptionMixin):
 
     @property
     def has_active_key(self) -> bool:
-        """
-        Dynamically checks if the server actually possesses the funds/keys
-        required to use this provider at this exact moment.
-        """
         if not self.requires_api_key:
             return True
         if not self.api_key_env_var:
             return False
 
-        # Check Django settings first, then fall back to OS environment
         key = getattr(settings, self.api_key_env_var, None) or os.environ.get(
             self.api_key_env_var
         )
@@ -81,7 +73,19 @@ class LLMProvider(DefaultFieldsMixin, DescriptionMixin):
 
 
 class AIModelCategory(NameMixin, DescriptionMixin):
-    """Category for AI models, e.g., 'Text Generation', 'Vision', 'Coding'."""
+    """I saw this word."""
+
+    pass
+
+
+class AIModelCapabilities(NameMixin, DescriptionMixin):
+    """Dynamically tracks things like 'vision', 'function_calling', 'reasoning'."""
+
+    pass
+
+
+class AIModelTags(NameMixin, DescriptionMixin):
+    """Everything Else we come across, tag it."""
 
     pass
 
@@ -93,13 +97,7 @@ class AIMode(NameMixin, DescriptionMixin):
 
 
 class AIModelFamily(NameMixin, DescriptionMixin):
-    """
-    Groups models into conceptual lineages (e.g., 'Claude 3.5', 'Llama 3').
-    Allows the Swarm to understand that different physical endpoints are the same 'Brain'.
-
-    NOTE Name must be unique AND slug must be unique.
-    slug is what we use to help identify the family.
-    """
+    """Groups models into conceptual lineages (e.g., 'Claude 3.5', 'Llama 3')."""
 
     slug = models.SlugField(unique=True, default='llama-3-70b-instruct')
 
@@ -107,14 +105,58 @@ class AIModelFamily(NameMixin, DescriptionMixin):
         verbose_name_plural = 'AI Model Families'
 
 
+class AIModelVersion(NameMixin, DescriptionMixin):
+    """Version of an AI model, e.g., '1.0', '2.0', '3.0'."""
+
+    pass
+
+
+class AIModelCreator(NameMixin, DescriptionMixin):
+    """The organization or group that trained the model (e.g., Meta, Alibaba, Mistral)."""
+
+    class Meta:
+        verbose_name_plural = 'AI Model Creators'
+
+
+class AIModelRole(NameMixin, DescriptionMixin):
+    """The intended use-case or fine-tuning style (e.g., instruct, base, coder, uncensored)."""
+
+    pass
+
+
+class AIModelQuantization(NameMixin, DescriptionMixin):
+    """The compression format, crucial for local hardware routing (e.g., q4_0, awq, fp16)."""
+
+    pass
+
+
 class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
-    """
-    The Semantic Model Catalog. Represents the mathematical 'Brain' conceptually
-    (e.g., "Llama 3 70B"), regardless of who is hosting it.
-    """
+    """The Semantic Model Catalog. Represents the mathematical 'Brain' conceptually."""
 
     RELATED_NAME = 'ai_models'
-
+    creator = models.ForeignKey(
+        AIModelCreator,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name=RELATED_NAME,
+    )
+    roles = models.ManyToManyField(
+        AIModelRole,
+        blank=True,
+        related_name=RELATED_NAME,
+    )
+    quantizations = models.ManyToManyField(
+        AIModelQuantization,
+        blank=True,
+        related_name=RELATED_NAME,
+    )
+    parameter_size = models.FloatField(
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text='Parameter count in billions (e.g., 70.0 for 70B, 0.5 for 500M).',
+    )
     family = models.ForeignKey(
         AIModelFamily,
         on_delete=models.SET_NULL,
@@ -122,89 +164,121 @@ class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
         blank=True,
         related_name=RELATED_NAME,
     )
-
-    # Hard Constraints (The Filters)
-    context_length = models.IntegerField(db_index=True)
-
-    enabled = models.BooleanField(default=True, db_index=True)
-
-    # Connect to the LiteLLM Categories
-    categories = models.ManyToManyField(AIModelCategory, blank=True)
-    supports_vision = models.BooleanField(default=False, db_index=True)
-    supports_function_calling = models.BooleanField(
-        default=False, db_index=True
+    version = models.ForeignKey(
+        AIModelVersion,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name=RELATED_NAME,
     )
-    supports_parallel_function_calling = models.BooleanField(default=False)
-    supports_response_schema = models.BooleanField(default=False)
-    supports_system_messages = models.BooleanField(default=True)
-    supports_prompt_caching = models.BooleanField(default=False)
-    supports_reasoning = models.BooleanField(default=False)
-    supports_audio_input = models.BooleanField(default=False)
-    supports_audio_output = models.BooleanField(default=False)
-    supports_web_search = models.BooleanField(default=False)
 
+    context_length = models.IntegerField(db_index=True)
+    enabled = models.BooleanField(default=True, db_index=True)
+    capabilities = models.ManyToManyField(AIModelCapabilities, blank=True)
     deprecation_date = models.DateField(null=True, blank=True)
 
-    # Semantic Constraints (The Math)
-    # Using 768 dimensions (standard for nomic-embed-text)
-    vector = VectorField(dimensions=768, null=True, blank=True)
+    @property
+    def vector(self):
+        """Silently fetches the vector from the 1:1 table."""
+        if hasattr(self, 'vector_node'):
+            return self.vector_node.embeddings
+        return None
+
+    @vector.setter
+    def vector(self, value):
+        """Silently updates or creates the 1:1 record."""
+        if not hasattr(self, 'vector_node'):
+            AIModelVector.objects.create(ai_model=self, embeddings=value)
+        else:
+            self.vector_node.embeddings = value
+            self.vector_node.save(update_fields=['embeddings'])
 
     def update_vector(self):
         from frontal_lobe.synapse import OllamaClient
 
-        registry = ModelRegistry.objects.get(id=ModelRegistry.NOMIC_EMBED_TEXT)
-        client = OllamaClient(registry.name)
+        client = OllamaClient('nomic-embed-text')
+        cap_names = ', '.join(self.capabilities.values_list('name', flat=True))
 
-        cat_names = ', '.join(self.categories.values_list('name', flat=True))
+        current_desc = self.aimodeldescription_set.filter(
+            is_current=True
+        ).first()
+
+        if current_desc:
+            cat_names = ', '.join(
+                current_desc.categories.values_list('name', flat=True)
+            )
+            tag_names = ', '.join(
+                current_desc.tags.values_list('name', flat=True)
+            )
+            desc_text = (
+                current_desc.description or 'General AI inference model.'
+            )
+        else:
+            cat_names = ''
+            tag_names = ''
+            desc_text = self.description or 'General AI inference model.'
+
+        role_names = (
+            ', '.join(self.roles.values_list('name', flat=True)) or 'General'
+        )
+        quant_names = (
+            ', '.join(self.quantizations.values_list('name', flat=True))
+            or 'Unquantized/Unknown'
+        )
+
+        creator_name = self.creator.name if self.creator else 'Unknown Creator'
+        family_name = self.family.name if self.family else 'Unknown Family'
+        size_str = (
+            f'{self.parameter_size}B' if self.parameter_size else 'Unknown Size'
+        )
+
+        # The new, hyper-enriched vector payload!
         rich_text = (
             f'Model Name: {self.name}. '
+            f'Creator: {creator_name}. '
+            f'Family: {family_name}. '
+            f'Size: {size_str}. '
+            f'Roles: {role_names}. '
+            f'Quantizations: {quant_names}. '
             f'Categories: {cat_names}. '
-            f'Description: {self.description or "General AI inference model."}'
+            f'Tags: {tag_names}. '
+            f'Capabilities: {cap_names}. '
+            f'Description: {desc_text}'
         )
         self.vector = client.embed(rich_text)
         self.save(update_fields=['vector'])
 
 
+class AIModelVector(models.Model):
+    """Offloads the heavy 768-dimensional vector to keep AIModel queries and fixtures clean."""
+
+    ai_model = models.OneToOneField(
+        'hypothalamus.AIModel',
+        on_delete=models.CASCADE,
+        related_name='vector_node',
+    )
+    embeddings = VectorField(dimensions=768, null=True, blank=True)
+
+
 class AIModelProviderRateLimitMixin(models.Model):
     """Rate limit tracking for AI model providers."""
 
-    rate_limited_on = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text='When the 429 Too Many Requests was hit.',
-    )
-    rate_limit_reset_time = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text='The exact time this model is allowed back into the routing pool.',
-    )
+    rate_limited_on = models.DateTimeField(null=True, blank=True)
+    rate_limit_reset_time = models.DateTimeField(null=True, blank=True)
     rate_limit_reset_interval = models.DurationField(
-        null=True,
-        blank=True,
-        default=datetime.timedelta(seconds=60),
-        help_text='Base cooldown duration.',
+        null=True, blank=True, default=datetime.timedelta(seconds=60)
     )
-    rate_limit_counter = models.IntegerField(
-        default=0,
-        help_text='Tracks consecutive failures for Exponential Backoff.',
-    )
-    rate_limit_total_failures = models.IntegerField(
-        default=0, help_text='Tracks total failures for this model.'
-    )
+    rate_limit_counter = models.IntegerField(default=0)
+    rate_limit_total_failures = models.IntegerField(default=0)
 
     class Meta:
         abstract = True
 
     def trip_circuit_breaker(self):
-        """
-        Calculates exponential backoff and evicts the model from the routing pool.
-        Fail 1: 1 min, Fail 2: 2 mins, Fail 3: 4 mins...
-        """
         self.rate_limited_on = timezone.now()
         self.rate_limit_counter += 1
         self.rate_limit_total_failures += 1
 
-        # Exponential backoff math: interval * (2 ^ (failures - 1))
         multiplier = 2 ** (self.rate_limit_counter - 1)
         cooldown = self.rate_limit_reset_interval * multiplier
 
@@ -219,7 +293,6 @@ class AIModelProviderRateLimitMixin(models.Model):
         )
 
     def reset_circuit_breaker(self):
-        """Called upon a successful request to clear the breaker state."""
         if self.rate_limit_counter > 0:
             self.rate_limited_on = None
             self.rate_limit_reset_time = None
@@ -236,37 +309,38 @@ class AIModelProviderRateLimitMixin(models.Model):
 class AIModelProvider(
     CreatedMixin, ModifiedMixin, AIModelProviderRateLimitMixin
 ):
-    """The physical routing string and token limits."""
+    is_enabled = models.BooleanField(default=True, db_index=True)
 
+    # References
     ai_model = models.ForeignKey(AIModel, on_delete=models.CASCADE)
     provider = models.ForeignKey(LLMProvider, on_delete=models.CASCADE)
+
+    # PROVIDER + MODEL
     provider_unique_model_id = models.CharField(
         max_length=255, unique=True, db_index=True
     )
+    # MODE 'image_generation', 'chat', 'embedding'
+    # CANONICAL MODE CHOICE FOR THIS MODEL PROVIDER NO MODE NO WORK.
     mode = models.ForeignKey(
         AIMode, on_delete=models.SET_NULL, null=True, blank=True
     )
+
+    # Occasional provider specific token limiters.
     max_tokens = models.IntegerField(null=True, blank=True)
     max_input_tokens = models.IntegerField(null=True, blank=True)
     max_output_tokens = models.IntegerField(null=True, blank=True)
+
+    disabled_capabilities = models.ManyToManyField(
+        AIModelCapabilities, blank=True
+    )
 
     def __str__(self):
         return f'{self.ai_model} via {self.provider} ({self.provider_unique_model_id})'
 
 
-class AIModelPricingAbstract(CreatedMixin, ModifiedMixin):
-    """
-    1:1 map of the LiteLLM Cost spec.
-    Massive decimal precision to handle scientific notation (3e-05).
-    """
+class AIModelFinOpsAbstract(CreatedMixin, ModifiedMixin):
+    """Shared financial fields for both Pricing ledgers and Usage receipts."""
 
-    is_current = models.BooleanField(default=False, db_index=True)
-    model_provider = models.ForeignKey(
-        AIModelProvider, on_delete=models.CASCADE
-    )
-    is_active = models.BooleanField(default=True, db_index=True)
-
-    # STANDARD COSTS
     input_cost_per_token = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True, db_index=True
     )
@@ -274,7 +348,6 @@ class AIModelPricingAbstract(CreatedMixin, ModifiedMixin):
         max_digits=25, decimal_places=15, null=True, blank=True
     )
 
-    # CHARACTER COSTS (For older models or specific providers like Vertex)
     input_cost_per_character = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
     )
@@ -282,7 +355,6 @@ class AIModelPricingAbstract(CreatedMixin, ModifiedMixin):
         max_digits=25, decimal_places=15, null=True, blank=True
     )
 
-    # OVERAGE COSTS (The > 128k context penalty tier)
     input_cost_per_token_above_128k_tokens = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
     )
@@ -295,19 +367,31 @@ class AIModelPricingAbstract(CreatedMixin, ModifiedMixin):
 
     output_cost_per_reasoning_token = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
-    )  # for o1/o3 models
+    )
     cache_read_input_token_cost = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
-    )  # Claude/Gemini prompt caching
+    )
     cache_creation_input_token_cost = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
-    )  # Claude/Gemini prompt caching
+    )
     input_cost_per_audio_token = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
-    )  # Whisper / Gemini audio
+    )
 
-    # EMBEDDING SPECIFIC
     output_vector_size = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class AIModelPricingAbstract(AIModelFinOpsAbstract):
+    """The authoritative pricing catalog."""
+
+    is_current = models.BooleanField(default=False, db_index=True)
+    model_provider = models.ForeignKey(
+        AIModelProvider, on_delete=models.CASCADE
+    )
+    is_active = models.BooleanField(default=True, db_index=True)
 
     class Meta:
         abstract = True
@@ -318,14 +402,24 @@ class AIModelPricing(AIModelPricingAbstract):
     pass
 
 
-class AIModelProviderUsageRecord(AIModelPricingAbstract):
+class AIModelProviderUsageRecord(AIModelFinOpsAbstract):
+    """The individual transaction receipt."""
+
     RELATED_NAME = 'usage_records'
 
     ai_model_provider = models.ForeignKey(
-        AIModelProvider, on_delete=models.CASCADE, related_name=RELATED_NAME
+        AIModelProvider,
+        on_delete=models.CASCADE,
+        related_name=RELATED_NAME,
+        blank=True,
+        null=True,
     )
     ai_model = models.ForeignKey(
-        AIModel, on_delete=models.CASCADE, related_name=RELATED_NAME
+        AIModel,
+        on_delete=models.CASCADE,
+        related_name=RELATED_NAME,
+        blank=True,
+        null=True,
     )
     identity_disc = models.ForeignKey(
         'identity.IdentityDisc',
@@ -335,40 +429,135 @@ class AIModelProviderUsageRecord(AIModelPricingAbstract):
         blank=True,
     )
 
-    # TODO: reasoning_turn
-    reasoning_turn = models.ForeignKey(
-        'frontal_lobe.ReasoningTurn',
-        on_delete=models.SET_NULL,
-        related_name=RELATED_NAME,
-        null=True,
-        blank=True,
-    )
-
-    query_time = models.DurationField(null=True, blank=True)
-    input_tokens = models.IntegerField(default=0)
-    output_tokens = models.IntegerField(default=0)
-    reasoning_tokens = models.IntegerField(default=0)
-    audio_tokens = models.IntegerField(default=0)
-    cache_read_input_tokens = models.IntegerField(default=0)
-    cache_creation_input_tokens = models.IntegerField(default=0)
-
+    request_payload = models.JSONField(blank=True, default=dict)
+    tool_payload = models.JSONField(blank=True, default=dict)
     estimated_cost = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
     )
+
+    query_time = models.DurationField(null=True, blank=True)
+    response_payload = models.JSONField(blank=True, default=dict)
+
+    input_tokens = models.IntegerField(default=0)
+    cache_read_input_tokens = models.IntegerField(default=0)
+    cache_creation_input_tokens = models.IntegerField(default=0)
+
+    output_tokens = models.IntegerField(default=0)
+    reasoning_tokens = models.IntegerField(default=0)
+    audio_tokens = models.IntegerField(default=0)
+
     actual_cost = models.DecimalField(
         max_digits=25, decimal_places=15, null=True, blank=True
     )
 
 
+class FailoverStrategy(NameMixin, DescriptionMixin):
+    """
+    A reusable, ordered sequence of failover steps.
+    The strategy is defined entirely by its assignments — no scalar flags needed.
+    e.g. 'Standard Cloud' = [family_failover(1), vector_search(2)]
+         'Local First'    = [local_fallback(1), family_failover(2), strict_fail(3)]
+    """
+
+    class Meta:
+        verbose_name = 'Failover Strategy'
+        verbose_name_plural = 'Failover Strategies'
+
+
+class FailoverType(NameMixin, DescriptionMixin):
+    """
+    A discrete failover step, e.g.:
+    'family_failover', 'vector_search', 'local_fallback', 'strict_fail'
+    'force_filters', etc?
+    """
+
+    class Meta:
+        verbose_name = 'Failover Type'
+        verbose_name_plural = 'Failover Types'
+
+
+class FailoverStrategyStep(models.Model):
+    """
+    One step in a FailoverStrategy's execution chain.
+    """
+
+    strategy = models.ForeignKey(
+        FailoverStrategy,
+        on_delete=models.CASCADE,
+        related_name='steps',
+    )
+    failover_type = models.ForeignKey(
+        FailoverType,
+        on_delete=models.PROTECT,  # Don't silently orphan steps
+    )
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        verbose_name = 'Failover Strategy Step'
+        verbose_name_plural = 'Failover Strategy Steps'
+        ordering = ['order']
+        unique_together = [
+            ('strategy', 'order')
+        ]  # Prevent duplicate priority slots
+
+
+class AIModelSelectionFilter(NameMixin):
+    """
+    Defines the routing policy for a Persona or Task.
+    Acts as a pre-filter before Hypothalamus vector selection.
+    """
+
+    # Drives the full degradation chain when preferred_model is unavailable
+    failover_strategy = models.ForeignKey(
+        FailoverStrategy,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    # Sets the MODE, Provider, and Model baseline in one FK
+    preferred_model = models.ForeignKey(
+        AIModelProvider,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='selection_filter_preferred',
+        help_text='Bypass vector search and use this specific provider+model first.',
+    )
+    local_failover = models.ForeignKey(
+        AIModelProvider,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='selection_filter_local',
+        help_text='Explicit local model to try when the failover strategy permits it.',
+    )
+
+    required_capabilities = models.ManyToManyField(
+        AIModelCapabilities,
+        blank=True,
+        help_text='Hard requirement — candidate models MUST have all of these.',
+    )
+    banned_providers = models.ManyToManyField(
+        LLMProvider,
+        blank=True,
+        help_text='Never route to these providers, even as a fallback.',
+    )
+
+    # --- Semantic Weights (Vector Boosters) ---
+    # Soft signals that bias the Hypothalamus query, not hard filters.
+    preferred_categories = models.ManyToManyField(AIModelCategory, blank=True)
+    preferred_tags = models.ManyToManyField(AIModelTags, blank=True)
+    preferred_roles = models.ManyToManyField(AIModelRole, blank=True)
+
+
 class SyncStatus(NameMixin):
-    RUNNING = 1  # 'RUNNING', 'Running'
-    SUCCESS = 2  # 'SUCCESS', 'Success'
-    FAILED = 3  # 'FAILED', 'Failed'
+    RUNNING = 1
+    SUCCESS = 2
+    FAILED = 3
 
 
 class AIModelSyncLog(CreatedAndModifiedWithDelta):
-    """Audit trail and mutex lock for the Hypothalamus sync job."""
-
     status = models.ForeignKey(
         SyncStatus, on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -394,3 +583,21 @@ class AIModelRating(CreatedMixin):
 
     class Meta:
         indexes = [models.Index(fields=['ai_model', 'is_current'])]
+
+
+class LiteLLMCache(CreatedMixin):
+    cached_catalog = models.JSONField(default=dict)
+
+
+class AIModelDescriptionCache(CreatedMixin):
+    cached_library = models.JSONField(default=dict)
+
+
+class AIModelDescription(DescriptionMixin, CreatedAndModifiedWithDelta):
+    """Parsed from Description Cache."""
+
+    ai_models = models.ManyToManyField(AIModel, blank=True)
+    families = models.ManyToManyField(AIModelFamily, blank=True)
+    categories = models.ManyToManyField(AIModelCategory, blank=True)
+    tags = models.ManyToManyField(AIModelTags, blank=True)
+    is_current = models.BooleanField(default=True, db_index=True)

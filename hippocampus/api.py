@@ -1,17 +1,33 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from rest_framework.viewsets import ModelViewSet
 
-from hippocampus.models import TalosEngram, TalosEngramTag
+from hippocampus.models import Engram, EngramTag
+
+if TYPE_CHECKING:
+    from django.db.models import QuerySet
 from hippocampus.serializers import (
-    TalosEngramSerializer,
-    TalosEngramTagSerializer,
+    EngramSerializer,
+    EngramTagSerializer,
 )
 
 
-class TalosEngramTagViewSet(ModelViewSet):
-    queryset = TalosEngramTag.objects.all()
-    serializer_class = TalosEngramTagSerializer
+class EngramTagViewSet(ModelViewSet):
+    queryset = EngramTag.objects.all()
+    serializer_class = EngramTagSerializer
 
 
-class TalosEngramViewSet(ModelViewSet):
-    queryset = TalosEngram.objects.all()
-    serializer_class = TalosEngramSerializer
+class EngramViewSet(ModelViewSet):
+    queryset = Engram.objects.all()
+    serializer_class = EngramSerializer
+
+    def get_queryset(self) -> 'QuerySet[Engram]':
+        queryset = super().get_queryset()
+        identity_discs = self.request.query_params.get('identity_discs')
+        if identity_discs:
+            queryset = queryset.filter(
+                identity_discs=identity_discs
+            ).distinct()
+        return queryset

@@ -1,23 +1,22 @@
 from unittest.mock import patch
 
+from central_nervous_system.central_nervous_system import CNS
+from central_nervous_system.models import (
+    Axon,
+    AxonType,
+    Effector,
+    NeuralPathway,
+    Neuron,
+    Spike,
+    SpikeStatus,
+)
 from common.tests.common_test_case import CommonFixturesAPITestCase
-
 from environments.models import (
     ProjectEnvironment,
     ProjectEnvironmentStatus,
     ProjectEnvironmentType,
     TalosExecutable,
 )
-from central_nervous_system.models import (
-    Spike,
-    SpikeStatus,
-    Effector,
-    NeuralPathway,
-    Neuron,
-    Axon,
-    AxonType,
-)
-from central_nervous_system.central_nervous_system import CNS
 
 
 class CNSGraphRoutingTest(CommonFixturesAPITestCase):
@@ -54,8 +53,8 @@ class CNSGraphRoutingTest(CommonFixturesAPITestCase):
                                         target=self.neuron2,
                                         type=axon_type_success)
 
-    @patch('central_nervous_system.central_nervous_system.cast_cns_spell.delay')
-    def test_creates_head_from_node_on_success(self, mock_cast_delay):
+    @patch('central_nervous_system.central_nervous_system.fire_spike.delay')
+    def test_creates_head_from_node_on_success(self, mock_fire_spike_delay):
         """Verify CNS._process_graph_triggers successfully traverses wires to spawn child Spikes."""
 
         cns = CNS(pathway_id=self.book.id)
@@ -91,4 +90,4 @@ class CNSGraphRoutingTest(CommonFixturesAPITestCase):
         self.assertEqual(child_spike.status_id, SpikeStatus.PENDING)
 
         # Assert task enqueued
-        mock_cast_delay.assert_called_with(child_spike.id)
+        mock_fire_spike_delay.assert_called_with(child_spike.id)

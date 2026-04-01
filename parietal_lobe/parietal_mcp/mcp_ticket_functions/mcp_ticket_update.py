@@ -5,19 +5,16 @@ from django.core.exceptions import ValidationError
 
 from prefrontal_cortex.models import PFCEpic, PFCItemStatus, PFCStory, PFCTask
 from prefrontal_cortex.serializers import (
-    PFCEpicSerializer,
-    PFCStorySerializer,
-    PFCTaskSerializer,
     TicketAction,
     make_action_response,
 )
 
 from .constants import EPIC, STATUS_ID, STATUS_KEY, STORY, TASK
 
-MODEL_SERIALIZER_SEQ = [
-    (EPIC, PFCEpic, PFCEpicSerializer),
-    (STORY, PFCStory, PFCStorySerializer),
-    (TASK, PFCTask, PFCTaskSerializer),
+MODEL_SEQ = [
+    (EPIC, PFCEpic),
+    (STORY, PFCStory),
+    (TASK, PFCTask),
 ]
 
 
@@ -102,7 +99,7 @@ def _update_sync(item_id: str, field_name: str, field_value: str) -> str:
             error='field_name is required for update.',
         )
 
-    for type_name, model_class, serializer_class in MODEL_SERIALIZER_SEQ:
+    for type_name, model_class in MODEL_SEQ:
         try:
             instance = model_class.objects.get(id=val_uuid)
         except model_class.DoesNotExist:
@@ -157,12 +154,10 @@ def _update_sync(item_id: str, field_name: str, field_value: str) -> str:
             )
 
         _auto_status_update(instance, type_name)
-        serializer = serializer_class(instance)
         return make_action_response(
             action=TicketAction.UPDATE,
             item_type=type_name,
             item_id=val_uuid,
-            data=serializer.data,
         )
 
     return make_action_response(

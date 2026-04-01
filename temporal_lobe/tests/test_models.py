@@ -1,7 +1,10 @@
+from rest_framework import status as drf_status
+
 from common.tests.common_test_case import CommonFixturesAPITestCase
 from identity.models import Identity, IdentityDisc
 from temporal_lobe.models import (Shift, ShiftDefaultParticipant,
                                   IterationDefinition, IterationShiftDefinition,
+                                  IterationShiftDefinitionParticipant,
                                   IterationStatus, Iteration, IterationShift,
                                   IterationShiftParticipantStatus,
                                   IterationShiftParticipant)
@@ -40,3 +43,46 @@ class TemporalLobeModelsTest(CommonFixturesAPITestCase):
         self.assertEqual(str(iteration), "TestIterationModel")
         self.assertTrue(str(disc.name) in str(participant))
         self.assertTrue(str(shift.name) in str(iter_shift))
+
+    def test_create_iteration_definition_auto_populates_shift_definitions(self):
+        """Assert POST to iteration-definitions creates 6 nested shift definitions in order."""
+        shift_count = Shift.objects.count()
+        response = self.test_client.post(
+            '/api/v2/iteration-definitions/',
+            {'name': 'Test'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, drf_status.HTTP_201_CREATED)
+        data = response.json()
+        shift_defs = data['shift_definitions']
+        self.assertEqual(len(shift_defs), shift_count)
+
+        shifts_in_order = list(
+            Shift.objects.all().order_by('id').values_list('id', flat=True)
+        )
+        for i, sd in enumerate(shift_defs):
+            self.assertEqual(sd['order'], i)
+            self.assertEqual(sd['shift']['id'], shifts_in_order[i])
+            expected_limit = Shift.objects.get(id=shifts_in_order[i]).default_turn_limit
+            self.assertEqual(sd['turn_limit'], expected_limit)
+
+    def test_post_iteration_shift_definition_with_shift_id(self):
+        """Assert POST to iteration-shift-definitions with shift_id writes the FK correctly."""
+        definition = IterationDefinition.objects.create(name='PostTest')
+        shift = Shift.objects.first()
+        response = self.test_client.post(
+            '/api/v2/iteration-shift-definitions/',
+            {
+                'definition': definition.id,
+                'shift_id': shift.id,
+                'order': 0,
+                'turn_limit': 1,
+            },
+            format='json',
+        )
+        self.assertEqual(response.status_code, drf_status.HTTP_201_CREATED)
+        data = response.json()
+        self.assertEqual(data['shift']['id'], shift.id)
+        self.assertEqual(data['definition'], definition.id)
+        self.assertEqual(data['order'], 0)
+        self.assertEqual(data['turn_limit'], 1)

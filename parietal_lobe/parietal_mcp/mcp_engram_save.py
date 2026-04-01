@@ -1,4 +1,4 @@
-from hippocampus.hippocampus import TalosHippocampus
+from hippocampus.hippocampus import Hippocampus
 
 
 async def mcp_engram_save(
@@ -8,7 +8,8 @@ async def mcp_engram_save(
     turn_id: int,
     tags: str = '',
     relevance: float = 1.0,
+    thought: str = '',
 ) -> str:
     """MCP Tool: Crystallizes a NEW fact into an Engram card."""
-    return await TalosHippocampus.save_engram(session_id, title, fact, turn_id,
+    return await Hippocampus.save_engram(session_id, title, fact, turn_id,
                                               tags, relevance)

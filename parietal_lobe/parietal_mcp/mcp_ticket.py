@@ -13,6 +13,7 @@ async def mcp_ticket(
     field_value: Optional[str] = None,
     parent_id: Optional[str] = None,
     query: Optional[str] = None,
+    thought: str = '',
     session_id: Optional[str] = None,
 ) -> str:
     """MCP Tool: Unified Agile ticket operations (EPIC, STORY, TASK).

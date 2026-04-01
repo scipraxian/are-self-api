@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from central_nervous_system.models import SpikeStatus
-from central_nervous_system.tasks import cast_cns_spell
+from central_nervous_system.tasks import fire_spike
 from frontal_lobe.models import ReasoningStatusID
 from frontal_lobe.serializers import (
     KEY_REPLY,
@@ -17,10 +17,13 @@ from thalamus.serializers import (
     ThalamusMessageListDTO,
     ThalamusMessageListSerializer,
 )
-from thalamus.thalamus import get_chat_history, inject_human_reply
+from thalamus.thalamus import (
+    get_chat_history,
+    inject_swarm_chatter,
+)
 
 from . import serializers
-from .models import ModelRegistry, ReasoningSession, ReasoningTurn
+from .models import ReasoningSession, ReasoningTurn
 
 MSG_REIGNITED = 'Neural pathway re-ignited.'
 MSG_INVALID_STATE = (
@@ -31,7 +34,7 @@ MSG_INVALID_STATE = (
 class ReasoningSessionViewSet(viewsets.ModelViewSet):
     """Command Center for Talos AGI Reasoning Sessions."""
 
-    queryset = ReasoningSession.objects.all().order_by('-created')
+    queryset = ReasoningSession.objects.all().order_by('-modified')
     serializer_class = serializers.ReasoningSessionLiteSerializer
     filter_backends = [
         DjangoFilterBackend,
@@ -72,7 +75,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
 
         spike.status_id = SpikeStatus.PENDING
         spike.save(update_fields=['status'])
-        cast_cns_spell.delay(spike.id)
+        fire_spike.delay(spike.id)
 
         return Response(
             {
@@ -117,26 +120,19 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         serializer_class=ResumeSessionRequestSerializer,
     )
     def resume(self, request, pk=None):
-        """Resumes a paused ReasoningSession, attaching the human's reply."""
+        """Injects human chatter into a ReasoningSession and ensures it is awake."""
         session = self.get_object()
 
         request_serializer = self.get_serializer(data=request.data)
         request_serializer.is_valid(raise_exception=True)
         user_reply = request_serializer.validated_data.get(KEY_REPLY, '')
 
-        success = inject_human_reply(session, user_reply)
+        # Drop into the async queue!
+        inject_swarm_chatter(session, role='user', text=user_reply)
 
-        if not success:
-            error_dto = ResumeSessionResponseDTO(
-                ok=False,
-                message=MSG_INVALID_STATE.format(status_id=session.status_id),
-            )
-            return Response(
-                ResumeSessionResponseSerializer(instance=error_dto).data,
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        success_dto = ResumeSessionResponseDTO(ok=True, message=MSG_REIGNITED)
+        success_dto = ResumeSessionResponseDTO(
+            ok=True, message='Swarm chatter injected. Neural pathway active.'
+        )
         return Response(
             ResumeSessionResponseSerializer(instance=success_dto).data,
             status=status.HTTP_200_OK,
@@ -159,6 +155,26 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         )
 
 
-class ModelRegistryViewSet(viewsets.ModelViewSet):
-    queryset = ModelRegistry.objects.all()
-    serializer_class = serializers.ModelRegistrySerializer
+class ReasoningTurnViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Deep inspection endpoint for individual cognitive cycles.
+    Used by the frontend graph to view the raw Ledger (request/response payloads, tokens, costs).
+    """
+
+    queryset = (
+        ReasoningTurn.objects.select_related(
+            'status',
+            'session',
+            'model_usage_record',
+            'model_usage_record__ai_model',
+            'model_usage_record__ai_model_provider',
+        )
+        .prefetch_related('tool_calls__tool')
+        .order_by('-created')
+    )
+
+    # Using the serializer you defined earlier!
+    serializer_class = serializers.ReasoningTurnSerializer
+
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['session', 'status']

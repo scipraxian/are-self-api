@@ -162,6 +162,8 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 CELERY_TASK_TRACK_STARTED = True
+CELERY_WORKER_SEND_TASK_EVENTS = True
+CELERY_TASK_SEND_SENT_EVENT = True
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny']
@@ -172,6 +174,9 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'simple': {'format': '[%(levelname)s] %(message)s'},
+        'verbose': {
+            'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+        },
     },
     'handlers': {
         'console': {
@@ -179,20 +184,55 @@ LOGGING = {
             'stream': 'ext://sys.stdout',
             'formatter': 'simple',
         },
+        'norepinephrine': {
+            'class': 'synaptic_cleft.norepinephrine_handler.NorepinephrineHandler',
+            'level': 'INFO',
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
         'central_nervous_system': {
-            'handlers': ['console'],
+            'handlers': ['console', 'norepinephrine'],
             'level': 'INFO',
             'propagate': True,
         },
-        'prefrontal_cortex': {
-            'handlers': ['console'],
+        'frontal_lobe': {
+            'handlers': ['console', 'norepinephrine'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'hypothalamus': {
+            'handlers': ['console', 'norepinephrine'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'parietal_lobe': {
+            'handlers': ['console', 'norepinephrine'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'hippocampus': {
+            'handlers': ['console', 'norepinephrine'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'peripheral_nervous_system': {
+            'handlers': ['console', 'norepinephrine'],
             'level': 'INFO',
             'propagate': True,
         },
         'temporal_lobe': {
-            'handlers': ['console'],
+            'handlers': ['console', 'norepinephrine'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'prefrontal_cortex': {
+            'handlers': ['console', 'norepinephrine'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'identity': {
+            'handlers': ['console', 'norepinephrine'],
             'level': 'INFO',
             'propagate': True,
         },
@@ -217,9 +257,9 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [
-                ('127.0.0.1', 6379)
-            ],  # Connection details for your Redis server
+            'hosts': [('127.0.0.1', 6379)],
+            'capacity': 1500,
+            'expiry': 5,
         },
     },
 }

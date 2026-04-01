@@ -1,7 +1,7 @@
 from parietal_lobe.parietal_mcp.mcp_git_functions.mcp_git__router import route
 
 
-async def mcp_git(action: str, params: dict) -> str:
+async def mcp_git(action: str, params: dict, thought: str = '') -> str:
     """MCP Tool: Unified git operations.
 
     Actions: status, diff, log, commit, add, stash, branch, checkout.

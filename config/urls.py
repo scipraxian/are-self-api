@@ -10,6 +10,7 @@ from dashboard.api_urls import DASHBOARD_ROUTER
 from environments.api_urls import ENVIRONMENTS_ROUTER
 from frontal_lobe.api_urls import V2_REASONING_ROUTER
 from hippocampus.api_urls import V2_HIPPOCAMPUS_ROUTER
+from hypothalamus.api_urls import V2_HYPOTHALAMUS_ROUTER
 from identity.api_urls import V2_IDENTITY_ROUTER
 from identity.urls import V2_IDENTITY_ROUTER
 from parietal_lobe.api_urls import V2_PARIETAL_LOBE
@@ -36,6 +37,8 @@ V2_ROUTER.registry.extend(V2_REASONING_ROUTER.registry)
 V2_ROUTER.registry.extend(V2_PARIETAL_LOBE.registry)
 V2_ROUTER.registry.extend(V2_PNS_ROUTER.registry)
 V2_ROUTER.registry.extend(V2_THALAMUS.registry)
+V2_ROUTER.registry.extend(V2_HYPOTHALAMUS_ROUTER.registry)
+V2_ROUTER.registry.extend(ENVIRONMENTS_ROUTER.registry)
 
 urlpatterns = [
     path('', include('dashboard.urls')),

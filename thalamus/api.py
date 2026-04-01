@@ -12,7 +12,6 @@ from central_nervous_system.models import (
     SpikeTrain,
     SpikeTrainStatus,
 )
-from central_nervous_system.tasks import cast_cns_spell
 from frontal_lobe.models import (
     ReasoningSession,
     ReasoningStatusID,
@@ -27,7 +26,7 @@ from .serializers import (
     ThalamusResponseDTO,
     ThalamusResponseSerializer,
 )
-from .thalamus import get_chat_history, inject_human_reply
+from .thalamus import get_chat_history, inject_swarm_chatter
 
 logger = logging.getLogger(__name__)
 
@@ -72,40 +71,26 @@ class ThalamusViewSet(viewsets.ViewSet):
             .first()
         )
 
-        # 3A. RE-IGNITION: The AI was paused waiting for you.
-        if (
-            session
-            and session.status_id == ReasoningStatusID.ATTENTION_REQUIRED
-        ):
-            # Hand off to the DRY operation
-            inject_human_reply(session, user_message)
-
+        # 3A. INJECT INTO EXISTING SESSION (Regardless of state)
+        if session and session.status_id in [
+            ReasoningStatusID.ACTIVE,
+            ReasoningStatusID.PENDING,
+            ReasoningStatusID.ATTENTION_REQUIRED,
+        ]:
+            inject_swarm_chatter(session, role='user', text=user_message)
             dto = ThalamusResponseDTO(
-                ok=True, message='Neural pathway re-ignited.'
+                ok=True, message='Swarm chatter injected into standing session.'
             )
             return Response(
                 ThalamusResponseSerializer(instance=dto).data,
                 status=status.HTTP_200_OK,
             )
 
-        # 3B. BUSY STATE
-        elif session and session.status_id in [
-            ReasoningStatusID.ACTIVE,
-            ReasoningStatusID.PENDING,
-        ]:
-            # Now properly using your DTOs instead of raw dicts!
-            dto = ThalamusResponseDTO(
-                ok=False, message='Thalamus is currently thinking.'
-            )
-            return Response(
-                ThalamusResponseSerializer(instance=dto).data,
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # 3C. GENESIS / FRESH START
+        # 3B. GENESIS / FRESH START
         cc_neuron = Neuron.objects.filter(
             pathway_id=pathway_id, is_root=False
         ).first()
+
         spike = Spike.objects.create(
             spike_train=standing_train,
             neuron=cc_neuron,
@@ -127,8 +112,8 @@ class ThalamusViewSet(viewsets.ViewSet):
             status_id=ReasoningStatusID.ACTIVE,
         )
 
-        # Pre-seed your message using the exact same injection logic
-        inject_human_reply(new_session, user_message)
+        # Pre-seed your message into the fresh queue
+        inject_swarm_chatter(new_session, role='user', text=user_message)
 
         dto = ThalamusResponseDTO(
             ok=True, message='Fresh Spike spawned with user prompt.'
@@ -176,7 +161,23 @@ class ThalamusViewSet(viewsets.ViewSet):
         # Hand off to the DRY operation
         messages_payload = get_chat_history(session, include_volatile=False)
 
-        response_dto = ThalamusMessageListDTO(messages=messages_payload)
+        # 🧹 SHIELD: Sanitize internal system prompts at the source
+        clean_messages = []
+        for m in messages_payload:
+            role = m.get('role')
+            content = m.get('content') or m.get('text') or ''
+
+            if role == 'user' and isinstance(content, str):
+                if (
+                    'YOUR MOVE:' in content
+                    or '[SYSTEM DIAGNOSTICS]' in content
+                    or '[YOUR CARD CATALOG' in content
+                ):
+                    continue
+
+            clean_messages.append(m)
+
+        response_dto = ThalamusMessageListDTO(messages=clean_messages)
         return Response(
             ThalamusMessageListSerializer(instance=response_dto).data,
             status=status.HTTP_200_OK,

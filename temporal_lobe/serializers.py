@@ -78,6 +78,12 @@ class IterationShiftDefinitionSerializer(serializers.ModelSerializer):
     """Serializer for the IterationShiftDefinition model."""
 
     shift = ShiftSerializer(read_only=True)
+    shift_id = serializers.PrimaryKeyRelatedField(
+        source='shift',
+        queryset=Shift.objects.all(),
+        write_only=True,
+        required=False,
+    )
 
     participants = IterationShiftDefinitionParticipantSerializer(
         source='iterationshiftdefinitionparticipant_set',

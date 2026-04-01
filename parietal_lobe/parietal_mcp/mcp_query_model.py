@@ -88,6 +88,7 @@ async def mcp_query_model(
     filters: dict = None,
     q_string: str = None,
     page: int = 1,
+    thought: str = '',
 ) -> str:
     """MCP Tool: Queries database via pagination. Auto-truncates massive fields."""
     filters = filters or {}

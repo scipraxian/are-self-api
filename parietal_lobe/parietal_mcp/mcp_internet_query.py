@@ -3,7 +3,7 @@ from urllib.parse import quote_plus
 import requests
 
 
-def mcp_internet_query(query: str) -> str:
+def mcp_internet_query(query: str, thought: str = '') -> str:
     """MCP Tool: Search the web using DuckDuckGo (lightweight, no browser)."""
     try:
         url = f'https://html.duckduckgo.com/html/?q={quote_plus(query)}'

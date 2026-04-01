@@ -61,7 +61,7 @@ async def scan_and_register(
     if registered_names:
         log_output += f' Registered/Updated: {", ".join(registered_names)}'
 
-    # Return (Success Code 200, Log String) for GenericEffectorCaster
+    # Return (Success Code 200, Log String) for NeuroMuscularJunction
     return 200, log_output
 
 

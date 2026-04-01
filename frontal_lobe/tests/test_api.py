@@ -9,7 +9,7 @@ from central_nervous_system.models import (
     SpikeTrain,
     SpikeTrainStatus,
 )
-from hippocampus.models import TalosEngram
+from hippocampus.models import Engram
 from parietal_lobe.models import ToolCall, ToolDefinition
 from frontal_lobe import constants
 from frontal_lobe.models import (
@@ -46,11 +46,29 @@ class ReasoningAPITest(TestCase):
             spike=self.spike, status=self.status_active
         )
 
+        from hypothalamus.models import AIModel, LLMProvider, AIModelProvider, AIModelProviderUsageRecord
+
+        self.model = AIModel.objects.create(name='test-model', context_length=4096)
+        self.provider = LLMProvider.objects.create(key='test-provider', base_url='http://test.com')
+        self.ai_model_provider = AIModelProvider.objects.create(
+            ai_model=self.model,
+            provider=self.provider,
+            provider_unique_model_id='test-model-id'
+        )
+
+        self.usage_record = AIModelProviderUsageRecord.objects.create(
+            ai_model_provider=self.ai_model_provider,
+            ai_model=self.model,
+            request_payload={'test': 'data'},
+            response_payload={'content': 'Thinking 1'},
+            input_tokens=10,
+            output_tokens=20
+        )
+
         self.turn = ReasoningTurn.objects.create(
             session=self.session,
             turn_number=1,
-            request_payload={'test': 'data'},
-            thought_process='Thinking 1',
+            model_usage_record=self.usage_record,
             status=self.status_active,
         )
 
@@ -59,7 +77,7 @@ class ReasoningAPITest(TestCase):
             turn=self.turn, tool=self.tool, arguments='{}', call_id='call_123'
         )
 
-        self.engram = TalosEngram.objects.create(
+        self.engram = Engram.objects.create(
             description='Test Engram', relevance_score=0.9
         )
         self.engram.sessions.add(self.session)

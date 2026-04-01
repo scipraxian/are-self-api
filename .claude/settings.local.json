@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -E \"\\\\.py$|^d\")",
+      "Bash(grep -E \"\\\\.py$\")",
+      "Bash(echo \"EXIT: $?\")"
+    ]
+  }
+}
