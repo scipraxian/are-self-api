@@ -1,5 +1,6 @@
 """Logging handler that broadcasts log records as Norepinephrine via Synaptic Cleft."""
 
+import asyncio
 import logging
 import socket
 
@@ -16,6 +17,7 @@ SKIPPED_LOGGER_PREFIXES = (
     'daphne',
     'redis',
     'asyncio',
+    'peripheral_nervous_system',
 )
 
 
@@ -23,6 +25,7 @@ def _get_worker_hostname() -> str:
     """Return the Celery worker hostname if available, else socket hostname."""
     try:
         from celery import current_app
+
         worker_hostname = current_app.current_worker_task
         if worker_hostname and hasattr(worker_hostname, 'request'):
             hostname = worker_hostname.request.hostname
@@ -63,7 +66,15 @@ class NorepinephrineHandler(logging.Handler):
                     'lineno': record.lineno,
                 },
             )
-            async_to_sync(fire_neurotransmitter)(transmitter)
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None
+
+            if loop and loop.is_running():
+                loop.create_task(fire_neurotransmitter(transmitter))
+            else:
+                async_to_sync(fire_neurotransmitter)(transmitter)
         except Exception:
             self.handleError(record)
         finally:

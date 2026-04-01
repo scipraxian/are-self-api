@@ -13,7 +13,7 @@ from common.models import (
     UUIDIdMixin,
 )
 from frontal_lobe.models import ReasoningTurn
-from hippocampus.models import TalosEngram
+from hippocampus.models import Engram
 from parietal_lobe.models import ToolDefinition
 
 
@@ -182,7 +182,7 @@ class IdentityDisc(
         ReasoningTurn, on_delete=models.SET_NULL, null=True, blank=True
     )
     timeouts = models.IntegerField(default=0)
-    memories = models.ManyToManyField(TalosEngram, blank=True)
+    memories = models.ManyToManyField(Engram, blank=True)
 
     @property
     def vector(self):

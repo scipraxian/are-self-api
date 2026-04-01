@@ -5,8 +5,8 @@ from asgiref.sync import sync_to_async
 
 from common.tests.common_test_case import CommonFixturesAPITestCase
 
-from central_nervous_system.effectors.effector_casters.generic_effector_caster import (
-    GenericEffectorCaster,)
+from central_nervous_system.effectors.effector_casters.neuromuscular_junction import (
+    NeuroMuscularJunction,)
 from central_nervous_system.models import (
     Effector,
     NeuralPathway,
@@ -34,7 +34,7 @@ async def mock_event_stream(events):
 
 
 @pytest.mark.django_db
-class TestGenericSpellCaster:
+class TestNeuroMuscularJunction:
 
     @pytest.fixture
     def mock_head(self):
@@ -70,10 +70,10 @@ class TestGenericSpellCaster:
     def mock_env_utils(self):
         with (
                 patch(
-                    'central_nervous_system.effectors.effector_casters.generic_effector_caster.get_active_environment'
+                    'central_nervous_system.effectors.effector_casters.neuromuscular_junction.get_active_environment'
                 ) as mock_env,
                 patch(
-                    'central_nervous_system.effectors.effector_casters.generic_effector_caster.resolve_environment_context'
+                    'central_nervous_system.effectors.effector_casters.neuromuscular_junction.resolve_environment_context'
                 ) as mock_ctx,
         ):
             mock_env.return_value = None
@@ -82,7 +82,7 @@ class TestGenericSpellCaster:
 
     def test_init_starts_execution(self, mock_head, mock_env_utils):
         """Test that execute() kicks off the process."""
-        caster = GenericEffectorCaster(mock_head.id)
+        caster = NeuroMuscularJunction(mock_head.id)
 
         # Mock NerveTerminal.execute_local to return an empty stream then exit
         events = [
@@ -106,7 +106,7 @@ class TestGenericSpellCaster:
 
     def test_async_pipeline_success(self, mock_head, mock_env_utils):
         """Test a successful run updates status to SUCCESS."""
-        caster = GenericEffectorCaster(mock_head.id)
+        caster = NeuroMuscularJunction(mock_head.id)
 
         events = [
             NerveTerminalEvent(
@@ -132,7 +132,7 @@ class TestGenericSpellCaster:
 
     def test_async_pipeline_failure(self, mock_head, mock_env_utils):
         """Test a non-zero exit code updates status to FAILED."""
-        caster = GenericEffectorCaster(mock_head.id)
+        caster = NeuroMuscularJunction(mock_head.id)
 
         events = [
             NerveTerminalEvent(type=NerveTerminalConstants.T_LOG,
@@ -155,7 +155,7 @@ class TestGenericSpellCaster:
         mock_head.target = MagicMock()
         mock_head.target.hostname = '192.168.1.50'
 
-        caster = GenericEffectorCaster(mock_head.id)
+        caster = NeuroMuscularJunction(mock_head.id)
 
         events = [
             NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0)
@@ -180,7 +180,7 @@ class TestGenericSpellCaster:
             '-project="C:\\My Files\\Proj.uproject"',
         ]
 
-        caster = GenericEffectorCaster(mock_head.id)
+        caster = NeuroMuscularJunction(mock_head.id)
 
         events = [
             NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0)
@@ -212,7 +212,7 @@ class TestGenericSpellCaster:
         _, mock_ctx = mock_env_utils
         mock_ctx.return_value = {'project_name': 'HSHVacancy'}
 
-        caster = GenericEffectorCaster(mock_head.id)
+        caster = NeuroMuscularJunction(mock_head.id)
         events = [
             NerveTerminalEvent(type=NerveTerminalConstants.T_EXIT, code=0)
         ]
@@ -253,13 +253,13 @@ class TestGenericSpellCaster:
 
         # 3. Hijack the Caster's Native Handler routing
         with patch.dict(
-                'central_nervous_system.effectors.effector_casters.generic_effector_caster.NATIVE_HANDLERS',
+                'central_nervous_system.effectors.effector_casters.neuromuscular_junction.NATIVE_HANDLERS',
             {'ai_parser': mock_ai_handler},
         ):
             mock_head.effector.talos_executable.internal = True
             mock_head.effector.talos_executable.executable = 'ai_parser'
 
-            caster = GenericEffectorCaster(mock_head.id)
+            caster = NeuroMuscularJunction(mock_head.id)
             caster.spike = mock_head
             caster.effector = mock_head.effector
 
@@ -280,7 +280,7 @@ class TestGenericSpellCaster:
         mock_head.execution_log = ''
         mock_head.application_log = ''
 
-        caster = GenericEffectorCaster(mock_head.id)
+        caster = NeuroMuscularJunction(mock_head.id)
 
         # Mixed log output mimicking a CLI tool sending secret commands
         log_payload = ('Standard log line 1\n'
@@ -320,7 +320,7 @@ class TestGenericSpellCaster:
         mock_head.blackboard = None  # Simulate an uninitialized JSONField
         mock_head.execution_log = ''
 
-        caster = GenericEffectorCaster(mock_head.id)
+        caster = NeuroMuscularJunction(mock_head.id)
 
         # Edge cases
         log_payload = (
@@ -356,7 +356,7 @@ class TestGenericSpellCaster:
 
 
 @pytest.mark.django_db
-class GenericSpellCasterQueryTest(CommonFixturesAPITestCase):
+class NeuroMuscularJunctionQueryTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         # Environment
@@ -388,7 +388,7 @@ class GenericSpellCasterQueryTest(CommonFixturesAPITestCase):
 
     def test_load_head_sync_prefetches_environment(self):
         """Verify _load_head_sync loads the environment in the initial query to prevent async ORM crashes."""
-        caster = GenericEffectorCaster(spike_id=self.spike.id)
+        caster = NeuroMuscularJunction(spike_id=self.spike.id)
 
         # 1. Load the spike (Should take exactly 1 query due to select_related)
         with self.assertNumQueries(1):

@@ -1,4 +1,4 @@
-from hippocampus.hippocampus import TalosHippocampus
+from hippocampus.hippocampus import Hippocampus
 
 
 async def mcp_engram_update(
@@ -6,6 +6,6 @@ async def mcp_engram_update(
     thought: str = ''
 ) -> str:
     """MCP Tool: Appends new findings to an existing Engram. REQUIRES THE ENGRAM ID."""
-    return await TalosHippocampus.update_engram(
+    return await Hippocampus.update_engram(
         session_id, engram_id, additional_fact, turn_id
     )

@@ -100,7 +100,7 @@ def check_channel_layer_config():
             )
         else:
             logger.debug(
-                f'[CHANNEL_LAYER] CHANNEL_LAYERS config: {settings.CHANNEL_LAYERS}'
+                '[CHANNEL_LAYER] CHANNEL_LAYERS config: %s', settings.CHANNEL_LAYERS
             )
 
             # Check if using InMemoryChannelLayer (won't work across processes)
@@ -114,7 +114,7 @@ def check_channel_layer_config():
                 )
     else:
         logger.debug(
-            f'[CHANNEL_LAYER] Channel layer initialized: {type(channel_layer).__name__}'
+            '[CHANNEL_LAYER] Channel layer initialized: %s', type(channel_layer).__name__
         )
 
     return channel_layer
@@ -129,7 +129,7 @@ class AsyncLogManager:
     def __init__(self, spike: Spike, flush_size=50, flush_interval=1.0):
         self.spike = spike
         self.exec_buffer: List[str] = []
-        self.spell_buffer: List[str] = []
+        self.application_buffer: List[str] = []
         self._lock = asyncio.Lock()
         self._last_flush_time = time.time()
         self._flush_size = flush_size
@@ -145,12 +145,12 @@ class AsyncLogManager:
             if self._should_flush():
                 await self._flush_unsafe()
 
-    async def append_spell(self, text: str):
+    async def append_application(self, text: str):
         """Appends to Effector Log (Game Logs/File)."""
         if text:
             text = text.replace('\x00', '')
         async with self._lock:
-            self.spell_buffer.append(text)
+            self.application_buffer.append(text)
             if self._should_flush():
                 await self._flush_unsafe()
 
@@ -159,7 +159,7 @@ class AsyncLogManager:
         if text:
             text = text.replace('\x00', '')
         # Double Log: Ensures we see it in the Server Console (Celery) AND the DB
-        logger.debug(f'[HEAD {self.spike.id}] {text.strip()}')
+        logger.debug('[HEAD %s] %s', self.spike.id, text.strip())
         async with self._lock:
             await self._flush_unsafe()
             self.spike.execution_log += text
@@ -174,31 +174,31 @@ class AsyncLogManager:
             await self._flush_unsafe()
 
     def _should_flush(self) -> bool:
-        total_size = len(self.exec_buffer) + len(self.spell_buffer)
+        total_size = len(self.exec_buffer) + len(self.application_buffer)
         return (
             total_size > self._flush_size
             or (time.time() - self._last_flush_time) > self._flush_interval
         )
 
     async def _flush_unsafe(self):
-        if not self.exec_buffer and not self.spell_buffer:
+        if not self.exec_buffer and not self.application_buffer:
             return
 
         # Capture current buffered chunks before mutating spike fields
         exec_chunk = ''.join(self.exec_buffer) if self.exec_buffer else ''
-        spell_chunk = ''.join(self.spell_buffer) if self.spell_buffer else ''
+        application_chunk = ''.join(self.application_buffer) if self.application_buffer else ''
 
         if self.exec_buffer:
             self.spike.execution_log += exec_chunk
             self.exec_buffer.clear()
 
-        if self.spell_buffer:
-            self.spike.application_log += spell_chunk
-            self.spell_buffer.clear()
+        if self.application_buffer:
+            self.spike.application_log += application_chunk
+            self.application_buffer.clear()
 
         await self._mirror_to_socket(
             execution_chunk=exec_chunk,
-            application_chunk=spell_chunk,
+            application_chunk=application_chunk,
         )
 
         await self._save_to_db()
@@ -255,11 +255,11 @@ class AsyncLogManager:
             raise
         except Exception as e:
             logger.error(
-                f'Failed to save execution log for Spike {self.spike.id}: {e}'
+                'Failed to save execution log for Spike %s: %s', self.spike.id, e
             )
 
 
-class GenericEffectorCaster:
+class NeuroMuscularJunction:
     """The Orchestrator for Are-Self Executables."""
 
     LOG_START_MESSAGE = 'Starting effector execution.\n'
@@ -288,11 +288,11 @@ class GenericEffectorCaster:
 
     def execute(self):
         """Public Synchronous Entry Point."""
-        logger.debug(f'Initializing execution for Spike ID: {self.spike_id}')
+        logger.debug('Initializing execution for Spike ID: %s', self.spike_id)
         try:
             self._load_head_sync()
         except Exception as e:
-            logger.error(f'FATAL: Could not load Spike {self.spike_id}: {e}')
+            logger.error('FATAL: Could not load Spike %s: %s', self.spike_id, e)
             return
 
         if sys.platform == 'win32':
@@ -311,11 +311,11 @@ class GenericEffectorCaster:
             self.logger = AsyncLogManager(self.spike)
             await self._preflight()
 
-            spell_task = asyncio.create_task(self._cast_spell())
+            spike_task = asyncio.create_task(self._execute_spike())
             monitor_task = asyncio.create_task(self._monitor_abort_signal())
 
             done, pending = await asyncio.wait(
-                [spell_task, monitor_task],
+                [spike_task, monitor_task],
                 return_when=asyncio.FIRST_COMPLETED,
             )
 
@@ -333,12 +333,12 @@ class GenericEffectorCaster:
                         raise exc
                 except ConnectionAbortedError:
                     logger.warning(
-                        f'Spike {self.spike_id} execution aborted by user.'
+                        'Spike %s execution aborted by user.', self.spike_id
                     )
                     return
 
-            if spell_task in done:
-                exc = spell_task.exception()
+            if spike_task in done:
+                exc = spike_task.exception()
                 if exc:
                     raise exc
 
@@ -375,7 +375,7 @@ class GenericEffectorCaster:
             if check_interval < max_interval:
                 check_interval = min(check_interval + 0.5, max_interval)
 
-    async def _cast_spell(self):
+    async def _execute_spike(self):
         self._log_info(f'Launching {self.effector.name}')
         await self._update_status(SpikeStatus.RUNNING)
 
@@ -475,7 +475,7 @@ class GenericEffectorCaster:
                             '', text_to_log
                         )
                     if text_to_log:
-                        await self.logger.append_spell(text_to_log)
+                        await self.logger.append_application(text_to_log)
                 elif event.type == NerveTerminalConstants.T_EXIT:
                     exit_code = event.code
         except Exception as e:
@@ -547,7 +547,7 @@ class GenericEffectorCaster:
             return
 
         if output_log:
-            await self.logger.append_spell(output_log)
+            await self.logger.append_application(output_log)
             await self.logger.flush()
 
         new_status = (
@@ -577,7 +577,7 @@ class GenericEffectorCaster:
             await sync_to_async(self.spike.save)(update_fields=fields)
         except Exception as e:
             logger.error(
-                f'Failed to save Spike {self.spike.id} fields {fields}: {e}'
+                'Failed to save Spike %s fields %s: %s', self.spike.id, fields, e
             )
 
     async def _update_status(self, status_id: int):
@@ -611,7 +611,7 @@ class GenericEffectorCaster:
 
     def _handle_fatal_error_sync(self, e: Exception):
         """Synchronous fallback for loop crashes."""
-        logger.error(f'Critical Caster Failure: {e}')
+        logger.error('Critical NMJ Failure: %s', e)
         trace = traceback.format_exc()
         if self.spike:
             try:
@@ -622,12 +622,12 @@ class GenericEffectorCaster:
                 self.spike.save(update_fields=['execution_log', 'status'])
             except Exception as db_err:
                 logger.error(
-                    f'Double Fault: Failed to write error to DB: {db_err}'
+                    'Double Fault: Failed to write error to DB: %s', db_err
                 )
 
     async def _handle_fatal_error(self, e: Exception):
         """Async error handler for pipeline logic."""
-        logger.error(f'Pipeline execution failed: {e}')
+        logger.error('Pipeline execution failed: %s', e)
         error_msg = f'\n[FATAL] Pipeline Error: {e}\n'
         if self.logger:
             try:

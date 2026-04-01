@@ -2,7 +2,7 @@ import json
 import logging
 from typing import Any, Dict, List
 
-from central_nervous_system.tasks import cast_cns_spell
+from central_nervous_system.tasks import fire_spike
 from frontal_lobe.constants import FrontalLobeConstants
 from frontal_lobe.models import (
     ReasoningSession,
@@ -158,7 +158,7 @@ def inject_swarm_chatter(
     if session.status_id == ReasoningStatusID.ATTENTION_REQUIRED:
         session.status_id = ReasoningStatusID.ACTIVE
         session.save(update_fields=['swarm_message_queue', 'status_id'])
-        cast_cns_spell.delay(session.spike_id)
+        fire_spike.delay(session.spike_id)
     else:
         # If it's already running, just save the queue. It will catch it next turn.
         session.save(update_fields=['swarm_message_queue'])

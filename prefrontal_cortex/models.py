@@ -69,7 +69,7 @@ class PFCTicketMixin(models.Model):
     demo_specifics = models.TextField(blank=True, default='')
 
     source_engrams = models.ManyToManyField(
-        'hippocampus.TalosEngram', blank=True
+        'hippocampus.Engram', blank=True
     )
 
     class Meta:

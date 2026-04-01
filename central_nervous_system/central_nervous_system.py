@@ -24,7 +24,7 @@ from .models import (
     SpikeTrain,
     SpikeTrainStatus,
 )
-from .tasks import cast_cns_spell
+from .tasks import fire_spike
 
 logger = logging.getLogger(__name__)
 
@@ -406,12 +406,12 @@ class CNS:
             status_id=SpikeStatus.PENDING,
             blackboard=seed.blackboard.copy(),
         )
-        transaction.on_commit(lambda: cast_cns_spell.delay(new_spike.id))
+        transaction.on_commit(lambda: fire_spike.delay(new_spike.id))
 
     def _prepare_and_dispatch(self, spike: Spike) -> None:
         spike.status_id = SpikeStatus.PENDING
         spike.save()
-        transaction.on_commit(lambda: cast_cns_spell.delay(spike.id))
+        transaction.on_commit(lambda: fire_spike.delay(spike.id))
 
     def _finalize_spawn_unsafe(self) -> None:
         """Determines final status."""

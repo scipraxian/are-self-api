@@ -43,8 +43,20 @@ class IdentityTypeSerializer(serializers.ModelSerializer):
 
 class IdentitySerializer(serializers.ModelSerializer):
     enabled_tools = ToolDefinitionSerializer(many=True, read_only=True)
+    enabled_tool_ids = serializers.PrimaryKeyRelatedField(
+        source='enabled_tools', queryset=ToolDefinition.objects.all(),
+        many=True, write_only=True, required=False,
+    )
     tags = IdentityTagSerializer(many=True, read_only=True)
+    tag_ids = serializers.PrimaryKeyRelatedField(
+        source='tags', queryset=IdentityTag.objects.all(),
+        many=True, write_only=True, required=False,
+    )
     addons = IdentityAddonSerializer(many=True, read_only=True)
+    addon_ids = serializers.PrimaryKeyRelatedField(
+        source='addons', queryset=IdentityAddon.objects.all(),
+        many=True, write_only=True, required=False,
+    )
     identity_type = IdentityTypeSerializer(read_only=True)
 
     rendered = serializers.SerializerMethodField()
@@ -95,8 +107,20 @@ class IdentityDiscReasoningSerializer(serializers.ModelSerializer):
 
 class IdentityDiscSerializer(serializers.ModelSerializer):
     enabled_tools = ToolDefinitionSerializer(many=True, read_only=True)
+    enabled_tool_ids = serializers.PrimaryKeyRelatedField(
+        source='enabled_tools', queryset=ToolDefinition.objects.all(),
+        many=True, write_only=True, required=False,
+    )
     tags = IdentityTagSerializer(many=True, read_only=True)
+    tag_ids = serializers.PrimaryKeyRelatedField(
+        source='tags', queryset=IdentityTag.objects.all(),
+        many=True, write_only=True, required=False,
+    )
     addons = IdentityAddonSerializer(many=True, read_only=True)
+    addon_ids = serializers.PrimaryKeyRelatedField(
+        source='addons', queryset=IdentityAddon.objects.all(),
+        many=True, write_only=True, required=False,
+    )
     identity_type = IdentityTypeSerializer(read_only=True)
     rendered = serializers.SerializerMethodField()
     reasoning_session = IdentityDiscReasoningSerializer(
@@ -126,10 +150,10 @@ class IdentityDiscSerializer(serializers.ModelSerializer):
 
     def get_memories(self, identity_disc):
         from frontal_lobe.serializers import (
-            TalosEngramSerializer,
+            EngramSerializer,
         )
 
-        return TalosEngramSerializer(
+        return EngramSerializer(
             identity_disc.engrams.distinct(),
             many=True,
         ).data

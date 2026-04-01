@@ -11,12 +11,12 @@ from central_nervous_system.models import (
     Effector,
     NeuralPathway,
 )
-from central_nervous_system.effectors.effector_casters.generic_effector_caster import GenericEffectorCaster
+from central_nervous_system.effectors.effector_casters.neuromuscular_junction import NeuroMuscularJunction
 
-MODULE_PATH = 'central_nervous_system.effectors.effector_casters.generic_effector_caster'
+MODULE_PATH = 'central_nervous_system.effectors.effector_casters.neuromuscular_junction'
 
 
-class GenericSpellcasterTest(CommonFixturesAPITestCase):
+class NeuroMuscularJunctionTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         # 1. Setup Data Hierarchy using Fixtures
@@ -44,11 +44,11 @@ class GenericSpellcasterTest(CommonFixturesAPITestCase):
                                           status_id=SpikeStatus.CREATED)
 
     def test_generic_spellcaster_instantiates(self):
-        """Asserts that the GenericEffectorCaster can be instantiated."""
+        """Asserts that the NeuroMuscularJunction can be instantiated."""
         try:
-            GenericEffectorCaster(self.spike.id)
+            NeuroMuscularJunction(self.spike.id)
         except Exception as e:
-            self.fail(f'Failed to instantiate GenericEffectorCaster: {e}')
+            self.fail(f'Failed to instantiate NeuroMuscularJunction: {e}')
 
     async def _mock_executable_router(self, caster):
         # Helper to simulate calling the router since it is async
@@ -56,7 +56,7 @@ class GenericSpellcasterTest(CommonFixturesAPITestCase):
 
     def test_generic_spellcaster_executable_router(self):
         """Assert executable router selects the correct executable logic."""
-        caster = GenericEffectorCaster(self.spike.id)
+        caster = NeuroMuscularJunction(self.spike.id)
         caster.spike = self.spike
         caster.effector = self.spike.effector
 
