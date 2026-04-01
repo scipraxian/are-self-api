@@ -170,6 +170,63 @@ def test_flux():
     assert r.creator == 'Black Forest Labs'
 
 
+def test_qwen_coder_subfamily():
+    r = parse_model_string('ollama/qwen2.5-coder:7b')
+    assert r.family == 'Qwen Coder'
+    assert r.parent_family == 'Qwen'
+    assert r.creator == 'Alibaba'
+
+
+def test_qwen_base_no_parent():
+    r = parse_model_string('ollama/qwen2.5:14b')
+    assert r.family == 'Qwen'
+    assert r.parent_family is None
+
+
+def test_codellama_subfamily():
+    r = parse_model_string('codellama:13b')
+    assert r.family == 'CodeLlama'
+    assert r.parent_family == 'Llama'
+    assert r.creator == 'Meta'
+
+
+def test_deepseek_coder_subfamily():
+    r = parse_model_string('deepseek-coder:6.7b')
+    assert r.family == 'DeepSeek Coder'
+    assert r.parent_family == 'DeepSeek'
+
+
+def test_codegemma_subfamily():
+    r = parse_model_string('codegemma:7b')
+    assert r.family == 'CodeGemma'
+    assert r.parent_family == 'Gemma'
+
+
+def test_codestral_parent():
+    r = parse_model_string('codestral:22b')
+    assert r.family == 'Codestral'
+    assert r.parent_family == 'Mistral'
+
+
+def test_mixtral_parent():
+    r = parse_model_string('mixtral:8x7b')
+    assert r.family == 'Mixtral'
+    assert r.parent_family == 'Mistral'
+
+
+def test_deepseek_r1_no_coder():
+    """deepseek-r1 is DeepSeek, NOT DeepSeek Coder."""
+    r = parse_model_string('deepseek-r1:7b')
+    assert r.family == 'DeepSeek'
+    assert r.parent_family is None
+
+
+def test_qwq_parent():
+    r = parse_model_string('qwq:32b')
+    assert r.family == 'QwQ'
+    assert r.parent_family == 'Qwen'
+
+
 def test_full_catalog_no_crashes():
     """Run against all models; none should crash."""
     current_dir = os.path.dirname(__file__)

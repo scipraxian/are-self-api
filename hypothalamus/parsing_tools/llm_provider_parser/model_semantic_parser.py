@@ -12,6 +12,7 @@ class AIModelSemanticParseResult:
     provider_region: str | None = None
     creator: str | None = None
     family: str | None = None
+    parent_family: str | None = None
     version: str | None = None
     parameter_size: str | None = None
     roles: list[str] = field(default_factory=list)
@@ -122,234 +123,239 @@ AZURE_REGION_RE = re.compile(
 # ──────────────────────────────────────────────
 FAMILY_PATTERNS = [
     # Anthropic
-    ('Claude', [
+    ('Claude', None, [
         'claude-opus', 'claude-sonnet', 'claude-haiku',
         'claude-instant', 'claude',
     ]),
     # OpenAI
-    ('GPT-OSS', ['gpt-oss']),
-    ('GPT-Image', ['gpt-image']),
-    ('GPT-Realtime', ['gpt-realtime']),
-    ('GPT-Audio', ['gpt-audio']),
-    ('GPT', [
+    ('GPT-OSS', None, ['gpt-oss']),
+    ('GPT-Image', None, ['gpt-image']),
+    ('GPT-Realtime', None, ['gpt-realtime']),
+    ('GPT-Audio', None, ['gpt-audio']),
+    ('GPT', None, [
         'gpt-5', 'gpt-4o', 'gpt-4.1', 'gpt-4', 'gpt-3.5',
         'gpt-35',  # azure naming
     ]),
-    ('o-series', ['o4-mini', 'o3-pro', 'o3-mini', 'o3', 'o1-pro', 'o1-mini', 'o1']),
-    ('DALL-E', ['dall-e']),
-    ('Sora', ['sora']),
-    ('Codex', ['codex']),
-    ('Whisper', ['whisper']),
-    ('TTS', ['tts-1']),
+    ('o-series', None, ['o4-mini', 'o3-pro', 'o3-mini', 'o3', 'o1-pro', 'o1-mini', 'o1']),
+    ('DALL-E', None, ['dall-e']),
+    ('Sora', None, ['sora']),
+    ('Codex', None, ['codex']),
+    ('Whisper', None, ['whisper']),
+    ('TTS', None, ['tts-1']),
     # Google
-    ('Gemini', ['gemini']),
-    ('Gemma', ['gemma']),
-    ('Imagen', ['imagen']),
-    ('Veo', ['veo']),
-    ('PaLM', ['chat-bison', 'text-bison']),
-    ('LearnLM', ['learnlm']),
-    # Meta
-    ('Llama', [
+    ('Gemini', None, ['gemini']),
+    ('CodeGemma', 'Gemma', ['codegemma']),
+    ('Gemma', None, ['gemma']),
+    ('Imagen', None, ['imagen']),
+    ('Veo', None, ['veo']),
+    ('PaLM', None, ['chat-bison', 'text-bison']),
+    ('LearnLM', None, ['learnlm']),
+    # Meta — CodeLlama before Llama
+    ('CodeLlama', 'Llama', ['codellama', 'code-llama', 'code-qwen']),
+    ('Llama', None, [
         'llama-guard', 'llama-4', 'llama-3.3', 'llama-3.2',
         'llama-3.1', 'llama-3', 'llama-2', 'llama',
         'llama4', 'llama3.3', 'llama3.2', 'llama3.1',
         'llama3', 'llama2',
     ]),
-    # Mistral
-    ('Codestral', ['codestral']),
-    ('Devstral', ['devstral']),
-    ('Magistral', ['magistral']),
-    ('Ministral', ['ministral']),
-    ('Pixtral', ['pixtral']),
-    ('Mixtral', ['mixtral']),
-    ('Mistral', ['mistral']),
-    ('Voxtral', ['voxtral']),
+    # Mistral — sub-families with parent before base Mistral
+    ('Codestral', 'Mistral', ['codestral']),
+    ('Devstral', 'Mistral', ['devstral']),
+    ('Magistral', 'Mistral', ['magistral']),
+    ('Ministral', 'Mistral', ['ministral']),
+    ('Pixtral', None, ['pixtral']),
+    ('Mixtral', 'Mistral', ['mixtral']),
+    ('Mistral', None, ['mistral']),
+    ('Voxtral', None, ['voxtral']),
     # DeepSeek (before Qwen to prevent qwen stealing deepseek-r1-distill-qwen)
-    ('DeepSeek', [
+    # DeepSeek Coder before DeepSeek
+    ('DeepSeek Coder', 'DeepSeek', ['deepseek-coder']),
+    ('DeepSeek', None, [
         'deepseek-r1', 'deepseek-v3', 'deepseek-v2',
-        'deepseek-coder', 'deepseek-prover',
+        'deepseek-prover',
         'deepseek-chat', 'deepseek-reasoner', 'deepseek-ocr',
         'deepseek-llama', 'deepseek',
     ]),
-    # Alibaba / Qwen
-    ('Qwen', [
-        'qwen3.5', 'qwen3-coder', 'qwen3-vl', 'qwen3-next',
-        'qwen3-omni', 'qwen3', 'qwen2.5-coder', 'qwen2.5-vl',
-        'qwen2.5', 'qwen2-vl', 'qwen2', 'qwen1.5',
-        'qwen-vl', 'qwen-mt', 'qwen-plus', 'qwen-max',
-        'qwen-turbo', 'qwen-flash', 'qwen-coder', 'qwen',
+    # Alibaba / Qwen — sub-families before base Qwen
+    ('Qwen Coder', 'Qwen', ['qwen3-coder', 'qwen2.5-coder', 'qwen-coder']),
+    ('Qwen VL', 'Qwen', ['qwen3-vl', 'qwen2.5-vl', 'qwen2-vl', 'qwen-vl']),
+    ('QwQ', 'Qwen', ['qwq']),
+    ('Qwen', None, [
+        'qwen3.5', 'qwen3-next',
+        'qwen3-omni', 'qwen3',
+        'qwen2.5', 'qwen2', 'qwen1.5',
+        'qwen-mt', 'qwen-plus', 'qwen-max',
+        'qwen-turbo', 'qwen-flash', 'qwen',
         'qwen25',  # fireworks p-notation: qwen25 = qwen2.5
-        'qwq',
     ]),
     # Cohere
-    ('Command', ['command-r', 'command-a', 'command-light', 'command-nightly', 'command']),
-    ('Cohere-Embed', ['cohere-embed', 'embed-english', 'embed-multilingual', 'cohere.embed', 'embed-v']),
-    ('Cohere-Rerank', ['cohere-rerank', 'rerank']),
+    ('Command', None, ['command-r', 'command-a', 'command-light', 'command-nightly', 'command']),
+    ('Cohere-Embed', None, ['cohere-embed', 'embed-english', 'embed-multilingual', 'cohere.embed', 'embed-v']),
+    ('Cohere-Rerank', None, ['cohere-rerank', 'rerank']),
     # AI21
-    ('Jamba', ['jamba']),
-    ('Jurassic', ['j2-mid', 'j2-light', 'j2-ultra', 'ai21.j2']),
+    ('Jamba', None, ['jamba']),
+    ('Jurassic', None, ['j2-mid', 'j2-light', 'j2-ultra', 'ai21.j2']),
     # Microsoft
-    ('Phi', ['phi-4', 'phi-3.5', 'phi-3', 'phi-2', 'phi']),
+    ('Phi', None, ['phi-4', 'phi-3.5', 'phi-3', 'phi-2', 'phi']),
     # Amazon
-    ('Nova', ['nova-2', 'nova-premier', 'nova-pro', 'nova-lite', 'nova-micro', 'nova-canvas', 'nova']),
-    ('Titan', ['titan']),
+    ('Nova', None, ['nova-2', 'nova-premier', 'nova-pro', 'nova-lite', 'nova-micro', 'nova-canvas', 'nova']),
+    ('Titan', None, ['titan']),
     # Stability
-    ('Stable Diffusion', ['stable-diffusion', 'sd3.5', 'sd3', 'ssd-1b']),
-    ('Stable Image', [
+    ('Stable Diffusion', None, ['stable-diffusion', 'sd3.5', 'sd3', 'ssd-1b']),
+    ('Stable Image', None, [
         'stable-image', 'stable-creative', 'stable-conservative',
         'stable-fast', 'stable-style', 'stable-outpaint',
     ]),
     # FLUX
-    ('FLUX', ['flux-kontext', 'flux-pro', 'flux-dev', 'flux-realism', 'flux']),
+    ('FLUX', None, ['flux-kontext', 'flux-pro', 'flux-dev', 'flux-realism', 'flux']),
     # Moonshot / Kimi
-    ('Kimi', ['kimi-k2', 'kimi-latest', 'kimi-thinking', 'kimi']),
-    ('Moonshot', ['moonshot']),
+    ('Kimi', None, ['kimi-k2', 'kimi-latest', 'kimi-thinking', 'kimi']),
+    ('Moonshot', None, ['moonshot']),
     # MiniMax
-    ('MiniMax', ['minimax-m2', 'minimax-m1', 'minimax-01', 'minimax']),
+    ('MiniMax', None, ['minimax-m2', 'minimax-m1', 'minimax-01', 'minimax']),
     # GLM (Zhipu AI)
-    ('GLM', [
+    ('GLM', None, [
         'glm-5', 'glm-4.7', 'glm-4.6', 'glm-4.5', 'glm-4',
         'glm-4p7', 'glm-4p6', 'glm-4p5', 'glm',
     ]),
     # Various
-    ('Nemotron', ['nemotron']),
-    ('Hermes', ['hermes']),
-    ('Dolphin', ['dolphin']),
-    ('CodeLlama', ['codellama', 'code-llama', 'code-qwen']),
-    ('Granite', ['granite']),
-    ('ERNIE', ['ernie']),
-    ('Doubao', ['doubao']),
-    ('Luminous', ['luminous']),
-    ('Voyage', ['voyage']),
-    ('MPT', ['mpt']),
-    ('Yi', ['yi-large', 'yi-34b', 'yi-6b', 'yi']),
-    ('DBRX', ['dbrx']),
-    ('Cogito', ['cogito']),
-    ('InternVL', ['internvl']),
-    ('StarCoder', ['starcoder']),
-    ('Nomic-Embed', ['nomic-embed']),
-    ('LLaVA', ['llava']),
-    ('Reka', ['reka']),
-    ('Arctic', ['snowflake-arctic', 'arctic']),
-    ('Falcon', ['falcon']),
-    ('OLMo', ['olmo']),
-    ('Mercury', ['mercury']),
-    ('BGE', ['bge']),
-    ('GTE', ['gte']),
-    ('E5', ['e5-mistral']),
-    ('Pegasus', ['pegasus']),
-    ('MedLM', ['medlm']),
-    ('Palmyra', ['palmyra']),
-    ('JAIS', ['jais']),
-    ('Allam', ['allam']),
-    ('Salamandra', ['salamandra']),
-    ('ALIA', ['alia']),
-    ('Apertus', ['apertus']),
-    ('SEA-LION', ['sea-lion']),
-    ('LFM', ['lfm']),
-    ('Seed', ['seed-2', 'seed-1']),
-    ('Hunyuan', ['hunyuan']),
-    ('MIMO', ['mimo']),
-    ('Text-Embedding', ['text-embedding', 'text-multilingual-embedding']),
-    ('Text-Moderation', ['text-moderation', 'omni-moderation']),
-    ('Text-Unicorn', ['text-unicorn']),
-    ('Marengo', ['marengo']),
-    ('Multimodal-Embedding', ['multimodalembedding']),
-    ('Chirp', ['chirp']),
-    ('V0', ['v0-1']),
-    ('Computer-Use', ['computer-use']),
-    ('Deep-Research', ['deep-research']),
-    ('Sonar', ['sonar']),
-    ('PPLX', ['pplx']),
-    ('Grok', ['grok']),
-    ('Morph', ['morph']),
-    ('Runway', ['gen4', 'gen3a']),
-    ('Eleven', ['eleven_multilingual', 'eleven_v3']),
-    ('Scribe', ['scribe']),
-    ('Internlm', ['internlm']),
-    ('Vicuna', ['vicuna']),
-    ('Orca', ['orca-mini']),
-    ('Zephyr', ['zephyr']),
-    ('FireFunction', ['firefunction']),
-    ('Pythia', ['pythia']),
-    ('Playground', ['playground']),
-    ('Dobby', ['dobby']),
-    ('Trinity', ['trinity']),
-    ('Cydonia', ['cydonia']),
-    ('Skyfall', ['skyfall']),
-    ('Rocinante', ['rocinante']),
-    ('Euryale', ['euryale']),
-    ('Lunaris', ['lunaris']),
-    ('Goliath', ['goliath']),
-    ('MythoMax', ['mythomax']),
-    ('Capybara', ['capybara']),
-    ('Chronos', ['chronos']),
-    ('Toppy', ['toppy']),
-    ('Remm', ['remm']),
-    ('Weaver', ['weaver']),
-    ('OpenHermes', ['openhermes']),
-    ('Phind', ['phind']),
-    ('OpenOrca', ['openorca']),
-    ('StableCode', ['stablecode']),
-    ('GigaChat', ['gigachat']),
-    ('Embeddings', ['embeddings']),
-    ('Catcoder', ['kat-coder', 'kat-dev']),
-    ('Aion', ['aion']),
-    ('Spotlight', ['spotlight']),
-    ('Maestro', ['maestro']),
-    ('Virtuoso', ['virtuoso']),
-    ('Coder', ['coder-large']),
-    ('Longcat', ['longcat']),
-    ('GPT-OSS-Safeguard', ['gpt-oss-safeguard']),
-    ('Fare', ['fare']),
-    ('ROLM-OCR', ['rolm-ocr']),
-    ('Firesearch', ['firesearch']),
-    ('Solar', ['solar']),
-    ('Intellect', ['intellect']),
-    ('Step', ['step-3']),
+    ('Nemotron', None, ['nemotron']),
+    ('Hermes', None, ['hermes']),
+    ('Dolphin', None, ['dolphin']),
+    ('Granite', None, ['granite']),
+    ('ERNIE', None, ['ernie']),
+    ('Doubao', None, ['doubao']),
+    ('Luminous', None, ['luminous']),
+    ('Voyage', None, ['voyage']),
+    ('MPT', None, ['mpt']),
+    ('Yi', None, ['yi-large', 'yi-34b', 'yi-6b', 'yi']),
+    ('DBRX', None, ['dbrx']),
+    ('Cogito', None, ['cogito']),
+    ('InternVL', None, ['internvl']),
+    ('StarCoder', None, ['starcoder']),
+    ('Nomic-Embed', None, ['nomic-embed']),
+    ('LLaVA', None, ['llava']),
+    ('Reka', None, ['reka']),
+    ('Arctic', None, ['snowflake-arctic', 'arctic']),
+    ('Falcon', None, ['falcon']),
+    ('OLMo', None, ['olmo']),
+    ('Mercury', None, ['mercury']),
+    ('BGE', None, ['bge']),
+    ('GTE', None, ['gte']),
+    ('E5', None, ['e5-mistral']),
+    ('Pegasus', None, ['pegasus']),
+    ('MedLM', None, ['medlm']),
+    ('Palmyra', None, ['palmyra']),
+    ('JAIS', None, ['jais']),
+    ('Allam', None, ['allam']),
+    ('Salamandra', None, ['salamandra']),
+    ('ALIA', None, ['alia']),
+    ('Apertus', None, ['apertus']),
+    ('SEA-LION', None, ['sea-lion']),
+    ('LFM', None, ['lfm']),
+    ('Seed', None, ['seed-2', 'seed-1']),
+    ('Hunyuan', None, ['hunyuan']),
+    ('MIMO', None, ['mimo']),
+    ('Text-Embedding', None, ['text-embedding', 'text-multilingual-embedding']),
+    ('Text-Moderation', None, ['text-moderation', 'omni-moderation']),
+    ('Text-Unicorn', None, ['text-unicorn']),
+    ('Marengo', None, ['marengo']),
+    ('Multimodal-Embedding', None, ['multimodalembedding']),
+    ('Chirp', None, ['chirp']),
+    ('V0', None, ['v0-1']),
+    ('Computer-Use', None, ['computer-use']),
+    ('Deep-Research', None, ['deep-research']),
+    ('Sonar', None, ['sonar']),
+    ('PPLX', None, ['pplx']),
+    ('Grok', None, ['grok']),
+    ('Morph', None, ['morph']),
+    ('Runway', None, ['gen4', 'gen3a']),
+    ('Eleven', None, ['eleven_multilingual', 'eleven_v3']),
+    ('Scribe', None, ['scribe']),
+    ('Internlm', None, ['internlm']),
+    ('Vicuna', None, ['vicuna']),
+    ('Orca', None, ['orca-mini']),
+    ('Zephyr', None, ['zephyr']),
+    ('FireFunction', None, ['firefunction']),
+    ('Pythia', None, ['pythia']),
+    ('Playground', None, ['playground']),
+    ('Dobby', None, ['dobby']),
+    ('Trinity', None, ['trinity']),
+    ('Cydonia', None, ['cydonia']),
+    ('Skyfall', None, ['skyfall']),
+    ('Rocinante', None, ['rocinante']),
+    ('Euryale', None, ['euryale']),
+    ('Lunaris', None, ['lunaris']),
+    ('Goliath', None, ['goliath']),
+    ('MythoMax', None, ['mythomax']),
+    ('Capybara', None, ['capybara']),
+    ('Chronos', None, ['chronos']),
+    ('Toppy', None, ['toppy']),
+    ('Remm', None, ['remm']),
+    ('Weaver', None, ['weaver']),
+    ('OpenHermes', None, ['openhermes']),
+    ('Phind', None, ['phind']),
+    ('OpenOrca', None, ['openorca']),
+    ('StableCode', None, ['stablecode']),
+    ('GigaChat', None, ['gigachat']),
+    ('Embeddings', None, ['embeddings']),
+    ('Catcoder', None, ['kat-coder', 'kat-dev']),
+    ('Aion', None, ['aion']),
+    ('Spotlight', None, ['spotlight']),
+    ('Maestro', None, ['maestro']),
+    ('Virtuoso', None, ['virtuoso']),
+    ('Coder', None, ['coder-large']),
+    ('Longcat', None, ['longcat']),
+    ('GPT-OSS-Safeguard', None, ['gpt-oss-safeguard']),
+    ('Fare', None, ['fare']),
+    ('ROLM-OCR', None, ['rolm-ocr']),
+    ('Firesearch', None, ['firesearch']),
+    ('Solar', None, ['solar']),
+    ('Intellect', None, ['intellect']),
+    ('Step', None, ['step-3']),
     # Speech / Audio
-    ('PlayAI-TTS', ['playai-tts']),
-    ('MiniMax-Speech', ['speech-02', 'speech-2.6']),
-    ('Azure-TTS', ['azure-tts']),
+    ('PlayAI-TTS', None, ['playai-tts']),
+    ('MiniMax-Speech', None, ['speech-02', 'speech-2.6']),
+    ('Azure-TTS', None, ['azure-tts']),
     # Misc
-    ('Babbage', ['babbage']),
-    ('Davinci', ['davinci']),
-    ('Ada', ['ada']),
-    ('CodeGeex', ['codegeex']),
-    ('Ideogram', ['ideogram']),
-    ('Recraft', ['recraftv3', 'recraftv2', 'recraft']),
-    ('AssemblyAI', ['assemblyai']),
-    ('Relace', ['relace']),
-    ('RNJ', ['rnj']),
-    ('Flan-T5', ['flan-t5']),
-    ('MT0', ['mt0']),
-    ('Inflection', ['inflection']),
-    ('Magnum', ['magnum']),
-    ('Baichuan', ['baichuan']),
-    ('OpenThinker', ['openthinker']),
-    ('Stheno', ['stheno']),
-    ('Nano-Banana', ['nano-banana']),
-    ('Tongyi', ['tongyi']),
-    ('Chimera', ['chimera']),
-    ('WizardLM', ['wizardlm']),
-    ('UI-TARS', ['ui-tars']),
-    ('PaddleOCR', ['paddleocr']),
-    ('SeedReam', ['seedream']),
-    ('Dreamina', ['dreamina']),
-    ('OpenChat', ['openchat']),
-    ('Llemma', ['llemma']),
-    ('UnslopNemo', ['unslopnemo']),
-    ('Hanami', ['hanami']),
-    ('Qwerky', ['qwerky']),
-    ('SSD', ['ssd']),
-    ('UAE', ['uae']),
-    ('ImageGen', ['imagegeneration', 'imagen4', 'imagen']),
-    ('Sarvam', ['sarvam']),
-    ('Perplexity-Preset', ['pro-search', 'fast-search', 'deep-research', 'advanced-deep-research']),
-    ('Fireworks-ASR', ['fireworks-asr']),
-    ('MAI', ['mai-ds']),
-    ('Skywork', ['r1v4']),
-    ('Bria', ['bria']),
+    ('Babbage', None, ['babbage']),
+    ('Davinci', None, ['davinci']),
+    ('Ada', None, ['ada']),
+    ('CodeGeex', None, ['codegeex']),
+    ('Ideogram', None, ['ideogram']),
+    ('Recraft', None, ['recraftv3', 'recraftv2', 'recraft']),
+    ('AssemblyAI', None, ['assemblyai']),
+    ('Relace', None, ['relace']),
+    ('RNJ', None, ['rnj']),
+    ('Flan-T5', None, ['flan-t5']),
+    ('MT0', None, ['mt0']),
+    ('Inflection', None, ['inflection']),
+    ('Magnum', None, ['magnum']),
+    ('Baichuan', None, ['baichuan']),
+    ('OpenThinker', None, ['openthinker']),
+    ('Stheno', None, ['stheno']),
+    ('Nano-Banana', None, ['nano-banana']),
+    ('Tongyi', None, ['tongyi']),
+    ('Chimera', None, ['chimera']),
+    ('WizardLM', None, ['wizardlm']),
+    ('UI-TARS', None, ['ui-tars']),
+    ('PaddleOCR', None, ['paddleocr']),
+    ('SeedReam', None, ['seedream']),
+    ('Dreamina', None, ['dreamina']),
+    ('OpenChat', None, ['openchat']),
+    ('Llemma', None, ['llemma']),
+    ('UnslopNemo', None, ['unslopnemo']),
+    ('Hanami', None, ['hanami']),
+    ('Qwerky', None, ['qwerky']),
+    ('SSD', None, ['ssd']),
+    ('UAE', None, ['uae']),
+    ('ImageGen', None, ['imagegeneration', 'imagen4', 'imagen']),
+    ('Sarvam', None, ['sarvam']),
+    ('Perplexity-Preset', None, ['pro-search', 'fast-search', 'deep-research', 'advanced-deep-research']),
+    ('Fireworks-ASR', None, ['fireworks-asr']),
+    ('MAI', None, ['mai-ds']),
+    ('Skywork', None, ['r1v4']),
+    ('Bria', None, ['bria']),
 ]
 
 # ──────────────────────────────────────────────
@@ -363,7 +369,8 @@ FAMILY_TO_CREATOR = {
     'Codex': 'OpenAI', 'Whisper': 'OpenAI', 'TTS': 'OpenAI',
     'Text-Embedding': 'OpenAI', 'Text-Moderation': 'OpenAI',
     'GPT-OSS-Safeguard': 'OpenAI',
-    'Gemini': 'Google', 'Gemma': 'Google', 'Imagen': 'Google',
+    'Gemini': 'Google', 'Gemma': 'Google', 'CodeGemma': 'Google',
+    'Imagen': 'Google',
     'Veo': 'Google', 'PaLM': 'Google', 'LearnLM': 'Google',
     'Chirp': 'Google', 'Multimodal-Embedding': 'Google',
     'Llama': 'Meta', 'CodeLlama': 'Meta',
@@ -371,8 +378,9 @@ FAMILY_TO_CREATOR = {
     'Magistral': 'Mistral', 'Ministral': 'Mistral',
     'Pixtral': 'Mistral', 'Mixtral': 'Mistral',
     'Mistral': 'Mistral', 'Voxtral': 'Mistral',
-    'Qwen': 'Alibaba',
-    'DeepSeek': 'DeepSeek',
+    'Qwen': 'Alibaba', 'Qwen Coder': 'Alibaba', 'Qwen VL': 'Alibaba',
+    'QwQ': 'Alibaba',
+    'DeepSeek': 'DeepSeek', 'DeepSeek Coder': 'DeepSeek',
     'Command': 'Cohere', 'Cohere-Embed': 'Cohere',
     'Cohere-Rerank': 'Cohere',
     'Jamba': 'AI21', 'Jurassic': 'AI21',
@@ -738,13 +746,13 @@ def _is_unmanageable(raw: str) -> str | None:
     return None
 
 
-def _find_family(name: str) -> tuple[str | None, str]:
+def _find_family(name: str) -> tuple[str | None, str | None, str]:
     """Find the model family from the cleaned name.
 
-    Returns (family_name, name_with_family_removed).
+    Returns (family_name, parent_family, name_with_family_removed).
     """
     lower = name.lower()
-    for family_name, slugs in FAMILY_PATTERNS:
+    for family_name, parent_name, slugs in FAMILY_PATTERNS:
         for slug in slugs:
             idx = lower.find(slug)
             if idx != -1:
@@ -752,8 +760,8 @@ def _find_family(name: str) -> tuple[str | None, str]:
                 before = name[:idx]
                 after = name[idx + len(slug):]
                 cleaned = before + ' ' + after
-                return family_name, cleaned.strip()
-    return None, name
+                return family_name, parent_name, cleaned.strip()
+    return None, None, name
 
 
 def _find_creator_from_path(path_segments: list[str]) -> str | None:
@@ -837,7 +845,7 @@ def _normalize_name(remainder: str) -> str:
                 continue
             # It might be a product segment, include it
             # But only if it's a known family slug
-            for _, slugs in FAMILY_PATTERNS:
+            for _, _, slugs in FAMILY_PATTERNS:
                 if seg_lower in [s.lower() for s in slugs]:
                     model_part = '/'.join(parts[i:])
                     return model_part.replace('/', '-')
@@ -975,8 +983,9 @@ def parse_model_string(raw_string: str) -> AIModelSemanticParseResult:
                 model_name = model_name[:model_lower.find(slug)] + ' ' + model_name[model_lower.find(slug) + len(slug):]
                 break
 
+    parent_family = None
     if not family:
-        family, model_name = _find_family(model_name)
+        family, parent_family, model_name = _find_family(model_name)
 
     # Step 6b: If we have a creator from path but no family, try inferring
     # For cases like deepseek.v3.2 -> creator=DeepSeek, name="v3.2"
@@ -1039,6 +1048,7 @@ def parse_model_string(raw_string: str) -> AIModelSemanticParseResult:
         provider_region=region,
         creator=creator,
         family=family,
+        parent_family=parent_family,
         version=version,
         parameter_size=param_size,
         roles=roles,
