@@ -1,0 +1,932 @@
+[
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "416a6c88-409e-50f0-963b-a0ab38ba60af",
+    "fields": {
+      "name": "llama3.1:8b",
+      "description": "Meta's 8B parameter model with 128K context. Strong general purpose with tool use. The workhorse of local inference.",
+      "creator": 1,
+      "parameter_size": 8.0,
+      "family": 1,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "fb41f388-34ca-586f-9db3-8fab56d6126a",
+    "fields": {
+      "name": "llama3.1:70b",
+      "description": "Meta's 70B flagship. Near-frontier performance on reasoning, coding, and multilingual tasks.",
+      "creator": 1,
+      "parameter_size": 70.0,
+      "family": 1,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "d2d0178c-c6c4-54ef-927f-323955e9f355",
+    "fields": {
+      "name": "deepseek-r1:7b",
+      "description": "DeepSeek's open reasoning model. Uses chain-of-thought thinking tokens. Approaches frontier model performance on math and logic.",
+      "creator": 7,
+      "parameter_size": 7.0,
+      "family": 8,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        4,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        7,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "b24f8e41-08c2-5c93-9adc-5bae7a8004c1",
+    "fields": {
+      "name": "deepseek-r1:14b",
+      "description": "DeepSeek R1 at 14B parameters. Strong reasoning with thinking tokens. Good balance of capability and hardware requirements.",
+      "creator": 7,
+      "parameter_size": 14.0,
+      "family": 8,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        4,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        7,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "4b0053c0-6765-5546-bda7-b6f9879bf61a",
+    "fields": {
+      "name": "deepseek-r1:32b",
+      "description": "DeepSeek R1 32B. Excellent reasoning performance approaching larger models.",
+      "creator": 7,
+      "parameter_size": 32.0,
+      "family": 8,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        4,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        7,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "96944b3c-a7b4-5643-801e-0853f6932d0f",
+    "fields": {
+      "name": "deepseek-r1:70b",
+      "description": "DeepSeek R1 70B. Top-tier open reasoning model. Competitive with O3 and Gemini 2.5 Pro on benchmarks.",
+      "creator": 7,
+      "parameter_size": 70.0,
+      "family": 8,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        4,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        7,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "de6bb7e6-0a95-5263-8bdd-c0c59077b9df",
+    "fields": {
+      "name": "gemma3:12b",
+      "description": "Google Gemma 3 at 12B. Vision-capable with strong general reasoning.",
+      "creator": 5,
+      "parameter_size": 12.0,
+      "family": 4,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        2,
+        6
+      ],
+      "quantizations": [],
+      "capabilities": [
+        6,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "296ad1d0-dba6-53a8-8c7e-2a2ea93587ae",
+    "fields": {
+      "name": "gemma3:27b",
+      "description": "Google Gemma 3 27B. The most capable single-GPU Gemma model. Vision and strong reasoning.",
+      "creator": 5,
+      "parameter_size": 27.0,
+      "family": 4,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        2,
+        6
+      ],
+      "quantizations": [],
+      "capabilities": [
+        6,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "72db57ca-3100-508c-9518-a986350e0d60",
+    "fields": {
+      "name": "mistral:7b",
+      "description": "Mistral AI's 7B model. Strong multilingual performance. Updated to version 0.3.",
+      "creator": 3,
+      "parameter_size": 7.0,
+      "family": 5,
+      "version": null,
+      "context_length": 32768,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "22fd49d3-9e31-5e98-aac7-e30f67cbed06",
+    "fields": {
+      "name": "qwen2.5:7b",
+      "description": "Alibaba's 7B general-purpose model. Trained on 18 trillion tokens. 128K context with multilingual support.",
+      "creator": 2,
+      "parameter_size": 7.0,
+      "family": 2,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "715ad402-35e9-5420-a4e3-b815bd6c0151",
+    "fields": {
+      "name": "qwen2.5:14b",
+      "description": "Qwen 2.5 14B. Strong reasoning and multilingual capability at moderate hardware requirements.",
+      "creator": 2,
+      "parameter_size": 14.0,
+      "family": 2,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "67bdc7cf-37b3-5aae-a8f1-163f551c7019",
+    "fields": {
+      "name": "qwen2.5:32b",
+      "description": "Qwen 2.5 32B. Excellent performance across benchmarks. Good for serious local inference.",
+      "creator": 2,
+      "parameter_size": 32.0,
+      "family": 2,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "e28f1042-5e03-571e-97ce-eb633d3b263a",
+    "fields": {
+      "name": "qwen3:8b",
+      "description": "Alibaba's latest generation 8B model. Dense architecture with thinking support.",
+      "creator": 2,
+      "parameter_size": 8.0,
+      "family": 2,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2,
+        4
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        7,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "06c13c5f-7344-506d-a558-aed5b6821546",
+    "fields": {
+      "name": "qwen3:14b",
+      "description": "Qwen 3 14B. Strong reasoning with thinking tokens.",
+      "creator": 2,
+      "parameter_size": 14.0,
+      "family": 2,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2,
+        4
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        7,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "4034e264-5013-561f-8309-e89564202f66",
+    "fields": {
+      "name": "qwen3:30b",
+      "description": "Qwen 3 30B. Excellent general purpose with thinking support.",
+      "creator": 2,
+      "parameter_size": 30.0,
+      "family": 2,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2,
+        4
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        7,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "78a452f3-e831-5ca5-855e-c768f4c3c771",
+    "fields": {
+      "name": "qwen3-coder:30b",
+      "description": "Alibaba's performant 30B coding model. Strong function calling and agentic task capability.",
+      "creator": 2,
+      "parameter_size": 30.0,
+      "family": 3,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        3,
+        1
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "10ec1523-72dd-59fa-b913-7f596e9ea6cb",
+    "fields": {
+      "name": "qwen2.5-coder:14b",
+      "description": "Qwen 2.5 Coder at 14B. Stronger code generation and reasoning than the 7B variant.",
+      "creator": 2,
+      "parameter_size": 14.0,
+      "family": 3,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        3,
+        1
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "cbcf84c6-c03d-57ae-a7da-01fae2e465f4",
+    "fields": {
+      "name": "qwen2.5-coder:32b",
+      "description": "Qwen 2.5 Coder 32B. Top-tier open code model.",
+      "creator": 2,
+      "parameter_size": 32.0,
+      "family": 3,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        3,
+        1
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "ee7e931b-cf8e-587d-9935-5e5964240d50",
+    "fields": {
+      "name": "phi3:3.8b",
+      "description": "Microsoft's Phi-3 Mini. Strong reasoning in a lightweight 3.8B package.",
+      "creator": 8,
+      "parameter_size": 3.8,
+      "family": 7,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "e1947980-0c08-52ef-afeb-b6c5dd22f30f",
+    "fields": {
+      "name": "phi4:14b",
+      "description": "Microsoft's Phi-4. State-of-the-art 14B open model with strong reasoning.",
+      "creator": 8,
+      "parameter_size": 14.0,
+      "family": 7,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2,
+        4
+      ],
+      "quantizations": [],
+      "capabilities": [
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "d50ac6a1-bbfe-5d6b-b2b4-53d5a404d007",
+    "fields": {
+      "name": "llama3:8b",
+      "description": "Meta Llama 3 8B. The most capable openly available LLM of its generation.",
+      "creator": 1,
+      "parameter_size": 8.0,
+      "family": 1,
+      "version": null,
+      "context_length": 8192,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "23c95869-9f39-50b5-845b-cbec7649a354",
+    "fields": {
+      "name": "codellama:7b",
+      "description": "Meta's code-specialized Llama. Trained on code and natural language for generation and discussion.",
+      "creator": 1,
+      "parameter_size": 7.0,
+      "family": 15,
+      "version": null,
+      "context_length": 16384,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        3,
+        1
+      ],
+      "quantizations": [],
+      "capabilities": [
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "c43d88e7-ecd5-5188-9f12-8f6a6b90c8e9",
+    "fields": {
+      "name": "codellama:34b",
+      "description": "CodeLlama 34B. Strong code generation at scale.",
+      "creator": 1,
+      "parameter_size": 34.0,
+      "family": 15,
+      "version": null,
+      "context_length": 16384,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        3,
+        1
+      ],
+      "quantizations": [],
+      "capabilities": [
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "d2731827-3c12-53cf-a8c8-000d4734d47c",
+    "fields": {
+      "name": "mixtral:8x7b",
+      "description": "Mistral's MoE model. 8 experts at 7B each. High throughput with tool support.",
+      "creator": 3,
+      "parameter_size": 56.0,
+      "family": 6,
+      "version": null,
+      "context_length": 32768,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "fbd6f637-1b59-5157-97bd-87fba1dc5f73",
+    "fields": {
+      "name": "mistral-nemo:12b",
+      "description": "Mistral and NVIDIA's 12B model. 128K context with tool use.",
+      "creator": 3,
+      "parameter_size": 12.0,
+      "family": 5,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "77568f75-fc5f-5027-abb7-2115b6da29ae",
+    "fields": {
+      "name": "mistral-small:22b",
+      "description": "Mistral Small 3. Sets benchmarks in the sub-70B category.",
+      "creator": 3,
+      "parameter_size": 22.0,
+      "family": 5,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "034b76e9-a812-521a-8a25-7a3601216dd9",
+    "fields": {
+      "name": "llava:7b",
+      "description": "Large Language and Vision Assistant. End-to-end multimodal model combining vision encoder and Vicuna.",
+      "creator": 1,
+      "parameter_size": 7.0,
+      "family": 19,
+      "version": null,
+      "context_length": 4096,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        6,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        6,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "27579289-f642-58f1-a4e9-3338a022e5d3",
+    "fields": {
+      "name": "gpt-oss:20b",
+      "description": "OpenAI's open-weight 20B model. Strong reasoning and agentic task capability.",
+      "creator": 4,
+      "parameter_size": 20.0,
+      "family": 11,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2,
+        4
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        7,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "e72f764d-6949-5988-b893-66bdb37d7e2a",
+    "fields": {
+      "name": "glm-4.7-flash",
+      "description": "Zhipu AI's efficient model. Strongest in the 30B class. Balances performance and efficiency with thinking support.",
+      "creator": 17,
+      "parameter_size": 30.0,
+      "family": 12,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2,
+        4
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        7,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "fdd8d48d-5391-5a5a-a1b3-ff90472f95a5",
+    "fields": {
+      "name": "command-r:35b",
+      "description": "Cohere's Command R. Optimized for conversational RAG and long context tasks with tool use.",
+      "creator": 13,
+      "parameter_size": 35.0,
+      "family": 13,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "e5f1d7c9-8c25-5372-b5cf-3f49cab1e41f",
+    "fields": {
+      "name": "granite-code:8b",
+      "description": "IBM Granite for code. Open foundation model for code intelligence.",
+      "creator": 14,
+      "parameter_size": 8.0,
+      "family": 14,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        3,
+        1
+      ],
+      "quantizations": [],
+      "capabilities": [
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "26045bf4-8199-5f43-ac35-bfcf28cf88ac",
+    "fields": {
+      "name": "deepseek-coder:6.7b",
+      "description": "DeepSeek Coder 6.7B. Trained on 2 trillion code and natural language tokens.",
+      "creator": 7,
+      "parameter_size": 6.7,
+      "family": 9,
+      "version": null,
+      "context_length": 16384,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        3,
+        1
+      ],
+      "quantizations": [],
+      "capabilities": [
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "f3a64a9c-d87b-590b-bb91-effd896495dc",
+    "fields": {
+      "name": "mxbai-embed-large:335m",
+      "description": "State-of-the-art large embedding model from Mixedbread AI.",
+      "creator": 30,
+      "parameter_size": 0.335,
+      "family": 33,
+      "version": null,
+      "context_length": 8192,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        5
+      ],
+      "quantizations": [],
+      "capabilities": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "6c451154-f60a-5f6f-8202-f21cd8f453c4",
+    "fields": {
+      "name": "bge-m3:567m",
+      "description": "BAAI's BGE-M3. Versatile embedding model: multi-functionality, multi-linguality, multi-granularity.",
+      "creator": 20,
+      "parameter_size": 0.567,
+      "family": 31,
+      "version": null,
+      "context_length": 8192,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        5
+      ],
+      "quantizations": [],
+      "capabilities": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "c8da744e-d15e-5ffc-b85f-de07f62a4d1a",
+    "fields": {
+      "name": "snowflake-arctic-embed:335m",
+      "description": "Snowflake's text embedding model optimized for retrieval performance.",
+      "creator": 21,
+      "parameter_size": 0.335,
+      "family": 32,
+      "version": null,
+      "context_length": 8192,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        5
+      ],
+      "quantizations": [],
+      "capabilities": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "2729d457-b6b7-5dd7-a458-998c6760d9b3",
+    "fields": {
+      "name": "hermes3:8b",
+      "description": "NousResearch Hermes 3. Latest flagship instruction-tuned model with tool use.",
+      "creator": 15,
+      "parameter_size": 8.0,
+      "family": 16,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "9c70b2a9-d9bf-541c-adc2-017a9cf1e7ae",
+    "fields": {
+      "name": "cogito:8b",
+      "description": "DeepCogito's hybrid reasoning model. Outperforms counterparts from Llama, DeepSeek, and Qwen at similar sizes.",
+      "creator": 26,
+      "parameter_size": 8.0,
+      "family": 28,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2,
+        4
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "a94bfc7c-1169-5fca-a905-eb53dac6809e",
+    "fields": {
+      "name": "llama3.3:70b",
+      "description": "Meta Llama 3.3 70B. Performance comparable to the 405B Llama 3.1 at a fraction of the size.",
+      "creator": 1,
+      "parameter_size": 70.0,
+      "family": 1,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        1,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        2,
+        1
+      ]
+    }
+  },
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "d2939e2f-dafc-5f2c-a430-df619f64ae3e",
+    "fields": {
+      "name": "llama3.2-vision:11b",
+      "description": "Meta's 11B vision-language model. Image reasoning with instruction following.",
+      "creator": 1,
+      "parameter_size": 11.0,
+      "family": 1,
+      "version": null,
+      "context_length": 131072,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        6,
+        2
+      ],
+      "quantizations": [],
+      "capabilities": [
+        6,
+        1
+      ]
+    }
+  }
+]
