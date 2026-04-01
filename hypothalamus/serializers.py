@@ -12,6 +12,7 @@ from .models import (
     AIModel,
     AIModelCapabilities,
     AIModelCategory,
+    AIModelCreator,
     AIModelFamily,
     AIModelPricing,
     AIModelProvider,
@@ -106,8 +107,15 @@ class AIModelTagsSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
+class AIModelCreatorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AIModelCreator
+        fields = ALL_FIELDS
+
+
 class AIModelSerializer(serializers.ModelSerializer):
     categories = AIModelCategorySerializer(many=True, read_only=True)
+    creator = AIModelCreatorSerializer(read_only=True)
     family = AIModelFamilySerializer(read_only=True)
     roles = AIModelRoleSerializer(many=True, read_only=True)
     capabilities = AIModelCapabilitiesSerializer(many=True, read_only=True)

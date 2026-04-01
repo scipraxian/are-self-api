@@ -100,6 +100,13 @@ class AIModelFamily(NameMixin, DescriptionMixin):
     """Groups models into conceptual lineages (e.g., 'Claude 3.5', 'Llama 3')."""
 
     slug = models.SlugField(unique=True, default='llama-3-70b-instruct')
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='children',
+    )
 
     class Meta:
         verbose_name_plural = 'AI Model Families'
