@@ -9,8 +9,10 @@ from frontal_lobe.models import (
 from parietal_lobe.models import ToolDefinition
 
 from .models import (
+    BudgetPeriod,
     Identity,
     IdentityAddon,
+    IdentityBudget,
     IdentityDisc,
     IdentityTag,
     IdentityType,
@@ -157,3 +159,23 @@ class IdentityDiscSerializer(serializers.ModelSerializer):
             identity_disc.engrams.distinct(),
             many=True,
         ).data
+
+
+class BudgetPeriodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BudgetPeriod
+        fields = ALL_FIELDS
+
+
+class IdentityBudgetSerializer(serializers.ModelSerializer):
+    period = BudgetPeriodSerializer(read_only=True)
+    period_id = serializers.PrimaryKeyRelatedField(
+        source='period',
+        queryset=BudgetPeriod.objects.all(),
+        write_only=True,
+        required=False,
+    )
+
+    class Meta:
+        model = IdentityBudget
+        fields = ALL_FIELDS

@@ -10,13 +10,20 @@ from identity.serializers import IdentityDiscSerializer
 from .models import (
     AIMode,
     AIModel,
+    AIModelCapabilities,
     AIModelCategory,
     AIModelFamily,
     AIModelPricing,
     AIModelProvider,
     AIModelProviderUsageRecord,
     AIModelRating,
+    AIModelRole,
+    AIModelSelectionFilter,
     AIModelSyncLog,
+    AIModelTags,
+    FailoverStrategy,
+    FailoverStrategyStep,
+    FailoverType,
     LLMProvider,
     SyncStatus,
 )
@@ -81,9 +88,29 @@ class AIModelFamilySerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
+class AIModelRoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AIModelRole
+        fields = ALL_FIELDS
+
+
+class AIModelCapabilitiesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AIModelCapabilities
+        fields = ALL_FIELDS
+
+
+class AIModelTagsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AIModelTags
+        fields = ALL_FIELDS
+
+
 class AIModelSerializer(serializers.ModelSerializer):
     categories = AIModelCategorySerializer(many=True, read_only=True)
     family = AIModelFamilySerializer(read_only=True)
+    roles = AIModelRoleSerializer(many=True, read_only=True)
+    capabilities = AIModelCapabilitiesSerializer(many=True, read_only=True)
 
     class Meta:
         model = AIModel
@@ -137,5 +164,111 @@ class AIModelRatingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AIModelRating
+        fields = ALL_FIELDS
+
+
+class FailoverTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FailoverType
+        fields = ALL_FIELDS
+
+
+class FailoverStrategyStepSerializer(serializers.ModelSerializer):
+    failover_type = FailoverTypeSerializer(read_only=True)
+    failover_type_id = serializers.PrimaryKeyRelatedField(
+        source='failover_type',
+        queryset=FailoverType.objects.all(),
+        write_only=True,
+    )
+
+    class Meta:
+        model = FailoverStrategyStep
+        fields = ALL_FIELDS
+
+
+class FailoverStrategySerializer(serializers.ModelSerializer):
+    steps = FailoverStrategyStepSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = FailoverStrategy
+        fields = ALL_FIELDS
+
+
+class AIModelSelectionFilterSerializer(serializers.ModelSerializer):
+    failover_strategy = FailoverStrategySerializer(read_only=True)
+    failover_strategy_id = serializers.PrimaryKeyRelatedField(
+        source='failover_strategy',
+        queryset=FailoverStrategy.objects.all(),
+        write_only=True,
+        required=False,
+    )
+
+    preferred_model = AIModelProviderSerializer(read_only=True)
+    preferred_model_id = serializers.PrimaryKeyRelatedField(
+        source='preferred_model',
+        queryset=AIModelProvider.objects.all(),
+        write_only=True,
+        required=False,
+    )
+
+    local_failover = AIModelProviderSerializer(read_only=True)
+    local_failover_id = serializers.PrimaryKeyRelatedField(
+        source='local_failover',
+        queryset=AIModelProvider.objects.all(),
+        write_only=True,
+        required=False,
+    )
+
+    required_capabilities = AIModelCapabilitiesSerializer(
+        many=True, read_only=True
+    )
+    required_capabilities_ids = serializers.PrimaryKeyRelatedField(
+        source='required_capabilities',
+        queryset=AIModelCapabilities.objects.all(),
+        many=True,
+        write_only=True,
+        required=False,
+    )
+
+    banned_providers = LLMProviderSerializer(many=True, read_only=True)
+    banned_providers_ids = serializers.PrimaryKeyRelatedField(
+        source='banned_providers',
+        queryset=LLMProvider.objects.all(),
+        many=True,
+        write_only=True,
+        required=False,
+    )
+
+    preferred_categories = AIModelCategorySerializer(
+        many=True, read_only=True
+    )
+    preferred_categories_ids = serializers.PrimaryKeyRelatedField(
+        source='preferred_categories',
+        queryset=AIModelCategory.objects.all(),
+        many=True,
+        write_only=True,
+        required=False,
+    )
+
+    preferred_tags = AIModelTagsSerializer(many=True, read_only=True)
+    preferred_tags_ids = serializers.PrimaryKeyRelatedField(
+        source='preferred_tags',
+        queryset=AIModelTags.objects.all(),
+        many=True,
+        write_only=True,
+        required=False,
+    )
+
+    preferred_roles = AIModelRoleSerializer(many=True, read_only=True)
+    preferred_roles_ids = serializers.PrimaryKeyRelatedField(
+        source='preferred_roles',
+        queryset=AIModelRole.objects.all(),
+        many=True,
+        write_only=True,
+        required=False,
+    )
+
+    class Meta:
+        model = AIModelSelectionFilter
         fields = ALL_FIELDS
 
