@@ -73,6 +73,7 @@ class IdentityDiscViewSet(viewsets.ModelViewSet):
 
         return Response({
             'model_provider': best.id,
+            'ai_model_id': str(best.ai_model.id),
             'model_name': best.ai_model.name,
             'provider_name': best.provider.name,
             'provider_model_id': best.provider_unique_model_id,
