@@ -59,13 +59,8 @@ if %errorlevel% neq 0 (
 )
 
 :: Step 7: Load fixtures
-echo [7/9] Loading initial data...
-for /d %%D in (*) do (
-    if exist "%%D\fixtures\initial_data.json" (
-        echo   Loading %%D fixtures...
-        .\venv\Scripts\python.exe manage.py loaddata "%%D/fixtures/initial_data.json"
-    )
-)
+echo [7/8] Loading initial data...
+.\venv\Scripts\python.exe manage.py loaddata initial_data.json
 
 :: Step 8: Create superuser
 echo [8/9] Creating admin superuser...
