@@ -145,8 +145,8 @@ Here's how to improve:
 
 **Nothing happens after Initiate:**
 
-- Check that Celery Beat is running (`celery -A talos beat -l info`)
-- Check that at least one Celery worker is running (`celery -A talos worker -l info -E`)
+- Check that Celery Beat is running (`celery -A config beat -l info`)
+- Check that at least one Celery worker is running (`celery -A config worker -l info -E`)
 - Check the PNS page (`/pns`) — you should see worker cards with heartbeats
 
 **Reasoning session starts but fails immediately:**

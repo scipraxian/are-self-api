@@ -34,11 +34,11 @@ hard parts.
 - Redis
 - Ollama (for local models)
 
-### Backend (talos)
+### Backend (are-self)
 
 ```bash
-git clone https://github.com/scipraxian/talos.git
-cd talos
+git clone https://github.com/scipraxian/are-self.git
+cd are-self
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py loaddata */fixtures/*.json
@@ -48,8 +48,8 @@ python manage.py runserver
 Start Celery workers (the nervous system):
 
 ```bash
-celery -A talos worker -l info -E
-celery -A talos beat -l info
+celery -A config worker -l info -E
+celery -A config beat -l info
 ```
 
 ### Frontend (are-self-ui)

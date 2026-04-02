@@ -36,7 +36,7 @@ class NeuroMuscularJunctionTest(CommonFixturesAPITestCase):
 
         self.effector = Effector.objects.create(
             name='Unit Test Spell',
-            talos_executable=self.python_exe,
+            executable=self.python_exe,
         )
 
         self.spike = Spike.objects.create(effector=self.effector,
@@ -68,7 +68,7 @@ class NeuroMuscularJunctionTest(CommonFixturesAPITestCase):
         import asyncio
 
         # Case 1: Standard Executable (PYTHON) -> Unified Pipeline
-        caster.effector.talos_executable = self.python_exe
+        caster.effector.executable = self.python_exe
 
         # We need to run the async method
         loop = asyncio.new_event_loop()
@@ -85,7 +85,7 @@ class NeuroMuscularJunctionTest(CommonFixturesAPITestCase):
         # Case 2: Internal Handler -> Local Python
         internal_exe = Executable.objects.get(
             id=Executable.VERSION_HANDLER)
-        caster.effector.talos_executable = internal_exe
+        caster.effector.executable = internal_exe
 
         loop.run_until_complete(caster._executable_router())
 

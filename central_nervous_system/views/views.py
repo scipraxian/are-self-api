@@ -29,7 +29,7 @@ def generate_spawn_dump(spike_train, depth=0):
         spike_train.spikes.all()
         .order_by('created')
         .select_related(
-            'effector', 'status', 'target', 'neuron', 'spell__talos_executable'
+            'effector', 'status', 'target', 'neuron', 'effector__executable'
         )
     )
 

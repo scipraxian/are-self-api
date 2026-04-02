@@ -1,4 +1,4 @@
-'''Project initialization for Talos.'''
+'''Project initialization for Are-Self.'''
 
 from .celery import app
 

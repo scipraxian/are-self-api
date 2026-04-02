@@ -2,7 +2,7 @@ services:
   # 1. The Database (With Vector Hardware)
   db:
     image: pgvector/pgvector:pg16
-    container_name: talos_db
+    container_name: are_self_db
     restart: always
     environment:
       POSTGRES_DB: postgres
@@ -16,7 +16,7 @@ services:
   # 2. The Nervous System (Task Queue)
   redis:
     image: redis
-    container_name: talos_redis
+    container_name: are_self_redis
     restart: always
     ports:
       - "6379:6379"

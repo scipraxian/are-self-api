@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 # --- 1. CONSTANTS & TYPES ---
 
 
-class TalosDiscoveryConstants:
+class DiscoveryConstants:
     """Centralized constants for the discovery protocol."""
 
-    DEFAULT_SUBNET_PREFIX = getattr(settings, 'TALOS_SUBNET', '192.168.1.')
-    DEFAULT_PORT = getattr(settings, 'TALOS_PORT', 5005)
+    DEFAULT_SUBNET_PREFIX = getattr(settings, 'ARE_SELF_SUBNET', '192.168.1.')
+    DEFAULT_PORT = getattr(settings, 'ARE_SELF_PORT', 5005)
     SCAN_TIMEOUT = 1.5  # Fast timeout for ping-only
     ENCODING = 'utf-8'
 
@@ -49,8 +49,8 @@ class AgentIdentity(NamedTuple):
 # --- 2. CORE FUNCTIONS ---
 async def scan_and_register(
     spike_id: str,
-    subnet_prefix: str = TalosDiscoveryConstants.DEFAULT_SUBNET_PREFIX,
-    port: int = TalosDiscoveryConstants.DEFAULT_PORT,
+    subnet_prefix: str = DiscoveryConstants.DEFAULT_SUBNET_PREFIX,
+    port: int = DiscoveryConstants.DEFAULT_PORT,
 ) -> Tuple[int, str]:
     """Asynchronous entry point for agent discovery."""
 
@@ -103,7 +103,7 @@ async def _probe_agent(ip: str, port: int) -> Optional[AgentIdentity]:
     try:
         reader, writer = await asyncio.wait_for(
             asyncio.open_connection(ip, port),
-            timeout=TalosDiscoveryConstants.SCAN_TIMEOUT,
+            timeout=DiscoveryConstants.SCAN_TIMEOUT,
         )
     except (asyncio.TimeoutError, OSError, ConnectionRefusedError):
         # Host is likely offline or port is closed.
@@ -113,18 +113,18 @@ async def _probe_agent(ip: str, port: int) -> Optional[AgentIdentity]:
     try:
         # 1. Send PING
         ping_req = {
-            TalosDiscoveryConstants.K_CMD: TalosDiscoveryConstants.CMD_PING
+            DiscoveryConstants.K_CMD: DiscoveryConstants.CMD_PING
         }
         writer.write(
             (json.dumps(ping_req) + '\n').encode(
-                TalosDiscoveryConstants.ENCODING
+                DiscoveryConstants.ENCODING
             )
         )
         await writer.drain()
 
         # 2. Read Response
         raw_data = await asyncio.wait_for(
-            reader.read(4096), timeout=TalosDiscoveryConstants.SCAN_TIMEOUT
+            reader.read(4096), timeout=DiscoveryConstants.SCAN_TIMEOUT
         )
 
         if not raw_data:
@@ -132,19 +132,19 @@ async def _probe_agent(ip: str, port: int) -> Optional[AgentIdentity]:
             return None
 
         # 3. Parse & Validate
-        decoded_data = raw_data.decode(TalosDiscoveryConstants.ENCODING)
+        decoded_data = raw_data.decode(DiscoveryConstants.ENCODING)
         data = json.loads(decoded_data)
 
         if (
-            data.get(TalosDiscoveryConstants.K_STATUS)
-            != TalosDiscoveryConstants.VAL_PONG
+            data.get(DiscoveryConstants.K_STATUS)
+            != DiscoveryConstants.VAL_PONG
         ):
             logger.warning(
-                f'[{ip}] Protocol Mismatch: Expected PONG, got {data.get(TalosDiscoveryConstants.K_STATUS)}'
+                f'[{ip}] Protocol Mismatch: Expected PONG, got {data.get(DiscoveryConstants.K_STATUS)}'
             )
             return None
 
-        agent_uuid = data.get(TalosDiscoveryConstants.K_UUID)
+        agent_uuid = data.get(DiscoveryConstants.K_UUID)
         if not agent_uuid:
             logger.error(f'[{ip}] Agent handshake failed: Missing UUID field.')
             return None
@@ -154,12 +154,12 @@ async def _probe_agent(ip: str, port: int) -> Optional[AgentIdentity]:
             unique_id=agent_uuid,
             ip_address=ip,
             hostname=data.get(
-                TalosDiscoveryConstants.K_HOSTNAME,
-                TalosDiscoveryConstants.VAL_UNKNOWN,
+                DiscoveryConstants.K_HOSTNAME,
+                DiscoveryConstants.VAL_UNKNOWN,
             ),
             version=data.get(
-                TalosDiscoveryConstants.K_VERSION,
-                TalosDiscoveryConstants.VAL_VER_ZERO,
+                DiscoveryConstants.K_VERSION,
+                DiscoveryConstants.VAL_VER_ZERO,
             ),
         )
 

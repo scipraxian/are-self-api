@@ -32,7 +32,7 @@ MSG_INVALID_STATE = (
 
 
 class ReasoningSessionViewSet(viewsets.ModelViewSet):
-    """Command Center for Talos AGI Reasoning Sessions."""
+    """Command Center for Are-Self AGI Reasoning Sessions."""
 
     queryset = ReasoningSession.objects.all().order_by('-modified')
     serializer_class = serializers.ReasoningSessionLiteSerializer

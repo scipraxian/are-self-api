@@ -18,7 +18,7 @@ HEAD_ARGUMENT = '--spike_id'
 SPIKE_ID = 'spike_id'
 KEY = 'key'
 KEY_ARGUMENT = '--key'
-TEMP_FILE_PREFIX = 'talos_payload_'
+TEMP_FILE_PREFIX = 'are_self_payload_'
 TEMP_FILE_SUFFIX = '.txt'
 
 

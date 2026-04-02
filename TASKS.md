@@ -4,14 +4,14 @@ Tracked priorities for pushing Are-Self to MIT release. Updated as work complete
 
 ## P0 — Blocking Release
 
-- [ ] **README rewrite.** Replace the Talos UE5 README with Are-Self documentation. Cover: what it is (swarm management
+- [ ] **README rewrite.** Replace the legacy UE5 README with Are-Self documentation. Cover: what it is (swarm management
   system / AI reasoning engine), architecture overview (the brain analogy with lobe descriptions), stack, quick start (
   Docker Compose, Ollama, seed, launch), API-first design philosophy, and the mission (free local AI reasoning for
   everyone).
-- [ ] **Talos naming sweep.** Rename all `Talos`-prefixed classes, variables, and references. Key targets:
+- [ ] **Naming sweep.** Rename all legacy-prefixed classes, variables, and references. Key targets:
   `TalosEngram` → `Engram`, `TalosEngramTag` → `EngramTag`, `TalosExecutable` → `Executable` (or
   `ExecutableDefinition`), `talos_executable` FK references, `talos_bin` path references in fixtures,
-  `TalosHippocampus` → `Hippocampus` (the service class), `seed_talos` management command. Preserve DB migration
+  `Hippocampus` (the service class), `seed` management command. Preserve DB migration
   compatibility with `db_table` Meta where needed.
 - [ ] **"Spell" / "Cast" naming sweep.** Rename: `cast_cns_spell` → `dispatch_cns_spike` (or similar), `spell_buffer` /
   `append_spell` → `application_buffer` / `append_application`, `GenericEffectorCaster` → `SpikeExecutor` (or similar).

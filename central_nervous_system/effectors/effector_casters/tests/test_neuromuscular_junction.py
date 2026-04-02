@@ -43,9 +43,9 @@ class TestNeuroMuscularJunction:
         spike.id = 1
         spike.status_id = SpikeStatus.CREATED
         spike.target = None  # Default to Local
-        spike.effector.talos_executable.internal = False
-        spike.effector.talos_executable.executable = 'TestExe.exe'
-        spike.effector.talos_executable.log = 'test.log'
+        spike.effector.executable.internal = False
+        spike.effector.executable.executable = 'TestExe.exe'
+        spike.effector.executable.log = 'test.log'
 
         # Mock the DB methods
         spike.save = MagicMock()
@@ -174,7 +174,7 @@ class TestNeuroMuscularJunction:
 
     def test_command_quoting_logic(self, mock_head, mock_env_utils):
         """Test arguments are passed correctly (Agent handles quoting now, but list integrity matters)."""
-        mock_head.effector.talos_executable.executable = 'RunUAT.bat'
+        mock_head.effector.executable.executable = 'RunUAT.bat'
         mock_head.effector.get_full_command.return_value = [
             'RunUAT.bat',
             '-project="C:\\My Files\\Proj.uproject"',
@@ -205,7 +205,7 @@ class TestNeuroMuscularJunction:
     def test_log_path_template_resolution(self, mock_head, mock_env_utils):
         """Verify that templated log paths are resolved before pipeline execution."""
         # 1. Setup a templated log path
-        mock_head.effector.talos_executable.log = (
+        mock_head.effector.executable.log = (
             'C:\\{{project_name}}\\Saved\\Logs\\{{project_name}}.log')
 
         # 2. Inject context into mock_env_utils (mock_ctx is the 2nd item in fixture)
@@ -256,8 +256,8 @@ class TestNeuroMuscularJunction:
                 'central_nervous_system.effectors.effector_casters.neuromuscular_junction.NATIVE_HANDLERS',
             {'ai_parser': mock_ai_handler},
         ):
-            mock_head.effector.talos_executable.internal = True
-            mock_head.effector.talos_executable.executable = 'ai_parser'
+            mock_head.effector.executable.internal = True
+            mock_head.effector.executable.executable = 'ai_parser'
 
             caster = NeuroMuscularJunction(mock_head.id)
             caster.spike = mock_head
@@ -371,7 +371,7 @@ class NeuroMuscularJunctionQueryTest(CommonFixturesAPITestCase):
         self.exe = Executable.objects.create(name='TestExe',
                                                   executable='cmd.exe')
         self.effector = Effector.objects.create(name='TestSpell',
-                                                talos_executable=self.exe)
+                                                executable=self.exe)
         self.book = NeuralPathway.objects.create(name='Test Book')
         self.neuron = Neuron.objects.create(pathway=self.book,
                                             effector=self.effector,
@@ -400,7 +400,7 @@ class NeuroMuscularJunctionQueryTest(CommonFixturesAPITestCase):
             spawn_env = caster.spike.spike_train.environment
             node_env = caster.spike.neuron.environment
             target = caster.spike.target
-            executable = caster.spike.effector.talos_executable
+            executable = caster.spike.effector.executable
 
         # 3. Assert correct data was cached
         self.assertEqual(spawn_env.id, self.env.id)

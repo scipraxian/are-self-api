@@ -33,7 +33,7 @@ class ProjectEnvironmentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def select(self, request, pk=None):
         """
-        Sets this environment as the active global context for all Talos operations.
+        Sets this environment as the active global context for all Are-Self operations.
         """
         env = self.get_object()
         if not env.available:

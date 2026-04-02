@@ -11,7 +11,7 @@ class NerveTerminalClient:
     self.host = host
     self.port = port
     self.timeout = timeout
-    self.logger = logging.getLogger(f'TalosClient[{host}]')
+    self.logger = logging.getLogger(f'RemoteClient[{host}]')
 
   def _send_command(self, cmd: str, args: dict = None) -> dict:
     '''Encapsulates the JSON request/call-response cycle.'''

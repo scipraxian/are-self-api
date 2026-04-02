@@ -1,8 +1,8 @@
 @echo off
-TITLE Talos Launcher
+TITLE Are-Self Launcher
 
 echo ========================================================
-echo   TALOS BUILD SYSTEM
+echo   ARE-SELF
 echo   Initializing Django Server and Celery Worker...
 echo ========================================================
 
@@ -35,11 +35,11 @@ echo Starting Celery Beats Worker...
 :: 2. Start Django Server in its own window
 echo Starting Django Server...
 start "" "http://127.0.0.1:8000"
-start "Talos Django Server" cmd /k ".\venv\Scripts\python.exe manage.py runserver"
+start "Are-Self Django Server" cmd /k ".\venv\Scripts\python.exe manage.py runserver"
 
 timeout /t 3 >nul
 echo Start RJS Server
-start "RJS Server" cmd /k "cd /d c:\are-self-ui\ && npm run dev"
+start "RJS Server" cmd /k "cd /d c:\Users\micha\are-self\are-self-ui\ && npm run dev"
 start "" "http://localhost:5173"
 
 
@@ -49,4 +49,3 @@ if %ERRORLEVEL% NEQ 0 (
     echo Server stopped with error code %ERRORLEVEL%
     pause
 )
-

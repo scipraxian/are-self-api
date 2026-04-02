@@ -35,7 +35,7 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
 
         self.effector = Effector.objects.create(
             name='Version Spell',
-            talos_executable_id=Executable.VERSION_HANDLER,
+            executable_id=Executable.VERSION_HANDLER,
         )
         self.book = NeuralPathway.objects.create(name='Test Book')
 

@@ -106,7 +106,7 @@ def _extract_variables_from_spell(effector: Optional[Effector]) -> set:
         variables.update(found)
     for (
         a
-    ) in effector.talos_executable.executableargumentassignment_set.all():
+    ) in effector.executable.executableargumentassignment_set.all():
         found = re.findall(r'\{\{\s*(\w+)\s*\}\}', a.argument.argument)
         variables.update(found)
     return variables
@@ -287,7 +287,7 @@ class EffectorArgumentAssignmentSerializer(serializers.ModelSerializer):
 class EffectorSerializer(serializers.ModelSerializer):
     tags = CNSTagSerializer(many=True, read_only=True)
     executable_name = serializers.CharField(
-        source='talos_executable.name', read_only=True
+        source='executable.name', read_only=True
     )
     rendered_command = serializers.SerializerMethodField()
     args = EffectorArgumentAssignmentSerializer(

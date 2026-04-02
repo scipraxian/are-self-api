@@ -62,14 +62,14 @@ the error with enough context to diagnose:
 ```python
 # GOOD
 try:
-    engram = TalosEngram.objects.get(id=engram_id)
-except TalosEngram.DoesNotExist:
+    engram = Engram.objects.get(id=engram_id)
+except Engram.DoesNotExist:
     logger.error('[Hippocampus] Engram %s not found.', engram_id)
     return None
 
 # BAD
 try:
-    engram = TalosEngram.objects.get(id=engram_id)
+    engram = Engram.objects.get(id=engram_id)
     engram.sessions.add(session)
     engram.spikes.add(spike)
     tags = process_tags(engram)

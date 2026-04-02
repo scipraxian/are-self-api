@@ -49,7 +49,7 @@ class EffectorViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = (
         Effector.objects.all()
-        .select_related('distribution_mode', 'talos_executable')
+        .select_related('distribution_mode', 'executable')
         .order_by('name')
     )
     serializer_class = EffectorSerializer

@@ -36,7 +36,7 @@ class CNSGraphRoutingTest(CommonFixturesAPITestCase):
         self.exe = Executable.objects.create(name='TestExe',
                                                   executable='cmd.exe')
         self.effector = Effector.objects.create(name='TestSpell',
-                                                talos_executable=self.exe)
+                                                executable=self.exe)
         self.book = NeuralPathway.objects.create(name='Test Book')
         self.neuron1 = Neuron.objects.create(pathway=self.book,
                                              effector=self.effector,

@@ -159,7 +159,7 @@ class Effector(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
 
     BEGIN_PLAY = 1
 
-    talos_executable = models.ForeignKey(
+    executable = models.ForeignKey(
         Executable, on_delete=models.PROTECT, default=1
     )
     switches = models.ManyToManyField(ExecutableSwitch, blank=True)
@@ -192,7 +192,7 @@ class Effector(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
             context.update(extra_context)
 
         # 2. Render Executable
-        executable_path = self.talos_executable.get_rendered_executable(
+        executable_path = self.executable.get_rendered_executable(
             environment
         )
         command_list = [executable_path]
@@ -200,7 +200,7 @@ class Effector(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
         # 3. Gather and Render Arguments & Switches
         # We need to render them using the FULL context
         executable_args = (
-            self.talos_executable.executableargumentassignment_set.all()
+            self.executable.executableargumentassignment_set.all()
         )
         spell_args = self.effectorargumentassignment_set.all()
 
@@ -216,7 +216,7 @@ class Effector(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
             command_list.append(resolved_arg)
 
         # Switches
-        executable_switches = self.talos_executable.switches.all()
+        executable_switches = self.executable.switches.all()
         spell_switches = self.switches.all()
 
         for switch in list(executable_switches) + list(spell_switches):

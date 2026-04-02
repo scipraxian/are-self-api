@@ -1,4 +1,4 @@
-"""Centralized constants for the Talos Reasoning graph and UI."""
+"""Centralized constants for the Are-Self Reasoning graph and UI."""
 
 # Graph Node Types
 NODE_TURN = 'turn'
