@@ -203,5 +203,23 @@ is_enabled=False).
 `hypothalamus/parsing_tools/llm_provider_parser/model_semantic_parser.py`. Never reinvent
 model string parsing.
 
-**Neurotransmitter naming:** Match exactly what the frontend subscribes to. The receptor_class
-and dendrite_id must match `useDendrite(receptorClass, dendriteId)` in the React code.
+**Neurotransmitter receptor_class convention:** The `receptor_class` determines the Channels
+group (`synapse_{receptor_class}`) and MUST be a domain entity or brain region — never a raw
+internal model. Two valid patterns:
+
+1. **Thalamus auto-signals** (`thalamus/signals.py`): Use `sender.__name__` for `post_save`
+   signals. These are domain entities: `PFCEpic`, `IdentityDisc`, `ReasoningTurn`, `SpikeTrain`,
+   `Engram`, `Iteration`. The frontend subscribes via `useDendrite('PFCEpic', null)`.
+
+2. **Manual brain-region signals** (e.g., `hypothalamus/api.py`): Use the brain region name
+   itself: `receptor_class='Hypothalamus'`. The frontend subscribes via
+   `useDendrite('Hypothalamus', null)`. Use `dendrite_id` for sub-scoping (specific entity PK)
+   and `vesicle` for action metadata (`{'action': 'sync_local'}`).
+
+**NEVER** use internal ORM models like `AIModel`, `AIModelProvider`, or `LLMProvider` as
+receptor_class values. These are plumbing — the Hypothalamus brain region owns them, and
+signals about them flow through `receptor_class='Hypothalamus'`. Similarly, molecule types
+(`Acetylcholine`, `Dopamine`, etc.) are NOT receptor classes — they are Layer 3 routing.
+
+The `useDendrite(receptorClass, dendriteId)` first arg is the receptor class (Layer 1),
+not the molecule type (Layer 3). Both sides must agree on receptor_class.

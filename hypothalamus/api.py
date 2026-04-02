@@ -367,7 +367,7 @@ class AIModelViewSet(viewsets.ModelViewSet):
 
         async_to_sync(fire_neurotransmitter)(
             Acetylcholine(
-                receptor_class='AIModel',
+                receptor_class='Hypothalamus',
                 dendrite_id=str(ai_model.pk),
                 activity='updated',
                 vesicle={'action': 'pulled', 'model_name': model_name},
@@ -409,7 +409,7 @@ class AIModelViewSet(viewsets.ModelViewSet):
 
         async_to_sync(fire_neurotransmitter)(
             Acetylcholine(
-                receptor_class='AIModel',
+                receptor_class='Hypothalamus',
                 dendrite_id=str(ai_model.pk),
                 activity='updated',
                 vesicle={'action': 'removed', 'model_name': model_name},
@@ -524,7 +524,7 @@ class AIModelViewSet(viewsets.ModelViewSet):
 
         async_to_sync(fire_neurotransmitter)(
             Acetylcholine(
-                receptor_class='AIModel',
+                receptor_class='Hypothalamus',
                 dendrite_id='hypothalamus',
                 activity='updated',
                 vesicle={'action': 'sync_local'},
@@ -589,7 +589,7 @@ class AIModelViewSet(viewsets.ModelViewSet):
 
         async_to_sync(fire_neurotransmitter)(
             Acetylcholine(
-                receptor_class='AIModel',
+                receptor_class='Hypothalamus',
                 dendrite_id='hypothalamus',
                 activity='updated',
                 vesicle={'action': 'fetch_catalog'},
