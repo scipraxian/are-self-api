@@ -17,10 +17,10 @@ from common.models import (
     UUIDIdMixin,
 )
 from environments.models import (
+    Executable,
+    ExecutableArgument,
+    ExecutableSwitch,
     ProjectEnvironmentMixin,
-    TalosExecutable,
-    TalosExecutableArgument,
-    TalosExecutableSwitch,
 )
 from environments.variable_renderer import VariableRenderer
 
@@ -160,9 +160,9 @@ class Effector(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
     BEGIN_PLAY = 1
 
     talos_executable = models.ForeignKey(
-        TalosExecutable, on_delete=models.PROTECT, default=1
+        Executable, on_delete=models.PROTECT, default=1
     )
-    switches = models.ManyToManyField(TalosExecutableSwitch, blank=True)
+    switches = models.ManyToManyField(ExecutableSwitch, blank=True)
     distribution_mode = models.ForeignKey(
         CNSDistributionMode,
         on_delete=models.PROTECT,
@@ -200,7 +200,7 @@ class Effector(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
         # 3. Gather and Render Arguments & Switches
         # We need to render them using the FULL context
         executable_args = (
-            self.talos_executable.talosexecutableargumentassignment_set.all()
+            self.talos_executable.executableargumentassignment_set.all()
         )
         spell_args = self.effectorargumentassignment_set.all()
 
@@ -261,7 +261,7 @@ class EffectorArgumentAssignment(models.Model):
     effector = models.ForeignKey(Effector, on_delete=models.CASCADE)
     order = models.IntegerField(default=10)
     argument = models.ForeignKey(
-        TalosExecutableArgument, on_delete=models.CASCADE
+        ExecutableArgument, on_delete=models.CASCADE
     )
 
     class Meta(object):

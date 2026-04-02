@@ -381,7 +381,7 @@ def get_neuron_details(
             variables.update(found)
 
         # Check Executable Args (Base args)
-        exe_args = neuron.effector.talos_executable.talosexecutableargumentassignment_set.all()
+        exe_args = neuron.effector.talos_executable.executableargumentassignment_set.all()
         for a in exe_args:
             raw = a.argument.argument
             found = re.findall(r'\{\{\s*(\w+)\s*\}\}', raw)
@@ -528,7 +528,7 @@ def get_neuron_telemetry(
         for s in spike.effector.switches.all():
             found = re.findall(r'\{\{\s*(\w+)\s*\}\}', s.flag + (s.value or ''))
             variables.update(found)
-        for a in spike.effector.talos_executable.talosexecutableargumentassignment_set.all():
+        for a in spike.effector.talos_executable.executableargumentassignment_set.all():
             found = re.findall(r'\{\{\s*(\w+)\s*\}\}', a.argument.argument)
             variables.update(found)
 

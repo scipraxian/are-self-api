@@ -106,7 +106,7 @@ def _extract_variables_from_spell(effector: Optional[Effector]) -> set:
         variables.update(found)
     for (
         a
-    ) in effector.talos_executable.talosexecutableargumentassignment_set.all():
+    ) in effector.talos_executable.executableargumentassignment_set.all():
         found = re.findall(r'\{\{\s*(\w+)\s*\}\}', a.argument.argument)
         variables.update(found)
     return variables

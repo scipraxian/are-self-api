@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from common.tests.common_test_case import CommonFixturesAPITestCase
 
-from environments.models import TalosExecutable
+from environments.models import Executable
 from central_nervous_system.models import (
     Spike,
     SpikeStatus,
@@ -32,7 +32,7 @@ class NeuroMuscularJunctionTest(CommonFixturesAPITestCase):
         )
 
         # 2. Use a standard executable (PYTHON) for default state
-        self.python_exe = TalosExecutable.objects.get(id=TalosExecutable.PYTHON)
+        self.python_exe = Executable.objects.get(id=Executable.PYTHON)
 
         self.effector = Effector.objects.create(
             name='Unit Test Spell',
@@ -83,8 +83,8 @@ class NeuroMuscularJunctionTest(CommonFixturesAPITestCase):
         caster._execute_local_python.reset_mock()
 
         # Case 2: Internal Handler -> Local Python
-        internal_exe = TalosExecutable.objects.get(
-            id=TalosExecutable.VERSION_HANDLER)
+        internal_exe = Executable.objects.get(
+            id=Executable.VERSION_HANDLER)
         caster.effector.talos_executable = internal_exe
 
         loop.run_until_complete(caster._executable_router())

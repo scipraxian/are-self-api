@@ -4,7 +4,7 @@ from unittest.mock import mock_open, patch
 
 from common.tests.common_test_case import CommonFixturesAPITestCase
 
-from environments.models import TalosExecutable
+from environments.models import Executable
 from central_nervous_system.models import (
     Spike,
     SpikeStatus,
@@ -35,7 +35,7 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
 
         self.effector = Effector.objects.create(
             name='Version Spell',
-            talos_executable_id=TalosExecutable.VERSION_HANDLER,
+            talos_executable_id=Executable.VERSION_HANDLER,
         )
         self.book = NeuralPathway.objects.create(name='Test Book')
 

@@ -19,7 +19,7 @@ from environments.models import (
     ProjectEnvironment,
     ProjectEnvironmentStatus,
     ProjectEnvironmentType,
-    TalosExecutable,
+    Executable,
 )
 from peripheral_nervous_system.nerve_terminal import (
     NerveTerminalConstants,
@@ -368,7 +368,7 @@ class NeuroMuscularJunctionQueryTest(CommonFixturesAPITestCase):
                                                      status=env_status)
 
         # Effector & Node
-        self.exe = TalosExecutable.objects.create(name='TestExe',
+        self.exe = Executable.objects.create(name='TestExe',
                                                   executable='cmd.exe')
         self.effector = Effector.objects.create(name='TestSpell',
                                                 talos_executable=self.exe)
