@@ -1,169 +1,207 @@
-# Are-Self Style Guide
+# CLAUDE.md — Are-Self API
 
-This document defines the engineering standards for Are-Self. Every contributor — human or AI agent — must follow these
-rules. No exceptions. No "I'll clean it up later." If it's in the codebase, it meets this standard.
+The single source of truth for any AI agent working on the are-self-api codebase.
+Read completely before making any changes.
 
-## Baseline
+## The Developer
 
-Google Python Style Guide. Everything below either reinforces or overrides it for this project.
+Michael is a 30+ year programming veteran building Are-Self as an MIT-licensed AI reasoning
+engine. The project's mission is providing free AI technology to underserved youth, with
+academic interest from MIT and a PhD student collaborator at UPA. Michael has exceptional
+product instincts and will actively correct architectural drift. He values ergonomics over
+cleverness, biological naming over mechanical metaphors, and clean separation of concerns.
 
-## Naming
+**Workflow:** Claude (Projects chat) for planning and architecture. Claude Code for
+implementation via self-contained prompts. Each Claude Code session gets a fresh prompt with
+all necessary context. This CLAUDE.md file is read first every session.
 
-Are-Self, not Talos. New code never introduces the word "Talos", "spell", or "cast" in class names, variable names,
-function names, or comments. The canonical class prefix where a prefix is needed is `AreSelf`, but prefer no prefix when
-the Django app label already provides namespace (e.g., `Engram` inside the `hippocampus` app, not `AreSelfEngram`).
+## What This Is
 
-Use `snake_case` for functions, methods, variables, and module names. Use `PascalCase` for classes. Use
-`UPPER_SNAKE_CASE` for module-level constants. No exceptions.
+A Django 6.x backend for **Are-Self**, an open-source AI reasoning engine with
+neurologically-inspired architecture. Every Django app is a brain region. The frontend is
+React + Vite + TypeScript (repo: `are-self-ui`). This repo serves a DRF API consumed by
+that frontend, plus Celery workers that drive the autonomous reasoning loop.
 
-## No Nested Functions
+**Mission:** Empower underprivileged youth in remote areas with free access to AI technology.
+MIT licensed. Runs on consumer hardware via Ollama.
 
-Never define a function inside another function. If you need a helper, make it a module-level function. Closures are
-banned. Lambda is acceptable only in trivial one-liners passed to `sync_to_async`, `sorted()`, or ORM calls where
-extracting it would reduce clarity.
+## The Tick Cycle
 
-## Functions vs. Methods
+Everything exists to support this loop — one heartbeat of the system:
 
-If it doesn't use `self`, it is a module-level function, not a method. If it doesn't use `cls`, it is a module-level
-function, not a `@classmethod`. Classes are for state. Stateless logic lives at module scope.
-
-## No Repeated String Literals
-
-If a string appears more than once, it becomes a constant at module scope or a class-level attribute. Use the
-`common/constants.py` pattern for cross-cutting values. Use class-level constants (e.g., `RELATED_NAME = 'engrams'`) for
-model-specific repeated strings.
-
-## Constants on Model Classes
-
-Integer FK reference constants live on the model class they point to:
-
-```python
-class SpikeStatus(NameMixin):
-    PENDING = 1
-    ACTIVE = 2
-    SUCCESS = 3
-    FAILED = 4
+```
+PNS (Celery Beat ticks)
+  → Temporal Lobe (wakes the active iteration, picks current shift)
+    → CNS (fires a spike train through the neural pathway)
+      → Spikes cascade through neurons
+        → Frontal Lobe (starts a reasoning session)
+          → LLM reasons in a while-True loop
+            → Parietal Lobe (executes tools)
+            → Hippocampus (stores and retrieves memories)
+            → Hypothalamus (selects the right model)
+          → Session concludes or yields
+        → Control returns up the spike chain
+      → Next spike fires
+    → Shift turn count increments
+  → Next tick
 ```
 
-This makes callsites self-documenting: `SpikeStatus.PENDING` not `1`.
+## Django Apps (Brain Regions)
 
-## Small Testable Units
+| App | Brain Region | Responsibility |
+|-----|-------------|----------------|
+| `identity/` | Identity | Persona blueprints → IdentityDiscs (deployed instances) |
+| `temporal_lobe/` | Temporal Lobe | Iterations, shifts, turn management |
+| `central_nervous_system/` | CNS | Directed-graph execution engine (pathways, spikes) |
+| `frontal_lobe/` | Frontal Lobe | Reasoning sessions (LLM inference loop) |
+| `parietal_lobe/` | Parietal Lobe | Tool execution gateway (ParietalMCP) |
+| `hippocampus/` | Hippocampus | Vector-embedded memory (Engrams, pgvector) |
+| `hypothalamus/` | Hypothalamus | Model catalog, routing, budgets, circuit breakers |
+| `synaptic_cleft/` | Synaptic Cleft | WebSocket event bus (typed neurotransmitters) |
+| `peripheral_nervous_system/` | PNS | Celery fleet monitoring |
+| `prefrontal_cortex/` | Prefrontal Cortex | Task management (Epics → Stories → Tasks) |
+| `thalamus/` | Thalamus | Chat relay (human ↔ system interface) |
+| `environments/` | — | Project context (active environment, context variables) |
+| `common/` | — | Shared mixins, constants, base test classes |
+| `config/` | — | Django settings, URL routing, Celery config |
 
-Every function should do one thing. If you can't describe what a function does in a single sentence without the word "
-and", split it. The goal: any function can be tested by calling it directly with known inputs and asserting on the
-return value or a single side effect.
+Legacy apps still present: `dashboard/` (old HTMX views), `ue_tools/` (UE5 build tools),
+`occipital_lobe/` (placeholder). These are deprecated and will be removed.
 
-## Error Handling
+## Key Code Paths
 
-Try/except blocks must be short and targeted. Wrap the specific line that can raise, not 40 lines of logic. Catch the
-specific exception, not `Exception`, unless you are at a true boundary (top-level task runner, HTTP view). Always log
-the error with enough context to diagnose:
+**Reasoning session:** `frontal_lobe/frontal_lobe.py` → `FrontalLobe.run()` — the while-True
+loop. Assembles prompt via `identity/identity_prompt.py` → `build_identity_prompt()`. Calls
+LLM via LiteLLM. Parses tool calls → dispatches to `parietal_lobe/parietal_mcp/mcp_*.py`.
 
-```python
-# GOOD
-try:
-    engram = Engram.objects.get(id=engram_id)
-except Engram.DoesNotExist:
-    logger.error('[Hippocampus] Engram %s not found.', engram_id)
-    return None
+**Spike execution:** `central_nervous_system/neuromuscular_junction.py` → `fire_spike()` is the
+Celery task entry point. `_execute_spike()` dispatches to effectors.
 
-# BAD
-try:
-    engram = Engram.objects.get(id=engram_id)
-    engram.sessions.add(session)
-    engram.spikes.add(spike)
-    tags = process_tags(engram)
-    engram.save()
-except Exception as e:
-    logger.error(f'Something went wrong: {e}')
+**Model selection:** `hypothalamus/hypothalamus.py` → `pick_optimal_model()`. Vector-similarity
+matching + failover strategies + circuit breakers + budget gates.
+
+**Memory:** `hippocampus/hippocampus.py` → `Hippocampus.save_engram()` / `read_engram()`.
+90% cosine similarity dedup. Auto-revectorization on change.
+
+**Real-time events:** `synaptic_cleft/synaptic_cleft.py` → `fire_neurotransmitter()`. Types:
+Dopamine (success), Cortisol (error), Acetylcholine (data sync), Glutamate (streaming),
+Norepinephrine (monitoring).
+
+**Temporal tick:** `temporal_lobe/temporal_lobe.py` → `trigger_temporal_metronomes()` →
+`fetch_canonical_temporal_pathway()` → CNS builds SpikeTrain.
+
+## API Endpoints
+
+All at `/api/v2/`. Most use hyphens; a few legacy routes use underscores. Do not "fix" casing.
+
+```
+# CNS
+spiketrains, spikes, neuralpathways, neurons, axons, effectors
+
+# Temporal Lobe
+iterations, iteration-definitions, iteration-shift-definitions, shifts
+
+# Identity
+identities, identity-discs, identity-addons, identity-tags, identity-types
+budget-periods, identity-budgets
+
+# Prefrontal Cortex
+pre-frontal-item-status, pfc-tags, pfc-epics, pfc-stories, pfc-tasks, pfc-comments
+
+# Hippocampus
+engram_tags, engrams
+
+# Frontal Lobe
+reasoning_sessions, reasoning_turns
+
+# Parietal Lobe (Tools)
+tool-parameter-types, tool-use-types, tool-definitions, tool-parameters
+tool-parameter-assignments, parameter-enums, tool-calls
+
+# PNS
+celery-workers
+
+# Hypothalamus
+llm-providers, model-categories, model-modes, model-families
+ai-models, model-providers, model-pricing, model-descriptions
+usage-records, sync-status, sync-logs, model-ratings
+failover-types, failover-strategies, selection-filters
+
+# Environments
+environments, executables, context-variables, context-keys
+environment-types, environment-statuses
 ```
 
-The only acceptable broad `except Exception` is at the outermost boundary of a Celery task or the Frontal Lobe `run()`
-method, where crashing the process is worse than logging and continuing.
+## Current State (April 2026)
 
-Never silently swallow exceptions. Every `except` block either logs, re-raises, or returns a meaningful error to the
-caller.
+**What works:** The full tick cycle runs end-to-end. Identities create, forge into discs,
+get slotted into iterations, pick up tasks, reason autonomously, call tools, form memories.
+The Hypothalamus semantic parser (83 tests, 98.4% accuracy) enriches models automatically.
+Real-time events flow through the Synaptic Cleft. All brain regions have working API endpoints.
 
-## Logging
+**What's in progress:** See TASKS.md. Key items: spell/cast naming sweep (~9 files in CNS),
+deprecated `ModelProvider`/`ModelRegistry` removal from frontal_lobe, engram function
+consolidation, linter standardization, API URL standardization (underscores → hyphens),
+shutdown/restart scripts.
 
-Verbose logging is a feature. Every significant state change, tool execution, model selection, and session transition
-should log at `INFO` or `DEBUG`. Use bracketed component tags:
+**Completed renames:** Talos → Are-Self naming sweep is done (only migration history retains
+old names). HTMX views fully removed. `TalosEngram` → `Engram`, `TalosExecutable` →
+`Executable`, `talos_bin` references cleaned.
 
-```python
-logger.info('[FrontalLobe] Session %s started. Turns: %d', session.id, max_turns)
-logger.warning('[Synapse] Circuit breaker tripped for %s.', model_id)
-logger.debug('[ParietalMCP] Executing %s with args: %s', tool_name, safe_args)
-```
+**Legacy remnants:** `spell`/`cast`/`Caster` terminology still live in ~9 CNS files.
+`ModelProvider` and `ModelRegistry` still in `frontal_lobe/models.py` with active imports.
+`parietal_lobe/registry.py` still exists. The `dashboard/` and `ue_tools/` apps are from the
+original UE5 build orchestrator and should not be modified — they'll be removed.
 
-Use `%s` formatting in logger calls, not f-strings. The logger defers string interpolation until the message is actually
-emitted, which matters at `DEBUG` level in production.
+## Style Guide (Enforced)
 
-## Async Policy
+Read STYLE_GUIDE.md for the full guide. Key rules for quick reference:
 
-Async is intentional, not infectious. Use async for:
+**Naming:** Are-Self, not Talos. `snake_case` functions, `PascalCase` classes,
+`UPPER_SNAKE_CASE` constants. No prefix when Django app label provides namespace.
 
-- WebSocket streaming (Glutamate neurotransmitters, log mirroring).
-- The Nerve Terminal (remote process execution with async generators).
-- Any code path that genuinely benefits from concurrent I/O.
+**Functions:** No nested functions. No closures. If it doesn't use `self`, it's a
+module-level function. Classes are for state.
 
-Do not use async merely because a caller is async. The Frontal Lobe reasoning loop runs inside a Celery worker. The
-Celery worker calls `async_to_sync` at the boundary. Inside that boundary, `sync_to_async` wrapping is acceptable for
-ORM calls but should not proliferate into every helper function. If a function is purely synchronous DB work called from
-an async context, write it synchronously and wrap it once at the call site.
+**Error handling:** Short, targeted try/except. Catch specific exceptions. Broad
+`except Exception` only at Celery task or Frontal Lobe `run()` boundaries.
 
-## Django Models
+**Logging:** Verbose, bracketed tags: `logger.info('[FrontalLobe] Session %s started.', id)`.
+Use `%s` formatting, not f-strings.
 
-Use the established mixin hierarchy from `common/models.py`: `CreatedMixin`, `ModifiedMixin`,
-`CreatedAndModifiedWithDelta`, `NameMixin`, `DefaultFieldsMixin`, `UUIDIdMixin`, `DescriptionMixin`. Do not reinvent
-timestamps or naming patterns.
+**Async:** Intentional, not infectious. Async for WebSocket, Nerve Terminal, genuine
+concurrent I/O. Sync for everything else with `sync_to_async` wrap at the Celery boundary.
 
-`RELATED_NAME` should be a class-level constant when used across multiple ForeignKeys on the same model.
+**Models:** Use mixin hierarchy from `common/models.py`: CreatedMixin, ModifiedMixin,
+CreatedAndModifiedWithDelta, NameMixin, DefaultFieldsMixin, UUIDIdMixin, DescriptionMixin.
 
-Abstract mixins (`class Meta: abstract = True`) for cross-cutting concerns like `ReasoningStatusMixin`.
+**Testing:** Real database with fixtures, not mocks. Inherit from `CommonTestCase` or
+`CommonFixturesAPITestCase`. Test docstrings begin with "Assert".
 
-## Testing
+**Fixtures:** PKs are stable integers. Never change an existing PK. Old records deprecated
+in place, never deleted. Each app has its own `fixtures/initial_data.json`.
 
-All tests inherit from `CommonTestCase` or `CommonFixturesAPITestCase`. Tests use the real database with fixtures, not
-mocks. Django + PostgreSQL is the product; abstracting it away in tests is lying to yourself.
+**Formatting:** 88-char lines (Black default). Single quotes. No trailing commas in function
+signatures. `isort`-compatible imports.
 
-Test names and docstrings may exceed the line length limit. Docstrings begin with the word "Assert":
+**Type hints:** All function signatures including return types. `Optional[X]` not `X | None`.
+Built-in generics (`list`, `dict`) not `typing.List`, `typing.Dict`.
 
-```python
-def test_yield_turn_pauses_session(self):
-    """Assert mcp_respond_to_user with yield_turn=True sets session status to ATTENTION_REQUIRED."""
-```
+## Common Pitfalls
 
-Do not mock Django models. Use fixture data. If setup requires more than what fixtures provide, build the objects in
-`setUp()` using the ORM directly.
+**DRF M2M writes:** Nested serializers with `read_only=True` silently ignore writes. Any
+writable FK/M2M needs a `PrimaryKeyRelatedField` write-only counterpart. This pattern is
+already applied on Identity, Temporal, Hypothalamus, and AIModelDescription serializers.
 
-## Type Hints
+**AIModel.description is null.** Use `current_description` (resolved from AIModelDescription:
+model-specific first, family fallback second). Never read the deprecated `description` field.
 
-Type hints on all function signatures, including return types. Use `Optional[X]` not `X | None` for Django model fields
-that can be null (consistency with the existing codebase). Use built-in generics (`list`, `dict`, `tuple`) not
-`typing.List`, `typing.Dict`, `typing.Tuple` (Python 3.10+).
+**Never delete AIModel or AIModelProvider records.** Disable them (enabled=False,
+is_enabled=False).
 
-## Imports
+**Model string parsing:** Import and use the standalone parser at
+`hypothalamus/parsing_tools/llm_provider_parser/model_semantic_parser.py`. Never reinvent
+model string parsing.
 
-Standard library, then blank line, then third-party, then blank line, then Django, then blank line, then project
-imports. Within each group, alphabetical. `isort` compatible.
-
-## Docstrings
-
-Google style. Classes always get a docstring. Public methods get a docstring if the behavior isn't obvious from the name
-and type hints. Private helpers and short pure functions can skip docstrings if the name is self-documenting. Args
-sections only when parameter names aren't self-explanatory.
-
-## Fixtures
-
-Tool definitions, parameters, and assignments live in `initial_data.json` fixtures. PKs are stable integers used as
-class-level constants. Never change an existing PK. Add new records with the next available PK. Old records are
-deprecated in place, never deleted, because existing sessions reference them.
-
-## Line Length
-
-88 characters for code (Black default). Test names, test docstrings, and URLs are exempt.
-
-## Formatting
-
-Single quotes for strings unless the string contains a single quote. No trailing commas in function signatures (but yes
-in collections and Django model field definitions for clean diffs). Black-compatible formatting throughout.
+**Neurotransmitter naming:** Match exactly what the frontend subscribes to. The receptor_class
+and dendrite_id must match `useDendrite(receptorClass, dendriteId)` in the React code.

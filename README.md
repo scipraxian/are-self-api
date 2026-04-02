@@ -29,58 +29,72 @@ hard parts.
 
 ### Prerequisites
 
-- Python 3.12+, Node.js 20+
-- PostgreSQL with pgvector extension
-- Redis
-- Ollama (for local models)
+- Python 3.12+
+- Docker Desktop (for PostgreSQL + Redis)
+- Node.js 20+ (for the frontend — see [are-self-ui](https://github.com/scipraxian/are-self-ui))
 
-### Backend (are-self)
+Ollama is installed automatically by the install script if not already present.
 
-```bash
+### First-Time Install (Windows)
+
+```
 git clone https://github.com/scipraxian/are-self.git
 cd are-self
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py loaddata */fixtures/*.json
-python manage.py runserver
+are-self-install.bat
 ```
 
-Start Celery workers (the nervous system):
+This handles everything: creates a virtual environment, installs dependencies, starts Docker, enables pgvector,
+runs migrations, loads fixture data, creates an admin superuser (`admin`/`admin`), installs Ollama if needed, and
+pulls the embedding model.
 
-```bash
-celery -A config worker -l info -E
-celery -A config beat -l info
+### Launch
+
+```
+are-self.bat
 ```
 
-### Frontend (are-self-ui)
-
-```bash
-git clone https://github.com/scipraxian/are-self-ui.git
-cd are-self-ui
-npm install
-npm run dev
-```
+Starts Docker, the Celery worker, the Django server, and the frontend dev server. Opens the browser automatically.
 
 Open `http://localhost:5173`. You'll see a brain.
 
+### Manual Setup (Non-Windows)
+
+If you're not on Windows, the install script shows the exact sequence. The key steps:
+
+```bash
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+docker compose up -d
+docker exec -it are_self_db psql -U postgres -d postgres -c "CREATE EXTENSION IF NOT EXISTS vector;"
+python manage.py migrate
+python manage.py loaddata initial_data.json
+ollama pull nomic-embed-text
+python manage.py runserver
+```
+
+In separate terminals, start the Celery worker and frontend:
+
+```bash
+celery -A config worker -l info -E -P threads --concurrency=4
+cd ../are-self-ui && npm install && npm run dev
+```
+
 ## The Brain
 
-Every part of Are-Self maps to a brain region. This isn't decoration — it's how you navigate the system.
+Every part of Are-Self maps to a brain region. This is how you navigate the system.
 
-| Region                        | Route           | What It Does                                                |
-|-------------------------------|-----------------|-------------------------------------------------------------|
-| **Identity**                  | `/identity`     | Create AI personas with tools, personality, and budget      |
-| **Temporal Lobe**             | `/temporal`     | Set up work cycles with shifts and participants             |
-| **Prefrontal Cortex**         | `/pfc`          | Assign and manage tasks (epics, stories, tasks)             |
-| **Hypothalamus**              | `/hypothalamus` | Model catalog, pricing, selection, circuit breakers         |
-| **Central Nervous System**    | `/cns`          | Execution engine — pathways, spike trains, neurons          |
-| **Frontal Lobe**              | `/frontal`      | Reasoning sessions — watch AI think in real time            |
-| **Hippocampus**               | `/hippocampus`  | Memory — vector-embedded facts that persist across sessions |
-| **Parietal Lobe**             | —               | Tool execution gateway (no UI, runs server-side)            |
-| **Peripheral Nervous System** | `/pns`          | Worker fleet monitoring                                     |
-| **Thalamus**                  | floating bubble | Chat interface — talk to the system from any page           |
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for how these connect.
+| Region | Route | What It Does |
+|---|---|---|
+| **Identity** | `/identity` | Create AI personas with tools, personality, and budget |
+| **Temporal Lobe** | `/temporal` | Set up work cycles with shifts and participants |
+| **Prefrontal Cortex** | `/pfc` | Assign and manage tasks (epics, stories, tasks) |
+| **Hypothalamus** | `/hypothalamus` | Model catalog, pricing, selection, circuit breakers |
+| **Central Nervous System** | `/cns` | Execution engine — pathways, spike trains, neurons |
+| **Frontal Lobe** | `/frontal` | Reasoning sessions — watch AI think in real time |
+| **Hippocampus** | `/hippocampus` | Memory — vector-embedded facts that persist across sessions |
+| **Parietal Lobe** | — | Tool execution gateway (no UI, runs server-side) |
+| **Peripheral Nervous System** | `/pns` | Worker fleet monitoring |
+| **Thalamus** | floating bubble | Chat interface — talk to the system from any page |
 
 ## The Lifecycle
 
@@ -93,12 +107,15 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for how these connect.
    tools execute → memories form
 7. **Watch and interact** — monitor spike trains, read reasoning logs, inject messages into active sessions
 
+See [ARCHITECTURE.md](ARCHITECTURE.md) for how the brain regions connect.
 See [GETTING_STARTED.md](GETTING_STARTED.md) for a hands-on walkthrough.
+See [FEATURES.md](FEATURES.md) for a complete list of what's built.
+See [TASKS.md](TASKS.md) for what's next.
 
 ## Stack
 
 - **Backend:** Django 6.x, Daphne (ASGI), Celery 5.x, Redis, PostgreSQL + pgvector
-- **Frontend:** React, Vite, TypeScript
+- **Frontend:** React, Vite, TypeScript ([separate repo](https://github.com/scipraxian/are-self-ui))
 - **LLM Providers:** Ollama (local), OpenRouter (cloud failover), via LiteLLM
 - **Embeddings:** nomic-embed-text (768-dim, runs locally via Ollama)
 - **Real-time:** Django Channels (WebSocket) with typed neurotransmitter events
@@ -112,3 +129,5 @@ MIT. Free as in freedom, free as in beer.
 Are-Self is built by [Michael](https://github.com/scipraxian) with the mission of making AI accessible to underserved
 communities. Contributions welcome — especially from educators, students, and anyone who believes AI should be a public
 good.
+
+See [STYLE_GUIDE.md](STYLE_GUIDE.md) for coding standards.
