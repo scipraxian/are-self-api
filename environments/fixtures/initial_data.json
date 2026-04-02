@@ -1598,7 +1598,7 @@
   "fields": {
     "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
     "key": 5,
-    "value": "C:\\are-self"
+    "value": "{{BASE_DIR}}"
   }
 },
 {
@@ -1679,7 +1679,7 @@
   "fields": {
     "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
     "key": 12,
-    "value": "c:\\are-self\\venv"
+    "value": "{{BASE_DIR}}\\venv"
   }
 },
 {
@@ -1688,7 +1688,7 @@
   "fields": {
     "environment": "4d82fab0-c62d-4204-a316-476476c10a55",
     "key": 12,
-    "value": "c:/are-self/venv"
+    "value": "{{BASE_DIR}}/venv"
   }
 },
 {
@@ -1697,7 +1697,7 @@
   "fields": {
     "environment": "4d82fab0-c62d-4204-a316-476476c10a55",
     "key": 5,
-    "value": "c:/are-self"
+    "value": "{{BASE_DIR}}"
   }
 },
 {
@@ -1733,7 +1733,7 @@
   "fields": {
     "environment": "c1b7a124-a50b-4710-aa85-154736a839bc",
     "key": 5,
-    "value": "c:/are-self"
+    "value": "{{BASE_DIR}}"
   }
 },
 {
@@ -1742,7 +1742,7 @@
   "fields": {
     "environment": "c1b7a124-a50b-4710-aa85-154736a839bc",
     "key": 12,
-    "value": "c:/are-self/venv/"
+    "value": "{{BASE_DIR}}/venv/"
   }
 }
 ]

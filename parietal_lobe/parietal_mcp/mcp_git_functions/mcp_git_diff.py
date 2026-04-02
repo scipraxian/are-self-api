@@ -12,7 +12,7 @@ def _diff_sync(
     file_path: str = None,
 ) -> str:
     """Runs git diff and returns the output."""
-    cwd = repo_path or str(getattr(settings, 'BASE_DIR', 'c:/talos'))
+    cwd = repo_path or str(settings.BASE_DIR)
 
     cmd = ['git', 'diff']
     if staged:

@@ -1,6 +1,7 @@
 import socket
 from typing import Any, Dict
 
+from django.conf import settings
 from django.template import Context, Template
 
 from central_nervous_system.constants import KEY_SERVER
@@ -21,7 +22,10 @@ class VariableRenderer:
         # Local import to avoid circular dependency
         from environments.models import ContextVariable
 
-        context_data = {KEY_SERVER: socket.gethostname()}
+        context_data = {
+            KEY_SERVER: socket.gethostname(),
+            'BASE_DIR': str(settings.BASE_DIR),
+        }
 
         if not environment:
             return context_data

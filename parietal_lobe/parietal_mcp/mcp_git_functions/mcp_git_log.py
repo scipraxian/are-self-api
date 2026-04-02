@@ -14,7 +14,7 @@ def _log_sync(
     oneline: bool = True,
 ) -> str:
     """Runs git log and returns formatted output."""
-    cwd = repo_path or str(getattr(settings, 'BASE_DIR', 'c:/talos'))
+    cwd = repo_path or str(settings.BASE_DIR)
 
     safe_count = max(1, min(count, MAX_LOG_ENTRIES))
 

@@ -21,10 +21,7 @@ def _resolve_path(path, root_path):
     if root_path:
         base_dir = os.path.normpath(str(root_path))
     else:
-        # Default to Talos Root if no context provided
-        base_dir = os.path.normpath(
-            str(getattr(settings, 'BASE_DIR', 'c:/talos'))
-        )
+        base_dir = os.path.normpath(str(settings.BASE_DIR))
 
     # 2. Handle Absolute Paths (BYPASS SANDBOX)
     if os.path.isabs(path):

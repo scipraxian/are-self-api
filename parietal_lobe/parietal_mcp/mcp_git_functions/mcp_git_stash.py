@@ -10,7 +10,7 @@ def _stash_sync(
     repo_path: str = None,
 ) -> str:
     """Manages the git stash."""
-    cwd = repo_path or str(getattr(settings, 'BASE_DIR', 'c:/talos'))
+    cwd = repo_path or str(settings.BASE_DIR)
 
     STASH_ACTIONS = frozenset({'push', 'pop', 'list', 'drop'})
     action = action.lower()

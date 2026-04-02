@@ -15,7 +15,7 @@ V2_IDENTITY_ROUTER.register(
     r'identities', IdentityViewSet, basename='identities'
 )
 V2_IDENTITY_ROUTER.register(
-    r'identity_discs', IdentityDiscViewSet, basename='identitydiscs'
+    r'identity-discs', IdentityDiscViewSet, basename='identitydiscs'
 )
 V2_IDENTITY_ROUTER.register(
     r'identity_addons', IdentityAddonViewSet, basename='identityaddons'
