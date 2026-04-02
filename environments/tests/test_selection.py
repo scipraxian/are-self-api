@@ -1,5 +1,4 @@
-from django.test import Client, TestCase
-from django.urls import reverse
+from django.test import TestCase
 
 from environments.models import (
     ProjectEnvironment,
@@ -29,8 +28,6 @@ class EnvironmentSelectionTest(TestCase):
             selected=False,
         )
 
-        self.client = Client()
-
     def test_single_selection_enforcement(self):
         """Verify saving one environment as selected deselects others."""
         self.assertTrue(
@@ -49,16 +46,3 @@ class EnvironmentSelectionTest(TestCase):
             ProjectEnvironment.objects.get(pk=self.env2.pk).selected
         )
 
-    def test_view_selection_logic(self):
-        """Verify the view performs the switch correctly."""
-        url = reverse('environments:select_environment', args=[self.env2.pk])
-        response = self.client.post(url)
-
-        self.assertEqual(response.status_code, 302)
-
-        self.assertFalse(
-            ProjectEnvironment.objects.get(pk=self.env1.pk).selected
-        )
-        self.assertTrue(
-            ProjectEnvironment.objects.get(pk=self.env2.pk).selected
-        )

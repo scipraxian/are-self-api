@@ -5,7 +5,11 @@
       "Bash(xargs grep:*)",
       "Bash(grep -E \"\\\\.py$|^d\")",
       "Bash(grep -E \"\\\\.py$\")",
-      "Bash(echo \"EXIT: $?\")"
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(ls C:/talos/frontal_lobe/views*)",
+      "Bash(ls C:/talos/frontal_lobe/urls*)",
+      "Bash(ls C:/talos/peripheral_nervous_system/views*)",
+      "Bash(ls C:/talos/peripheral_nervous_system/urls*)"
     ]
   }
 }
