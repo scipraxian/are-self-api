@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from common.tests.common_test_case import CommonFixturesAPITestCase
 
-from environments.models import TalosExecutable
+from environments.models import Executable
 from central_nervous_system.models import (
     Spike,
     SpikeStatus,
@@ -32,11 +32,11 @@ class NeuroMuscularJunctionTest(CommonFixturesAPITestCase):
         )
 
         # 2. Use a standard executable (PYTHON) for default state
-        self.python_exe = TalosExecutable.objects.get(id=TalosExecutable.PYTHON)
+        self.python_exe = Executable.objects.get(id=Executable.PYTHON)
 
         self.effector = Effector.objects.create(
             name='Unit Test Spell',
-            talos_executable=self.python_exe,
+            executable=self.python_exe,
         )
 
         self.spike = Spike.objects.create(effector=self.effector,
@@ -68,7 +68,7 @@ class NeuroMuscularJunctionTest(CommonFixturesAPITestCase):
         import asyncio
 
         # Case 1: Standard Executable (PYTHON) -> Unified Pipeline
-        caster.effector.talos_executable = self.python_exe
+        caster.effector.executable = self.python_exe
 
         # We need to run the async method
         loop = asyncio.new_event_loop()
@@ -83,9 +83,9 @@ class NeuroMuscularJunctionTest(CommonFixturesAPITestCase):
         caster._execute_local_python.reset_mock()
 
         # Case 2: Internal Handler -> Local Python
-        internal_exe = TalosExecutable.objects.get(
-            id=TalosExecutable.VERSION_HANDLER)
-        caster.effector.talos_executable = internal_exe
+        internal_exe = Executable.objects.get(
+            id=Executable.VERSION_HANDLER)
+        caster.effector.executable = internal_exe
 
         loop.run_until_complete(caster._executable_router())
 

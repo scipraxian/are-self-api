@@ -389,7 +389,7 @@ class NeuroMuscularJunction:
         """
         Routes execution to internal python handlers or the unified pipeline.
         """
-        if self.effector.talos_executable.internal:
+        if self.effector.executable.internal:
             await self._execute_local_python()
         else:
             await self._execute_unified_pipeline()
@@ -412,7 +412,7 @@ class NeuroMuscularJunction:
         executable = full_cmd[0]
         params = full_cmd[1:]
 
-        raw_log_path = self.effector.talos_executable.log
+        raw_log_path = self.effector.executable.log
         log_path = VariableRenderer.render_string(raw_log_path, full_context)
 
         is_remote = self.spike.target is not None
@@ -522,7 +522,7 @@ class NeuroMuscularJunction:
 
     async def _execute_local_python(self):
         """Executes internal python handlers, supporting both sync and async."""
-        slug = self.effector.talos_executable.executable
+        slug = self.effector.executable.executable
         handler_func = NATIVE_HANDLERS.get(slug)
 
         if not handler_func:
@@ -558,7 +558,7 @@ class NeuroMuscularJunction:
     def _load_head_sync(self):
         self.spike = Spike.objects.select_related(
             'effector',
-            'effector__talos_executable',
+            'effector__executable',
             'target',
             'spike_train',
             'spike_train__environment',

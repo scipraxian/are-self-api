@@ -264,7 +264,7 @@ class CommentAdmin(admin.ModelAdmin):
         if obj.user:
             return obj.user.username
         return mark_safe(
-            '<span style="color: #f99f1b; font-weight: bold;">Talos (System)</span>'
+            '<span style="color: #f99f1b; font-weight: bold;">Are-Self (System)</span>'
         )
 
     user_display.short_description = 'Author'

@@ -2,28 +2,28 @@ from django.contrib import admin
 
 from .models import (
     ContextVariable,
+    Executable,
+    ExecutableArgument,
+    ExecutableArgumentAssignment,
+    ExecutableSupplementaryFileOrPath,
+    ExecutableSwitch,
     ProjectEnvironment,
-    ProjectEnvironmentContextKey,  # Added
+    ProjectEnvironmentContextKey,
     ProjectEnvironmentStatus,
     ProjectEnvironmentType,
-    TalosExecutable,
-    TalosExecutableArgument,
-    TalosExecutableArgumentAssignment,
-    TalosExecutableSupplementaryFileOrPath,
-    TalosExecutableSwitch,
 )
 
 
-@admin.register(TalosExecutableSwitch)
-class TalosExecutableSwitchAdmin(admin.ModelAdmin):
+@admin.register(ExecutableSwitch)
+class ExecutableSwitchAdmin(admin.ModelAdmin):
     list_display = ('name', 'flag', 'value', 'id')
     search_fields = ('name', 'flag')
     ordering = ('flag',)
     list_editable = ('flag', 'value')
 
 
-@admin.register(TalosExecutableArgument)
-class TalosExecutableArgumentAdmin(admin.ModelAdmin):
+@admin.register(ExecutableArgument)
+class ExecutableArgumentAdmin(admin.ModelAdmin):
     list_display = ('name', 'argument')
     search_fields = (
         'name',
@@ -34,7 +34,7 @@ class TalosExecutableArgumentAdmin(admin.ModelAdmin):
 class ArgumentAssignmentInline(admin.TabularInline):
     """Allows ordering arguments directly on the Executable page."""
 
-    model = TalosExecutableArgumentAssignment
+    model = ExecutableArgumentAssignment
     extra = 1
     autocomplete_fields = [
         'argument'
@@ -45,12 +45,12 @@ class ArgumentAssignmentInline(admin.TabularInline):
 class SupplementaryFileInline(admin.TabularInline):
     """Manages output paths/manifests associated with the tool."""
 
-    model = TalosExecutableSupplementaryFileOrPath
+    model = ExecutableSupplementaryFileOrPath
     extra = 1
 
 
-@admin.register(TalosExecutable)
-class TalosExecutableAdmin(admin.ModelAdmin):
+@admin.register(Executable)
+class ExecutableAdmin(admin.ModelAdmin):
     list_display = ('name', 'executable_short', 'working_path', 'switch_count')
     search_fields = ('name', 'executable')
     list_filter = ('working_path',)

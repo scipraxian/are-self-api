@@ -11,7 +11,7 @@ def _branch_sync(
     repo_path: str = None,
 ) -> str:
     """Manages git branches."""
-    cwd = repo_path or str(getattr(settings, 'BASE_DIR', 'c:/talos'))
+    cwd = repo_path or str(settings.BASE_DIR)
 
     if delete and branch_name:
         cmd = ['git', 'branch', '-d', branch_name]

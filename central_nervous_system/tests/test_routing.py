@@ -15,7 +15,7 @@ from environments.models import (
     ProjectEnvironment,
     ProjectEnvironmentStatus,
     ProjectEnvironmentType,
-    TalosExecutable,
+    Executable,
 )
 
 
@@ -33,10 +33,10 @@ class CNSGraphRoutingTest(CommonFixturesAPITestCase):
         self.env.save()
 
         # Effector & Nodes
-        self.exe = TalosExecutable.objects.create(name='TestExe',
+        self.exe = Executable.objects.create(name='TestExe',
                                                   executable='cmd.exe')
         self.effector = Effector.objects.create(name='TestSpell',
-                                                talos_executable=self.exe)
+                                                executable=self.exe)
         self.book = NeuralPathway.objects.create(name='Test Book')
         self.neuron1 = Neuron.objects.create(pathway=self.book,
                                              effector=self.effector,

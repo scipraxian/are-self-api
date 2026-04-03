@@ -6,7 +6,7 @@ from django.conf import settings
 
 def _commit_sync(message: str, repo_path: str = None) -> str:
     """Runs git commit with the given message."""
-    cwd = repo_path or str(getattr(settings, 'BASE_DIR', 'c:/talos'))
+    cwd = repo_path or str(settings.BASE_DIR)
 
     if not message or not message.strip():
         return 'Error: Commit message is required.'

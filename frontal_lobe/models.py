@@ -317,4 +317,4 @@ class SessionConclusion(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
 
     @property
     def engrams(self):
-        return self.session.talosengram_set.all()
+        return self.session.engram_set.all()

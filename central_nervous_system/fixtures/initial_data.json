@@ -150,7 +150,7 @@
   "model": "central_nervous_system.cnsdistributionmode",
   "pk": 1,
   "fields": {
-    "description": "Executes strictly on the local Talos Server (e.g. Compiling).",
+    "description": "Executes strictly on the local server (e.g. Compiling).",
     "name": "Local Server (Default)"
   }
 },
@@ -187,7 +187,7 @@
     "modified": "2026-01-22T22:13:06.759Z",
     "name": "Begin Play",
     "is_favorite": false,
-    "talos_executable": 1,
+    "executable": 1,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -202,7 +202,7 @@
     "modified": "2026-01-21T22:07:32.891Z",
     "name": "Staging: Build Game",
     "is_favorite": false,
-    "talos_executable": 5,
+    "executable": 5,
     "distribution_mode": 1,
     "tags": [],
     "switches": [
@@ -225,7 +225,7 @@
     "modified": "2026-01-23T19:58:04.138Z",
     "name": "Staging: Record PSOs",
     "is_favorite": false,
-    "talos_executable": 6,
+    "executable": 6,
     "distribution_mode": 1,
     "tags": [],
     "switches": [
@@ -248,7 +248,7 @@
     "modified": "2026-01-23T20:29:01.872Z",
     "name": "Staging Run Once",
     "is_favorite": false,
-    "talos_executable": 6,
+    "executable": 6,
     "distribution_mode": 1,
     "tags": [],
     "switches": [
@@ -269,7 +269,7 @@
     "modified": "2026-01-23T20:13:48.542Z",
     "name": "Compile PSO Cache",
     "is_favorite": false,
-    "talos_executable": 4,
+    "executable": 4,
     "distribution_mode": 1,
     "tags": [],
     "switches": [
@@ -290,7 +290,7 @@
     "modified": "2026-01-26T17:43:04.964Z",
     "name": "Pre-Release Build",
     "is_favorite": false,
-    "talos_executable": 5,
+    "executable": 5,
     "distribution_mode": 1,
     "tags": [],
     "switches": [
@@ -322,7 +322,7 @@
     "modified": "2026-01-20T16:24:06.085Z",
     "name": "UAT Run (Legacy)",
     "is_favorite": false,
-    "talos_executable": 1,
+    "executable": 1,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -337,7 +337,7 @@
     "modified": "2026-01-27T23:11:29.978Z",
     "name": "Deploy",
     "is_favorite": false,
-    "talos_executable": 13,
+    "executable": 13,
     "distribution_mode": 2,
     "tags": [],
     "switches": [
@@ -360,7 +360,7 @@
     "modified": "2026-01-22T16:15:08.374Z",
     "name": "Version Metadata",
     "is_favorite": false,
-    "talos_executable": 9,
+    "executable": 9,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -375,7 +375,7 @@
     "modified": "2026-01-20T16:14:01.054Z",
     "name": "MP Remotes",
     "is_favorite": false,
-    "talos_executable": 1,
+    "executable": 1,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -390,7 +390,7 @@
     "modified": "2026-01-26T17:53:32.250Z",
     "name": "Pre-Release Run",
     "is_favorite": false,
-    "talos_executable": 7,
+    "executable": 7,
     "distribution_mode": 1,
     "tags": [],
     "switches": [
@@ -410,7 +410,7 @@
     "modified": "2026-01-27T17:26:18.581Z",
     "name": "Get Agent UUID",
     "is_favorite": false,
-    "talos_executable": 11,
+    "executable": 11,
     "distribution_mode": 4,
     "tags": [],
     "switches": []
@@ -425,7 +425,7 @@
     "modified": "2026-01-27T19:19:00.155Z",
     "name": "Scan for Agents",
     "is_favorite": false,
-    "talos_executable": 12,
+    "executable": 12,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -440,7 +440,7 @@
     "modified": "2026-01-27T23:23:03.205Z",
     "name": "Launch All",
     "is_favorite": false,
-    "talos_executable": 7,
+    "executable": 7,
     "distribution_mode": 2,
     "tags": [],
     "switches": [
@@ -461,7 +461,7 @@
     "modified": "2026-01-30T19:50:49.527Z",
     "name": "Retry w/ 5 Second Delay",
     "is_favorite": false,
-    "talos_executable": 14,
+    "executable": 14,
     "distribution_mode": 1,
     "tags": [],
     "switches": [
@@ -479,7 +479,7 @@
     "modified": "2026-02-10T16:22:55.534Z",
     "name": "Test",
     "is_favorite": false,
-    "talos_executable": 4,
+    "executable": 4,
     "distribution_mode": 1,
     "tags": [],
     "switches": [
@@ -503,7 +503,7 @@
     "modified": "2026-01-30T16:34:23.839Z",
     "name": "Cache Shader Cache",
     "is_favorite": false,
-    "talos_executable": 13,
+    "executable": 13,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -518,7 +518,7 @@
     "modified": "2026-01-30T18:39:01.226Z",
     "name": "Add Shaders to Prerelease",
     "is_favorite": false,
-    "talos_executable": 13,
+    "executable": 13,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -533,7 +533,7 @@
     "modified": "2026-02-08T22:50:30.100Z",
     "name": "Backup SaveGames (Prerelease -> Cache)",
     "is_favorite": false,
-    "talos_executable": 13,
+    "executable": 13,
     "distribution_mode": 1,
     "tags": [],
     "switches": [
@@ -556,7 +556,7 @@
     "modified": "2026-02-08T22:47:28.893Z",
     "name": "Restore SaveGames (Cache -> Prerelease)",
     "is_favorite": false,
-    "talos_executable": 13,
+    "executable": 13,
     "distribution_mode": 1,
     "tags": [],
     "switches": [
@@ -579,7 +579,7 @@
     "modified": "2026-02-08T18:03:51.164Z",
     "name": "Remove Pre-Release SaveGames",
     "is_favorite": false,
-    "talos_executable": 15,
+    "executable": 15,
     "distribution_mode": 1,
     "tags": [],
     "switches": [
@@ -597,7 +597,7 @@
     "modified": "2026-01-31T15:51:56.896Z",
     "name": "Remove Intermediate",
     "is_favorite": false,
-    "talos_executable": 15,
+    "executable": 15,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -610,9 +610,9 @@
     "created": "2026-01-31T16:09:07.810Z",
     "description": null,
     "modified": "2026-02-12T22:05:47.939Z",
-    "name": "Dump Talos Scripts",
+    "name": "Dump Scripts",
     "is_favorite": false,
-    "talos_executable": 2,
+    "executable": 2,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -627,7 +627,7 @@
     "modified": "2026-02-16T20:35:29.308Z",
     "name": "Ollama Query llama3.2:3b from Path",
     "is_favorite": false,
-    "talos_executable": 15,
+    "executable": 15,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -642,7 +642,7 @@
     "modified": "2026-02-03T18:39:52.179Z",
     "name": "Launch #2 Server",
     "is_favorite": false,
-    "talos_executable": 7,
+    "executable": 7,
     "distribution_mode": 4,
     "tags": [],
     "switches": [
@@ -662,7 +662,7 @@
     "modified": "2026-02-08T17:47:11.756Z",
     "name": "Remove Pre-Release Logs",
     "is_favorite": false,
-    "talos_executable": 15,
+    "executable": 15,
     "distribution_mode": 1,
     "tags": [],
     "switches": [
@@ -680,7 +680,7 @@
     "modified": "2026-02-08T17:51:31.870Z",
     "name": "Remove Pre-Release User Config",
     "is_favorite": false,
-    "talos_executable": 15,
+    "executable": 15,
     "distribution_mode": 1,
     "tags": [],
     "switches": [
@@ -698,7 +698,7 @@
     "modified": "2026-02-08T22:49:57.630Z",
     "name": "Backup UserConfig (Prerelease -> Cache)",
     "is_favorite": false,
-    "talos_executable": 13,
+    "executable": 13,
     "distribution_mode": 1,
     "tags": [],
     "switches": [
@@ -721,7 +721,7 @@
     "modified": "2026-02-08T17:56:39.786Z",
     "name": "Restore UserConfig (Cache -> Prerelease)",
     "is_favorite": false,
-    "talos_executable": 13,
+    "executable": 13,
     "distribution_mode": 1,
     "tags": [],
     "switches": [
@@ -744,7 +744,7 @@
     "modified": "2026-02-08T22:49:22.505Z",
     "name": "Remote Pre-Release Save to Cache",
     "is_favorite": false,
-    "talos_executable": 13,
+    "executable": 13,
     "distribution_mode": 2,
     "tags": [],
     "switches": [
@@ -767,7 +767,7 @@
     "modified": "2026-02-08T19:29:25.342Z",
     "name": "Remote Pre-Release Restore Save",
     "is_favorite": false,
-    "talos_executable": 13,
+    "executable": 13,
     "distribution_mode": 2,
     "tags": [],
     "switches": [
@@ -790,7 +790,7 @@
     "modified": "2026-02-08T22:48:48.160Z",
     "name": "Remote Pre-Release Cache UserConfig",
     "is_favorite": false,
-    "talos_executable": 13,
+    "executable": 13,
     "distribution_mode": 2,
     "tags": [],
     "switches": [
@@ -813,7 +813,7 @@
     "modified": "2026-02-08T19:34:47.032Z",
     "name": "Remote Restore User Config",
     "is_favorite": false,
-    "talos_executable": 13,
+    "executable": 13,
     "distribution_mode": 2,
     "tags": [],
     "switches": [
@@ -836,7 +836,7 @@
     "modified": "2026-02-10T18:44:57.240Z",
     "name": "List Location",
     "is_favorite": false,
-    "talos_executable": 11,
+    "executable": 11,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -851,7 +851,7 @@
     "modified": "2026-02-11T23:14:10.176Z",
     "name": "Switch Resolution Test",
     "is_favorite": false,
-    "talos_executable": 11,
+    "executable": 11,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -866,7 +866,7 @@
     "modified": "2026-02-12T22:07:16.774Z",
     "name": "Dump Project Scripts",
     "is_favorite": false,
-    "talos_executable": 2,
+    "executable": 2,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -881,7 +881,7 @@
     "modified": "2026-02-16T18:59:11.608Z",
     "name": "Generate Prompt Payload",
     "is_favorite": false,
-    "talos_executable": 3,
+    "executable": 3,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -896,7 +896,7 @@
     "modified": "2026-02-16T21:53:52.610Z",
     "name": "Delete Prompt Temp File",
     "is_favorite": false,
-    "talos_executable": 15,
+    "executable": 15,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -911,7 +911,7 @@
     "modified": "2026-02-17T18:26:37.884Z",
     "name": "Frontal Lobe Node",
     "is_favorite": false,
-    "talos_executable": 17,
+    "executable": 17,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -926,7 +926,7 @@
     "modified": "2026-03-05T13:35:37.844Z",
     "name": "Temporal Lobe Effector",
     "is_favorite": false,
-    "talos_executable": 18,
+    "executable": 18,
     "distribution_mode": 1,
     "tags": [],
     "switches": []
@@ -1641,7 +1641,7 @@
     "created": "2026-01-31T16:07:02.726Z",
     "description": null,
     "modified": "2026-01-31T16:13:18.776Z",
-    "name": "Dump Talos Scripts",
+    "name": "Dump Scripts",
     "environment": null,
     "is_favorite": true,
     "ui_json": "{}",
@@ -3032,7 +3032,7 @@
   "fields": {
     "neuron": 125,
     "key": "prompt",
-    "value": "I would like to know what you can learn about yourself and what level you can achieve.... you time out at 10 minutes so be careful of your context window, enjoy the game.... you live at c:/talos/\nEnjoy please."
+    "value": "I would like to know what you can learn about yourself and what level you can achieve.... you time out at 10 minutes so be careful of your context window, enjoy the game.... you live at c:/are-self/\nEnjoy please."
   }
 },
 {

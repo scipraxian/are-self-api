@@ -10,7 +10,7 @@ def _add_sync(
     repo_path: str = None,
 ) -> str:
     """Stages files for commit."""
-    cwd = repo_path or str(getattr(settings, 'BASE_DIR', 'c:/talos'))
+    cwd = repo_path or str(settings.BASE_DIR)
 
     if not file_path and not all_files:
         return (

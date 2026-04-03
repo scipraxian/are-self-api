@@ -35,7 +35,7 @@ BLOCKED_PATH_SEGMENTS = frozenset(
 
 
 def _get_base_dir() -> str:
-    return os.path.normpath(str(getattr(settings, 'BASE_DIR', '/')))
+    return os.path.normpath(str(settings.BASE_DIR))
 
 
 def _validate_action(action: str) -> str | None:

@@ -194,7 +194,7 @@ class CNS:
             'spikes': [
                 {
                     'id': str(h.id),
-                    'name': h.effector.talos_executable.name,
+                    'name': h.effector.executable.name,
                     'node_id': h.neuron_id if h.neuron else None,
                     'status_id': h.status.id,
                     'status_name': h.status.name,

@@ -1,6 +1,6 @@
 [
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 2,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -11,7 +11,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 3,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -22,7 +22,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 4,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -33,7 +33,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 5,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -44,7 +44,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 6,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -55,7 +55,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 7,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -66,7 +66,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 8,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -77,7 +77,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 9,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -88,7 +88,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 10,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -99,7 +99,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 11,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -110,7 +110,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 12,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -121,7 +121,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 13,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -132,7 +132,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 14,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -143,7 +143,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 15,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -154,7 +154,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 16,
   "fields": {
     "created": "2026-01-21T19:36:17.120Z",
@@ -165,7 +165,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 17,
   "fields": {
     "created": "2026-01-21T19:36:27.244Z",
@@ -176,7 +176,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 18,
   "fields": {
     "created": "2026-01-21T19:36:40.196Z",
@@ -187,7 +187,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 19,
   "fields": {
     "created": "2026-01-21T19:39:34.201Z",
@@ -198,7 +198,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 20,
   "fields": {
     "created": "2026-01-21T19:40:12.434Z",
@@ -209,7 +209,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 22,
   "fields": {
     "created": "2026-01-21T19:44:56.489Z",
@@ -220,7 +220,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 23,
   "fields": {
     "created": "2026-01-21T19:45:39.581Z",
@@ -231,7 +231,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 24,
   "fields": {
     "created": "2026-01-21T19:46:03.486Z",
@@ -242,7 +242,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 25,
   "fields": {
     "created": "2026-01-21T19:46:21.449Z",
@@ -253,7 +253,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 26,
   "fields": {
     "created": "2026-01-21T19:47:12.352Z",
@@ -264,7 +264,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 27,
   "fields": {
     "created": "2026-01-21T19:47:57.645Z",
@@ -275,7 +275,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 28,
   "fields": {
     "created": "2026-01-21T19:48:21.323Z",
@@ -286,7 +286,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 29,
   "fields": {
     "created": "2026-01-21T19:49:38.408Z",
@@ -297,7 +297,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 30,
   "fields": {
     "created": "2026-01-21T19:50:08.584Z",
@@ -308,7 +308,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 31,
   "fields": {
     "created": "2026-01-21T19:50:58.267Z",
@@ -319,7 +319,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 32,
   "fields": {
     "created": "2026-01-21T19:51:38.664Z",
@@ -330,7 +330,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 33,
   "fields": {
     "created": "2026-01-21T19:52:19.264Z",
@@ -341,7 +341,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 34,
   "fields": {
     "created": "2026-01-21T19:52:42.932Z",
@@ -352,7 +352,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 35,
   "fields": {
     "created": "2026-01-21T19:53:43.914Z",
@@ -363,7 +363,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 36,
   "fields": {
     "created": "2026-01-21T19:54:58.926Z",
@@ -374,7 +374,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 37,
   "fields": {
     "created": "2026-01-21T19:55:32.760Z",
@@ -385,7 +385,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 38,
   "fields": {
     "created": "2026-01-21T19:56:42.630Z",
@@ -396,7 +396,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 40,
   "fields": {
     "created": "2026-01-21T19:57:37.584Z",
@@ -407,7 +407,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 41,
   "fields": {
     "created": "2026-01-21T19:58:18.758Z",
@@ -418,7 +418,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 44,
   "fields": {
     "created": "2026-01-21T20:25:50.209Z",
@@ -429,7 +429,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 47,
   "fields": {
     "created": "2026-01-22T21:55:32.999Z",
@@ -440,7 +440,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 48,
   "fields": {
     "created": "2026-01-22T21:57:46.046Z",
@@ -451,7 +451,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 49,
   "fields": {
     "created": "2026-01-22T21:59:09.174Z",
@@ -462,7 +462,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 50,
   "fields": {
     "created": "2026-01-27T22:36:32.050Z",
@@ -473,7 +473,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 51,
   "fields": {
     "created": "2026-01-27T22:37:05.486Z",
@@ -484,7 +484,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 52,
   "fields": {
     "created": "2026-01-27T22:37:32.856Z",
@@ -495,7 +495,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 53,
   "fields": {
     "created": "2026-01-27T22:37:51.661Z",
@@ -506,7 +506,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 54,
   "fields": {
     "created": "2026-01-27T22:38:37.642Z",
@@ -517,7 +517,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 55,
   "fields": {
     "created": "2026-01-27T22:38:57.955Z",
@@ -528,7 +528,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 56,
   "fields": {
     "created": "2026-01-27T22:39:16.441Z",
@@ -539,7 +539,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 57,
   "fields": {
     "created": "2026-01-27T22:39:38.481Z",
@@ -550,7 +550,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 58,
   "fields": {
     "created": "2026-01-28T16:16:56.915Z",
@@ -561,7 +561,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 59,
   "fields": {
     "created": "2026-01-28T16:17:14.913Z",
@@ -572,7 +572,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 60,
   "fields": {
     "created": "2026-01-30T19:50:27.302Z",
@@ -583,7 +583,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 61,
   "fields": {
     "created": "2026-01-31T15:21:46.758Z",
@@ -594,7 +594,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 62,
   "fields": {
     "created": "2026-01-31T15:22:07.489Z",
@@ -605,7 +605,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableswitch",
+  "model": "environments.executableswitch",
   "pk": 63,
   "fields": {
     "created": "2026-02-08T22:45:40.195Z",
@@ -616,7 +616,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 1,
   "fields": {
     "created": "2026-01-21T21:58:49.251Z",
@@ -626,7 +626,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 2,
   "fields": {
     "created": "2026-01-21T22:00:20.700Z",
@@ -636,7 +636,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 3,
   "fields": {
     "created": "2026-01-21T22:00:46.742Z",
@@ -646,7 +646,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 4,
   "fields": {
     "created": "2026-01-21T22:01:08.540Z",
@@ -656,7 +656,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 5,
   "fields": {
     "created": "2026-01-21T22:02:13.967Z",
@@ -666,7 +666,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 6,
   "fields": {
     "created": "2026-01-21T22:02:21.823Z",
@@ -676,7 +676,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 7,
   "fields": {
     "created": "2026-01-22T14:21:52.388Z",
@@ -686,7 +686,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 8,
   "fields": {
     "created": "2026-01-27T17:21:17.212Z",
@@ -696,7 +696,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 9,
   "fields": {
     "created": "2026-01-27T17:23:00.022Z",
@@ -706,7 +706,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 10,
   "fields": {
     "created": "2026-01-27T22:42:52.057Z",
@@ -716,7 +716,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 11,
   "fields": {
     "created": "2026-01-27T22:43:48.676Z",
@@ -726,7 +726,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 12,
   "fields": {
     "created": "2026-01-30T16:27:56.809Z",
@@ -736,7 +736,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 13,
   "fields": {
     "created": "2026-01-30T16:28:31.567Z",
@@ -746,7 +746,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 14,
   "fields": {
     "created": "2026-01-30T16:29:03.187Z",
@@ -756,7 +756,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 15,
   "fields": {
     "created": "2026-01-30T16:29:38.051Z",
@@ -766,7 +766,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 16,
   "fields": {
     "created": "2026-01-30T16:32:41.643Z",
@@ -776,7 +776,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 17,
   "fields": {
     "created": "2026-01-30T16:34:15.931Z",
@@ -786,7 +786,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 18,
   "fields": {
     "created": "2026-01-30T18:35:43.800Z",
@@ -796,7 +796,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 19,
   "fields": {
     "created": "2026-01-31T14:28:11.107Z",
@@ -806,7 +806,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 20,
   "fields": {
     "created": "2026-01-31T14:28:59.875Z",
@@ -816,17 +816,17 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 21,
   "fields": {
     "created": "2026-01-31T15:23:49.006Z",
     "modified": "2026-01-31T16:12:08.563Z",
-    "name": "Talos Root",
-    "argument": "{{talos_root}}"
+    "name": "Are-Self Root",
+    "argument": "{{are_self_root}}"
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 22,
   "fields": {
     "created": "2026-01-31T15:47:25.252Z",
@@ -836,7 +836,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 23,
   "fields": {
     "created": "2026-01-31T15:48:03.054Z",
@@ -846,7 +846,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 24,
   "fields": {
     "created": "2026-01-31T15:51:48.415Z",
@@ -856,7 +856,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 25,
   "fields": {
     "created": "2026-01-31T16:07:56.600Z",
@@ -866,17 +866,17 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 26,
   "fields": {
     "created": "2026-01-31T16:08:51.014Z",
     "modified": "2026-02-28T23:04:09.791Z",
     "name": "dumpscripts",
-    "argument": "{{talos_root}}\\central_nervous_system\\effectors\\dumpscripts.py"
+    "argument": "{{are_self_root}}\\central_nervous_system\\effectors\\dumpscripts.py"
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 27,
   "fields": {
     "created": "2026-01-31T16:10:31.725Z",
@@ -886,7 +886,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 28,
   "fields": {
     "created": "2026-01-31T20:19:32.005Z",
@@ -896,7 +896,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 29,
   "fields": {
     "created": "2026-01-31T20:19:54.140Z",
@@ -906,7 +906,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 30,
   "fields": {
     "created": "2026-01-31T20:24:58.474Z",
@@ -916,7 +916,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 31,
   "fields": {
     "created": "2026-01-31T20:33:16.600Z",
@@ -926,7 +926,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 32,
   "fields": {
     "created": "2026-01-31T20:33:39.809Z",
@@ -936,7 +936,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 33,
   "fields": {
     "created": "2026-02-08T17:46:49.433Z",
@@ -946,7 +946,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 34,
   "fields": {
     "created": "2026-02-08T17:51:08.618Z",
@@ -956,7 +956,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 35,
   "fields": {
     "created": "2026-02-08T17:54:50.576Z",
@@ -966,7 +966,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 36,
   "fields": {
     "created": "2026-02-10T18:44:45.466Z",
@@ -976,7 +976,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 37,
   "fields": {
     "created": "2026-02-11T16:30:44.368Z",
@@ -986,7 +986,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 38,
   "fields": {
     "created": "2026-02-12T22:07:06.628Z",
@@ -996,7 +996,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 39,
   "fields": {
     "created": "2026-02-16T18:39:55.793Z",
@@ -1006,7 +1006,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 40,
   "fields": {
     "created": "2026-02-16T18:42:01.725Z",
@@ -1016,7 +1016,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 41,
   "fields": {
     "created": "2026-02-16T18:47:26.334Z",
@@ -1026,7 +1026,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 42,
   "fields": {
     "created": "2026-02-16T18:47:50.424Z",
@@ -1036,7 +1036,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 43,
   "fields": {
     "created": "2026-02-16T18:59:05.758Z",
@@ -1046,7 +1046,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 44,
   "fields": {
     "created": "2026-02-16T20:31:09.136Z",
@@ -1056,7 +1056,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargument",
+  "model": "environments.executableargument",
   "pk": 45,
   "fields": {
     "created": "2026-02-16T21:52:59.872Z",
@@ -1066,7 +1066,7 @@
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 1,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -1081,7 +1081,7 @@
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 2,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -1096,7 +1096,7 @@
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 3,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -1106,12 +1106,12 @@
     "internal": false,
     "working_path": "{{venv_root}}",
     "executable": "{{venv_root}}/Scripts/python.exe",
-    "log": "{{talos_root}}\\logs\\django.log",
+    "log": "{{are_self_root}}\\logs\\django.log",
     "switches": []
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 4,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -1132,7 +1132,7 @@
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 5,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -1151,7 +1151,7 @@
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 6,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -1166,7 +1166,7 @@
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 7,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -1181,7 +1181,7 @@
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 8,
   "fields": {
     "created": "2026-01-21T00:00:00Z",
@@ -1196,7 +1196,7 @@
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 9,
   "fields": {
     "created": "2026-01-22T16:14:49.475Z",
@@ -1211,7 +1211,7 @@
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 10,
   "fields": {
     "created": "2026-01-22T16:20:19.871Z",
@@ -1226,7 +1226,7 @@
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 11,
   "fields": {
     "created": "2026-01-27T17:17:28.671Z",
@@ -1241,7 +1241,7 @@
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 12,
   "fields": {
     "created": "2026-01-27T19:15:25.963Z",
@@ -1256,7 +1256,7 @@
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 13,
   "fields": {
     "created": "2026-01-27T22:45:40.160Z",
@@ -1271,7 +1271,7 @@
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 14,
   "fields": {
     "created": "2026-01-28T16:14:59.681Z",
@@ -1286,7 +1286,7 @@
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 15,
   "fields": {
     "created": "2026-01-31T15:17:06.378Z",
@@ -1301,7 +1301,7 @@
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 16,
   "fields": {
     "created": "2026-01-31T20:20:21.722Z",
@@ -1316,7 +1316,7 @@
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 17,
   "fields": {
     "created": "2026-02-17T18:22:31.543Z",
@@ -1331,7 +1331,7 @@
   }
 },
 {
-  "model": "environments.talosexecutable",
+  "model": "environments.executable",
   "pk": 18,
   "fields": {
     "created": "2026-03-05T13:34:11.882Z",
@@ -1346,7 +1346,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargumentassignment",
+  "model": "environments.executableargumentassignment",
   "pk": 1,
   "fields": {
     "executable": 9,
@@ -1355,7 +1355,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargumentassignment",
+  "model": "environments.executableargumentassignment",
   "pk": 2,
   "fields": {
     "executable": 11,
@@ -1364,7 +1364,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargumentassignment",
+  "model": "environments.executableargumentassignment",
   "pk": 3,
   "fields": {
     "executable": 15,
@@ -1373,7 +1373,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargumentassignment",
+  "model": "environments.executableargumentassignment",
   "pk": 4,
   "fields": {
     "executable": 3,
@@ -1382,7 +1382,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargumentassignment",
+  "model": "environments.executableargumentassignment",
   "pk": 5,
   "fields": {
     "executable": 2,
@@ -1391,7 +1391,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargumentassignment",
+  "model": "environments.executableargumentassignment",
   "pk": 6,
   "fields": {
     "executable": 16,
@@ -1400,7 +1400,7 @@
   }
 },
 {
-  "model": "environments.talosexecutableargumentassignment",
+  "model": "environments.executableargumentassignment",
   "pk": 7,
   "fields": {
     "executable": 16,
@@ -1440,7 +1440,7 @@
   "model": "environments.projectenvironmentcontextkey",
   "pk": 5,
   "fields": {
-    "name": "talos_root"
+    "name": "are_self_root"
   }
 },
 {
@@ -1525,7 +1525,7 @@
   "pk": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
   "fields": {
     "created": "2026-02-11T15:33:50.687Z",
-    "description": "Default UE Environment for Talos",
+    "description": "Default UE Environment",
     "modified": "2026-03-29T14:45:34.236Z",
     "name": "Default Environment",
     "type": 1,
@@ -1598,7 +1598,7 @@
   "fields": {
     "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
     "key": 5,
-    "value": "C:\\talos"
+    "value": "{{BASE_DIR}}"
   }
 },
 {
@@ -1607,7 +1607,7 @@
   "fields": {
     "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
     "key": 4,
-    "value": "C:\\talos_bin\\0_test"
+    "value": "C:\\are-self-bin\\0_test"
   }
 },
 {
@@ -1616,7 +1616,7 @@
   "fields": {
     "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
     "key": 6,
-    "value": "C:\\talos_bin\\1_staging"
+    "value": "C:\\are-self-bin\\1_staging"
   }
 },
 {
@@ -1625,7 +1625,7 @@
   "fields": {
     "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
     "key": 7,
-    "value": "C:\\talos_bin\\2_shader_cache"
+    "value": "C:\\are-self-bin\\2_shader_cache"
   }
 },
 {
@@ -1634,7 +1634,7 @@
   "fields": {
     "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
     "key": 8,
-    "value": "C:\\talos_bin\\3_environment_cache"
+    "value": "C:\\are-self-bin\\3_environment_cache"
   }
 },
 {
@@ -1643,7 +1643,7 @@
   "fields": {
     "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
     "key": 9,
-    "value": "C:\\talos_bin\\4_prerelease"
+    "value": "C:\\are-self-bin\\4_prerelease"
   }
 },
 {
@@ -1652,7 +1652,7 @@
   "fields": {
     "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
     "key": 10,
-    "value": "C:\\talos_bin\\5_main"
+    "value": "C:\\are-self-bin\\5_main"
   }
 },
 {
@@ -1679,7 +1679,7 @@
   "fields": {
     "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
     "key": 12,
-    "value": "c:\\talos\\venv"
+    "value": "{{BASE_DIR}}\\venv"
   }
 },
 {
@@ -1688,7 +1688,7 @@
   "fields": {
     "environment": "4d82fab0-c62d-4204-a316-476476c10a55",
     "key": 12,
-    "value": "c:/talos/venv"
+    "value": "{{BASE_DIR}}/venv"
   }
 },
 {
@@ -1697,7 +1697,7 @@
   "fields": {
     "environment": "4d82fab0-c62d-4204-a316-476476c10a55",
     "key": 5,
-    "value": "c:/talos"
+    "value": "{{BASE_DIR}}"
   }
 },
 {
@@ -1706,7 +1706,7 @@
   "fields": {
     "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
     "key": 13,
-    "value": "talos_bin\\4_prerelease"
+    "value": "are-self-bin\\4_prerelease"
   }
 },
 {
@@ -1733,7 +1733,7 @@
   "fields": {
     "environment": "c1b7a124-a50b-4710-aa85-154736a839bc",
     "key": 5,
-    "value": "c:/talos"
+    "value": "{{BASE_DIR}}"
   }
 },
 {
@@ -1742,7 +1742,7 @@
   "fields": {
     "environment": "c1b7a124-a50b-4710-aa85-154736a839bc",
     "key": 12,
-    "value": "c:/talos/venv/"
+    "value": "{{BASE_DIR}}/venv/"
   }
 }
 ]

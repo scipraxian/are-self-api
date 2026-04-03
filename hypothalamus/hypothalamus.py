@@ -43,19 +43,24 @@ def _dec(key: str, data: dict) -> Decimal:
 
 
 class Hypothalamus:
+    # ------------------------------------------------------------------ #
+    #  Pure query: "which model WOULD I pick?" — no side effects          #
+    # ------------------------------------------------------------------ #
+
     @staticmethod
-    def pick_optimal_model(
-        ledger: AIModelProviderUsageRecord, attempt: int = 0
-    ) -> bool:
-        disc = ledger.identity_disc
-        # 1. Resolve Selection Policy (Identity-level or default)
+    def _build_candidate_queryset(
+        disc,
+        payload_size: int = 0,
+        require_function_calling: bool = False,
+    ):
+        """Build the base AIModelProvider QuerySet for a given disc.
+
+        This is the shared query-building logic used by both the real
+        ``pick_optimal_model`` path and the read-only ``preview_model_selection``.
+        Returns ``(base_qs, filter_obj, strategy_obj)``.
+        """
         filter_obj = disc.selection_filter if disc else None
         strategy_obj = filter_obj.failover_strategy if filter_obj else None
-
-        # 2. Extract baseline constraints
-        payload_size = (
-            len(str(ledger.request_payload)) + len(str(ledger.tool_payload))
-        ) // 4
 
         valid_provider_ids = [
             p.id
@@ -67,7 +72,6 @@ class Hypothalamus:
             rate_limit_reset_time__lte=timezone.now()
         )
 
-        # Baseline filters matching all candidate models (Pricing removed!)
         filters = {
             'provider_id__in': valid_provider_ids,
             'mode__name': 'chat',
@@ -76,7 +80,7 @@ class Hypothalamus:
             'ai_model__context_length__gte': payload_size,
         }
 
-        # FIX 1 (Updated): Dynamically apply pricing filters ONLY if a budget is enforced
+        # Pricing filters only when a budget is enforced
         max_cost = None
         if disc and hasattr(disc, 'identitybudgetassignment_set'):
             assignment = disc.identitybudgetassignment_set.filter(
@@ -90,9 +94,8 @@ class Hypothalamus:
             filters['aimodelpricing__is_active'] = True
             filters['aimodelpricing__input_cost_per_token__lte'] = max_cost
 
-        # Hard Exclusions (Global + Filter-specific)
         excludes = {}
-        if ledger.tool_payload:
+        if require_function_calling:
             filters['ai_model__capabilities__name'] = 'function_calling'
             excludes['disabled_capabilities__name'] = 'function_calling'
 
@@ -101,7 +104,6 @@ class Hypothalamus:
             if banned:
                 excludes['provider_id__in'] = list(banned)
 
-        # Compile into a Base QuerySet to allow chained capability filtering
         base_qs = AIModelProvider.objects.filter(
             breaker_filter, **filters
         ).exclude(**excludes)
@@ -113,18 +115,30 @@ class Hypothalamus:
             for cap_id in req_caps:
                 base_qs = base_qs.filter(ai_model__capabilities__id=cap_id)
 
-        # 3. Determine the Current Selection Strategy Step
+        return base_qs, filter_obj, strategy_obj
+
+    @staticmethod
+    def _select_best_from_strategy(
+        disc,
+        base_qs,
+        filter_obj,
+        strategy_obj,
+        attempt: int = 0,
+    ) -> Optional[AIModelProvider]:
+        """Walk the priority-0-then-failover chain and return the best
+        ``AIModelProvider``, or ``None`` if nothing qualifies.
+
+        Pure read — no ledger mutation.
+        """
         best = None
 
         # PRIORITY 0: The Preferred Model (Locked to attempt 0)
         if attempt == 0 and filter_obj and filter_obj.preferred_model:
             best = base_qs.filter(id=filter_obj.preferred_model_id).first()
             if best:
-                ledger.ai_model_provider = best
-                ledger.ai_model = best.ai_model
-                return Hypothalamus._finalize_ledger(ledger, best)
+                return best
 
-        # 4. Strategy Dispatch Loop (If no hit yet)
+        # Strategy Dispatch Loop
         if not best and strategy_obj:
             step_index = (
                 attempt - 1
@@ -138,12 +152,12 @@ class Hypothalamus:
             )
 
             if not step:
-                return False
+                return None
 
             fail_type = step.failover_type.name.lower()
 
             if 'strict' in fail_type:
-                return False
+                return None
 
             elif 'local' in fail_type:
                 if filter_obj and filter_obj.local_failover:
@@ -219,7 +233,7 @@ class Hypothalamus:
                         .first()
                     )
 
-        # 5. Final Fallback
+        # Final Fallback (no strategy configured)
         if not best and not strategy_obj:
             if disc and getattr(disc, 'vector', None) is not None:
                 best = (
@@ -240,6 +254,48 @@ class Hypothalamus:
                     .order_by('aimodelpricing__input_cost_per_token')
                     .first()
                 )
+
+        return best
+
+    @staticmethod
+    def preview_model_selection(
+        disc,
+    ) -> Optional[AIModelProvider]:
+        """Return the AIModelProvider the routing engine *would* select for
+        this disc right now, without creating or mutating any ledger record.
+
+        This is the read-only sibling of ``pick_optimal_model``.
+        """
+        base_qs, filter_obj, strategy_obj = Hypothalamus._build_candidate_queryset(
+            disc, payload_size=0, require_function_calling=False,
+        )
+        return Hypothalamus._select_best_from_strategy(
+            disc, base_qs, filter_obj, strategy_obj, attempt=0,
+        )
+
+    # ------------------------------------------------------------------ #
+    #  Stateful selection: picks a model AND stamps the ledger            #
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def pick_optimal_model(
+        ledger: AIModelProviderUsageRecord, attempt: int = 0
+    ) -> bool:
+        disc = ledger.identity_disc
+
+        payload_size = (
+            len(str(ledger.request_payload)) + len(str(ledger.tool_payload))
+        ) // 4
+
+        require_fc = bool(ledger.tool_payload)
+
+        base_qs, filter_obj, strategy_obj = Hypothalamus._build_candidate_queryset(
+            disc, payload_size=payload_size, require_function_calling=require_fc,
+        )
+
+        best = Hypothalamus._select_best_from_strategy(
+            disc, base_qs, filter_obj, strategy_obj, attempt=attempt,
+        )
 
         if not best:
             return False

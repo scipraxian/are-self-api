@@ -16,7 +16,7 @@ class EnvironmentAPITest(CommonFixturesAPITestCase):
     def setUp(self):
         # 1. Setup Auth
         self.user = User.objects.create_superuser('testadmin',
-                                                  'admin@talos.dev', 'password')
+                                                  'admin@are-self.dev', 'password')
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 

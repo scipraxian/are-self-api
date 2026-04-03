@@ -7,7 +7,7 @@ def _resolve_path(path: str, root_path: str = None) -> tuple[
     Optional[str], Optional[str]]:
     from django.conf import settings
     base_dir = os.path.normpath(
-        str(root_path or getattr(settings, 'BASE_DIR', 'c:/talos')))
+        str(root_path or settings.BASE_DIR))
     if os.path.isabs(path):
         full_path = os.path.normpath(path)
         return (full_path, None) if os.path.exists(full_path) else (None,

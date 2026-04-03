@@ -5,19 +5,19 @@ from rest_framework.response import Response
 
 from .models import (
     ContextVariable,
+    Executable,
     ProjectEnvironment,
     ProjectEnvironmentContextKey,
     ProjectEnvironmentStatus,
     ProjectEnvironmentType,
-    TalosExecutable,
 )
 from .serializers import (
     ContextVariableSerializer,
+    ExecutableSerializer,
     ProjectEnvironmentContextKeySerializer,
     ProjectEnvironmentSerializer,
     ProjectEnvironmentStatusSerializer,
     ProjectEnvironmentTypeSerializer,
-    TalosExecutableSerializer,
 )
 
 
@@ -33,7 +33,7 @@ class ProjectEnvironmentViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def select(self, request, pk=None):
         """
-        Sets this environment as the active global context for all Talos operations.
+        Sets this environment as the active global context for all Are-Self operations.
         """
         env = self.get_object()
         if not env.available:
@@ -53,14 +53,14 @@ class ProjectEnvironmentViewSet(viewsets.ModelViewSet):
         return Response({'status': f'Active Environment set to: {env.name}'})
 
 
-class TalosExecutableViewSet(viewsets.ModelViewSet):
+class ExecutableViewSet(viewsets.ModelViewSet):
     """
     Registry of Tools/Executables.
     MCP Usage: Read-only lookup to understand available tools and their default flags.
     """
 
-    queryset = TalosExecutable.objects.all().order_by('name')
-    serializer_class = TalosExecutableSerializer
+    queryset = Executable.objects.all().order_by('name')
+    serializer_class = ExecutableSerializer
     # Executable updates are rare/dangerous; restricting to admin or explicit PATCH
     http_method_names = ['get', 'head', 'options', 'patch']
 

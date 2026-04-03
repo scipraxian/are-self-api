@@ -100,11 +100,11 @@ class EffectorAdmin(admin.ModelAdmin):
     # FIXED: Removed 'order' from list_display
     list_display = (
         'name',
-        'talos_executable',
+        'executable',
         'distribution_mode',
         'resolved_command_preview',
     )
-    list_filter = ('distribution_mode', 'talos_executable')
+    list_filter = ('distribution_mode', 'executable')
     filter_horizontal = ('switches',)
     inlines = [
         EffectorArgumentInline,
@@ -120,8 +120,8 @@ class EffectorAdmin(admin.ModelAdmin):
         ('Distribution Strategy', {
             'fields': ('distribution_mode',)
         }),
-        ('Configuration (Talos)', {
-            'fields': ('talos_executable', 'switches')
+        ('Configuration', {
+            'fields': ('executable', 'switches')
         }),
     )
 
@@ -203,7 +203,7 @@ class CNSNeuralPathwayNodeAdmin(admin.ModelAdmin):
             {
                 'fields': ('effector', 'invoked_pathway', 'distribution_mode'),
                 'description':
-                    "If Distribution Mode is empty, Talos will use the Spell's default strategy.",
+                    "If Distribution Mode is empty, the Effector's default strategy will be used.",
             },
         ),
         # [NEW] Preview Section

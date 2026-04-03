@@ -12,10 +12,8 @@ from common.models import (
 from .variable_renderer import VariableRenderer
 
 
-class TalosExecutableSwitch(DefaultFieldsMixin):
-    """
-    An option or flag for a Talos executable.
-    """
+class ExecutableSwitch(DefaultFieldsMixin):
+    """An option or flag for an executable."""
 
     flag = models.CharField(
         max_length=255,
@@ -26,7 +24,7 @@ class TalosExecutableSwitch(DefaultFieldsMixin):
     )
 
 
-class TalosExecutableArgument(DefaultFieldsMixin):
+class ExecutableArgument(DefaultFieldsMixin):
     """An argument to be passed to the executable."""
 
     argument = models.CharField(
@@ -37,8 +35,8 @@ class TalosExecutableArgument(DefaultFieldsMixin):
         return f'{self.name} - {self.argument}'
 
 
-class TalosExecutable(DefaultFieldsMixin, DescriptionMixin):
-    """Reference to an executable usable by Talos."""
+class Executable(DefaultFieldsMixin, DescriptionMixin):
+    """Reference to an executable usable by Are-Self."""
 
     BEGIN_PLAY = 1
     PYTHON = 2  # venv/Scripts/python.exe
@@ -52,7 +50,7 @@ class TalosExecutable(DefaultFieldsMixin, DescriptionMixin):
     DEPLOY_RELEASE = 10  # depreciated.
 
     internal = models.BooleanField(
-        default=False, help_text='Internal Talos Python Function'
+        default=False, help_text='Internal Python Function'
     )
     working_path = models.CharField(
         max_length=500,
@@ -68,7 +66,7 @@ class TalosExecutable(DefaultFieldsMixin, DescriptionMixin):
         help_text='Full path to the log, including filename.',
         blank=True,
     )
-    switches = models.ManyToManyField(TalosExecutableSwitch, blank=True)
+    switches = models.ManyToManyField(ExecutableSwitch, blank=True)
 
     def get_rendered_executable(self, environment=None) -> str:
         """
@@ -85,11 +83,11 @@ class TalosExecutable(DefaultFieldsMixin, DescriptionMixin):
         return VariableRenderer.render_string(self.executable, context)
 
 
-class TalosExecutableArgumentAssignment(models.Model):
-    executable = models.ForeignKey(TalosExecutable, on_delete=models.CASCADE)
+class ExecutableArgumentAssignment(models.Model):
+    executable = models.ForeignKey(Executable, on_delete=models.CASCADE)
     order = models.IntegerField(default=10)
     argument = models.ForeignKey(
-        TalosExecutableArgument, on_delete=models.CASCADE
+        ExecutableArgument, on_delete=models.CASCADE
     )
 
     class Meta(object):
@@ -99,11 +97,11 @@ class TalosExecutableArgumentAssignment(models.Model):
         return f'{self.executable} - {self.argument}'
 
 
-class TalosExecutableSupplementaryFileOrPath(DefaultFieldsMixin):
+class ExecutableSupplementaryFileOrPath(DefaultFieldsMixin):
     """The name should be treated like a json field name.
     e.g. name=destination_file, path=c:/temp/temp.txt"""
 
-    executable = models.ForeignKey(TalosExecutable, on_delete=models.CASCADE)
+    executable = models.ForeignKey(Executable, on_delete=models.CASCADE)
     path = models.CharField(max_length=500, help_text='Full path to the file.')
 
 
