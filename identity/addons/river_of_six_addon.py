@@ -1,7 +1,7 @@
-import json
 import logging
 from typing import Any, Dict, List
 
+from common.constants import HUMAN_TAG, ROLE, USER
 from frontal_lobe.models import ReasoningTurn
 from parietal_lobe.models import ToolCall
 
@@ -87,13 +87,19 @@ def _build_tool_messages(tool_calls_qs: list, age: int) -> List[Dict[str, Any]]:
 
 
 def _extract_user_messages(req_payload: list) -> List[Dict[str, Any]]:
-    """Extract only user-role messages from a request_payload."""
+    """Extract only human-originated user messages from a request_payload.
+
+    Only messages tagged with <<h>> (injected by swarm_message_queue) are
+    replayed.  Addon-injected user messages (e.g. prompt_addon) have no tag
+    and are skipped — the addon will re-inject them fresh each turn.
+    """
     if not req_payload:
         return []
-    user_msgs = [m for m in req_payload if m.get('role') == 'user']
-    if user_msgs:
-        return [user_msgs[-1]]
-    return []
+    return [
+        m for m in req_payload
+        if m.get(ROLE) == USER
+        and m.get('content', '').startswith(HUMAN_TAG)
+    ]
 
 
 def river_of_six_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:

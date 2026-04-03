@@ -191,6 +191,66 @@ signatures. `isort`-compatible imports.
 **Type hints:** All function signatures including return types. `Optional[X]` not `X | None`.
 Built-in generics (`list`, `dict`) not `typing.List`, `typing.Dict`.
 
+## Addon System (Identity Addons)
+
+Pure synchronous functions registered in `identity/addons/addon_registry.py` (`ADDON_REGISTRY` dict).
+Each addon receives a `ReasoningTurn` and returns `List[Dict[str, Any]]` — messages to inject into
+the LLM payload.
+
+### Phases (executed in order)
+| Phase | ID | Purpose |
+|-------|----|---------|
+| IDENTIFY | 1 | Identity/persona injection |
+| CONTEXT | 2 | Environmental context |
+| HISTORY | 3 | Conversation history reconstruction |
+| TERMINAL | 4 | Final payload items (prompt, your_move) |
+
+### Turn Assembly Order (`_build_turn_payload` in `frontal_lobe.py`)
+1. Phase 1→2→3→4 addons execute in order, each appending messages
+2. `swarm_message_queue` messages are tagged with `<<h>>` prefix and appended
+3. `compile_system_messages()` hoists all system messages to index 0
+
+### The `<<h>>` Human Message Tagging System
+**Problem solved:** The prompt_addon (Phase 4 TERMINAL) injects the task prompt as a `role: user`
+message every turn. The river_of_six addon (Phase 3 HISTORY) replays previous turns' user messages
+from `request_payload`. Without differentiation, the same prompt appeared twice from turn 2 onward.
+
+**Solution:** Human messages from `swarm_message_queue` get `<<h>>\n` prepended to their content
+in `_build_turn_payload`. The river_of_six addon's `_extract_user_messages()` only replays user
+messages that start with `<<h>>`. Addon-injected user messages (prompt_addon, etc.) have no tag
+and are skipped — the addon re-injects them fresh each turn.
+
+**Constants:** `HUMAN_TAG = '<<h>>'` is defined in `identity/addons/river_of_six_addon.py`.
+`ROLE = 'role'` and `CONTENT = 'content'` are defined in `frontal_lobe/frontal_lobe.py`.
+TODO: Move `HUMAN_TAG` to a shared constants file and import everywhere.
+
+### River of Six (Phase 3 HISTORY)
+`identity/addons/river_of_six_addon.py` — sliding window of 6 turns with age-based decay.
+
+- **Reconstruction sources (atomic, non-duplicating):**
+  - `response_payload` → assistant message
+  - `ToolCall` DB records → tool call metadata + tool result messages
+  - `request_payload` → only `<<h>>`-tagged user messages
+
+- **Age-based decay (age = current_turn - past_turn):**
+  - Age ≥ 4 (`EVICTION_THRESHOLD`): tool results evicted, `tool_calls` stripped from assistant msg
+  - Age 3 (`EVICTION_WARNING_AGE`): eviction warning appended to tool results
+  - Age 2 (`DECAY_WARNING_AGE`): decay warning appended to tool results
+
+### Key Addons Reference
+| PK | Name | Phase | Slug |
+|----|------|-------|------|
+| 8 | Normal Chat | 3 (HISTORY) | `normal_chat_addon` |
+| 13 | River of Six | 3 (HISTORY) | `river_of_six_addon` |
+| 14 | Prompt | 4 (TERMINAL) | `prompt_addon` |
+| 12 | Your Move | 4 (TERMINAL) | `your_move_addon` |
+
+### response_payload Format
+Provider-agnostic. Can be direct `{role, content, ...}` or OpenAI-style
+`{choices: [{message: {...}}]}`. The `choices` array should be preserved for the frontend —
+don't hardcode `choices[0]`. Extract assistant message by checking `'role' in resp` first,
+then falling back to `resp.get('choices', [])[0].get('message', {})`.
+
 ## Common Pitfalls
 
 **DRF M2M writes:** Nested serializers with `read_only=True` silently ignore writes. Any

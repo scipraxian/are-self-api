@@ -9,10 +9,14 @@ Remaining work, sifted for the backend. See FEATURES.md for what's built.
   session's prompt. The context variable resolution chain (spike blackboard → effector context → neuron context) needs
   auditing — variables are stored but not consumed by `_get_rendered_objective()` or wherever the prompt is assembled.
   Verify the full flow: NeuronContext → raw_context dict → rendered objective → session prompt.
-- [ ] **Frontal Lobe — swarm_message_queue / session chat.** Typing a message in the Thalamus chat window of a
-  running Frontal Lobe session does not deliver the message to the running session. On refresh, the typed message
-  is also gone — not persisted. Two bugs: (1) swarm_message_queue not receiving/processing inbound messages during
-  a live session, (2) messages not being saved as ReasoningTurns on send.
+- [x] **Frontal Lobe — swarm_message_queue <<h>> tagging.** Human messages from swarm_message_queue now get
+  `<<h>>\n` prepended in `_build_turn_payload`. River of Six only replays `<<h>>`-tagged user messages,
+  preventing prompt_addon duplication. Tests pass. TODO: move `HUMAN_TAG` constant to shared location,
+  use `ROLE`/`CONTENT` constants in frontal_lobe.py instead of raw strings.
+- [ ] **Frontal Lobe — swarm_message_queue delivery + persistence.** Typing a message in the Thalamus chat window
+  of a running Frontal Lobe session does not deliver the message to the running session. On refresh, the typed
+  message is also gone — not persisted. Two bugs: (1) swarm_message_queue not receiving/processing inbound messages
+  during a live session, (2) messages not being saved as ReasoningTurns on send.
 - [x] **Lightweight stats endpoint for dashboard.** Created `GET /api/v2/stats/` in `config/api.py`. Returns
   `identity_disc_count`, `ai_model_count`, `reasoning_session_count` via `Model.objects.count()`.
 - [ ] **Tool call `thought` parameter — make required or improve prompting.** Local models often call tools silently
@@ -65,6 +69,19 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
 - [ ] **Docker Compose for full stack.** PostgreSQL and Redis already have Docker configs. Extend to cover Daphne,
   Celery worker, Celery Beat. One `docker compose up` starts everything.
 
+## Recently Completed (April 3, 2026)
+
+- [x] **Session summary_dump endpoint.** `GET /api/v2/reasoning_sessions/{id}/summary_dump/` returns a compact
+  text log showing INPUT CONTEXT (all addon-assembled messages per turn with role, content preview, tool calls)
+  and OUTPUT (provider-agnostic response extraction). Uses plain HttpResponse (not streaming — ASGI incompatible).
+- [x] **<<h>> human message tagging.** Solved prompt duplication bug where prompt_addon's user message was
+  replayed by river_of_six. Human swarm messages tagged with `<<h>>`, river_of_six skips untagged user messages.
+- [x] **Lightweight list serializer for BBB dashboard.** `ReasoningSessionMinimalSerializer` with annotation-based
+  `turns_count` for fast dashboard loading.
+- [ ] **Share HUMAN_TAG constant.** `HUMAN_TAG = '<<h>>'` lives in `river_of_six_addon.py` but `frontal_lobe.py`
+  uses the raw string `'<<h>>\n'`. Move to a shared constants file. Also use existing `ROLE` constant instead of
+  raw `'user'` string in frontal_lobe.py.
+
 ## Backlog
 
 - [ ] **Test coverage: reasoning loop.** Integration tests for `FrontalLobe.run()` with fixture-backed sessions.
@@ -88,5 +105,4 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
 ## Future
 
 - [ ] **Engram vector search in Thalamus.** Pre-feed relevant engrams into chat context based on vector similarity to
-  the user's message.
-- [ ] **Model arena / ELO tracking.** The `AIModelRating` model exists. Build a lightweight evaluation pipe
+  the user's 

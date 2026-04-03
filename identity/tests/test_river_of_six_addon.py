@@ -88,7 +88,7 @@ class RiverOfSixAddonTest(CommonFixturesAPITestCase):
         self.assertEqual(result, [])
 
     def test_single_turn_with_tool_calls(self):
-        """Assert single prior turn produces exactly 1 assistant + 1 tool message."""
+        """Assert single prior turn produces assistant + tool (no addon user replay)."""
         response = self._make_response_payload(
             content='I will fetch the ticket.',
             tool_calls=[{
@@ -101,6 +101,7 @@ class RiverOfSixAddonTest(CommonFixturesAPITestCase):
             }],
         )
         usage1 = self._make_usage_record(
+            # Untagged user message (addon-injected) — should NOT be replayed
             request_payload=[{'role': 'user', 'content': 'Get ticket 1'}],
             response_payload=response,
         )
@@ -112,14 +113,48 @@ class RiverOfSixAddonTest(CommonFixturesAPITestCase):
 
         result = river_of_six_addon(turn2)
 
-        # Should be: user msg, assistant msg (with tool_calls), tool result
+        # Should be: assistant msg (with tool_calls), tool result
+        # No user message — addon prompt is not replayed (no <<h>> tag)
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0]['role'], 'assistant')
+        self.assertIn('tool_calls', result[0])
+        self.assertEqual(len(result[0]['tool_calls']), 1)
+        self.assertEqual(result[1]['role'], 'tool')
+        self.assertEqual(result[1]['tool_call_id'], 'call_1')
+
+    def test_single_turn_with_human_message_and_tool_calls(self):
+        """Assert human <<h>> user messages ARE replayed alongside assistant + tool."""
+        response = self._make_response_payload(
+            content='I will fetch the ticket.',
+            tool_calls=[{
+                'id': 'call_1',
+                'type': 'function',
+                'function': {
+                    'name': 'mcp_get_ticket',
+                    'arguments': '{"ticket_id": 1}',
+                },
+            }],
+        )
+        usage1 = self._make_usage_record(
+            request_payload=[
+                {'role': 'user', 'content': '<<h>>\nGet ticket 1'},
+            ],
+            response_payload=response,
+        )
+        turn1 = self._make_turn(1, usage1)
+        self._make_tool_call(turn1, call_id='call_1', result='{"title": "Bug"}')
+
+        usage2 = self._make_usage_record()
+        turn2 = self._make_turn(2, usage2, last_turn=turn1)
+
+        result = river_of_six_addon(turn2)
+
+        # Should be: human user msg, assistant msg (with tool_calls), tool result
         self.assertEqual(len(result), 3)
         self.assertEqual(result[0]['role'], 'user')
+        self.assertTrue(result[0]['content'].startswith('<<h>>'))
         self.assertEqual(result[1]['role'], 'assistant')
-        self.assertIn('tool_calls', result[1])
-        self.assertEqual(len(result[1]['tool_calls']), 1)
         self.assertEqual(result[2]['role'], 'tool')
-        self.assertEqual(result[2]['tool_call_id'], 'call_1')
 
     def test_no_duplicate_tool_call_ids(self):
         """Assert no duplicate tool_call_ids appear across multiple turns of history."""
@@ -208,11 +243,12 @@ class RiverOfSixAddonTest(CommonFixturesAPITestCase):
 
         result = river_of_six_addon(current_turn)
 
-        # Max messages: per turn = 1 user + 1 assistant + tools_per_turn
-        # But old turns (age >= 4) have evicted tool results and stripped
+        # Max messages per turn = 1 assistant + tools_per_turn (no addon
+        # user replay — only <<h>> human messages get replayed).
+        # Old turns (age >= 4) have evicted tool results and stripped
         # tool_calls, so actual count is less.
-        # Upper bound without eviction: 6 * (1 + 1 + 2) = 24
-        max_expected = num_turns * (1 + 1 + tools_per_turn)
+        # Upper bound without eviction: 6 * (1 + 2) = 18
+        max_expected = num_turns * (1 + 1 + tools_per_turn)  # generous bound
         self.assertLessEqual(len(result), max_expected)
 
         # Verify NO exponential growth: with old bug, 6 turns with 2 tools
@@ -400,6 +436,89 @@ class RiverOfSixAddonTest(CommonFixturesAPITestCase):
         self.assertEqual(len(tool_msgs), 1)
         self.assertIn('EVICTION IMMINENT', tool_msgs[0]['content'])
         self.assertIn('about to evict', tool_msgs[0]['content'])
+
+
+    def test_skips_addon_user_messages_replays_human_only(self):
+        """Assert only <<h>>-tagged human user messages are replayed, not addon user messages."""
+        # Turn 1: request_payload has an addon user message (no <<h>> tag)
+        # AND a human swarm message (<<h>> tagged)
+        response1 = self._make_response_payload(content='Understood, working on it.')
+        usage1 = self._make_usage_record(
+            request_payload=[
+                {'role': 'system', 'content': 'You are an agent.'},
+                {'role': 'user', 'content': 'Parse the spike data for errors.'},
+                {'role': 'user', 'content': '<<h>>\nhey also check the logs'},
+            ],
+            response_payload=response1,
+        )
+        turn1 = self._make_turn(1, usage1)
+
+        usage2 = self._make_usage_record()
+        turn2 = self._make_turn(2, usage2, last_turn=turn1)
+
+        result = river_of_six_addon(turn2)
+
+        # Should replay: human user msg, assistant msg
+        user_msgs = [m for m in result if m.get('role') == 'user']
+        self.assertEqual(len(user_msgs), 1)
+        self.assertTrue(user_msgs[0]['content'].startswith('<<h>>'))
+        self.assertIn('check the logs', user_msgs[0]['content'])
+
+        # The addon prompt should NOT appear in history
+        contents = ' '.join(m.get('content', '') for m in result)
+        self.assertNotIn('Parse the spike data', contents)
+
+    def test_multiple_human_messages_all_replayed(self):
+        """Assert all <<h>>-tagged human messages are replayed, not just the last."""
+        response1 = self._make_response_payload(content='Got both messages.')
+        usage1 = self._make_usage_record(
+            request_payload=[
+                {'role': 'system', 'content': 'You are an agent.'},
+                {'role': 'user', 'content': '<<h>>\nfirst human message'},
+                {'role': 'user', 'content': 'addon prompt (no tag)'},
+                {'role': 'user', 'content': '<<h>>\nsecond human message'},
+            ],
+            response_payload=response1,
+        )
+        turn1 = self._make_turn(1, usage1)
+
+        usage2 = self._make_usage_record()
+        turn2 = self._make_turn(2, usage2, last_turn=turn1)
+
+        result = river_of_six_addon(turn2)
+
+        user_msgs = [m for m in result if m.get('role') == 'user']
+        self.assertEqual(len(user_msgs), 2)
+        self.assertIn('first human message', user_msgs[0]['content'])
+        self.assertIn('second human message', user_msgs[1]['content'])
+
+        # Addon prompt should NOT be in results
+        contents = ' '.join(m.get('content', '') for m in result)
+        self.assertNotIn('addon prompt', contents)
+
+    def test_no_user_messages_when_no_human_tag(self):
+        """Assert no user messages replayed when only addon user messages exist (no <<h>>)."""
+        response1 = self._make_response_payload(content='On it.')
+        usage1 = self._make_usage_record(
+            request_payload=[
+                {'role': 'system', 'content': 'You are an agent.'},
+                {'role': 'user', 'content': 'Do the task.'},
+            ],
+            response_payload=response1,
+        )
+        turn1 = self._make_turn(1, usage1)
+
+        usage2 = self._make_usage_record()
+        turn2 = self._make_turn(2, usage2, last_turn=turn1)
+
+        result = river_of_six_addon(turn2)
+
+        user_msgs = [m for m in result if m.get('role') == 'user']
+        self.assertEqual(len(user_msgs), 0)
+
+        # Assistant message should still be present
+        assistant_msgs = [m for m in result if m.get('role') == 'assistant']
+        self.assertEqual(len(assistant_msgs), 1)
 
 
 class GracefulNoModelCrashTest(CommonFixturesAPITestCase):
