@@ -48,6 +48,9 @@ Remaining work, sifted for the backend. See FEATURES.md for what's built.
   (tool name, arguments, result) in the response so the frontend can render them. Currently invisible turns when
   models work silently. Check the Vercel AI SDK `parts` schema — tool calls should be `tool-call` and `tool-result`
   parts.
+- [ ] **Effector Editor** see django admin EffectorAdmin
+- [ ] **Logic Node Validation**  The logic node for looping etc, needs to be validated.
+- [ ] **]
 - [ ] **Audit async usage.** Identify `sync_to_async` wrapping that adds ceremony without value. Primary candidates:
   Frontal Lobe loop, Hippocampus, Parietal Lobe tool execution. Keep async for WebSocket streaming (Glutamate), Nerve
   Terminal, and genuine concurrent I/O. Convert the rest to synchronous with a single `sync_to_async` wrap at the

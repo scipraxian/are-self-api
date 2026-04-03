@@ -109,7 +109,7 @@ class FrontalLobe:
         return rendered_prompt
 
     async def _initialize_session(
-        self, rendered_objective: str, max_turns: int
+        self, raw_context: Dict[str, Any], rendered_objective: str, max_turns: int
     ) -> None:
         """Creates or resumes the ReasoningSession in the DB."""
         if not self.session:
@@ -136,12 +136,29 @@ class FrontalLobe:
                     )
                 self.session = existing
             else:
+                # Extract identity_disc from context (spike blackboard, neuron context, or effector context)
+                identity_disc_id = None
+                identity_disc_value = raw_context.get('identity_disc')
+                if identity_disc_value:
+                    # If it's already a UUID, use it; otherwise convert string to UUID
+                    try:
+                        identity_disc_id = (
+                            identity_disc_value
+                            if isinstance(identity_disc_value, UUID)
+                            else UUID(str(identity_disc_value))
+                        )
+                    except (ValueError, TypeError):
+                        logger.warning(
+                            f'[FrontalLobe] Invalid identity_disc value: {identity_disc_value}'
+                        )
+
                 self.session = await sync_to_async(
                     ReasoningSession.objects.create
                 )(
                     spike=self.spike,
                     status_id=ReasoningStatusID.ACTIVE,
                     max_turns=max_turns,
+                    identity_disc_id=identity_disc_id,
                 )
 
         await self.cache_ids()
@@ -391,7 +408,7 @@ class FrontalLobe:
                     'max_turns', FrontalLobeConstants.DEFAULT_MAX_TURNS
                 )
             )
-            await self._initialize_session(rendered_objective, max_turns)
+            await self._initialize_session(raw_context, rendered_objective, max_turns)
 
             # 3. Resolve IdentityDisc and prep Parietal Lobe
             identity_disc = await sync_to_async(_fetch_disc_sync)(

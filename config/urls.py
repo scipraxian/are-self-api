@@ -6,6 +6,7 @@ from rest_framework import routers
 
 from central_nervous_system.urls.api_urls import CNS_ROUTER
 from central_nervous_system.urls.v2_urls import V2_CNS_ROUTER
+from config.api_urls import CONFIG_URLS
 from dashboard.api_urls import DASHBOARD_ROUTER
 from environments.api_urls import ENVIRONMENTS_ROUTER
 from frontal_lobe.api_urls import V2_REASONING_ROUTER
@@ -45,6 +46,7 @@ urlpatterns = [
     ),
     path('api/v1/', include(v1_router.urls)),
     path('api/v2/', include(V2_ROUTER.urls)),
+    path('api/v2/', include(CONFIG_URLS)),
     path('admin/', admin.site.urls),
     path(
         'api-auth/', include('rest_framework.urls', namespace='rest_framework')
