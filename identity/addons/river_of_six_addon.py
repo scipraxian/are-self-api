@@ -153,7 +153,11 @@ def river_of_six_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
             # to avoid orphaned tool_calls with no matching tool results
             if age >= EVICTION_THRESHOLD and 'tool_calls' in assistant_msg:
                 del assistant_msg['tool_calls']
-            history_array.append(assistant_msg)
+            # Skip empty evicted assistant messages (no content, no tool_calls)
+            # — these are turns where the model only produced tool calls and
+            # the tool data has since been evicted. Wasted tokens.
+            if assistant_msg.get('content') or 'tool_calls' in assistant_msg:
+                history_array.append(assistant_msg)
 
         # 3. Build tool result messages from ToolCall DB records
         tool_messages = _build_tool_messages(tool_calls_qs, age)

@@ -496,6 +496,44 @@ class RiverOfSixAddonTest(CommonFixturesAPITestCase):
         contents = ' '.join(m.get('content', '') for m in result)
         self.assertNotIn('addon prompt', contents)
 
+    def test_empty_evicted_assistant_messages_stripped(self):
+        """Assert evicted assistant messages with no content and no tool_calls are dropped."""
+        turns = []
+        for i in range(1, 7):
+            # Models that only produce tool calls have empty assistant content.
+            response = self._make_response_payload(
+                content='',  # No text, only tool calls
+                tool_calls=[{
+                    'id': f'call_t{i}',
+                    'type': 'function',
+                    'function': {
+                        'name': 'mcp_get_ticket',
+                        'arguments': f'{{"id": {i}}}',
+                    },
+                }],
+            )
+            usage = self._make_usage_record(response_payload=response)
+            last = turns[-1] if turns else None
+            turn = self._make_turn(i, usage, last_turn=last)
+            self._make_tool_call(turn, call_id=f'call_t{i}', result=f'result_{i}')
+            turns.append(turn)
+
+        # Turn 7: turns 1-2 have age >= 5 (evicted). Their assistant msgs
+        # had empty content + tool_calls stripped = totally empty. Should be dropped.
+        usage7 = self._make_usage_record()
+        turn7 = self._make_turn(7, usage7, last_turn=turns[-1])
+
+        result = river_of_six_addon(turn7)
+
+        # No message in the result should be an empty assistant
+        empty_assistants = [
+            m for m in result
+            if m.get('role') == 'assistant'
+            and not m.get('content')
+            and 'tool_calls' not in m
+        ]
+        self.assertEqual(len(empty_assistants), 0, 'Empty evicted assistants should be stripped')
+
     def test_no_user_messages_when_no_human_tag(self):
         """Assert no user messages replayed when only addon user messages exist (no <<h>>)."""
         response1 = self._make_response_payload(content='On it.')
