@@ -207,35 +207,84 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
                 elif mur.estimated_cost:
                     lines.append(f'Est:    ${mur.estimated_cost}')
 
-                # Extract assistant content summary from response_payload
-                resp = mur.response_payload or {}
-                choices = resp.get('choices', [])
-                if choices:
-                    msg = choices[0].get('message', {})
-                    content = msg.get('content', '')
-                    if content and isinstance(content, str):
-                        preview = content[:300]
-                        if len(content) > 300:
-                            preview += f'... ({len(content)} chars)'
-                        lines.append(f'Content:\n  {preview}')
+                # INPUT CONTEXT — what the addons assembled for this turn
+                req_payload = mur.request_payload
+                if req_payload and isinstance(req_payload, list):
+                    lines.append('')
+                    lines.append(f'  INPUT CONTEXT ({len(req_payload)} messages):')
+                    for idx, msg in enumerate(req_payload):
+                        role = msg.get('role', '?')
+                        content = msg.get('content', '')
+                        tc_list = msg.get('tool_calls', [])
+                        tc_id = msg.get('tool_call_id', '')
 
-                    # Tool calls from response payload
-                    tool_calls_resp = msg.get('tool_calls', [])
-                    if tool_calls_resp:
-                        lines.append(f'Tool calls ({len(tool_calls_resp)}):')
-                        for tc in tool_calls_resp:
-                            fn = tc.get('function', {})
-                            name = fn.get('name', '?')
-                            args_str = fn.get('arguments', '')
-                            args_preview = args_str[:200]
-                            if len(args_str) > 200:
-                                args_preview += '...'
-                            lines.append(f'  -> {name}({args_preview})')
+                        # Role header
+                        header = f'  [{idx}] {role.upper()}'
+                        if tc_id:
+                            name = msg.get('name', '')
+                            header += f' (tool_call_id={tc_id}'
+                            if name:
+                                header += f', name={name}'
+                            header += ')'
+                        lines.append(header)
+
+                        # Content preview
+                        if content and isinstance(content, str):
+                            preview = content[:400]
+                            if len(content) > 400:
+                                preview += f'\n    ... ({len(content)} chars total)'
+                            # Indent each line
+                            for cl in preview.splitlines():
+                                lines.append(f'    {cl}')
+
+                        # Tool calls in the message
+                        if tc_list:
+                            for tc in tc_list:
+                                fn = tc.get('function', {})
+                                lines.append(
+                                    f'    -> {fn.get("name", "?")}('
+                                    f'{fn.get("arguments", "")[:150]})'
+                                )
+
+                lines.append('')
+                lines.append('  OUTPUT:')
+
+                # Extract assistant message — provider-agnostic
+                resp = mur.response_payload or {}
+                # Direct format: {role, content, ...}
+                if 'role' in resp:
+                    msg = resp
+                # OpenAI-style: {choices: [{message: {...}}]}
+                elif 'choices' in resp:
+                    choices = resp.get('choices', [])
+                    msg = choices[0].get('message', {}) if choices else {}
+                else:
+                    msg = {}
+
+                content = msg.get('content', '')
+                if content and isinstance(content, str):
+                    preview = content[:400]
+                    if len(content) > 400:
+                        preview += f'... ({len(content)} chars)'
+                    lines.append(f'  Content:\n    {preview}')
+
+                # Tool calls from response
+                tool_calls_resp = msg.get('tool_calls', [])
+                if tool_calls_resp:
+                    lines.append(f'  Tool calls ({len(tool_calls_resp)}):')
+                    for tc in tool_calls_resp:
+                        fn = tc.get('function', {})
+                        name = fn.get('name', '?')
+                        args_str = fn.get('arguments', '')
+                        args_preview = args_str[:200]
+                        if len(args_str) > 200:
+                            args_preview += '...'
+                        lines.append(f'    -> {name}({args_preview})')
 
             # Tool calls from ORM (tool execution results)
             orm_tool_calls = list(turn.tool_calls.all())
             if orm_tool_calls:
-                lines.append(f'Tool results ({len(orm_tool_calls)}):')
+                lines.append(f'  Tool results ({len(orm_tool_calls)}):')
                 for tc in orm_tool_calls:
                     tool_name = tc.tool.name if tc.tool else '?'
                     result_preview = ''
@@ -244,7 +293,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
                         if len(str(tc.result_payload)) > 200:
                             r += '...'
                         result_preview = f' => {r}'
-                    lines.append(f'  <- {tool_name}{result_preview}')
+                    lines.append(f'    <- {tool_name}{result_preview}')
 
             lines.append('')
 
