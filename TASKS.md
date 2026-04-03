@@ -4,7 +4,9 @@ Remaining work, sifted for the backend. See FEATURES.md for what's built.
 
 ## Ship-Blocking
 
-- [ ] **Frontal Lobe — context variable injection into session.** identity_disc context variable now flows to
+support multiple ollama endpoints locally.... my secondary machine is running ollama, i want to be able to use it.
+
+- [X] **Frontal Lobe — context variable injection into session.** identity_disc context variable now flows to
   `ReasoningSession.objects.create()` (fixed 4/3), but the `prompt` context variable is NOT being injected into the
   session's prompt. The context variable resolution chain (spike blackboard → effector context → neuron context) needs
   auditing — variables are stored but not consumed by `_get_rendered_objective()` or wherever the prompt is assembled.
@@ -13,7 +15,7 @@ Remaining work, sifted for the backend. See FEATURES.md for what's built.
   `<<h>>\n` prepended in `_build_turn_payload`. River of Six only replays `<<h>>`-tagged user messages,
   preventing prompt_addon duplication. Tests pass. TODO: move `HUMAN_TAG` constant to shared location,
   use `ROLE`/`CONTENT` constants in frontal_lobe.py instead of raw strings.
-- [ ] **Frontal Lobe — swarm_message_queue delivery + persistence.** Typing a message in the Thalamus chat window
+- [X] **Frontal Lobe — swarm_message_queue delivery + persistence.** Typing a message in the Thalamus chat window
   of a running Frontal Lobe session does not deliver the message to the running session. On refresh, the typed
   message is also gone — not persisted. Two bugs: (1) swarm_message_queue not receiving/processing inbound messages
   during a live session, (2) messages not being saved as ReasoningTurns on send.
@@ -27,7 +29,7 @@ Remaining work, sifted for the backend. See FEATURES.md for what's built.
   and delay via `asyncio.sleep`. Only 1 logic node type exists. Write tests: verify retry count increments correctly
   via provenance, verify delay parameter, verify 200 vs 500 return codes, verify edge cases (no provenance, zero
   retries, zero delay).
-- [ ] **"Spell" / "Cast" naming sweep.** Still live in ~9 files. Key targets: `effector_casters/` directory name,
+- [X] **"Spell" / "Cast" naming sweep.** Still live in ~9 files. Key targets: `effector_casters/` directory name,
   `cast_cns_spell` in PNS tests, `_extract_variables_from_spell` in CNS serializers, `spell_args`/`spell_switches` in
   CNS models, `Caster` references in tasks.py and tests, `cns_spellbook`/`cns_spell` basenames in CNS URL router.
 - [ ] **Remove deprecated frontal_lobe models.** `ModelProvider` and `ModelRegistry` in `frontal_lobe/models.py` are
@@ -47,8 +49,6 @@ Remaining work, sifted for the backend. See FEATURES.md for what's built.
   `reasoning_turns`, `nerve_terminal_*`. Coordinated with frontend — both repos change together.
 - [ ] **Hypothalamus fixture initial state.** The 4 fixture AIModelProvider records have `is_enabled: true`, showing as
   "Installed" before sync_local runs. Should default to `is_enabled: false` (Available until confirmed by sync).
-
-support multiple ollama endpoints locally.... my secondary machine is running ollama, i want to be able to use it.
 
 ## Next Up
 
@@ -81,6 +81,9 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
 - [ ] **Share HUMAN_TAG constant.** `HUMAN_TAG = '<<h>>'` lives in `river_of_six_addon.py` but `frontal_lobe.py`
   uses the raw string `'<<h>>\n'`. Move to a shared constants file. Also use existing `ROLE` constant instead of
   raw `'user'` string in frontal_lobe.py.
+- [ ] **IdentityAddonPhase — optional API endpoint.** No ViewSet/router exists for IdentityAddonPhase.
+  Frontend hardcodes the 4 phases (IDENTIFY=1, CONTEXT=2, HISTORY=3, TERMINAL=4). If phases ever become
+  user-configurable, a read-only endpoint will be needed. Low priority since phases are fixed constants.
 
 ## Backlog
 
