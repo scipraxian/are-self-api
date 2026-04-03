@@ -92,7 +92,7 @@ def _terminate_process(pid):
 class CeleryBeatViewSet(viewsets.ViewSet):
     """
     API to launch and stop the Django Celery Beat server (Are-Self Heartbeat).
-    Mirrors the Beat process started by talos.bat.
+    Mirrors the Beat process started by are_self.bat.
     """
 
     @action(detail=False, methods=['get'])
@@ -109,7 +109,7 @@ class CeleryBeatViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'])
     def start(self, request):
-        """Start the Celery Beat worker (same as talos.bat Are-Self Heartbeat)."""
+        """Start the Celery Beat worker (same as are_self.bat Are-Self Heartbeat)."""
         pid = _read_beat_pid()
         if _is_process_running(pid):
             return Response(
@@ -138,7 +138,7 @@ class CeleryBeatViewSet(viewsets.ViewSet):
 
         try:
             if sys.platform == 'win32':
-                # New console with title "Are-Self Heartbeat" (like talos.bat) and
+                # New console with title "Are-Self Heartbeat" (like are_self.bat) and
                 # stdout/stderr attached to that console so Beat logs are visible.
                 title_cmd = f'title Are-Self Heartbeat && {subprocess.list2cmdline(cmd)}'
                 proc = subprocess.Popen(

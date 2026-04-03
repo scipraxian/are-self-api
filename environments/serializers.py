@@ -5,15 +5,15 @@ from central_nervous_system.constants import ENVIRONMENT_KEY
 
 from .models import (
     ContextVariable,
+    Executable,
+    ExecutableArgument,
+    ExecutableArgumentAssignment,
+    ExecutableSupplementaryFileOrPath,
+    ExecutableSwitch,
     ProjectEnvironment,
     ProjectEnvironmentContextKey,
     ProjectEnvironmentStatus,
     ProjectEnvironmentType,
-    TalosExecutable,
-    TalosExecutableArgument,
-    TalosExecutableArgumentAssignment,
-    TalosExecutableSupplementaryFileOrPath,
-    TalosExecutableSwitch,
 )
 
 
@@ -62,60 +62,60 @@ class ProjectEnvironmentSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
-class TalosExecutableSwitchSerializer(serializers.ModelSerializer):
+class ExecutableSwitchSerializer(serializers.ModelSerializer):
     class Meta:
-        model = TalosExecutableSwitch
+        model = ExecutableSwitch
         fields = ALL_FIELDS
 
 
-class TalosExecutableArgumentSerializer(serializers.ModelSerializer):
+class ExecutableArgumentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = TalosExecutableArgument
+        model = ExecutableArgument
         fields = ALL_FIELDS
 
 
-class TalosExecutableArgumentAssignmentSerializer(serializers.ModelSerializer):
-    argument_detail = TalosExecutableArgumentSerializer(
+class ExecutableArgumentAssignmentSerializer(serializers.ModelSerializer):
+    argument_detail = ExecutableArgumentSerializer(
         source='argument', read_only=True
     )
 
     class Meta:
-        model = TalosExecutableArgumentAssignment
+        model = ExecutableArgumentAssignment
         fields = ALL_FIELDS
 
 
-class TalosExecutableSupplementaryFileOrPathSerializer(
+class ExecutableSupplementaryFileOrPathSerializer(
     serializers.ModelSerializer
 ):
     class Meta:
-        model = TalosExecutableSupplementaryFileOrPath
+        model = ExecutableSupplementaryFileOrPath
         fields = ALL_FIELDS
 
 
-class TalosExecutableSerializer(serializers.ModelSerializer):
+class ExecutableSerializer(serializers.ModelSerializer):
     """
     Executable definition.
     Uses ALL_FIELDS for model data, plus computed fields for UI convenience.
     """
 
     # Computed / Nested Display Fields
-    switches_detail = TalosExecutableSwitchSerializer(
+    switches_detail = ExecutableSwitchSerializer(
         source='switches', many=True, read_only=True
     )
-    argument_assignments = TalosExecutableArgumentAssignmentSerializer(
-        source='talosexecutableargumentassignment_set',
+    argument_assignments = ExecutableArgumentAssignmentSerializer(
+        source='executableargumentassignment_set',
         many=True,
         read_only=True,
     )
-    files = TalosExecutableSupplementaryFileOrPathSerializer(
-        source='talosexecutablesupplementaryfileorpath_set',
+    files = ExecutableSupplementaryFileOrPathSerializer(
+        source='executablesupplementaryfileorpath_set',
         many=True,
         read_only=True,
     )
     rendered_executable = serializers.SerializerMethodField()
 
     class Meta:
-        model = TalosExecutable
+        model = Executable
         fields = ALL_FIELDS  # Includes standard model fields + the ones defined above
 
     def get_rendered_executable(self, obj) -> str:

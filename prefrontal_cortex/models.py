@@ -183,7 +183,7 @@ class PFCCommentStatus(NameMixin):
 
 
 class PFCComment(UUIDIdMixin, CreatedMixin, ModifiedMixin, PFCTagsMixin):
-    """A Comment on an Item. If user is None, the comment is made by Talos."""
+    """A Comment on an Item. If user is None, the comment is made by Are-Self."""
 
     RELATED_NAME = 'comments'
 
@@ -223,7 +223,7 @@ class PFCComment(UUIDIdMixin, CreatedMixin, ModifiedMixin, PFCTagsMixin):
 
     def __str__(self):
         return (
-            f'Comment by {self.user.username if self.user else "Talos"} '
+            f'Comment by {self.user.username if self.user else "Are-Self"} '
             f'on {self.epic or self.story or self.task}'
         )
 

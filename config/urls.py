@@ -6,13 +6,13 @@ from rest_framework import routers
 
 from central_nervous_system.urls.api_urls import CNS_ROUTER
 from central_nervous_system.urls.v2_urls import V2_CNS_ROUTER
+from config.api_urls import CONFIG_URLS
 from dashboard.api_urls import DASHBOARD_ROUTER
 from environments.api_urls import ENVIRONMENTS_ROUTER
 from frontal_lobe.api_urls import V2_REASONING_ROUTER
 from hippocampus.api_urls import V2_HIPPOCAMPUS_ROUTER
 from hypothalamus.api_urls import V2_HYPOTHALAMUS_ROUTER
 from identity.api_urls import V2_IDENTITY_ROUTER
-from identity.urls import V2_IDENTITY_ROUTER
 from parietal_lobe.api_urls import V2_PARIETAL_LOBE
 from peripheral_nervous_system.api_urls import V2_PNS_ROUTER
 from prefrontal_cortex.urls import V2_PREFRONTAL_CORTEX_ROUTER
@@ -41,14 +41,12 @@ V2_ROUTER.registry.extend(V2_HYPOTHALAMUS_ROUTER.registry)
 V2_ROUTER.registry.extend(ENVIRONMENTS_ROUTER.registry)
 
 urlpatterns = [
-    path('', include('dashboard.urls')),
     path(
         'central_nervous_system/', include('central_nervous_system.urls.urls')
     ),
-    path('environments/', include('environments.urls')),
-    path('reasoning/', include('frontal_lobe.urls')),
     path('api/v1/', include(v1_router.urls)),
     path('api/v2/', include(V2_ROUTER.urls)),
+    path('api/v2/', include(CONFIG_URLS)),
     path('admin/', admin.site.urls),
     path(
         'api-auth/', include('rest_framework.urls', namespace='rest_framework')

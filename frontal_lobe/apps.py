@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class TalosReasoningConfig(AppConfig):
+class FrontalLobeConfig(AppConfig):
     name = 'frontal_lobe'

@@ -2,16 +2,16 @@ import pytest
 from django.test import TestCase
 
 from environments.models import (
+    Executable,
+    ExecutableSwitch,
     ProjectEnvironment,
     ProjectEnvironmentContextKey,
     ProjectEnvironmentStatus,
     ProjectEnvironmentType,
-    TalosExecutable,
-    TalosExecutableSwitch,
 )
 from environments.serializers import (
     ContextVariableSerializer,
-    TalosExecutableSerializer,
+    ExecutableSerializer,
 )
 
 
@@ -60,18 +60,18 @@ class EnvironmentSerializersTest(TestCase):
 
         self.assertEqual(updated_var.value, 'D:/New/Root')
 
-    def test_talos_executable_serialization(self):
-        """Verify TalosExecutableSerializer handles nested details and updates."""
-        switch = TalosExecutableSwitch.objects.create(
+    def test_executable_serialization(self):
+        """Verify ExecutableSerializer handles nested details and updates."""
+        switch = ExecutableSwitch.objects.create(
             name='Silent', flag='-silent'
         )
-        exe = TalosExecutable.objects.create(
+        exe = Executable.objects.create(
             name='Editor', executable='UnrealEditor.exe', log='editor.log'
         )
         exe.switches.add(switch)
 
         # 1. Read Check (Nested Fields)
-        serializer = TalosExecutableSerializer(exe)
+        serializer = ExecutableSerializer(exe)
         data = serializer.data
 
         self.assertIn('switches_detail', data)
@@ -84,7 +84,7 @@ class EnvironmentSerializersTest(TestCase):
             'executable': 'UnrealEditor_Patched.exe',
         }
 
-        write_serializer = TalosExecutableSerializer(
+        write_serializer = ExecutableSerializer(
             exe, data=update_payload, partial=True
         )
         self.assertTrue(write_serializer.is_valid(), write_serializer.errors)

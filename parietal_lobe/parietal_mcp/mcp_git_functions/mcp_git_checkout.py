@@ -6,7 +6,7 @@ from django.conf import settings
 
 def _checkout_sync(target: str, repo_path: str = None) -> str:
     """Switches branches or restores working tree files."""
-    cwd = repo_path or str(getattr(settings, 'BASE_DIR', 'c:/talos'))
+    cwd = repo_path or str(settings.BASE_DIR)
 
     if not target:
         return 'Error: target (branch name or file path) is required.'

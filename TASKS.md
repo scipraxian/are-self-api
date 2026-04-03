@@ -1,80 +1,89 @@
-# Are-Self Task List
+# Are-Self API — Tasks
 
-Tracked priorities for pushing Are-Self to MIT release. Updated as work completes.
+Remaining work, sifted for the backend. See FEATURES.md for what's built.
 
-## P0 — Blocking Release
+## Ship-Blocking
 
-- [ ] **README rewrite.** Replace the Talos UE5 README with Are-Self documentation. Cover: what it is (swarm management
-  system / AI reasoning engine), architecture overview (the brain analogy with lobe descriptions), stack, quick start (
-  Docker Compose, Ollama, seed, launch), API-first design philosophy, and the mission (free local AI reasoning for
-  everyone).
-- [ ] **Talos naming sweep.** Rename all `Talos`-prefixed classes, variables, and references. Key targets:
-  `TalosEngram` → `Engram`, `TalosEngramTag` → `EngramTag`, `TalosExecutable` → `Executable` (or
-  `ExecutableDefinition`), `talos_executable` FK references, `talos_bin` path references in fixtures,
-  `TalosHippocampus` → `Hippocampus` (the service class), `seed_talos` management command. Preserve DB migration
-  compatibility with `db_table` Meta where needed.
-- [ ] **"Spell" / "Cast" naming sweep.** Rename: `cast_cns_spell` → `dispatch_cns_spike` (or similar), `spell_buffer` /
-  `append_spell` → `application_buffer` / `append_application`, `GenericEffectorCaster` → `SpikeExecutor` (or similar).
-  Touch all references in tasks.py, the effector caster, and templates/views.
-- [X] **Style guide in repo.** Drop `STYLE_GUIDE.md` in project root. Pin in Claude Project.
-- [X] **Claude Project setup.** Create a Claude Project with the architecture prompt and style guide pinned as project
-  knowledge.
+- [ ] **Frontal Lobe node — read identity_disc from context variable.** `_initialize_session()` in
+  `frontal_lobe/frontal_lobe.py` creates ReasoningSession with `identity_disc=None`. Line 401 then crashes:
+  `ValueError: Session {id} missing IdentityDisc.` Fix: in `run_frontal_lobe()` / `_initialize_session()`, read
+  `identity_disc` UUID from the spike's blackboard or NeuronContext variables, then pass it to
+  `ReasoningSession.objects.create(identity_disc_id=uuid)`. The Thalamus path hardcodes `IdentityDisc.THALAMUS`,
+  the Temporal path passes it explicitly — the CNS path is the only one missing it. **Paired with UI task.**
+- [ ] **Lightweight stats endpoint for dashboard.** Create `GET /api/v2/stats/` returning counts for identity discs,
+  AI models, and reasoning sessions. The dashboard currently fetches full unpaginated lists just to count — takes
+  forever. Single query with `Model.objects.count()` for each.
+- [ ] **Tool call `thought` parameter — make required or improve prompting.** Local models often call tools silently
+  (no assistant text). The `thought` parameter exists but isn't required. Either: (a) make it required in the tool
+  schema so models must explain themselves, or (b) add system prompt instructions demanding tool explanations.
+  This pairs with the UI task to render tool calls in chat. Move from Future to here.
+- [ ] **Logic node — test coverage.** `pathway_logic_node.py` handles retry counting via provenance chain walking
+  and delay via `asyncio.sleep`. Only 1 logic node type exists. Write tests: verify retry count increments correctly
+  via provenance, verify delay parameter, verify 200 vs 500 return codes, verify edge cases (no provenance, zero
+  retries, zero delay).
+- [ ] **"Spell" / "Cast" naming sweep.** Still live in ~9 files. Key targets: `effector_casters/` directory name,
+  `cast_cns_spell` in PNS tests, `_extract_variables_from_spell` in CNS serializers, `spell_args`/`spell_switches` in
+  CNS models, `Caster` references in tasks.py and tests, `cns_spellbook`/`cns_spell` basenames in CNS URL router.
+- [ ] **Remove deprecated frontal_lobe models.** `ModelProvider` and `ModelRegistry` in `frontal_lobe/models.py` are
+  still alive with admin registrations, serializers, and `synapse_open_router.py` actively importing them. The
+  Hypothalamus owns model routing now. Remove the old classes, update imports, replace
+  `ModelRegistry.NOMIC_EMBED_TEXT` constant in Hippocampus with a settings constant or direct string.
+- [ ] **Remove deprecated `parietal_lobe/registry.py`.** Hardcoded model map still exists. Superseded by Hypothalamus
+  DB-driven routing.
+- [ ] **Consolidate and improve MCP engram functions.** The Hippocampus tool functions need cleanup — reduce
+  redundancy, improve the interface, make the tool descriptions clearer for small models.
+- [ ] **Fix linters / Ruff configuration.** Ensure linting is consistent across the project. Pin Ruff config, resolve
+  any conflicting rules.
+- [ ] **Migrate shutdown endpoint out of dashboard.** The shutdown action exists in `dashboard/api.py`
+  (`celery_app.control.shutdown()` + delayed Django process kill). Needs to move to a non-deprecated app (PNS or
+  config) before `dashboard/` is removed. Add a restart endpoint. Frontend buttons needed (tracked in UI tasks).
+- [ ] **Standardize API URLs to hyphens.** Legacy underscore routes: `engram_tags`, `reasoning_sessions`,
+  `reasoning_turns`, `nerve_terminal_*`. Coordinated with frontend — both repos change together.
+- [ ] **Hypothalamus fixture initial state.** The 4 fixture AIModelProvider records have `is_enabled: true`, showing as
+  "Installed" before sync_local runs. Should default to `is_enabled: false` (Available until confirmed by sync).
 
-## P1 — Architectural Improvements
+## Next Up
 
-- [X] **Propagate `thought` parameter to work tools.** Add an optional `thought` string parameter to all MCP tools (
-  mcp_git, mcp_fs, mcp_ticket, mcp_engram_save, mcp_engram_update, mcp_query_model, etc.). Update fixture
-  `ToolParameterAssignment` records accordingly. The `thought` is logged but not functionally consumed — it forces the
-  local model to reason inline with every action.
-- [ ] **Audit async usage.** Identify `sync_to_async` wrapping that adds ceremony without value. The Frontal Lobe loop,
-  Hippocampus, and Parietal Lobe tool execution are the primary candidates. Keep async for: WebSocket streaming (
-  Glutamate), Nerve Terminal, and any genuine concurrent I/O. Convert the rest to synchronous with a single
-  `sync_to_async` wrap at the Celery boundary.
-- [ ] **Remove deprecated models.** `ModelProvider` and `ModelRegistry` in `frontal_lobe/models.py` are marked
-  DEPRECATED. The Hypothalamus (`hypothalamus/models.py`) now owns model routing. Remove the old classes and update any
-  remaining references (the `ModelRegistry.NOMIC_EMBED_TEXT` constant in Hippocampus is one — replace with a settings
-  constant or direct string).
-- [ ] **Remove deprecated `parietal_lobe/registry.py`.** The `ModelRegistry` class in the parietal lobe is a hardcoded
-  model map that's been superseded by the Hypothalamus DB-driven routing. Remove it.
-- [ ] **Clean up HTMX remnants.** Remove any HTMX-specific views, templates, and URL patterns. The frontend is React
-  consuming DRF. The Django side is a pure API.
+- [ ] **Expose tool calls in Thalamus chat history.** The session chat endpoint needs to include tool call details
+  (tool name, arguments, result) in the response so the frontend can render them. Currently invisible turns when
+  models work silently. Check the Vercel AI SDK `parts` schema — tool calls should be `tool-call` and `tool-result`
+  parts.
+- [ ] **Effector Editor** see django admin EffectorAdmin
+- [ ] **Logic Node Validation**  The logic node for looping etc, needs to be validated.
+- [ ] **]
+- [ ] **Audit async usage.** Identify `sync_to_async` wrapping that adds ceremony without value. Primary candidates:
+  Frontal Lobe loop, Hippocampus, Parietal Lobe tool execution. Keep async for WebSocket streaming (Glutamate), Nerve
+  Terminal, and genuine concurrent I/O. Convert the rest to synchronous with a single `sync_to_async` wrap at the
+  Celery boundary.
+- [ ] **Stabilize DRF API contract.** Audit all ViewSets and serializers for consistency. Ensure Thalamus chat history
+  endpoint returns the Vercel AI SDK `parts` schema reliably. Document endpoints (DRF Spectacular or similar).
+- [ ] **Docker Compose for full stack.** PostgreSQL and Redis already have Docker configs. Extend to cover Daphne,
+  Celery worker, Celery Beat. One `docker compose up` starts everything.
 
-## P2 — Frontend & API Stabilization
+## Backlog
 
-- [ ] **Stabilize DRF API contract.** Audit all ViewSets and serializers for consistency. Ensure the Thalamus chat
-  history endpoint (`/sessions/{id}/messages/`) returns the Vercel AI SDK `parts` schema reliably. Document the API
-  endpoints (DRF Spectacular or similar).
-- [ ] **React frontend integration.** Connect assistant-ui (or chosen React chat framework) to the DRF API. The Thalamus
-  already formats messages with `reasoning` and `text` parts — the frontend needs to consume them and render thought
-  bubbles vs. assistant messages.
-- [ ] **WebSocket streaming for logs.** The Glutamate neurotransmitter system (Axon Hillock → Django Channels) is built.
-  Wire the React frontend to subscribe to the appropriate channel groups for live log streaming during spike execution
-  and reasoning sessions.
-
-## P3 — Quality & Testing
-
-- [ ] **Test coverage for the reasoning loop.** Integration tests that exercise `FrontalLobe.run()` with fixture-backed
-  sessions, identity discs, and tool definitions. Verify: turn creation, tool dispatch, `yield_turn` breaks the loop,
-  `mcp_done` creates a conclusion, max turns halts, stop signal halts.
-- [ ] **Test coverage for Hypothalamus routing.** Unit tests for `pick_optimal_model`: preferred model selection,
-  failover strategy steps, circuit breaker tripping and reset, budget gate filtering, vector similarity fallback.
-- [ ] **Test coverage for Hippocampus.** Integration tests for engram CRUD: save with vector dedup at 90% threshold,
+- [ ] **Test coverage: reasoning loop.** Integration tests for `FrontalLobe.run()` with fixture-backed sessions.
+  Verify: turn creation, tool dispatch, `yield_turn` breaks the loop, `mcp_done` creates a conclusion, max turns
+  halts, stop signal halts.
+- [ ] **Test coverage: Hypothalamus routing.** Unit tests for `pick_optimal_model`: preferred model selection, failover
+  strategy steps, circuit breaker tripping/reset, budget gate filtering, vector similarity fallback.
+- [ ] **Test coverage: Hippocampus.** Integration tests for engram CRUD: save with vector dedup at 90% threshold,
   update appends text, read links session/spike/identity, search by text and tags.
-- [ ] **Test coverage for Parietal Lobe tools.** Test each MCP tool function in isolation with fixture data. Verify
-  argument validation (the hallucination armor in `ParietalMCP.execute`), focus fizzle gating, and XP/focus accounting.
+- [ ] **Test coverage: Parietal Lobe tools.** Test each MCP tool function in isolation with fixture data. Verify
+  hallucination armor, focus fizzle gating, XP/focus accounting.
+- [ ] **Budget enforcement at request time.** Wire actual spend tracking (sum
+  `AIModelProviderUsageRecord.estimated_cost` per period) into the Hypothalamus pre-filter so budgets are enforced,
+  not just defined.
+- [ ] **Hypothalamus subfamily routing.** Update `pick_optimal_model` to prefer same-subfamily first, then
+  parent-family, then vector search.
+- [ ] **Hypothalamus OpenRouter sync.** Rewrite `_process_openrouter_model()` to use the new
+  `_enrich_from_parser(ai_model, parsed)` pattern. Add frontend button. Brings full cloud model catalog with real
+  pricing.
 
-## P4 — Future / Nice to Have
+## Future
 
-- [ ] **Per-tool `thought` rendering in frontend.** The `thought` parameter on work tools gets logged server-side.
-  Expose it through the Thalamus chat history so the frontend can render a timeline of "what the AI was thinking when it
-  called mcp_git_commit."
-- [ ] **Engram vector search in Thalamus.** Pre-feed relevant engrams into the chat context based on vector similarity
-  to the user's message, similar to how the Hippocampus catalog injection works in Turn 1.
+- [ ] **Engram vector search in Thalamus.** Pre-feed relevant engrams into chat context based on vector similarity to
+  the user's message.
 - [ ] **Model arena / ELO tracking.** The `AIModelRating` model exists. Build a lightweight evaluation pipeline that
   compares model outputs on identical prompts and updates ELO scores.
-- [ ] **Budget enforcement at request time.** The `IdentityBudget` and `IdentityBudgetAssignment` models exist. Wire
-  actual spend tracking (sum `AIModelProviderUsageRecord.estimated_cost` per period) into the Hypothalamus pre-filter so
-  budgets are enforced, not just defined.
-
-consolodate and improve the mcp engram functions.
-fix the linters or ruff or whatever so they are consistent.
+- [ ] **Voice speaking module.** Rust-based TTS integration (from Samuel).

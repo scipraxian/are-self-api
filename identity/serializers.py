@@ -8,9 +8,14 @@ from frontal_lobe.models import (
 )
 from parietal_lobe.models import ToolDefinition
 
+from hypothalamus.models import AIModelSelectionFilter
+
 from .models import (
+    BudgetPeriod,
     Identity,
     IdentityAddon,
+    IdentityBudget,
+    IdentityBudgetAssignment,
     IdentityDisc,
     IdentityTag,
     IdentityType,
@@ -41,6 +46,22 @@ class IdentityTypeSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
+class SelectionFilterRefSerializer(serializers.ModelSerializer):
+    """Lightweight read-only serializer for SelectionFilter FK references."""
+
+    class Meta:
+        model = AIModelSelectionFilter
+        fields = ('id', 'name')
+
+
+class IdentityBudgetRefSerializer(serializers.ModelSerializer):
+    """Lightweight read-only serializer for IdentityBudget FK references."""
+
+    class Meta:
+        model = IdentityBudget
+        fields = ('id', 'name')
+
+
 class IdentitySerializer(serializers.ModelSerializer):
     enabled_tools = ToolDefinitionSerializer(many=True, read_only=True)
     enabled_tool_ids = serializers.PrimaryKeyRelatedField(
@@ -58,6 +79,14 @@ class IdentitySerializer(serializers.ModelSerializer):
         many=True, write_only=True, required=False,
     )
     identity_type = IdentityTypeSerializer(read_only=True)
+    selection_filter = SelectionFilterRefSerializer(read_only=True)
+    selection_filter_id = serializers.PrimaryKeyRelatedField(
+        source='selection_filter',
+        queryset=AIModelSelectionFilter.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
 
     rendered = serializers.SerializerMethodField()
 
@@ -122,6 +151,24 @@ class IdentityDiscSerializer(serializers.ModelSerializer):
         many=True, write_only=True, required=False,
     )
     identity_type = IdentityTypeSerializer(read_only=True)
+    selection_filter = SelectionFilterRefSerializer(read_only=True)
+    selection_filter_id = serializers.PrimaryKeyRelatedField(
+        source='selection_filter',
+        queryset=AIModelSelectionFilter.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    budget = IdentityBudgetRefSerializer(read_only=True)
+    budget_id = serializers.SerializerMethodField()
+    budget_id_write = serializers.PrimaryKeyRelatedField(
+        source='budget',
+        queryset=IdentityBudget.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+
     rendered = serializers.SerializerMethodField()
     reasoning_session = IdentityDiscReasoningSerializer(
         read_only=True, many=True
@@ -157,3 +204,51 @@ class IdentityDiscSerializer(serializers.ModelSerializer):
             identity_disc.engrams.distinct(),
             many=True,
         ).data
+
+    def get_budget_id(self, obj):
+        """Get the budget ID from the OneToOne budget_assignments relationship."""
+        try:
+            assignment = obj.budget_assignments
+            if assignment.is_active:
+                return assignment.budget_id
+            return None
+        except IdentityBudgetAssignment.DoesNotExist:
+            return None
+
+    def update(self, instance, validated_data):
+        """Handle budget assignment when budget_id_write is provided."""
+        budget = validated_data.pop('budget', None)
+
+        instance = super().update(instance, validated_data)
+
+        # Handle budget assignment (OneToOne — update or create)
+        if budget is not None:
+            IdentityBudgetAssignment.objects.update_or_create(
+                identity_disc=instance,
+                defaults={
+                    'budget': budget,
+                    'is_active': True,
+                },
+            )
+
+        return instance
+
+
+class BudgetPeriodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BudgetPeriod
+        fields = ALL_FIELDS
+
+
+class IdentityBudgetSerializer(serializers.ModelSerializer):
+    period = BudgetPeriodSerializer(read_only=True)
+    period_id = serializers.PrimaryKeyRelatedField(
+        source='period',
+        queryset=BudgetPeriod.objects.all(),
+        write_only=True,
+        required=False,
+    )
+
+    class Meta:
+        model = IdentityBudget
+        fields = ALL_FIELDS

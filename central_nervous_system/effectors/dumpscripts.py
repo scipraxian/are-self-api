@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Talos Spell: Script Dumper.
+"""Script Dumper.
 
 Concatenates source files from a target directory and streams them to stdout.
 Used by the Peripheral Nervous System to provide context for AI reasoning sessions.
@@ -63,7 +63,7 @@ def _is_target_file(filename: str) -> bool:
 def _process_file(full_path: str, relative_path: str) -> None:
     """Reads a file and writes its content to stdout with header."""
     try:
-        # Standard header format for Talos concatenation [cite: 26319]
+        # Standard header format for concatenated source dump
         sys.stdout.write('\n' + '=' * 80 + '\n')
         sys.stdout.write(f'FILE: {relative_path}\n')
         sys.stdout.write('=' * 80 + '\n\n')
@@ -89,7 +89,7 @@ def dump_directory_tree(root_dir: str) -> None:
         sys.exit(1)
 
     # Section header for the effector stream
-    sys.stdout.write(f'TALOS CONCATENATED SOURCE DUMP\n')
+    sys.stdout.write('CONCATENATED SOURCE DUMP\n')
     sys.stdout.write(f'START_PATH: {os.path.abspath(root_dir)}\n')
 
     for current_root, dirs, files in os.walk(root_dir):

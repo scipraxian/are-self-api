@@ -1,7 +1,9 @@
 from rest_framework import routers
 
 from .api import (
+    BudgetPeriodViewSet,
     IdentityAddonViewSet,
+    IdentityBudgetViewSet,
     IdentityDiscViewSet,
     IdentityTagViewSet,
     IdentityTypeViewSet,
@@ -13,7 +15,7 @@ V2_IDENTITY_ROUTER.register(
     r'identities', IdentityViewSet, basename='identities'
 )
 V2_IDENTITY_ROUTER.register(
-    r'identity_discs', IdentityDiscViewSet, basename='identitydiscs'
+    r'identity-discs', IdentityDiscViewSet, basename='identitydiscs'
 )
 V2_IDENTITY_ROUTER.register(
     r'identity_addons', IdentityAddonViewSet, basename='identityaddons'
@@ -23,4 +25,10 @@ V2_IDENTITY_ROUTER.register(
 )
 V2_IDENTITY_ROUTER.register(
     r'identity_types', IdentityTypeViewSet, basename='identitytypes'
+)
+V2_IDENTITY_ROUTER.register(
+    r'budget-periods', BudgetPeriodViewSet, basename='budgetperiods'
+)
+V2_IDENTITY_ROUTER.register(
+    r'identity-budgets', IdentityBudgetViewSet, basename='identitybudgets'
 )
