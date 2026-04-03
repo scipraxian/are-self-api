@@ -139,10 +139,14 @@ get slotted into iterations, pick up tasks, reason autonomously, call tools, for
 The Hypothalamus semantic parser (83 tests, 98.4% accuracy) enriches models automatically.
 Real-time events flow through the Synaptic Cleft. All brain regions have working API endpoints.
 
-**What's in progress:** See TASKS.md. Key items: spell/cast naming sweep (~9 files in CNS),
-deprecated `ModelProvider`/`ModelRegistry` removal from frontal_lobe, engram function
-consolidation, linter standardization, API URL standardization (underscores → hyphens),
-shutdown/restart scripts.
+**What's in progress:** See `are-self-ui/TASKS.md` for full task list. Backend items: spell/cast
+naming sweep (~9 files in CNS), deprecated `ModelProvider`/`ModelRegistry` removal from
+frontal_lobe, engram function consolidation, linter standardization, API URL standardization
+(underscores → hyphens), shutdown/restart scripts. Recently completed: `pick_optimal_model()`
+refactored into pure query helpers (`_build_candidate_queryset`, `_select_best_from_strategy`,
+`preview_model_selection`), model-preview endpoint on IdentityDiscViewSet, Hypothalamus
+receptor_class fix (`'AIModel'` → `'Hypothalamus'`), budget serializer OneToOne fix,
+receptor_class convention documented.
 
 **Completed renames:** Talos → Are-Self naming sweep is done (only migration history retains
 old names). HTMX views fully removed. `TalosEngram` → `Engram`, `TalosExecutable` →

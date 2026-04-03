@@ -4,6 +4,23 @@ Remaining work, sifted for the backend. See FEATURES.md for what's built.
 
 ## Ship-Blocking
 
+- [ ] **Frontal Lobe node — read identity_disc from context variable.** `_initialize_session()` in
+  `frontal_lobe/frontal_lobe.py` creates ReasoningSession with `identity_disc=None`. Line 401 then crashes:
+  `ValueError: Session {id} missing IdentityDisc.` Fix: in `run_frontal_lobe()` / `_initialize_session()`, read
+  `identity_disc` UUID from the spike's blackboard or NeuronContext variables, then pass it to
+  `ReasoningSession.objects.create(identity_disc_id=uuid)`. The Thalamus path hardcodes `IdentityDisc.THALAMUS`,
+  the Temporal path passes it explicitly — the CNS path is the only one missing it. **Paired with UI task.**
+- [ ] **Lightweight stats endpoint for dashboard.** Create `GET /api/v2/stats/` returning counts for identity discs,
+  AI models, and reasoning sessions. The dashboard currently fetches full unpaginated lists just to count — takes
+  forever. Single query with `Model.objects.count()` for each.
+- [ ] **Tool call `thought` parameter — make required or improve prompting.** Local models often call tools silently
+  (no assistant text). The `thought` parameter exists but isn't required. Either: (a) make it required in the tool
+  schema so models must explain themselves, or (b) add system prompt instructions demanding tool explanations.
+  This pairs with the UI task to render tool calls in chat. Move from Future to here.
+- [ ] **Logic node — test coverage.** `pathway_logic_node.py` handles retry counting via provenance chain walking
+  and delay via `asyncio.sleep`. Only 1 logic node type exists. Write tests: verify retry count increments correctly
+  via provenance, verify delay parameter, verify 200 vs 500 return codes, verify edge cases (no provenance, zero
+  retries, zero delay).
 - [ ] **"Spell" / "Cast" naming sweep.** Still live in ~9 files. Key targets: `effector_casters/` directory name,
   `cast_cns_spell` in PNS tests, `_extract_variables_from_spell` in CNS serializers, `spell_args`/`spell_switches` in
   CNS models, `Caster` references in tasks.py and tests, `cns_spellbook`/`cns_spell` basenames in CNS URL router.
@@ -27,6 +44,10 @@ Remaining work, sifted for the backend. See FEATURES.md for what's built.
 
 ## Next Up
 
+- [ ] **Expose tool calls in Thalamus chat history.** The session chat endpoint needs to include tool call details
+  (tool name, arguments, result) in the response so the frontend can render them. Currently invisible turns when
+  models work silently. Check the Vercel AI SDK `parts` schema — tool calls should be `tool-call` and `tool-result`
+  parts.
 - [ ] **Audit async usage.** Identify `sync_to_async` wrapping that adds ceremony without value. Primary candidates:
   Frontal Lobe loop, Hippocampus, Parietal Lobe tool execution. Keep async for WebSocket streaming (Glutamate), Nerve
   Terminal, and genuine concurrent I/O. Convert the rest to synchronous with a single `sync_to_async` wrap at the
@@ -58,8 +79,6 @@ Remaining work, sifted for the backend. See FEATURES.md for what's built.
 
 ## Future
 
-- [ ] **Per-tool `thought` rendering.** Expose the `thought` parameter through the Thalamus chat history so the
-  frontend can render what the AI was thinking when it called each tool.
 - [ ] **Engram vector search in Thalamus.** Pre-feed relevant engrams into chat context based on vector similarity to
   the user's message.
 - [ ] **Model arena / ELO tracking.** The `AIModelRating` model exists. Build a lightweight evaluation pipeline that
