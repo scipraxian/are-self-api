@@ -4,19 +4,21 @@ Remaining work, sifted for the backend. See FEATURES.md for what's built.
 
 ## Ship-Blocking
 
-- [ ] **Frontal Lobe node — read identity_disc from context variable.** `_initialize_session()` in
-  `frontal_lobe/frontal_lobe.py` creates ReasoningSession with `identity_disc=None`. Line 401 then crashes:
-  `ValueError: Session {id} missing IdentityDisc.` Fix: in `run_frontal_lobe()` / `_initialize_session()`, read
-  `identity_disc` UUID from the spike's blackboard or NeuronContext variables, then pass it to
-  `ReasoningSession.objects.create(identity_disc_id=uuid)`. The Thalamus path hardcodes `IdentityDisc.THALAMUS`,
-  the Temporal path passes it explicitly — the CNS path is the only one missing it. **Paired with UI task.**
-- [ ] **Lightweight stats endpoint for dashboard.** Create `GET /api/v2/stats/` returning counts for identity discs,
-  AI models, and reasoning sessions. The dashboard currently fetches full unpaginated lists just to count — takes
-  forever. Single query with `Model.objects.count()` for each.
+- [ ] **Frontal Lobe — context variable injection into session.** identity_disc context variable now flows to
+  `ReasoningSession.objects.create()` (fixed 4/3), but the `prompt` context variable is NOT being injected into the
+  session's prompt. The context variable resolution chain (spike blackboard → effector context → neuron context) needs
+  auditing — variables are stored but not consumed by `_get_rendered_objective()` or wherever the prompt is assembled.
+  Verify the full flow: NeuronContext → raw_context dict → rendered objective → session prompt.
+- [ ] **Frontal Lobe — swarm_message_queue / session chat.** Typing a message in the Thalamus chat window of a
+  running Frontal Lobe session does not deliver the message to the running session. On refresh, the typed message
+  is also gone — not persisted. Two bugs: (1) swarm_message_queue not receiving/processing inbound messages during
+  a live session, (2) messages not being saved as ReasoningTurns on send.
+- [x] **Lightweight stats endpoint for dashboard.** Created `GET /api/v2/stats/` in `config/api.py`. Returns
+  `identity_disc_count`, `ai_model_count`, `reasoning_session_count` via `Model.objects.count()`.
 - [ ] **Tool call `thought` parameter — make required or improve prompting.** Local models often call tools silently
   (no assistant text). The `thought` parameter exists but isn't required. Either: (a) make it required in the tool
   schema so models must explain themselves, or (b) add system prompt instructions demanding tool explanations.
-  This pairs with the UI task to render tool calls in chat. Move from Future to here.
+  This pairs with the UI task to render tool calls in chat.
 - [ ] **Logic node — test coverage.** `pathway_logic_node.py` handles retry counting via provenance chain walking
   and delay via `asyncio.sleep`. Only 1 logic node type exists. Write tests: verify retry count increments correctly
   via provenance, verify delay parameter, verify 200 vs 500 return codes, verify edge cases (no provenance, zero
@@ -48,9 +50,10 @@ Remaining work, sifted for the backend. See FEATURES.md for what's built.
   (tool name, arguments, result) in the response so the frontend can render them. Currently invisible turns when
   models work silently. Check the Vercel AI SDK `parts` schema — tool calls should be `tool-call` and `tool-result`
   parts.
-- [ ] **Effector Editor** see django admin EffectorAdmin
-- [ ] **Logic Node Validation**  The logic node for looping etc, needs to be validated.
-- [ ] **]
+- [ ] **Effector Editor.** Build a proper editor for Effector records. Reference: `EffectorAdmin` in Django admin for
+  field layout. Needs full CRUD with all fields exposed.
+- [ ] **Logic Node Validation.** The logic node (pathway_logic_node.py) for retry looping and delay needs functional
+  validation. Verify provenance chain walking counts correctly, delay works, return codes route properly.
 - [ ] **Audit async usage.** Identify `sync_to_async` wrapping that adds ceremony without value. Primary candidates:
   Frontal Lobe loop, Hippocampus, Parietal Lobe tool execution. Keep async for WebSocket streaming (Glutamate), Nerve
   Terminal, and genuine concurrent I/O. Convert the rest to synchronous with a single `sync_to_async` wrap at the
@@ -84,6 +87,4 @@ Remaining work, sifted for the backend. See FEATURES.md for what's built.
 
 - [ ] **Engram vector search in Thalamus.** Pre-feed relevant engrams into chat context based on vector similarity to
   the user's message.
-- [ ] **Model arena / ELO tracking.** The `AIModelRating` model exists. Build a lightweight evaluation pipeline that
-  compares model outputs on identical prompts and updates ELO scores.
-- [ ] **Voice speaking module.** Rust-based TTS integration (from Samuel).
+- [ ] **Model arena / ELO tracking.** The `AIModelRating` model exists. Build a lightweight evaluation pipe
