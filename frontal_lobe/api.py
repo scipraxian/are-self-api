@@ -1,4 +1,4 @@
-from django.db.models import Prefetch
+from django.db.models import Count, Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
@@ -34,7 +34,6 @@ MSG_INVALID_STATE = (
 class ReasoningSessionViewSet(viewsets.ModelViewSet):
     """Command Center for Are-Self AGI Reasoning Sessions."""
 
-    queryset = ReasoningSession.objects.all().order_by('-modified')
     serializer_class = serializers.ReasoningSessionLiteSerializer
     filter_backends = [
         DjangoFilterBackend,
@@ -43,6 +42,20 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
     ]
     search_fields = ['id', 'conclusion__summary']
     filterset_fields = ['status']
+
+    def get_queryset(self):
+        qs = ReasoningSession.objects.all().order_by('-modified')
+        if self.action == 'list':
+            # Lightweight query for list — annotate turns_count, only join status + identity_disc
+            qs = qs.select_related('status', 'identity_disc').annotate(
+                turns_count=Count('turns')
+            )
+        return qs
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return serializers.ReasoningSessionMinimalSerializer
+        return serializers.ReasoningSessionLiteSerializer
 
     @action(detail=True, methods=['get'], url_path='graph_data')
     def graph_data(self, request, pk=None):
@@ -137,6 +150,111 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
             ResumeSessionResponseSerializer(instance=success_dto).data,
             status=status.HTTP_200_OK,
         )
+
+    @action(detail=True, methods=['get'], url_path='summary_dump')
+    def summary_dump(self, request, pk=None):
+        """Returns a compact text summary of the session for human review."""
+        from django.http import HttpResponse
+
+        session = (
+            self.get_queryset()
+            .select_related('status', 'identity_disc', 'spike',
+                            'spike__spike_train')
+            .get(pk=pk)
+        )
+        turns = (
+            session.turns.select_related(
+                'status',
+                'model_usage_record',
+                'model_usage_record__ai_model',
+            )
+            .prefetch_related('tool_calls__tool')
+            .order_by('turn_number')
+        )
+
+        lines = []
+        lines.append('SESSION SUMMARY DUMP')
+        lines.append('=' * 72)
+        lines.append(f'Session ID:    {session.id}')
+        lines.append(f'Status:        {session.status.name if session.status else "?"}')
+        lines.append(f'Identity:      {session.identity_disc.name if session.identity_disc else "Unassigned"}')
+        lines.append(f'Created:       {session.created}')
+        lines.append(f'Modified:      {session.modified}')
+        lines.append(f'Turns:         {turns.count()}')
+        if session.spike:
+            lines.append(f'Spike:         {session.spike_id}')
+            if session.spike.spike_train_id:
+                lines.append(f'SpikeTrain:    {session.spike.spike_train_id}')
+        lines.append('=' * 72)
+        lines.append('')
+
+        for turn in turns:
+            lines.append(f'--- TURN {turn.turn_number} [{turn.id}] ---')
+            lines.append(f'Status: {turn.status.name if turn.status else "?"}')
+
+            mur = turn.model_usage_record
+            if mur:
+                model_name = mur.ai_model.name if mur.ai_model else '?'
+                lines.append(f'Model:  {model_name}')
+                token_line = f'Tokens: in={mur.input_tokens} out={mur.output_tokens}'
+                if mur.reasoning_tokens:
+                    token_line += f' reasoning={mur.reasoning_tokens}'
+                if mur.cache_read_input_tokens:
+                    token_line += f' cache_read={mur.cache_read_input_tokens}'
+                lines.append(token_line)
+                if mur.actual_cost:
+                    lines.append(f'Cost:   ${mur.actual_cost}')
+                elif mur.estimated_cost:
+                    lines.append(f'Est:    ${mur.estimated_cost}')
+
+                # Extract assistant content summary from response_payload
+                resp = mur.response_payload or {}
+                choices = resp.get('choices', [])
+                if choices:
+                    msg = choices[0].get('message', {})
+                    content = msg.get('content', '')
+                    if content and isinstance(content, str):
+                        preview = content[:300]
+                        if len(content) > 300:
+                            preview += f'... ({len(content)} chars)'
+                        lines.append(f'Content:\n  {preview}')
+
+                    # Tool calls from response payload
+                    tool_calls_resp = msg.get('tool_calls', [])
+                    if tool_calls_resp:
+                        lines.append(f'Tool calls ({len(tool_calls_resp)}):')
+                        for tc in tool_calls_resp:
+                            fn = tc.get('function', {})
+                            name = fn.get('name', '?')
+                            args_str = fn.get('arguments', '')
+                            args_preview = args_str[:200]
+                            if len(args_str) > 200:
+                                args_preview += '...'
+                            lines.append(f'  -> {name}({args_preview})')
+
+            # Tool calls from ORM (tool execution results)
+            orm_tool_calls = list(turn.tool_calls.all())
+            if orm_tool_calls:
+                lines.append(f'Tool results ({len(orm_tool_calls)}):')
+                for tc in orm_tool_calls:
+                    tool_name = tc.tool.name if tc.tool else '?'
+                    result_preview = ''
+                    if tc.result_payload:
+                        r = str(tc.result_payload)[:200]
+                        if len(str(tc.result_payload)) > 200:
+                            r += '...'
+                        result_preview = f' => {r}'
+                    lines.append(f'  <- {tool_name}{result_preview}')
+
+            lines.append('')
+
+        body = '\n'.join(lines)
+        sid = str(session.id)[:8]
+        response = HttpResponse(body, content_type='text/plain')
+        response['Content-Disposition'] = (
+            f'attachment; filename="session_summary_{sid}.log"'
+        )
+        return response
 
     @action(detail=True, methods=['post'])
     def stop(self, request, pk=None):

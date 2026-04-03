@@ -44,6 +44,8 @@ Remaining work, sifted for the backend. See FEATURES.md for what's built.
 - [ ] **Hypothalamus fixture initial state.** The 4 fixture AIModelProvider records have `is_enabled: true`, showing as
   "Installed" before sync_local runs. Should default to `is_enabled: false` (Available until confirmed by sync).
 
+support multiple ollama endpoints locally.... my secondary machine is running ollama, i want to be able to use it.
+
 ## Next Up
 
 - [ ] **Expose tool calls in Thalamus chat history.** The session chat endpoint needs to include tool call details

@@ -99,6 +99,30 @@ class ReasoningSessionLiteSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
+class ReasoningSessionMinimalSerializer(serializers.ModelSerializer):
+    """Minimal serializer for dashboard and list views. No heavy relations."""
+
+    status_name = serializers.CharField(source='status.name', read_only=True)
+    identity_disc_name = serializers.CharField(
+        source='identity_disc.name',
+        read_only=True,
+        default='Unassigned',
+    )
+    turns_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = ReasoningSession
+        fields = [
+            'id',
+            'status',
+            'status_name',
+            'identity_disc_name',
+            'created',
+            'modified',
+            'turns_count',
+        ]
+
+
 class ReasoningSessionGraphSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     turns = ReasoningTurnSerializer(many=True, read_only=True)

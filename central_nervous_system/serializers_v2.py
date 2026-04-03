@@ -125,6 +125,27 @@ class SpikeDetailSerializer(SpikeSerializer):
         ]
 
 
+class SpikeMinimalSerializer(serializers.ModelSerializer):
+    """Minimal serializer for dashboard views. No deep relation traversals."""
+
+    status_name = serializers.CharField(source='status.name', read_only=True)
+    effector_name = serializers.CharField(
+        source='effector.name', read_only=True, default=''
+    )
+
+    class Meta:
+        model = Spike
+        fields = [
+            'id',
+            'status',
+            'status_name',
+            'effector_name',
+            'created',
+            'modified',
+            'spike_train',
+        ]
+
+
 class SpikeTrainSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     pathway_name = serializers.CharField(source='pathway.name', read_only=True)

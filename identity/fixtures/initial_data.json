@@ -158,6 +158,16 @@
   }
 },
 {
+  "model": "identity.identityaddon",
+  "pk": 14,
+  "fields": {
+    "description": "Injects the rendered prompt context variable as the session instruction. The prompt is resolved from the spike's NeuronContext chain and template-rendered with environment variables. Attach this addon to any identity that should receive task instructions from the CNS graph.",
+    "name": "Prompt",
+    "phase": 4,
+    "function_slug": "prompt_addon"
+  }
+},
+{
   "model": "identity.identitytag",
   "pk": 1,
   "fields": {
