@@ -306,12 +306,30 @@ class CNS:
         if not axons.exists():
             return
 
+        type_labels = {
+            AxonType.TYPE_FLOW: 'FLOW',
+            AxonType.TYPE_SUCCESS: 'SUCCESS',
+            AxonType.TYPE_FAILURE: 'FAILURE',
+        }
+
         logger.info(
-            f'[CNS] Triggering {axons.count()} '
-            f'axons from Spike {finished_spike.id}'
+            '[CNS] Triggering %s axon(s) from Spike %s '
+            '(status=%s, neuron=%s):',
+            axons.count(),
+            finished_spike.id,
+            finished_spike.status_id,
+            finished_spike.neuron_id,
         )
 
         for wire in axons:
+            logger.info(
+                '[CNS]   → %s wire to neuron %s (%s)',
+                type_labels.get(wire.type_id, f'type={wire.type_id}'),
+                wire.target_id,
+                wire.target.effector.name
+                if wire.target and wire.target.effector
+                else 'no effector',
+            )
             self._create_spike_from_node(
                 neuron=wire.target, provenance=finished_spike
             )

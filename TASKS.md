@@ -40,8 +40,8 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
   schema so models must explain themselves, or (b) add system prompt instructions demanding tool explanations.
   This pairs with the UI task to render tool calls in chat.
 - [x] **Logic node — rewrite + test coverage.** `pathway_logic_node.py` rewritten to 3 modes (retry/gate/wait)
-  with blackboard-driven config instead of provenance walking. 16 tests in `test_logic_node.py`: retry (6),
-  gate (8), wait (2), unknown mode (1). Config via NeuronContext keys: `logic_mode`, `max_retries`, `delay`,
+  with blackboard-driven config instead of provenance walking. 49 tests in `test_logic_node.py` (expanded Session 7).
+  Config via NeuronContext keys: `logic_mode`, `max_retries`, `retry_delay` (retry mode), `delay` (wait mode),
   `gate_key`, `gate_operator`, `gate_value`. Returns 200 (SUCCESS axon) or 500 (FAILURE axon).
 - [X] **"Spell" / "Cast" naming sweep.** Still live in ~9 files. Key targets: `effector_casters/` directory name,
   `cast_cns_spell` in PNS tests, `_extract_variables_from_spell` in CNS serializers, `spell_args`/`spell_switches` in
@@ -150,6 +150,38 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
   endpoint returns the Vercel AI SDK `parts` schema reliably. Document endpoints (DRF Spectacular or similar).
 - [ ] **Docker Compose for full stack.** PostgreSQL and Redis already have Docker configs. Extend to cover Daphne,
   Celery worker, Celery Beat. One `docker compose up` starts everything.
+
+## Recently Completed (April 4, 2026 — Session 7)
+
+- [x] **Logic node test coverage expanded (18 → 49 tests).** New test classes: RetryDelayTest (3),
+  RetryLifecycleTest (1), ContextKeyConstantsTest (8). Expanded existing: RetryModeTest (+6), GateModeTest (+10
+  including LT operator coverage, unknown operator, non-numeric, whitespace, None blackboard), WaitModeTest (+2),
+  UnknownModeTest (+2 for case-insensitivity and whitespace trimming). Tests exercise edge cases: negative/non-numeric
+  max_retries, blackboard preservation across retries, limit-reached-does-not-increment, retry_delay vs delay key
+  separation. File: `central_nervous_system/tests/test_logic_node.py`.
+- [x] **retry_delay key standardized.** Retry mode uses `CTX_RETRY_DELAY = 'retry_delay'` (matching frontend
+  RetryNeuronNode). Wait/delay mode keeps `CTX_DELAY = 'delay'` (matching DelayNeuronNode). No backward compat
+  fallback — one key per mode, period. Frontend and backend now agree.
+- [x] **SystemControlViewSet.** Shutdown/restart/status endpoints at `/api/v2/system-control/`. Shutdown kills
+  Celery workers + delayed os._exit. Restart spawns new worker process + restarts Beat if running. Status returns
+  `workers_online`, `beat_running`, `timestamp`.
+- [x] **CNS execution wire-type logging.** `_process_graph_triggers` now logs wire type labels (FLOW/SUCCESS/FAILURE)
+  per axon firing. This confirmed the infinite loop root cause (FLOW axon firing after LIMIT REACHED).
+
+## Known Bugs — Session 7
+
+- [ ] **Infinite loop on retry LIMIT REACHED.** The retry logic node correctly returns 500 (LIMIT REACHED), firing
+  the FAILURE axon. BUT if the graph has a FLOW axon (type 1) from the retry neuron to a downstream node, that FLOW
+  wire ALSO fires — because FLOW axons fire regardless of spike status. The user deleted the stale FLOW wire and
+  recreated it as SUCCESS, but the loop still continues. This means the bug is deeper than a stale wire. Investigate
+  `_process_graph_triggers` in `central_nervous_system/central_nervous_system.py` — when a logic node (effector PKs
+  5, 6, 7) finishes, FLOW axons should NOT fire. Only SUCCESS or FAILURE should fire based on the result code. This
+  is the #1 bug.
+- [ ] **CNS Monitor view never refreshes.** After clicking Start and navigating to `/cns/spiketrain/:id`, the graph
+  shows initial state then never updates. Dendrite subscriptions use `useDendrite('Spike', spiketrainId)` and
+  `useDendrite('SpikeTrain', spiketrainId)` — but events may not be scoped to the spiketrain ID on the backend.
+  Check that `fire_neurotransmitter` in the spike lifecycle uses `dendrite_id=str(spike.spike_train_id)` so the
+  frontend subscription actually matches. Also check `trainTerminalRef` isn't getting set prematurely.
 
 ## Recently Completed (April 4, 2026 — Session 6)
 

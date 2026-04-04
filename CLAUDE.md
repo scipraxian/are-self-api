@@ -154,11 +154,15 @@ The logic node (retry/gate/wait) enables conditional branching for modality rout
 **What's in progress:** See TASKS.md for full task list. Backend items: image generation effector
 PoC, error handler effector, branching canonical pathway, spell/cast naming sweep (~9 files in CNS),
 engram function consolidation, linter standardization, API URL standardization (underscores → hyphens),
-shutdown/restart scripts (⚠️ ship-blocker), prompt_addon state awareness. Recently completed
-(Session 6): debug node effector (PK 9) with native handler, CNS execution logging upgrade
-(INFO-level train/spike lifecycle), Frontal Lobe PK 171→8 deprecated fixture record fix.
+prompt_addon state awareness. Recently completed (Session 7): logic node tests expanded to 49,
+`retry_delay` key standardized (retry mode uses `retry_delay`, wait mode uses `delay`),
+SystemControlViewSet for shutdown/restart/status at `/api/v2/system-control/`, wire-type logging
+in `_process_graph_triggers`. **KNOWN BUG:** FLOW axons fire after logic node LIMIT REACHED — the
+CNS dispatch logic needs to suppress FLOW axons for logic nodes (PKs 5-7) and only fire SUCCESS or
+FAILURE. Also: monitor view dendrite events may not be scoped to spiketrain ID correctly.
+Session 6: debug node effector (PK 9) with native handler, CNS execution logging upgrade.
 Session 5: Frontal Lobe PK migration, canonical effector PK constants. Session 4: logic node
-rewritten to 3 modes (retry/gate/wait) with 16 tests, `mcp_tts` tool built with Piper TTS,
+rewritten to 3 modes (retry/gate/wait), `mcp_tts` tool built with Piper TTS,
 efficiency bonus re-enabled, shallow blackboard copy → deepcopy fix.
 
 **Completed renames:** Talos → Are-Self naming sweep is done (only migration history retains

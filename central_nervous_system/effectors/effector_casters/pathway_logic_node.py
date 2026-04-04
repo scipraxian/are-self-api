@@ -8,6 +8,18 @@ from central_nervous_system.utils import resolve_environment_context  # NeuronCo
 
 logger = logging.getLogger(__name__)
 
+# ── NeuronContext key constants ──────────────────────────────
+# These MUST match the keys used in the frontend node editors
+# (RetryNeuronNode, GateNeuronNode, DelayNeuronNode) and in
+# nodeConstants.ts EFFECTOR_DEFAULTS.
+CTX_LOGIC_MODE = 'logic_mode'
+CTX_MAX_RETRIES = 'max_retries'
+CTX_DELAY = 'delay'
+CTX_RETRY_DELAY = 'retry_delay'
+CTX_GATE_KEY = 'gate_key'
+CTX_GATE_OPERATOR = 'gate_operator'
+CTX_GATE_VALUE = 'gate_value'
+
 # Logic node modes — stored in NeuronContext as logic_mode=<value>.
 MODE_RETRY = 'retry'
 MODE_GATE = 'gate'
@@ -48,7 +60,14 @@ async def pathway_logic_node(spike_id: str) -> tuple[int, str]:
         spike_id=spike.id
     )
 
-    mode = str(context.get('logic_mode', MODE_RETRY)).strip().lower()
+    mode = str(context.get(CTX_LOGIC_MODE, MODE_RETRY)).strip().lower()
+
+    logger.info(
+        '[LogicNode] Spike %s | mode=%s | neuron=%s | bb_keys=%s',
+        spike_id, mode,
+        spike.neuron_id if spike.neuron else 'N/A',
+        list((spike.blackboard or {}).keys()),
+    )
 
     if mode == MODE_RETRY:
         return await _handle_retry(spike, context)
@@ -66,13 +85,20 @@ async def pathway_logic_node(spike_id: str) -> tuple[int, str]:
 
 async def _handle_retry(spike: Spike, context: dict) -> tuple[int, str]:
     """Walk provenance chain, count visits to this neuron, write loop_count."""
-    max_retries = _safe_int(context.get('max_retries', 0))
-    delay = _safe_int(context.get('delay', 0))
+    max_retries = _safe_int(context.get(CTX_MAX_RETRIES, 0))
+    delay = _safe_int(context.get(CTX_RETRY_DELAY, 0))
 
     if delay > 0:
         await asyncio.sleep(delay)
 
     if max_retries <= 0:
+        logger.warning(
+            '[LogicNode] Retry pass-through: max_retries=%s '
+            '(raw=%r). Check NeuronContext for neuron %s.',
+            max_retries,
+            context.get(CTX_MAX_RETRIES),
+            spike.neuron_id,
+        )
         return 200, 'Retry mode: max_retries=0, pass-through.'
 
     # Read loop count from blackboard — starts at 0, increments each pass.
@@ -80,22 +106,27 @@ async def _handle_retry(spike: Spike, context: dict) -> tuple[int, str]:
     bb = spike.blackboard or {}
     current_count = _safe_int(bb.get(BB_LOOP_COUNT, 0))
 
-    log_msg = f'Retry: attempt {current_count + 1} of {max_retries + 1}'
+    log_msg = (
+        f'Retry: attempt {current_count + 1} of {max_retries + 1}'
+        f' (loop_count={current_count}, max_retries={max_retries})'
+    )
 
     if current_count < max_retries:
         # Increment and write back for the next iteration.
         spike.blackboard[BB_LOOP_COUNT] = current_count + 1
         await sync_to_async(spike.save)(update_fields=['blackboard'])
+        logger.info('[LogicNode] %s -> LOOPING', log_msg)
         return 200, f'{log_msg} -> LOOPING'
     else:
+        logger.info('[LogicNode] %s -> LIMIT REACHED', log_msg)
         return 500, f'{log_msg} -> LIMIT REACHED'
 
 
 def _handle_gate(spike: Spike, context: dict) -> tuple[int, str]:
     """Check a blackboard key against a condition."""
-    gate_key = str(context.get('gate_key', '')).strip()
-    operator = str(context.get('gate_operator', OP_EXISTS)).strip().lower()
-    gate_value = str(context.get('gate_value', '')).strip()
+    gate_key = str(context.get(CTX_GATE_KEY, '')).strip()
+    operator = str(context.get(CTX_GATE_OPERATOR, OP_EXISTS)).strip().lower()
+    gate_value = str(context.get(CTX_GATE_VALUE, '')).strip()
 
     if not gate_key:
         return 500, 'Gate mode: no gate_key configured.'
@@ -139,7 +170,7 @@ def _handle_gate(spike: Spike, context: dict) -> tuple[int, str]:
 
 async def _handle_wait(context: dict) -> tuple[int, str]:
     """Pure delay. Always passes."""
-    delay = _safe_int(context.get('delay', 0))
+    delay = _safe_int(context.get(CTX_DELAY, 0))
     if delay > 0:
         await asyncio.sleep(delay)
         return 200, f'Wait: delayed {delay}s -> PASS'

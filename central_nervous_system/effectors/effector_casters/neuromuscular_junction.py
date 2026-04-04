@@ -104,7 +104,8 @@ def check_channel_layer_config():
             )
         else:
             logger.debug(
-                '[CHANNEL_LAYER] CHANNEL_LAYERS config: %s', settings.CHANNEL_LAYERS
+                '[CHANNEL_LAYER] CHANNEL_LAYERS config: %s',
+                settings.CHANNEL_LAYERS,
             )
 
             # Check if using InMemoryChannelLayer (won't work across processes)
@@ -118,7 +119,8 @@ def check_channel_layer_config():
                 )
     else:
         logger.debug(
-            '[CHANNEL_LAYER] Channel layer initialized: %s', type(channel_layer).__name__
+            '[CHANNEL_LAYER] Channel layer initialized: %s',
+            type(channel_layer).__name__,
         )
 
     return channel_layer
@@ -190,7 +192,9 @@ class AsyncLogManager:
 
         # Capture current buffered chunks before mutating spike fields
         exec_chunk = ''.join(self.exec_buffer) if self.exec_buffer else ''
-        application_chunk = ''.join(self.application_buffer) if self.application_buffer else ''
+        application_chunk = (
+            ''.join(self.application_buffer) if self.application_buffer else ''
+        )
 
         if self.exec_buffer:
             self.spike.execution_log += exec_chunk
@@ -259,7 +263,9 @@ class AsyncLogManager:
             raise
         except Exception as e:
             logger.error(
-                'Failed to save execution log for Spike %s: %s', self.spike.id, e
+                'Failed to save execution log for Spike %s: %s',
+                self.spike.id,
+                e,
             )
 
 
@@ -588,7 +594,10 @@ class NeuroMuscularJunction:
             await sync_to_async(self.spike.save)(update_fields=fields)
         except Exception as e:
             logger.error(
-                'Failed to save Spike %s fields %s: %s', self.spike.id, fields, e
+                'Failed to save Spike %s fields %s: %s',
+                self.spike.id,
+                fields,
+                e,
             )
 
     async def _update_status(self, status_id: int):
@@ -614,6 +623,7 @@ class NeuroMuscularJunction:
                 vesicle={'status_id': status_id},
             )
 
+        self.status = status_id
         await fire_neurotransmitter(transmitter)
 
     async def _preflight(self):
