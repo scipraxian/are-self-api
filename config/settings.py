@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'synaptic_cleft.apps.SynapticCleftConfig',
     'hypothalamus.apps.HypothalamusConfig',
+    'talos_gateway.apps.TalosGatewayConfig',
 ]
 
 MIDDLEWARE = [
@@ -228,6 +229,11 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+        'talos_gateway': {
+            'handlers': ['console', 'norepinephrine'],
+            'level': 'INFO',
+            'propagate': True,
+        },
     },
 }
 
@@ -254,4 +260,18 @@ CHANNEL_LAYERS = {
             'expiry': 5,
         },
     },
+}
+
+# Layer 4 gateway: platform adapters, sessions, delivery (see docs/LAYER_4_GATEWAY_STT_TTS_PLAN.md)
+TALOS_GATEWAY = {
+    'platforms': {
+        'cli': {'enabled': True},
+        'discord': {'enabled': False},
+        'webhook': {'enabled': False},
+        'signal': {'enabled': False},
+    },
+    'default_identity_disc': None,
+    'max_concurrent_sessions': 10,
+    'session_timeout_minutes': 60,
+    'interactive_mode': True,
 }

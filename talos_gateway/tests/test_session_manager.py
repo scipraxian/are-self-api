@@ -1,0 +1,89 @@
+"""Tests for talos_gateway.session_manager."""
+
+from datetime import timedelta
+
+from django.test import override_settings
+from django.utils import timezone
+
+from common.tests.common_test_case import CommonFixturesAPITestCase
+
+from frontal_lobe.models import ReasoningSession
+
+from talos_gateway.contracts import PlatformEnvelope
+from talos_gateway.models import GatewaySession
+from talos_gateway.session_manager import SessionManager
+
+THALAMUS_DISC_PK = '15ca85b8-59a9-4cb6-9fd8-bfd2be47b838'
+
+
+@override_settings(
+    TALOS_GATEWAY={
+        'default_identity_disc': THALAMUS_DISC_PK,
+        'session_timeout_minutes': 60,
+    }
+)
+class SessionManagerTests(CommonFixturesAPITestCase):
+    """Database-backed tests for SessionManager."""
+
+    fixtures = list(CommonFixturesAPITestCase.fixtures) + [
+        'talos_gateway/fixtures/initial_data.json',
+    ]
+
+    def test_resolve_creates_gateway_and_reasoning_session(self):
+        """Assert a new channel gets GatewaySession and ReasoningSession rows."""
+        ts = timezone.now()
+        env = PlatformEnvelope(
+            platform='cli',
+            channel_id='chan-sm-1',
+            sender_id='u1',
+            sender_name='User',
+            message_id='m1',
+            content='hello',
+            timestamp=ts,
+        )
+        sm = SessionManager()
+        gs, rs = sm.resolve_session('cli', 'chan-sm-1', env)
+        self.assertEqual(gs.platform, 'cli')
+        self.assertEqual(gs.channel_id, 'chan-sm-1')
+        self.assertEqual(rs.pk, gs.reasoning_session_id)
+        self.assertEqual(str(rs.identity_disc_id), THALAMUS_DISC_PK)
+
+    def test_resolve_reuses_active_session(self):
+        """Assert the same channel reuses the existing session before timeout."""
+        ts = timezone.now()
+        env = PlatformEnvelope(
+            platform='cli',
+            channel_id='chan-sm-2',
+            sender_id='u',
+            sender_name='User',
+            message_id='m1',
+            content='a',
+            timestamp=ts,
+        )
+        sm = SessionManager()
+        gs1, rs1 = sm.resolve_session('cli', 'chan-sm-2', env)
+        gs2, rs2 = sm.resolve_session('cli', 'chan-sm-2', env)
+        self.assertEqual(gs1.pk, gs2.pk)
+        self.assertEqual(rs1.pk, rs2.pk)
+
+    def test_resolve_rotates_after_timeout(self):
+        """Assert stale last_activity yields a new ReasoningSession."""
+        ts = timezone.now()
+        env = PlatformEnvelope(
+            platform='cli',
+            channel_id='chan-sm-3',
+            sender_id='u',
+            sender_name='User',
+            message_id='m1',
+            content='a',
+            timestamp=ts,
+        )
+        sm = SessionManager()
+        gs, rs_old = sm.resolve_session('cli', 'chan-sm-3', env)
+        old_pk = rs_old.pk
+        GatewaySession.objects.filter(pk=gs.pk).update(
+            last_activity=timezone.now() - timedelta(minutes=120)
+        )
+        _, rs_new = sm.resolve_session('cli', 'chan-sm-3', env)
+        self.assertNotEqual(rs_new.pk, old_pk)
+        self.assertEqual(ReasoningSession.objects.filter(pk=old_pk).count(), 1)

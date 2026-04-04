@@ -11,6 +11,7 @@ django_asgi_app = get_asgi_application()
 
 # Import your routing AFTER get_asgi_application() to avoid AppRegistryNotReady errors
 import synaptic_cleft.axons
+import talos_gateway.routing
 
 application = ProtocolTypeRouter(
     {
@@ -18,7 +19,10 @@ application = ProtocolTypeRouter(
         'http': django_asgi_app,
         # WebSocket traffic goes through Channels
         'websocket': AuthMiddlewareStack(
-            URLRouter(synaptic_cleft.axons.websocket_urlpatterns)
+            URLRouter(
+                list(synaptic_cleft.axons.websocket_urlpatterns)
+                + list(talos_gateway.routing.websocket_urlpatterns)
+            )
         ),
     }
 )

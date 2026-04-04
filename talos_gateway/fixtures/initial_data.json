@@ -1,0 +1,16 @@
+[
+{
+  "model": "talos_gateway.gatewaysessionstatus",
+  "pk": 1,
+  "fields": {
+    "name": "Active"
+  }
+},
+{
+  "model": "talos_gateway.gatewaysessionstatus",
+  "pk": 2,
+  "fields": {
+    "name": "Closed"
+  }
+}
+]
