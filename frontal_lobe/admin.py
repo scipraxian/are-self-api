@@ -2,8 +2,6 @@ from django.contrib import admin
 from django.utils.html import format_html
 
 from .models import (
-    ModelProvider,
-    ModelRegistry,
     ReasoningSession,
     ReasoningStatus,
     ReasoningTurn,
@@ -88,16 +86,3 @@ class ReasoningStatusAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
-@admin.register(ModelProvider)
-class ModelProviderAdmin(admin.ModelAdmin):
-    list_display = (
-        'id',
-        'name',
-    )
-    search_fields = ('name',)
-
-
-@admin.register(ModelRegistry)
-class ModelRegistryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'api_variant')
-    search_fields = ('name', 'api_variant')

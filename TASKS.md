@@ -32,10 +32,10 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
 - [X] **"Spell" / "Cast" naming sweep.** Still live in ~9 files. Key targets: `effector_casters/` directory name,
   `cast_cns_spell` in PNS tests, `_extract_variables_from_spell` in CNS serializers, `spell_args`/`spell_switches` in
   CNS models, `Caster` references in tasks.py and tests, `cns_spellbook`/`cns_spell` basenames in CNS URL router.
-- [ ] **Remove deprecated frontal_lobe models.** `ModelProvider` and `ModelRegistry` in `frontal_lobe/models.py` are
-  still alive with admin registrations, serializers, and `synapse_open_router.py` actively importing them. The
-  Hypothalamus owns model routing now. Remove the old classes, update imports, replace
-  `ModelRegistry.NOMIC_EMBED_TEXT` constant in Hippocampus with a settings constant or direct string.
+- [x] **Remove deprecated frontal_lobe models.** `ModelProvider` and `ModelRegistry` removed from `models.py`,
+  `admin.py`, `serializers.py`. `synapse_open_router.py` refactored to string-only (deprecated, no production
+  callers). `NOMIC_EMBED_TEXT_MODEL` constant replaces DB lookup in Hippocampus. `hypothalamus/models.py` stray
+  import removed. Migration `0004` drops tables. Hippocampus tests updated.
 - [ ] **Remove deprecated `parietal_lobe/registry.py`.** Hardcoded model map still exists. Superseded by Hypothalamus
   DB-driven routing.
 - [ ] **Consolidate and improve MCP engram functions.** The Hippocampus tool functions need cleanup — reduce
@@ -56,6 +56,20 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
   (tool name, arguments, result) in the response so the frontend can render them. Currently invisible turns when
   models work silently. Check the Vercel AI SDK `parts` schema — tool calls should be `tool-call` and `tool-result`
   parts.
+- [ ] **Prompt_addon state awareness.** The prompt_addon re-injects the same static objective every turn, even after
+  the model has already completed early steps. Observed in session 2d46beb8: prompt kept saying "use the parser ONCE"
+  after it had already been called. The prompt_addon should check session ToolCall history and adapt the injected
+  objective accordingly — e.g., "parser already ran, process results and save engrams." This isn't an addon doing the
+  agent's job — it's giving the agent accurate situational context. Without this, small models get stuck in loops
+  re-attempting completed steps.
+- [ ] **Focus economy tuning.** Heavy Extraction (-5 focus) on a starting budget of 5 means one tool call and the
+  agent is locked out. The unreal parser specifically may need to be Extraction (-2) instead of Heavy Extraction (-5).
+  Alternatively, review starting focus levels — 5 is very tight for multi-step workflows. This is a data/fixture
+  change, not a code change.
+- [ ] **Addon stage/lifecycle system (stretch).** Currently addons fire in phase order every turn with no awareness
+  of session state. A stage system would let addons fire conditionally — e.g., "only inject tool list every N turns"
+  or "only fire this addon before the first tool call." Would also allow moving focus mechanics out of mainline
+  parietal_lobe code and into a dedicated focus addon. Stretch goal but architecturally sound.
 - [ ] **Effector Editor.** Build a proper editor for Effector records. Reference: `EffectorAdmin` in Django admin for
   field layout. Needs full CRUD with all fields exposed.
 - [ ] **Logic Node Validation.** The logic node (pathway_logic_node.py) for retry looping and delay needs functional
@@ -71,6 +85,9 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
 
 ## Recently Completed (April 3, 2026)
 
+- [x] **Fizzle message tool name fix.** `parietal_lobe.py` fizzle error referenced nonexistent `mcp_save_memory` —
+  corrected to `mcp_engram_save`. Models were unable to recover from fizzle states because the suggested recovery
+  tool didn't exist. (Fixed by Michael 4/3.)
 - [x] **Session summary_dump endpoint.** `GET /api/v2/reasoning_sessions/{id}/summary_dump/` returns a compact
   text log showing INPUT CONTEXT (all addon-assembled messages per turn with role, content preview, tool calls)
   and OUTPUT (provider-agnostic response extraction). Uses plain HttpResponse (not streaming — ASGI incompatible).
@@ -87,6 +104,12 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
 
 ## Backlog
 
+- [ ] **Reasoning session testing harness.** A dedicated test runner that can replay or simulate reasoning sessions
+  with controlled inputs: fixed tool results, predetermined model responses, configurable focus/XP budgets, and
+  assertion hooks per turn. Goal: test addon assembly, focus economics, tool gating, river_of_six eviction, and
+  prompt_addon state transitions WITHOUT requiring a live LLM or full tick cycle. Should support fixture-backed
+  sessions and produce summary_dump-style output for comparison. The session_summary log format is already a good
+  starting point for expected-vs-actual comparison.
 - [ ] **Test coverage: reasoning loop.** Integration tests for `FrontalLobe.run()` with fixture-backed sessions.
   Verify: turn creation, tool dispatch, `yield_turn` breaks the loop, `mcp_done` creates a conclusion, max turns
   halts, stop signal halts.

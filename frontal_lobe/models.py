@@ -4,7 +4,6 @@ from typing import Optional
 
 from django.db import models
 
-from common.constants import STANDARD_CHARFIELD_LENGTH
 from common.models import (
     CreatedAndModifiedWithDelta,
     CreatedMixin,
@@ -51,110 +50,11 @@ class ReasoningStatusMixin(models.Model):
         abstract = True
 
 
-# ATTENTION: DEPRECIATED.
-class ModelProvider(DefaultFieldsMixin, DescriptionMixin):
-    """
-    Provider-level network configuration for LLM backends.
-
-    This decouples ModelRegistry entries from hardcoded URLs and headers and
-    allows dynamic switching between providers like Ollama and OpenRouter.
-    """
-
-    # ATTENTION: DEPRECIATED.
-    # Use id keys for stable FK references (see fixtures).
-    OLLAMA = 1
-    OPENROUTER = 2
-
-    name = models.CharField(
-        max_length=STANDARD_CHARFIELD_LENGTH,
-        help_text='Human-readable name, e.g. "Ollama", "OpenRouter".',
-    )
-
-    key = models.CharField(
-        max_length=50,
-        unique=True,
-        help_text='Stable identifier, e.g. "ollama", "openrouter", "local".',
-    )
-    base_url = models.URLField(
-        max_length=255,
-        help_text='Base URL for this provider, e.g. https://openrouter.ai/api',
-    )
-    chat_path = models.CharField(
-        max_length=255,
-        default='/v1/chat/completions',
-        help_text='Path segment for chat completions, appended to base_url.',
-    )
-    requires_api_key = models.BooleanField(
-        default=False,
-        help_text='Whether this provider requires an API key for requests.',
-    )
-    api_key_header = models.CharField(
-        max_length=100,
-        default='Authorization',
-        help_text='Header name used to send the API key (e.g. Authorization).',
-    )
-    api_key_env_var = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        help_text='Environment variable name that stores the API key.',
-    )
-
-    class Meta:
-        verbose_name_plural = 'Model Providers'
-
-    def __str__(self):
-        return self.name
-
-    def natural_key(self):
-        return self.name
-
-
-# ATTENTION: DEPRECIATED.
-class ModelRegistry(DefaultFieldsMixin, NameMixin, DescriptionMixin):
-    """
-    Database-driven LLM definition.
-    Allows us to switch from 'qwen2.5-coder' to 'gpt-4o' via the Admin panel
-    without redeploying code.
-    """
-
-    # ATTENTION: DEPRECIATED.
-    DEFAULT_MODEL_ID = 1
-    QUEN3_CODER = 1
-    GEMMA3 = 2
-    LLAMA3_LATEST = 3
-    LLAMA3 = 4
-    NOMIC_EMBED_TEXT = 5
-    GPT_OSS_LATEST = 6
-    QWEN_LATEST = 7
-    GLM_47_FLASH_LATEST = 8
-
-    api_variant = models.CharField(
-        max_length=50, default='ollama', blank=True, null=True
-    )
-    context_window_size = models.IntegerField(default=32768)
-    cost_per_1k_input = models.DecimalField(
-        max_digits=10, decimal_places=6, default=0
-    )
-    cost_per_1k_output = models.DecimalField(
-        max_digits=10, decimal_places=6, default=0
-    )
-    provider = models.ForeignKey(
-        'frontal_lobe.ModelProvider',
-        on_delete=models.PROTECT,
-        related_name='models',
-        blank=True,
-        null=True,
-    )
-
-    class Meta:
-        verbose_name_plural = 'Model Registries'
-
-    def __str__(self):
-        return f'{self.provider}-{self.name}'
-
-    def natural_key(self):
-        return self.name
+# ---------------------------------------------------------------------------
+# Embedding model name — used by Hippocampus for vector operations.
+# Replaces the old ModelRegistry.NOMIC_EMBED_TEXT constant.
+# ---------------------------------------------------------------------------
+NOMIC_EMBED_TEXT_MODEL = 'nomic-embed-text'
 
 
 class ReasoningSession(

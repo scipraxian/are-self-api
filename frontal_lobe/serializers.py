@@ -4,7 +4,6 @@ from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
 from frontal_lobe.models import (
-    ModelRegistry,
     ReasoningSession,
     ReasoningTurn,
     SessionConclusion,
@@ -39,12 +38,6 @@ class ResumeSessionResponseSerializer(serializers.Serializer):
 
     ok = serializers.BooleanField()
     message = serializers.CharField()
-
-
-class ModelRegistrySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ModelRegistry
-        fields = ALL_FIELDS
 
 
 class ToolDefinitionSerializer(serializers.ModelSerializer):
