@@ -454,20 +454,47 @@
 },
 {
   "model": "central_nervous_system.effector",
-  "pk": 147,
+  "pk": 5,
   "fields": {
-    "created": "2026-01-28T16:17:19.220Z",
-    "description": null,
-    "modified": "2026-01-30T19:50:49.527Z",
-    "name": "Retry w/ 5 Second Delay",
+    "created": "2026-04-04T00:00:00.000Z",
+    "description": "Conditional branch based on blackboard state. Routes to SUCCESS or FAILURE axon.",
+    "modified": "2026-04-04T00:00:00.000Z",
+    "name": "Gate",
     "is_favorite": false,
     "executable": 14,
     "distribution_mode": 1,
     "tags": [],
-    "switches": [
-      58,
-      60
-    ]
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 6,
+  "fields": {
+    "created": "2026-04-04T00:00:00.000Z",
+    "description": "Loop control via blackboard counter. Retries up to max_retries then fires FAILURE.",
+    "modified": "2026-04-04T00:00:00.000Z",
+    "name": "Retry",
+    "is_favorite": false,
+    "executable": 14,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 7,
+  "fields": {
+    "created": "2026-04-04T00:00:00.000Z",
+    "description": "Pure delay. Waits for configured seconds then passes through.",
+    "modified": "2026-04-04T00:00:00.000Z",
+    "name": "Delay",
+    "is_favorite": false,
+    "executable": 14,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
   }
 },
 {
@@ -904,12 +931,27 @@
 },
 {
   "model": "central_nervous_system.effector",
-  "pk": 171,
+  "pk": 8,
   "fields": {
     "created": "2026-02-17T18:23:16.500Z",
     "description": null,
     "modified": "2026-02-17T18:26:37.884Z",
     "name": "Frontal Lobe Node",
+    "is_favorite": false,
+    "executable": 17,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 171,
+  "fields": {
+    "created": "2026-02-17T18:23:16.500Z",
+    "description": "DEPRECATED — moved to PK 8",
+    "modified": "2026-02-17T18:26:37.884Z",
+    "name": "Frontal Lobe Node (Deprecated)",
     "is_favorite": false,
     "executable": 17,
     "distribution_mode": 1,
@@ -945,7 +987,7 @@
   "model": "central_nervous_system.effectorcontext",
   "pk": 3,
   "fields": {
-    "effector": 171,
+    "effector": 8,
     "key": "prompt",
     "value": "You are part of the Frontal Lobe"
   }
@@ -1958,7 +2000,7 @@
     "environment": null,
     "is_root": false,
     "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-    "effector": 147,
+    "effector": 6,
     "ui_json": "{\"x\": 797, \"y\": 43}",
     "invoked_pathway": null,
     "distribution_mode": null
@@ -2257,7 +2299,7 @@
     "environment": null,
     "is_root": false,
     "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-    "effector": 147,
+    "effector": 6,
     "ui_json": "{\"x\": 560, \"y\": 583}",
     "invoked_pathway": null,
     "distribution_mode": null
@@ -2387,7 +2429,7 @@
     "environment": null,
     "is_root": false,
     "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-    "effector": 147,
+    "effector": 6,
     "ui_json": "{\"x\": 430, \"y\": 3}",
     "invoked_pathway": null,
     "distribution_mode": null
@@ -2400,7 +2442,7 @@
     "environment": null,
     "is_root": false,
     "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-    "effector": 147,
+    "effector": 6,
     "ui_json": "{\"x\": 742, \"y\": 9}",
     "invoked_pathway": null,
     "distribution_mode": null
@@ -2517,7 +2559,7 @@
     "environment": null,
     "is_root": false,
     "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-    "effector": 147,
+    "effector": 6,
     "ui_json": "{\"x\": 157, \"y\": 394}",
     "invoked_pathway": null,
     "distribution_mode": null
@@ -2920,7 +2962,7 @@
     "environment": null,
     "is_root": false,
     "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
-    "effector": 171,
+    "effector": 8,
     "ui_json": "{\"x\":1434.8246333820168,\"y\":-8.631975299264411}",
     "invoked_pathway": null,
     "distribution_mode": null
@@ -2998,7 +3040,7 @@
     "environment": null,
     "is_root": false,
     "pathway": "04c3997f-d5f3-402f-952a-519bbd7e4dee",
-    "effector": 171,
+    "effector": 8,
     "ui_json": "{\"x\": 506, \"y\": 151}",
     "invoked_pathway": null,
     "distribution_mode": null

@@ -149,6 +149,14 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
 - [ ] **Docker Compose for full stack.** PostgreSQL and Redis already have Docker configs. Extend to cover Daphne,
   Celery worker, Celery Beat. One `docker compose up` starts everything.
 
+## Recently Completed (April 4, 2026 — Session 5)
+
+- [x] **Frontal Lobe effector PK moved from 171 to 8.** Consistent with the canonical PK range (5-8).
+  Updated in `models.py` (Effector.FRONTAL_LOBE), fixture (effector, effector_context, 2 neuron references).
+- [x] **Canonical effector PK constants.** `Effector.BEGIN_PLAY=1, LOGIC_GATE=5, LOGIC_RETRY=6,
+  LOGIC_DELAY=7, FRONTAL_LOBE=8` in `central_nervous_system/models.py`. Mirrored in frontend
+  `nodeConstants.ts`. These PKs are fixture-defined and stable.
+
 ## Recently Completed (April 4, 2026 — Session 4)
 
 - [x] **Logic node rewrite — 3 modes.** `pathway_logic_node.py` rewritten from single retry mode to

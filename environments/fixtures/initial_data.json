@@ -1275,12 +1275,12 @@
   "pk": 14,
   "fields": {
     "created": "2026-01-28T16:14:59.681Z",
-    "description": "Retry, wait, etc.",
+    "description": "Flow control: gate, retry, and delay modes via blackboard state.",
     "modified": "2026-01-28T16:14:59.681Z",
-    "name": "SpellBook Logic Node",
+    "name": "Pathway Logic Node",
     "internal": true,
     "working_path": "",
-    "executable": "spellbook_logic_node",
+    "executable": "pathway_logic_neuron",
     "log": "",
     "switches": []
   }

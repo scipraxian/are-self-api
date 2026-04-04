@@ -192,10 +192,27 @@ concurrent I/O. Sync for everything else with `sync_to_async` wrap at the Celery
 CreatedAndModifiedWithDelta, NameMixin, DefaultFieldsMixin, UUIDIdMixin, DescriptionMixin.
 
 **Testing:** Real database with fixtures, not mocks. Inherit from `CommonTestCase` or
-`CommonFixturesAPITestCase`. Test docstrings begin with "Assert".
+`CommonFixturesAPITestCase`. Test docstrings begin with "Assert". Run tests with
+`venv/Scripts/pytest` from project root on Windows (`venv/bin/pytest` on Linux/Mac).
+
+**Async testing trap:** NEVER make Django test methods async even though `asyncio_mode = "auto"` is
+set in pyproject.toml. Async test methods get a SEPARATE database connection that cannot see
+transaction-wrapped setUp() objects — tests will fail with IntegrityError or missing data. Instead,
+keep test methods sync and use `async_to_sync` from `asgiref.sync` to call async functions:
+```python
+from asgiref.sync import async_to_sync
+result = async_to_sync(some_async_function)(arg1, arg2)
+```
+This runs the async function on the SAME database connection as the test transaction.
 
 **Fixtures:** PKs are stable integers. Never change an existing PK. Old records deprecated
 in place, never deleted. Each app has its own `fixtures/initial_data.json`.
+
+**Canonical Effector PKs:** Important effectors get fixed PKs and model constants
+(`central_nervous_system/models.py`): `BEGIN_PLAY=1, LOGIC_GATE=5, LOGIC_RETRY=6,
+LOGIC_DELAY=7, FRONTAL_LOBE=8`. These are mirrored in the frontend `nodeConstants.ts`.
+PKs 5-100 are reserved for canonical effectors. The frontend uses these PKs (not executable
+slugs) to determine which custom React Flow node component to render.
 
 **Formatting:** 88-char lines (Black default). Single quotes. No trailing commas in function
 signatures. `isort`-compatible imports.
