@@ -59,6 +59,12 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
 
 ## Next Up
 
+- [ ] **Clean requirements.txt.** Pin versions, remove unused/deprecated packages (`pygtail` is marked
+  deprecated, `scapy` may be unused, `django-htmx` was for the removed HTMX views). Verify every package
+  is actually imported somewhere. Group by purpose (Django core, async/channels, testing, AI/ML, tools).
+- [ ] **Compress fixtures before release.** All `initial_data.json` fixture files are human-readable with
+  generous whitespace. For the Docker release, compress to single-line JSON or use Django's `--format`
+  option. Keep the readable versions in version control, generate compressed copies at build time.
 - [ ] **Expose tool calls in Thalamus chat history.** The session chat endpoint needs to include tool call details
   (tool name, arguments, result) in the response so the frontend can render them. Currently invisible turns when
   models work silently. Check the Vercel AI SDK `parts` schema — tool calls should be `tool-call` and `tool-result`

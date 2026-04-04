@@ -52,3 +52,5 @@ channels-redis
 litellm
 tenacity
 asgiref
+
+piper-tts
