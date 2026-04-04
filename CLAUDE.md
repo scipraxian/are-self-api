@@ -139,23 +139,28 @@ get slotted into iterations, pick up tasks, reason autonomously, call tools, for
 The Hypothalamus semantic parser (83 tests, 98.4% accuracy) enriches models automatically.
 Real-time events flow through the Synaptic Cleft. All brain regions have working API endpoints.
 
-**What's in progress:** See `are-self-ui/TASKS.md` for full task list. Backend items: spell/cast
-naming sweep (~9 files in CNS), deprecated `ModelProvider`/`ModelRegistry` removal from
-frontal_lobe, engram function consolidation, linter standardization, API URL standardization
-(underscores → hyphens), shutdown/restart scripts. Recently completed: `pick_optimal_model()`
-refactored into pure query helpers (`_build_candidate_queryset`, `_select_best_from_strategy`,
-`preview_model_selection`), model-preview endpoint on IdentityDiscViewSet, Hypothalamus
-receptor_class fix (`'AIModel'` → `'Hypothalamus'`), budget serializer OneToOne fix,
-receptor_class convention documented.
+**Top priority:** Image and audio manipulation capabilities. Specific IdentityDiscs should be
+"attuned" to these modalities — dedicated tool sets, addons, and routing profiles. This will
+involve new Parietal Lobe tool definitions, new identity templates, and Hypothalamus routing
+filters for multimodal-capable models.
+
+**What's in progress:** See TASKS.md for full task list. Backend items: spell/cast naming sweep
+(~9 files in CNS), engram function consolidation, linter standardization, API URL
+standardization (underscores → hyphens), shutdown/restart scripts, prompt_addon state
+awareness, focus economy tuning. Recently completed: `ModelProvider`/`ModelRegistry` removed
+from frontal_lobe (migration 0004, fixture cleaned, Hippocampus uses `NOMIC_EMBED_TEXT_MODEL`
+constant), tool call rendering overhaul in both chat views, session loop diagnosis
+(7B model stuck in parser loop — identified 4 interacting causes).
 
 **Completed renames:** Talos → Are-Self naming sweep is done (only migration history retains
 old names). HTMX views fully removed. `TalosEngram` → `Engram`, `TalosExecutable` →
 `Executable`, `talos_bin` references cleaned.
 
 **Legacy remnants:** `spell`/`cast`/`Caster` terminology still live in ~9 CNS files.
-`ModelProvider` and `ModelRegistry` still in `frontal_lobe/models.py` with active imports.
-`parietal_lobe/registry.py` still exists. The `dashboard/` and `ue_tools/` apps are from the
-original UE5 build orchestrator and should not be modified — they'll be removed.
+`parietal_lobe/registry.py` still exists (superseded by Hypothalamus DB-driven routing).
+`synapse_open_router.py` is deprecated (no production callers, only test coverage).
+The `dashboard/` and `ue_tools/` apps are from the original UE5 build orchestrator and should
+not be modified — they'll be removed.
 
 ## Style Guide (Enforced)
 

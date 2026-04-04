@@ -2,6 +2,13 @@
 
 Remaining work, sifted for the backend. See FEATURES.md for what's built.
 
+## Top Priority — Image & Audio Manipulation
+
+The next major push is **image and audio manipulation capabilities**. Specific IdentityDiscs should be
+"attuned" to these modalities — dedicated personas with tool sets, addons, and routing profiles optimized
+for visual and audio tasks. This likely involves new tool definitions in the Parietal Lobe, new identity
+templates/addons, and potentially new Hypothalamus routing filters for multimodal-capable models.
+
 ## Ship-Blocking
 
 support multiple ollama endpoints locally.... my secondary machine is running ollama, i want to be able to use it.
@@ -83,7 +90,22 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
 - [ ] **Docker Compose for full stack.** PostgreSQL and Redis already have Docker configs. Extend to cover Daphne,
   Celery worker, Celery Beat. One `docker compose up` starts everything.
 
-## Recently Completed (April 3, 2026)
+## Recently Completed (April 3, 2026 — Session 3)
+
+- [x] **Remove deprecated frontal_lobe models.** `ModelProvider` and `ModelRegistry` deleted from `models.py`,
+  `admin.py`, `serializers.py`. `synapse_open_router.py` simplified to string-only (deprecated, no production
+  callers). `NOMIC_EMBED_TEXT_MODEL` constant in `frontal_lobe/models.py` replaces two async DB lookups in
+  Hippocampus `save_engram()` and `update_engram()`. `hypothalamus/models.py` stray import removed. Migration
+  `0004_remove_modelprovider_modelregistry` drops both tables. `frontal_lobe/fixtures/initial_data.json` cleaned
+  (ModelProvider and ModelRegistry entries removed — only ReasoningStatus remains). Hippocampus tests updated
+  to remove `mock_registry_get` patches.
+- [x] **Session analysis — 7B model loop diagnosis.** Analyzed `session_summary_2d46beb8.log` (qwen2.5-coder:7b).
+  Identified 4 interacting causes: static prompt_addon re-injecting "call parser ONCE" after it was already called,
+  aggressive river_of_six eviction losing tool results, 20K parser payload exceeding context budget, Heavy Extraction
+  focus cost (-5) on a 5-focus budget giving exactly one shot. Recommended prompt_addon state awareness as the key
+  fix. Added tasks for focus economy tuning and addon stage/lifecycle system.
+
+## Recently Completed (April 3, 2026 — Session 2)
 
 - [x] **Fizzle message tool name fix.** `parietal_lobe.py` fizzle error referenced nonexistent `mcp_save_memory` —
   corrected to `mcp_engram_save`. Models were unable to recover from fizzle states because the suggested recovery
