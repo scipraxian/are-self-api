@@ -294,22 +294,22 @@
     "distribution_mode": 1,
     "tags": [],
     "switches": [
-      3,
-      5,
-      9,
-      10,
-      11,
-      13,
-      15,
-      19,
-      20,
       32,
       33,
       34,
+      3,
       35,
+      5,
       37,
       38,
-      44
+      9,
+      10,
+      11,
+      44,
+      13,
+      15,
+      19,
+      20
     ]
   }
 },
@@ -583,8 +583,8 @@
     "distribution_mode": 1,
     "tags": [],
     "switches": [
-      62,
-      61
+      61,
+      62
     ]
   }
 },
@@ -666,8 +666,8 @@
     "distribution_mode": 1,
     "tags": [],
     "switches": [
-      62,
-      61
+      61,
+      62
     ]
   }
 },
@@ -684,8 +684,8 @@
     "distribution_mode": 1,
     "tags": [],
     "switches": [
-      62,
-      61
+      61,
+      62
     ]
   }
 },
@@ -1920,7 +1920,7 @@
     "is_root": false,
     "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
     "effector": 143,
-    "ui_json": "{\"x\": 1074, \"y\": 147}",
+    "ui_json": "{\"x\":1074,\"y\":147}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -2557,7 +2557,7 @@
     "is_root": false,
     "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
     "effector": 1,
-    "ui_json": "{\"x\":501,\"y\":137}",
+    "ui_json": "{\"x\":482.51332720588243,\"y\":91.39954044117647}",
     "invoked_pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
     "distribution_mode": null
   }
@@ -2915,26 +2915,13 @@
 },
 {
   "model": "central_nervous_system.neuron",
-  "pk": 125,
-  "fields": {
-    "environment": null,
-    "is_root": false,
-    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-    "effector": 171,
-    "ui_json": "{\"x\":77.79952264876295,\"y\":-399.88026690225996}",
-    "invoked_pathway": null,
-    "distribution_mode": null
-  }
-},
-{
-  "model": "central_nervous_system.neuron",
   "pk": 127,
   "fields": {
     "environment": null,
     "is_root": false,
     "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
     "effector": 171,
-    "ui_json": "{\"x\": 1511, \"y\": 255}",
+    "ui_json": "{\"x\":1434.8246333820168,\"y\":-8.631975299264411}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -3028,20 +3015,11 @@
 },
 {
   "model": "central_nervous_system.neuroncontext",
-  "pk": 6,
-  "fields": {
-    "neuron": 125,
-    "key": "prompt",
-    "value": "I would like to know what you can learn about yourself and what level you can achieve.... you time out at 10 minutes so be careful of your context window, enjoy the game.... you live at c:/are-self/\nEnjoy please."
-  }
-},
-{
-  "model": "central_nervous_system.neuroncontext",
   "pk": 7,
   "fields": {
     "neuron": 127,
     "key": "prompt",
-    "value": "use the unreal parsing tool mcp_run_unreal_diagnostic_parser\non the provenance spike\n{{spike.provenance.id}}\n\nwhich is the output of our Unreal 5.6.1 application.\n\nyou should also inspect the record\n\nmcp_inspect_record cns Spike {{spike.provenance.id}}\n\nEach turn enhance the Engrams of known issues, as well as create Engrams for new issues.\nOnce you think you have tagged all issues, use mcp_done to file a report and end."
+    "value": "ONLY OBJECTIVE: Find and Report issues with this Unreal 5.6.1 application run.\r\nuse the unreal parsing tool ONCE: mcp_run_unreal_diagnostic_parser with spike id {{spike.provenance.id}}\r\nafter doing that you may also inspect the record.\r\nmcp_inspect_record Spike {{spike.provenance.id}}\r\nFound issues should be checked against your engrams.\r\nYou should enhance relative Engrams and may create Engrams for new issues.\r\nYou may not stray from the objective.\r\nTry to finish quickly.\r\nOnce you think you have tagged all issues, use mcp_done to file a report and end."
   }
 },
 {
@@ -3064,11 +3042,20 @@
 },
 {
   "model": "central_nervous_system.neuroncontext",
-  "pk": 10,
+  "pk": 11,
   "fields": {
-    "neuron": 125,
+    "neuron": 127,
+    "key": "identity_disc",
+    "value": "108f68c7-88f3-43cd-a94e-33d1c866fccc"
+  }
+},
+{
+  "model": "central_nervous_system.neuroncontext",
+  "pk": 12,
+  "fields": {
+    "neuron": 127,
     "key": "prompt",
-    "value": "Please attempt to count the number of files in this list {{provenance.application_log}}"
+    "value": "ONLY OBJECTIVE: Find and Report issues with this Unreal 5.6.1 application run.\nThe unreal parsing tool is helpful: mcp_run_unreal_diagnostic_parser with spike id {{spike.provenance.id}}\nafter doing that you may consider inspecting the record.\nmcp_inspect_record Spike {{spike.provenance.id}}\nFound issues should be checked against your engrams.\nYou should enhance relative Engrams and may create Engrams for new issues.\nYou may not stray from the objective.\nTry to finish quickly.\nOnce you think you have tagged all issues, use mcp_done to file a report and end."
   }
 },
 {
