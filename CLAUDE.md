@@ -144,18 +144,20 @@ get slotted into iterations, pick up tasks, reason autonomously, call tools, for
 The Hypothalamus semantic parser (83 tests, 98.4% accuracy) enriches models automatically.
 Real-time events flow through the Synaptic Cleft. All brain regions have working API endpoints.
 
-**Top priority:** Image and audio manipulation capabilities. Specific IdentityDiscs should be
-"attuned" to these modalities — dedicated tool sets, addons, and routing profiles. This will
-involve new Parietal Lobe tool definitions, new identity templates, and Hypothalamus routing
-filters for multimodal-capable models.
+**Top priority:** Image and audio manipulation capabilities via **CNS effectors** (not Parietal
+Lobe tools). The artist LLM writes a generation prompt to the blackboard, a generation effector
+POSTs to whatever image/audio server is configured via environment context variables, and the
+result path goes back on the blackboard. This decouples Are-Self from any specific backend
+(InvokeAI, ComfyUI, etc.). TTS is already built as a Parietal Lobe tool (`mcp_tts`) using Piper.
+The logic node (retry/gate/wait) enables conditional branching for modality routing.
 
-**What's in progress:** See TASKS.md for full task list. Backend items: spell/cast naming sweep
-(~9 files in CNS), engram function consolidation, linter standardization, API URL
-standardization (underscores → hyphens), shutdown/restart scripts, prompt_addon state
-awareness, focus economy tuning. Recently completed: `ModelProvider`/`ModelRegistry` removed
-from frontal_lobe (migration 0004, fixture cleaned, Hippocampus uses `NOMIC_EMBED_TEXT_MODEL`
-constant), tool call rendering overhaul in both chat views, session loop diagnosis
-(7B model stuck in parser loop — identified 4 interacting causes).
+**What's in progress:** See TASKS.md for full task list. Backend items: image generation effector
+PoC, error handler effector, branching canonical pathway, spell/cast naming sweep (~9 files in CNS),
+engram function consolidation, linter standardization, API URL standardization (underscores → hyphens),
+shutdown/restart scripts, prompt_addon state awareness. Recently completed (Session 4): logic node
+rewritten to 3 modes (retry/gate/wait) with 16 tests, `mcp_tts` tool built with Piper TTS,
+efficiency bonus re-enabled, shallow blackboard copy → deepcopy fix, fixture constraint fix,
+EnvironmentEditor "+ Key" button, image/audio architecture documented as CNS effectors.
 
 **Completed renames:** Talos → Are-Self naming sweep is done (only migration history retains
 old names). HTMX views fully removed. `TalosEngram` → `Engram`, `TalosExecutable` →

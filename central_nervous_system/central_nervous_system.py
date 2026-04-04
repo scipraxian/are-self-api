@@ -1,3 +1,4 @@
+import copy
 import logging
 import uuid
 from datetime import timedelta
@@ -316,10 +317,10 @@ class CNS:
         starting_blackboard = {}
 
         if provenance:
-            starting_blackboard = provenance.blackboard.copy()
+            starting_blackboard = copy.deepcopy(provenance.blackboard)
         elif self.spike_train.parent_spike:
-            starting_blackboard = (
-                self.spike_train.parent_spike.blackboard.copy()
+            starting_blackboard = copy.deepcopy(
+                self.spike_train.parent_spike.blackboard
             )
             node_args = NeuronContext.objects.filter(
                 neuron=self.spike_train.parent_spike.neuron
@@ -404,7 +405,7 @@ class CNS:
             provenance=seed.provenance,
             target=agent,
             status_id=SpikeStatus.PENDING,
-            blackboard=seed.blackboard.copy(),
+            blackboard=copy.deepcopy(seed.blackboard),
         )
         transaction.on_commit(lambda: fire_spike.delay(new_spike.id))
 

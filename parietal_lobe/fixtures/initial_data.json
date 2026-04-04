@@ -1077,17 +1077,6 @@
 },
 {
   "model": "parietal_lobe.toolparameter",
-  "pk": 63,
-  "fields": {
-    "created": "2026-04-04T12:00:00Z",
-    "description": "The text to convert to speech.",
-    "modified": "2026-04-04T12:00:00Z",
-    "name": "text",
-    "type": 1
-  }
-},
-{
-  "model": "parietal_lobe.toolparameter",
   "pk": 64,
   "fields": {
     "created": "2026-04-04T12:00:00Z",
@@ -2063,7 +2052,7 @@
     "created": "2026-04-04T12:00:00Z",
     "modified": "2026-04-04T12:00:00Z",
     "tool": 29,
-    "parameter": 63,
+    "parameter": 50,
     "required": true,
     "prune_after_turns": 0
   }

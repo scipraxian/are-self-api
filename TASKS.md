@@ -4,10 +4,17 @@ Remaining work, sifted for the backend. See FEATURES.md for what's built.
 
 ## Top Priority — Image & Audio Manipulation
 
-The next major push is **image and audio manipulation capabilities**. Specific IdentityDiscs should be
-"attuned" to these modalities — dedicated personas with tool sets, addons, and routing profiles optimized
-for visual and audio tasks. This likely involves new tool definitions in the Parietal Lobe, new identity
-templates/addons, and potentially new Hypothalamus routing filters for multimodal-capable models.
+Image and audio generation are **CNS effectors**, not Parietal Lobe tools. The artist LLM reasons and
+writes a generation prompt to the blackboard. A generation effector reads that prompt, POSTs to whatever
+image/audio server is configured via environment context variables, saves the output file, and writes the
+file path back to the blackboard. The Frontal Lobe node after the effector can review the result.
+
+This completely decouples Are-Self from any specific generation backend. The effector just calls a URL.
+InvokeAI (MIT licensed), ComfyUI, stable-diffusion.cpp — whatever's listening at `{{image_gen_endpoint}}`
+does the work. Swap backends by changing one environment variable.
+
+**TTS** is already built as a Parietal Lobe tool (`mcp_tts`) using Piper (in-process, no GPU, no server).
+Image/audio generation that requires a GPU and a separate process uses the effector pattern instead.
 
 ## Ship-Blocking
 
@@ -32,10 +39,10 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
   (no assistant text). The `thought` parameter exists but isn't required. Either: (a) make it required in the tool
   schema so models must explain themselves, or (b) add system prompt instructions demanding tool explanations.
   This pairs with the UI task to render tool calls in chat.
-- [ ] **Logic node — test coverage.** `pathway_logic_node.py` handles retry counting via provenance chain walking
-  and delay via `asyncio.sleep`. Only 1 logic node type exists. Write tests: verify retry count increments correctly
-  via provenance, verify delay parameter, verify 200 vs 500 return codes, verify edge cases (no provenance, zero
-  retries, zero delay).
+- [x] **Logic node — rewrite + test coverage.** `pathway_logic_node.py` rewritten to 3 modes (retry/gate/wait)
+  with blackboard-driven config instead of provenance walking. 16 tests in `test_logic_node.py`: retry (6),
+  gate (8), wait (2), unknown mode (1). Config via NeuronContext keys: `logic_mode`, `max_retries`, `delay`,
+  `gate_key`, `gate_operator`, `gate_value`. Returns 200 (SUCCESS axon) or 500 (FAILURE axon).
 - [X] **"Spell" / "Cast" naming sweep.** Still live in ~9 files. Key targets: `effector_casters/` directory name,
   `cast_cns_spell` in PNS tests, `_extract_variables_from_spell` in CNS serializers, `spell_args`/`spell_switches` in
   CNS models, `Caster` references in tasks.py and tests, `cns_spellbook`/`cns_spell` basenames in CNS URL router.
@@ -59,6 +66,52 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
 
 ## Next Up
 
+- [x] **Logic Node Verification (gates testing harness AND branching pathways).** DONE. The logic node
+  (`pathway_logic_node.py`) was rewritten to 3 modes with blackboard-driven config:
+  1. **Retry mode:** Reads `loop_count` from blackboard (no provenance walking), increments, checks
+     against `max_retries`. Deep copy fix applied in `central_nervous_system.py`.
+  2. **Gate mode:** Checks blackboard keys with operators: exists, equals, not_equals, gt, lt.
+     Returns 200 (SUCCESS axon) or 500 (FAILURE axon). This is the switch for modality routing.
+  3. **Wait mode:** Pure delay, always passes.
+  16 tests written in `test_logic_node.py`. Both capabilities verified — testing harness and
+  modality routing are now unblocked.
+- [ ] **Error Handler Effector.** A native handler that fires when a spike fails (wired via TYPE_FAILURE
+  axon). Reads error context from the blackboard (`error_message`, `failed_effector`, `result_code`).
+  Can dispatch notifications — log to engram, fire a Cortisol neurotransmitter, write a PFC comment on
+  the failed task, or escalate to the Thalamus standing session. Multiple notification types, configured
+  via effector command args. Every non-trivial pathway should have a failure wire leading here.
+- [ ] **Image Generation Effector — PoC (Option A).** Prove the generation effector pattern works with a
+  dedicated art pathway (separate from the canonical temporal pathway):
+  - **Effector caster:** `image_generation_caster.py`. Reads `generation_prompt` from the blackboard,
+    POSTs to `{{image_gen_endpoint}}` (environment context variable), saves result to
+    `{{media_root}}/filename.png`, writes file path back to blackboard. ~30 lines. Uses `requests.post()`.
+  - **Fixture:** New Effector record for the image generation effector.
+  - **Pathway:** 3-node art pathway — Frontal Lobe (artist writes prompt to BB) → Generation Effector
+    (calls external service) → Frontal Lobe (reviews result, iterates or done).
+  - **Identity template:** Artist IdentityDisc with creative prompting addons.
+  - **Acceptance criteria:** Artist LLM writes an image prompt, effector generates an image via external
+    service, file lands on disk at the environment-configured path.
+  - **Addon candidate:** This is Are-Self's first addon — "install the effector, configure the endpoint,
+    it works." Docker Compose profile: `docker compose --profile art up` adds InvokeAI.
+- [ ] **Branching Canonical Pathway (Option B — after logic node).** Evolve the temporal tick to support
+  modality routing. The canonical pathway's first node (PM/dispatcher) inspects the PFC task and mangles
+  the blackboard. A logic node routes based on blackboard state: code tasks → worker branch, art tasks →
+  artist branch (includes generation effector), default → existing behavior. One beat, one pathway, N
+  execution paths. **Depends on:** logic node verification, PoC effector proven.
+- [ ] **Effector Editor.** Build a proper editor for Effector records. Reference: `EffectorAdmin` in Django admin for
+  field layout. Needs full CRUD with all fields exposed.
+- [ ] **Self-improving pathway testing harness (zero new code).** The testing harness IS a CNS neural pathway.
+  No new framework needed — use the existing architecture:
+    - **Node A:** Frontal Lobe effector, 7B model, given a task prompt via identity/addon config
+    - **Node B:** Frontal Lobe effector, 30B evaluator model, reads Node A's session output. Job: "Did it work?
+      If not, use the DB tool to UPDATE Node A's prompt, then fail."
+    - **Logic Node:** Loop controller. Blackboard tracks iteration count. On Node B failure → loop back to Node A
+      with the improved prompt. On success → done.
+    - **Acceptance criteria:** Can a 7B with 10 focus make a useful memory in 10 turns on 8GB RAM?
+    - **Prerequisites:** Logic node must work (verify provenance chain walking, loop counting via blackboard,
+      delay parameter). Node B needs a "prompt editor" tool in the Parietal Lobe (or just the existing DB update
+      tool pointed at IdentityAddon/prompt_addon content).
+    - The spike train IS the test run. The blackboard IS the assertion state. The summary_dump IS the test report.
 - [ ] **Clean requirements.txt.** Pin versions, remove unused/deprecated packages (`pygtail` is marked
   deprecated, `scapy` may be unused, `django-htmx` was for the removed HTMX views). Verify every package
   is actually imported somewhere. Group by purpose (Django core, async/channels, testing, AI/ML, tools).
@@ -79,17 +132,14 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
   5 to 10 (matches `max_focus` at level 1). Agents now start with full focus instead of half. Heavy Extraction (-5)
   now allows two tool calls before needing synthesis, not one-and-done. The unreal parser may still need to be
   reclassified from Heavy Extraction (-5) to Extraction (-2) — that's a fixture change.
-- [ ] **Re-enable efficiency bonus.** `ReasoningTurn.apply_efficiency_bonus()` is commented out. The data source for
+- [X] **Re-enable efficiency bonus.** `ReasoningTurn.apply_efficiency_bonus()` is commented out. The data source for
   output length is now known (`model_usage_record.response_payload`). Re-enable so XP comes from being concise, not
   just from tool use. The leveling system is half-wired without it.
 - [ ] **Addon stage/lifecycle system (stretch).** Currently addons fire in phase order every turn with no awareness
   of session state. A stage system would let addons fire conditionally — e.g., "only inject tool list every N turns"
   or "only fire this addon before the first tool call." Would also allow moving focus mechanics out of mainline
   parietal_lobe code and into a dedicated focus addon. Stretch goal but architecturally sound.
-- [ ] **Effector Editor.** Build a proper editor for Effector records. Reference: `EffectorAdmin` in Django admin for
-  field layout. Needs full CRUD with all fields exposed.
-- [ ] **Logic Node Validation.** The logic node (pathway_logic_node.py) for retry looping and delay needs functional
-  validation. Verify provenance chain walking counts correctly, delay works, return codes route properly.
+
 - [ ] **Audit async usage.** Identify `sync_to_async` wrapping that adds ceremony without value. Primary candidates:
   Frontal Lobe loop, Hippocampus, Parietal Lobe tool execution. Keep async for WebSocket streaming (Glutamate), Nerve
   Terminal, and genuine concurrent I/O. Convert the rest to synchronous with a single `sync_to_async` wrap at the
@@ -98,6 +148,30 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
   endpoint returns the Vercel AI SDK `parts` schema reliably. Document endpoints (DRF Spectacular or similar).
 - [ ] **Docker Compose for full stack.** PostgreSQL and Redis already have Docker configs. Extend to cover Daphne,
   Celery worker, Celery Beat. One `docker compose up` starts everything.
+
+## Recently Completed (April 4, 2026 — Session 4)
+
+- [x] **Logic node rewrite — 3 modes.** `pathway_logic_node.py` rewritten from single retry mode to
+  retry/gate/wait. Config via NeuronContext keys instead of command string parsing. Blackboard-driven
+  loop counting replaces provenance walking. Gate mode enables conditional branching (the switch for
+  modality routing). 16 tests in `test_logic_node.py`.
+- [x] **Shallow blackboard copy → deepcopy.** `central_nervous_system.py` changed 3 instances of
+  `.blackboard.copy()` to `copy.deepcopy()`. Prevents nested dict mutation leaking between sibling spikes.
+- [x] **Re-enable efficiency bonus.** `ReasoningTurn.apply_efficiency_bonus()` re-enabled. Gated on
+  Focus Addon presence (only called from `focus_addon()`, so no addon = no bonus). Added early return
+  for turn 1 (no previous output). Tests written and passing.
+- [x] **mcp_tts Parietal Lobe tool.** `parietal_lobe/parietal_mcp/mcp_tts.py` built with Piper TTS
+  (in-process, no GPU). 5 voice slugs (male/female/child/narrator/whisper), resolves output path from
+  `audio_root` environment context variable. Fixture entries added (ToolDefinition PK 29, assignments,
+  parameter enums). `piper-tts` added to requirements.txt.
+- [x] **Fixture constraint fix.** Removed duplicate ToolParameter PK 63 (name="text") — reused
+  existing PK 50. Assignment PK 173 updated to point to PK 50. Also fixed truncated JSON at end of
+  parietal_lobe fixture (missing closing braces).
+- [x] **EnvironmentEditor "+ Key" button.** Added inline creation of new context variable keys via
+  POST to `/api/v2/context-keys/`. Auto-selects new key after creation.
+- [x] **Image/audio architecture documented.** CNS effector pattern — artist LLM writes prompt to
+  blackboard, generation effector POSTs to external service, result path written back. Completely
+  decoupled from any specific backend (InvokeAI, ComfyUI, etc.).
 
 ## Recently Completed (April 3, 2026 — Session 3)
 
@@ -135,18 +209,6 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
 
 ## Backlog
 
-- [ ] **Self-improving pathway testing harness (zero new code).** The testing harness IS a CNS neural pathway.
-  No new framework needed — use the existing architecture:
-  - **Node A:** Frontal Lobe effector, 7B model, given a task prompt via identity/addon config
-  - **Node B:** Frontal Lobe effector, 30B evaluator model, reads Node A's session output. Job: "Did it work?
-    If not, use the DB tool to UPDATE Node A's prompt, then fail."
-  - **Logic Node:** Loop controller. Blackboard tracks iteration count. On Node B failure → loop back to Node A
-    with the improved prompt. On success → done.
-  - **Acceptance criteria:** Can a 7B with 10 focus make a useful memory in 10 turns on 8GB RAM?
-  - **Prerequisites:** Logic node must work (verify provenance chain walking, loop counting via blackboard,
-    delay parameter). Node B needs a "prompt editor" tool in the Parietal Lobe (or just the existing DB update
-    tool pointed at IdentityAddon/prompt_addon content).
-  - The spike train IS the test run. The blackboard IS the assertion state. The summary_dump IS the test report.
 - [ ] **Test coverage: reasoning loop.** Integration tests for `FrontalLobe.run()` with fixture-backed sessions.
   Verify: turn creation, tool dispatch, `yield_turn` breaks the loop, `mcp_done` creates a conclusion, max turns
   halts, stop signal halts.
@@ -169,5 +231,4 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
 
 ## Future
 
-- [ ] **Engram vector search in Thalamus.** Pre-feed relevant engrams into chat context based on vector similarity to
-  the user's 
+- [ ] **Engram vector search in Thalamus.** Pre-feed relevant engrams into chat context based on vector simila
