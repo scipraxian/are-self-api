@@ -162,6 +162,7 @@ class Effector(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
     LOGIC_RETRY = 6
     LOGIC_DELAY = 7
     FRONTAL_LOBE = 8
+    DEBUG = 9
 
     executable = models.ForeignKey(
         Executable, on_delete=models.PROTECT, default=1

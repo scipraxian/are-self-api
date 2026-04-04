@@ -74,6 +74,11 @@ class CNS:
             spike_train.status_id = SpikeTrainStatus.RUNNING
             spike_train.save(update_fields=['status'])
 
+        logger.info(
+            '[CNS] SpikeTrain %s STARTED for pathway %s.',
+            self.spike_train.id,
+            self.spike_train.pathway.name,
+        )
         self.dispatch_next_wave()
 
     def terminate(self) -> None:
@@ -339,6 +344,14 @@ class CNS:
             blackboard=starting_blackboard,
         )
 
+        logger.info(
+            '[CNS] Created Spike %s for neuron %s (effector=%s, provenance=%s).',
+            seed_spike.id,
+            neuron.id,
+            neuron.effector.name if neuron.effector else 'None',
+            provenance.id if provenance else 'root',
+        )
+
         if getattr(neuron, 'invoked_pathway', None):
             self._spawn_subgraph(seed_spike)
             return
@@ -355,6 +368,7 @@ class CNS:
         elif mode == CNSDistributionModeID.ONE_AVAILABLE_AGENT:
             self._dispatch_first_responder(seed_spike)
         else:
+            logger.info('[CNS] Dispatching Spike %s locally.', seed_spike.id)
             self._prepare_and_dispatch(seed_spike)
 
     def _dispatch_fleet_wave(self, seed_spike: Spike) -> None:
@@ -426,6 +440,11 @@ class CNS:
             ]
         )
         if active.exists():
+            logger.info(
+                '[CNS] SpikeTrain %s has %d active spikes — not finalizing.',
+                self.spike_train.id,
+                active.count(),
+            )
             return
 
         if self.spike_train.status_id == SpikeTrainStatus.STOPPING:
@@ -434,6 +453,11 @@ class CNS:
             new_status = SpikeTrainStatus.SUCCESS
 
         if self.spike_train.status_id != new_status:
+            logger.info(
+                '[CNS] SpikeTrain %s FINALIZED as %s.',
+                self.spike_train.id,
+                'STOPPED' if new_status == SpikeTrainStatus.STOPPED else 'SUCCESS',
+            )
             self.spike_train.status_id = new_status
             self.spike_train.save(update_fields=['status'])
             transaction.on_commit(

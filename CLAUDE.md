@@ -154,10 +154,12 @@ The logic node (retry/gate/wait) enables conditional branching for modality rout
 **What's in progress:** See TASKS.md for full task list. Backend items: image generation effector
 PoC, error handler effector, branching canonical pathway, spell/cast naming sweep (~9 files in CNS),
 engram function consolidation, linter standardization, API URL standardization (underscores → hyphens),
-shutdown/restart scripts, prompt_addon state awareness. Recently completed (Session 4): logic node
+shutdown/restart scripts (⚠️ ship-blocker), prompt_addon state awareness. Recently completed
+(Session 6): debug node effector (PK 9) with native handler, CNS execution logging upgrade
+(INFO-level train/spike lifecycle), Frontal Lobe PK 171→8 deprecated fixture record fix.
+Session 5: Frontal Lobe PK migration, canonical effector PK constants. Session 4: logic node
 rewritten to 3 modes (retry/gate/wait) with 16 tests, `mcp_tts` tool built with Piper TTS,
-efficiency bonus re-enabled, shallow blackboard copy → deepcopy fix, fixture constraint fix,
-EnvironmentEditor "+ Key" button, image/audio architecture documented as CNS effectors.
+efficiency bonus re-enabled, shallow blackboard copy → deepcopy fix.
 
 **Completed renames:** Talos → Are-Self naming sweep is done (only migration history retains
 old names). HTMX views fully removed. `TalosEngram` → `Engram`, `TalosExecutable` →
@@ -210,9 +212,14 @@ in place, never deleted. Each app has its own `fixtures/initial_data.json`.
 
 **Canonical Effector PKs:** Important effectors get fixed PKs and model constants
 (`central_nervous_system/models.py`): `BEGIN_PLAY=1, LOGIC_GATE=5, LOGIC_RETRY=6,
-LOGIC_DELAY=7, FRONTAL_LOBE=8`. These are mirrored in the frontend `nodeConstants.ts`.
+LOGIC_DELAY=7, FRONTAL_LOBE=8, DEBUG=9`. These are mirrored in the frontend `nodeConstants.ts`.
 PKs 5-100 are reserved for canonical effectors. The frontend uses these PKs (not executable
 slugs) to determine which custom React Flow node component to render.
+
+**Debug node:** Effector PK 9. Native handler `debug_node` in
+`central_nervous_system/effectors/effector_casters/debug_node.py`. Logs blackboard state and
+neuron context at INFO level. Useful for diagnosing blackboard data flow between spikes.
+Configurable via NeuronContext key `debug_label` (defaults to "DEBUG").
 
 **Formatting:** 88-char lines (Black default). Single quotes. No trailing commas in function
 signatures. `isort`-compatible imports.

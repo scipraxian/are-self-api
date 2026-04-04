@@ -1346,6 +1346,21 @@
   }
 },
 {
+  "model": "environments.executable",
+  "pk": 19,
+  "fields": {
+    "created": "2026-04-04T00:00:00.000Z",
+    "description": "Logs blackboard state and neuron context to the worker log. For pathway debugging.",
+    "modified": "2026-04-04T00:00:00.000Z",
+    "name": "Debug Node",
+    "internal": true,
+    "working_path": "",
+    "executable": "debug_node",
+    "log": "",
+    "switches": []
+  }
+},
+{
   "model": "environments.executableargumentassignment",
   "pk": 1,
   "fields": {

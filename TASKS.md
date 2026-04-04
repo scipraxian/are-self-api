@@ -56,9 +56,11 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
   redundancy, improve the interface, make the tool descriptions clearer for small models.
 - [ ] **Fix linters / Ruff configuration.** Ensure linting is consistent across the project. Pin Ruff config, resolve
   any conflicting rules.
-- [ ] **Migrate shutdown endpoint out of dashboard.** The shutdown action exists in `dashboard/api.py`
+- [ ] **Migrate shutdown endpoint out of dashboard.** ⚠️ SHIP-BLOCKER. The shutdown action exists in `dashboard/api.py`
   (`celery_app.control.shutdown()` + delayed Django process kill). Needs to move to a non-deprecated app (PNS or
   config) before `dashboard/` is removed. Add a restart endpoint. Frontend buttons needed (tracked in UI tasks).
+  Without this, developers must manually kill/restart Celery workers when deploying code changes — stale workers
+  run old native handlers and produce confusing errors (e.g., "No handler found for slug: debug_node").
 - [ ] **Standardize API URLs to hyphens.** Legacy underscore routes: `engram_tags`, `reasoning_sessions`,
   `reasoning_turns`, `nerve_terminal_*`. Coordinated with frontend — both repos change together.
 - [ ] **Hypothalamus fixture initial state.** The 4 fixture AIModelProvider records have `is_enabled: true`, showing as
@@ -148,6 +150,19 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
   endpoint returns the Vercel AI SDK `parts` schema reliably. Document endpoints (DRF Spectacular or similar).
 - [ ] **Docker Compose for full stack.** PostgreSQL and Redis already have Docker configs. Extend to cover Daphne,
   Celery worker, Celery Beat. One `docker compose up` starts everything.
+
+## Recently Completed (April 4, 2026 — Session 6)
+
+- [x] **Debug node effector (PK 9).** New native handler `debug_node.py` that logs blackboard state and
+  neuron context at INFO level. Registered in `NATIVE_HANDLERS` dict in `neuromuscular_junction.py`.
+  Fixture: Effector PK 9 (executable PK 19, `is_favorite=true`). Executable PK 19 added to environments
+  fixture (`internal=true`, `executable="debug_node"`).
+- [x] **CNS execution logging.** Added `logger.info` at: train START (pathway name), spike creation
+  (neuron ID, effector name, provenance), local dispatch, finalize (active spike count or terminal status).
+  `_log_info` in NMJ upgraded from `logger.debug` to `logger.info` with spike ID prefix. Explicit log
+  before native handler execution with slug and effector name.
+- [x] **Frontal Lobe effector PK 171 → 8 fixture fix.** Added deprecated PK 171 record back to fixture
+  (`"Frontal Lobe Node (Deprecated)"`) so existing DB records don't cause IntegrityError on fixture reload.
 
 ## Recently Completed (April 4, 2026 — Session 5)
 
