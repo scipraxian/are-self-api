@@ -33,7 +33,14 @@ class SpikeTrainViewSetV2(viewsets.ModelViewSet):
         SpikeTrain.objects.all()
         .select_related('status', 'pathway')
         .prefetch_related(
-            'spikes', 'spikes__status', 'spikes__effector', 'spikes__target'
+            'spikes',
+            'spikes__status',
+            'spikes__effector',
+            'spikes__target',
+            'spikes__neuron',
+            'spikes__neuron__pathway',
+            'spikes__neuron__invoked_pathway',
+            'spikes__provenance__spike_train',
         )
         .order_by('-created')
     )
