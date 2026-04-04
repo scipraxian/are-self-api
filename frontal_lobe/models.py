@@ -89,7 +89,7 @@ class ReasoningSession(
     max_turns = models.IntegerField(default=100)
 
     total_xp = models.IntegerField(default=0)
-    current_focus = models.IntegerField(default=5)
+    current_focus = models.IntegerField(default=10)
 
     # Queued messages from users or other agents during a turn.
     swarm_message_queue = models.JSONField(default=list, blank=True)

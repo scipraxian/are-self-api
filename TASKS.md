@@ -69,10 +69,13 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
   objective accordingly — e.g., "parser already ran, process results and save engrams." This isn't an addon doing the
   agent's job — it's giving the agent accurate situational context. Without this, small models get stuck in loops
   re-attempting completed steps.
-- [ ] **Focus economy tuning.** Heavy Extraction (-5 focus) on a starting budget of 5 means one tool call and the
-  agent is locked out. The unreal parser specifically may need to be Extraction (-2) instead of Heavy Extraction (-5).
-  Alternatively, review starting focus levels — 5 is very tight for multi-step workflows. This is a data/fixture
-  change, not a code change.
+- [x] **Focus economy tuning — starting focus raised to 10.** `ReasoningSession.current_focus` default changed from
+  5 to 10 (matches `max_focus` at level 1). Agents now start with full focus instead of half. Heavy Extraction (-5)
+  now allows two tool calls before needing synthesis, not one-and-done. The unreal parser may still need to be
+  reclassified from Heavy Extraction (-5) to Extraction (-2) — that's a fixture change.
+- [ ] **Re-enable efficiency bonus.** `ReasoningTurn.apply_efficiency_bonus()` is commented out. The data source for
+  output length is now known (`model_usage_record.response_payload`). Re-enable so XP comes from being concise, not
+  just from tool use. The leveling system is half-wired without it.
 - [ ] **Addon stage/lifecycle system (stretch).** Currently addons fire in phase order every turn with no awareness
   of session state. A stage system would let addons fire conditionally — e.g., "only inject tool list every N turns"
   or "only fire this addon before the first tool call." Would also allow moving focus mechanics out of mainline
@@ -126,12 +129,18 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
 
 ## Backlog
 
-- [ ] **Reasoning session testing harness.** A dedicated test runner that can replay or simulate reasoning sessions
-  with controlled inputs: fixed tool results, predetermined model responses, configurable focus/XP budgets, and
-  assertion hooks per turn. Goal: test addon assembly, focus economics, tool gating, river_of_six eviction, and
-  prompt_addon state transitions WITHOUT requiring a live LLM or full tick cycle. Should support fixture-backed
-  sessions and produce summary_dump-style output for comparison. The session_summary log format is already a good
-  starting point for expected-vs-actual comparison.
+- [ ] **Self-improving pathway testing harness (zero new code).** The testing harness IS a CNS neural pathway.
+  No new framework needed — use the existing architecture:
+  - **Node A:** Frontal Lobe effector, 7B model, given a task prompt via identity/addon config
+  - **Node B:** Frontal Lobe effector, 30B evaluator model, reads Node A's session output. Job: "Did it work?
+    If not, use the DB tool to UPDATE Node A's prompt, then fail."
+  - **Logic Node:** Loop controller. Blackboard tracks iteration count. On Node B failure → loop back to Node A
+    with the improved prompt. On success → done.
+  - **Acceptance criteria:** Can a 7B with 10 focus make a useful memory in 10 turns on 8GB RAM?
+  - **Prerequisites:** Logic node must work (verify provenance chain walking, loop counting via blackboard,
+    delay parameter). Node B needs a "prompt editor" tool in the Parietal Lobe (or just the existing DB update
+    tool pointed at IdentityAddon/prompt_addon content).
+  - The spike train IS the test run. The blackboard IS the assertion state. The summary_dump IS the test report.
 - [ ] **Test coverage: reasoning loop.** Integration tests for `FrontalLobe.run()` with fixture-backed sessions.
   Verify: turn creation, tool dispatch, `yield_turn` breaks the loop, `mcp_done` creates a conclusion, max turns
   halts, stop signal halts.
@@ -146,9 +155,11 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
   not just defined.
 - [ ] **Hypothalamus subfamily routing.** Update `pick_optimal_model` to prefer same-subfamily first, then
   parent-family, then vector search.
-- [ ] **Hypothalamus OpenRouter sync.** Rewrite `_process_openrouter_model()` to use the new
-  `_enrich_from_parser(ai_model, parsed)` pattern. Add frontend button. Brings full cloud model catalog with real
-  pricing.
+- [ ] **Hypothalamus OpenRouter sync (clean import).** Rewrite `_process_openrouter_model()` to use the new
+  `_enrich_from_parser(ai_model, parsed)` pattern and the standalone semantic parser (98.4% accuracy). Previous
+  attempt borked the database with junk records — the parser should now prevent that by properly classifying
+  families, roles, quantizations, and rejecting unrecognizable entries. Add frontend button. `synapse_open_router.py`
+  is dead code and can be deleted — this sync uses the Hypothalamus routing layer, not the old OpenRouter client.
 
 ## Future
 
