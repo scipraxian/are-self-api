@@ -176,24 +176,31 @@ class ReasoningTurn(
         )
         return last_output_len <= target_capacity
 
-    def apply_efficiency_bonus(self) -> (bool, str):
-        return False, ''
-        # THIS IS REMOVED UNTIL WE REFACTOR THE EFFICIENCY LOGIC.
-        # was_efficient = self.was_efficient_last_turn
-        # focus = 1
-        # xp = 5
-        # if was_efficient:
-        #     self.session.current_focus = min(
-        #         self.session.max_focus, self.session.current_focus + focus
-        #     )
-        #     self.session.total_xp += xp
-        #
-        # efficiency_status = (
-        #     f'SUCCESS (+{focus} Focus, +{xp} XP)'
-        #     if was_efficient
-        #     else 'FAILED (Data footprint too large)'
-        # )
-        # return was_efficient, efficiency_status
+    def apply_efficiency_bonus(self) -> tuple[bool, str]:
+        """Award Focus and XP when the previous turn's output was concise.
+
+        Conciseness threshold: current_level * 1000 characters.
+        Only meaningful when the Focus Addon is attached — otherwise
+        this method is never called.
+        """
+        if not self.last_turn:
+            return False, ''
+
+        was_efficient = self.was_efficient_last_turn
+        focus = 1
+        xp = 5
+        if was_efficient:
+            self.session.current_focus = min(
+                self.session.max_focus, self.session.current_focus + focus
+            )
+            self.session.total_xp += xp
+
+        efficiency_status = (
+            f'SUCCESS (+{focus} Focus, +{xp} XP)'
+            if was_efficient
+            else 'FAILED (Data footprint too large)'
+        )
+        return was_efficient, efficiency_status
 
 
 class SessionConclusion(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):

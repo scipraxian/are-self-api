@@ -23,7 +23,12 @@ def focus_addon(turn: ReasoningTurn) -> List[Dict[str, Any]]:
         prompt_blocks.append('Focus Addon Preview Mode (No Identity Disc)')
 
     # Apply the bonus (updates session focus natively)
-    turn.apply_efficiency_bonus()
+    was_efficient, efficiency_status = turn.apply_efficiency_bonus()
+    if efficiency_status:
+        prompt_blocks.append(
+            f'### Efficiency Bonus ###\n'
+            f'{efficiency_status}'
+        )
 
     current_turn = turn.turn_number
     level_up_str = (
