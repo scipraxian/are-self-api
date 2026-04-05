@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from .models import (
     ContextVariable,
     Executable,
+    ExecutableArgument,
+    ExecutableArgumentAssignment,
     ProjectEnvironment,
     ProjectEnvironmentContextKey,
     ProjectEnvironmentStatus,
@@ -13,6 +15,8 @@ from .models import (
 )
 from .serializers import (
     ContextVariableSerializer,
+    ExecutableArgumentAssignmentSerializer,
+    ExecutableArgumentSerializer,
     ExecutableSerializer,
     ProjectEnvironmentContextKeySerializer,
     ProjectEnvironmentSerializer,
@@ -55,14 +59,20 @@ class ProjectEnvironmentViewSet(viewsets.ModelViewSet):
 
 class ExecutableViewSet(viewsets.ModelViewSet):
     """
-    Registry of Tools/Executables.
-    MCP Usage: Read-only lookup to understand available tools and their default flags.
+    Registry of Tools/Executables — full CRUD for the Effector Editor.
     """
 
-    queryset = Executable.objects.all().order_by('name')
+    queryset = (
+        Executable.objects.all()
+        .prefetch_related(
+            'switches',
+            'executableargumentassignment_set',
+            'executableargumentassignment_set__argument',
+            'executablesupplementaryfileorpath_set',
+        )
+        .order_by('name')
+    )
     serializer_class = ExecutableSerializer
-    # Executable updates are rare/dangerous; restricting to admin or explicit PATCH
-    http_method_names = ['get', 'head', 'options', 'patch']
 
 
 class ContextVariableViewSet(viewsets.ModelViewSet):
@@ -84,3 +94,28 @@ class EnvironmentTypeViewSet(viewsets.ModelViewSet):
 class EnvironmentStatusViewSet(viewsets.ModelViewSet):
     queryset = ProjectEnvironmentStatus.objects.all()
     serializer_class = ProjectEnvironmentStatusSerializer
+
+
+class ExecutableArgumentViewSet(viewsets.ModelViewSet):
+    """
+    CRUD for standalone argument definitions.
+    These are the reusable argument templates that get assigned to Executables/Effectors.
+    """
+
+    queryset = ExecutableArgument.objects.all().order_by('name')
+    serializer_class = ExecutableArgumentSerializer
+
+
+class ExecutableArgumentAssignmentViewSet(viewsets.ModelViewSet):
+    """
+    CRUD for the join table linking arguments to executables (with order).
+    Filterable by executable FK.
+    """
+
+    queryset = (
+        ExecutableArgumentAssignment.objects.all()
+        .select_related('argument')
+        .order_by('order')
+    )
+    serializer_class = ExecutableArgumentAssignmentSerializer
+    filterset_fields = ['executable']

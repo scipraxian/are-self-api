@@ -4,12 +4,20 @@ from rest_framework import serializers
 
 from central_nervous_system.models import (
     Axon,
+    CNSDistributionMode,
     CNSTag,
     Effector,
+    EffectorArgumentAssignment,
+    EffectorContext,
     NeuralPathway,
     Neuron,
     Spike,
     SpikeTrain,
+)
+from environments.serializers import (
+    ExecutableArgumentSerializer,
+    ExecutableSerializer,
+    ExecutableSwitchSerializer,
 )
 
 
@@ -23,6 +31,83 @@ class EffectorLightSerializer(serializers.ModelSerializer):
     class Meta:
         model = Effector
         fields = ['id', 'name', 'description', 'distribution_mode']
+
+
+class EffectorArgumentAssignmentSerializer(serializers.ModelSerializer):
+    argument_detail = ExecutableArgumentSerializer(
+        source='argument', read_only=True
+    )
+
+    class Meta:
+        model = EffectorArgumentAssignment
+        fields = ['id', 'effector', 'argument', 'order', 'argument_detail']
+
+
+class EffectorContextSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EffectorContext
+        fields = ['id', 'effector', 'key', 'value']
+
+
+class CNSDistributionModeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CNSDistributionMode
+        fields = ['id', 'name', 'description']
+
+
+class EffectorDetailSerializer(serializers.ModelSerializer):
+    """
+    Full serializer for the Effector Editor page.
+    Includes nested read-only details for executable, switches, arguments, and context.
+    """
+
+    distribution_mode_detail = CNSDistributionModeSerializer(
+        source='distribution_mode', read_only=True
+    )
+    executable_detail = ExecutableSerializer(
+        source='executable', read_only=True
+    )
+    switches_detail = ExecutableSwitchSerializer(
+        source='switches', many=True, read_only=True
+    )
+    argument_assignments = EffectorArgumentAssignmentSerializer(
+        source='effectorargumentassignment_set',
+        many=True,
+        read_only=True,
+    )
+    context_entries = EffectorContextSerializer(
+        source='effectorcontext_set',
+        many=True,
+        read_only=True,
+    )
+    tags = CNSTagSerializer(many=True, read_only=True)
+    rendered_full_command = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Effector
+        fields = [
+            'id',
+            'name',
+            'description',
+            'executable',
+            'executable_detail',
+            'switches',
+            'switches_detail',
+            'distribution_mode',
+            'distribution_mode_detail',
+            'argument_assignments',
+            'context_entries',
+            'tags',
+            'is_favorite',
+            'rendered_full_command',
+        ]
+
+    def get_rendered_full_command(self, obj) -> list:
+        """
+        Returns the full command line [executable, arg1, arg2, switch1, ...]
+        using Effector.get_full_command() which includes all arguments and switches.
+        """
+        return obj.get_full_command()
 
 
 class AxonSerializer(serializers.ModelSerializer):

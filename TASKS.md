@@ -28,7 +28,8 @@ Image/audio generation that requires a GPU and a separate process uses the effec
 - [ ] **Multiple Ollama endpoints.** Secondary machine running Ollama should be usable. These are
   **AIModelProviders** — the Hypothalamus already supports multiple providers per model. Add a second
   AIModelProvider record pointing to the secondary machine's `host:port`. The failover strategy handles
-  routing. May need a UI affordance in the Hypothalamus to add/edit provider endpoints.
+  routing. May need a UI affordance in the Hypothalamus to add/edit provider endpoints. Create a scanner much like
+- the scan for agents executable.
 
 ## Ship-Blocking — Security Remediation (Before Tuesday Release)
 
@@ -48,7 +49,28 @@ Image/audio generation that requires a GPU and a separate process uses the effec
 - [ ] **Document Ollama security posture.** Users must keep Ollama updated independently. The install
   script should recommend a minimum Ollama version. See DEPENDENCY_AUDIT.md for full CVE list.
 
+## Ship-Blocking — Documentation Infrastructure
+
+- [ ] **Google-style docstrings for all viewsets, serializers, and public methods.** Prerequisite for
+  Swagger/OpenAPI auto-generation. Run through each Django app and add docstrings to every ViewSet class,
+  every serializer class, and every public method. Format: Google-style (`Args:`, `Returns:`, `Raises:`).
+  Priority order: Frontal Lobe, CNS, Hippocampus, Hypothalamus, Identity, then the rest.
+- [ ] **drf-spectacular integration for /api/docs/.** Install `drf-spectacular`, add to INSTALLED_APPS,
+  wire `SpectacularAPIView` + `SpectacularSwaggerView` at `/api/docs/`. Generates interactive OpenAPI
+  docs from DRF viewsets + docstrings. This gives scientists and developers a try-it-in-the-browser
+  API explorer on the running server itself.
+- [ ] **Docusaurus docs site (are-self-docs repo).** React-based documentation site deployed via GitHub
+  Pages at `are-self.com`. Pulls content from markdown docs in are-self-api and are-self-ui. Sidebar
+  navigation, search, versioning. Scaffold is ready — needs content migration and styling.
+- [ ] **are-self-research repo.** Separate GitHub repo for whitepapers and academic papers. LaTeX format
+  for formal publications. Papers: Focus Economy, Neuro-Mimetic Architecture, LLM Testing Harness,
+  CI/CD Sovereignty, Hippcampus Hypergraph Migration (Samuel), Unreal Engine Integration.
+
 ## Ship-Blocking — Existing
+
+I need to be able to delete a reasoning session.
+I need to be able to prune a reasoning session.... i pick turn 10 and click "Prune" and it deletes the turns
+from 10 to the end.
 
 - [X] **Frontal Lobe — context variable injection into session.** identity_disc context variable now flows to
   `ReasoningSession.objects.create()` (fixed 4/3), but the `prompt` context variable is NOT being injected into the
@@ -118,13 +140,13 @@ Image/audio generation that requires a GPU and a separate process uses the effec
 
 - [x] **Logic Node Verification (gates testing harness AND branching pathways).** DONE. The logic node
   (`pathway_logic_node.py`) was rewritten to 3 modes with blackboard-driven config:
-  1. **Retry mode:** Reads `loop_count` from blackboard (no provenance walking), increments, checks
-     against `max_retries`. Deep copy fix applied in `central_nervous_system.py`.
-  2. **Gate mode:** Checks blackboard keys with operators: exists, equals, not_equals, gt, lt.
-     Returns 200 (SUCCESS axon) or 500 (FAILURE axon). This is the switch for modality routing.
-  3. **Wait mode:** Pure delay, always passes.
-  16 tests written in `test_logic_node.py`. Both capabilities verified — testing harness and
-  modality routing are now unblocked.
+    1. **Retry mode:** Reads `loop_count` from blackboard (no provenance walking), increments, checks
+       against `max_retries`. Deep copy fix applied in `central_nervous_system.py`.
+    2. **Gate mode:** Checks blackboard keys with operators: exists, equals, not_equals, gt, lt.
+       Returns 200 (SUCCESS axon) or 500 (FAILURE axon). This is the switch for modality routing.
+    3. **Wait mode:** Pure delay, always passes.
+       16 tests written in `test_logic_node.py`. Both capabilities verified — testing harness and
+       modality routing are now unblocked.
 - [ ] **Error Handler Effector.** A native handler that fires when a spike fails (wired via TYPE_FAILURE
   axon). Reads error context from the blackboard (`error_message`, `failed_effector`, `result_code`).
   Can dispatch notifications — log to engram, fire a Cortisol neurotransmitter, write a PFC comment on
@@ -132,17 +154,17 @@ Image/audio generation that requires a GPU and a separate process uses the effec
   via effector command args. Every non-trivial pathway should have a failure wire leading here.
 - [ ] **Image Generation Effector — PoC (Option A).** Prove the generation effector pattern works with a
   dedicated art pathway (separate from the canonical temporal pathway):
-  - **Effector caster:** `image_generation_caster.py`. Reads `generation_prompt` from the blackboard,
-    POSTs to `{{image_gen_endpoint}}` (environment context variable), saves result to
-    `{{media_root}}/filename.png`, writes file path back to blackboard. ~30 lines. Uses `requests.post()`.
-  - **Fixture:** New Effector record for the image generation effector.
-  - **Pathway:** 3-node art pathway — Frontal Lobe (artist writes prompt to BB) → Generation Effector
-    (calls external service) → Frontal Lobe (reviews result, iterates or done).
-  - **Identity template:** Artist IdentityDisc with creative prompting addons.
-  - **Acceptance criteria:** Artist LLM writes an image prompt, effector generates an image via external
-    service, file lands on disk at the environment-configured path.
-  - **Addon candidate:** This is Are-Self's first addon — "install the effector, configure the endpoint,
-    it works." Docker Compose profile: `docker compose --profile art up` adds InvokeAI.
+    - **Effector caster:** `image_generation_caster.py`. Reads `generation_prompt` from the blackboard,
+      POSTs to `{{image_gen_endpoint}}` (environment context variable), saves result to
+      `{{media_root}}/filename.png`, writes file path back to blackboard. ~30 lines. Uses `requests.post()`.
+    - **Fixture:** New Effector record for the image generation effector.
+    - **Pathway:** 3-node art pathway — Frontal Lobe (artist writes prompt to BB) → Generation Effector
+      (calls external service) → Frontal Lobe (reviews result, iterates or done).
+    - **Identity template:** Artist IdentityDisc with creative prompting addons.
+    - **Acceptance criteria:** Artist LLM writes an image prompt, effector generates an image via external
+      service, file lands on disk at the environment-configured path.
+    - **Addon candidate:** This is Are-Self's first addon — "install the effector, configure the endpoint,
+      it works." Docker Compose profile: `docker compose --profile art up` adds InvokeAI.
 - [ ] **Branching Canonical Pathway (Option B — after logic node).** Evolve the temporal tick to support
   modality routing. The canonical pathway's first node (PM/dispatcher) inspects the PFC task and mangles
   the blackboard. A logic node routes based on blackboard state: code tasks → worker branch, art tasks →

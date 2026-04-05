@@ -102,6 +102,7 @@ All at `/api/v2/`. Most use hyphens; a few legacy routes use underscores. Do not
 ```
 # CNS
 spiketrains, spikes, neuralpathways, neurons, axons, effectors
+effector-contexts, effector-argument-assignments, distribution-modes
 
 # Temporal Lobe
 iterations, iteration-definitions, iteration-shift-definitions, shifts
@@ -135,6 +136,7 @@ failover-types, failover-strategies, selection-filters
 # Environments
 environments, executables, context-variables, context-keys
 environment-types, environment-statuses
+executable-arguments, executable-argument-assignments
 ```
 
 ## Current State (April 2026)
@@ -176,6 +178,12 @@ and (500, msg) for FAILURE. External effectors use Unix exit codes (0 = success)
 are evaluated in SEPARATE code paths (`_execute_local_python` vs `_execute_unified_pipeline`)
 but both flow through `_update_status` to set final status. Do not bypass `_update_status`.
 
+Session 9: Effector Editor API — `EffectorViewSetV2` upgraded to full `ModelViewSet` with
+`EffectorDetailSerializer` (nested read-only fields + `rendered_full_command`). New ViewSets:
+`EffectorContextViewSetV2`, `EffectorArgumentAssignmentViewSetV2`, `CNSDistributionModeViewSetV2`.
+Environments app: `ExecutableViewSet` upgraded to full CRUD, new `ExecutableArgumentViewSet` and
+`ExecutableArgumentAssignmentViewSet`. 15 API tests. Session 8: `_update_status` assignment fix,
+SpikeTrainViewSet N+1, dendrite subscription mismatch, narrative_dump endpoint.
 Session 7: logic node tests expanded to 68, `retry_delay` key standardized,
 SystemControlViewSet, wire-type logging in `_process_graph_triggers`.
 Session 6: debug node effector (PK 9) with native handler, CNS execution logging upgrade.
