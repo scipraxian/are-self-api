@@ -23,12 +23,23 @@ React + Vite + TypeScript (repo: `are-self-ui`). This repo serves a DRF API cons
 that frontend, plus Celery workers that drive the autonomous reasoning loop.
 
 **Mission:** Empower underprivileged youth in remote areas with free access to AI technology.
-MIT licensed. Runs on consumer hardware via Ollama.
+MIT licensed. Runs on consumer hardware via Ollama. Released by Michael personally under
+[scipraxian](https://github.com/scipraxian) — not a company or nonprofit. Would pitch TO
+nonprofits and churches as a free tool they can use.
 
 **Target user:** A 10-year-old with no money (or their grandma). Every design decision flows
 from this. If it requires a credit card, a powerful GPU, or a CS degree — it's wrong. The
 system must run on whatever hardware they have, use free models, and be approachable enough
 that a child can make art and games with it.
+
+## The Four Repositories
+
+| Repo | Purpose |
+|------|---------|
+| [are-self-api](https://github.com/scipraxian/are-self-api) | Django backend (this repo) |
+| [are-self-ui](https://github.com/scipraxian/are-self-ui) | React frontend |
+| [are-self-docs](https://github.com/scipraxian/are-self-docs) | Docusaurus documentation site → [are-self.com](https://are-self.com) |
+| [are-self-research](https://github.com/scipraxian/are-self-research) | LaTeX whitepapers (APA 7th edition) |
 
 ## The Tick Cycle
 
@@ -141,10 +152,21 @@ executable-arguments, executable-argument-assignments
 
 ## Current State (April 2026)
 
+**MIT open-source release: Tuesday, April 7, 2026.** All four repos go public simultaneously.
+DNS for are-self.com and GitHub Pages deployment happen release day. Documentation site
+(Docusaurus) is scaffolded with 30+ pages including brain-region deep dives, API reference,
+security posture, dependency audit, and UI walkthrough stubs. Research repo has LaTeX
+templates and 6 paper directories. Samuel Frerichs (apprentice, UPA) is collaborating on
+the Hippocampus Hypergraph Migration paper.
+
 **What works:** The full tick cycle runs end-to-end. Identities create, forge into discs,
 get slotted into iterations, pick up tasks, reason autonomously, call tools, form memories.
 The Hypothalamus semantic parser (83 tests, 98.4% accuracy) enriches models automatically.
 Real-time events flow through the Synaptic Cleft. All brain regions have working API endpoints.
+
+**Ship-blocking security:** Django CVE-2025-64459 (CVSS 9.1), Redis CVE-2025-49844 (CVSS 10.0),
+LiteLLM supply chain incident (March 2026), Ollama CVEs including CVE-2024-37032 "Probllama".
+Full audit in DEPENDENCY_AUDIT.md. Version pins needed before release.
 
 **Top priority:** Image and audio manipulation capabilities via **CNS effectors** (not Parietal
 Lobe tools). The artist LLM writes a generation prompt to the blackboard, a generation effector
