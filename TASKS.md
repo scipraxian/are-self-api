@@ -68,9 +68,19 @@ Image/audio generation that requires a GPU and a separate process uses the effec
 
 ## Ship-Blocking — Existing
 
+I need to be able to add a missing model to the hypothalamus by hand.
+can't set favorites or groups in CNS nor in the pathway editor
+
+api/v2/thalamus/messages polls a lot when talking to the thalamus.....
+
+frontal lobe session parietal tab, i can't click or drill to any of the items, yes it's working, no it's nto good enough
+yea parietal actions on the right window also don't drill at all
+the easiest answer would be to drill to zoom the 3d matching node..... so that we see the entire call....
 I need to be able to delete a reasoning session.
 I need to be able to prune a reasoning session.... i pick turn 10 and click "Prune" and it deletes the turns
 from 10 to the end.
+
+fetched gemma4, saw new model, pull, took forever but worked but showed up only after clicking refresh.
 
 - [X] **Frontal Lobe — context variable injection into session.** identity_disc context variable now flows to
   `ReasoningSession.objects.create()` (fixed 4/3), but the `prompt` context variable is NOT being injected into the

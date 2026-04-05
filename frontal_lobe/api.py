@@ -381,7 +381,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
 
         # Summary section
         lines.append('SUMMARY')
-        if session.conclusion and session.conclusion.summary:
+        if hasattr(session, 'conclusion') and session.conclusion.summary:
             lines.append(session.conclusion.summary)
         else:
             lines.append('Session ended without summary.')

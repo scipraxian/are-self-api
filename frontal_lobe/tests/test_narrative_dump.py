@@ -1,14 +1,21 @@
 import json
+
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from common.tests.common_test_case import CommonFixturesAPITestCase
 from central_nervous_system.models import (
     Spike,
     SpikeStatus,
     SpikeTrain,
     SpikeTrainStatus,
+)
+from common.tests.common_test_case import CommonFixturesAPITestCase
+from frontal_lobe.models import (
+    ReasoningSession,
+    ReasoningStatus,
+    ReasoningTurn,
+    SessionConclusion,
 )
 from hippocampus.models import Engram
 from hypothalamus.models import (
@@ -18,12 +25,6 @@ from hypothalamus.models import (
     LLMProvider,
 )
 from parietal_lobe.models import ToolCall, ToolDefinition
-from frontal_lobe.models import (
-    ReasoningSession,
-    ReasoningStatus,
-    ReasoningTurn,
-    SessionConclusion,
-)
 
 
 class NarrativeDumpAPITest(CommonFixturesAPITestCase):
@@ -45,9 +46,7 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
         spike_status = SpikeStatus.objects.get(id=1)
         spike_train_status = SpikeTrainStatus.objects.get(id=1)
 
-        self.spike_train = SpikeTrain.objects.create(
-            status=spike_train_status
-        )
+        self.spike_train = SpikeTrain.objects.create(status=spike_train_status)
         self.spike = Spike.objects.create(
             spike_train=self.spike_train, status=spike_status
         )
@@ -94,10 +93,10 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
             self.turns.append(turn)
 
         # Create tools and tool calls
-        self.tool_ticket = ToolDefinition.objects.create(
+        self.tool_ticket, _ = ToolDefinition.objects.get_or_create(
             name='mcp_ticket'
         )
-        self.tool_generic = ToolDefinition.objects.create(
+        self.tool_generic, _ = ToolDefinition.objects.get_or_create(
             name='mcp_generic'
         )
 
@@ -223,7 +222,9 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
         content = response.content.decode('utf-8')
 
         self.assertIn('SUMMARY', content)
-        self.assertIn('This is a test session summary with conclusions.', content)
+        self.assertIn(
+            'This is a test session summary with conclusions.', content
+        )
 
     def test_narrative_dump_contains_parietal_lobe_activity(self):
         """Verify narrative_dump contains PARIETAL LOBE ACTIVITY section."""
@@ -311,7 +312,9 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
             spike=self.spike, status=self.status_active
         )
 
-        url = reverse('reasoningsession-narrative-dump', args=[session_no_summary.id])
+        url = reverse(
+            'reasoningsession-narrative-dump', args=[session_no_summary.id]
+        )
         response = self.client.post(url)
         content = response.content.decode('utf-8')
 
@@ -324,7 +327,9 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
             spike=self.spike, status=self.status_active
         )
 
-        url = reverse('reasoningsession-narrative-dump', args=[session_no_engrams.id])
+        url = reverse(
+            'reasoningsession-narrative-dump', args=[session_no_engrams.id]
+        )
         response = self.client.post(url)
         content = response.content.decode('utf-8')
 
