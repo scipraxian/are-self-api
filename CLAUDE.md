@@ -154,12 +154,30 @@ The logic node (retry/gate/wait) enables conditional branching for modality rout
 **What's in progress:** See TASKS.md for full task list. Backend items: image generation effector
 PoC, error handler effector, branching canonical pathway, spell/cast naming sweep (~9 files in CNS),
 engram function consolidation, linter standardization, API URL standardization (underscores → hyphens),
-prompt_addon state awareness. Recently completed (Session 7): logic node tests expanded to 49,
-`retry_delay` key standardized (retry mode uses `retry_delay`, wait mode uses `delay`),
-SystemControlViewSet for shutdown/restart/status at `/api/v2/system-control/`, wire-type logging
-in `_process_graph_triggers`. **KNOWN BUG:** FLOW axons fire after logic node LIMIT REACHED — the
-CNS dispatch logic needs to suppress FLOW axons for logic nodes (PKs 5-7) and only fire SUCCESS or
-FAILURE. Also: monitor view dendrite events may not be scoped to spiketrain ID correctly.
+prompt_addon state awareness.
+
+**Session 8 fixes (critical):**
+- **`_update_status` missing `self.status` assignment.** The root cause of logic nodes always
+  producing SUCCESS spikes. `_execute_local_python` saved status to DB via `_update_status()` but
+  that method never set `self.status` on the NMJ instance. The guard in `_execute_spike`
+  (`if self.status not in STATUSES_WHICH_HALT`) then overwrote the DB status back to SUCCESS.
+  Fix applied in `_update_status` itself — `self.status = status_id` — so ALL callers
+  (internal and external) stay in sync. **This is the heart of spike status propagation.
+  Any future changes to `_update_status` must preserve `self.status` assignment.**
+- **SpikeTrainViewSet prefetch fix.** Added 4 missing prefetch_related entries to eliminate
+  N+1 queries on the pathway view.
+- **CNSMonitorPage dendrite mismatch.** Spike subscription changed to unfiltered (`null`)
+  because the thalamus signal uses `spike.id` as dendrite_id, not `spike_train_id`.
+  The 500ms debounced refetch coalesces events. SpikeTrain subscription was already correct.
+
+**IMPORTANT for future sessions:** `_update_status` in `neuromuscular_junction.py` is the
+single source of truth for spike status. Internal effectors return (200, msg) for SUCCESS
+and (500, msg) for FAILURE. External effectors use Unix exit codes (0 = success). These
+are evaluated in SEPARATE code paths (`_execute_local_python` vs `_execute_unified_pipeline`)
+but both flow through `_update_status` to set final status. Do not bypass `_update_status`.
+
+Session 7: logic node tests expanded to 68, `retry_delay` key standardized,
+SystemControlViewSet, wire-type logging in `_process_graph_triggers`.
 Session 6: debug node effector (PK 9) with native handler, CNS execution logging upgrade.
 Session 5: Frontal Lobe PK migration, canonical effector PK constants. Session 4: logic node
 rewritten to 3 modes (retry/gate/wait), `mcp_tts` tool built with Piper TTS,

@@ -305,6 +305,213 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         )
         return response
 
+    @action(detail=True, methods=['post'], url_path='narrative_dump')
+    def narrative_dump(self, request, pk=None):
+        """Returns a detailed narrative of session activity with tool
+        execution and error summaries."""
+        from django.http import HttpResponse
+        import json
+
+        session = (
+            self.get_queryset()
+            .select_related(
+                'status',
+                'identity_disc',
+                'spike',
+                'spike__spike_train',
+                'conclusion',
+            )
+            .get(pk=pk)
+        )
+        turns = (
+            session.turns.select_related(
+                'status',
+                'model_usage_record',
+                'model_usage_record__ai_model',
+                'model_usage_record__ai_model_provider',
+                'model_usage_record__ai_model_provider__provider',
+            )
+            .prefetch_related('tool_calls__tool')
+            .order_by('turn_number')
+        )
+
+        id_prefix = str(session.id)[:8]
+        identity_name = (
+            session.identity_disc.name
+            if session.identity_disc
+            else 'Unassigned'
+        )
+        status_name = session.status.name if session.status else '?'
+        turn_count = turns.count()
+        duration = session.modified - session.created
+
+        lines = []
+        lines.append(
+            'SESSION NARRATIVE — #%s — %s'
+            % (id_prefix, identity_name)
+        )
+        lines.append('=' * 88)
+
+        # Status line
+        duration_str = '%d:%02d:%02d' % (
+            int(duration.total_seconds() // 3600),
+            int((duration.total_seconds() % 3600) // 60),
+            int(duration.total_seconds() % 60),
+        )
+        model_name = '?'
+        provider_name = '?'
+        if turns.exists():
+            first_turn = turns.first()
+            if first_turn.model_usage_record:
+                mur = first_turn.model_usage_record
+                if mur.ai_model:
+                    model_name = mur.ai_model.name
+                if mur.ai_model_provider and mur.ai_model_provider.provider:
+                    provider_name = mur.ai_model_provider.provider.key
+
+        lines.append(
+            '%s · %d turns · %s'
+            % (status_name, turn_count, duration_str)
+        )
+        lines.append(
+            'Started: %s · Model: %s · %s'
+            % (session.created, model_name, provider_name)
+        )
+        lines.append('')
+
+        # Summary section
+        lines.append('SUMMARY')
+        if session.conclusion and session.conclusion.summary:
+            lines.append(session.conclusion.summary)
+        else:
+            lines.append('Session ended without summary.')
+        lines.append('')
+
+        # Parietal Lobe Activity section
+        all_tool_calls = []
+        for turn in turns:
+            for tc in turn.tool_calls.all():
+                all_tool_calls.append((turn, tc))
+
+        lines.append('PARIETAL LOBE ACTIVITY (%d calls)' % len(all_tool_calls))
+        if all_tool_calls:
+            for idx, (turn, tc) in enumerate(all_tool_calls, 1):
+                tool_name = tc.tool.name if tc.tool else '?'
+                action_name = ''
+                field_name = ''
+
+                # Parse arguments JSON to extract mcp_ticket action/field_name
+                if tool_name == 'mcp_ticket' and tc.arguments:
+                    try:
+                        args_dict = json.loads(tc.arguments)
+                        action_name = args_dict.get('action', '')
+                        field_name = args_dict.get('field_name', '')
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+
+                # Determine success/failure
+                status_indicator = '✓'
+                if tc.traceback or (
+                    tc.result_payload
+                    and isinstance(tc.result_payload, str)
+                ):
+                    try:
+                        result = json.loads(tc.result_payload)
+                        if isinstance(result, dict) and not result.get('ok', True):
+                            status_indicator = '✗'
+                    except (json.JSONDecodeError, TypeError):
+                        result_lower = tc.result_payload.lower()
+                        if 'error' in result_lower or not tc.result_payload:
+                            status_indicator = '✗'
+
+                # Format action description
+                action_desc = ''
+                if action_name and field_name:
+                    action_desc = '%s %s' % (action_name, field_name)
+                elif action_name:
+                    action_desc = action_name
+                elif field_name:
+                    action_desc = 'set %s' % field_name
+
+                line = '  T%d   %s' % (idx, tool_name)
+                if action_desc:
+                    line += '  %s' % action_desc
+                line += '        %s' % status_indicator
+                lines.append(line)
+        lines.append('')
+
+        # Engrams section
+        engrams = session.engrams.all()
+        engram_names = ', '.join([e.name for e in engrams])
+        if not engram_names:
+            engram_names = 'none formed'
+        lines.append('ENGRAMS: %s' % engram_names)
+        lines.append('')
+
+        # Errors section
+        errors = []
+        for turn in turns:
+            for tc in turn.tool_calls.all():
+                if tc.traceback:
+                    error_text = tc.traceback.split('\n')[0][:60]
+                    if len(tc.traceback) > 60:
+                        error_text += '...'
+                    tool_name = tc.tool.name if tc.tool else '?'
+                    errors.append(
+                        'T%d: %s — %s'
+                        % (
+                            turn.turn_number,
+                            tool_name,
+                            error_text,
+                        )
+                    )
+                elif tc.result_payload and isinstance(tc.result_payload, str):
+                    try:
+                        result = json.loads(tc.result_payload)
+                        if isinstance(result, dict) and not result.get('ok', True):
+                            error_msg = result.get('error', 'Unknown error')[:60]
+                            if len(str(error_msg)) > 60:
+                                error_msg += '...'
+                            tool_name = tc.tool.name if tc.tool else '?'
+                            errors.append(
+                                'T%d: %s — %s'
+                                % (turn.turn_number, tool_name, error_msg)
+                            )
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+
+        lines.append('ERRORS (%d):' % len(errors))
+        if errors:
+            for error in errors:
+                lines.append('  %s' % error)
+        lines.append('')
+
+        # Token summary section
+        if turns.exists():
+            total_in = 0
+            total_out = 0
+            for turn in turns:
+                if turn.model_usage_record:
+                    mur = turn.model_usage_record
+                    total_in += mur.input_tokens or 0
+                    total_out += mur.output_tokens or 0
+
+            avg_in = int(total_in / turn_count) if turn_count > 0 else 0
+            avg_out = int(total_out / turn_count) if turn_count > 0 else 0
+
+            lines.append('TOKEN SUMMARY:')
+            lines.append(
+                '  Total: %d in · %d out · Avg/turn: %d in · %d out'
+                % (total_in, total_out, avg_in, avg_out)
+            )
+
+        body = '\n'.join(lines)
+        response = HttpResponse(body, content_type='text/plain')
+        response['Content-Disposition'] = (
+            'attachment; filename="session_narrative_%s.log"' % id_prefix
+        )
+        return response
+
     @action(detail=True, methods=['post'])
     def stop(self, request, pk=None):
         """Gracefully signals the Frontal Lobe loop to halt at the next turn."""

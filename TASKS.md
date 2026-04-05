@@ -40,9 +40,27 @@ support multiple ollama endpoints locally.... my secondary machine is running ol
   schema so models must explain themselves, or (b) add system prompt instructions demanding tool explanations.
   This pairs with the UI task to render tool calls in chat.
 - [x] **Logic node — rewrite + test coverage.** `pathway_logic_node.py` rewritten to 3 modes (retry/gate/wait)
-  with blackboard-driven config instead of provenance walking. 49 tests in `test_logic_node.py` (expanded Session 7).
+  with blackboard-driven config instead of provenance walking. 68 tests in `test_logic_node.py` (expanded Session 7).
   Config via NeuronContext keys: `logic_mode`, `max_retries`, `retry_delay` (retry mode), `delay` (wait mode),
   `gate_key`, `gate_operator`, `gate_value`. Returns 200 (SUCCESS axon) or 500 (FAILURE axon).
+- [x] **NMJ `_update_status` not setting `self.status` — logic nodes always SUCCESS (Session 8).**
+  `_execute_local_python` called `_update_status(new_status)` which saved to DB but never set `self.status`.
+  The guard in `_execute_spike` (`if self.status not in STATUSES_WHICH_HALT`) then overwrote FAILED back to
+  SUCCESS. All internal effectors (retry/gate/debug) could never produce a FAILED spike. Fix: `self.status =
+  status_id` added to `_update_status` itself so all callers stay in sync.
+- [x] **SpikeTrainViewSet N+1 queries — pathway view slow (Session 8).** `api_v2.py` prefetch_related was
+  missing `spikes__neuron`, `spikes__neuron__pathway`, `spikes__neuron__invoked_pathway`,
+  `spikes__provenance__spike_train`. Serializer accessed these relations per-spike, causing thousands of
+  individual queries. Fixed by adding all four to the queryset.
+- [x] **CNSMonitorPage dendrite subscription mismatch (Session 8).** `useDendrite('Spike', spiketrainId)`
+  never matched because the thalamus `broadcast_status` signal sends `dendrite_id=spike.id` (individual
+  spike UUID), not the train UUID. Fix: changed to `useDendrite('Spike', null)` — unfiltered, relies on
+  500ms debounced refetch to coalesce. SpikeTrain subscription was already correct.
+- [x] **Narrative dump endpoint (Session 8).** `narrative_dump` action on ReasoningSessionViewSet.
+  Compact human-readable session briefing: summary from mcp_done, chronological tool activity with
+  semantic formatting, engram list, error summary, token stats. Downloadable as
+  `session_narrative_{id}.log`. 16 tests in `test_narrative_dump.py`. Complements existing forensic
+  `summary_dump`. **Tests need to be run via Claude Code.**
 - [X] **"Spell" / "Cast" naming sweep.** Still live in ~9 files. Key targets: `effector_casters/` directory name,
   `cast_cns_spell` in PNS tests, `_extract_variables_from_spell` in CNS serializers, `spell_args`/`spell_switches` in
   CNS models, `Caster` references in tasks.py and tests, `cns_spellbook`/`cns_spell` basenames in CNS URL router.
