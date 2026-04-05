@@ -17,7 +17,8 @@
       "Bash(./venv/Scripts/pytest --tb=short)",
       "Bash(echo \"EXIT_CODE=$?\")",
       "Bash(ls identity/migrations/*.py)",
-      "Bash(./venv/Scripts/pytest frontal_lobe/tests/test_narrative_dump.py -x --tb=short)"
+      "Bash(./venv/Scripts/pytest frontal_lobe/tests/test_narrative_dump.py -x --tb=short)",
+      "Bash(./venv/Scripts/pytest parietal_lobe/parietal_mcp/mcp_ticket_functions/tests/test_mcp_ticket_search.py central_nervous_system/tests/test_logic_node.py -x --tb=short)"
     ]
   }
 }

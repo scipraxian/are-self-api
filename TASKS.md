@@ -82,6 +82,8 @@ from 10 to the end.
 
 fetched gemma4, saw new model, pull, took forever but worked but showed up only after clicking refresh.
 
+remvoe synapse entirely in favor of the new synapes_client....
+
 - [X] **Frontal Lobe — context variable injection into session.** identity_disc context variable now flows to
   `ReasoningSession.objects.create()` (fixed 4/3), but the `prompt` context variable is NOT being injected into the
   session's prompt. The context variable resolution chain (spike blackboard → effector context → neuron context) needs
