@@ -16,9 +16,39 @@ does the work. Swap backends by changing one environment variable.
 **TTS** is already built as a Parietal Lobe tool (`mcp_tts`) using Piper (in-process, no GPU, no server).
 Image/audio generation that requires a GPU and a separate process uses the effector pattern instead.
 
-## Ship-Blocking
+## Top Priority — Today (April 5, 2026)
 
-support multiple ollama endpoints locally.... my secondary machine is running ollama, i want to be able to use it.
+- [ ] **Test Gemma 4 tool calling.** Google released Gemma 4 on April 2, 2026 with native structured
+  tool use. The e4b variant activates ~3.8B parameters (MoE, 26B total) and fits on 10+ GB VRAM or Apple
+  Silicon unified memory. If tool calling works reliably, this could solve the small-model-can't-follow-
+  instructions problem that has plagued Are-Self's 7B testing. **Known issue:** Ollama v0.20.0 tool call
+  parser is reportedly broken — streaming drops tool calls. Test with `ollama run gemma4` and verify
+  `mcp_done`, `mcp_respond_to_user`, and engram tools work. Also test `functiongemma` (function-calling
+  fine-tune) from the Ollama library. This is potentially the most important model test before release.
+- [ ] **Multiple Ollama endpoints.** Secondary machine running Ollama should be usable. These are
+  **AIModelProviders** — the Hypothalamus already supports multiple providers per model. Add a second
+  AIModelProvider record pointing to the secondary machine's `host:port`. The failover strategy handles
+  routing. May need a UI affordance in the Hypothalamus to add/edit provider endpoints.
+
+## Ship-Blocking — Security Remediation (Before Tuesday Release)
+
+- [ ] **Pin Django to >=6.0.2.** CVE-2025-64459 (CVSS 9.1) — SQL injection via QuerySet.filter(). Affects
+  6.0.0 and 6.0.1. Change `Django>=6.0` to `Django>=6.0.2` in requirements.txt.
+- [ ] **Pin LiteLLM to verified-safe version with hash.** Supply chain compromise in March 2026 (versions
+  1.82.7 and 1.82.8 stole cloud credentials). Pin to a post-incident version and use `--hash` verification.
+  Are-Self's default Ollama-only config limits exposure, but cloud users are at risk.
+- [ ] **Update Docker Compose Redis image.** CVE-2025-49844 (CVSS 10.0) — RCE in Redis server Lua engine.
+  Pin to a patched Redis image in docker-compose.yml.
+- [ ] **Pin DRF to >=3.15.2.** CVE-2024-21520 — XSS in break_long_headers filter.
+- [ ] **Remove pygtail from requirements.txt.** Deprecated, not imported anywhere.
+- [ ] **Remove unused packages.** Audit and remove if confirmed: django-htmx (migrated to React),
+  scapy (possibly unused), yapf (redundant with Ruff), aiosmtpd (verify usage).
+- [ ] **Separate dev dependencies.** Move pytest, coverage, ruff, isort, yapf, ipython, type stubs,
+  playwright into `requirements-dev.txt`.
+- [ ] **Document Ollama security posture.** Users must keep Ollama updated independently. The install
+  script should recommend a minimum Ollama version. See DEPENDENCY_AUDIT.md for full CVE list.
+
+## Ship-Blocking — Existing
 
 - [X] **Frontal Lobe — context variable injection into session.** identity_disc context variable now flows to
   `ReasoningSession.objects.create()` (fixed 4/3), but the `prompt` context variable is NOT being injected into the
