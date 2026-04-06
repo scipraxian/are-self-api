@@ -150,78 +150,50 @@ environment-types, environment-statuses
 executable-arguments, executable-argument-assignments
 ```
 
-## Current State (April 2026)
+## Current State (April 5, 2026)
 
 **MIT open-source release: Tuesday, April 7, 2026.** All four repos go public simultaneously.
 DNS for are-self.com and GitHub Pages deployment happen release day. Documentation site
-(Docusaurus) is scaffolded with 30+ pages including brain-region deep dives, API reference,
-security posture, dependency audit, and UI walkthrough stubs. Research repo has LaTeX
-templates and 6 paper directories. Samuel Frerichs (apprentice, UPA) is collaborating on
-the Hippocampus Hypergraph Migration paper.
+(Docusaurus) is scaffolded with 30+ pages. Research repo has LaTeX templates and 6 paper
+directories. Samuel Frerichs (apprentice, UPA) is collaborating on the Hippocampus Hypergraph
+Migration paper.
 
 **What works:** The full tick cycle runs end-to-end. Identities create, forge into discs,
 get slotted into iterations, pick up tasks, reason autonomously, call tools, form memories.
 The Hypothalamus semantic parser (83 tests, 98.4% accuracy) enriches models automatically.
 Real-time events flow through the Synaptic Cleft. All brain regions have working API endpoints.
+Logic node (3 modes: retry/gate/wait) with 68 tests. TTS via Piper. Efficiency bonus active.
+SystemControlViewSet for shutdown/restart. Effector Editor API with full CRUD. Debug node
+(PK 9). Narrative dump + summary dump endpoints. `<<h>>` human message tagging prevents
+prompt_addon duplication.
 
 **Ship-blocking security:** Django CVE-2025-64459 (CVSS 9.1), Redis CVE-2025-49844 (CVSS 10.0),
 LiteLLM supply chain incident (March 2026), Ollama CVEs including CVE-2024-37032 "Probllama".
 Full audit in DEPENDENCY_AUDIT.md. Version pins needed before release.
 
-**Top priority:** Image and audio manipulation capabilities via **CNS effectors** (not Parietal
-Lobe tools). The artist LLM writes a generation prompt to the blackboard, a generation effector
-POSTs to whatever image/audio server is configured via environment context variables, and the
-result path goes back on the blackboard. This decouples Are-Self from any specific backend
-(InvokeAI, ComfyUI, etc.). TTS is already built as a Parietal Lobe tool (`mcp_tts`) using Piper.
-The logic node (retry/gate/wait) enables conditional branching for modality routing.
+**Top priority:** Documentation (release day), PNS expansion (multiple Ollama endpoints, live agent
+monitoring), and security version pins. Image/audio generation via CNS effectors is deferred to
+post-release — TTS via Piper is the PoC for binary creation.
 
-**What's in progress:** See TASKS.md for full task list. Backend items: image generation effector
-PoC, error handler effector, branching canonical pathway, spell/cast naming sweep (~9 files in CNS),
-engram function consolidation, linter standardization, API URL standardization (underscores → hyphens),
-prompt_addon state awareness.
+**What's in progress:** See TASKS.md for full task list. Key items: documentation infrastructure,
+security remediation, PNS expansion, error handler effector, engram function consolidation,
+API URL standardization (underscores → hyphens), prompt_addon state awareness.
 
-**Session 8 fixes (critical):**
-- **`_update_status` missing `self.status` assignment.** The root cause of logic nodes always
-  producing SUCCESS spikes. `_execute_local_python` saved status to DB via `_update_status()` but
-  that method never set `self.status` on the NMJ instance. The guard in `_execute_spike`
-  (`if self.status not in STATUSES_WHICH_HALT`) then overwrote the DB status back to SUCCESS.
-  Fix applied in `_update_status` itself — `self.status = status_id` — so ALL callers
-  (internal and external) stay in sync. **This is the heart of spike status propagation.
-  Any future changes to `_update_status` must preserve `self.status` assignment.**
-- **SpikeTrainViewSet prefetch fix.** Added 4 missing prefetch_related entries to eliminate
-  N+1 queries on the pathway view.
-- **CNSMonitorPage dendrite mismatch.** Spike subscription changed to unfiltered (`null`)
-  because the thalamus signal uses `spike.id` as dendrite_id, not `spike_train_id`.
-  The 500ms debounced refetch coalesces events. SpikeTrain subscription was already correct.
+**Critical architecture note — `_update_status`:** This method in `neuromuscular_junction.py` is
+the single source of truth for spike status. It sets BOTH `self.status` on the instance AND saves
+to DB. Internal effectors return (200, msg) for SUCCESS and (500, msg) for FAILURE. External
+effectors use Unix exit codes (0 = success). These are evaluated in SEPARATE code paths
+(`_execute_local_python` vs `_execute_unified_pipeline`) but both flow through `_update_status`
+to set final status. **Do not bypass `_update_status`. Any changes must preserve `self.status`
+assignment.**
 
-**IMPORTANT for future sessions:** `_update_status` in `neuromuscular_junction.py` is the
-single source of truth for spike status. Internal effectors return (200, msg) for SUCCESS
-and (500, msg) for FAILURE. External effectors use Unix exit codes (0 = success). These
-are evaluated in SEPARATE code paths (`_execute_local_python` vs `_execute_unified_pipeline`)
-but both flow through `_update_status` to set final status. Do not bypass `_update_status`.
+**Completed renames:** Talos → Are-Self naming sweep done. HTMX removed. Spell/Cast naming
+sweep done across CNS. Deprecated `ModelProvider`/`ModelRegistry` removed from Frontal Lobe.
 
-Session 9: Effector Editor API — `EffectorViewSetV2` upgraded to full `ModelViewSet` with
-`EffectorDetailSerializer` (nested read-only fields + `rendered_full_command`). New ViewSets:
-`EffectorContextViewSetV2`, `EffectorArgumentAssignmentViewSetV2`, `CNSDistributionModeViewSetV2`.
-Environments app: `ExecutableViewSet` upgraded to full CRUD, new `ExecutableArgumentViewSet` and
-`ExecutableArgumentAssignmentViewSet`. 15 API tests. Session 8: `_update_status` assignment fix,
-SpikeTrainViewSet N+1, dendrite subscription mismatch, narrative_dump endpoint.
-Session 7: logic node tests expanded to 68, `retry_delay` key standardized,
-SystemControlViewSet, wire-type logging in `_process_graph_triggers`.
-Session 6: debug node effector (PK 9) with native handler, CNS execution logging upgrade.
-Session 5: Frontal Lobe PK migration, canonical effector PK constants. Session 4: logic node
-rewritten to 3 modes (retry/gate/wait), `mcp_tts` tool built with Piper TTS,
-efficiency bonus re-enabled, shallow blackboard copy → deepcopy fix.
-
-**Completed renames:** Talos → Are-Self naming sweep is done (only migration history retains
-old names). HTMX views fully removed. `TalosEngram` → `Engram`, `TalosExecutable` →
-`Executable`, `talos_bin` references cleaned.
-
-**Legacy remnants:** `spell`/`cast`/`Caster` terminology still live in ~9 CNS files.
-`parietal_lobe/registry.py` still exists (superseded by Hypothalamus DB-driven routing).
-`synapse_open_router.py` is deprecated (no production callers, only test coverage).
-The `dashboard/` and `ue_tools/` apps are from the original UE5 build orchestrator and should
-not be modified — they'll be removed.
+**Legacy remnants:** `parietal_lobe/registry.py` still exists (superseded by Hypothalamus
+DB-driven routing). `synapse_open_router.py` is deprecated (no production callers). The
+`dashboard/` and `ue_tools/` apps are from the original UE5 build orchestrator — they'll be
+removed.
 
 ## Style Guide (Enforced)
 
