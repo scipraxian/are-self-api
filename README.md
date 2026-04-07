@@ -29,11 +29,72 @@ hard parts.
 
 ### Prerequisites
 
-- Python 3.12+
-- Docker Desktop (for PostgreSQL + Redis)
-- Node.js 20+ (for the frontend — see [are-self-ui](https://github.com/scipraxian/are-self-ui))
+- **Python 3.12+**
+- **Docker Desktop** (for PostgreSQL + Redis)
+- **Node.js 20+** (for the frontend — see [are-self-ui](https://github.com/scipraxian/are-self-ui))
 
 Ollama is installed automatically by the install script if not already present.
+
+#### Installing Python
+
+Python runs the entire Are-Self backend — the Django server, Celery workers, and all AI/ML integrations.
+
+1. Go to [https://www.python.org/downloads/](https://www.python.org/downloads/)
+2. Download Python **3.12 or higher** (the big yellow button usually has the latest version — check that the number starts with 3.12 or above).
+3. Run the installer:
+   - **Windows:** Run the `.exe` file. **Important:** On the very first screen, check the box that says "Add python.exe to PATH" — this is easy to miss and things will break without it. Then click "Install Now".
+   - **Mac:** Run the `.pkg` file and follow the prompts. Python will be installed to `/usr/local/bin`. If you have Homebrew, you can also run:
+     ```bash
+     brew install python@3.12
+     ```
+   - **Linux (Ubuntu/Debian):**
+     ```bash
+     sudo apt update
+     sudo apt install python3.12 python3.12-venv python3-pip
+     ```
+     For other distros, see [https://www.python.org/downloads/](https://www.python.org/downloads/) or use your package manager.
+4. Verify it works by opening a **new** terminal window and running:
+   ```
+   python --version
+   ```
+   You should see `Python 3.12.x` or higher. On Linux/Mac you may need to use `python3 --version` instead.
+
+#### Installing Docker Desktop
+
+Docker runs the PostgreSQL database and Redis message broker that Are-Self depends on.
+
+1. Go to [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/)
+2. Download the installer for your operating system:
+   - **Windows:** Click "Download for Windows". Run the `.exe` installer and follow the prompts. You may need to enable WSL 2 when asked — the installer will guide you.
+   - **Mac:** Click "Download for Mac". Choose **Apple chip** if you have an M1/M2/M3/M4 Mac, or **Intel chip** if you have an older Mac. Open the `.dmg` file and drag Docker to your Applications folder.
+   - **Linux:** Follow the instructions for your distro at [https://docs.docker.com/desktop/install/linux/](https://docs.docker.com/desktop/install/linux/). For Ubuntu/Debian, there's a `.deb` package you can download and install directly.
+3. Open Docker Desktop after installing. It needs to be running before you start Are-Self.
+4. Verify it works by opening a terminal and running:
+   ```
+   docker --version
+   ```
+   You should see something like `Docker version 27.x.x`.
+
+#### Installing Node.js
+
+Node.js is needed for the React frontend ([are-self-ui](https://github.com/scipraxian/are-self-ui)).
+
+1. Go to [https://nodejs.org](https://nodejs.org)
+2. Download the **LTS** version (make sure it's 20 or higher — it will say the version number on the button).
+3. Run the installer:
+   - **Windows:** Run the `.msi` file. Click Next through the prompts. Make sure "Add to PATH" is checked (it is by default).
+   - **Mac:** Run the `.pkg` file. Follow the prompts — it installs everything you need.
+   - **Linux:** The easiest way is through NodeSource. Run these commands in your terminal:
+     ```bash
+     curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+     sudo apt-get install -y nodejs
+     ```
+     For other distros, see [https://nodejs.org/en/download/package-manager](https://nodejs.org/en/download/package-manager).
+4. Verify it works by opening a **new** terminal window and running:
+   ```
+   node --version
+   ```
+   You should see `v20.x.x` or higher.
 
 ### First-Time Install (Windows)
 
