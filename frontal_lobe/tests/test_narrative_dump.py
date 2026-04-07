@@ -181,13 +181,13 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
     def test_narrative_dump_returns_200(self):
         """Verify narrative_dump endpoint returns 200 OK."""
         url = reverse('reasoningsession-narrative-dump', args=[self.session.id])
-        response = self.client.post(url)
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_narrative_dump_returns_file(self):
         """Verify narrative_dump returns a downloadable file."""
         url = reverse('reasoningsession-narrative-dump', args=[self.session.id])
-        response = self.client.post(url)
+        response = self.client.get(url)
 
         # Check Content-Disposition header
         self.assertIn('Content-Disposition', response)
@@ -199,7 +199,7 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
     def test_narrative_dump_contains_header(self):
         """Verify narrative_dump contains SESSION NARRATIVE header."""
         url = reverse('reasoningsession-narrative-dump', args=[self.session.id])
-        response = self.client.post(url)
+        response = self.client.get(url)
         content = response.content.decode('utf-8')
 
         self.assertIn('SESSION NARRATIVE', content)
@@ -208,7 +208,7 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
     def test_narrative_dump_contains_status_line(self):
         """Verify narrative_dump contains status, turns, duration line."""
         url = reverse('reasoningsession-narrative-dump', args=[self.session.id])
-        response = self.client.post(url)
+        response = self.client.get(url)
         content = response.content.decode('utf-8')
 
         # Check for status line
@@ -218,7 +218,7 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
     def test_narrative_dump_contains_summary(self):
         """Verify narrative_dump contains SUMMARY section."""
         url = reverse('reasoningsession-narrative-dump', args=[self.session.id])
-        response = self.client.post(url)
+        response = self.client.get(url)
         content = response.content.decode('utf-8')
 
         self.assertIn('SUMMARY', content)
@@ -229,7 +229,7 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
     def test_narrative_dump_contains_parietal_lobe_activity(self):
         """Verify narrative_dump contains PARIETAL LOBE ACTIVITY section."""
         url = reverse('reasoningsession-narrative-dump', args=[self.session.id])
-        response = self.client.post(url)
+        response = self.client.get(url)
         content = response.content.decode('utf-8')
 
         self.assertIn('PARIETAL LOBE ACTIVITY (4 calls)', content)
@@ -239,7 +239,7 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
     def test_narrative_dump_shows_success_indicators(self):
         """Verify narrative_dump shows ✓ for successful calls."""
         url = reverse('reasoningsession-narrative-dump', args=[self.session.id])
-        response = self.client.post(url)
+        response = self.client.get(url)
         content = response.content.decode('utf-8')
 
         # Should have checkmarks for successful calls
@@ -248,7 +248,7 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
     def test_narrative_dump_shows_error_indicators(self):
         """Verify narrative_dump shows ✗ for failed calls."""
         url = reverse('reasoningsession-narrative-dump', args=[self.session.id])
-        response = self.client.post(url)
+        response = self.client.get(url)
         content = response.content.decode('utf-8')
 
         # Should have X for failed calls
@@ -257,7 +257,7 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
     def test_narrative_dump_contains_engrams_section(self):
         """Verify narrative_dump contains ENGRAMS section."""
         url = reverse('reasoningsession-narrative-dump', args=[self.session.id])
-        response = self.client.post(url)
+        response = self.client.get(url)
         content = response.content.decode('utf-8')
 
         self.assertIn('ENGRAMS:', content)
@@ -267,7 +267,7 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
     def test_narrative_dump_contains_errors_section(self):
         """Verify narrative_dump contains ERRORS section."""
         url = reverse('reasoningsession-narrative-dump', args=[self.session.id])
-        response = self.client.post(url)
+        response = self.client.get(url)
         content = response.content.decode('utf-8')
 
         self.assertIn('ERRORS', content)
@@ -276,7 +276,7 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
     def test_narrative_dump_contains_token_summary(self):
         """Verify narrative_dump contains TOKEN SUMMARY section."""
         url = reverse('reasoningsession-narrative-dump', args=[self.session.id])
-        response = self.client.post(url)
+        response = self.client.get(url)
         content = response.content.decode('utf-8')
 
         self.assertIn('TOKEN SUMMARY:', content)
@@ -287,7 +287,7 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
     def test_narrative_dump_includes_action_field_names(self):
         """Verify narrative_dump extracts and shows action/field_name."""
         url = reverse('reasoningsession-narrative-dump', args=[self.session.id])
-        response = self.client.post(url)
+        response = self.client.get(url)
         content = response.content.decode('utf-8')
 
         # mcp_ticket tool calls should show action and field_name
@@ -298,7 +298,7 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
     def test_narrative_dump_filename_includes_id_prefix(self):
         """Verify filename uses first 8 chars of session ID."""
         url = reverse('reasoningsession-narrative-dump', args=[self.session.id])
-        response = self.client.post(url)
+        response = self.client.get(url)
         disposition = response['Content-Disposition']
 
         id_prefix = str(self.session.id)[:8]
@@ -315,7 +315,7 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
         url = reverse(
             'reasoningsession-narrative-dump', args=[session_no_summary.id]
         )
-        response = self.client.post(url)
+        response = self.client.get(url)
         content = response.content.decode('utf-8')
 
         self.assertIn('Session ended without summary.', content)
@@ -330,7 +330,7 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
         url = reverse(
             'reasoningsession-narrative-dump', args=[session_no_engrams.id]
         )
-        response = self.client.post(url)
+        response = self.client.get(url)
         content = response.content.decode('utf-8')
 
         self.assertIn('ENGRAMS: none formed', content)
@@ -338,7 +338,7 @@ class NarrativeDumpAPITest(CommonFixturesAPITestCase):
     def test_narrative_dump_model_and_provider_info(self):
         """Verify model and provider info are included."""
         url = reverse('reasoningsession-narrative-dump', args=[self.session.id])
-        response = self.client.post(url)
+        response = self.client.get(url)
         content = response.content.decode('utf-8')
 
         self.assertIn('Model: test-model', content)

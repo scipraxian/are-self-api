@@ -606,3 +606,38 @@ class AIModelDescription(DescriptionMixin, CreatedAndModifiedWithDelta):
     categories = models.ManyToManyField(AIModelCategory, blank=True)
     tags = models.ManyToManyField(AIModelTags, blank=True)
     is_current = models.BooleanField(default=True, db_index=True)
+
+
+class AIModelSyncReport(CreatedMixin):
+    """Captures proposed taxonomy that the sync would have created but didn't.
+
+    Attached 1:1 to an AIModelSyncLog. Human reviews this, updates
+    canonical fixtures, then the next sync picks up the new records.
+    """
+
+    sync_log = models.OneToOneField(
+        AIModelSyncLog,
+        on_delete=models.CASCADE,
+        related_name='sync_report',
+    )
+
+    # Each field is a JSON list of {"raw_slug": "...", "proposed_name": "..."}
+    proposed_families = models.JSONField(default=list)
+    proposed_creators = models.JSONField(default=list)
+    proposed_roles = models.JSONField(default=list)
+    proposed_quantizations = models.JSONField(default=list)
+    proposed_tags = models.JSONField(default=list)
+    proposed_versions = models.JSONField(default=list)
+
+    # Models that couldn't be fully enriched because taxonomy was missing
+    unenriched_model_slugs = models.JSONField(default=list)
+
+    def __str__(self):
+        total = (
+            len(self.proposed_families)
+            + len(self.proposed_creators)
+            + len(self.proposed_roles)
+            + len(self.proposed_tags)
+            + len(self.proposed_versions)
+        )
+        return f'SyncReport ({total} proposed) for {self.sync_log}'

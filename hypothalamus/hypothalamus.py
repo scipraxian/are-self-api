@@ -9,18 +9,26 @@ from django.db.models import Q
 from django.utils import timezone
 from pgvector.django import CosineDistance
 
-from hypothalamus.model_semantic_parser import parse_model_string
+from hypothalamus.parsing_tools.llm_provider_parser.model_semantic_parser import (
+    parse_model_string,
+)
 from hypothalamus.models import (
     AIMode,
     AIModel,
     AIModelCapabilities,
+    AIModelCreator,
     AIModelDescription,
     AIModelDescriptionCache,
+    AIModelFamily,
     AIModelPricing,
     AIModelProvider,
     AIModelProviderUsageRecord,
+    AIModelQuantization,
+    AIModelRole,
     AIModelSyncLog,
+    AIModelSyncReport,
     AIModelTags,
+    AIModelVersion,
     LiteLLMCache,
     LLMProvider,
     SyncStatus,
@@ -413,7 +421,10 @@ class Hypothalamus:
 
     @classmethod
     def sync_catalog(
-        cls, use_local_cache: bool = False, force_rebuild: bool = False
+        cls,
+        use_local_cache: bool = False,
+        force_rebuild: bool = False,
+        allow_new_taxonomy: bool = False,
     ) -> Optional[AIModelSyncLog]:
         """Orchestrates the lock and state tracking, delegating all business logic."""
         running_status = SyncStatus.objects.get(id=SyncStatus.RUNNING)
@@ -426,7 +437,9 @@ class Hypothalamus:
 
         # The strictly necessary state-machine wrapper. No business logic lives here.
         try:
-            cls._execute_sync_pipeline(sync_log, use_local_cache, force_rebuild)
+            cls._execute_sync_pipeline(
+                sync_log, use_local_cache, force_rebuild, allow_new_taxonomy
+            )
         except Exception as exc:
             logger.exception('[Hypothalamus] Fatal pipeline crash.')
             sync_log.status = SyncStatus.objects.get(id=SyncStatus.FAILED)
@@ -442,21 +455,26 @@ class Hypothalamus:
         sync_log: AIModelSyncLog,
         use_local_cache: bool,
         force_rebuild: bool,
+        allow_new_taxonomy: bool,
     ) -> None:
         """The core ETL pipeline. Fails fast if data is unretrievable."""
 
         logger.info('[Hypothalamus] Execute Pipeline')
+        sync_report = AIModelSyncReport.objects.create(sync_log=sync_log)
         catalog = cls._fetch_litellm_catalog(use_local_cache)
         if not catalog:
             raise RuntimeError('Catalog fetch returned empty or failed.')
 
         active_keys, flagged_models = cls._process_litellm_catalog(
-            catalog, sync_log
+            catalog, sync_log, sync_report, allow_new_taxonomy
         )
         cls._deactivate_stale_models(active_keys, sync_log)
 
         enriched_ids = cls.enrich_model_semantics_from_openrouter(
-            use_local_cache=use_local_cache, force_rebuild=force_rebuild
+            use_local_cache=use_local_cache,
+            force_rebuild=force_rebuild,
+            sync_report=sync_report,
+            allow_new_taxonomy=allow_new_taxonomy,
         )
         flagged_models.update(enriched_ids)
 
@@ -468,6 +486,8 @@ class Hypothalamus:
         logger.info('[Hypothalamus] Sync Ollama.')
         cls._sync_local_ollama(sync_log)
         sync_log.status = SyncStatus.objects.get(id=SyncStatus.SUCCESS)
+
+        sync_report.save()
 
         if flagged_models:
             cls._trigger_vector_generation(flagged_models)
@@ -504,7 +524,11 @@ class Hypothalamus:
 
     @classmethod
     def _process_litellm_catalog(
-        cls, catalog: dict, sync_log: AIModelSyncLog
+        cls,
+        catalog: dict,
+        sync_log: AIModelSyncLog,
+        sync_report: 'AIModelSyncReport',
+        allow_new_taxonomy: bool,
     ) -> tuple[set, set]:
         """Iterates the raw dictionary and maps it to the database models."""
         active_provider_keys = set()
@@ -525,7 +549,9 @@ class Hypothalamus:
 
                 provider = cls._ensure_provider(data)
                 mode = cls._ensure_mode(data)
-                ai_model, model_created = cls._ensure_ai_model(raw_key, data)
+                ai_model, model_created = cls._ensure_ai_model(
+                    raw_key, data, sync_report, allow_new_taxonomy
+                )
 
                 if model_created:
                     sync_log.models_added += 1
@@ -571,7 +597,13 @@ class Hypothalamus:
         return mode
 
     @classmethod
-    def _ensure_ai_model(cls, raw_key: str, data: dict) -> tuple[AIModel, bool]:
+    def _ensure_ai_model(
+        cls,
+        raw_key: str,
+        data: dict,
+        sync_report: 'AIModelSyncReport',
+        allow_new_taxonomy: bool,
+    ) -> tuple[AIModel, bool]:
         model_name = raw_key.split('/')[-1] if '/' in raw_key else raw_key
         context_length = (
             data.get('max_input_tokens') or data.get('max_tokens') or 4096
@@ -582,6 +614,8 @@ class Hypothalamus:
             raw_slug=raw_key,
             display_name=model_name,
             context_length=context_length,
+            sync_report=sync_report,
+            allow_new_taxonomy=allow_new_taxonomy,
         )
 
         # 2. Retain the LiteLLM-specific capability flags
@@ -601,47 +635,219 @@ class Hypothalamus:
 
     @classmethod
     def _get_or_create_enriched_model(
-        cls, raw_slug: str, display_name: str, context_length: int
+        cls,
+        raw_slug: str,
+        display_name: str,
+        context_length: int,
+        sync_report: 'AIModelSyncReport | None' = None,
+        allow_new_taxonomy: bool = True,
     ) -> tuple[AIModel, bool]:
-        """Centralized factory that runs the semantic parser and UPDATES existing models."""
+        """Centralized factory: parse → resolve taxonomy → enrich AIModel.
+
+        When allow_new_taxonomy=False, taxonomy records (families, creators,
+        roles, quantizations, tags, versions) are never created — only linked
+        if they already exist. Proposed-but-skipped items are logged to
+        sync_report for human review.
+        """
         parsed = parse_model_string(raw_slug)
 
+        # --- Resolve strings → DB objects (the gated bridge) ---
+        family_obj = cls._resolve_family(
+            parsed.family, parsed.parent_family,
+            allow_new_taxonomy, sync_report, raw_slug,
+        )
+        creator_obj = cls._resolve_creator(
+            parsed.creator, allow_new_taxonomy, sync_report, raw_slug,
+        )
+        version_obj = cls._resolve_version(
+            parsed.version, allow_new_taxonomy, sync_report, raw_slug,
+        )
+        role_objs = cls._resolve_roles(
+            parsed.roles, allow_new_taxonomy, sync_report, raw_slug,
+        )
+        quant_objs = cls._resolve_quantizations(
+            parsed.quantizations, allow_new_taxonomy, sync_report, raw_slug,
+        )
+        tag_objs = cls._resolve_tags(
+            parsed.tags, allow_new_taxonomy, sync_report, raw_slug,
+        )
+
+        # --- Ensure AIModel record ---
         ai_model, created = AIModel.objects.get_or_create(
             name=display_name, defaults={'context_length': context_length}
         )
+
         needs_save = False
         update_fields = []
+
         if parsed.parameter_size and not ai_model.parameter_size:
-            ai_model.parameter_size = parsed.parameter_size
+            size_str = parsed.parameter_size.rstrip('Bb')
+            if 'x' in size_str:
+                parts = size_str.split('x')
+                ai_model.parameter_size = float(parts[0]) * float(parts[1])
+            else:
+                ai_model.parameter_size = float(size_str)
             update_fields.append('parameter_size')
             needs_save = True
-        if parsed.family and not ai_model.family_id:
-            ai_model.family = parsed.family
+        if family_obj and not ai_model.family_id:
+            ai_model.family = family_obj
             update_fields.append('family')
             needs_save = True
-        if parsed.version and not ai_model.version_id:
-            ai_model.version = parsed.version
+        if version_obj and not ai_model.version_id:
+            ai_model.version = version_obj
             update_fields.append('version')
             needs_save = True
-        if parsed.creator and not ai_model.creator_id:
-            ai_model.creator = parsed.creator
+        if creator_obj and not ai_model.creator_id:
+            ai_model.creator = creator_obj
             update_fields.append('creator')
             needs_save = True
+
         if needs_save:
             ai_model.save(update_fields=update_fields)
-        if parsed.roles:
-            ai_model.roles.add(*parsed.roles)
-        if parsed.quantizations:
-            ai_model.quantizations.add(*parsed.quantizations)
+
+        if role_objs:
+            ai_model.roles.add(*role_objs)
+        if quant_objs:
+            ai_model.quantizations.add(*quant_objs)
+
         current_desc = ai_model.aimodeldescription_set.first()
         if not current_desc:
             current_desc = AIModelDescription.objects.create(is_current=True)
             current_desc.ai_models.add(ai_model)
-        if parsed.tags:
-            current_desc.tags.add(*parsed.tags)
-        if parsed.family:
-            current_desc.families.add(parsed.family)
+        if tag_objs:
+            current_desc.tags.add(*tag_objs)
+        if family_obj:
+            current_desc.families.add(family_obj)
+
         return ai_model, created
+
+    # ------------------------------------------------------------------ #
+    #  Taxonomy resolvers — gated bridge from parser strings to DB        #
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _resolve_family(
+        family_name, parent_family_name,
+        allow_new, report, raw_slug,
+    ):
+        if not family_name:
+            return None
+        from django.utils.text import slugify
+        slug = slugify(family_name)
+        if allow_new:
+            parent = None
+            if parent_family_name:
+                parent_slug = slugify(parent_family_name)
+                parent, _ = AIModelFamily.objects.get_or_create(
+                    slug=parent_slug,
+                    defaults={'name': parent_family_name},
+                )
+            family, _ = AIModelFamily.objects.get_or_create(
+                slug=slug,
+                defaults={'name': family_name, 'parent': parent},
+            )
+            return family
+        family = AIModelFamily.objects.filter(slug=slug).first()
+        if family:
+            return family
+        if report is not None:
+            entry = {'raw_slug': raw_slug, 'proposed_name': family_name}
+            if entry not in report.proposed_families:
+                report.proposed_families.append(entry)
+            if raw_slug not in report.unenriched_model_slugs:
+                report.unenriched_model_slugs.append(raw_slug)
+        return None
+
+    @staticmethod
+    def _resolve_creator(creator_name, allow_new, report, raw_slug):
+        if not creator_name:
+            return None
+        if allow_new:
+            obj, _ = AIModelCreator.objects.get_or_create(name=creator_name)
+            return obj
+        obj = AIModelCreator.objects.filter(name=creator_name).first()
+        if obj:
+            return obj
+        if report is not None:
+            entry = {'raw_slug': raw_slug, 'proposed_name': creator_name}
+            if entry not in report.proposed_creators:
+                report.proposed_creators.append(entry)
+            if raw_slug not in report.unenriched_model_slugs:
+                report.unenriched_model_slugs.append(raw_slug)
+        return None
+
+    @staticmethod
+    def _resolve_version(version_str, allow_new, report, raw_slug):
+        if not version_str:
+            return None
+        if allow_new:
+            obj, _ = AIModelVersion.objects.get_or_create(name=version_str)
+            return obj
+        obj = AIModelVersion.objects.filter(name=version_str).first()
+        if obj:
+            return obj
+        if report is not None:
+            entry = {'raw_slug': raw_slug, 'proposed_name': version_str}
+            if entry not in report.proposed_versions:
+                report.proposed_versions.append(entry)
+        return None
+
+    @staticmethod
+    def _resolve_roles(role_names, allow_new, report, raw_slug):
+        if not role_names:
+            return []
+        resolved = []
+        for name in role_names:
+            if allow_new:
+                obj, _ = AIModelRole.objects.get_or_create(name=name)
+                resolved.append(obj)
+            else:
+                obj = AIModelRole.objects.filter(name=name).first()
+                if obj:
+                    resolved.append(obj)
+                elif report is not None:
+                    entry = {'raw_slug': raw_slug, 'proposed_name': name}
+                    if entry not in report.proposed_roles:
+                        report.proposed_roles.append(entry)
+        return resolved
+
+    @staticmethod
+    def _resolve_quantizations(quant_names, allow_new, report, raw_slug):
+        if not quant_names:
+            return []
+        resolved = []
+        for name in quant_names:
+            if allow_new:
+                obj, _ = AIModelQuantization.objects.get_or_create(name=name)
+                resolved.append(obj)
+            else:
+                obj = AIModelQuantization.objects.filter(name=name).first()
+                if obj:
+                    resolved.append(obj)
+                elif report is not None:
+                    entry = {'raw_slug': raw_slug, 'proposed_name': name}
+                    if entry not in report.proposed_quantizations:
+                        report.proposed_quantizations.append(entry)
+        return resolved
+
+    @staticmethod
+    def _resolve_tags(tag_names, allow_new, report, raw_slug):
+        if not tag_names:
+            return []
+        resolved = []
+        for name in tag_names:
+            if allow_new:
+                obj, _ = AIModelTags.objects.get_or_create(name=name)
+                resolved.append(obj)
+            else:
+                obj = AIModelTags.objects.filter(name=name).first()
+                if obj:
+                    resolved.append(obj)
+                elif report is not None:
+                    entry = {'raw_slug': raw_slug, 'proposed_name': name}
+                    if entry not in report.proposed_tags:
+                        report.proposed_tags.append(entry)
+        return resolved
 
     @staticmethod
     def _ensure_model_provider(
@@ -716,7 +922,11 @@ class Hypothalamus:
 
     @classmethod
     def enrich_model_semantics_from_openrouter(
-        cls, use_local_cache: bool = False, force_rebuild: bool = False
+        cls,
+        use_local_cache: bool = False,
+        force_rebuild: bool = False,
+        sync_report: 'AIModelSyncReport | None' = None,
+        allow_new_taxonomy: bool = True,
     ) -> set:
         """Main orchestrator for OpenRouter data ingestion and semantic updates."""
         logger.info('[Hypothalamus] Enriching OpenRouter authoritative data...')
@@ -748,7 +958,8 @@ class Hypothalamus:
                         )
 
                     modified_id = cls._process_openrouter_model(
-                        or_data, or_llm_provider, chat_mode, force_rebuild
+                        or_data, or_llm_provider, chat_mode, force_rebuild,
+                        sync_report, allow_new_taxonomy,
                     )
                     if modified_id:
                         modified_model_ids.add(modified_id)
@@ -808,6 +1019,8 @@ class Hypothalamus:
         provider: LLMProvider,
         mode: AIMode,
         force_rebuild: bool,
+        sync_report: 'AIModelSyncReport | None' = None,
+        allow_new_taxonomy: bool = True,
     ) -> Optional[int]:
         """Handles the ingestion of a single model's routing, capability, and pricing data."""
         stripped_id = or_data['id']
@@ -820,6 +1033,8 @@ class Hypothalamus:
             raw_slug=provider_unique_id,
             display_name=display_name,
             context_length=context_length,
+            sync_report=sync_report,
+            allow_new_taxonomy=allow_new_taxonomy,
         )
 
         # 2. Optimistic Inheritance (No string-matching guesswork!)

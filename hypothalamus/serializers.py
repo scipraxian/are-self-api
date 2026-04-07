@@ -22,6 +22,7 @@ from .models import (
     AIModelRole,
     AIModelSelectionFilter,
     AIModelSyncLog,
+    AIModelSyncReport,
     AIModelTags,
     FailoverStrategy,
     FailoverStrategyStep,
@@ -190,8 +191,15 @@ class SyncStatusSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
+class AIModelSyncReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AIModelSyncReport
+        fields = ALL_FIELDS
+
+
 class AIModelSyncLogSerializer(serializers.ModelSerializer):
     status = SyncStatusSerializer(read_only=True)
+    sync_report = AIModelSyncReportSerializer(read_only=True)
 
     class Meta:
         model = AIModelSyncLog
