@@ -80,9 +80,8 @@ def truncate_message(
         content: str,
         chunk_indicator_reserve: Optional[int] = 10,
         max_length: int = 4096) -> List[str]:
-    """
-
-
+    """Cleans and reformats .md styled messages for different platforms and outputs them into chunks for better LLM
+    parsing.
     """
     if len(content) <= max_length:
         return [content]

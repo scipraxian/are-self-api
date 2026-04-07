@@ -12,6 +12,24 @@ from talos_gateway.session_manager import SessionManager
 
 logger = logging.getLogger('talos_gateway.gateway')
 
+_active_gateway_orchestrator: Optional[Any] = None
+
+
+def set_active_gateway_orchestrator(orchestrator: Optional[Any]) -> None:
+    """Register the process-global orchestrator for ASGI consumers (e.g. CLI WS)."""
+    global _active_gateway_orchestrator
+    _active_gateway_orchestrator = orchestrator
+
+
+def get_active_gateway_orchestrator() -> Optional[Any]:
+    """Return the orchestrator set by ``run_gateway`` or tests, if any."""
+    return _active_gateway_orchestrator
+
+
+def clear_active_gateway_orchestrator() -> None:
+    """Clear the active orchestrator (shutdown)."""
+    set_active_gateway_orchestrator(None)
+
 
 def discover_adapter_class(platform_key: str) -> Type[Any]:
     """Import ``<platform_key>_adapter`` and return the ``*Adapter`` class."""
