@@ -18,7 +18,14 @@
       "Bash(echo \"EXIT_CODE=$?\")",
       "Bash(ls identity/migrations/*.py)",
       "Bash(./venv/Scripts/pytest frontal_lobe/tests/test_narrative_dump.py -x --tb=short)",
-      "Bash(./venv/Scripts/pytest parietal_lobe/parietal_mcp/mcp_ticket_functions/tests/test_mcp_ticket_search.py central_nervous_system/tests/test_logic_node.py -x --tb=short)"
+      "Bash(./venv/Scripts/pytest parietal_lobe/parietal_mcp/mcp_ticket_functions/tests/test_mcp_ticket_search.py central_nervous_system/tests/test_logic_node.py -x --tb=short)",
+      "Bash(./venv/Scripts/pytest synaptic_cleft -x --tb=short)",
+      "Bash(./venv/Scripts/pytest synaptic_cleft::SynapticDendriteTests::test_joins_correct_group -x --tb=long)",
+      "Bash(./venv/Scripts/pytest \"synaptic_cleft/tests.py::SynapticDendriteTests::test_joins_correct_group\" -x --tb=long)",
+      "Bash(./venv/Scripts/pytest \"synaptic_cleft/tests.py::SynapticDendriteTests::test_connect_accepts\" -x --tb=long)",
+      "Bash(./venv/Scripts/pytest synaptic_cleft --tb=short)",
+      "Bash(./venv/Scripts/pytest \"synaptic_cleft/tests.py::SynapticDendriteTests::test_connect_accepts\" \"synaptic_cleft/tests.py::WebSocketURLRoutingTests::test_spike_route\" --tb=short)",
+      "Bash(./venv/Scripts/pytest \"synaptic_cleft/tests.py::SynapticDendriteTests::test_connect_accepts\" \"synaptic_cleft/tests.py::SynapticDendriteTests::test_disconnect_completes\" --tb=short)"
     ]
   }
 }

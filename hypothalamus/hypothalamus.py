@@ -42,6 +42,17 @@ def _dec(key: str, data: dict) -> Decimal:
     return Decimal(str(data.get(key) or 0.0))
 
 
+def _is_preferred_model_active(filter_obj) -> bool:
+    """Check if the preferred model is enabled and its provider is active.
+
+    The preferred model is an explicit user choice.  At attempt 0 we
+    honour that choice unconditionally — the only hard gate is whether
+    the model and provider are actually turned on.
+    """
+    pref = filter_obj.preferred_model
+    return pref.is_enabled and pref.ai_model.enabled
+
+
 class Hypothalamus:
     # ------------------------------------------------------------------ #
     #  Pure query: "which model WOULD I pick?" — no side effects          #
@@ -136,11 +147,14 @@ class Hypothalamus:
         best = None
 
         # PRIORITY 0: The Preferred Model (Locked to attempt 0)
+        # Explicit user choice — skip all filters except enabled.
         if attempt == 0 and filter_obj and filter_obj.preferred_model:
-            best = base_qs.filter(id=filter_obj.preferred_model_id).first()
-            if best:
+            if _is_preferred_model_active(filter_obj):
+                best = filter_obj.preferred_model
                 logger.info(
-                    f'[Hypothalamus] Found preferred model {best} for {disc.name}'
+                    '[Hypothalamus] Found preferred model %s for %s',
+                    best,
+                    disc.name,
                 )
                 return best
 
@@ -162,64 +176,93 @@ class Hypothalamus:
 
             if not step:
                 logger.warning(
-                    f'[Hypothalamus] No strategy step found for {disc.name}'
+                    '[Hypothalamus] No strategy step at index %s '
+                    'for %s.',
+                    step_index,
+                    disc.name,
                 )
-                return None
+            else:
+                fail_type = step.failover_type.name.lower()
 
-            fail_type = step.failover_type.name.lower()
-
-            if 'strict' in fail_type:
-                logger.warning(f'[Hypothalamus] Strict strategy: {fail_type}')
-                return None
-
-            elif 'local' in fail_type:
-                if filter_obj and filter_obj.local_failover:
-                    logger.info(
-                        f'[Hypothalamus] Using local failover for {disc.name}'
+                if 'strict' in fail_type:
+                    logger.warning(
+                        '[Hypothalamus] Strict strategy: %s', fail_type
                     )
-                    best = base_qs.filter(
-                        id=filter_obj.local_failover_id
-                    ).first()
+                    return None
 
-            elif 'family' in fail_type:
-                ref_family_id = None
-                if filter_obj and filter_obj.preferred_model:
-                    logger.info(
-                        f'[Hypothalamus] Using preferred family for {disc.name}'
-                    )
-                    ref_family_id = (
-                        filter_obj.preferred_model.ai_model.family_id
-                    )
+                elif 'local' in fail_type:
+                    if filter_obj and filter_obj.local_failover:
+                        logger.info(
+                            '[Hypothalamus] Using local failover for %s',
+                            disc.name,
+                        )
+                        best = base_qs.filter(
+                            id=filter_obj.local_failover_id
+                        ).first()
 
-                if not ref_family_id:
-                    v_match = None
+                elif 'family' in fail_type:
+                    ref_family_id = None
+                    if filter_obj and filter_obj.preferred_model:
+                        logger.info(
+                            '[Hypothalamus] Using preferred family for %s',
+                            disc.name,
+                        )
+                        ref_family_id = (
+                            filter_obj.preferred_model.ai_model.family_id
+                        )
+
+                    if not ref_family_id:
+                        v_match = None
+                        if disc and getattr(disc, 'vector', None) is not None:
+                            v_match = (
+                                base_qs.annotate(
+                                    distance=CosineDistance(
+                                        'ai_model__vector_node__embeddings',
+                                        disc.vector,
+                                    )
+                                )
+                                .order_by('distance')
+                                .first()
+                            )
+                        else:
+                            v_match = base_qs.first()
+
+                        if v_match:
+                            ref_family_id = v_match.ai_model.family_id
+
+                    if ref_family_id:
+                        qs_fam = base_qs.filter(
+                            ai_model__family_id=ref_family_id
+                        )
+                        if disc and getattr(disc, 'vector', None) is not None:
+                            best = (
+                                qs_fam.annotate(
+                                    distance=CosineDistance(
+                                        'ai_model__vector_node__embeddings',
+                                        disc.vector,
+                                    )
+                                )
+                                .order_by(
+                                    'distance',
+                                    'aimodelpricing__input_cost_per_token',
+                                )
+                                .first()
+                            )
+                        else:
+                            best = qs_fam.order_by(
+                                'aimodelpricing__input_cost_per_token'
+                            ).first()
+
+                elif 'vector' in fail_type or not fail_type:
                     if disc and getattr(disc, 'vector', None) is not None:
-                        v_match = (
+                        best = (
                             base_qs.annotate(
                                 distance=CosineDistance(
                                     'ai_model__vector_node__embeddings',
                                     disc.vector,
                                 )
                             )
-                            .order_by('distance')
-                            .first()
-                        )
-                    else:
-                        v_match = base_qs.first()
-
-                    if v_match:
-                        ref_family_id = v_match.ai_model.family_id
-
-                if ref_family_id:
-                    qs_fam = base_qs.filter(ai_model__family_id=ref_family_id)
-                    if disc and getattr(disc, 'vector', None) is not None:
-                        best = (
-                            qs_fam.annotate(
-                                distance=CosineDistance(
-                                    'ai_model__vector_node__embeddings',
-                                    disc.vector,
-                                )
-                            )
+                            .select_related('ai_model')
                             .order_by(
                                 'distance',
                                 'aimodelpricing__input_cost_per_token',
@@ -227,30 +270,11 @@ class Hypothalamus:
                             .first()
                         )
                     else:
-                        best = qs_fam.order_by(
-                            'aimodelpricing__input_cost_per_token'
-                        ).first()
-
-            elif 'vector' in fail_type or not fail_type:
-                if disc and getattr(disc, 'vector', None) is not None:
-                    best = (
-                        base_qs.annotate(
-                            distance=CosineDistance(
-                                'ai_model__vector_node__embeddings', disc.vector
-                            )
+                        best = (
+                            base_qs.select_related('ai_model')
+                            .order_by('aimodelpricing__input_cost_per_token')
+                            .first()
                         )
-                        .select_related('ai_model')
-                        .order_by(
-                            'distance', 'aimodelpricing__input_cost_per_token'
-                        )
-                        .first()
-                    )
-                else:
-                    best = (
-                        base_qs.select_related('ai_model')
-                        .order_by('aimodelpricing__input_cost_per_token')
-                        .first()
-                    )
 
         # Final Fallback (no strategy configured)
         if not best and not strategy_obj:
@@ -292,13 +316,15 @@ class Hypothalamus:
         """Return the AIModelProvider the routing engine *would* select for
         this disc right now, without creating or mutating any ledger record.
 
-        This is the read-only sibling of ``pick_optimal_model``.
+        Derives ``require_function_calling`` from the disc's enabled
+        tools so the preview matches what production would actually do.
         """
+        require_fc = disc.enabled_tools.exists() if disc else False
         base_qs, filter_obj, strategy_obj = (
             Hypothalamus._build_candidate_queryset(
                 disc,
                 payload_size=0,
-                require_function_calling=False,
+                require_function_calling=require_fc,
             )
         )
         return Hypothalamus._select_best_from_strategy(
