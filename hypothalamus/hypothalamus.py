@@ -130,20 +130,29 @@ class Hypothalamus:
 
         Pure read — no ledger mutation.
         """
+        logger.info(
+            f'[Hypothalamus] Selecting best AI model for {disc.name} (attempt {attempt})'
+        )
         best = None
 
         # PRIORITY 0: The Preferred Model (Locked to attempt 0)
         if attempt == 0 and filter_obj and filter_obj.preferred_model:
             best = base_qs.filter(id=filter_obj.preferred_model_id).first()
             if best:
+                logger.info(
+                    f'[Hypothalamus] Found preferred model {best} for {disc.name}'
+                )
                 return best
 
         # Strategy Dispatch Loop
         if not best and strategy_obj:
             step_index = (
                 attempt - 1
-                if (filter_obj and filter_obj.preferred_model)
+                if (attempt > 0 and filter_obj and filter_obj.preferred_model)
                 else attempt
+            )
+            logger.info(
+                f'[Hypothalamus] Starting strategy dispatch with step index {step_index}'
             )
             step = (
                 strategy_obj.steps.filter(order=step_index)
@@ -152,15 +161,22 @@ class Hypothalamus:
             )
 
             if not step:
+                logger.warning(
+                    f'[Hypothalamus] No strategy step found for {disc.name}'
+                )
                 return None
 
             fail_type = step.failover_type.name.lower()
 
             if 'strict' in fail_type:
+                logger.warning(f'[Hypothalamus] Strict strategy: {fail_type}')
                 return None
 
             elif 'local' in fail_type:
                 if filter_obj and filter_obj.local_failover:
+                    logger.info(
+                        f'[Hypothalamus] Using local failover for {disc.name}'
+                    )
                     best = base_qs.filter(
                         id=filter_obj.local_failover_id
                     ).first()
@@ -168,6 +184,9 @@ class Hypothalamus:
             elif 'family' in fail_type:
                 ref_family_id = None
                 if filter_obj and filter_obj.preferred_model:
+                    logger.info(
+                        f'[Hypothalamus] Using preferred family for {disc.name}'
+                    )
                     ref_family_id = (
                         filter_obj.preferred_model.ai_model.family_id
                     )
@@ -235,6 +254,9 @@ class Hypothalamus:
 
         # Final Fallback (no strategy configured)
         if not best and not strategy_obj:
+            logger.info(
+                f'[Hypothalamus] No strategy configured, Final Fallback for {disc.name}'
+            )
             if disc and getattr(disc, 'vector', None) is not None:
                 best = (
                     base_qs.annotate(
@@ -255,6 +277,12 @@ class Hypothalamus:
                     .first()
                 )
 
+        if best:
+            logger.info(
+                f'[Hypothalamus] Selected AI model {best} for {disc.name}'
+            )
+        else:
+            logger.warning(f'[Hypothalamus] No AI model found for {disc.name}')
         return best
 
     @staticmethod
@@ -266,11 +294,19 @@ class Hypothalamus:
 
         This is the read-only sibling of ``pick_optimal_model``.
         """
-        base_qs, filter_obj, strategy_obj = Hypothalamus._build_candidate_queryset(
-            disc, payload_size=0, require_function_calling=False,
+        base_qs, filter_obj, strategy_obj = (
+            Hypothalamus._build_candidate_queryset(
+                disc,
+                payload_size=0,
+                require_function_calling=False,
+            )
         )
         return Hypothalamus._select_best_from_strategy(
-            disc, base_qs, filter_obj, strategy_obj, attempt=0,
+            disc,
+            base_qs,
+            filter_obj,
+            strategy_obj,
+            attempt=0,
         )
 
     # ------------------------------------------------------------------ #
@@ -289,12 +325,25 @@ class Hypothalamus:
 
         require_fc = bool(ledger.tool_payload)
 
-        base_qs, filter_obj, strategy_obj = Hypothalamus._build_candidate_queryset(
-            disc, payload_size=payload_size, require_function_calling=require_fc,
+        logger.info(
+            f'IdentityDisc: {disc.name if disc else "unknown"} '
+            f'Payload size: {payload_size}, Require FC: {require_fc}'
+        )
+
+        base_qs, filter_obj, strategy_obj = (
+            Hypothalamus._build_candidate_queryset(
+                disc,
+                payload_size=payload_size,
+                require_function_calling=require_fc,
+            )
         )
 
         best = Hypothalamus._select_best_from_strategy(
-            disc, base_qs, filter_obj, strategy_obj, attempt=attempt,
+            disc,
+            base_qs,
+            filter_obj,
+            strategy_obj,
+            attempt=attempt,
         )
 
         if not best:
