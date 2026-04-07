@@ -198,8 +198,8 @@ class OllamaClient:
             # or 'embedding' if it was a single string. Ollama /api/embed usually returns
             # an 'embeddings' array.
             embeddings = data.get('embeddings', [])
-            return embeddings[0] if embeddings else []
+            return embeddings[0] if embeddings else None
 
         except requests.RequestException as e:
             logger.error(f'Ollama Embed Misfire: {e}')
-            return []
+            return None

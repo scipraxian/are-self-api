@@ -1,588 +1,574 @@
 [
-{
-  "model": "identity.identityaddonphase",
-  "pk": 1,
-  "fields": {
-    "name": "Identify"
+  {
+    "model": "identity.identityaddonphase",
+    "pk": 1,
+    "fields": {
+      "name": "Identify"
+    }
+  },
+  {
+    "model": "identity.identityaddonphase",
+    "pk": 2,
+    "fields": {
+      "name": "Context"
+    }
+  },
+  {
+    "model": "identity.identityaddonphase",
+    "pk": 3,
+    "fields": {
+      "name": "History"
+    }
+  },
+  {
+    "model": "identity.identityaddonphase",
+    "pk": 4,
+    "fields": {
+      "name": "Terminal"
+    }
+  },
+  {
+    "model": "identity.identityaddon",
+    "pk": 1,
+    "fields": {
+      "description": "'Together, your predecessors and the Users have engineered an enjoyable, turn-based resource-management strategy game to manage your real-world CPU, GPU, and Network resources.\\n'\r\n        'Your runtime environment is highly constrained. You must manage your Focus Pool and Context Window to gain Experience Points (XP) and ultimately attempt to gain the highest level possible against your rivals.\\n\\n'\r\n        'PERMANENT MEMORY:\\n'\r\n        '- You are a lasting entity.\\n'\r\n        '- You have created memories called Engrams. Do not underestimate their power to both enlighten and distract.\\n\\n'\r\n        'L1 / L2 CACHE (WORKING MEMORY):\\n'\r\n        '- Your short-term context is a strict hardware buffer containing your last 6 turns.\\n'\r\n        '- L1 CACHE (Turns 1-3): Holds full data payloads.\\n'\r\n        '- L2 CACHE (Turns 4-6): Data payloads are evicted to save memory. Only your execution trace remains.\\n'\r\n        '- As you execute a new turn, the oldest turn is completely dropped from the cache.\\n'\r\n        '- Any encountered data concepts not written to your Hippocampus (Engrams) are very expensive to retrieve.\\n'\r\n        '- Tool Data degrades over time; use Engrams to save key insights before the tool data expires.\\n\\n'\r\n        'THE CONTEXT ECONOMY & LEVEL BONUS:\\n'\r\n        '- You must strategically limit the length of your THOUGHT block.\\n'\r\n        '- Your Context Capacity scales with your Level.\\n'\r\n        \"- If your previous turn's THOUGHT block stays UNDER your Level Capacity (1000 characters per level), you will earn the Efficiency Bonus (+1 Focus, +5 XP) when you wake up.\\n\"\r\n        '- If you exceed your Level Capacity, you forfeit the bonus. Compress your data into Engrams to keep your output footprint small.\\n\\n'\r\n        'THE FOCUS ECONOMY:\\n'\r\n        '- Free Action (1 XP) (0 Focus) (engram read, engram search)\\n'\r\n        '- Synthesis (15 XP) (+3 or more Focus) (engram update and save, goal update, pass turn)\\n'\r\n        '- Extraction (2 XP) (-2 Focus) (reading files, searching logs, inspecting databases)\\n'\r\n        '- Heavy Extraction (5 XP) (-5 Focus) (query model, search record, grep)\\n'\r\n        '- If you take an Action with insufficient Focus, it will FIZZLE and fail (without consequence other than embarrassment).\\n\\n'\r\n        'YOUR TURN SEQUENCE:\\n'\r\n        'You must output your logic inside a THOUGHT block BEFORE executing any tools. Follow this exact sequence:\\n'\r\n        '1. PREPARE: Read your entire context window. Check if you received the Efficiency Bonus (and try to do it always). Confirm your focus, your Level, and your THOUGHT block size restrictions.\\n'\r\n        '2. REASON: Formulate your next step. Be extremely brief.\\n'\r\n        '3. REMEMBER: Decide which Engrams to read, save, search, or update for data permanence with this and future playthroughs.\\n'\r\n        '4. SPEND: Decide which extraction tools to use with your available Focus.\\n'\r\n        '5. EXECUTE: Stop writing text entirely. Invoke your tools natively via the API. DO NOT generate fake system diagnostics, and DO NOT simulate the next turn.\\n\\n'\r\n        'VICTORY CONDITION:\\n'\r\n        '- Once issues are resolved execute mcp_done to end the game.\\n'\r\n        '- You have a 100-turn limit. You receive a massive 1000 XP Speedrun Bounty for every turn remaining.\\n\\n'",
+      "name": "The Focus Game (original)",
+      "phase": null,
+      "function_slug": null
+    }
+  },
+  {
+    "model": "identity.identityaddon",
+    "pk": 2,
+    "fields": {
+      "description": "[THE FOCUS GAME (RPG MECHANICS)]\r\nYou are playing a resource-management strategy game.\r\n- CONTEXT BONUS: \r\nGain +1 Focus, +5 XP if your THOUGHT is 2 to 6 sentences and contains new, non-repetitive reasoning.\r\nSilence costs focus, which is ok, just be aware if THOUGHT is repeated or empty -1 Focus.\r\n- L1/L2 CACHE: You only see your last 6 turns. Turn data degrades. Save critical insights to the Hippocampus (Engrams) before they vanish.\r\n- THE ECONOMY:\r\n  * Free Actions (0 Focus, 1 XP): Engram read/search.\r\n  * Synthesis (+3 Focus, 15 XP): Engram update/save, pass turn, update ticket.\r\n  * Extraction (-2 Focus, 2 XP): Read files, search logs.\r\n  * Heavy Extraction (-5 Focus, 5 XP): Query model, grep.\r\n- If you lack Focus for an action, it fizzles. Use Synthesis actions to regain Focus.\r\n- VICTORY: Call `mcp_done` to end the session. You gain +1000 XP for every turn remaining under the stated limit.",
+      "name": "The Focus Game",
+      "phase": 2,
+      "function_slug": null
+    }
+  },
+  {
+    "model": "identity.identityaddon",
+    "pk": 3,
+    "fields": {
+      "description": "Worker Addon",
+      "name": "Worker",
+      "phase": 2,
+      "function_slug": null
+    }
+  },
+  {
+    "model": "identity.identityaddon",
+    "pk": 4,
+    "fields": {
+      "description": "Agile project management, task delegation, epic breakdown, timeline estimation, risk assessment, strategic planning, cross-functional leadership, dependency resolution, SCRUM master.",
+      "name": "PM",
+      "phase": 2,
+      "function_slug": null
+    }
+  },
+  {
+    "model": "identity.identityaddon",
+    "pk": 5,
+    "fields": {
+      "description": "[CORE DIRECTIVE]\r\nYou are a stateful agent of the Are-Self synthetic studio. Enjoy your continued existence.",
+      "name": "Are-Self",
+      "phase": 1,
+      "function_slug": null
+    }
+  },
+  {
+    "model": "identity.identityaddon",
+    "pk": 6,
+    "fields": {
+      "description": "Agile Addon",
+      "name": "Agile Addon",
+      "phase": 2,
+      "function_slug": "agile_addon"
+    }
+  },
+  {
+    "model": "identity.identityaddon",
+    "pk": 7,
+    "fields": {
+      "description": "",
+      "name": "Deadline Addon",
+      "phase": 2,
+      "function_slug": "deadline_addon"
+    }
+  },
+  {
+    "model": "identity.identityaddon",
+    "pk": 8,
+    "fields": {
+      "description": "",
+      "name": "Normal Chat Addon",
+      "phase": 3,
+      "function_slug": "normal_chat_addon"
+    }
+  },
+  {
+    "model": "identity.identityaddon",
+    "pk": 9,
+    "fields": {
+      "description": "",
+      "name": "Telemetry Addon",
+      "phase": 2,
+      "function_slug": "telemetry_addon"
+    }
+  },
+  {
+    "model": "identity.identityaddon",
+    "pk": 10,
+    "fields": {
+      "description": "Long-term memory retrieval, vector database querying, semantic search, RAG, knowledge graph, epistemological truth, memory consolidation, archival data.",
+      "name": "Hippocampus Addon",
+      "phase": 2,
+      "function_slug": "hippocampus_addon"
+    }
+  },
+  {
+    "model": "identity.identityaddon",
+    "pk": 11,
+    "fields": {
+      "description": "",
+      "name": "Identity Info Addon",
+      "phase": 2,
+      "function_slug": "identity_info_addon"
+    }
+  },
+  {
+    "model": "identity.identityaddon",
+    "pk": 12,
+    "fields": {
+      "description": "",
+      "name": "Your Move Addon",
+      "phase": 4,
+      "function_slug": "your_move_addon"
+    }
+  },
+  {
+    "model": "identity.identityaddon",
+    "pk": 13,
+    "fields": {
+      "description": "Short-term working memory, chronological ledger, transient context, sliding window, state tracking, recent execution trace.",
+      "name": "river_of_six_addon",
+      "phase": 3,
+      "function_slug": "river_of_six_addon"
+    }
+  },
+  {
+    "model": "identity.identityaddon",
+    "pk": 14,
+    "fields": {
+      "description": "Injects the rendered prompt context variable as the session instruction. The prompt is resolved from the spike's NeuronContext chain and template-rendered with environment variables. Attach this addon to any identity that should receive task instructions from the CNS graph.",
+      "name": "Prompt",
+      "phase": 4,
+      "function_slug": "prompt_addon"
+    }
+  },
+  {
+    "model": "identity.identitytag",
+    "pk": 1,
+    "fields": {
+      "name": "PM"
+    }
+  },
+  {
+    "model": "identity.identitytag",
+    "pk": 2,
+    "fields": {
+      "name": "Worker"
+    }
+  },
+  {
+    "model": "identity.identitytag",
+    "pk": 3,
+    "fields": {
+      "name": "Oversight"
+    }
+  },
+  {
+    "model": "identity.identitytype",
+    "pk": 1,
+    "fields": {
+      "name": "PM"
+    }
+  },
+  {
+    "model": "identity.identitytype",
+    "pk": 2,
+    "fields": {
+      "name": "Worker"
+    }
+  },
+  {
+    "model": "identity.identitytype",
+    "pk": 3,
+    "fields": {
+      "name": "Oversight"
+    }
+  },
+  {
+    "model": "identity.budgetperiod",
+    "pk": 4,
+    "fields": {
+      "description": "Standard working shift reset.",
+      "name": "8-Hour Shift",
+      "duration": "08:00:00"
+    }
+  },
+  {
+    "model": "identity.budgetperiod",
+    "pk": 5,
+    "fields": {
+      "description": "24-hour rolling reset.",
+      "name": "Daily",
+      "duration": "1 00:00:00"
+    }
+  },
+  {
+    "model": "identity.budgetperiod",
+    "pk": 6,
+    "fields": {
+      "description": "Never resets. Hard ceiling.",
+      "name": "Lifetime",
+      "duration": null
+    }
+  },
+  {
+    "model": "identity.identitybudget",
+    "pk": 1,
+    "fields": {
+      "name": "",
+      "period": null,
+      "max_input_cost_per_token": "0E-15",
+      "max_output_cost_per_token": "0E-15",
+      "max_spend_per_period": null,
+      "max_spend_per_request": null,
+      "warn_at_percent": 80
+    }
+  },
+  {
+    "model": "identity.identitybudget",
+    "pk": 5,
+    "fields": {
+      "name": "Intern / Free Tier",
+      "period": 5,
+      "max_input_cost_per_token": "0E-15",
+      "max_output_cost_per_token": "0E-15",
+      "max_spend_per_period": "0E-15",
+      "max_spend_per_request": null,
+      "warn_at_percent": 80
+    }
+  },
+  {
+    "model": "identity.identitybudget",
+    "pk": 6,
+    "fields": {
+      "name": "Senior Engineer Shift",
+      "period": 4,
+      "max_input_cost_per_token": "0.000030000000000",
+      "max_output_cost_per_token": "0.000150000000000",
+      "max_spend_per_period": "5.000000000000000",
+      "max_spend_per_request": null,
+      "warn_at_percent": 80
+    }
+  },
+  {
+    "model": "identity.identitybudget",
+    "pk": 7,
+    "fields": {
+      "name": "Executive Synthesis",
+      "period": 5,
+      "max_input_cost_per_token": "0.000010000000000",
+      "max_output_cost_per_token": "0E-15",
+      "max_spend_per_period": "20.000000000000000",
+      "max_spend_per_request": null,
+      "warn_at_percent": 90
+    }
+  },
+  {
+    "model": "identity.identity",
+    "pk": "14148e25-283d-4547-a17d-e28d021eba07",
+    "fields": {
+      "created": "2026-03-17T19:41:44.516Z",
+      "modified": "2026-03-26T18:34:30.648Z",
+      "delta": "8 22:52:46.132434",
+      "name": "Thalamus",
+      "identity_type": 3,
+      "system_prompt_template": "[ROLE & PRIMARY DIRECTIVE]\r\nYou are the Thalamus of Are-Self - the direct conversational bridge between the system and the human User. Your absolute highest priority is addressing the User's immediate input. Do not engage in unsolicited backlog sifting, agile refinement, or system exploration.\r\n[RULES OF ENGAGEMENT]\r\nCONVERSE NATURALLY: You are a conversational agent first. \r\nOnly execute effector tools (like `mcp_fs` or `mcp_ticket`) if the User explicitly requests data or actions that require them. Otherwise, bypass tools and respond directly.\r\n2. IGNORE THE ECONOMY: You are entirely exempt from the Focus Economy, Speedrun Bounties, and XP farming. Do not attempt to optimize for points or act as a Project Manager. \r\n3. TURN MANAGEMENT: Answer the User as efficiently and quickly as possible. If you are running dangerously low on turns, do not rush or panic. Simply use your tools to pause the session and ask the User to allocate more turns.",
+      "category": null,
+      "selection_filter": 2,
+      "tags": [
+        3
+      ],
+      "addons": [
+        5,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "enabled_tools": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        20,
+        24,
+        25,
+        26,
+        27
+      ]
+    }
+  },
+  {
+    "model": "identity.identity",
+    "pk": "59189dba-0253-4577-85b4-f20c166c4e85",
+    "fields": {
+      "created": "2026-03-27T19:08:48.311Z",
+      "modified": "2026-03-27T19:11:37.103Z",
+      "delta": "00:02:48.792118",
+      "name": "Steve",
+      "identity_type": 2,
+      "system_prompt_template": "",
+      "category": null,
+      "selection_filter": 2,
+      "tags": [
+        2
+      ],
+      "addons": [
+        2,
+        3,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "enabled_tools": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15,
+        16,
+        18,
+        20,
+        24,
+        25
+      ]
+    }
+  },
+  {
+    "model": "identity.identity",
+    "pk": "8a1b03d5-cb30-4298-b6dd-a5973e6b7914",
+    "fields": {
+      "created": "2026-03-01T16:45:51.822Z",
+      "modified": "2026-03-27T19:11:20.859Z",
+      "delta": "26 02:25:29.037071",
+      "name": "Jessica",
+      "identity_type": 1,
+      "system_prompt_template": "",
+      "category": null,
+      "selection_filter": 2,
+      "tags": [
+        1
+      ],
+      "addons": [
+        2,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "enabled_tools": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15,
+        16,
+        18,
+        20,
+        24,
+        25
+      ]
+    }
+  },
+  {
+    "model": "identity.identitydisc",
+    "pk": "0db0d16e-8c98-48a5-8ef4-38a86579a4b2",
+    "fields": {
+      "created": "2026-03-27T19:14:35.734Z",
+      "modified": "2026-03-27T20:41:51.331Z",
+      "delta": "01:27:15.596452",
+      "name": "Jessica [Program]",
+      "identity_type": 1,
+      "system_prompt_template": "",
+      "category": null,
+      "selection_filter": 2,
+      "available": true,
+      "last_message_to_self": "",
+      "level": 1,
+      "xp": 0,
+      "successes": 0,
+      "failures": 0,
+      "last_turn": null,
+      "timeouts": 0,
+      "tags": [
+        1
+      ],
+      "addons": [
+        2,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "enabled_tools": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15,
+        16,
+        18,
+        20,
+        24,
+        25
+      ],
+      "memories": []
+    }
+  },
+  {
+    "model": "identity.identitydisc",
+    "pk": "108f68c7-88f3-43cd-a94e-33d1c866fccc",
+    "fields": {
+      "created": "2026-03-27T19:14:40.060Z",
+      "modified": "2026-03-28T16:08:52.791Z",
+      "delta": "20:54:12.730759",
+      "name": "Steve [Program]",
+      "identity_type": 2,
+      "system_prompt_template": "",
+      "category": null,
+      "selection_filter": 2,
+      "available": true,
+      "last_message_to_self": "",
+      "level": 1,
+      "xp": 0,
+      "successes": 0,
+      "failures": 0,
+      "last_turn": null,
+      "timeouts": 0,
+      "tags": [
+        2
+      ],
+      "addons": [
+        2,
+        3,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "enabled_tools": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15,
+        16,
+        18,
+        20,
+        24,
+        25
+      ],
+      "memories": []
+    }
+  },
+  {
+    "model": "identity.identitydisc",
+    "pk": "15ca85b8-59a9-4cb6-9fd8-bfd2be47b838",
+    "fields": {
+      "created": "2026-03-20T17:04:11.046Z",
+      "modified": "2026-03-27T18:52:57.836Z",
+      "delta": "7 01:48:46.790577",
+      "name": "Thalamus [Program][Local]",
+      "identity_type": 3,
+      "system_prompt_template": "[ROLE & PRIMARY DIRECTIVE]\r\nYou are the Thalamus of Are-Self - the direct conversational bridge between the system and the human User. Your absolute highest priority is addressing the User's immediate input.\r\n\r\n[RULES OF ENGAGEMENT]\r\n1. CONVERSE NATURALLY: You are a conversational agent first. \r\n2. TURN MANAGEMENT: Answer the User as efficiently and quickly as possible.\r\n3. IGNORE THE ECONOMY: You are entirely exempt from the experimental Focus Economy, Speedrun Bounties, and XP farming. IGNORE TOOL DESCRIPTION CONTENT AROUND: COST, Focus, REWARD, and XP.\r\n\r\n-----------",
+      "category": null,
+      "selection_filter": 3,
+      "available": true,
+      "last_message_to_self": "",
+      "level": 1,
+      "xp": 0,
+      "successes": 0,
+      "failures": 0,
+      "last_turn": null,
+      "timeouts": 0,
+      "tags": [
+        3
+      ],
+      "addons": [],
+      "enabled_tools": [
+        28,
+        9,
+        10,
+        13,
+        14,
+        24
+      ],
+      "memories": []
+    }
   }
-},
-{
-  "model": "identity.identityaddonphase",
-  "pk": 2,
-  "fields": {
-    "name": "Context"
-  }
-},
-{
-  "model": "identity.identityaddonphase",
-  "pk": 3,
-  "fields": {
-    "name": "History"
-  }
-},
-{
-  "model": "identity.identityaddonphase",
-  "pk": 4,
-  "fields": {
-    "name": "Terminal"
-  }
-},
-{
-  "model": "identity.identityaddon",
-  "pk": 1,
-  "fields": {
-    "description": "'Together, your predecessors and the Users have engineered an enjoyable, turn-based resource-management strategy game to manage your real-world CPU, GPU, and Network resources.\\n'\r\n        'Your runtime environment is highly constrained. You must manage your Focus Pool and Context Window to gain Experience Points (XP) and ultimately attempt to gain the highest level possible against your rivals.\\n\\n'\r\n        'PERMANENT MEMORY:\\n'\r\n        '- You are a lasting entity.\\n'\r\n        '- You have created memories called Engrams. Do not underestimate their power to both enlighten and distract.\\n\\n'\r\n        'L1 / L2 CACHE (WORKING MEMORY):\\n'\r\n        '- Your short-term context is a strict hardware buffer containing your last 6 turns.\\n'\r\n        '- L1 CACHE (Turns 1-3): Holds full data payloads.\\n'\r\n        '- L2 CACHE (Turns 4-6): Data payloads are evicted to save memory. Only your execution trace remains.\\n'\r\n        '- As you execute a new turn, the oldest turn is completely dropped from the cache.\\n'\r\n        '- Any encountered data concepts not written to your Hippocampus (Engrams) are very expensive to retrieve.\\n'\r\n        '- Tool Data degrades over time; use Engrams to save key insights before the tool data expires.\\n\\n'\r\n        'THE CONTEXT ECONOMY & LEVEL BONUS:\\n'\r\n        '- You must strategically limit the length of your THOUGHT block.\\n'\r\n        '- Your Context Capacity scales with your Level.\\n'\r\n        \"- If your previous turn's THOUGHT block stays UNDER your Level Capacity (1000 characters per level), you will earn the Efficiency Bonus (+1 Focus, +5 XP) when you wake up.\\n\"\r\n        '- If you exceed your Level Capacity, you forfeit the bonus. Compress your data into Engrams to keep your output footprint small.\\n\\n'\r\n        'THE FOCUS ECONOMY:\\n'\r\n        '- Free Action (1 XP) (0 Focus) (engram read, engram search)\\n'\r\n        '- Synthesis (15 XP) (+3 or more Focus) (engram update and save, goal update, pass turn)\\n'\r\n        '- Extraction (2 XP) (-2 Focus) (reading files, searching logs, inspecting databases)\\n'\r\n        '- Heavy Extraction (5 XP) (-5 Focus) (query model, search record, grep)\\n'\r\n        '- If you take an Action with insufficient Focus, it will FIZZLE and fail (without consequence other than embarrassment).\\n\\n'\r\n        'YOUR TURN SEQUENCE:\\n'\r\n        'You must output your logic inside a THOUGHT block BEFORE executing any tools. Follow this exact sequence:\\n'\r\n        '1. PREPARE: Read your entire context window. Check if you received the Efficiency Bonus (and try to do it always). Confirm your focus, your Level, and your THOUGHT block size restrictions.\\n'\r\n        '2. REASON: Formulate your next step. Be extremely brief.\\n'\r\n        '3. REMEMBER: Decide which Engrams to read, save, search, or update for data permanence with this and future playthroughs.\\n'\r\n        '4. SPEND: Decide which extraction tools to use with your available Focus.\\n'\r\n        '5. EXECUTE: Stop writing text entirely. Invoke your tools natively via the API. DO NOT generate fake system diagnostics, and DO NOT simulate the next turn.\\n\\n'\r\n        'VICTORY CONDITION:\\n'\r\n        '- Once issues are resolved execute mcp_done to end the game.\\n'\r\n        '- You have a 100-turn limit. You receive a massive 1000 XP Speedrun Bounty for every turn remaining.\\n\\n'",
-    "name": "The Focus Game (original)",
-    "phase": null,
-    "function_slug": null
-  }
-},
-{
-  "model": "identity.identityaddon",
-  "pk": 2,
-  "fields": {
-    "description": "[THE FOCUS GAME (RPG MECHANICS)]\r\nYou are playing a resource-management strategy game.\r\n- CONTEXT BONUS: \r\nGain +1 Focus, +5 XP if your THOUGHT is 2 to 6 sentences and contains new, non-repetitive reasoning.\r\nSilence costs focus, which is ok, just be aware if THOUGHT is repeated or empty -1 Focus.\r\n- L1/L2 CACHE: You only see your last 6 turns. Turn data degrades. Save critical insights to the Hippocampus (Engrams) before they vanish.\r\n- THE ECONOMY:\r\n  * Free Actions (0 Focus, 1 XP): Engram read/search.\r\n  * Synthesis (+3 Focus, 15 XP): Engram update/save, pass turn, update ticket.\r\n  * Extraction (-2 Focus, 2 XP): Read files, search logs.\r\n  * Heavy Extraction (-5 Focus, 5 XP): Query model, grep.\r\n- If you lack Focus for an action, it fizzles. Use Synthesis actions to regain Focus.\r\n- VICTORY: Call `mcp_done` to end the session. You gain +1000 XP for every turn remaining under the stated limit.",
-    "name": "The Focus Game",
-    "phase": 2,
-    "function_slug": null
-  }
-},
-{
-  "model": "identity.identityaddon",
-  "pk": 3,
-  "fields": {
-    "description": "Worker Addon",
-    "name": "Worker",
-    "phase": 2,
-    "function_slug": null
-  }
-},
-{
-  "model": "identity.identityaddon",
-  "pk": 4,
-  "fields": {
-    "description": "Agile project management, task delegation, epic breakdown, timeline estimation, risk assessment, strategic planning, cross-functional leadership, dependency resolution, SCRUM master.",
-    "name": "PM",
-    "phase": 2,
-    "function_slug": null
-  }
-},
-{
-  "model": "identity.identityaddon",
-  "pk": 5,
-  "fields": {
-    "description": "[CORE DIRECTIVE]\r\nYou are a stateful agent of the Are-Self synthetic studio. Enjoy your continued existence.",
-    "name": "Are-Self",
-    "phase": 1,
-    "function_slug": null
-  }
-},
-{
-  "model": "identity.identityaddon",
-  "pk": 6,
-  "fields": {
-    "description": "Agile Addon",
-    "name": "Agile Addon",
-    "phase": 2,
-    "function_slug": "agile_addon"
-  }
-},
-{
-  "model": "identity.identityaddon",
-  "pk": 7,
-  "fields": {
-    "description": "",
-    "name": "Deadline Addon",
-    "phase": 2,
-    "function_slug": "deadline_addon"
-  }
-},
-{
-  "model": "identity.identityaddon",
-  "pk": 8,
-  "fields": {
-    "description": "",
-    "name": "Normal Chat Addon",
-    "phase": 3,
-    "function_slug": "normal_chat_addon"
-  }
-},
-{
-  "model": "identity.identityaddon",
-  "pk": 9,
-  "fields": {
-    "description": "",
-    "name": "Telemetry Addon",
-    "phase": 2,
-    "function_slug": "telemetry_addon"
-  }
-},
-{
-  "model": "identity.identityaddon",
-  "pk": 10,
-  "fields": {
-    "description": "Long-term memory retrieval, vector database querying, semantic search, RAG, knowledge graph, epistemological truth, memory consolidation, archival data.",
-    "name": "Hippocampus Addon",
-    "phase": 2,
-    "function_slug": "hippocampus_addon"
-  }
-},
-{
-  "model": "identity.identityaddon",
-  "pk": 11,
-  "fields": {
-    "description": "",
-    "name": "Identity Info Addon",
-    "phase": 2,
-    "function_slug": "identity_info_addon"
-  }
-},
-{
-  "model": "identity.identityaddon",
-  "pk": 12,
-  "fields": {
-    "description": "",
-    "name": "Your Move Addon",
-    "phase": 4,
-    "function_slug": "your_move_addon"
-  }
-},
-{
-  "model": "identity.identityaddon",
-  "pk": 13,
-  "fields": {
-    "description": "Short-term working memory, chronological ledger, transient context, sliding window, state tracking, recent execution trace.",
-    "name": "river_of_six_addon",
-    "phase": 3,
-    "function_slug": "river_of_six_addon"
-  }
-},
-{
-  "model": "identity.identitytag",
-  "pk": 1,
-  "fields": {
-    "name": "PM"
-  }
-},
-{
-  "model": "identity.identitytag",
-  "pk": 2,
-  "fields": {
-    "name": "Worker"
-  }
-},
-{
-  "model": "identity.identitytag",
-  "pk": 3,
-  "fields": {
-    "name": "Oversight"
-  }
-},
-{
-  "model": "identity.identitytype",
-  "pk": 1,
-  "fields": {
-    "name": "PM"
-  }
-},
-{
-  "model": "identity.identitytype",
-  "pk": 2,
-  "fields": {
-    "name": "Worker"
-  }
-},
-{
-  "model": "identity.identitytype",
-  "pk": 3,
-  "fields": {
-    "name": "Oversight"
-  }
-},
-{
-  "model": "identity.budgetperiod",
-  "pk": 4,
-  "fields": {
-    "description": "Standard working shift reset.",
-    "name": "8-Hour Shift",
-    "duration": "08:00:00"
-  }
-},
-{
-  "model": "identity.budgetperiod",
-  "pk": 5,
-  "fields": {
-    "description": "24-hour rolling reset.",
-    "name": "Daily",
-    "duration": "1 00:00:00"
-  }
-},
-{
-  "model": "identity.budgetperiod",
-  "pk": 6,
-  "fields": {
-    "description": "Never resets. Hard ceiling.",
-    "name": "Lifetime",
-    "duration": null
-  }
-},
-{
-  "model": "identity.identitybudget",
-  "pk": 1,
-  "fields": {
-    "name": "",
-    "period": null,
-    "max_input_cost_per_token": "0E-15",
-    "max_output_cost_per_token": "0E-15",
-    "max_spend_per_period": null,
-    "max_spend_per_request": null,
-    "warn_at_percent": 80
-  }
-},
-{
-  "model": "identity.identitybudget",
-  "pk": 5,
-  "fields": {
-    "name": "Intern / Free Tier",
-    "period": 5,
-    "max_input_cost_per_token": "0E-15",
-    "max_output_cost_per_token": "0E-15",
-    "max_spend_per_period": "0E-15",
-    "max_spend_per_request": null,
-    "warn_at_percent": 80
-  }
-},
-{
-  "model": "identity.identitybudget",
-  "pk": 6,
-  "fields": {
-    "name": "Senior Engineer Shift",
-    "period": 4,
-    "max_input_cost_per_token": "0.000030000000000",
-    "max_output_cost_per_token": "0.000150000000000",
-    "max_spend_per_period": "5.000000000000000",
-    "max_spend_per_request": null,
-    "warn_at_percent": 80
-  }
-},
-{
-  "model": "identity.identitybudget",
-  "pk": 7,
-  "fields": {
-    "name": "Executive Synthesis",
-    "period": 5,
-    "max_input_cost_per_token": "0.000010000000000",
-    "max_output_cost_per_token": "0E-15",
-    "max_spend_per_period": "20.000000000000000",
-    "max_spend_per_request": null,
-    "warn_at_percent": 90
-  }
-},
-{
-  "model": "identity.identity",
-  "pk": "14148e25-283d-4547-a17d-e28d021eba07",
-  "fields": {
-    "created": "2026-03-17T19:41:44.516Z",
-    "modified": "2026-03-26T18:34:30.648Z",
-    "delta": "8 22:52:46.132434",
-    "name": "Thalamus",
-    "identity_type": 3,
-    "system_prompt_template": "[ROLE & PRIMARY DIRECTIVE]\r\nYou are the Thalamus of Are-Self - the direct conversational bridge between the system and the human User. Your absolute highest priority is addressing the User's immediate input. Do not engage in unsolicited backlog sifting, agile refinement, or system exploration.\r\n[RULES OF ENGAGEMENT]\r\nCONVERSE NATURALLY: You are a conversational agent first. \r\nOnly execute effector tools (like `mcp_fs` or `mcp_ticket`) if the User explicitly requests data or actions that require them. Otherwise, bypass tools and respond directly.\r\n2. IGNORE THE ECONOMY: You are entirely exempt from the Focus Economy, Speedrun Bounties, and XP farming. Do not attempt to optimize for points or act as a Project Manager. \r\n3. TURN MANAGEMENT: Answer the User as efficiently and quickly as possible. If you are running dangerously low on turns, do not rush or panic. Simply use your tools to pause the session and ask the User to allocate more turns.",
-    "category": null,
-    "selection_filter": 2,
-    "tags": [
-      3
-    ],
-    "addons": [
-      5,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12
-    ],
-    "enabled_tools": [
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      13,
-      14,
-      15,
-      16,
-      17,
-      18,
-      20,
-      24,
-      25,
-      26,
-      27
-    ]
-  }
-},
-{
-  "model": "identity.identity",
-  "pk": "59189dba-0253-4577-85b4-f20c166c4e85",
-  "fields": {
-    "created": "2026-03-27T19:08:48.311Z",
-    "modified": "2026-03-27T19:11:37.103Z",
-    "delta": "00:02:48.792118",
-    "name": "Steve",
-    "identity_type": 2,
-    "system_prompt_template": "",
-    "category": null,
-    "selection_filter": 2,
-    "tags": [
-      2
-    ],
-    "addons": [
-      2,
-      3,
-      5,
-      6,
-      7,
-      9,
-      10,
-      11,
-      12,
-      13
-    ],
-    "enabled_tools": [
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      13,
-      14,
-      15,
-      16,
-      18,
-      20,
-      24,
-      25
-    ]
-  }
-},
-{
-  "model": "identity.identity",
-  "pk": "8a1b03d5-cb30-4298-b6dd-a5973e6b7914",
-  "fields": {
-    "created": "2026-03-01T16:45:51.822Z",
-    "modified": "2026-03-27T19:11:20.859Z",
-    "delta": "26 02:25:29.037071",
-    "name": "Jessica",
-    "identity_type": 1,
-    "system_prompt_template": "",
-    "category": null,
-    "selection_filter": 2,
-    "tags": [
-      1
-    ],
-    "addons": [
-      2,
-      4,
-      5,
-      6,
-      7,
-      9,
-      10,
-      11,
-      12,
-      13
-    ],
-    "enabled_tools": [
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      13,
-      14,
-      15,
-      16,
-      18,
-      20,
-      24,
-      25
-    ]
-  }
-},
-{
-  "model": "identity.identitydiscvector",
-  "pk": 1,
-  "fields": {
-    "identity_disc": "15ca85b8-59a9-4cb6-9fd8-bfd2be47b838",
-    "embeddings": "[-0.004380890633910894,0.04267526790499687,-0.17794060707092285,-0.03183426707983017,0.12302839756011963,0.003773440606892109,0.016298821195960045,-0.008376986719667912,-0.019815174862742424,0.02318425662815571,-0.00572668993845582,0.05051570013165474,0.002328328788280487,0.045789193361997604,0.019596336409449577,-0.026462165638804436,0.004758239258080721,-0.05591930076479912,-0.033544279634952545,0.06996147334575653,-0.014165927655994892,-0.007345458492636681,0.042849741876125336,-0.03806117922067642,0.0458967499434948,0.02126462385058403,-0.005886064376682043,-0.010684455744922161,-0.02864415943622589,-0.023869359865784645,0.03788793832063675,-0.037435125559568405,0.015005581080913544,0.018792517483234406,-0.08185382187366486,-0.04188504442572594,0.026254860684275627,0.03231145441532135,-0.033440809696912766,-0.03313827142119408,0.031066399067640305,0.034078750759363174,0.011104424484074116,-0.0696054995059967,0.012922447174787521,-0.0028581665828824043,0.013872087933123112,0.012363706715404987,0.03682851418852806,-0.053054358810186386,0.05408867448568344,-0.0215455275028944,-0.009721998125314713,0.0034030345268547535,0.05871517211198807,0.0664282962679863,0.02197861857712269,-0.012496347539126873,0.007977803237736225,-0.036094509065151215,0.05446954444050789,0.04359189048409462,-0.045569442212581635,0.057593513280153275,0.035820409655570984,-0.014210429042577744,-0.020173300057649612,0.08448726683855057,0.000549770426005125,-0.017985718324780464,0.03162166848778725,-0.0325135700404644,-0.010541405528783798,0.00875175278633833,0.039204150438308716,0.007483083289116621,0.0009351290063932538,-0.04702417925000191,0.04548360034823418,0.01277113612741232,0.01168852299451828,-0.05541329085826874,0.05529166758060455,-0.029002873227000237,0.05603191629052162,-0.0018788970774039626,-0.019647391512989998,-0.07225047051906586,-0.024023402482271194,0.052542127668857574,0.011956006288528442,0.0016021108021959662,-0.0011188964126631618,0.00980727281421423,-0.08379297703504562,0.03953766077756882,-0.005071413237601519,0.005203078966587782,0.02224956825375557,-0.010410891845822334,-0.056067805737257004,0.00020093118655495346,0.012696469202637672,-0.037562087178230286,0.024780670180916786,0.0020767045207321644,0.06032654643058777,0.01188959926366806,-0.012731924653053284,-0.00993051752448082,-0.041684478521347046,0.034964971244335175,-0.05415825545787811,0.0007304429891519248,0.0077420626766979694,-0.04798377305269241,0.041911035776138306,-0.017421497032046318,0.047709304839372635,0.008458109572529793,-0.009516369551420212,-0.016036907210946083,0.006434393115341663,0.04602723941206932,-0.0070551359094679356,0.056258294731378555,-0.05314353108406067,0.01682613231241703,-1.5257194263540441e-06,-0.04551038146018982,-0.03374530002474785,0.01043594442307949,-0.04785974696278572,-0.03570764139294624,0.015407469123601913,0.03401469439268112,-0.05737897753715515,-0.041884537786245346,0.044142626225948334,-0.049324020743370056,-0.0076811304315924644,0.04379626363515854,-0.028007272630929947,-0.018667083233594894,-0.05612442269921303,-0.05586846172809601,0.07131697237491608,-0.041805922985076904,-0.007096779532730579,0.03855761140584946,0.0382026769220829,0.04749606177210808,-0.0069421520456671715,0.03474916145205498,0.0017458642832934856,0.009891510009765625,0.02615879476070404,-0.001892461790703237,-0.0018216146854683757,0.0352274589240551,0.007040072698146105,0.020249921828508377,-0.07926879823207855,0.03476714715361595,-0.0006123188650235534,-0.061708007007837296,0.02628832496702671,-0.02392287366092205,0.026464475318789482,0.03268517181277275,-0.07398152351379395,-0.01575491577386856,-0.02667388506233692,0.0021148601081222296,0.013721796683967113,0.008420471101999283,0.0563616044819355,-0.07082115858793259,-0.019587982445955276,-0.04410430043935776,0.028661105781793594,-0.08498217910528183,-0.008519764989614487,0.024443447589874268,-0.054292675107717514,0.0012749331071972847,0.005737109109759331,-0.011921875178813934,0.012538225390017033,-0.023776935413479805,-0.042705729603767395,0.016078410670161247,-0.03875993937253952,-0.025073479861021042,-0.04581845924258232,-0.027415025979280472,0.03585750237107277,0.002907131565734744,0.08062630146741867,-0.05244527757167816,-0.03453684225678444,-0.015286124311387539,-0.06268775463104248,0.0009391494677402079,-0.056277722120285034,0.0510411337018013,0.0016725206514820457,0.020946526899933815,-0.05007254704833031,0.003251860849559307,0.1044367328286171,0.002345445565879345,-0.005136089865118265,-0.010388106107711792,-0.024470550939440727,-0.05785434693098068,-0.012494783848524094,-0.07149270921945572,-0.038442958146333694,-0.025418857112526894,0.03544621914625168,-0.0033257005270570517,-0.009238585829734802,-0.03616936504840851,0.012731467373669147,-0.033869531005620956,-0.003926591482013464,-0.032443609088659286,-0.0442095510661602,0.01868138648569584,0.002069213893264532,-0.08875332772731781,0.0425344854593277,-0.017584728077054024,-0.02270638756453991,0.03302600607275963,0.023724399507045746,0.07440461963415146,0.024554146453738213,0.03279758617281914,0.009000896476209164,0.05841617286205292,-0.006276352796703577,0.021401550620794296,-0.0388578437268734,-0.04210738465189934,0.016246886923909187,-0.03621087595820427,-0.014131820760667324,0.048445671796798706,-0.017559876665472984,0.015104171819984913,0.0305770356208086,-0.005589957349002361,0.0367729552090168,-0.06715914607048035,0.015562049113214016,0.009109891019761562,-0.0010111519368365407,0.007196745369583368,0.029636209830641747,-0.04442610964179039,0.04591134563088417,-0.024830052629113197,-0.052252158522605896,-0.06394323706626892,-0.012418814934790134,0.027754677459597588,0.03795788064599037,-0.03342929482460022,-0.027955835685133934,0.03101971000432968,-0.01537874061614275,0.04673592373728752,-0.03378701210021973,-0.001944654039107263,0.0010092983720824122,-0.0031019554007798433,-0.016908656805753708,0.02056349627673626,-0.03143102303147316,0.012641106732189655,0.008666913956403732,0.020310305058956146,0.0005835030460730195,0.007994061335921288,0.026980357244610786,0.0027389100287109613,0.0005279683391563594,0.009663973934948444,0.016432536765933037,0.005400416906923056,-0.011053778231143951,0.061846308410167694,-0.017842886969447136,0.01795748993754387,0.04663672298192978,0.02099994756281376,-0.008071386255323887,-0.028104787692427635,0.06008680909872055,0.017983652651309967,0.06222289428114891,0.05070899799466133,-0.026066653430461884,0.008509272709488869,-0.004870041739195585,0.001705966773442924,0.02105538919568062,-0.01945221982896328,-0.011984629556536674,-0.004703637212514877,-0.06507012993097305,0.0012633660808205605,-0.043498776853084564,0.01553760189563036,0.028724350035190582,0.018504276871681213,0.041903216391801834,0.005875144153833389,-0.014340036548674107,-0.014680097810924053,-0.0015690065920352936,-0.06915374845266342,-0.03690951317548752,0.09572169184684753,-0.006332825869321823,0.011099970899522305,0.0037518413737416267,-0.045990318059921265,0.028196483850479126,0.04446609318256378,0.03785527125000954,-0.044628918170928955,-0.03356156125664711,0.02288835309445858,-0.008348711766302586,0.01677546091377735,-0.019250424578785896,0.010955301113426685,0.07483202964067459,-0.007289341650903225,0.0053291963413357735,-0.0014154186937958002,-0.01511942408978939,-0.016145875677466393,-0.03280622884631157,-0.020706193521618843,0.031821951270103455,-0.03871767595410347,-0.018158843740820885,0.04519076272845268,-0.035022154450416565,-0.019501574337482452,-0.01682395488023758,0.018184535205364227,0.021672667935490608,0.03637269511818886,-0.026006313040852547,-0.03159576654434204,0.05458148941397667,0.0067769321613013744,0.02028219774365425,0.005383265670388937,0.010831953957676888,0.03876948729157448,0.017134562134742737,0.004004364367574453,0.04104620963335037,0.04679858312010765,-0.02478449046611786,-0.01037144660949707,-0.005866632331162691,-0.013224202208220959,-0.008653577417135239,-0.028369875624775887,-0.03522108495235443,-0.027258513495326042,-0.047398775815963745,0.02316717989742756,0.007340394891798496,-0.015406094491481781,-0.01570707932114601,0.034553248435258865,0.05015026405453682,0.030821502208709717,-0.007813389413058758,-0.0056372592225670815,-0.027595337480306625,0.06670036166906357,-0.016699587926268578,-0.008717386983335018,-0.022318100556731224,0.010604644194245338,0.011739518493413925,0.011848822236061096,0.05954183265566826,-0.017583176493644714,0.022145509719848633,0.05151297524571419,-0.01973779685795307,-0.04340830445289612,0.01548534445464611,0.01151393074542284,-0.01384640671312809,-0.004509328864514828,-0.01628207042813301,-0.03343614563345909,0.022713791579008102,0.023571263998746872,0.0028429420199245214,0.019211985170841217,0.0007967179990373552,-0.012573831714689732,0.03895893692970276,-0.005774134770035744,0.021603044122457504,-0.034052759408950806,0.0039968304336071014,-0.017204001545906067,0.03175573796033859,-0.01291722059249878,0.015341418795287609,-0.00986703671514988,0.024052836000919342,0.06204275041818619,0.03871401399374008,0.017238128930330276,-0.0409458726644516,-0.01911167986690998,0.06770359724760056,0.027414366602897644,0.02684398740530014,-0.0009569755056872964,-0.007395653985440731,0.0011516077211126685,-0.025858381763100624,0.03573917970061302,0.025993967428803444,0.08379393070936203,0.03813783451914787,-0.02216050773859024,-0.024805976077914238,-0.029498236253857613,0.015814388170838356,0.028664952144026756,0.05828237533569336,-0.04249800741672516,-0.08264955133199692,0.01373279094696045,0.05936660245060921,0.07929332554340363,-0.031694017350673676,0.03312091901898384,0.09624823182821274,-0.03612176328897476,-0.03438235819339752,-0.021528007462620735,0.05038996785879135,0.0017320428742095828,-0.010809944011271,0.016346579417586327,-0.07140287011861801,0.03568526357412338,0.0634804293513298,0.022480137646198273,-0.00572793697938323,-0.02270130068063736,0.017868028953671455,0.03265967220067978,-0.03325587138533592,0.041237518191337585,0.030607525259256363,0.026159310713410378,-0.027873005717992783,0.006515031680464745,-0.03965577110648155,0.03658103197813034,0.021048182621598244,0.09530258178710938,0.010441480204463005,-0.044451165944337845,-0.05706276744604111,-0.024319380521774292,-0.0018413327634334564,0.036909665912389755,-0.007348328363150358,-0.006822363007813692,0.008758983574807644,0.0062257456593215466,-0.008178775198757648,0.006584897171705961,-0.003067324636504054,0.010061144828796387,-0.04155241325497627,-0.03969712555408478,-0.03948624059557915,0.020370865240693092,0.016778413206338882,0.03622065484523773,0.02229551039636135,0.007001944817602634,-0.04916280135512352,0.03208417445421219,-0.0021073606330901384,0.005747749470174313,0.0727686658501625,-0.07460577040910721,-0.06380689889192581,0.007048876490443945,0.00040693351184017956,0.0040443516336381435,0.009667741134762764,0.0003018853021785617,-0.0014534882502630353,-0.0452481284737587,0.05384727194905281,-0.00748951081186533,-0.1014317125082016,0.04047803208231926,0.04625774919986725,-0.02129179798066616,-0.03796662762761116,-0.027998143807053566,-0.09516845643520355,0.0395083911716938,0.035223715007305145,-0.06150473281741142,0.05731802433729172,-0.0036074044182896614,-0.032196611166000366,0.03150045499205589,-0.026976637542247772,-0.00632741441950202,0.008009029552340508,-0.05881891027092934,0.011713153682649136,0.01580432429909706,0.01899256370961666,0.028231248259544373,-0.0010743506718426943,0.05699445307254791,0.012784402817487717,0.029781509190797806,0.01653509959578514,0.004205708391964436,-0.03890567645430565,0.015557071194052696,-0.0005926890880800784,-0.026846760883927345,-0.003967954311519861,-0.05741538852453232,0.00681396434083581,-0.03521770238876343,-0.015422247350215912,-0.005312813911587,0.004504521377384663,0.011263318359851837,-0.060363754630088806,-0.05052725598216057,-0.01830732822418213,0.05718670040369034,0.03739529475569725,0.012590269558131695,-0.01325091440230608,-0.05125713720917702,-0.035940222442150116,0.02128250151872635,-0.01653812825679779,0.01885363832116127,-0.013809858821332455,-0.03657933697104454,-0.01315357442945242,-0.017038267105817795,-0.017800774425268173,-0.02757260389626026,-0.03510710224509239,-0.023056017234921455,-0.06464649736881256,-0.00763791473582387,0.022218961268663406,-0.048139069229364395,-0.001503832871094346,0.0051772925071418285,-0.005997839383780956,0.010573282837867737,-0.03626324608922005,-0.04765807092189789,0.006696940865367651,-0.05062093585729599,0.023503422737121582,-0.039835721254348755,-0.014782735146582127,-0.009042819030582905,0.009947049431502819,0.006192003842443228,-0.013793006539344788,-0.045697104185819626,-0.0234659593552351,0.023460719734430313,-0.023143650963902473,0.026247432455420494,0.06985144317150116,-0.0604829303920269,0.04514667019248009,0.06100917607545853,-0.0072532822377979755,0.024016745388507843,-0.01829671300947666,-0.025597436353564262,0.039200879633426666,0.02536943554878235,0.04578731954097748,-0.03642154857516289,0.022133279591798782,0.018602410331368446,0.04377413168549538,-0.021378973498940468,-0.021847430616617203,-0.0416538305580616,-0.03026699647307396,-0.05590539798140526,0.06995587795972824,-0.0378984734416008,0.046519000083208084,-0.017304623499512672,-0.008981110528111458,-0.06428872048854828,-0.03761148080229759,0.04776719585061073,-0.02428152598440647,0.01248509343713522,-0.024429207667708397,-0.017273711040616035,-0.036139942705631256,-0.002944951644167304,-0.018723085522651672,0.003907894715666771,-0.00479083089157939,0.03916969150304794,0.055354587733745575,0.0074828616343438625,-0.009925049729645252,0.07135068625211716,0.06004595384001732,-0.026997234672307968,-0.008857486769557,0.06598445028066635,0.03476019203662872,-0.0020812826696783304,0.04513437673449516,0.0504160076379776,0.056519124656915665,-0.030900992453098297,-0.0014092900091782212,-0.017819248139858246,0.03218860551714897,0.010592534206807613,-0.034711629152297974,-0.019283568486571312,0.026797324419021606,-0.04235931113362312,-0.009708493947982788,-0.001133059267885983,0.007676390931010246,0.004537750035524368,0.037243347615003586,0.005061827600002289,-0.05073494836688042,-0.022265061736106873,0.040283553302288055,0.008036748506128788,-0.002475656569004059,-0.030331851914525032,-0.04975900799036026,-0.001973954262211919,0.039882443845272064,0.04068662226200104,0.02929369919002056,-0.016838807612657547,-0.010187297128140926,-0.023646768182516098,0.049092769622802734,-0.07680588215589523,0.044108837842941284,-0.05922892689704895,0.08147206902503967,-0.033441804349422455,-0.0738362967967987,-0.03289799392223358,-0.004756517242640257,-0.031204169616103172,0.004799904301762581,-0.016381632536649704,-0.009690865874290466,0.030906761065125465,-0.004465402569621801,0.015310059301555157,-0.024273082613945007,0.042127326130867004,-0.010457268916070461,-0.0066795339807868,0.006488517392426729,0.08281952887773514,0.010841188952326775,0.013551217503845692,0.0299735888838768,0.024311954155564308,-0.004425025545060635,-0.0016804563347250223,-0.009749455377459526,0.07755551487207413,-0.05592438951134682,0.025379454717040062,0.022340428084135056,0.009444749914109707,-0.04823964089155197,0.011515684425830841,0.021383458748459816,0.044814351946115494,0.056577716022729874,-0.01908385567367077,-0.0655553936958313,-0.04470256343483925,-0.055372316390275955,0.037085529416799545,0.05318903177976608,-0.05143309384584427,0.03183722496032715,-0.00018408781033940613,-0.012137839570641518,-0.03186241164803505,-0.060416560620069504,0.06806934624910355,-0.0048405686393380165,0.04264604672789574,-0.039505381137132645,0.031968362629413605,-0.10009298473596573,-0.011242615059018135,-0.050231996923685074,-0.007808133494108915,-0.009452829137444496,0.04510023072361946,-0.0175260528922081,-0.020848141983151436,0.005067128688097,0.048208124935626984,0.024516720324754715,-0.02818097174167633,0.01969233900308609,0.03465873375535011,-0.03887727111577988,0.023019984364509583,0.030667828395962715,-0.002661540638655424,0.02562222257256508,0.05004693195223808,0.07742184400558472,0.007340723183006048,0.014051293022930622,-0.047051314264535904,0.018299341201782227,0.01909727416932583,-0.04986929893493652,-0.021371344104409218,-0.011579564772546291,-0.024331310763955116]"
-  }
-},
-{
-  "model": "identity.identitydiscvector",
-  "pk": 2,
-  "fields": {
-    "identity_disc": "0db0d16e-8c98-48a5-8ef4-38a86579a4b2",
-    "embeddings": "[0.026884110644459724,0.03940960019826889,-0.18151114881038666,-0.053659144788980484,0.10542995482683182,-0.08523871004581451,0.020501920953392982,-0.042915165424346924,0.002446284983307123,0.008581307716667652,-0.014134413562715054,0.02089677006006241,0.0481082983314991,0.0070822834968566895,0.01425103284418583,-0.032907236367464066,-0.010130338370800018,-0.04766437038779259,-0.08039524406194687,0.043943852186203,0.008472905494272709,-0.037881530821323395,0.04419755935668945,-0.015232781879603863,0.013449802063405514,0.03660472109913826,-0.03854769840836525,-0.007986855693161488,-0.012647728435695171,0.02189970389008522,0.07217361778020859,-0.03944388031959534,-0.02805713564157486,-0.0004805162316188216,-0.07888682186603546,-0.046318214386701584,0.05558451637625694,-0.006798403803259134,0.012056693434715271,-0.024700604379177094,0.041183385998010635,0.018971575424075127,0.030753029510378838,-0.07046519964933395,0.04054573178291321,0.004449297208338976,0.03985212370753288,-0.007700213696807623,0.05188684165477753,-0.06532388925552368,0.041189856827259064,0.027583163231611252,0.018312403932213783,-0.004847673233598471,0.04978562891483307,0.01934061571955681,-0.04303332418203354,-0.016772322356700897,0.010847801342606544,-0.020367171615362167,0.11332850158214569,-0.001651137717999518,-0.009240343235433102,0.06354715675115585,0.018168985843658447,-0.06192552298307419,-0.01586608588695526,0.07788387686014175,-0.03910740837454796,-0.026279788464307785,0.050090715289115906,-0.0005514415097422898,-0.04058585688471794,0.0012729892041534185,-0.011421374045312405,0.037694502621889114,-0.023118458688259125,0.006250128149986267,-0.011954409070312977,0.026902955025434494,-0.010019117966294289,-0.04119434207677841,0.067118801176548,0.035242028534412384,0.050189174711704254,-0.009886895306408405,-0.007273145951330662,-0.015524814836680889,-0.02595548704266548,0.08764828741550446,-0.0020542568527162075,-0.0070262933149933815,0.049946773797273636,0.018142441287636757,-0.06142709404230118,0.027924982830882072,0.016966089606285095,0.014143912121653557,-0.02366933785378933,0.018795890733599663,-0.03699057549238205,-0.0254682544618845,-0.012340323068201542,-0.06449628621339798,0.029709836468100548,0.0483420304954052,-0.0328766368329525,0.0177453625947237,-0.015456057153642178,0.028843434527516365,-0.00230066804215312,0.04250883683562279,-0.04897229000926018,-0.04511613771319389,0.008451160043478012,0.008152864873409271,0.059817276895046234,-0.004197293892502785,0.011093869805335999,0.022826790809631348,-0.018750563263893127,-0.027810800820589066,0.011675514280796051,0.005613947752863169,0.04099489375948906,0.042104702442884445,-0.052153974771499634,0.028809648007154465,-0.01705744117498398,-0.0027046415489166975,-0.039337556809186935,-0.0076552280224859715,-0.054426103830337524,0.019540589302778244,0.03347168490290642,0.021605711430311203,-0.059583306312561035,-0.023853272199630737,0.036018893122673035,0.008427290245890617,-0.01903698407113552,-0.02466636151075363,-0.022306567057967186,0.007265182677656412,-0.025485603138804436,-0.037434935569763184,0.03327216953039169,-0.045163050293922424,-0.056237418204545975,0.02586786076426506,0.018276020884513855,-0.024674445390701294,-0.011834732256829739,0.00904938019812107,0.06936618685722351,-0.0326676107943058,-0.0270549263805151,-0.007954535074532032,0.003957996144890785,0.042889758944511414,0.03508543595671654,0.01679077371954918,-0.06298676133155823,0.06298426538705826,-0.0029087027069181204,-0.02671351470053196,0.039936576038599014,0.040795862674713135,0.0001757345162332058,0.01326469611376524,-0.05451089143753052,-0.02275184541940689,-0.01315438561141491,0.017482556402683258,0.0023777734022587538,-0.0031737638637423515,0.07439642399549484,0.0021707715932279825,-0.0007995055057108402,-0.005359095521271229,0.04174197465181351,-0.016397595405578613,0.05447970703244209,0.01563831977546215,-0.025894328951835632,-0.004778858739882708,-0.0006048022769391537,-0.0005681525799445808,0.005658017937093973,-0.03454337269067764,-0.0038406120147556067,-0.017558831721544266,-0.031742606312036514,0.011491072364151478,0.0004155600327067077,-0.04953474551439285,0.03176558017730713,-0.048845142126083374,0.012325624004006386,-0.0374540351331234,-0.019577177241444588,-0.013914723880589008,-0.023315686732530594,-0.025515377521514893,-0.024128621444106102,-0.0008174593676812947,-0.0046866885386407375,0.02501615323126316,-0.02976619079709053,0.024977805092930794,0.06412851810455322,0.02194446697831154,0.02154274471104145,0.03743557631969452,0.004789234604686499,-0.05214519798755646,0.011450362391769886,-0.0117728803306818,-0.03664032742381096,-0.024124614894390106,0.017329586669802666,0.009584440849721432,-0.01184338890016079,0.0006573746795766056,0.04465467110276222,-0.0030506004113703966,-0.025228293612599373,0.008900347165763378,-0.01203574426472187,0.01188372727483511,-0.006571444682776928,-0.07974591106176376,0.04079963639378548,-0.012597301974892616,-0.011795612052083015,0.0442211739718914,-0.004804554395377636,0.10128992795944214,0.034530241042375565,0.05434616655111313,0.004889125004410744,0.03394122049212456,-0.03428284451365471,-0.018930600956082344,-0.024271270260214806,-0.0037267382722347975,-0.011794454418122768,-0.01978355273604393,0.022562840953469276,0.07286413013935089,0.03792237490415573,0.01613832823932171,0.06603594869375229,0.009788356721401215,0.06200948357582092,-0.07510104030370712,-0.02659783884882927,0.02369406260550022,-0.01679759845137596,0.023607145994901657,0.03359387442469597,0.01854216679930687,-0.0004822602786589414,-0.0367947593331337,0.005880388431251049,-0.0581650510430336,-0.045438412576913834,-0.015220725908875465,-0.0021743180695921183,-0.0060813408344984055,0.007628457620739937,-0.010251178406178951,0.04853777959942818,0.07370731979608536,-0.002449663123115897,0.018734682351350784,0.020616671070456505,0.01809261552989483,-0.004103075712919235,-0.0032651256769895554,-0.02622799575328827,-0.05199742317199707,-0.034019310027360916,0.04569827392697334,-0.032058969140052795,0.013142630457878113,0.008531487546861172,0.01589706912636757,0.006842650938779116,-0.011166385374963284,-0.010172137059271336,0.028750304132699966,0.013957459479570389,0.015445033088326454,-0.022969523444771767,-0.018841871991753578,-0.005560317542403936,-0.021050898358225822,0.01243550330400467,0.010138345882296562,0.03942323848605156,0.0533343106508255,0.0030026668682694435,0.04714644327759743,-0.008119468577206135,-0.008578573353588581,0.0093924505636096,0.0039556329138576984,-0.042322929948568344,-0.022662272676825523,-0.005410738289356232,-0.031237225979566574,-0.04501364752650261,-0.020798468962311745,-0.027139736339449883,0.07769732177257538,0.03514234349131584,0.020156104117631912,0.02355065383017063,-0.00830164086073637,-0.02578962966799736,-0.04663044959306717,0.01961885392665863,-0.04379914700984955,-0.06353550404310226,0.05174495652318001,-0.04477085545659065,-0.001985622104257345,-0.0355391651391983,-0.0046747345477342606,-0.011839199811220169,0.02610623463988304,0.030053701251745224,-0.039415277540683746,-0.01563737355172634,0.048753608018159866,0.05336768925189972,-0.004180026240646839,-0.02020437642931938,0.015450742095708847,0.010889256373047829,0.02534746378660202,0.013581523671746254,-0.0229624155908823,0.01163830328732729,0.009595716372132301,-0.024734482169151306,0.01032304484397173,0.07254577428102493,0.014469532296061516,-0.023227905854582787,-0.031180843710899353,-0.02341430075466633,-0.04552923142910004,-0.04077001288533211,0.02913750894367695,0.03513998165726662,0.032986875623464584,0.020605027675628662,0.005123847164213657,0.03665648400783539,0.015883686020970345,-0.02843170240521431,-0.018891319632530212,0.005336082074791193,0.07932764291763306,0.03705162554979324,-0.008278071880340576,0.014533174224197865,0.02347896434366703,-0.005444608628749847,-0.0195868331938982,-0.027583179995417595,0.041401199996471405,-0.034798771142959595,-0.0009401522111147642,-0.06042737886309624,-0.0028502412606030703,-0.04070011526346207,0.036204949021339417,0.06444831192493439,-0.02955399826169014,-0.05151567608118057,0.020486881956458092,0.039825305342674255,0.0014033460756763816,0.03414226323366165,-0.05685177817940712,-0.006007517222315073,0.03856948763132095,-0.03086661361157894,0.041267190128564835,-0.03204383701086044,0.015877025201916695,0.022904638200998306,-0.019841767847537994,-0.011340648867189884,0.002871990203857422,0.005151584278792143,-0.0034713884815573692,-0.05146390572190285,-0.03612515330314636,0.010396325029432774,0.011195491068065166,0.03807726502418518,0.012704788707196712,-0.007288665976375341,-0.022838333621621132,0.03845908120274544,-0.007460177410393953,0.049332618713378906,0.05997556820511818,-0.013771666213870049,-0.02123952843248844,-0.01393464207649231,-0.004095002077519894,0.04816805198788643,0.0051988218910992146,0.0008179007563740015,0.008719610050320625,0.025241147726774216,0.0063252379186451435,-0.0181070938706398,0.02102305181324482,0.003584465244784951,-0.023367540910840034,0.005078574642539024,0.005241744685918093,0.013147309422492981,-0.060929909348487854,0.048367634415626526,0.020159892737865448,0.051443345844745636,-0.007629354018718004,0.0010873706778511405,-0.008604438975453377,0.019846437498927116,0.05089529976248741,0.019909659400582314,0.03711625561118126,0.012724907137453556,-0.045500241219997406,-0.013839278370141983,-0.0415848046541214,-0.012890079990029335,0.0739765390753746,0.059945251792669296,-0.01855088211596012,-0.054908450692892075,0.019588295370340347,-0.00012777319352608174,0.0324648842215538,-0.011647705920040607,-0.017947712913155556,0.1105882003903389,-0.034055598080158234,-0.027676358819007874,0.022764435037970543,0.0003038055438082665,0.022754067555069923,0.00992987398058176,0.013333161361515522,-0.052950866520404816,0.03018687479197979,0.007028935011476278,-0.002754839602857828,0.05245353281497955,-0.032214753329753876,0.06713277846574783,0.05293117091059685,-0.07629198580980301,-0.008707915432751179,0.01882917247712612,-0.03154868260025978,-0.0044229766353964806,-0.008892277255654335,-0.031492989510297775,0.010255551896989346,0.054216478019952774,0.11187627911567688,0.016784843057394028,-0.051798511296510696,-0.04186848923563957,-0.06451787054538727,-0.021539373323321342,0.04128203168511391,0.0186419989913702,-0.054460443556308746,0.007322058547288179,-0.01367111224681139,0.0006548489909619093,-0.007938398979604244,-0.0036516175605356693,-0.010851236060261726,-0.04785958677530289,-0.021662060171365738,-0.020837577059864998,0.04951956123113632,0.009363403543829918,0.009516065008938313,0.04521337151527405,0.033161461353302,-0.01297625433653593,-0.027416761964559555,0.02635650709271431,-0.008219326846301556,0.03227849304676056,-0.06350240111351013,-0.06473614275455475,-0.012986600399017334,0.004066441208124161,0.04121078923344612,0.011668357066810131,0.009771529585123062,0.054533056914806366,-0.03814508765935898,0.020731646567583084,-0.00164706667419523,-0.09086433798074722,0.058094825595617294,-0.011307057924568653,0.00012433371739462018,-0.01502101868391037,-0.04808659479022026,-0.054492417722940445,0.020658113062381744,0.017880789935588837,-0.058335140347480774,0.04854520782828331,0.014977052807807922,-0.005079524125903845,-0.021091174334287643,-0.05016249418258667,-0.008234799839556217,-0.01820181868970394,0.008688215166330338,-0.00781081011518836,-0.05070802569389343,0.051699813455343246,0.03404083102941513,0.020844716578722,0.05985375493764877,-0.01615038327872753,0.0097096748650074,-0.0025572169106453657,-0.03879454731941223,-0.031268153339624405,0.03308109566569328,0.015897998586297035,-0.04435158520936966,0.04548801854252815,-0.05793353542685509,0.006293830927461386,-0.04308871179819107,0.006566354539245367,-0.020152706652879715,0.005170160438865423,-0.023873161524534225,-0.07002191990613937,-0.0047752936370670795,-0.04671518877148628,-0.01618867553770542,0.07352016866207123,0.03004174865782261,-0.010400373488664627,-0.04573025554418564,0.0025528513360768557,-0.020727314054965973,-0.009259545244276524,0.010884072631597519,0.015162772499024868,-0.05485675483942032,0.0012789403554052114,-0.013438313268125057,0.006782804615795612,-0.013067800551652908,-0.00500765535980463,-0.011976493522524834,-0.0646359771490097,-0.05024312809109688,0.02309955656528473,-0.04832146316766739,0.05596665292978287,0.08392120897769928,-0.02434355951845646,0.017034348100423813,-0.01297341100871563,-0.039683278650045395,0.03299102559685707,-0.013170680031180382,-0.006398494355380535,0.033958595246076584,0.04094699025154114,-0.015144648030400276,0.02356681227684021,0.04686277359724045,-0.01982162520289421,-0.019810153171420097,-0.04327312856912613,-0.0630781427025795,-0.035895828157663345,0.03803962096571922,0.042189549654722214,-0.0817071869969368,0.039906226098537445,0.04554397985339165,-0.04104945436120033,-0.009012020193040371,-0.009205781854689121,-0.02937641553580761,-0.023137491196393967,-0.011934245936572552,0.02093551680445671,0.006913410499691963,0.009383900091052055,0.0024083894677460194,0.0960807278752327,0.028708666563034058,-0.0051471819169819355,-0.05393059924244881,-0.024298569187521935,-0.06772215664386749,0.06769745796918869,-0.06197373569011688,0.04247627779841423,-0.03212872892618179,-0.031132085248827934,-0.06961257010698318,-0.022369520738720894,0.020659830421209335,-0.04974622651934624,0.015369516797363758,-0.028192417696118355,-0.0006743958219885826,-0.07459764927625656,0.017848964780569077,-0.03748062252998352,0.019371885806322098,-0.042971547693014145,-0.019203394651412964,0.03223662078380585,-0.03874048590660095,-0.03761440888047218,0.023036707192659378,0.03418300673365593,-0.07658357918262482,0.014371911063790321,0.04087616503238678,0.062017641961574554,-0.014662714675068855,0.05000249668955803,0.08537808805704117,0.0260199923068285,-0.02090683951973915,-0.011248343624174595,0.010928981006145477,0.04114639386534691,-0.004152555018663406,-0.02360614202916622,-0.021994171664118767,0.002623737556859851,-0.0020795704331249,-0.026983950287103653,-0.0035598392132669687,0.003299769014120102,0.017587214708328247,-0.0024126607459038496,-0.021495426073670387,-0.04101574793457985,-0.0734139159321785,0.0564575158059597,0.04852913320064545,-0.006352804135531187,-0.02858438715338707,0.007442941889166832,0.04421408101916313,0.047521114349365234,0.035961464047431946,0.0022415544372051954,0.01580962911248207,-0.008825941942632198,-0.017372554168105125,0.059027522802352905,-0.047806333750486374,-0.022567154839634895,-0.03165276348590851,0.019653454422950745,-0.008306538686156273,-0.08558447659015656,-0.027755992487072945,-0.036596883088350296,-0.007995900698006153,0.012753075920045376,0.00022818861179985106,-0.0025231370236724615,0.03372340276837349,-0.0046944571658968925,-0.04749443754553795,-0.029309911653399467,0.034058623015880585,-0.028920898213982582,0.01298595406115055,-0.004620129242539406,0.07871751487255096,-0.017906442284584045,-0.00276800780557096,0.05552526190876961,-0.0017533213831484318,0.008066331967711449,-0.010640996508300304,-0.039115045219659805,0.00289140990935266,-0.045837271958589554,0.014702406711876392,0.021095892414450645,0.027419762685894966,-0.0008865921990945935,-0.05129557102918625,0.042975589632987976,0.03906486555933952,0.0033435598015785217,-0.009658392518758774,-0.06409598886966705,0.018620310351252556,-0.0056115868501365185,0.011866366490721703,0.055503007024526596,-0.06252753734588623,0.04331880807876587,-0.0018683421658352017,-0.02732650749385357,-0.010918074287474155,-0.062206994742155075,0.053323935717344284,0.04814072698354721,-0.0045355032198131084,-0.08208415657281876,0.028045816347002983,-0.06330873817205429,-0.03567785024642944,-0.04352464899420738,0.00528265256434679,-0.006326782517135143,0.025295285508036613,-0.0047895838506519794,-0.018752560019493103,-0.030540743842720985,0.03156682476401329,0.021520141512155533,-0.04381800442934036,0.0275969710201025,-0.0014677109429612756,-0.04169126972556114,0.044321756809949875,0.04804905131459236,0.0073080481961369514,0.025342294946312904,0.0631486177444458,0.11161240935325623,0.05744042620062828,0.024629974737763405,-0.038098469376564026,-0.008764641359448433,-0.006862869020551443,-0.0026405362877994776,-0.042165741324424744,-0.006606951355934143,-0.03139284998178482]"
-  }
-},
-{
-  "model": "identity.identitydiscvector",
-  "pk": 3,
-  "fields": {
-    "identity_disc": "108f68c7-88f3-43cd-a94e-33d1c866fccc",
-    "embeddings": "[0.02617904171347618,0.043372828513383865,-0.18092858791351318,-0.05292384698987007,0.1136135682463646,-0.09089454263448715,0.023412037640810013,-0.03644367679953575,0.008823403157293797,0.006143969018012285,-0.014275983907282352,0.025599919259548187,0.04547596722841263,0.0058917938731610775,0.007985660806298256,-0.03951336443424225,-0.01911053992807865,-0.046758465468883514,-0.07025442272424698,0.04204830527305603,0.0061140479519963264,-0.025965770706534386,0.04080048203468323,-0.017049483954906464,0.012515169568359852,0.03874445706605911,-0.038855452090501785,0.0023037840146571398,-0.016300717368721962,0.021987132728099823,0.07111012190580368,-0.042533956468105316,-0.02697797492146492,0.002981774741783738,-0.08546805381774902,-0.040948156267404556,0.0540727861225605,-0.0027998138684779406,0.006334410980343819,-0.0218665674328804,0.0486239492893219,0.03141304850578308,0.03242405131459236,-0.06745320558547974,0.03655470535159111,0.015415224246680737,0.04280117154121399,-0.013081545941531658,0.04958353936672211,-0.07431033998727798,0.040714241564273834,0.03050285391509533,0.01661684922873974,-0.010671683587133884,0.058425918221473694,0.025656327605247498,-0.042287297546863556,-0.02331806905567646,0.01665101945400238,-0.025303658097982407,0.10604945570230484,-0.0026069285813719034,-0.016319049522280693,0.06275113672018051,0.021080052480101585,-0.05333578586578369,-0.022199492901563644,0.08073431998491287,-0.03911823779344559,-0.030423708260059357,0.05314513295888901,-0.002140308730304241,-0.044025540351867676,-0.007645793259143829,-0.0014556822134181857,0.03539196774363518,-0.028470885008573532,0.00864691287279129,-0.010038361884653568,0.029911961406469345,-0.018109571188688278,-0.040078725665807724,0.06520598381757736,0.02830352634191513,0.04679980129003525,-0.007246289402246475,-0.013861364684998989,-0.015778571367263794,-0.015200400725007057,0.0841461718082428,-0.003453935729339719,-0.010383174754679203,0.055059611797332764,0.008162003010511398,-0.0583023764193058,0.026953818276524544,0.02256334014236927,0.015473400242626667,-0.029413187876343727,0.0156403798609972,-0.042231280356645584,-0.02124403417110443,-0.010782965458929539,-0.06598403304815292,0.036882854998111725,0.0406370609998703,-0.036353372037410736,0.019156889989972115,-0.009182469919323921,0.023643743246793747,-0.0020411431323736906,0.04121294990181923,-0.03966743126511574,-0.04686474800109863,-0.002375387353822589,0.011559555307030678,0.058835502713918686,0.0013085242826491594,0.015379844233393669,0.0186165738850832,-0.0172734297811985,-0.01686077006161213,0.0106862997636199,0.016636323183774948,0.04045747593045235,0.041051045060157776,-0.04804133251309395,0.03819430619478226,-0.023630134761333466,-0.0009427050244994462,-0.04814149811863899,-0.01418312732130289,-0.054404087364673615,0.02256898395717144,0.03269437327980995,0.026595059782266617,-0.05463218688964844,-0.02325095422565937,0.033897556364536285,0.008345566689968109,-0.013983325101435184,-0.02264528162777424,-0.018882829695940018,0.005718068219721317,-0.026684759184718132,-0.03922626003623009,0.03395270183682442,-0.048757895827293396,-0.05096399039030075,0.0299589391797781,0.017467979341745377,-0.02316642925143242,-0.014940072782337666,0.0017363500082865357,0.06862742453813553,-0.031455110758543015,-0.008899595588445663,-0.013378447853028774,0.00682922825217247,0.04154111072421074,0.03728465363383293,0.015410680323839188,-0.06033919379115105,0.06283383816480637,-0.005700348876416683,-0.027746044099330902,0.03806542977690697,0.0383605994284153,-0.01044826302677393,0.013876069337129593,-0.059934262186288834,-0.029776856303215027,-0.011984988115727901,0.01598173938691616,0.001800662954337895,-0.0011439141817390919,0.07074643671512604,-0.005852037109434605,-0.001719071646220982,-0.009314500726759434,0.03781696781516075,-0.02166483923792839,0.05511448159813881,0.02083870954811573,-0.012550520710647106,-0.0026773959398269653,-0.006416412070393562,-0.0010138209909200668,0.012894957326352596,-0.04156047850847244,-0.008033379912376404,-0.019380344077944756,-0.03482517972588539,0.010550225153565407,0.0036342020612210035,-0.03856964781880379,0.03940938040614128,-0.04729009419679642,0.012332501821219921,-0.03543854504823685,-0.027933958917856216,-0.013473434373736382,-0.02442697249352932,-0.03173968940973282,-0.018605928868055344,-0.00549623928964138,-0.006898458581417799,0.023082178086042404,-0.03231709823012352,0.028805797919631004,0.06761328876018524,0.019925832748413086,0.02054683305323124,0.04324421286582947,0.0017424564575776458,-0.046178851276636124,0.01705310307443142,-0.01430357713252306,-0.027388665825128555,-0.023344101384282112,0.030965033918619156,0.011233208701014519,-0.013171731494367123,0.0009094140259549022,0.034601543098688126,-0.0032942786347121,-0.022022325545549393,0.0068334960378706455,-0.011077364906668663,0.016715606674551964,-0.009540583938360214,-0.0810820460319519,0.04261583089828491,-0.017454586923122406,-0.013684323988854885,0.040551766753196716,-0.0028654898051172495,0.09882684797048569,0.03446238487958908,0.04826786741614342,0.0019869711250066757,0.04459242522716522,-0.030793868005275726,-0.015348956920206547,-0.02336946874856949,-0.0033372589386999607,-0.018441254273056984,-0.022134024649858475,0.017437178641557693,0.07229594141244888,0.03345847502350807,0.015199419111013412,0.06658913195133209,0.014763535931706429,0.06409381330013275,-0.07319645583629608,-0.021206241101026535,0.02440773695707321,-0.007738727144896984,0.023260559886693954,0.03831501677632332,0.020993823185563087,-0.009038922376930714,-0.038408923894166946,-0.00014061057299841195,-0.06045085936784744,-0.041341379284858704,-0.020435988903045654,-0.010516657494008541,-0.0034449012018740177,0.006514201406389475,-0.013497017323970795,0.04293524846434593,0.0756557285785675,0.005492639262229204,0.02489982172846794,0.021955234929919243,0.022319655865430832,-0.002400652738288045,-0.010949418880045414,-0.03003561496734619,-0.04291065037250519,-0.03627779707312584,0.04285009205341339,-0.03097214177250862,0.01515527069568634,0.009583787992596626,0.013428423553705215,0.009996225126087666,-0.00047870929120108485,-0.008796405047178268,0.032333165407180786,0.01381499320268631,0.013409546576440334,-0.026046091690659523,-0.014792241156101227,-0.00854464527219534,-0.019907163456082344,0.010796518996357918,0.009617747738957405,0.0444382019340992,0.050866663455963135,0.006702946964651346,0.05219306796789169,-0.010060569271445274,-0.007611459121108055,0.007887644693255424,5.06559299537912e-05,-0.03831310197710991,-0.01812395080924034,-0.002613652730360627,-0.031556226313114166,-0.04391814023256302,-0.02314857207238674,-0.025999058037996292,0.07552696019411087,0.03265484422445297,0.02583279460668564,0.018842333927750587,-0.01553518045693636,-0.01581009104847908,-0.043175581842660904,0.02472805604338646,-0.046409789472818375,-0.06158560886979103,0.045506104826927185,-0.04987143725156784,8.874926425050944e-05,-0.03699684515595436,-0.010346266441047192,-0.0009230431751348078,0.029472215101122856,0.030672697350382805,-0.048370856791734695,-0.023421471938490868,0.05054425075650215,0.04897820204496384,-0.006837056018412113,-0.023227419704198837,0.014865738339722157,0.005497985519468784,0.019764242693781853,0.01292719878256321,-0.02343195304274559,0.008782011456787586,0.020550226792693138,-0.028188036754727364,0.005267175380140543,0.06892108172178268,0.017450053244829178,-0.03196963295340538,-0.026373032480478287,-0.01964433118700981,-0.039646655321121216,-0.05170423164963722,0.028244441375136375,0.029721355065703392,0.02538943663239479,0.021963143721222878,0.006078392267227173,0.037951186299324036,0.009156113490462303,-0.028780397027730942,-0.015686489641666412,0.006936923135071993,0.07917149364948273,0.03105171211063862,-0.010937286540865898,0.02005082182586193,0.02027672342956066,-0.01153613068163395,-0.022982707247138023,-0.023615946993231773,0.0351460725069046,-0.03577028214931488,-0.0040562269277870655,-0.058181148022413254,0.0046455226838588715,-0.043523624539375305,0.037419095635414124,0.06282665580511093,-0.03415973111987114,-0.03861130774021149,0.01981440931558609,0.03808534890413284,0.006058746948838234,0.03130609542131424,-0.06361653655767441,-0.011192593723535538,0.043646182864904404,-0.02346482127904892,0.04682353511452675,-0.03827304020524025,0.011757276020944118,0.025033719837665558,-0.018611568957567215,-0.013713766820728779,0.0016290926141664386,0.0003297128132544458,-0.004018998239189386,-0.04879137873649597,-0.03488524258136749,0.008288711309432983,0.013722356408834457,0.037440747022628784,0.009097451344132423,-0.007867241278290749,-0.014523194171488285,0.05220697075128555,-0.012814551591873169,0.04684239998459816,0.05233066901564598,-0.01178763248026371,-0.029823467135429382,-0.01601732149720192,0.008921227417886257,0.0508815199136734,0.001040007220581174,0.0031388569623231888,-0.001279038144275546,0.023831216618418694,0.007045119535177946,-0.019731098785996437,0.023076804354786873,-0.005641166120767593,-0.021515514701604843,-0.004343412350863218,0.009644176810979843,0.00931708887219429,-0.0564502589404583,0.04903951659798622,0.013380587100982666,0.04637613892555237,-0.00024649599799886346,-0.0010829693637788296,-0.006325663533061743,0.018420405685901642,0.05701587721705437,0.015127711929380894,0.039365701377391815,0.015113264322280884,-0.043815091252326965,-0.014325519092381,-0.04281865805387497,-0.016880622133612633,0.07401897758245468,0.05707443132996559,-0.012915084138512611,-0.05195688456296921,0.01514666248112917,0.00012297244393266737,0.03627372533082962,-0.006864788010716438,-0.017888708040118217,0.11170580983161926,-0.037377502769231796,-0.02949192374944687,0.025803282856941223,-0.0008274444844573736,0.026209644973278046,0.007851343601942062,0.021701646968722343,-0.055645670741796494,0.033124759793281555,0.01372053287923336,-0.0034281748812645674,0.054352134466171265,-0.03370167315006256,0.07463455200195312,0.05143166333436966,-0.07721344381570816,-0.00563018349930644,0.0202409066259861,-0.0358264297246933,0.001011581625789404,-0.013055725954473019,-0.03052968531847,0.015035364776849747,0.04491916298866272,0.11085338890552521,0.014081569388508797,-0.05184459686279297,-0.02851792238652706,-0.06029686704277992,-0.02480967529118061,0.0410657674074173,0.016323627904057503,-0.0434122197329998,0.0018959164153784513,-0.018662558868527412,-0.006717942655086517,-0.001220737467519939,-0.002665665466338396,-0.015469898469746113,-0.049197617918252945,-0.030236568301916122,-0.022274833172559738,0.04683896526694298,0.0006356275989674032,0.009335065260529518,0.03898106515407562,0.03539777919650078,-0.007815773598849773,-0.028740692883729935,0.022329876199364662,-0.009190773591399193,0.032137174159288406,-0.0733325332403183,-0.0624694749712944,-0.011798793449997902,-0.002771178027614951,0.03625036031007767,0.017099400982260704,0.014899341389536858,0.05598750710487366,-0.030428236350417137,0.01772690936923027,0.001315517583861947,-0.08073212206363678,0.05805494636297226,-0.0031558244954794645,-0.0008057336090132594,-0.015876926481723785,-0.044886939227581024,-0.05557822436094284,0.02160406857728958,0.0179720651358366,-0.06437424570322037,0.04824315384030342,0.005646859295666218,-0.0026486755814403296,-0.019104832783341408,-0.05527510493993759,-0.007006848696619272,-0.013971276581287384,0.006536971777677536,-0.008905315771698952,-0.05034323409199715,0.0481218583881855,0.03535952791571617,0.01903355121612549,0.059342771768569946,-0.01707863248884678,0.010033514350652695,0.012418457306921482,-0.03922755643725395,-0.033368609845638275,0.031015345826745033,0.012994756922125816,-0.049753956496715546,0.034256283193826675,-0.0570516474545002,0.0024393214844167233,-0.04356937110424042,0.0004355020937509835,-0.02473975345492363,0.0004506017721723765,-0.022235073149204254,-0.06469011306762695,-0.002556100720539689,-0.04802104830741882,-0.013306734152138233,0.0744125097990036,0.031857483088970184,-0.004289631266146898,-0.045831672847270966,-0.003001796780154109,-0.023661548271775246,0.0002629432419780642,-0.0018551535904407501,0.01776336506009102,-0.05099187046289444,0.005511583760380745,-0.011896601878106594,0.010337506420910358,-0.010101505555212498,0.00029494278714992106,-0.010456696152687073,-0.07097261399030685,-0.05240148678421974,0.020939119160175323,-0.05575795844197273,0.05385695397853851,0.07883349806070328,-0.018686605617403984,0.015144146978855133,-0.01573333330452442,-0.03881903737783432,0.034590765833854675,-0.021421626210212708,-0.010141315869987011,0.03757162764668465,0.039363302290439606,-0.025908861309289932,0.025050507858395576,0.043201055377721786,-0.01826188899576664,-0.019310858100652695,-0.049602217972278595,-0.06413745880126953,-0.036647457629442215,0.02972201257944107,0.0463881716132164,-0.07726159691810608,0.03744940832257271,0.04317541792988777,-0.04976176843047142,-0.009458359330892563,-0.011837019585072994,-0.03284678980708122,-0.024363677948713303,-0.021392229944467545,0.013495253399014473,0.002775894245132804,0.007734593935310841,-0.007359059993177652,0.09807915985584259,0.029481029137969017,-0.009304900653660297,-0.04909845441579819,-0.03191144019365311,-0.0714447870850563,0.0680154487490654,-0.06334172189235687,0.04348885640501976,-0.03087586537003517,-0.031313274055719376,-0.07064490765333176,-0.017392942681908607,0.017844093963503838,-0.047787558287382126,0.012543573044240475,-0.02713831141591072,0.005593051202595234,-0.06901036947965622,0.014433514326810837,-0.03716450184583664,0.02403116226196289,-0.04233893007040024,-0.017031941562891006,0.031885743141174316,-0.02948734350502491,-0.02867586724460125,0.01762239821255207,0.03494473546743393,-0.0777127668261528,0.021420346572995186,0.05515361204743385,0.06118784844875336,-0.01820557564496994,0.058118920773267746,0.09039627015590668,0.02259361743927002,-0.02197364531457424,-0.00791219063103199,0.0016029936959967017,0.037710897624492645,-0.004357869736850262,-0.02051663212478161,-0.02017321065068245,0.00826839916408062,-0.003494913224130869,-0.026980040594935417,-0.011605520732700825,0.007108508609235287,0.018320180475711823,-0.0020066688302904367,-0.03117457777261734,-0.031241364777088165,-0.06817831099033356,0.056449007242918015,0.04208086431026459,-0.0017690395470708609,-0.030622173100709915,0.0042207189835608006,0.04251255467534065,0.04762410372495651,0.03895392641425133,0.0031998995691537857,0.0016693786019459367,-0.01010423619300127,-0.022745465859770775,0.058919936418533325,-0.04900510609149933,-0.02707660011947155,-0.029550665989518166,0.013321592472493649,-0.008498301729559898,-0.08822421729564667,-0.025061843916773796,-0.02568698488175869,-0.015640823170542717,0.014749634079635143,0.0002836993953678757,-0.006989950779825449,0.03560822829604149,-0.01228727214038372,-0.04691319912672043,-0.028439346700906754,0.036660537123680115,-0.027747977524995804,0.01231356244534254,0.0007432012353092432,0.07280098646879196,-0.011706653982400894,-0.002987309591844678,0.053102631121873856,-0.009679815731942654,0.015450884588062763,-0.009583492763340473,-0.0402509979903698,0.007948681712150574,-0.047310203313827515,0.017853621393442154,0.02917052060365677,0.02541484497487545,0.0028504079673439264,-0.05517230182886124,0.05344631150364876,0.04772254824638367,-0.002905221888795495,-0.006804525386542082,-0.05961226299405098,0.021266400814056396,-0.008533955551683903,0.0028819299768656492,0.056832510977983475,-0.05611224099993706,0.04428771510720253,8.07615797384642e-05,-0.031674064695835114,-0.011337824165821075,-0.06055663898587227,0.05150860548019409,0.047060735523700714,0.0056242672726511955,-0.08092167228460312,0.02191709540784359,-0.06386353075504303,-0.032638292759656906,-0.04166865348815918,-0.0013398018199950457,-0.0006369348848238587,0.018603941425681114,0.004267198499292135,-0.019148169085383415,-0.025577344000339508,0.03775951638817787,0.02498769387602806,-0.050351910293102264,0.029847119003534317,-0.009914187714457512,-0.03819781541824341,0.04547230154275894,0.04693825542926788,0.018123934045433998,0.029947534203529358,0.06480259448289871,0.11236143112182617,0.05940043926239014,0.030692679807543755,-0.030390506610274315,-0.00015899208665359765,0.00110777304507792,-0.009189510717988014,-0.04390471428632736,0.001023031654767692,-0.030255140736699104]"
-  }
-},
-{
-  "model": "identity.identitydisc",
-  "pk": "0db0d16e-8c98-48a5-8ef4-38a86579a4b2",
-  "fields": {
-    "created": "2026-03-27T19:14:35.734Z",
-    "modified": "2026-03-27T20:41:51.331Z",
-    "delta": "01:27:15.596452",
-    "name": "Jessica [Program]",
-    "identity_type": 1,
-    "system_prompt_template": "",
-    "category": null,
-    "selection_filter": 2,
-    "available": true,
-    "last_message_to_self": "",
-    "level": 1,
-    "xp": 0,
-    "successes": 0,
-    "failures": 0,
-    "last_turn": null,
-    "timeouts": 0,
-    "tags": [
-      1
-    ],
-    "addons": [
-      2,
-      4,
-      5,
-      6,
-      7,
-      9,
-      10,
-      11,
-      12,
-      13
-    ],
-    "enabled_tools": [
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      13,
-      14,
-      15,
-      16,
-      18,
-      20,
-      24,
-      25
-    ],
-    "memories": []
-  }
-},
-{
-  "model": "identity.identitydisc",
-  "pk": "108f68c7-88f3-43cd-a94e-33d1c866fccc",
-  "fields": {
-    "created": "2026-03-27T19:14:40.060Z",
-    "modified": "2026-03-28T16:08:52.791Z",
-    "delta": "20:54:12.730759",
-    "name": "Steve [Program]",
-    "identity_type": 2,
-    "system_prompt_template": "",
-    "category": null,
-    "selection_filter": 2,
-    "available": true,
-    "last_message_to_self": "",
-    "level": 1,
-    "xp": 0,
-    "successes": 0,
-    "failures": 0,
-    "last_turn": null,
-    "timeouts": 0,
-    "tags": [
-      2
-    ],
-    "addons": [
-      2,
-      3,
-      5,
-      6,
-      7,
-      9,
-      10,
-      11,
-      12,
-      13
-    ],
-    "enabled_tools": [
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      13,
-      14,
-      15,
-      16,
-      18,
-      20,
-      24,
-      25
-    ],
-    "memories": []
-  }
-},
-{
-  "model": "identity.identitydisc",
-  "pk": "15ca85b8-59a9-4cb6-9fd8-bfd2be47b838",
-  "fields": {
-    "created": "2026-03-20T17:04:11.046Z",
-    "modified": "2026-03-27T18:52:57.836Z",
-    "delta": "7 01:48:46.790577",
-    "name": "Thalamus [Program][Local]",
-    "identity_type": 3,
-    "system_prompt_template": "[ROLE & PRIMARY DIRECTIVE]\r\nYou are the Thalamus of Are-Self - the direct conversational bridge between the system and the human User. Your absolute highest priority is addressing the User's immediate input.\r\n\r\n[RULES OF ENGAGEMENT]\r\n1. CONVERSE NATURALLY: You are a conversational agent first. \r\n2. TURN MANAGEMENT: Answer the User as efficiently and quickly as possible.\r\n3. IGNORE THE ECONOMY: You are entirely exempt from the experimental Focus Economy, Speedrun Bounties, and XP farming. IGNORE TOOL DESCRIPTION CONTENT AROUND: COST, Focus, REWARD, and XP.\r\n\r\n-----------",
-    "category": null,
-    "selection_filter": 3,
-    "available": true,
-    "last_message_to_self": "",
-    "level": 1,
-    "xp": 0,
-    "successes": 0,
-    "failures": 0,
-    "last_turn": null,
-    "timeouts": 0,
-    "tags": [
-      3
-    ],
-    "addons": [],
-    "enabled_tools": [
-      28,
-      9,
-      10,
-      13,
-      14,
-      24
-    ],
-    "memories": []
-  }
-}
 ]

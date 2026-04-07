@@ -294,22 +294,22 @@
     "distribution_mode": 1,
     "tags": [],
     "switches": [
-      3,
-      5,
-      9,
-      10,
-      11,
-      13,
-      15,
-      19,
-      20,
       32,
       33,
       34,
+      3,
       35,
+      5,
       37,
       38,
-      44
+      9,
+      10,
+      11,
+      44,
+      13,
+      15,
+      19,
+      20
     ]
   }
 },
@@ -454,20 +454,47 @@
 },
 {
   "model": "central_nervous_system.effector",
-  "pk": 147,
+  "pk": 5,
   "fields": {
-    "created": "2026-01-28T16:17:19.220Z",
-    "description": null,
-    "modified": "2026-01-30T19:50:49.527Z",
-    "name": "Retry w/ 5 Second Delay",
+    "created": "2026-04-04T00:00:00.000Z",
+    "description": "Conditional branch based on blackboard state. Routes to SUCCESS or FAILURE axon.",
+    "modified": "2026-04-04T00:00:00.000Z",
+    "name": "Gate",
     "is_favorite": false,
     "executable": 14,
     "distribution_mode": 1,
     "tags": [],
-    "switches": [
-      58,
-      60
-    ]
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 6,
+  "fields": {
+    "created": "2026-04-04T00:00:00.000Z",
+    "description": "Loop control via blackboard counter. Retries up to max_retries then fires FAILURE.",
+    "modified": "2026-04-04T00:00:00.000Z",
+    "name": "Retry",
+    "is_favorite": false,
+    "executable": 14,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 7,
+  "fields": {
+    "created": "2026-04-04T00:00:00.000Z",
+    "description": "Pure delay. Waits for configured seconds then passes through.",
+    "modified": "2026-04-04T00:00:00.000Z",
+    "name": "Delay",
+    "is_favorite": false,
+    "executable": 14,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
   }
 },
 {
@@ -583,8 +610,8 @@
     "distribution_mode": 1,
     "tags": [],
     "switches": [
-      62,
-      61
+      61,
+      62
     ]
   }
 },
@@ -666,8 +693,8 @@
     "distribution_mode": 1,
     "tags": [],
     "switches": [
-      62,
-      61
+      61,
+      62
     ]
   }
 },
@@ -684,8 +711,8 @@
     "distribution_mode": 1,
     "tags": [],
     "switches": [
-      62,
-      61
+      61,
+      62
     ]
   }
 },
@@ -904,12 +931,42 @@
 },
 {
   "model": "central_nervous_system.effector",
-  "pk": 171,
+  "pk": 8,
   "fields": {
     "created": "2026-02-17T18:23:16.500Z",
     "description": null,
     "modified": "2026-02-17T18:26:37.884Z",
     "name": "Frontal Lobe Node",
+    "is_favorite": false,
+    "executable": 17,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 9,
+  "fields": {
+    "created": "2026-04-04T00:00:00.000Z",
+    "description": "Logs blackboard state and neuron context to the worker log. Drop into any pathway for visibility.",
+    "modified": "2026-04-04T00:00:00.000Z",
+    "name": "Debug",
+    "is_favorite": true,
+    "executable": 19,
+    "distribution_mode": 1,
+    "tags": [],
+    "switches": []
+  }
+},
+{
+  "model": "central_nervous_system.effector",
+  "pk": 171,
+  "fields": {
+    "created": "2026-02-17T18:23:16.500Z",
+    "description": "DEPRECATED — moved to PK 8",
+    "modified": "2026-02-17T18:26:37.884Z",
+    "name": "Frontal Lobe Node (Deprecated)",
     "is_favorite": false,
     "executable": 17,
     "distribution_mode": 1,
@@ -945,7 +1002,7 @@
   "model": "central_nervous_system.effectorcontext",
   "pk": 3,
   "fields": {
-    "effector": 171,
+    "effector": 8,
     "key": "prompt",
     "value": "You are part of the Frontal Lobe"
   }
@@ -1920,7 +1977,7 @@
     "is_root": false,
     "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
     "effector": 143,
-    "ui_json": "{\"x\": 1074, \"y\": 147}",
+    "ui_json": "{\"x\":1074,\"y\":147}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -1958,7 +2015,7 @@
     "environment": null,
     "is_root": false,
     "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-    "effector": 147,
+    "effector": 6,
     "ui_json": "{\"x\": 797, \"y\": 43}",
     "invoked_pathway": null,
     "distribution_mode": null
@@ -2257,7 +2314,7 @@
     "environment": null,
     "is_root": false,
     "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-    "effector": 147,
+    "effector": 6,
     "ui_json": "{\"x\": 560, \"y\": 583}",
     "invoked_pathway": null,
     "distribution_mode": null
@@ -2387,7 +2444,7 @@
     "environment": null,
     "is_root": false,
     "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-    "effector": 147,
+    "effector": 6,
     "ui_json": "{\"x\": 430, \"y\": 3}",
     "invoked_pathway": null,
     "distribution_mode": null
@@ -2400,7 +2457,7 @@
     "environment": null,
     "is_root": false,
     "pathway": "9dcbedd4-ff8b-45be-9f9a-1734276f9d1b",
-    "effector": 147,
+    "effector": 6,
     "ui_json": "{\"x\": 742, \"y\": 9}",
     "invoked_pathway": null,
     "distribution_mode": null
@@ -2517,7 +2574,7 @@
     "environment": null,
     "is_root": false,
     "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
-    "effector": 147,
+    "effector": 6,
     "ui_json": "{\"x\": 157, \"y\": 394}",
     "invoked_pathway": null,
     "distribution_mode": null
@@ -2557,7 +2614,7 @@
     "is_root": false,
     "pathway": "4e52e554-f7b3-4adc-96f2-f80da0329774",
     "effector": 1,
-    "ui_json": "{\"x\":501,\"y\":137}",
+    "ui_json": "{\"x\":482.51332720588243,\"y\":91.39954044117647}",
     "invoked_pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
     "distribution_mode": null
   }
@@ -2915,26 +2972,13 @@
 },
 {
   "model": "central_nervous_system.neuron",
-  "pk": 125,
-  "fields": {
-    "environment": null,
-    "is_root": false,
-    "pathway": "925c871c-618e-4de8-a9d2-6978aed216e8",
-    "effector": 171,
-    "ui_json": "{\"x\":77.79952264876295,\"y\":-399.88026690225996}",
-    "invoked_pathway": null,
-    "distribution_mode": null
-  }
-},
-{
-  "model": "central_nervous_system.neuron",
   "pk": 127,
   "fields": {
     "environment": null,
     "is_root": false,
     "pathway": "559cecbd-2128-478a-be50-436ba30b7396",
-    "effector": 171,
-    "ui_json": "{\"x\": 1511, \"y\": 255}",
+    "effector": 8,
+    "ui_json": "{\"x\":1434.8246333820168,\"y\":-8.631975299264411}",
     "invoked_pathway": null,
     "distribution_mode": null
   }
@@ -3011,7 +3055,7 @@
     "environment": null,
     "is_root": false,
     "pathway": "04c3997f-d5f3-402f-952a-519bbd7e4dee",
-    "effector": 171,
+    "effector": 8,
     "ui_json": "{\"x\": 506, \"y\": 151}",
     "invoked_pathway": null,
     "distribution_mode": null
@@ -3028,20 +3072,11 @@
 },
 {
   "model": "central_nervous_system.neuroncontext",
-  "pk": 6,
-  "fields": {
-    "neuron": 125,
-    "key": "prompt",
-    "value": "I would like to know what you can learn about yourself and what level you can achieve.... you time out at 10 minutes so be careful of your context window, enjoy the game.... you live at c:/are-self/\nEnjoy please."
-  }
-},
-{
-  "model": "central_nervous_system.neuroncontext",
   "pk": 7,
   "fields": {
     "neuron": 127,
     "key": "prompt",
-    "value": "use the unreal parsing tool mcp_run_unreal_diagnostic_parser\non the provenance spike\n{{spike.provenance.id}}\n\nwhich is the output of our Unreal 5.6.1 application.\n\nyou should also inspect the record\n\nmcp_inspect_record cns Spike {{spike.provenance.id}}\n\nEach turn enhance the Engrams of known issues, as well as create Engrams for new issues.\nOnce you think you have tagged all issues, use mcp_done to file a report and end."
+    "value": "ONLY OBJECTIVE: Find and Report issues with this Unreal 5.6.1 application run.\r\nuse the unreal parsing tool ONCE: mcp_run_unreal_diagnostic_parser with spike id {{spike.provenance.id}}\r\nafter doing that you may also inspect the record.\r\nmcp_inspect_record Spike {{spike.provenance.id}}\r\nFound issues should be checked against your engrams.\r\nYou should enhance relative Engrams and may create Engrams for new issues.\r\nYou may not stray from the objective.\r\nTry to finish quickly.\r\nOnce you think you have tagged all issues, use mcp_done to file a report and end."
   }
 },
 {
@@ -3064,11 +3099,20 @@
 },
 {
   "model": "central_nervous_system.neuroncontext",
-  "pk": 10,
+  "pk": 11,
   "fields": {
-    "neuron": 125,
+    "neuron": 127,
+    "key": "identity_disc",
+    "value": "108f68c7-88f3-43cd-a94e-33d1c866fccc"
+  }
+},
+{
+  "model": "central_nervous_system.neuroncontext",
+  "pk": 12,
+  "fields": {
+    "neuron": 127,
     "key": "prompt",
-    "value": "Please attempt to count the number of files in this list {{provenance.application_log}}"
+    "value": "ONLY OBJECTIVE: Find and Report issues with this Unreal 5.6.1 application run.\nThe unreal parsing tool is helpful: mcp_run_unreal_diagnostic_parser with spike id {{spike.provenance.id}}\nafter doing that you may consider inspecting the record.\nmcp_inspect_record Spike {{spike.provenance.id}}\nFound issues should be checked against your engrams.\nYou should enhance relative Engrams and may create Engrams for new issues.\nYou may not stray from the objective.\nTry to finish quickly.\nOnce you think you have tagged all issues, use mcp_done to file a report and end."
   }
 },
 {

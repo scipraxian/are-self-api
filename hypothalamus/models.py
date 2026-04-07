@@ -15,9 +15,6 @@ from common.models import (
     NameMixin,
     UUIDIdMixin,
 )
-from frontal_lobe.models import ModelRegistry
-
-
 class LLMProvider(DefaultFieldsMixin, DescriptionMixin):
     """Provider-level network configuration for LLM backends (LiteLLM)."""
 

@@ -1,11 +1,29 @@
+from unittest.mock import patch
+
 from django.contrib.auth.models import User
 from rest_framework.test import APIClient, APITestCase
+
+# BTW: I really don't like this, but it seems necessary atm.
+# Patch OllamaClient.embed globally so no test ever hits Ollama.
+_EMBED_PATCH = patch(
+    'frontal_lobe.synapse.OllamaClient.embed', return_value=None
+)
 
 
 class CommonTestCase(APITestCase):
     """A test case with the fundamentals."""
 
     fixtures = ('initial_data.json',)
+
+    @classmethod
+    def setUpClass(cls):
+        _EMBED_PATCH.start()
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        _EMBED_PATCH.stop()
 
     def setUp(self):
         self.test_user_name = 'Monty'

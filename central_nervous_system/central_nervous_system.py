@@ -1,3 +1,4 @@
+import copy
 import logging
 import uuid
 from datetime import timedelta
@@ -73,6 +74,11 @@ class CNS:
             spike_train.status_id = SpikeTrainStatus.RUNNING
             spike_train.save(update_fields=['status'])
 
+        logger.info(
+            '[CNS] SpikeTrain %s STARTED for pathway %s.',
+            self.spike_train.id,
+            self.spike_train.pathway.name,
+        )
         self.dispatch_next_wave()
 
     def terminate(self) -> None:
@@ -300,12 +306,30 @@ class CNS:
         if not axons.exists():
             return
 
+        type_labels = {
+            AxonType.TYPE_FLOW: 'FLOW',
+            AxonType.TYPE_SUCCESS: 'SUCCESS',
+            AxonType.TYPE_FAILURE: 'FAILURE',
+        }
+
         logger.info(
-            f'[CNS] Triggering {axons.count()} '
-            f'axons from Spike {finished_spike.id}'
+            '[CNS] Triggering %s axon(s) from Spike %s '
+            '(status=%s, neuron=%s):',
+            axons.count(),
+            finished_spike.id,
+            finished_spike.status_id,
+            finished_spike.neuron_id,
         )
 
         for wire in axons:
+            logger.info(
+                '[CNS]   → %s wire to neuron %s (%s)',
+                type_labels.get(wire.type_id, f'type={wire.type_id}'),
+                wire.target_id,
+                wire.target.effector.name
+                if wire.target and wire.target.effector
+                else 'no effector',
+            )
             self._create_spike_from_node(
                 neuron=wire.target, provenance=finished_spike
             )
@@ -316,10 +340,10 @@ class CNS:
         starting_blackboard = {}
 
         if provenance:
-            starting_blackboard = provenance.blackboard.copy()
+            starting_blackboard = copy.deepcopy(provenance.blackboard)
         elif self.spike_train.parent_spike:
-            starting_blackboard = (
-                self.spike_train.parent_spike.blackboard.copy()
+            starting_blackboard = copy.deepcopy(
+                self.spike_train.parent_spike.blackboard
             )
             node_args = NeuronContext.objects.filter(
                 neuron=self.spike_train.parent_spike.neuron
@@ -338,6 +362,14 @@ class CNS:
             blackboard=starting_blackboard,
         )
 
+        logger.info(
+            '[CNS] Created Spike %s for neuron %s (effector=%s, provenance=%s).',
+            seed_spike.id,
+            neuron.id,
+            neuron.effector.name if neuron.effector else 'None',
+            provenance.id if provenance else 'root',
+        )
+
         if getattr(neuron, 'invoked_pathway', None):
             self._spawn_subgraph(seed_spike)
             return
@@ -354,6 +386,7 @@ class CNS:
         elif mode == CNSDistributionModeID.ONE_AVAILABLE_AGENT:
             self._dispatch_first_responder(seed_spike)
         else:
+            logger.info('[CNS] Dispatching Spike %s locally.', seed_spike.id)
             self._prepare_and_dispatch(seed_spike)
 
     def _dispatch_fleet_wave(self, seed_spike: Spike) -> None:
@@ -404,7 +437,7 @@ class CNS:
             provenance=seed.provenance,
             target=agent,
             status_id=SpikeStatus.PENDING,
-            blackboard=seed.blackboard.copy(),
+            blackboard=copy.deepcopy(seed.blackboard),
         )
         transaction.on_commit(lambda: fire_spike.delay(new_spike.id))
 
@@ -425,6 +458,11 @@ class CNS:
             ]
         )
         if active.exists():
+            logger.info(
+                '[CNS] SpikeTrain %s has %d active spikes — not finalizing.',
+                self.spike_train.id,
+                active.count(),
+            )
             return
 
         if self.spike_train.status_id == SpikeTrainStatus.STOPPING:
@@ -433,6 +471,11 @@ class CNS:
             new_status = SpikeTrainStatus.SUCCESS
 
         if self.spike_train.status_id != new_status:
+            logger.info(
+                '[CNS] SpikeTrain %s FINALIZED as %s.',
+                self.spike_train.id,
+                'STOPPED' if new_status == SpikeTrainStatus.STOPPED else 'SUCCESS',
+            )
             self.spike_train.status_id = new_status
             self.spike_train.save(update_fields=['status'])
             transaction.on_commit(

@@ -2,88 +2,172 @@
 
 Remaining work, sifted for the backend. See FEATURES.md for what's built.
 
-## Ship-Blocking
+## Top Priority — Release Day Documentation (April 6, 2026)
 
-- [ ] **Frontal Lobe node — read identity_disc from context variable.** `_initialize_session()` in
-  `frontal_lobe/frontal_lobe.py` creates ReasoningSession with `identity_disc=None`. Line 401 then crashes:
-  `ValueError: Session {id} missing IdentityDisc.` Fix: in `run_frontal_lobe()` / `_initialize_session()`, read
-  `identity_disc` UUID from the spike's blackboard or NeuronContext variables, then pass it to
-  `ReasoningSession.objects.create(identity_disc_id=uuid)`. The Thalamus path hardcodes `IdentityDisc.THALAMUS`,
-  the Temporal path passes it explicitly — the CNS path is the only one missing it. **Paired with UI task.**
-- [ ] **Lightweight stats endpoint for dashboard.** Create `GET /api/v2/stats/` returning counts for identity discs,
-  AI models, and reasoning sessions. The dashboard currently fetches full unpaginated lists just to count — takes
-  forever. Single query with `Model.objects.count()` for each.
-- [ ] **Tool call `thought` parameter — make required or improve prompting.** Local models often call tools silently
-  (no assistant text). The `thought` parameter exists but isn't required. Either: (a) make it required in the tool
-  schema so models must explain themselves, or (b) add system prompt instructions demanding tool explanations.
-  This pairs with the UI task to render tool calls in chat. Move from Future to here.
-- [ ] **Logic node — test coverage.** `pathway_logic_node.py` handles retry counting via provenance chain walking
-  and delay via `asyncio.sleep`. Only 1 logic node type exists. Write tests: verify retry count increments correctly
-  via provenance, verify delay parameter, verify 200 vs 500 return codes, verify edge cases (no provenance, zero
-  retries, zero delay).
-- [ ] **"Spell" / "Cast" naming sweep.** Still live in ~9 files. Key targets: `effector_casters/` directory name,
-  `cast_cns_spell` in PNS tests, `_extract_variables_from_spell` in CNS serializers, `spell_args`/`spell_switches` in
-  CNS models, `Caster` references in tasks.py and tests, `cns_spellbook`/`cns_spell` basenames in CNS URL router.
-- [ ] **Remove deprecated frontal_lobe models.** `ModelProvider` and `ModelRegistry` in `frontal_lobe/models.py` are
-  still alive with admin registrations, serializers, and `synapse_open_router.py` actively importing them. The
-  Hypothalamus owns model routing now. Remove the old classes, update imports, replace
-  `ModelRegistry.NOMIC_EMBED_TEXT` constant in Hippocampus with a settings constant or direct string.
-- [ ] **Remove deprecated `parietal_lobe/registry.py`.** Hardcoded model map still exists. Superseded by Hypothalamus
-  DB-driven routing.
-- [ ] **Consolidate and improve MCP engram functions.** The Hippocampus tool functions need cleanup — reduce
-  redundancy, improve the interface, make the tool descriptions clearer for small models.
-- [ ] **Fix linters / Ruff configuration.** Ensure linting is consistent across the project. Pin Ruff config, resolve
-  any conflicting rules.
+Documentation is the release-day focus. The Docusaurus site has 34 solid pages and 11 UI walkthrough
+stubs. See "Ship-Blocking — Documentation Infrastructure" below. Docstrings and drf-spectacular are
+also ship-blocking for the API reference.
+
+## Top Priority — PNS Expansion
+
+- [ ] **Multiple Ollama endpoints.** Secondary machine running Ollama should be usable. These are
+  **AIModelProviders** — the Hypothalamus already supports multiple providers per model. Add a second
+  AIModelProvider record pointing to the secondary machine's `host:port`. The failover strategy handles
+  routing. May need a UI affordance in the Hypothalamus to add/edit provider endpoints. Create a scanner
+  similar to the scan for agents executable.
+- [ ] **Live agent monitoring.** PNS should show active reasoning agents — which IdentityDiscs are
+  currently in a session, what they're doing, session duration, turn count. Real-time via existing
+  dendrite infrastructure.
+
+## Ship-Blocking — Security Remediation (Before Tuesday Release)
+
+- [ ] **Pin Django to >=6.0.2.** CVE-2025-64459 (CVSS 9.1) — SQL injection via QuerySet.filter(). Affects
+  6.0.0 and 6.0.1. Change `Django>=6.0` to `Django>=6.0.2` in requirements.txt.
+- [ ] **Pin LiteLLM to verified-safe version with hash.** Supply chain compromise in March 2026 (versions
+  1.82.7 and 1.82.8 stole cloud credentials). Pin to a post-incident version and use `--hash` verification.
+  Are-Self's default Ollama-only config limits exposure, but cloud users are at risk.
+- [ ] **Update Docker Compose Redis image.** CVE-2025-49844 (CVSS 10.0) — RCE in Redis server Lua engine.
+  Pin to a patched Redis image in docker-compose.yml.
+- [ ] **Pin DRF to >=3.15.2.** CVE-2024-21520 — XSS in break_long_headers filter.
+- [ ] **Remove pygtail from requirements.txt.** Deprecated, not imported anywhere.
+- [ ] **Remove unused packages.** Audit and remove if confirmed: django-htmx (migrated to React),
+  scapy (possibly unused), yapf (redundant with Ruff), aiosmtpd (verify usage).
+- [ ] **Separate dev dependencies.** Move pytest, coverage, ruff, isort, yapf, ipython, type stubs,
+  playwright into `requirements-dev.txt`.
+- [ ] **Document Ollama security posture.** Users must keep Ollama updated independently. The install
+  script should recommend a minimum Ollama version. See DEPENDENCY_AUDIT.md for full CVE list.
+
+## Ship-Blocking — Documentation Infrastructure
+
+- [ ] **Google-style docstrings for all viewsets, serializers, and public methods.** Prerequisite for
+  Swagger/OpenAPI auto-generation. Run through each Django app and add docstrings to every ViewSet class,
+  every serializer class, and every public method. Format: Google-style (`Args:`, `Returns:`, `Raises:`).
+  Priority order: Frontal Lobe, CNS, Hippocampus, Hypothalamus, Identity, then the rest.
+- [ ] **drf-spectacular integration for /api/docs/.** Install `drf-spectacular`, add to INSTALLED_APPS,
+  wire `SpectacularAPIView` + `SpectacularSwaggerView` at `/api/docs/`. Generates interactive OpenAPI
+  docs from DRF viewsets + docstrings. This gives scientists and developers a try-it-in-the-browser
+  API explorer on the running server itself.
+- [ ] **Docusaurus docs site (are-self-docs repo).** React-based documentation site deployed via GitHub
+  Pages at `are-self.com`. Pulls content from markdown docs in are-self-api and are-self-ui. Sidebar
+  navigation, search, versioning. Scaffold is ready — needs content migration and styling.
+- [ ] **are-self-research repo.** Separate GitHub repo for whitepapers and academic papers. LaTeX format
+  for formal publications. Papers: Focus Economy, Neuro-Mimetic Architecture, LLM Testing Harness,
+  CI/CD Sovereignty, Hippocampus Hypergraph Migration (Samuel), Unreal Engine Integration.
+
+## Ship-Blocking — Existing
+
+- [ ] **Hypothalamus — manual model addition.** Need the ability to add a missing model to the
+  Hypothalamus by hand through the UI.
+- [ ] **CNS / Pathway Editor — favorites and groups.** Cannot set favorites or groups in CNS nor in the
+  pathway editor. Need UI affordances for both.
+- [ ] **Thalamus message polling.** `api/v2/thalamus/messages` polls excessively when talking to the
+  Thalamus. Needs throttling or WebSocket replacement.
+- [ ] **Frontal Lobe session Parietal tab — drill-through broken.** Items in the Parietal tab of a
+  Frontal Lobe session are not clickable/drillable. Same issue for Parietal actions in the right
+  inspector window. Proposed fix: drill to zoom the matching 3D node so the full call is visible.
+- [ ] **Reasoning session deletion.** Need the ability to delete a reasoning session.
+- [ ] **Reasoning session pruning.** Pick a turn number and click "Prune" to delete all turns from that
+  point to the end of the session.
+- [ ] **Remove synapse module.** Remove synapse entirely in favor of the new synapse_client.
+- [ ] **Tool call `thought` parameter — make required or improve prompting.** Local models often call
+  tools silently (no assistant text). The `thought` parameter exists but isn't required. Either:
+  (a) make it required in the tool schema so models must explain themselves, or (b) add system prompt
+  instructions demanding tool explanations.
+- [ ] **Remove deprecated `parietal_lobe/registry.py`.** Hardcoded model map still exists. Superseded by
+  Hypothalamus DB-driven routing.
+- [ ] **Consolidate and improve MCP engram functions.** The Hippocampus tool functions need cleanup —
+  reduce redundancy, improve the interface, make the tool descriptions clearer for small models.
+- [ ] **Fix linters / Ruff configuration.** Ensure linting is consistent across the project. Pin Ruff
+  config, resolve any conflicting rules.
 - [ ] **Migrate shutdown endpoint out of dashboard.** The shutdown action exists in `dashboard/api.py`
-  (`celery_app.control.shutdown()` + delayed Django process kill). Needs to move to a non-deprecated app (PNS or
-  config) before `dashboard/` is removed. Add a restart endpoint. Frontend buttons needed (tracked in UI tasks).
+  (`celery_app.control.shutdown()` + delayed Django process kill). Needs to move to a non-deprecated app
+  (PNS or config) before `dashboard/` is removed. Add a restart endpoint. Frontend buttons needed
+  (tracked in UI tasks). Without this, developers must manually kill/restart Celery workers when deploying
+  code changes — stale workers run old native handlers and produce confusing errors.
 - [ ] **Standardize API URLs to hyphens.** Legacy underscore routes: `engram_tags`, `reasoning_sessions`,
   `reasoning_turns`, `nerve_terminal_*`. Coordinated with frontend — both repos change together.
-- [ ] **Hypothalamus fixture initial state.** The 4 fixture AIModelProvider records have `is_enabled: true`, showing as
-  "Installed" before sync_local runs. Should default to `is_enabled: false` (Available until confirmed by sync).
+- [ ] **Hypothalamus fixture initial state.** The 4 fixture AIModelProvider records have `is_enabled: true`,
+  showing as "Installed" before sync_local runs. Should default to `is_enabled: false` (Available until
+  confirmed by sync).
+- [ ] **Share HUMAN_TAG constant.** `HUMAN_TAG = '<<h>>'` lives in `river_of_six_addon.py` but
+  `frontal_lobe.py` uses the raw string `'<<h>>\n'`. Move to a shared constants file. Also use existing
+  `ROLE` constant instead of raw `'user'` string in frontal_lobe.py.
+- [ ] **IdentityAddonPhase — optional API endpoint.** No ViewSet/router exists for IdentityAddonPhase.
+  Frontend hardcodes the 4 phases. If phases ever become user-configurable, a read-only endpoint will
+  be needed. Low priority since phases are fixed constants.
+- [ ] **`prompt` context variable injection.** The `prompt` context variable is NOT being injected into
+  the session's prompt. The context variable resolution chain (spike blackboard → effector context →
+  neuron context) needs auditing — variables are stored but not consumed by `_get_rendered_objective()`
+  or wherever the prompt is assembled.
+
+## Known Bugs
+
+- [ ] **Infinite loop on retry LIMIT REACHED.** The retry logic node correctly returns 500 (LIMIT
+  REACHED), firing the FAILURE axon. BUT if the graph has a FLOW axon (type 1) from the retry neuron to
+  a downstream node, that FLOW wire ALSO fires — because FLOW axons fire regardless of spike status. The
+  bug is deeper than stale wires. Investigate `_process_graph_triggers` in
+  `central_nervous_system/central_nervous_system.py` — when a logic node (effector PKs 5, 6, 7) finishes,
+  FLOW axons should NOT fire. Only SUCCESS or FAILURE should fire based on the result code. This is the
+  #1 bug.
 
 ## Next Up
 
-- [ ] **Expose tool calls in Thalamus chat history.** The session chat endpoint needs to include tool call details
-  (tool name, arguments, result) in the response so the frontend can render them. Currently invisible turns when
-  models work silently. Check the Vercel AI SDK `parts` schema — tool calls should be `tool-call` and `tool-result`
-  parts.
-- [ ] **Effector Editor** see django admin EffectorAdmin
-- [ ] **Logic Node Validation**  The logic node for looping etc, needs to be validated.
-- [ ] **]
-- [ ] **Audit async usage.** Identify `sync_to_async` wrapping that adds ceremony without value. Primary candidates:
-  Frontal Lobe loop, Hippocampus, Parietal Lobe tool execution. Keep async for WebSocket streaming (Glutamate), Nerve
-  Terminal, and genuine concurrent I/O. Convert the rest to synchronous with a single `sync_to_async` wrap at the
-  Celery boundary.
-- [ ] **Stabilize DRF API contract.** Audit all ViewSets and serializers for consistency. Ensure Thalamus chat history
-  endpoint returns the Vercel AI SDK `parts` schema reliably. Document endpoints (DRF Spectacular or similar).
-- [ ] **Docker Compose for full stack.** PostgreSQL and Redis already have Docker configs. Extend to cover Daphne,
-  Celery worker, Celery Beat. One `docker compose up` starts everything.
-
-## Backlog
-
-- [ ] **Test coverage: reasoning loop.** Integration tests for `FrontalLobe.run()` with fixture-backed sessions.
-  Verify: turn creation, tool dispatch, `yield_turn` breaks the loop, `mcp_done` creates a conclusion, max turns
-  halts, stop signal halts.
-- [ ] **Test coverage: Hypothalamus routing.** Unit tests for `pick_optimal_model`: preferred model selection, failover
-  strategy steps, circuit breaker tripping/reset, budget gate filtering, vector similarity fallback.
-- [ ] **Test coverage: Hippocampus.** Integration tests for engram CRUD: save with vector dedup at 90% threshold,
-  update appends text, read links session/spike/identity, search by text and tags.
-- [ ] **Test coverage: Parietal Lobe tools.** Test each MCP tool function in isolation with fixture data. Verify
-  hallucination armor, focus fizzle gating, XP/focus accounting.
-- [ ] **Budget enforcement at request time.** Wire actual spend tracking (sum
-  `AIModelProviderUsageRecord.estimated_cost` per period) into the Hypothalamus pre-filter so budgets are enforced,
-  not just defined.
-- [ ] **Hypothalamus subfamily routing.** Update `pick_optimal_model` to prefer same-subfamily first, then
-  parent-family, then vector search.
-- [ ] **Hypothalamus OpenRouter sync.** Rewrite `_process_openrouter_model()` to use the new
-  `_enrich_from_parser(ai_model, parsed)` pattern. Add frontend button. Brings full cloud model catalog with real
-  pricing.
+- [ ] **Swarm message queue — delivery + persistence bug.** Typing a message in the Thalamus chat window
+  of a running Frontal Lobe session does not deliver to the session. On refresh, the message is gone — not
+  persisted as a ReasoningTurn. Two bugs: (1) swarm_message_queue not receiving/processing inbound messages
+  during a live session, (2) messages not saved. **Paired with UI task.**
+- [ ] **Error Handler Effector.** A native handler that fires when a spike fails (wired via TYPE_FAILURE
+  axon). Reads error context from the blackboard (`error_message`, `failed_effector`, `result_code`).
+  Can dispatch notifications — log to engram, fire a Cortisol neurotransmitter, write a PFC comment on
+  the failed task, or escalate to the Thalamus standing session.
+- [ ] **Clean requirements.txt.** Pin versions, remove unused/deprecated packages. Verify every package
+  is actually imported somewhere. Group by purpose.
+- [ ] **Compress fixtures before release.** Compress `initial_data.json` files to single-line JSON for
+  Docker release. Keep readable versions in version control.
+- [ ] **Expose tool calls in Thalamus chat history.** Check the Vercel AI SDK `parts` schema — tool calls
+  should be `tool-call` and `tool-result` parts.
+- [ ] **Prompt_addon state awareness.** The prompt_addon should check session ToolCall history and adapt
+  the injected objective accordingly. Without this, small models get stuck in loops re-attempting completed
+  steps.
+- [ ] **MCP Server.** Have Are-Self be an MCP server, allowing other MCP clients to connect and execute
+  commands like Execute Neural Pathway.
+- [ ] **MCP Client.** Have Are-Self be an MCP client, calling other MCP servers.
 
 ## Future
 
-- [ ] **Engram vector search in Thalamus.** Pre-feed relevant engrams into chat context based on vector similarity to
-  the user's message.
-- [ ] **Model arena / ELO tracking.** The `AIModelRating` model exists. Build a lightweight evaluation pipeline that
-  compares model outputs on identical prompts and updates ELO scores.
-- [ ] **Voice speaking module.** Rust-based TTS integration (from Samuel).
+- [ ] **Image Generation Effector.** CNS effector pattern: artist LLM writes generation prompt to
+  blackboard, effector POSTs to `{{image_gen_endpoint}}`, saves result, writes path back to blackboard.
+  Decoupled from any specific backend (InvokeAI, ComfyUI, etc.). TTS is already built as Parietal Lobe
+  tool — that's the PoC for binary creation.
+- [ ] **Branching Canonical Pathway.** Modality routing via logic node. PM/dispatcher inspects PFC task,
+  logic node routes based on blackboard state: code → worker branch, art → artist branch. Depends on
+  image generation effector.
+- [ ] **Self-improving pathway testing harness.** The testing harness IS a CNS neural pathway — no new
+  framework. 7B model + 30B evaluator in a loop. The spike train IS the test run, the blackboard IS the
+  assertion state, the summary_dump IS the test report.
+- [ ] **Addon stage/lifecycle system.** Addons fire conditionally based on session state instead of every
+  turn. Would allow moving focus mechanics into a dedicated focus addon.
+
+## Backlog
+
+- [ ] **Test coverage: reasoning loop.** Integration tests for `FrontalLobe.run()` with fixture-backed
+  sessions. Verify: turn creation, tool dispatch, `yield_turn` breaks the loop, `mcp_done` creates a
+  conclusion, max turns halts, stop signal halts.
+- [ ] **Test coverage: Hypothalamus routing.** Unit tests for `pick_optimal_model`: preferred model
+  selection, failover strategy steps, circuit breaker tripping/reset, budget gate filtering, vector
+  similarity fallback.
+- [ ] **Test coverage: Hippocampus.** Integration tests for engram CRUD: save with vector dedup at 90%
+  threshold, update appends text, read links session/spike/identity, search by text and tags.
+- [ ] **Test coverage: Parietal Lobe tools.** Test each MCP tool function in isolation with fixture data.
+  Verify hallucination armor, focus fizzle gating, XP/focus accounting.
+- [ ] **Budget enforcement at request time.** Wire actual spend tracking (sum
+  `AIModelProviderUsageRecord.estimated_cost` per period) into the Hypothalamus pre-filter so budgets are
+  enforced, not just defined.
+- [ ] **Hypothalamus subfamily routing.** Update `pick_optimal_model` to prefer same-subfamily first, then
+  parent-family, then vector search.
+- [ ] **Audit async usage.** Identify `sync_to_async` wrapping that adds ceremony without value. Primary
+  candidates: Frontal Lobe loop, Hippocampus, Parietal Lobe tool execution. Keep async for WebSocket
+  streaming (Glutamate), Nerve Terminal, and genuine concurrent I/O. Convert the rest to synchronous with
+  a single `sync_to_async` wrap at the Celery boundary.
+- [ ] **Stabilize DRF API contract.** Audit all ViewSets and serializers for consistency. Ensure Thalamus
+  chat history endpoint returns the Vercel AI SDK `parts

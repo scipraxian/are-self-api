@@ -4,14 +4,12 @@ import os
 import time
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import requests
 from django.conf import settings
 
-from frontal_lobe.models import ModelRegistry
 from frontal_lobe.synapse import SynapseResponse
-from identity.models import IdentityDisc
 
 logger = logging.getLogger(__name__)
 
@@ -30,64 +28,22 @@ class OpenRouterChatPayload:
 
 class OpenRouterClient:
     """
-    Client that speaks OpenAI-compatible JSON over HTTP to OpenRouter.
+    DEPRECATED — Superseded by SynapseClient + Hypothalamus routing.
 
-    It maps OpenRouter responses back into the universal SynapseResponse
-    contract so the rest of the system remains provider-agnostic.
+    Retained only for backwards-compatible test coverage. Accepts a raw
+    model name string. Production code should use SynapseClient instead.
     """
 
-    def __init__(self, identity_disc: Union[IdentityDisc, str]):
-        """
-        Initialize the client.
-
-        In normal runtime, an IdentityDisc is provided so the underlying
-        ModelRegistry and its linked ModelProvider can be resolved.
-        For backwards-compatible tests, a raw model name string is allowed.
-        """
-
-        self.identity_disc: Optional[IdentityDisc] = None
-        self._chat_url: Optional[str] = None
+    def __init__(self, model_name: str):
+        self.model = str(model_name)
         self._requires_api_key: bool = True
         self._api_key_header: str = 'Authorization'
-        self._api_key_env_var: Optional[str] = None
+        self._api_key_env_var: Optional[str] = 'OPENROUTER_API_KEY'
 
-        if isinstance(identity_disc, IdentityDisc):
-            if not identity_disc.ai_model:
-                raise ValueError(
-                    f'IdentityDisc "{identity_disc}" has no ai_model configured.'
-                )
-            self.identity_disc = identity_disc
-            registry: ModelRegistry = identity_disc.ai_model
-            self.model = registry.name
-
-            provider = getattr(registry, 'provider', None)
-            if provider:
-                base_url = (
-                    provider.base_url.rstrip('/') if provider.base_url else ''
-                )
-                chat_path = provider.chat_path or '/v1/chat/completions'
-                if not chat_path.startswith('/'):
-                    chat_path = f'/{chat_path}'
-                self._chat_url = f'{base_url}{chat_path}'
-                self._requires_api_key = True
-                self._api_key_header = (
-                    provider.api_key_header or 'Authorization'
-                )
-                self._api_key_env_var = provider.api_key_env_var
-        else:
-            # Bare model string path; used only in narrow test scenarios.
-            self.model = str(identity_disc)
-
-        # Fallback to global settings for URL/API key if provider is not wired.
-        if not self._chat_url:
-            base_url = getattr(
-                settings, 'OPENROUTER_BASE_URL', 'https://openrouter.ai/api'
-            ).rstrip('/')
-            self._chat_url = f'{base_url}/v1/chat/completions'
-
-        if not self._api_key_env_var:
-            # Prefer explicit environment variable but fall back to Django settings.
-            self._api_key_env_var = 'OPENROUTER_API_KEY'
+        base_url = getattr(
+            settings, 'OPENROUTER_BASE_URL', 'https://openrouter.ai/api'
+        ).rstrip('/')
+        self._chat_url = f'{base_url}/v1/chat/completions'
 
     def _get_api_key(self) -> Optional[str]:
         """Resolve API key from Django settings or env. Used for auth header."""

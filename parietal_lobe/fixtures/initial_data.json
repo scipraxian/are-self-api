@@ -146,8 +146,8 @@
   "pk": 4,
   "fields": {
     "created": "2026-02-18T12:00:00Z",
-    "description": "Updates the CNS Blackboard. WARNING: This does NOT save to your memory. The Blackboard is ONLY used to route the underlying CNS execution graph.",
-    "modified": "2026-02-18T12:00:00Z",
+    "description": "Updates the CNS Blackboard. WARNING: This does NOT save to your memory. The Blackboard is ONLY used to route the underlying CNS execution graph..",
+    "modified": "2026-04-02T18:41:54.587Z",
     "name": "mcp_update_blackboard",
     "is_async": true,
     "use_type": 4
@@ -375,10 +375,22 @@
   "fields": {
     "created": "2026-03-27T12:00:00Z",
     "description": "Your voice, your thoughts, your control over the conversation. Speak to the user, record your reasoning, and decide whether to keep working or yield the turn to the human.",
-    "modified": "2026-03-27T12:00:00Z",
+    "modified": "2026-04-03T19:29:02.156Z",
     "name": "mcp_respond_to_user",
     "is_async": true,
-    "use_type": 6
+    "use_type": null
+  }
+},
+{
+  "model": "parietal_lobe.tooldefinition",
+  "pk": 29,
+  "fields": {
+    "created": "2026-04-04T12:00:00Z",
+    "description": "Convert text to speech and save as a WAV file. Uses Piper TTS locally — no GPU, no internet, no cost. Output saves to the audio_root environment path. Available voices: male, female, child, narrator, whisper.",
+    "modified": "2026-04-04T12:00:00Z",
+    "name": "mcp_tts",
+    "is_async": true,
+    "use_type": 2
   }
 },
 {
@@ -1061,6 +1073,28 @@
     "modified": "2026-03-27T12:00:00Z",
     "name": "yield_turn",
     "type": 4
+  }
+},
+{
+  "model": "parietal_lobe.toolparameter",
+  "pk": 64,
+  "fields": {
+    "created": "2026-04-04T12:00:00Z",
+    "description": "Name for the output WAV file (saved to audio_root).",
+    "modified": "2026-04-04T12:00:00Z",
+    "name": "filename",
+    "type": 1
+  }
+},
+{
+  "model": "parietal_lobe.toolparameter",
+  "pk": 65,
+  "fields": {
+    "created": "2026-04-04T12:00:00Z",
+    "description": "Voice to use: male, female, child, narrator, whisper.",
+    "modified": "2026-04-04T12:00:00Z",
+    "name": "voice",
+    "type": 1
   }
 },
 {
@@ -2012,6 +2046,54 @@
   }
 },
 {
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 173,
+  "fields": {
+    "created": "2026-04-04T12:00:00Z",
+    "modified": "2026-04-04T12:00:00Z",
+    "tool": 29,
+    "parameter": 50,
+    "required": true,
+    "prune_after_turns": 0
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 174,
+  "fields": {
+    "created": "2026-04-04T12:00:00Z",
+    "modified": "2026-04-04T12:00:00Z",
+    "tool": 29,
+    "parameter": 64,
+    "required": true,
+    "prune_after_turns": 0
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 175,
+  "fields": {
+    "created": "2026-04-04T12:00:00Z",
+    "modified": "2026-04-04T12:00:00Z",
+    "tool": 29,
+    "parameter": 65,
+    "required": false,
+    "prune_after_turns": 0
+  }
+},
+{
+  "model": "parietal_lobe.toolparameterassignment",
+  "pk": 176,
+  "fields": {
+    "created": "2026-04-04T12:00:00Z",
+    "modified": "2026-04-04T12:00:00Z",
+    "tool": 29,
+    "parameter": 57,
+    "required": false,
+    "prune_after_turns": 0
+  }
+},
+{
   "model": "parietal_lobe.parameterenum",
   "pk": 1,
   "fields": {
@@ -2320,5 +2402,55 @@
     "parameter": 55,
     "value": "comment"
   }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 32,
+  "fields": {
+    "created": "2026-04-04T12:00:00Z",
+    "modified": "2026-04-04T12:00:00Z",
+    "parameter": 65,
+    "value": "male"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 33,
+  "fields": {
+    "created": "2026-04-04T12:00:00Z",
+    "modified": "2026-04-04T12:00:00Z",
+    "parameter": 65,
+    "value": "female"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 34,
+  "fields": {
+    "created": "2026-04-04T12:00:00Z",
+    "modified": "2026-04-04T12:00:00Z",
+    "parameter": 65,
+    "value": "child"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 35,
+  "fields": {
+    "created": "2026-04-04T12:00:00Z",
+    "modified": "2026-04-04T12:00:00Z",
+    "parameter": 65,
+    "value": "narrator"
+  }
+},
+{
+  "model": "parietal_lobe.parameterenum",
+  "pk": 36,
+  "fields": {
+    "created": "2026-04-04T12:00:00Z",
+    "modified": "2026-04-04T12:00:00Z",
+    "parameter": 65,
+    "value": "whisper"
+  }
 }
-]
+]

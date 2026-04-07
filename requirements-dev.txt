@@ -1,0 +1,21 @@
+# Development dependencies — not needed in production
+-r requirements.txt
+
+# Testing
+pytest
+pytest-django>=4.11.1
+pytest-asyncio
+coverage
+playwright
+
+# Linting & Formatting
+ruff
+isort>=7.0.0
+
+# Type Stubs
+django-stubs>=5.2.8
+djangorestframework-stubs
+celery-types>=0.24.0
+
+# Interactive Shell
+ipython>=8.12
