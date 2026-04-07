@@ -1,0 +1,936 @@
+[
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 66,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Memory operation: add, replace, or remove.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "action",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 67,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Tagged collection: agent_memory or user_profile.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "collection",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 68,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Memory body text (add) or full replacement text.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "content",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 69,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Previous text to match for replace (optional if embedding match).",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "old_content",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 70,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "New text for replace.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "new_content",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 71,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Snippet to locate an entry for remove.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "content_snippet",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 72,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Shell command string.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "command",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 73,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "When true, run in background and return shell_session_id.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "background",
+      "type": 4
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 74,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Foreground timeout seconds (terminal) or subprocess timeout (code_exec).",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "timeout",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 75,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Working directory path.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "workdir",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 76,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Set true to bypass dangerous-command heuristic.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "dangerous_cmd_override",
+      "type": 4
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 77,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Background session UUID from mcp_terminal.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "shell_session_id",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 78,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Max search results (capped at 20).",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "max_results",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 79,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Max extracted characters from web page.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "max_length",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 80,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Python source executed in a subprocess with PYTHONPATH set.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "code",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 81,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Max matches (capped at 10).",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "limit",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 82,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Optional role filter (e.g. tool).",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "role_filter",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 83,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "CSS selector for click/type (browser).",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "ref",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 84,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Scroll direction: up or down.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "direction",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 85,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Local path or http(s) URL to an image for vision.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "image_path",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 86,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Optional LiteLLM model id for vision.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "provider",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": 88,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Browser action: navigate, click, type, press, scroll, snapshot, get_images, vision, back.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "action",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 37,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "parameter": 66,
+      "value": "add"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 38,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "parameter": 66,
+      "value": "replace"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 39,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "parameter": 66,
+      "value": "remove"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 40,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "parameter": 67,
+      "value": "agent_memory"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 41,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "parameter": 67,
+      "value": "user_profile"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 42,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "parameter": 88,
+      "value": "navigate"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 43,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "parameter": 88,
+      "value": "click"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 44,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "parameter": 88,
+      "value": "type"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 45,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "parameter": 88,
+      "value": "press"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 46,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "parameter": 88,
+      "value": "scroll"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 47,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "parameter": 88,
+      "value": "snapshot"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 48,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "parameter": 88,
+      "value": "get_images"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 49,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "parameter": 88,
+      "value": "vision"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": 50,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "parameter": 88,
+      "value": "back"
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 30,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Write a UTF-8 file under the project root (relative path). Creates parent directories.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "mcp_fs_write",
+      "is_async": true,
+      "use_type": 2
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 31,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Short-term tagged memory: agent_memory or user_profile (Hermes-compatible tag hermes_memory). Max 400 chars per entry, 2000 total per collection.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "mcp_memory",
+      "is_async": true,
+      "use_type": 6
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 32,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Run a shell command (foreground or background). Dangerous patterns require dangerous_cmd_override.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "mcp_terminal",
+      "is_async": true,
+      "use_type": 2
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 33,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Poll a background shell session for output and status.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "mcp_terminal_poll",
+      "is_async": true,
+      "use_type": 2
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 34,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Terminate a background shell session started by mcp_terminal.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "mcp_terminal_kill",
+      "is_async": true,
+      "use_type": 2
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 35,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Search the web via SEARXNG_URL or TAVILY_API_KEY.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "mcp_web_search",
+      "is_async": true,
+      "use_type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 36,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Fetch a URL and extract readable text (trafilatura with html2text fallback).",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "mcp_web_extract",
+      "is_async": true,
+      "use_type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 37,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Run Python in a subprocess; sys.executable with PYTHONPATH including project root (import hermes_tools).",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "mcp_code_exec",
+      "is_async": true,
+      "use_type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 38,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Search ToolCall payloads (PostgreSQL FTS when available).",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "mcp_session_search",
+      "is_async": true,
+      "use_type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 39,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Headless Chromium via Playwright. ref is a CSS selector.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "mcp_browser",
+      "is_async": true,
+      "use_type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": 40,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "description": "Vision Q&A over an image path or URL via LiteLLM.",
+      "modified": "2026-04-07T12:00:00Z",
+      "name": "mcp_vision",
+      "is_async": true,
+      "use_type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 177,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 30,
+      "parameter": 1,
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 178,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 30,
+      "parameter": 68,
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 179,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 31,
+      "parameter": 66,
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 180,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 31,
+      "parameter": 67,
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 181,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 31,
+      "parameter": 68,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 182,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 31,
+      "parameter": 69,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 183,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 31,
+      "parameter": 70,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 184,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 31,
+      "parameter": 71,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 185,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 32,
+      "parameter": 72,
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 186,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 32,
+      "parameter": 73,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 187,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 32,
+      "parameter": 74,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 188,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 32,
+      "parameter": 75,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 189,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 32,
+      "parameter": 76,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 190,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 33,
+      "parameter": 77,
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 191,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 34,
+      "parameter": 77,
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 192,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 35,
+      "parameter": 16,
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 193,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 35,
+      "parameter": 78,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 194,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 36,
+      "parameter": 35,
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 195,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 36,
+      "parameter": 79,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 196,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 37,
+      "parameter": 80,
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 197,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 37,
+      "parameter": 74,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 198,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 37,
+      "parameter": 75,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 199,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 38,
+      "parameter": 16,
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 200,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 38,
+      "parameter": 81,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 201,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 38,
+      "parameter": 82,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 202,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 39,
+      "parameter": 88,
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 203,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 39,
+      "parameter": 35,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 204,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 39,
+      "parameter": 83,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 205,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 39,
+      "parameter": 50,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 206,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 39,
+      "parameter": 7,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 207,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 39,
+      "parameter": 84,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 208,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 39,
+      "parameter": 60,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 209,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 40,
+      "parameter": 85,
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 210,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 40,
+      "parameter": 60,
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": 211,
+    "fields": {
+      "created": "2026-04-07T12:00:00Z",
+      "modified": "2026-04-07T12:00:00Z",
+      "tool": 40,
+      "parameter": 86,
+      "required": false,
+      "prune_after_turns": 0
+    }
+  }
+]

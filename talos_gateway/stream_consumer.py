@@ -5,14 +5,20 @@ Inbound text from a local CLI client uses this transport at
 Phase 1 still go through ``CliAdapter.send`` when wired in later phases; this
 consumer only normalizes JSON into ``PlatformEnvelope`` and forwards to the
 active ``GatewayOrchestrator``.
+
+Connect with ``?session_id=<reasoning_session_uuid>`` to receive LLM token
+deltas from ``FrontalLobe`` via ``group_send`` (Layer 2 §3.2).
 """
 
 import json
 import logging
 from typing import Any, Optional
+from urllib.parse import parse_qs
+from uuid import UUID
 
 from channels.generic.websocket import AsyncWebsocketConsumer
 
+from frontal_lobe.channels_streaming import reasoning_session_group_name
 from talos_gateway.gateway import get_active_gateway_orchestrator
 from talos_gateway.ws_protocol import (
     WS_ERR_INVALID_JSON,
@@ -22,6 +28,7 @@ from talos_gateway.ws_protocol import (
     WS_MSG_ERROR,
     WS_MSG_INBOUND,
     WS_MSG_INBOUND_ACK,
+    WS_MSG_TOKEN_DELTA,
     platform_envelope_from_inbound_payload,
 )
 
@@ -34,15 +41,55 @@ def _error_payload(code: str, message: str) -> dict[str, Any]:
 
 
 class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
-    """JSON channel for inbound CLI messages; future Serotonin token stream."""
+    """JSON channel for inbound CLI messages; outbound LLM token stream (Layer 2)."""
 
     async def connect(self) -> None:
-        """Accept WebSocket connection."""
+        """Accept WebSocket; optionally join a ReasoningSession channel group."""
+        self._session_group: Optional[str] = None
+        raw_qs = self.scope.get('query_string') or b''
+        try:
+            query_string = raw_qs.decode('utf-8')
+        except UnicodeDecodeError:
+            query_string = ''
+        params = parse_qs(query_string)
+        raw_sid = (params.get('session_id') or [None])[0]
+        if raw_sid:
+            try:
+                sid = UUID(str(raw_sid))
+            except (ValueError, TypeError):
+                logger.warning(
+                    '[GatewayTokenStreamConsumer] invalid session_id query: %s',
+                    raw_sid,
+                )
+            else:
+                self._session_group = reasoning_session_group_name(sid)
+                await self.channel_layer.group_add(
+                    self._session_group,
+                    self.channel_name,
+                )
+                logger.debug(
+                    '[GatewayTokenStreamConsumer] joined group %s',
+                    self._session_group,
+                )
         await self.accept()
 
     async def disconnect(self, close_code: int) -> None:
-        """Disconnect hook (reserved for logging or cleanup)."""
-        _ = close_code
+        """Leave session group when subscribed."""
+        grp = getattr(self, '_session_group', None)
+        if grp:
+            await self.channel_layer.group_discard(
+                grp,
+                self.channel_name,
+            )
+
+    async def token_delta(self, event: dict[str, Any]) -> None:
+        """Forward a streamed LLM token to the WebSocket (group message handler)."""
+        token = event.get('token', '')
+        await self.send(
+            text_data=json.dumps(
+                {'type': WS_MSG_TOKEN_DELTA, 'token': token}
+            )
+        )
 
     async def receive(
         self,

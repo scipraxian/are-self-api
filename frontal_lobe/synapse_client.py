@@ -3,7 +3,7 @@ import os
 import time
 from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 
 import litellm
 from django.conf import settings
@@ -33,6 +33,10 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------ #
 
 PROVIDER_OLLAMA = 'ollama'
+PROVIDER_ANTHROPIC = 'anthropic'
+
+ANTHROPIC_BETA_PROMPT_CACHING = 'prompt-caching-2024-07-31'
+KWARG_EXTRA_HEADERS = 'extra_headers'
 
 # ------------------------------------------------------------------ #
 #  LiteLLM kwarg keys                                                #
@@ -206,7 +210,7 @@ class SynapseClient:
         messages = self.ledger.request_payload
         tools = self.ledger.tool_payload if self.ledger.tool_payload else None
 
-        litellm_kwargs = self._build_kwargs(messages, tools, kwargs)
+        litellm_kwargs = self._build_kwargs(messages, tools, kwargs, stream=False)
 
         start_time = time.time()
         logger.info(f'[Synapse] >>>>>>>>>>>>>Sending request to Provider...')
@@ -263,6 +267,101 @@ class SynapseClient:
 
         # Stamp the ledger and return tool calls
         return True, self._process_response(response)
+
+    async def chat_stream(
+        self,
+        stream_callback: Optional[Callable[[str], Awaitable[None]]] = None,
+        interrupt_check: Optional[Callable[[], bool]] = None,
+        **kwargs: Any,
+    ) -> Tuple[bool, List[Dict[str, Any]]]:
+        """
+        Stream LLM response; optional async callback per text delta.
+
+        On interrupt_check True between chunks, raises InterruptedError.
+        """
+        messages = self.ledger.request_payload
+        tools = self.ledger.tool_payload if self.ledger.tool_payload else None
+
+        litellm_kwargs = self._build_kwargs(messages, tools, kwargs, stream=True)
+
+        start_time = time.time()
+        logger.info('[Synapse] >>>>>>>>>>>>>Sending streaming request to Provider...')
+        try:
+            response = await litellm.acompletion(**litellm_kwargs)
+        except Exception as e:
+            error_str = str(e).lower()
+            error_type = e.__class__.__name__.lower()
+            logger.error(
+                '[Synapse] Provider streaming error: %s | %s',
+                error_type,
+                error_str,
+            )
+            if self.ai_model_provider:
+                self.ai_model_provider.trip_circuit_breaker()
+            return False, []
+
+        chunks: List[Any] = []
+        streamed_parts: List[str] = []
+        async for chunk in response:
+            chunks.append(chunk)
+            delta = ''
+            if chunk.choices and chunk.choices[0].delta is not None:
+                delta = getattr(chunk.choices[0].delta, 'content', None) or ''
+            if delta:
+                streamed_parts.append(delta)
+                if stream_callback:
+                    await stream_callback(delta)
+            if interrupt_check and interrupt_check():
+                self._stamp_partial_streaming_ledger(chunks, streamed_parts)
+                raise InterruptedError('Stream interrupted')
+
+        inf_duration = timedelta(seconds=time.time() - start_time)
+        logger.info(
+            '[Synapse] <<<<<<<<<<<<<Streaming response done in %s.',
+            inf_duration,
+        )
+
+        if (
+            self.ai_model_provider
+            and self.ai_model_provider.rate_limit_counter > 0
+        ):
+            self.ai_model_provider.reset_circuit_breaker()
+
+        built = litellm.stream_chunk_builder(
+            chunks, messages=self.ledger.request_payload
+        )
+        if built is None:
+            logger.error('[Synapse] stream_chunk_builder returned None.')
+            return False, []
+        return True, self._process_response(built)
+
+    def _stamp_partial_streaming_ledger(
+        self, chunks: List[Any], streamed_parts: List[str]
+    ) -> None:
+        """Persist partial assistant output when streaming is interrupted."""
+        built = None
+        try:
+            built = litellm.stream_chunk_builder(
+                chunks, messages=self.ledger.request_payload
+            )
+        except Exception as exc:
+            logger.warning(
+                '[Synapse] stream_chunk_builder failed on interrupt: %s',
+                exc,
+            )
+        if built is not None:
+            try:
+                self._process_response(built)
+                return
+            except (IndexError, AttributeError, KeyError, TypeError) as exc:
+                logger.warning(
+                    '[Synapse] Partial stream stamp via builder failed: %s',
+                    exc,
+                )
+        joined = ''.join(streamed_parts)
+        self.ledger.response_payload = {
+            'choices': [{'message': {'content': joined, 'tool_calls': None}}],
+        }
 
     def _process_response(
         self, response: ModelResponse
@@ -339,14 +438,21 @@ class SynapseClient:
         messages: List[Dict[str, Any]],
         tools: Optional[List[Dict[str, Any]]],
         options: Dict[str, Any],
+        stream: bool = False,
     ) -> Dict[str, Any]:
         """Maps standard inputs and DB configuration to LiteLLM kwargs."""
         kwargs: Dict[str, Any] = {
             KWARG_MODEL: self.model_id,
             KWARG_MESSAGES: messages,
-            KWARG_STREAM: False,
+            KWARG_STREAM: stream,
             **options,
         }
+
+        provider_key = (self.network_config.key or '').lower()
+        if provider_key == PROVIDER_ANTHROPIC:
+            kwargs[KWARG_EXTRA_HEADERS] = {
+                'anthropic-beta': ANTHROPIC_BETA_PROMPT_CACHING,
+            }
 
         if self.network_config.requires_api_key:
             kwargs[KWARG_API_KEY] = resolve_api_key(

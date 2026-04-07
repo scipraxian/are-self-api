@@ -54,5 +54,26 @@
   "fields": {
     "name": "Stopped"
   }
+},
+{
+  "model": "frontal_lobe.reasoningstatus",
+  "pk": 9,
+  "fields": {
+    "name": "Interrupted"
+  }
+},
+{
+  "model": "frontal_lobe.reasoningturnkind",
+  "pk": 1,
+  "fields": {
+    "name": "Normal"
+  }
+},
+{
+  "model": "frontal_lobe.reasoningturnkind",
+  "pk": 2,
+  "fields": {
+    "name": "Summary"
+  }
 }
 ]

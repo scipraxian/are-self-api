@@ -53,3 +53,5 @@ channels-redis
 litellm
 tenacity
 asgiref
+httpx>=0.27
+trafilatura>=1.6

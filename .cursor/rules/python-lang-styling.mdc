@@ -1,5 +1,6 @@
 ---
-globs: ANY .py FILE or FILE THAT CONTAINS PYTHON CODE
+description: Python language style for .py files
+globs: "**/*.py"
 alwaysApply: false
 ---
 

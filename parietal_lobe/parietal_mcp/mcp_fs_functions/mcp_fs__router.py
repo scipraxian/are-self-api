@@ -4,6 +4,8 @@ import os
 
 from django.conf import settings
 
+from parietal_lobe.parietal_mcp.fs_path_policy import validate_blocked_segments
+
 logger = logging.getLogger(__name__)
 
 MODULE_PREFIX = 'parietal_lobe.parietal_mcp.mcp_fs_functions.mcp_fs_'
@@ -20,16 +22,6 @@ ALLOWED_ACTIONS = frozenset(
 WRITE_ACTIONS = frozenset(
     {
         'patch',
-    }
-)
-
-BLOCKED_PATH_SEGMENTS = frozenset(
-    {
-        'venv',
-        '__pycache__',
-        '.git',
-        'node_modules',
-        'site-packages',
     }
 )
 
@@ -50,18 +42,9 @@ def _validate_action(action: str) -> str | None:
 
 def _validate_path_safety(path: str, action: str) -> str | None:
     """Returns an error string if the path is unsafe, else None."""
-    if not path:
-        return 'Error: path is required.'
-
-    normalized = os.path.normpath(path).replace('\\', '/')
-    segments = normalized.split('/')
-
-    for segment in segments:
-        if segment in BLOCKED_PATH_SEGMENTS:
-            return (
-                f'Error: Access denied. Path contains '
-                f"blocked segment '{segment}'."
-            )
+    blocked = validate_blocked_segments(path)
+    if blocked:
+        return blocked
 
     if action in WRITE_ACTIONS and not os.path.isabs(path):
         base_dir = _get_base_dir()

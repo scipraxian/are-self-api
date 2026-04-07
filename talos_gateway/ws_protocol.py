@@ -11,6 +11,7 @@ WS_PROTOCOL_VERSION = 1
 WS_MSG_INBOUND = 'inbound'
 WS_MSG_INBOUND_ACK = 'inbound_ack'
 WS_MSG_ERROR = 'error'
+WS_MSG_TOKEN_DELTA = 'token_delta'
 
 WS_ERR_NO_GATEWAY = 'gateway_unavailable'
 WS_ERR_INVALID_JSON = 'invalid_json'
