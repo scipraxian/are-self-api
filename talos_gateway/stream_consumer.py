@@ -29,11 +29,12 @@ logger = logging.getLogger('talos_gateway.stream_consumer')
 
 
 def _error_payload(code: str, message: str) -> dict[str, Any]:
+    """Build a JSON-serializable WebSocket error frame."""
     return {'type': WS_MSG_ERROR, 'code': code, 'message': message}
 
 
 class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
-    """JSON control channel: inbound CLI messages and future Serotonin tokens."""
+    """JSON channel for inbound CLI messages; future Serotonin token stream."""
 
     async def connect(self) -> None:
         """Accept WebSocket connection."""
@@ -68,7 +69,9 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
         except json.JSONDecodeError:
             await self.send(
                 text_data=json.dumps(
-                    _error_payload(WS_ERR_INVALID_JSON, 'body is not valid JSON')
+                    _error_payload(
+                        WS_ERR_INVALID_JSON, 'body is not valid JSON'
+                    )
                 )
             )
             return
@@ -121,7 +124,9 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
         try:
             result = await orchestrator.handle_inbound(envelope)
         except Exception:
-            logger.exception('[GatewayTokenStreamConsumer] handle_inbound failed.')
+            logger.exception(
+                '[GatewayTokenStreamConsumer] handle_inbound failed.'
+            )
             await self.send(
                 text_data=json.dumps(
                     _error_payload(

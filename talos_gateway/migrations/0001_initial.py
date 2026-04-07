@@ -7,7 +7,6 @@ import common.constants
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -50,8 +49,14 @@ class Migration(migrations.Migration):
                         verbose_name='ID',
                     ),
                 ),
-                ('created', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('modified', models.DateTimeField(auto_now=True, db_index=True)),
+                (
+                    'created',
+                    models.DateTimeField(auto_now_add=True, db_index=True),
+                ),
+                (
+                    'modified',
+                    models.DateTimeField(auto_now=True, db_index=True),
+                ),
                 ('platform', models.CharField(db_index=True, max_length=64)),
                 (
                     'channel_id',

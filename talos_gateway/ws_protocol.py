@@ -1,5 +1,7 @@
 """WebSocket message types for the local gateway CLI (Layer 4 Phase 1)."""
 
+from typing import Any
+
 from django.utils import timezone
 
 from talos_gateway.contracts import PlatformEnvelope
@@ -21,8 +23,10 @@ DEFAULT_SENDER_ID = 'cli'
 DEFAULT_SENDER_NAME = 'CLI'
 
 
-def platform_envelope_from_inbound_payload(data: dict) -> PlatformEnvelope:
-    """Build a ``PlatformEnvelope`` from a validated inbound WebSocket payload."""
+def platform_envelope_from_inbound_payload(
+    data: dict[str, Any],
+) -> PlatformEnvelope:
+    """Build ``PlatformEnvelope`` from validated inbound WebSocket JSON."""
     if data.get('type') != WS_MSG_INBOUND:
         raise ValueError('message type must be inbound')
     channel_id = data.get('channel_id')

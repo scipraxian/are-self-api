@@ -2,14 +2,13 @@
 
 import logging
 from datetime import timedelta
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 from django.conf import settings
 from django.utils import timezone
 
 from frontal_lobe.models import ReasoningSession, ReasoningStatusID
 from identity.models import IdentityDisc
-
 from talos_gateway.contracts import PlatformEnvelope
 from talos_gateway.models import GatewaySession, GatewaySessionStatusID
 
@@ -19,7 +18,7 @@ logger = logging.getLogger('talos_gateway.session_manager')
 class SessionManager(object):
     """Resolve or create ``GatewaySession`` for a platform channel."""
 
-    def __init__(self, config: Optional[dict] = None) -> None:
+    def __init__(self, config: Optional[dict[str, Any]] = None) -> None:
         self.config = config or getattr(settings, 'TALOS_GATEWAY', {})
 
     def _resolve_identity_disc(self) -> IdentityDisc:
@@ -40,7 +39,7 @@ class SessionManager(object):
         channel_id: str,
         _envelope: PlatformEnvelope,
     ) -> Tuple[GatewaySession, ReasoningSession]:
-        """Return gateway row and its ``ReasoningSession``, creating if needed."""
+        """Return gateway row and reasoning session; create rows when absent."""
         timeout_minutes = int(self.config.get('session_timeout_minutes', 60))
         cutoff = timezone.now() - timedelta(minutes=timeout_minutes)
 

@@ -2,7 +2,7 @@
 
 import base64
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_serializer
 
@@ -30,7 +30,7 @@ class PlatformEnvelope(BaseModel):
     voice_audio: Optional[bytes] = None
     reply_to: Optional[str] = None
     timestamp: datetime
-    raw_event: Optional[dict] = None
+    raw_event: Optional[dict[str, Any]] = None
 
     @field_serializer('voice_audio', when_used='json')
     def _serialize_voice_audio(

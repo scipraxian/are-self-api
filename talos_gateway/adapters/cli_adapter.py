@@ -15,11 +15,9 @@ class CliAdapter(object):
     PLATFORM_NAME = 'cli'
     MAX_MESSAGE_LENGTH = 4000
 
-    def __init__(self, config: Optional[dict] = None) -> None:
+    def __init__(self, config: Optional[dict[str, Any]] = None) -> None:
         self.config = config or {}
-        self._on_message: Optional[
-            Callable[[Any], Awaitable[None]]
-        ] = None
+        self._on_message: Optional[Callable[[Any], Awaitable[None]]] = None
 
     async def start(self) -> None:
         """Connect to the platform."""
@@ -41,8 +39,6 @@ class CliAdapter(object):
                 return last
         return last
 
-    def on_message(
-        self, callback: Callable[[Any], Awaitable[None]]
-    ) -> None:
+    def on_message(self, callback: Callable[[Any], Awaitable[None]]) -> None:
         """Register inbound handler."""
         self._on_message = callback

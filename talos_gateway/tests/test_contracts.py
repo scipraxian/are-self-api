@@ -6,14 +6,18 @@ from datetime import datetime, timezone
 
 from django.test import SimpleTestCase
 
-from talos_gateway.contracts import Attachment, DeliveryPayload, PlatformEnvelope
+from talos_gateway.contracts import (
+    Attachment,
+    DeliveryPayload,
+    PlatformEnvelope,
+)
 
 
 class TestAttachment(SimpleTestCase):
     """Tests for Attachment."""
 
     def test_attachment_round_trip(self):
-        """Assert Attachment serializes and validates with optional size_bytes."""
+        """Assert Attachment round-trips with optional ``size_bytes``."""
         original = Attachment(
             url='https://example.com/f.png',
             filename='f.png',

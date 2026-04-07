@@ -6,9 +6,7 @@ from django.test import override_settings
 from django.utils import timezone
 
 from common.tests.common_test_case import CommonFixturesAPITestCase
-
 from frontal_lobe.models import ReasoningSession
-
 from talos_gateway.contracts import PlatformEnvelope
 from talos_gateway.models import GatewaySession
 from talos_gateway.session_manager import SessionManager
@@ -30,7 +28,7 @@ class SessionManagerTests(CommonFixturesAPITestCase):
     ]
 
     def test_resolve_creates_gateway_and_reasoning_session(self):
-        """Assert a new channel gets GatewaySession and ReasoningSession rows."""
+        """Assert new channel creates GatewaySession and ReasoningSession."""
         ts = timezone.now()
         env = PlatformEnvelope(
             platform='cli',
@@ -49,7 +47,7 @@ class SessionManagerTests(CommonFixturesAPITestCase):
         self.assertEqual(str(rs.identity_disc_id), THALAMUS_DISC_PK)
 
     def test_resolve_reuses_active_session(self):
-        """Assert the same channel reuses the existing session before timeout."""
+        """Assert same channel reuses session before timeout."""
         ts = timezone.now()
         env = PlatformEnvelope(
             platform='cli',

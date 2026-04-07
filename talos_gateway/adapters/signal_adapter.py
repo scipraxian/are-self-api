@@ -14,11 +14,9 @@ class SignalAdapter(object):
     PLATFORM_NAME = 'signal'
     MAX_MESSAGE_LENGTH = 2000
 
-    def __init__(self, config: Optional[dict] = None) -> None:
+    def __init__(self, config: Optional[dict[str, Any]] = None) -> None:
         self.config = config or {}
-        self._on_message: Optional[
-            Callable[[Any], Awaitable[None]]
-        ] = None
+        self._on_message: Optional[Callable[[Any], Awaitable[None]]] = None
 
     async def start(self) -> None:
         """Connect to Signal."""
@@ -29,7 +27,11 @@ class SignalAdapter(object):
     async def send(self, payload: DeliveryPayload) -> dict:
         """Deliver a message (stub)."""
         logger.debug('[SignalAdapter] send channel=%s', payload.channel_id)
-        return {'success': True, 'message_id': 'signal-stub', 'status_code': 200}
+        return {
+            'success': True,
+            'message_id': 'signal-stub',
+            'status_code': 200,
+        }
 
     async def send_chunked(self, payload: DeliveryPayload) -> dict:
         """Chunk long messages then send each part."""
@@ -42,8 +44,6 @@ class SignalAdapter(object):
                 return last
         return last
 
-    def on_message(
-        self, callback: Callable[[Any], Awaitable[None]]
-    ) -> None:
+    def on_message(self, callback: Callable[[Any], Awaitable[None]]) -> None:
         """Register inbound handler."""
         self._on_message = callback

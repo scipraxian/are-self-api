@@ -10,7 +10,6 @@ from django.test import SimpleTestCase, override_settings
 from django.urls import path
 
 from common.tests.common_test_case import CommonFixturesAPITestCase
-
 from talos_gateway.contracts import PlatformEnvelope
 from talos_gateway.gateway import (
     GatewayOrchestrator,
@@ -167,7 +166,7 @@ class GatewayTokenStreamConsumerTests(SimpleTestCase):
         asyncio.run(_run())
 
     def test_phase1_gateway_modules_avoid_reasoning_engine_hooks(self):
-        """Assert Phase 1 gateway modules omit FrontalLobe.run and spike tasks."""
+        """Assert Phase 1 gateway code omits FrontalLobe.run and fire_spike."""
         import talos_gateway.gateway as gw_mod
         import talos_gateway.message_router as mr_mod
         import talos_gateway.stream_consumer as sc_mod

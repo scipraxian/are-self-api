@@ -5,7 +5,6 @@ from django.test import override_settings
 from django.utils import timezone
 
 from common.tests.common_test_case import CommonFixturesAPITestCase
-
 from talos_gateway.contracts import PlatformEnvelope
 from talos_gateway.message_router import MessageRouter
 from talos_gateway.session_manager import SessionManager

@@ -17,7 +17,9 @@ class PlatformEnvelopeFromInboundPayloadTests(SimpleTestCase):
     def test_minimal_inbound_builds_cli_envelope(self):
         """Assert required fields produce a cli ``PlatformEnvelope``."""
         frozen = datetime(2026, 4, 6, 15, 0, 0, tzinfo=timezone.utc)
-        with patch('talos_gateway.ws_protocol.timezone.now', return_value=frozen):
+        with patch(
+            'talos_gateway.ws_protocol.timezone.now', return_value=frozen
+        ):
             env = platform_envelope_from_inbound_payload(
                 {
                     'type': WS_MSG_INBOUND,

@@ -16,7 +16,7 @@ _active_gateway_orchestrator: Optional[Any] = None
 
 
 def set_active_gateway_orchestrator(orchestrator: Optional[Any]) -> None:
-    """Register the process-global orchestrator for ASGI consumers (e.g. CLI WS)."""
+    """Register global gateway orchestrator for ASGI consumers (e.g. CLI WS)."""
     global _active_gateway_orchestrator
     _active_gateway_orchestrator = orchestrator
 
@@ -48,7 +48,7 @@ def discover_adapter_class(platform_key: str) -> Type[Any]:
 class GatewayOrchestrator(object):
     """Load platform adapters, run lifecycle, route inbound envelopes."""
 
-    def __init__(self, config: Optional[dict] = None) -> None:
+    def __init__(self, config: Optional[dict[str, Any]] = None) -> None:
         self.config = config or getattr(settings, 'TALOS_GATEWAY', {})
         self.adapters: dict[str, Any] = {}
         self.session_manager = SessionManager(self.config)
@@ -77,7 +77,7 @@ class GatewayOrchestrator(object):
                 await adapter.start()
             except Exception:
                 logger.exception(
-                    '[GatewayOrchestrator] adapter.start failed for %s; skipping.',
+                    '[GatewayOrchestrator] adapter.start failed for %s; skip.',
                     name,
                 )
                 del self.adapters[name]
@@ -92,7 +92,10 @@ class GatewayOrchestrator(object):
                     '[GatewayOrchestrator] adapter.stop failed for %s.', name
                 )
 
-    async def handle_inbound(self, envelope: PlatformEnvelope) -> dict:
+    async def handle_inbound(
+        self,
+        envelope: PlatformEnvelope,
+    ) -> dict[str, Any]:
         """Resolve session and queue inbound user content."""
         gs, rs = self.session_manager.resolve_session(
             envelope.platform,

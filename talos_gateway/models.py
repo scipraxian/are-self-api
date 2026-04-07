@@ -2,8 +2,8 @@
 
 from django.db import models
 
-from common.models import CreatedMixin, ModifiedMixin, NameMixin
 from common.constants import STANDARD_CHARFIELD_LENGTH
+from common.models import CreatedMixin, ModifiedMixin, NameMixin
 
 
 class GatewaySessionStatusID(object):
@@ -28,7 +28,9 @@ class GatewaySession(CreatedMixin, ModifiedMixin):
     """Maps a platform channel to an active reasoning session."""
 
     platform = models.CharField(max_length=64, db_index=True)
-    channel_id = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH, db_index=True)
+    channel_id = models.CharField(
+        max_length=STANDARD_CHARFIELD_LENGTH, db_index=True
+    )
     reasoning_session = models.ForeignKey(
         'frontal_lobe.ReasoningSession',
         on_delete=models.CASCADE,

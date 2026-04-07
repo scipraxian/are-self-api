@@ -6,6 +6,7 @@ from talos_gateway.adapters.base_patterns import (
     chunk_text,
     is_likely_audio_mime,
     iter_chunked_payloads,
+    truncate_message,
 )
 from talos_gateway.contracts import DeliveryPayload
 
@@ -76,3 +77,22 @@ class TestIsLikelyAudioMime(SimpleTestCase):
     def test_non_audio(self):
         """Assert image is not audio."""
         self.assertFalse(is_likely_audio_mime('image/png'))
+
+
+class TestTruncateMessage(SimpleTestCase):
+    """Tests for truncate_message."""
+
+    def test_short_message_returns_single_chunk(self):
+        """Assert content under max_length is unchanged."""
+        self.assertEqual(truncate_message('hello world'), ['hello world'])
+
+    def test_none_chunk_indicator_reserve_does_not_crash(self):
+        """Assert explicit None reserve is treated as zero, not a TypeError."""
+        body = 'paragraph\n\n' + ('x' * 6000)
+        chunks = truncate_message(
+            body,
+            chunk_indicator_reserve=None,
+            max_length=2048,
+        )
+        self.assertGreater(len(chunks), 1)
+        self.assertTrue(all(isinstance(c, str) for c in chunks))

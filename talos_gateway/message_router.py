@@ -1,10 +1,9 @@
 """Inbound/outbound message mapping (Layer 4)."""
 
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 from frontal_lobe.models import ReasoningSession
-
 from talos_gateway.contracts import DeliveryPayload, PlatformEnvelope
 from talos_gateway.models import GatewaySession
 from talos_gateway.session_manager import SessionManager
@@ -15,7 +14,9 @@ logger = logging.getLogger('talos_gateway.message_router')
 class MessageRouter(object):
     """Queue inbound text on ``ReasoningSession``; build outbound payloads."""
 
-    def __init__(self, session_manager: Optional[SessionManager] = None) -> None:
+    def __init__(
+        self, session_manager: Optional[SessionManager] = None
+    ) -> None:
         self.session_manager = session_manager or SessionManager()
 
     async def dispatch_inbound(
@@ -23,7 +24,7 @@ class MessageRouter(object):
         gateway_session: GatewaySession,
         reasoning_session: ReasoningSession,
         envelope: PlatformEnvelope,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Append user content to ``swarm_message_queue``."""
         queue = list(reasoning_session.swarm_message_queue or [])
         queue.append(

@@ -64,8 +64,7 @@ INSTALLED_APPS = [
     'synaptic_cleft.apps.SynapticCleftConfig',
     'hypothalamus.apps.HypothalamusConfig',
     'talos_gateway.apps.TalosGatewayConfig',
-    'auditory_cortex.apps.AuditoryCortexConfig',
-    'vocal_cortex.apps.VocalCortexConfig',
+    'vocal_auditory_cortex.apps.VocalAuditoryCortexConfig',
 ]
 
 MIDDLEWARE = [
@@ -236,12 +235,7 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
-        'auditory_cortex': {
-            'handlers': ['console', 'norepinephrine'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-        'vocal_cortex': {
+        'vocal_auditory_cortex': {
             'handlers': ['console', 'norepinephrine'],
             'level': 'INFO',
             'propagate': True,
@@ -290,29 +284,18 @@ TALOS_GATEWAY = {
     'asgi_port': 8001,
 }
 
-# Layer 4 speech: STT (see docs/LAYER_4_GATEWAY_STT_TTS_PLAN.md)
-AUDITORY_CORTEX = {
+# Layer 4 speech: STT + TTS (see docs/LAYER_4_GATEWAY_STT_TTS_PLAN.md)
+VOCAL_CORTEX = {
     'enabled': True,
     'stt_provider': 'faster_whisper',
+    'tts_provider': 'edge',
+    'tts_cache_dir': '',
     'providers': {
         'faster_whisper': {
             'model': 'base',
             'device': 'cpu',
             'compute_type': 'int8',
         },
-        'voxtral': {
-            'binary': '',
-            'asr_model': '',
-            'timeout_seconds': 300,
-        },
-    },
-}
-
-VOCAL_CORTEX = {
-    'enabled': True,
-    'tts_provider': 'edge',
-    'tts_cache_dir': '',
-    'providers': {
         'edge': {
             'voice': 'en-US-AriaNeural',
         },
@@ -322,6 +305,7 @@ VOCAL_CORTEX = {
         },
         'voxtral': {
             'binary': '',
+            'asr_model': '',
             'tts_model': '',
             'timeout_seconds': 300,
         },
