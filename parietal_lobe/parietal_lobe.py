@@ -212,7 +212,7 @@ class ParietalLobe:
             fizzle_msg = (
                 f'SYSTEM OVERRIDE: Effector Fizzled! Insufficient Focus. '
                 f'(Requires {-focus_mod}, but you only have {self.session.current_focus}). '
-                f'You must use Synthesis tools (like mcp_save_memory) to restore Focus.'
+                f'You must use Synthesis tools (like mcp_engram_save) to restore Focus.'
             )
             await self._log_live(f'Result: {fizzle_msg}')
 

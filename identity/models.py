@@ -257,7 +257,9 @@ class IdentityDisc(
             f'Prompt: {self.system_prompt_template or ""}'
         )
 
-        self.vector = client.embed(rich_text)
+        result = client.embed(rich_text)
+        if result:
+            self.vector = result
 
 
 @receiver(m2m_changed, sender=IdentityDisc.addons.through)

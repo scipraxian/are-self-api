@@ -34,7 +34,7 @@ class Command(BaseCommand):
             'aimodelsynclog',
             'litellmcache',
         ],
-        'identity': [],
+        'identity': ['identitydiscvector'],
         'parietal_lobe': ['toolcall'],
         'peripheral_nervous_system': ['nerveterminalregistry'],
         'prefrontal_cortex': ['pfccomment', 'pfcepic', 'pfcstory', 'pfctask'],

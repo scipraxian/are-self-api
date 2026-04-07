@@ -23,7 +23,23 @@ React + Vite + TypeScript (repo: `are-self-ui`). This repo serves a DRF API cons
 that frontend, plus Celery workers that drive the autonomous reasoning loop.
 
 **Mission:** Empower underprivileged youth in remote areas with free access to AI technology.
-MIT licensed. Runs on consumer hardware via Ollama.
+MIT licensed. Runs on consumer hardware via Ollama. Released by Michael personally under
+[scipraxian](https://github.com/scipraxian) — not a company or nonprofit. Would pitch TO
+nonprofits and churches as a free tool they can use.
+
+**Target user:** A 10-year-old with no money (or their grandma). Every design decision flows
+from this. If it requires a credit card, a powerful GPU, or a CS degree — it's wrong. The
+system must run on whatever hardware they have, use free models, and be approachable enough
+that a child can make art and games with it.
+
+## The Four Repositories
+
+| Repo | Purpose |
+|------|---------|
+| [are-self-api](https://github.com/scipraxian/are-self-api) | Django backend (this repo) |
+| [are-self-ui](https://github.com/scipraxian/are-self-ui) | React frontend |
+| [are-self-docs](https://github.com/scipraxian/are-self-docs) | Docusaurus documentation site → [are-self.com](https://are-self.com) |
+| [are-self-research](https://github.com/scipraxian/are-self-research) | LaTeX whitepapers (APA 7th edition) |
 
 ## The Tick Cycle
 
@@ -97,6 +113,7 @@ All at `/api/v2/`. Most use hyphens; a few legacy routes use underscores. Do not
 ```
 # CNS
 spiketrains, spikes, neuralpathways, neurons, axons, effectors
+effector-contexts, effector-argument-assignments, distribution-modes
 
 # Temporal Lobe
 iterations, iteration-definitions, iteration-shift-definitions, shifts
@@ -130,32 +147,53 @@ failover-types, failover-strategies, selection-filters
 # Environments
 environments, executables, context-variables, context-keys
 environment-types, environment-statuses
+executable-arguments, executable-argument-assignments
 ```
 
-## Current State (April 2026)
+## Current State (April 5, 2026)
+
+**MIT open-source release: Tuesday, April 7, 2026.** All four repos go public simultaneously.
+DNS for are-self.com and GitHub Pages deployment happen release day. Documentation site
+(Docusaurus) is scaffolded with 30+ pages. Research repo has LaTeX templates and 6 paper
+directories. Samuel Frerichs (apprentice, UPA) is collaborating on the Hippocampus Hypergraph
+Migration paper.
 
 **What works:** The full tick cycle runs end-to-end. Identities create, forge into discs,
 get slotted into iterations, pick up tasks, reason autonomously, call tools, form memories.
 The Hypothalamus semantic parser (83 tests, 98.4% accuracy) enriches models automatically.
 Real-time events flow through the Synaptic Cleft. All brain regions have working API endpoints.
+Logic node (3 modes: retry/gate/wait) with 68 tests. TTS via Piper. Efficiency bonus active.
+SystemControlViewSet for shutdown/restart. Effector Editor API with full CRUD. Debug node
+(PK 9). Narrative dump + summary dump endpoints. `<<h>>` human message tagging prevents
+prompt_addon duplication.
 
-**What's in progress:** See `are-self-ui/TASKS.md` for full task list. Backend items: spell/cast
-naming sweep (~9 files in CNS), deprecated `ModelProvider`/`ModelRegistry` removal from
-frontal_lobe, engram function consolidation, linter standardization, API URL standardization
-(underscores → hyphens), shutdown/restart scripts. Recently completed: `pick_optimal_model()`
-refactored into pure query helpers (`_build_candidate_queryset`, `_select_best_from_strategy`,
-`preview_model_selection`), model-preview endpoint on IdentityDiscViewSet, Hypothalamus
-receptor_class fix (`'AIModel'` → `'Hypothalamus'`), budget serializer OneToOne fix,
-receptor_class convention documented.
+**Ship-blocking security:** Django CVE-2025-64459 (CVSS 9.1), Redis CVE-2025-49844 (CVSS 10.0),
+LiteLLM supply chain incident (March 2026), Ollama CVEs including CVE-2024-37032 "Probllama".
+Full audit in DEPENDENCY_AUDIT.md. Version pins needed before release.
 
-**Completed renames:** Talos → Are-Self naming sweep is done (only migration history retains
-old names). HTMX views fully removed. `TalosEngram` → `Engram`, `TalosExecutable` →
-`Executable`, `talos_bin` references cleaned.
+**Top priority:** Documentation (release day), PNS expansion (multiple Ollama endpoints, live agent
+monitoring), and security version pins. Image/audio generation via CNS effectors is deferred to
+post-release — TTS via Piper is the PoC for binary creation.
 
-**Legacy remnants:** `spell`/`cast`/`Caster` terminology still live in ~9 CNS files.
-`ModelProvider` and `ModelRegistry` still in `frontal_lobe/models.py` with active imports.
-`parietal_lobe/registry.py` still exists. The `dashboard/` and `ue_tools/` apps are from the
-original UE5 build orchestrator and should not be modified — they'll be removed.
+**What's in progress:** See TASKS.md for full task list. Key items: documentation infrastructure,
+security remediation, PNS expansion, error handler effector, engram function consolidation,
+API URL standardization (underscores → hyphens), prompt_addon state awareness.
+
+**Critical architecture note — `_update_status`:** This method in `neuromuscular_junction.py` is
+the single source of truth for spike status. It sets BOTH `self.status` on the instance AND saves
+to DB. Internal effectors return (200, msg) for SUCCESS and (500, msg) for FAILURE. External
+effectors use Unix exit codes (0 = success). These are evaluated in SEPARATE code paths
+(`_execute_local_python` vs `_execute_unified_pipeline`) but both flow through `_update_status`
+to set final status. **Do not bypass `_update_status`. Any changes must preserve `self.status`
+assignment.**
+
+**Completed renames:** Talos → Are-Self naming sweep done. HTMX removed. Spell/Cast naming
+sweep done across CNS. Deprecated `ModelProvider`/`ModelRegistry` removed from Frontal Lobe.
+
+**Legacy remnants:** `parietal_lobe/registry.py` still exists (superseded by Hypothalamus
+DB-driven routing). `synapse_open_router.py` is deprecated (no production callers). The
+`dashboard/` and `ue_tools/` apps are from the original UE5 build orchestrator — they'll be
+removed.
 
 ## Style Guide (Enforced)
 
@@ -180,16 +218,98 @@ concurrent I/O. Sync for everything else with `sync_to_async` wrap at the Celery
 CreatedAndModifiedWithDelta, NameMixin, DefaultFieldsMixin, UUIDIdMixin, DescriptionMixin.
 
 **Testing:** Real database with fixtures, not mocks. Inherit from `CommonTestCase` or
-`CommonFixturesAPITestCase`. Test docstrings begin with "Assert".
+`CommonFixturesAPITestCase`. Test docstrings begin with "Assert". Run tests with
+`venv/Scripts/pytest` from project root on Windows (`venv/bin/pytest` on Linux/Mac).
+
+**Async testing trap:** NEVER make Django test methods async even though `asyncio_mode = "auto"` is
+set in pyproject.toml. Async test methods get a SEPARATE database connection that cannot see
+transaction-wrapped setUp() objects — tests will fail with IntegrityError or missing data. Instead,
+keep test methods sync and use `async_to_sync` from `asgiref.sync` to call async functions:
+```python
+from asgiref.sync import async_to_sync
+result = async_to_sync(some_async_function)(arg1, arg2)
+```
+This runs the async function on the SAME database connection as the test transaction.
 
 **Fixtures:** PKs are stable integers. Never change an existing PK. Old records deprecated
 in place, never deleted. Each app has its own `fixtures/initial_data.json`.
+
+**Canonical Effector PKs:** Important effectors get fixed PKs and model constants
+(`central_nervous_system/models.py`): `BEGIN_PLAY=1, LOGIC_GATE=5, LOGIC_RETRY=6,
+LOGIC_DELAY=7, FRONTAL_LOBE=8, DEBUG=9`. These are mirrored in the frontend `nodeConstants.ts`.
+PKs 5-100 are reserved for canonical effectors. The frontend uses these PKs (not executable
+slugs) to determine which custom React Flow node component to render.
+
+**Debug node:** Effector PK 9. Native handler `debug_node` in
+`central_nervous_system/effectors/effector_casters/debug_node.py`. Logs blackboard state and
+neuron context at INFO level. Useful for diagnosing blackboard data flow between spikes.
+Configurable via NeuronContext key `debug_label` (defaults to "DEBUG").
 
 **Formatting:** 88-char lines (Black default). Single quotes. No trailing commas in function
 signatures. `isort`-compatible imports.
 
 **Type hints:** All function signatures including return types. `Optional[X]` not `X | None`.
 Built-in generics (`list`, `dict`) not `typing.List`, `typing.Dict`.
+
+## Addon System (Identity Addons)
+
+Pure synchronous functions registered in `identity/addons/addon_registry.py` (`ADDON_REGISTRY` dict).
+Each addon receives a `ReasoningTurn` and returns `List[Dict[str, Any]]` — messages to inject into
+the LLM payload.
+
+### Phases (executed in order)
+| Phase | ID | Purpose |
+|-------|----|---------|
+| IDENTIFY | 1 | Identity/persona injection |
+| CONTEXT | 2 | Environmental context |
+| HISTORY | 3 | Conversation history reconstruction |
+| TERMINAL | 4 | Final payload items (prompt, your_move) |
+
+### Turn Assembly Order (`_build_turn_payload` in `frontal_lobe.py`)
+1. Phase 1→2→3→4 addons execute in order, each appending messages
+2. `swarm_message_queue` messages are tagged with `<<h>>` prefix and appended
+3. `compile_system_messages()` hoists all system messages to index 0
+
+### The `<<h>>` Human Message Tagging System
+**Problem solved:** The prompt_addon (Phase 4 TERMINAL) injects the task prompt as a `role: user`
+message every turn. The river_of_six addon (Phase 3 HISTORY) replays previous turns' user messages
+from `request_payload`. Without differentiation, the same prompt appeared twice from turn 2 onward.
+
+**Solution:** Human messages from `swarm_message_queue` get `<<h>>\n` prepended to their content
+in `_build_turn_payload`. The river_of_six addon's `_extract_user_messages()` only replays user
+messages that start with `<<h>>`. Addon-injected user messages (prompt_addon, etc.) have no tag
+and are skipped — the addon re-injects them fresh each turn.
+
+**Constants:** `HUMAN_TAG = '<<h>>'` is defined in `identity/addons/river_of_six_addon.py`.
+`ROLE = 'role'` and `CONTENT = 'content'` are defined in `frontal_lobe/frontal_lobe.py`.
+TODO: Move `HUMAN_TAG` to a shared constants file and import everywhere.
+
+### River of Six (Phase 3 HISTORY)
+`identity/addons/river_of_six_addon.py` — sliding window of 6 turns with age-based decay.
+
+- **Reconstruction sources (atomic, non-duplicating):**
+  - `response_payload` → assistant message
+  - `ToolCall` DB records → tool call metadata + tool result messages
+  - `request_payload` → only `<<h>>`-tagged user messages
+
+- **Age-based decay (age = current_turn - past_turn):**
+  - Age ≥ 4 (`EVICTION_THRESHOLD`): tool results evicted, `tool_calls` stripped from assistant msg
+  - Age 3 (`EVICTION_WARNING_AGE`): eviction warning appended to tool results
+  - Age 2 (`DECAY_WARNING_AGE`): decay warning appended to tool results
+
+### Key Addons Reference
+| PK | Name | Phase | Slug |
+|----|------|-------|------|
+| 8 | Normal Chat | 3 (HISTORY) | `normal_chat_addon` |
+| 13 | River of Six | 3 (HISTORY) | `river_of_six_addon` |
+| 14 | Prompt | 4 (TERMINAL) | `prompt_addon` |
+| 12 | Your Move | 4 (TERMINAL) | `your_move_addon` |
+
+### response_payload Format
+Provider-agnostic. Can be direct `{role, content, ...}` or OpenAI-style
+`{choices: [{message: {...}}]}`. The `choices` array should be preserved for the frontend —
+don't hardcode `choices[0]`. Extract assistant message by checking `'role' in resp` first,
+then falling back to `resp.get('choices', [])[0].get('message', {})`.
 
 ## Common Pitfalls
 

@@ -7,7 +7,10 @@ from central_nervous_system.central_nervous_system import CNS
 from central_nervous_system.filters import SpikeTrainFilter
 from central_nervous_system.models import (
     Axon,
+    CNSDistributionMode,
     Effector,
+    EffectorArgumentAssignment,
+    EffectorContext,
     NeuralPathway,
     Neuron,
     Spike,
@@ -15,6 +18,10 @@ from central_nervous_system.models import (
 )
 from central_nervous_system.serializers_v2 import (
     AxonSerializer,
+    CNSDistributionModeSerializer,
+    EffectorArgumentAssignmentSerializer,
+    EffectorContextSerializer,
+    EffectorDetailSerializer,
     EffectorLightSerializer,
     NeuralPathwayDetailSerializer,
     NeuralPathwaySerializer,
@@ -33,7 +40,14 @@ class SpikeTrainViewSetV2(viewsets.ModelViewSet):
         SpikeTrain.objects.all()
         .select_related('status', 'pathway')
         .prefetch_related(
-            'spikes', 'spikes__status', 'spikes__effector', 'spikes__target'
+            'spikes',
+            'spikes__status',
+            'spikes__effector',
+            'spikes__target',
+            'spikes__neuron',
+            'spikes__neuron__pathway',
+            'spikes__neuron__invoked_pathway',
+            'spikes__provenance__spike_train',
         )
         .order_by('-created')
     )
@@ -145,10 +159,61 @@ class AxonViewSetV2(viewsets.ModelViewSet):
     serializer_class = AxonSerializer
 
 
-class EffectorViewSetV2(viewsets.ReadOnlyModelViewSet):
+class EffectorViewSetV2(viewsets.ModelViewSet):
     """
-    Editor Palette: The actionable toolsets to drag onto the canvas.
+    Effector CRUD: Light list for the palette, full detail for the editor.
     """
 
-    queryset = Effector.objects.all().order_by('name')
-    serializer_class = EffectorLightSerializer
+    queryset = (
+        Effector.objects.all()
+        .select_related('executable', 'distribution_mode')
+        .prefetch_related(
+            'switches',
+            'tags',
+            'effectorargumentassignment_set',
+            'effectorargumentassignment_set__argument',
+            'effectorcontext_set',
+            'executable__switches',
+            'executable__executableargumentassignment_set',
+            'executable__executableargumentassignment_set__argument',
+            'executable__executablesupplementaryfileorpath_set',
+        )
+        .order_by('name')
+    )
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return EffectorDetailSerializer
+        if self.action in ('create', 'update', 'partial_update'):
+            return EffectorDetailSerializer
+        return EffectorLightSerializer
+
+
+class EffectorContextViewSetV2(viewsets.ModelViewSet):
+    """CRUD for EffectorContext key/value pairs."""
+
+    queryset = EffectorContext.objects.all()
+    serializer_class = EffectorContextSerializer
+    filterset_fields = ['effector']
+
+
+class EffectorArgumentAssignmentViewSetV2(viewsets.ModelViewSet):
+    """
+    CRUD for the join table linking arguments to effectors (with order).
+    Filterable by effector FK.
+    """
+
+    queryset = (
+        EffectorArgumentAssignment.objects.all()
+        .select_related('argument')
+        .order_by('order')
+    )
+    serializer_class = EffectorArgumentAssignmentSerializer
+    filterset_fields = ['effector']
+
+
+class CNSDistributionModeViewSetV2(viewsets.ReadOnlyModelViewSet):
+    """Lookup table for distribution modes."""
+
+    queryset = CNSDistributionMode.objects.all().order_by('name')
+    serializer_class = CNSDistributionModeSerializer

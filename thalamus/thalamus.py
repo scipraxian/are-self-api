@@ -76,6 +76,7 @@ def get_chat_history(
                         )
 
                     # 2. FLATTEN TOOL CALLS
+                    tool_call_parts = []
                     if tool_calls:
                         for tool in tool_calls:
                             try:
@@ -108,6 +109,14 @@ def get_chat_history(
                                     if extracted_thought:
                                         reasoning += f'\n{extracted_thought}'
 
+                                else:
+                                    # Expose all other tool calls as parts
+                                    tool_call_parts.append({
+                                        'type': 'tool-call',
+                                        'toolName': func_name,
+                                        'args': args,
+                                    })
+
                             except json.JSONDecodeError:
                                 continue
                             except Exception as e:
@@ -130,6 +139,9 @@ def get_chat_history(
                     if content:
                         parts.append({'type': 'text', 'text': content})
 
+                    # Tool calls rendered inline
+                    parts.extend(tool_call_parts)
+
                     # If we have any parts, append the pristine message object
                     if parts:
                         messages_payload.append(
@@ -140,6 +152,14 @@ def get_chat_history(
                             }
                         )
 
+    # Append volatile (queued but not yet processed) messages
+    if include_volatile and session.swarm_message_queue:
+        for queued_msg in session.swarm_message_queue:
+            messages_payload.append({
+                'role': queued_msg.get('role', 'user'),
+                'content': queued_msg.get('content', ''),
+            })
+
     return messages_payload
 
 
@@ -149,6 +169,10 @@ def inject_swarm_chatter(
     """
     Drops an async message into the AI's queue. Wakes the AI if it was waiting.
     """
+    from asgiref.sync import async_to_sync
+    from synaptic_cleft.axon_hillok import fire_neurotransmitter
+    from synaptic_cleft.neurotransmitters import Acetylcholine
+
     # 1. Drop the message in the queue
     queue = session.swarm_message_queue or []
     queue.append({'role': role, 'content': text.strip()})
@@ -162,5 +186,18 @@ def inject_swarm_chatter(
     else:
         # If it's already running, just save the queue. It will catch it next turn.
         session.save(update_fields=['swarm_message_queue'])
+
+    # 3. Notify the frontend that a message was queued
+    transmitter = Acetylcholine(
+        receptor_class='SynapseResponse',
+        dendrite_id=str(session.id),
+        activity='created',
+        vesicle={
+            'session_id': str(session.id),
+            'role': role,
+            'content': text.strip(),
+        },
+    )
+    async_to_sync(fire_neurotransmitter)(transmitter)
 
     return True

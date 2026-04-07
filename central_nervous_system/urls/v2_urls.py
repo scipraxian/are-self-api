@@ -2,6 +2,9 @@ from rest_framework import routers
 
 from central_nervous_system.api_v2 import (
     AxonViewSetV2,
+    CNSDistributionModeViewSetV2,
+    EffectorArgumentAssignmentViewSetV2,
+    EffectorContextViewSetV2,
     EffectorViewSetV2,
     NeuralPathwayViewSetV2,
     NeuronViewSetV2,
@@ -29,4 +32,13 @@ V2_CNS_ROUTER.register(r'axons', AxonViewSetV2, basename='v2-axon')
 V2_CNS_ROUTER.register(r'effectors', EffectorViewSetV2, basename='v2-effector')
 V2_CNS_ROUTER.register(
     r'spike-logs', SpikeLogMergeViewSet, basename='v2-spike-log'
+)
+V2_CNS_ROUTER.register(
+    r'effector-contexts', EffectorContextViewSetV2, basename='v2-effector-context'
+)
+V2_CNS_ROUTER.register(
+    r'effector-argument-assignments', EffectorArgumentAssignmentViewSetV2, basename='v2-effector-arg-assignment'
+)
+V2_CNS_ROUTER.register(
+    r'distribution-modes', CNSDistributionModeViewSetV2, basename='v2-distribution-mode'
 )

@@ -11,11 +11,29 @@ from central_nervous_system.utils import (
 )
 
 
-def generate_spawn_dump(spike_train, depth=0):
-    """Generator that streams the entire execution context of a SpikeTrain and its subgraphs."""
+def _truncate_log(log_text, max_lines=20):
+    """Truncates a log to max_lines, showing head and a line count summary."""
+    if not log_text:
+        return '<No Output>'
+    lines = log_text.splitlines()
+    total = len(lines)
+    if total <= max_lines:
+        return log_text
+    head = '\n'.join(lines[:max_lines])
+    return f'{head}\n... ({total - max_lines} more lines, {total} total)'
+
+
+def generate_spawn_dump(spike_train, depth=0, summary=False):
+    """Generator that streams the execution context of a SpikeTrain and its subgraphs.
+
+    Args:
+        spike_train: The SpikeTrain instance to dump.
+        depth: Current recursion depth (for indentation).
+        summary: If True, truncates logs and blackboard for reviewable output.
+    """
     indent = '    ' * depth
 
-    yield f'{indent}SPAWN EXPORT {"(SUBGRAPH)" if depth > 0 else ""}\n'
+    yield f'{indent}SPAWN EXPORT {"(SUBGRAPH)" if depth > 0 else ""}{"  [SUMMARY]" if summary and depth == 0 else ""}\n'
     yield f'{indent}================================================================================\n'
     yield f'{indent}SpikeTrain ID:   {spike_train.id}\n'
     yield f'{indent}NeuralPathway:  {spike_train.pathway.name if spike_train.pathway else "Deleted"}\n'
@@ -57,30 +75,33 @@ def generate_spawn_dump(spike_train, depth=0):
         yield f'{indent}Command:    {cmd_str}\n'
         yield f'{indent}Result RC:  {spike.result_code}\n'
 
-        # Output the exact Blackboard state!
+        # Output the Blackboard state
         if spike.blackboard:
-            yield f'{indent}Blackboard: {json.dumps(spike.blackboard)}\n'
+            bb_text = json.dumps(spike.blackboard)
+            if summary and len(bb_text) > 500:
+                bb_text = bb_text[:500] + f'... ({len(bb_text)} chars total)'
+            yield f'{indent}Blackboard: {bb_text}\n'
 
         yield f'\n{indent}[SPELL LOG (Tool Output)]\n'
         yield f'{indent}-------------------------\n'
-        if spike.application_log:
-            yield spike.application_log
+        if summary:
+            yield _truncate_log(spike.application_log, max_lines=20)
         else:
-            yield '<No Output>'
+            yield spike.application_log if spike.application_log else '<No Output>'
         yield '\n'
 
         yield f'\n{indent}[EXECUTION LOG (System)]\n'
         yield f'{indent}------------------------\n'
-        if spike.execution_log:
-            yield spike.execution_log
+        if summary:
+            yield _truncate_log(spike.execution_log, max_lines=10)
         else:
-            yield '<No System Logs>'
+            yield spike.execution_log if spike.execution_log else '<No System Logs>'
         yield '\n'
         yield '\n'
         yield f'{indent}================================================================================\n\n'
         child_trains = spike.child_trains.all().order_by('created')
         for child in child_trains:
-            yield from generate_spawn_dump(child, depth + 1)
+            yield from generate_spawn_dump(child, depth + 1, summary=summary)
 
 
 class SpikeTrainDownloadView(View):
@@ -88,11 +109,14 @@ class SpikeTrainDownloadView(View):
 
     def get(self, request, pk):
         spike_train = get_object_or_404(SpikeTrain, pk=pk)
+        summary = request.GET.get('summary', 'false').lower() == 'true'
 
         response = StreamingHttpResponse(
-            generate_spawn_dump(spike_train), content_type='text/plain'
+            generate_spawn_dump(spike_train, summary=summary),
+            content_type='text/plain',
         )
 
-        filename = f'Spawn_{str(spike_train.id)[:8]}_{spike_train.status.name}.log'
+        mode_tag = '_summary' if summary else ''
+        filename = f'Spawn_{str(spike_train.id)[:8]}_{spike_train.status.name}{mode_tag}.log'
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
