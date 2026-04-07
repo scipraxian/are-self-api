@@ -9,6 +9,7 @@ from litellm.exceptions import APIConnectionError, NotFoundError, RateLimitError
 
 from central_nervous_system.models import Spike, SpikeStatus
 from central_nervous_system.utils import resolve_environment_context
+from common.constants import CONTENT, HUMAN_TAG, ROLE, USER
 from environments.variable_renderer import VariableRenderer
 from frontal_lobe.constants import FrontalLobeConstants
 from frontal_lobe.models import (
@@ -26,8 +27,6 @@ from temporal_lobe.models import IterationShiftParticipant
 logger = logging.getLogger(__name__)
 
 STATUS_ID = 'status_id'
-ROLE = 'role'
-CONTENT = 'content'
 MODEL_USAGE_RECORD = 'model_usage_record'
 
 
@@ -236,7 +235,12 @@ class FrontalLobe:
                 )
 
         if self.session.swarm_message_queue:
-            # Append all queued messages to this turn's context
+            # Tag human messages with <<h>> so river_of_six replays them.
+            # Addon-injected user messages have no tag and get skipped
+            # on history reconstruction (the addon re-injects fresh).
+            for msg in self.session.swarm_message_queue:
+                if msg.get(ROLE) == USER and msg.get(CONTENT):
+                    msg[CONTENT] = HUMAN_TAG + '\n' + msg[CONTENT]
             all_messages.extend(self.session.swarm_message_queue)
             self.session.swarm_message_queue = []
             await sync_to_async(self.session.save)(

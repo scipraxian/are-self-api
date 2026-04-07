@@ -11,6 +11,7 @@ from peripheral_nervous_system.api import (
 from peripheral_nervous_system.autonomic_nervous_system import (
     CeleryBeatViewSet,
     CeleryWorkerViewSet,
+    SystemControlViewSet,
 )
 
 V2_PNS_ROUTER = routers.SimpleRouter()
@@ -24,6 +25,12 @@ V2_PNS_ROUTER.register(
     r'celery-workers',
     CeleryWorkerViewSet,
     basename='celery-workers',
+)
+
+V2_PNS_ROUTER.register(
+    r'system-control',
+    SystemControlViewSet,
+    basename='system-control',
 )
 
 V2_PNS_ROUTER.register(

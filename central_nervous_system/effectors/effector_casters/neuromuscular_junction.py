@@ -14,6 +14,9 @@ from django.conf import settings
 from central_nervous_system.effectors.effector_casters.begin_play_node import (
     begin_play,
 )
+from central_nervous_system.effectors.effector_casters.debug_node import (
+    debug_node,
+)
 from central_nervous_system.effectors.effector_casters.effector_handlers.version_metadata_handler import (
     update_version_metadata,
 )
@@ -62,6 +65,7 @@ BLACKBOARD_SET_STRIPPER = re.compile(
 # Instead use a management command with a effector. This is for special cases.
 NATIVE_HANDLERS = dict(
     begin_play=begin_play,
+    debug_node=debug_node,
     update_version_metadata=update_version_metadata,  # TODO: move to management
     scan_and_register=scan_and_register,  # TODO: move to management
     pathway_logic_neuron=pathway_logic_node,
@@ -100,7 +104,8 @@ def check_channel_layer_config():
             )
         else:
             logger.debug(
-                '[CHANNEL_LAYER] CHANNEL_LAYERS config: %s', settings.CHANNEL_LAYERS
+                '[CHANNEL_LAYER] CHANNEL_LAYERS config: %s',
+                settings.CHANNEL_LAYERS,
             )
 
             # Check if using InMemoryChannelLayer (won't work across processes)
@@ -114,7 +119,8 @@ def check_channel_layer_config():
                 )
     else:
         logger.debug(
-            '[CHANNEL_LAYER] Channel layer initialized: %s', type(channel_layer).__name__
+            '[CHANNEL_LAYER] Channel layer initialized: %s',
+            type(channel_layer).__name__,
         )
 
     return channel_layer
@@ -186,7 +192,9 @@ class AsyncLogManager:
 
         # Capture current buffered chunks before mutating spike fields
         exec_chunk = ''.join(self.exec_buffer) if self.exec_buffer else ''
-        application_chunk = ''.join(self.application_buffer) if self.application_buffer else ''
+        application_chunk = (
+            ''.join(self.application_buffer) if self.application_buffer else ''
+        )
 
         if self.exec_buffer:
             self.spike.execution_log += exec_chunk
@@ -255,7 +263,9 @@ class AsyncLogManager:
             raise
         except Exception as e:
             logger.error(
-                'Failed to save execution log for Spike %s: %s', self.spike.id, e
+                'Failed to save execution log for Spike %s: %s',
+                self.spike.id,
+                e,
             )
 
 
@@ -528,6 +538,13 @@ class NeuroMuscularJunction:
         if not handler_func:
             raise NotImplementedError(f'No handler found for slug: {slug}')
 
+        logger.info(
+            '[NMJ] Spike %s executing native handler: %s (effector=%s)',
+            self.spike_id,
+            slug,
+            self.effector.name,
+        )
+
         await self.logger.flush()
 
         try:
@@ -569,7 +586,7 @@ class NeuroMuscularJunction:
 
     def _log_info(self, message: str):
         if self.verbose_logging:
-            logger.debug(message)
+            logger.info('[NMJ] Spike %s: %s', self.spike_id, message)
 
     async def _save_head(self, fields: List[str]):
         """Async wrapper for saving specific fields."""
@@ -577,7 +594,10 @@ class NeuroMuscularJunction:
             await sync_to_async(self.spike.save)(update_fields=fields)
         except Exception as e:
             logger.error(
-                'Failed to save Spike %s fields %s: %s', self.spike.id, fields, e
+                'Failed to save Spike %s fields %s: %s',
+                self.spike.id,
+                fields,
+                e,
             )
 
     async def _update_status(self, status_id: int):
@@ -603,6 +623,7 @@ class NeuroMuscularJunction:
                 vesicle={'status_id': status_id},
             )
 
+        self.status = status_id
         await fire_neurotransmitter(transmitter)
 
     async def _preflight(self):

@@ -5,8 +5,10 @@ from .api import (
     ContextVariableViewSet,
     EnvironmentStatusViewSet,
     EnvironmentTypeViewSet,
-    ProjectEnvironmentViewSet,
+    ExecutableArgumentAssignmentViewSet,
+    ExecutableArgumentViewSet,
     ExecutableViewSet,
+    ProjectEnvironmentViewSet,
 )
 
 # Define a specific router for this app
@@ -19,3 +21,5 @@ ENVIRONMENTS_ROUTER.register(r'context-variables', ContextVariableViewSet)
 ENVIRONMENTS_ROUTER.register(r'context-keys', ContextKeyViewSet)
 ENVIRONMENTS_ROUTER.register(r'environment-types', EnvironmentTypeViewSet)
 ENVIRONMENTS_ROUTER.register(r'environment-statuses', EnvironmentStatusViewSet)
+ENVIRONMENTS_ROUTER.register(r'executable-arguments', ExecutableArgumentViewSet)
+ENVIRONMENTS_ROUTER.register(r'executable-argument-assignments', ExecutableArgumentAssignmentViewSet)

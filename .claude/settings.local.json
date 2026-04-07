@@ -9,7 +9,16 @@
       "Bash(ls C:/talos/frontal_lobe/views*)",
       "Bash(ls C:/talos/frontal_lobe/urls*)",
       "Bash(ls C:/talos/peripheral_nervous_system/views*)",
-      "Bash(ls C:/talos/peripheral_nervous_system/urls*)"
+      "Bash(ls C:/talos/peripheral_nervous_system/urls*)",
+      "Bash(venv/Scripts/pytest central_nervous_system/tests/test_logic_node.py)",
+      "Bash(venv/Scripts/pytest central_nervous_system/tests/test_logic_node.py::RetryModeTest::test_first_iteration_returns_success -v)",
+      "Bash(venv/Scripts/pytest central_nervous_system/tests/test_logic_node.py::RetryModeTest::test_first_iteration_returns_success -v --tb=long)",
+      "Bash(venv/Scripts/pytest central_nervous_system/tests/test_logic_node.py -v)",
+      "Bash(./venv/Scripts/pytest --tb=short)",
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Bash(ls identity/migrations/*.py)",
+      "Bash(./venv/Scripts/pytest frontal_lobe/tests/test_narrative_dump.py -x --tb=short)",
+      "Bash(./venv/Scripts/pytest parietal_lobe/parietal_mcp/mcp_ticket_functions/tests/test_mcp_ticket_search.py central_nervous_system/tests/test_logic_node.py -x --tb=short)"
     ]
   }
 }

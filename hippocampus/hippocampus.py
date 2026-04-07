@@ -15,7 +15,7 @@ from django.db.models import Count
 from pgvector.django import CosineDistance
 
 from central_nervous_system.models import Spike
-from frontal_lobe.models import ModelRegistry, ReasoningSession, ReasoningTurn
+from frontal_lobe.models import NOMIC_EMBED_TEXT_MODEL, ReasoningSession, ReasoningTurn
 from frontal_lobe.synapse import OllamaClient
 from hippocampus.models import Engram, EngramTag
 
@@ -352,10 +352,7 @@ class Hippocampus(object):
         relevance: float = 1.0,
     ) -> 'HippocampusMemoryYield':
         """Acts as CREATE. Notes its action in docstring."""
-        registry = await sync_to_async(ModelRegistry.objects.get)(
-            id=ModelRegistry.NOMIC_EMBED_TEXT
-        )
-        client = OllamaClient(registry.name)
+        client = OllamaClient(NOMIC_EMBED_TEXT_MODEL)
         text_payload = f'Title: {title}\nFact: {fact}'
         embedding = await sync_to_async(client.embed)(text_payload)
 
@@ -381,10 +378,7 @@ class Hippocampus(object):
         combined_text = f'{existing_desc}\n\n[UPDATE]: {additional_fact}'
         text_payload = f'Title: {engram_title}\nFact: {combined_text}'
 
-        registry = await sync_to_async(ModelRegistry.objects.get)(
-            name='nomic-embed-text'
-        )
-        client = OllamaClient(registry.name)
+        client = OllamaClient(NOMIC_EMBED_TEXT_MODEL)
         embedding = await sync_to_async(client.embed)(text_payload)
 
         return await sync_to_async(_update_sync)(

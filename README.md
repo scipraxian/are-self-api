@@ -120,6 +120,27 @@ See [TASKS.md](TASKS.md) for what's next.
 - **Embeddings:** nomic-embed-text (768-dim, runs locally via Ollama)
 - **Real-time:** Django Channels (WebSocket) with typed neurotransmitter events
 
+## Built With
+
+Are-Self stands on the shoulders of these projects and communities:
+
+| Project | Role in Are-Self |
+|---|---|
+| [Ollama](https://ollama.com) | Local model inference — the engine that makes "AI on your hardware" real |
+| [LiteLLM](https://github.com/BerriAI/litellm) | Universal LLM routing — one interface for every model provider |
+| [OpenRouter](https://openrouter.ai) | Cloud failover when local isn't enough |
+| [Gemma](https://ai.google.dev/gemma) | Tool-calling workhorse from Google DeepMind |
+| [Llama](https://llama.meta.com) | The model family that opened the floodgates |
+| [Mistral](https://mistral.ai) | Efficient models that punch above their weight |
+| [Qwen](https://github.com/QwenLM/Qwen) | Multilingual reasoning and strong tool use |
+| [nomic-embed-text](https://huggingface.co/nomic-ai/nomic-embed-text-v1.5) | 768-dim embeddings powering the Hippocampus memory system |
+| [Django](https://www.djangoproject.com) | Backend framework — the skeleton of the brain |
+| [React](https://react.dev) | Frontend UI ([are-self-ui](https://github.com/scipraxian/are-self-ui)) |
+| [Celery](https://docs.celeryq.dev) + [Redis](https://redis.io) | Task orchestration and message brokering |
+| [PostgreSQL](https://www.postgresql.org) + [pgvector](https://github.com/pgvector/pgvector) | Relational storage + vector similarity search |
+
+Full acknowledgments with details: [are-self.com/docs/acknowledgments](https://are-self.com/docs/acknowledgments)
+
 ## License
 
 MIT. Free as in freedom, free as in beer.
