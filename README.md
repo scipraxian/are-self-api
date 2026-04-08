@@ -9,6 +9,14 @@ The architecture is modeled after the human brain. Each component maps to a real
 actually does. This isn't a metaphor for marketing — it's a design principle that makes the system teachable,
 debuggable, and honest about what each piece is responsible for.
 
+## 📺 See It In Action
+
+[![Are-Self — The Grid Is Free](https://img.youtube.com/vi/UUX-T2aTZlI/maxresdefault.jpg)](https://youtu.be/UUX-T2aTZlI)
+
+**Full documentation, guides, and FAQ:** [are-self.com](https://are-self.com)
+
+---
+
 ## Why This Exists
 
 AI shouldn't require a credit card or a computer science degree. Are-Self is built so that a student with a laptop and
@@ -172,6 +180,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for how the brain regions connect.
 See [GETTING_STARTED.md](GETTING_STARTED.md) for a hands-on walkthrough.
 See [FEATURES.md](FEATURES.md) for a complete list of what's built.
 See [TASKS.md](TASKS.md) for what's next.
+See [are-self.com](https://are-self.com) for the full documentation site with guides, FAQ, and videos.
 
 ## Stack
 
