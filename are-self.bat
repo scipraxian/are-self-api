@@ -40,7 +40,11 @@ start "Are-Self Django Server" cmd /k ".\venv\Scripts\python.exe manage.py runse
 timeout /t 3 >nul
 echo Start RJS Server
 start "RJS Server" cmd /k "cd /d c:\Users\micha\are-self\are-self-ui\ && npm run dev"
-start "" "http://localhost:5173"
+if exist "C:\Program Files\Google\Chrome\Application\chrome.exe" (
+    start "" "C:\Program Files\Google\Chrome\Application\chrome.exe" --app=http://localhost:5173
+) else (
+    start "" "http://localhost:5173"
+)
 
 
 :: If runserver exits, pause so we can see the error
