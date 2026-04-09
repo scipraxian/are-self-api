@@ -22,6 +22,11 @@ class Command(BaseCommand):
             help='Force description remap and re-vectorize ALL models.',
         )
         parser.add_argument(
+            '--allow-new-taxonomy',
+            action='store_true',
+            help='Allow creation of new taxonomy records (families, creators, roles, quantizations, tags, versions).',
+        )
+        parser.add_argument(
             '--semantics-only',
             action='store_true',
             help='Skip LiteLLM sync and only run the OpenRouter semantic enrichment.',
@@ -30,6 +35,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         use_cache = options['use_cache']
         force_rebuild = options['force_rebuild']
+        allow_new_taxonomy = options['allow_new_taxonomy']
         semantics_only = options['semantics_only']
 
         self.stdout.write(self.style.NOTICE('Waking up the Hypothalamus...'))
@@ -41,7 +47,9 @@ class Command(BaseCommand):
                 )
                 modified_ids = (
                     Hypothalamus.enrich_model_semantics_from_openrouter(
-                        use_local_cache=use_cache, force_rebuild=force_rebuild
+                        use_local_cache=use_cache,
+                        force_rebuild=force_rebuild,
+                        allow_new_taxonomy=allow_new_taxonomy,
                     )
                 )
                 if modified_ids:
@@ -51,7 +59,9 @@ class Command(BaseCommand):
                 )
             else:
                 sync_log = Hypothalamus.sync_catalog(
-                    use_local_cache=use_cache, force_rebuild=force_rebuild
+                    use_local_cache=use_cache,
+                    force_rebuild=force_rebuild,
+                    allow_new_taxonomy=allow_new_taxonomy,
                 )
                 if sync_log:
                     self.stdout.write(self.style.SUCCESS('Sync Complete!'))

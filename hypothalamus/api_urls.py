@@ -12,6 +12,7 @@ from .api import (
     AIModelRolesViewSet,
     AIModelSelectionFilterViewSet,
     AIModelSyncLogViewSet,
+    AIModelSyncReportViewSet,
     AIModelTagsViewSet,
     AIModelViewSet,
     AIModeViewSet,
@@ -34,6 +35,7 @@ V2_HYPOTHALAMUS_ROUTER.register(
 )
 V2_HYPOTHALAMUS_ROUTER.register('sync-status', SyncStatusViewSet)
 V2_HYPOTHALAMUS_ROUTER.register('sync-logs', AIModelSyncLogViewSet)
+V2_HYPOTHALAMUS_ROUTER.register('sync-reports', AIModelSyncReportViewSet)
 V2_HYPOTHALAMUS_ROUTER.register('model-ratings', AIModelRatingViewSet)
 V2_HYPOTHALAMUS_ROUTER.register('failover-types', FailoverTypeViewSet)
 V2_HYPOTHALAMUS_ROUTER.register('failover-strategies', FailoverStrategyViewSet)

@@ -2,7 +2,18 @@
 
 Remaining work, sifted for the backend. See FEATURES.md for what's built.
 
-## Top Priority — Release Day Documentation (April 6, 2026)
+## Release Day Update (April 7, 2026)
+
+**Gemma4 rollback:** Gemma4 changed its output format, breaking the Frontal Lobe reasoning loop.
+Empirical testing showed Qwen outperformed Gemma4 on the Are-Self framework. Rolled back to Qwen
+for release. A parser is being developed to handle Gemma4's new output format post-release.
+
+**OpenRouter sync restored:** The OpenRouter provider sync feature has been brought back but is
+untested. Shipping with this feature enabled — needs documentation in are-self-docs.
+
+**READMEs updated:** All four repo READMEs have been updated for release.
+
+## Top Priority — Release Day Documentation (April 7, 2026)
 
 Documentation is the release-day focus. The Docusaurus site has 34 solid pages and 11 UI walkthrough
 stubs. See "Ship-Blocking — Documentation Infrastructure" below. Docstrings and drf-spectacular are

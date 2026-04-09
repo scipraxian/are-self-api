@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import time
@@ -148,6 +149,122 @@ def normalize_tool_calls(message: Any) -> List[Dict[str, Any]]:
         else tc
         for tc in tool_calls
     ]
+
+
+TOOL_CALLS_KEY = 'tool_calls'
+TOOL_KEY = 'tool'
+PARAMS_KEY = 'params'
+FUNCTION_KEY = 'function'
+NAME_KEY = 'name'
+ARGUMENTS_KEY = 'arguments'
+
+
+def _normalize_arguments(args: Any) -> dict:
+    """Ensures tool arguments are always a dict."""
+    if isinstance(args, str):
+        try:
+            return json.loads(args)
+        except (json.JSONDecodeError, TypeError):
+            return {}
+    if isinstance(args, dict):
+        return args
+    return {}
+
+
+def _recover_from_tool_calls_array(
+    parsed: dict,
+) -> list[dict[str, Any]]:
+    """Recovers from OpenAI-style tool_calls array in text content.
+
+    Handles: {"tool_calls": [{"function": {"name": "x", "arguments": {}}}]}
+    """
+    raw_calls = parsed.get(TOOL_CALLS_KEY)
+    if not isinstance(raw_calls, list) or not raw_calls:
+        return []
+
+    recovered = []
+    for call in raw_calls:
+        if not isinstance(call, dict):
+            continue
+        func = call.get(FUNCTION_KEY)
+        if not isinstance(func, dict):
+            continue
+        if not func.get(NAME_KEY):
+            continue
+        func[ARGUMENTS_KEY] = _normalize_arguments(
+            func.get(ARGUMENTS_KEY, {})
+        )
+        recovered.append(call)
+    return recovered
+
+
+def _recover_from_flat_tool_key(
+    parsed: dict,
+) -> list[dict[str, Any]]:
+    """Recovers from flat tool/params format in text content.
+
+    Handles: {"tool": "mcp_x", "params": {"arg": "val"}}
+    Normalizes into standard tool_calls structure.
+    """
+    tool_name = parsed.get(TOOL_KEY)
+    if not isinstance(tool_name, str) or not tool_name:
+        return []
+
+    args = _normalize_arguments(parsed.get(PARAMS_KEY, {}))
+    return [
+        {
+            'id': 'recovered_call',
+            'type': 'function',
+            FUNCTION_KEY: {
+                NAME_KEY: tool_name,
+                ARGUMENTS_KEY: args,
+            },
+        }
+    ]
+
+
+def recover_tool_calls_from_content(
+    content: str,
+) -> list[dict[str, Any]]:
+    """Recovers tool calls when a model emits them as JSON text content.
+
+    Some models (notably Gemma4) occasionally emit tool call JSON as plain
+    text instead of using the native structured tool-calling interface.
+    This function attempts to parse that content and extract valid tool
+    calls, preventing unnecessary session halts.
+
+    Supports two known failure patterns:
+    1. OpenAI-style: {"tool_calls": [{"function": {"name": ...}}]}
+    2. Flat format: {"tool": "mcp_x", "params": {...}}
+
+    Returns a list of normalized tool-call dicts, or an empty list if the
+    content is not parseable tool-call JSON.
+    """
+    if not content or not content.strip().startswith('{'):
+        return []
+
+    try:
+        parsed = json.loads(content)
+    except (json.JSONDecodeError, TypeError):
+        return []
+
+    if not isinstance(parsed, dict):
+        return []
+
+    # Strategy 1: OpenAI-style tool_calls array
+    recovered = _recover_from_tool_calls_array(parsed)
+
+    # Strategy 2: Flat {"tool": "name", "params": {...}} format
+    if not recovered:
+        recovered = _recover_from_flat_tool_key(parsed)
+
+    if recovered:
+        logger.info(
+            '[Synapse] Recovered %d tool call(s) from text content.',
+            len(recovered),
+        )
+
+    return recovered
 
 
 def parse_telemetry(usage: Any) -> TelemetryMetrics:

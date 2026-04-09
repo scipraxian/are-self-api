@@ -17,7 +17,10 @@ from frontal_lobe.models import (
     ReasoningStatusID,
     ReasoningTurn,
 )
-from frontal_lobe.synapse_client import SynapseClient
+from frontal_lobe.synapse_client import (
+    SynapseClient,
+    recover_tool_calls_from_content,
+)
 from hypothalamus.hypothalamus import Hypothalamus
 from hypothalamus.models import AIModelProviderUsageRecord
 from identity.addons.addon_registry import ADDON_REGISTRY
@@ -372,7 +375,13 @@ class FrontalLobe:
             )
 
         if content:
-            await self._log_live(f'[{pending_ledger.ai_model.name}] {content}')
+            await self._log_live(
+                f'[{pending_ledger.ai_model.name}] {content}'
+            )
+
+        # Recovery: model emitted tool calls as text content
+        if not tool_calls_data and content:
+            tool_calls_data = recover_tool_calls_from_content(content)
 
         if tool_calls_data and self.parietal_lobe:
             await self._log_live(

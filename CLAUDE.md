@@ -150,13 +150,18 @@ environment-types, environment-statuses
 executable-arguments, executable-argument-assignments
 ```
 
-## Current State (April 5, 2026)
+## Current State (April 7, 2026 — Release Day)
 
-**MIT open-source release: Tuesday, April 7, 2026.** All four repos go public simultaneously.
-DNS for are-self.com and GitHub Pages deployment happen release day. Documentation site
-(Docusaurus) is scaffolded with 30+ pages. Research repo has LaTeX templates and 6 paper
-directories. Samuel Frerichs (apprentice, UPA) is collaborating on the Hippocampus Hypergraph
-Migration paper.
+**MIT open-source release: TODAY.** All four repos going public. DNS via Cloudflare pointing
+are-self.com to GitHub Pages. All READMEs updated. Social media accounts created (scipraxian
+handle across Twitter/X, TikTok, Truth Social, Facebook, Discord, YouTube, Reddit).
+
+**Gemma4 rollback:** Gemma4 changed output format on release day, breaking the Frontal Lobe
+reasoning loop. Empirical testing confirmed Qwen outperforms Gemma4 on Are-Self. Rolled back
+to Qwen. Parser being developed for Gemma4 support post-release.
+
+**OpenRouter sync restored:** `sync_remote` feature brought back (untested). Ships with release.
+Needs documentation in are-self-docs.
 
 **What works:** The full tick cycle runs end-to-end. Identities create, forge into discs,
 get slotted into iterations, pick up tasks, reason autonomously, call tools, form memories.
