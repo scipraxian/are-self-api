@@ -1,4 +1,4 @@
-"""Inbound/outbound message mapping (Layer 4)."""
+"""Inbound/outbound message mapping for gateway orchestrator."""
 
 import logging
 from typing import Any, Optional

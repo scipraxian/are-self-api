@@ -12,7 +12,7 @@ from hippocampus.models import Engram, EngramTag
 
 logger = logging.getLogger(__name__)
 
-HERMES_MEMORY_TAG = 'hermes_memory'
+JULIANNA_MEMORY_TAG = 'julianna_memory'
 MAX_ENTRY_CHARS = 400
 MAX_TOTAL_CHARS = 2000
 SIMILARITY_CUTOFF = 0.90
@@ -28,7 +28,7 @@ def _normalize_collection(raw: str) -> str:
 
 
 def _collection_tags(collection: str) -> Tuple[str, ...]:
-    return (collection, HERMES_MEMORY_TAG)
+    return collection, JULIANNA_MEMORY_TAG
 
 
 def _ensure_tags(names: Tuple[str, ...]) -> List[EngramTag]:

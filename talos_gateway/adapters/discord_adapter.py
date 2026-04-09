@@ -9,8 +9,9 @@ logger = logging.getLogger('talos_gateway.adapters.discord')
 
 
 class DiscordAdapter(object):
-    """Discord adapter: convention API; SDK calls stay isolated here."""
+    """Discord adapter: conventional API; SDK calls stay isolated here."""
 
+    # Placeholder MAX_MESSAGE_LENGTH
     PLATFORM_NAME = 'discord'
     MAX_MESSAGE_LENGTH = 2000
 

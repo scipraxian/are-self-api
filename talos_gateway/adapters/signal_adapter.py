@@ -11,6 +11,7 @@ logger = logging.getLogger('talos_gateway.adapters.signal')
 class SignalAdapter(object):
     """Signal adapter stub."""
 
+    # Placeholder MAX_MESSAGE_LENGTH
     PLATFORM_NAME = 'signal'
     MAX_MESSAGE_LENGTH = 2000
 

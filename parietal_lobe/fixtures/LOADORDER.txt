@@ -1,0 +1,11 @@
+Layer 1 MCP fixtures — load after base parietal_lobe and identity fixtures.
+
+Example:
+
+  python manage.py loaddata parietal_lobe/fixtures/initial_data.json
+  python manage.py loaddata identity/fixtures/initial_data.json
+  python manage.py loaddata parietal_lobe/fixtures/terminal_session_status.json
+  python manage.py loaddata parietal_lobe/fixtures/layer1_tools.json
+  python manage.py loaddata identity/fixtures/layer1_julianna.json
+
+Apply migrations before loaddata so TerminalSessionStatus and TerminalSession tables exist.

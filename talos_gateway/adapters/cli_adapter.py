@@ -12,6 +12,7 @@ logger = logging.getLogger('talos_gateway.adapters.cli')
 class CliAdapter(object):
     """Minimal CLI adapter: stub transport for tests and local dev."""
 
+    # Placeholder MAX_MESSAGE_LENGTH
     PLATFORM_NAME = 'cli'
     MAX_MESSAGE_LENGTH = 4000
 

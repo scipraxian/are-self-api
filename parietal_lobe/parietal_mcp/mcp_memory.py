@@ -1,5 +1,7 @@
 """
 Structured memory entries as Hippocampus Engrams (agent_memory / user_profile).
+
+NOTE: Eventual combined usage with mcp_engram tools.
 """
 from typing import Any, Dict
 
@@ -18,7 +20,9 @@ async def mcp_memory(
     new_content: str = '',
     content_snippet: str = '',
 ) -> Dict[str, Any]:
-    """Add, replace, or remove a tagged memory entry."""
+    """
+    MCP Tool: Add, replace, or remove a tagged memory entry.
+    """
     return await sync_to_async(run_memory_action)(
         action,
         collection,

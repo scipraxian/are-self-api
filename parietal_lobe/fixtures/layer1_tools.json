@@ -482,7 +482,7 @@
     "pk": 38,
     "fields": {
       "created": "2026-04-07T12:00:00Z",
-      "description": "Search ToolCall payloads (PostgreSQL FTS when available).",
+      "description": "Search ToolCall rows and ReasoningTurn ledgers (AIModelProviderUsageRecord JSON). PostgreSQL: ranked FTS (websearch syntax). role_filter: user | assistant | tool | omit for all. Matches include score and role; limit max 10.",
       "modified": "2026-04-07T12:00:00Z",
       "name": "mcp_session_search",
       "is_async": true,
@@ -494,7 +494,7 @@
     "pk": 39,
     "fields": {
       "created": "2026-04-07T12:00:00Z",
-      "description": "Headless Chromium via Playwright. ref is a CSS selector.",
+      "description": "Headless Chromium (Playwright). Snapshot lists @e1, @e2, ... for elements marked data-parietal-browser-ref; use @eN or CSS selector for click/type. Navigate ~30s, interactions ~10s. action=close drops the session page.",
       "modified": "2026-04-07T12:00:00Z",
       "name": "mcp_browser",
       "is_async": true,

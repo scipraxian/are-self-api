@@ -1,4 +1,4 @@
-"""Maps platform channels to reasoning sessions (Layer 4)."""
+"""Maps platform channels to reasoning sessions for gateway orchestrator."""
 
 import logging
 from datetime import timedelta
@@ -38,7 +38,7 @@ class SessionManager(object):
         platform: str,
         channel_id: str,
         _envelope: PlatformEnvelope,
-    ) -> Tuple[GatewaySession, ReasoningSession]:
+    ) -> tuple[GatewaySession, ReasoningSession] | tuple[GatewaySession | None, ReasoningSession]:
         """Return gateway row and reasoning session; create rows when absent."""
         timeout_minutes = int(self.config.get('session_timeout_minutes', 60))
         cutoff = timezone.now() - timedelta(minutes=timeout_minutes)

@@ -11,6 +11,7 @@ logger = logging.getLogger('talos_gateway.adapters.webhook')
 class WebhookAdapter(object):
     """Outbound webhook stub; real HTTP is added in a later phase."""
 
+    # Placeholder MAX_MESSAGE_LENGTH
     PLATFORM_NAME = 'webhook'
     MAX_MESSAGE_LENGTH = 8000
 

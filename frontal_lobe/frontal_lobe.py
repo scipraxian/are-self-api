@@ -222,9 +222,10 @@ class FrontalLobe:
         """
         all_messages: list[dict] = []
 
+        # phase__id then pk so fixture IdentityAddon PKs define order within a phase.
         active_addons = await sync_to_async(list)(
             self.session.identity_disc.addons.select_related('phase').order_by(
-                'phase__id'
+                'phase__id', 'pk'
             )
         )
 

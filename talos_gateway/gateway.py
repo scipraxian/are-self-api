@@ -64,9 +64,9 @@ class GatewayOrchestrator(object):
                 cls = discover_adapter_class(name)
                 self.adapters[name] = cls(platform_cfg)
                 logger.info('[GatewayOrchestrator] Loaded adapter %s.', name)
-            except Exception:
+            except Exception as e:
                 logger.exception(
-                    '[GatewayOrchestrator] Failed to load adapter %s.', name
+                    '[GatewayOrchestrator] Failed to load adapter %s. Exception: %s', name, e
                 )
 
     async def start_all(self) -> None:
@@ -75,10 +75,11 @@ class GatewayOrchestrator(object):
             adapter = self.adapters[name]
             try:
                 await adapter.start()
-            except Exception:
+            except Exception as e:
                 logger.exception(
-                    '[GatewayOrchestrator] adapter.start failed for %s; skip.',
+                    '[GatewayOrchestrator] adapter.start failed for %s; skip. Exception: %s',
                     name,
+                    e,
                 )
                 del self.adapters[name]
 
@@ -87,9 +88,9 @@ class GatewayOrchestrator(object):
         for name, adapter in self.adapters.items():
             try:
                 await adapter.stop()
-            except Exception:
+            except Exception as e:
                 logger.exception(
-                    '[GatewayOrchestrator] adapter.stop failed for %s.', name
+                    '[GatewayOrchestrator] adapter.stop failed for %s. Exception: %s', name, e
                 )
 
     async def handle_inbound(

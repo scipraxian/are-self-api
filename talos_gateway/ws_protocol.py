@@ -30,25 +30,34 @@ def platform_envelope_from_inbound_payload(
     """Build ``PlatformEnvelope`` from validated inbound WebSocket JSON."""
     if data.get('type') != WS_MSG_INBOUND:
         raise ValueError('message type must be inbound')
+
     channel_id = data.get('channel_id')
     message_id = data.get('message_id')
+
     if not channel_id or not isinstance(channel_id, str):
         raise ValueError('channel_id is required and must be a string')
+
     if message_id is None or message_id == '':
         raise ValueError('message_id is required')
+
     content = data.get('content')
     if content is None or not isinstance(content, str):
         raise ValueError('content is required and must be a string')
+
     sender_id = data.get('sender_id') or DEFAULT_SENDER_ID
     sender_name = data.get('sender_name') or DEFAULT_SENDER_NAME
+
     if not isinstance(sender_id, str) or not isinstance(sender_name, str):
         raise ValueError('sender_id and sender_name must be strings when set')
+
     thread_id = data.get('thread_id')
     if thread_id is not None and not isinstance(thread_id, str):
         raise ValueError('thread_id must be a string or null')
+
     reply_to = data.get('reply_to')
     if reply_to is not None and not isinstance(reply_to, str):
         raise ValueError('reply_to must be a string or null')
+
     return PlatformEnvelope(
         platform=CLI_PLATFORM,
         channel_id=channel_id,

@@ -1,4 +1,4 @@
-"""Run the gateway orchestrator (Layer 4 §6.2)."""
+"""Run the gateway orchestrator on separate uvicorn ASGI server to not interfere with FrontalLobe Daphne server."""
 
 import asyncio
 import logging
@@ -27,6 +27,7 @@ async def run_gateway_main_async() -> None:
     await orchestrator.start_all()
     set_active_gateway_orchestrator(orchestrator)
 
+    # Create uvicorn server for adapter handling
     uv_config = Config(
         'config.asgi:application',
         host=host,
@@ -45,8 +46,8 @@ async def run_gateway_main_async() -> None:
     finally:
         try:
             await orchestrator.stop_all()
-        except Exception:
-            logger.exception('[run_gateway] stop_all failed during shutdown.')
+        except Exception as e:
+            logger.exception('[run_gateway] stop_all failed during shutdown. Exception: %s', e)
         clear_active_gateway_orchestrator()
 
 
@@ -54,7 +55,7 @@ class Command(BaseCommand):
     """``python manage.py run_gateway`` — adapters + embedded uvicorn ASGI."""
 
     help = (
-        'Start Are-Self gateway adapters and an ASGI server for the CLI '
+        'Start are-self gateway adapters and an ASGI server for the CLI '
         'WebSocket (blocks until interrupted).'
     )
 
