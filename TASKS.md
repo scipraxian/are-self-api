@@ -19,6 +19,25 @@ Documentation is the release-day focus. The Docusaurus site has 34 solid pages a
 stubs. See "Ship-Blocking — Documentation Infrastructure" below. Docstrings and drf-spectacular are
 also ship-blocking for the API reference.
 
+## Top Priority — Funding & Sponsorship Infrastructure
+
+- [ ] **Set up GitHub FUNDING.yml.** Create `.github/FUNDING.yml` in are-self-api (org-level). Populate
+  with active platform usernames. Platforms to evaluate and set up accounts on:
+  - **GitHub Sponsors** (`github: scipraxian`) — native to where the code lives, lowest friction
+  - **Ko-fi** — no fees on donations, good for one-time tips, easy setup
+  - **Buy Me a Coffee** — similar to Ko-fi, large casual donor base
+  - **Patreon** — recurring memberships, good for building a community tier
+  - **Open Collective** — transparent finances, good for open-source credibility
+  - **Polar** — built for open-source, ties funding to issues/features
+  - **LFX Crowdfunding** — Linux Foundation backed, good for institutional credibility
+  - **Custom links** — PayPal.me, Venmo, or direct donation page on are-self.com
+  Each platform added to FUNDING.yml creates a "Sponsor" button on the GitHub repo. More platforms =
+  more eyeballs. Priority: GitHub Sponsors + Ko-fi first, then expand.
+- [ ] **Add donation/sponsor links to docs site.** Add a "Support Are-Self" page or section to the
+  Docusaurus site with all funding links. Also add to the Discord welcome message.
+- [ ] **Explore 501(c)(3) path with Len Lanzi.** Long-term: tax-deductible donations unlock
+  institutional and grant funding. Len is the nonprofit connection.
+
 ## Top Priority — PNS Expansion
 
 - [ ] **Multiple Ollama endpoints.** Secondary machine running Ollama should be usable. These are

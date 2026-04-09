@@ -102,14 +102,34 @@ class CeleryBeatViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['get'])
     def status(self, request):
-        """Return whether Celery Beat is running (started by this API)."""
+        """Return Beat status plus scheduled periodic tasks."""
+        from django_celery_beat.models import PeriodicTask
+
         pid = _read_beat_pid()
         running = _is_process_running(pid)
         if pid is not None and not running:
             _clear_beat_pid()
+
+        tasks = []
+        for pt in PeriodicTask.objects.filter(enabled=True).order_by('name'):
+            schedule_str = ''
+            if pt.interval:
+                schedule_str = f'every {pt.interval.every} {pt.interval.period}'
+            elif pt.crontab:
+                schedule_str = f'{pt.crontab.minute} {pt.crontab.hour} {pt.crontab.day_of_week}'
+
+            tasks.append({
+                'name': pt.name,
+                'task': pt.task,
+                'schedule': schedule_str,
+                'total_run_count': pt.total_run_count,
+                'last_run_at': pt.last_run_at.isoformat() if pt.last_run_at else None,
+            })
+
         return Response({
             'running': running,
             'pid': pid if running else None,
+            'scheduled_tasks': tasks,
         })
 
     @action(detail=False, methods=['post'])
