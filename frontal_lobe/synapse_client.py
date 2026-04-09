@@ -357,9 +357,31 @@ class SynapseClient:
                         )
                 # Failover
                 return False, []
+            # --- RESOURCE ERRORS (not the provider's fault) ---
+            # OOM / insufficient-memory errors are transient host-resource
+            # issues. Don't penalise the provider — just failover.
+            RESOURCE_ERROR_MARKERS = [
+                'requires more system memory',
+                'out of memory',
+                'insufficient memory',
+                'oom',
+            ]
+            is_resource_error = any(
+                marker in error_str for marker in RESOURCE_ERROR_MARKERS
+            )
+
+            if is_resource_error:
+                if self.ai_model_provider:
+                    self.ai_model_provider.trip_resource_cooldown()
+                logger.warning(
+                    f'[Synapse] RESOURCE ERROR for {self.model_id} — '
+                    f'short cooldown (not the provider\'s fault).\r'
+                    f'Error: {error_type} | Reason: {error_str}...\r'
+                    f'Cooldown until: {getattr(self.ai_model_provider, "rate_limit_reset_time", "N/A")}\r'
+                )
             # --- CIRCUIT BREAKER LOGIC (Temporary Bench - Catch-All) ---
             # If the API failed for ANY other reason (502, 429, timeouts, parsing errors), bench it.
-            if self.ai_model_provider:
+            elif self.ai_model_provider:
                 self.ai_model_provider.trip_circuit_breaker()
 
                 logger.warning(
