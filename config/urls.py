@@ -51,5 +51,5 @@ urlpatterns = [
     path(
         'api-auth/', include('rest_framework.urls', namespace='rest_framework')
     ),
-    path('mcp/', include('djangorestframework_mcp.urls')),
+    path('mcp/', include('mcp_server.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

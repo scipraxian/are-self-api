@@ -53,7 +53,6 @@ INSTALLED_APPS = [
     'occipital_lobe',
     'temporal_lobe',
     'frontal_lobe',
-    'djangorestframework_mcp',
     'rest_framework',
     'django_filters',
     'hippocampus.apps.HippocampusConfig',
