@@ -15,7 +15,10 @@ services:
 
   # 2. The Nervous System (Task Queue)
   redis:
-    image: redis
+    # Pinned to 7.4.2-alpine for CVE-2025-49844 (CVSS 10.0) — RCE in the
+    # Redis server Lua scripting engine. `image: redis` floats to `:latest`
+    # on Docker Hub, which is why we pin. Alpine base keeps the image small.
+    image: redis:7.4.2-alpine
     container_name: are_self_redis
     restart: always
     ports:

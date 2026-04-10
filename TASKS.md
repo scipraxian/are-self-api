@@ -112,15 +112,20 @@ also ship-blocking for the API reference.
   ahead of the 90-day expiry.
 ## Ship-Blocking — Security Remediation (Before Tuesday Release)
 
-- [ ] **Pin Django to >=6.0.2.** CVE-2025-64459 (CVSS 9.1) — SQL injection via QuerySet.filter(). Affects
-  6.0.0 and 6.0.1. Change `Django>=6.0` to `Django>=6.0.2` in requirements.txt.
-- [ ] **Pin LiteLLM to verified-safe version with hash.** Supply chain compromise in March 2026 (versions
-  1.82.7 and 1.82.8 stole cloud credentials). Pin to a post-incident version and use `--hash` verification.
-  Are-Self's default Ollama-only config limits exposure, but cloud users are at risk.
-- [ ] **Update Docker Compose Redis image.** CVE-2025-49844 (CVSS 10.0) — RCE in Redis server Lua engine.
-  Pin to a patched Redis image in docker-compose.yml.
-- [ ] **Pin DRF to >=3.15.2.** CVE-2024-21520 — XSS in break_long_headers filter.
-- [ ] **Remove pygtail from requirements.txt.** Deprecated, not imported anywhere.
+- [x] **~~Pin Django to >=6.0.2.~~** Done — `Django>=6.0.2` is pinned in `requirements.txt` with the
+  CVE-2025-64459 comment.
+- [x] **~~Pin LiteLLM past the supply chain incident.~~** Done — `litellm>=1.83.0` is pinned in
+  `requirements.txt` with a comment calling out the compromised 1.82.7/1.82.8 versions. `--hash`
+  verification is still not in place; if we want hash pinning we can do it as a separate pass.
+- [x] **~~Update Docker Compose Redis image.~~** Done — `docker-compose.yml` now pins
+  `image: redis:7.4.2-alpine` (was `image: redis`, floating to `:latest`). Patched against
+  CVE-2025-49844 (CVSS 10.0 RCE in the Redis server Lua scripting engine). Needs a
+  `docker compose pull redis && docker compose up -d redis` on the live stack to actually
+  swap the running container — the edit alone only affects fresh `up`s.
+- [x] **~~Pin DRF to >=3.15.2.~~** Done — `djangorestframework>=3.15.2` is pinned in `requirements.txt`
+  with the CVE-2024-21520 comment.
+- [x] **~~Remove pygtail from requirements.txt.~~** Done — `pygtail` is no longer in `requirements.txt`.
+  Still referenced in TASKS.md (now this line) and `DEPENDENCY_AUDIT.md` as historical notes only.
 - [ ] **Remove unused packages.** Audit and remove if confirmed: django-htmx (migrated to React),
   scapy (possibly unused), yapf (redundant with Ruff), aiosmtpd (verify usage).
 - [ ] **Separate dev dependencies.** Move pytest, coverage, ruff, isort, yapf, ipython, type stubs,
