@@ -21,7 +21,10 @@ also ship-blocking for the API reference.
 
 ## Top Priority — Funding & Sponsorship Infrastructure
 
-- [ ] **Set up GitHub FUNDING.yml.** Create `.github/FUNDING.yml` in are-self-api (org-level). Populate
+- [ ] **Set up GitHub FUNDING.yml.** _Partially done — `are-self-api/.github/FUNDING.yml` exists with
+  `github: [scipraxian]` active. The other platforms are commented out pending account creation (to
+  avoid GitHub rendering broken Sponsor buttons). Remaining work is account creation + uncommenting,
+  which is out-of-repo._ Create `.github/FUNDING.yml` in are-self-api (org-level). Populate
   with active platform usernames. Platforms to evaluate and set up accounts on:
   - **GitHub Sponsors** (`github: scipraxian`) — native to where the code lives, lowest friction
   - **Ko-fi** — no fees on donations, good for one-time tips, easy setup
@@ -126,10 +129,14 @@ also ship-blocking for the API reference.
   with the CVE-2024-21520 comment.
 - [x] **~~Remove pygtail from requirements.txt.~~** Done — `pygtail` is no longer in `requirements.txt`.
   Still referenced in TASKS.md (now this line) and `DEPENDENCY_AUDIT.md` as historical notes only.
-- [ ] **Remove unused packages.** Audit and remove if confirmed: django-htmx (migrated to React),
-  scapy (possibly unused), yapf (redundant with Ruff), aiosmtpd (verify usage).
-- [ ] **Separate dev dependencies.** Move pytest, coverage, ruff, isort, yapf, ipython, type stubs,
-  playwright into `requirements-dev.txt`.
+- [x] **~~Remove unused packages.~~** Done — audited on April 10, 2026. None of `django-htmx`,
+  `scapy`, `yapf`, or `aiosmtpd` are present in `requirements.txt` or imported anywhere in
+  `are-self-api/`. Only residual references are in TASKS.md and `DEPENDENCY_AUDIT.md` as
+  historical notes.
+- [x] **~~Separate dev dependencies.~~** Done — `requirements-dev.txt` exists and pulls main via
+  `-r requirements.txt`. Contains pytest, pytest-django, pytest-asyncio, coverage, playwright, ruff,
+  isort, ipython, plus a type-stubs block (django-stubs, djangorestframework-stubs, celery-types).
+  yapf correctly absent (redundant with ruff — tracked under the unused-packages audit above).
 - [ ] **Document Ollama security posture.** Users must keep Ollama updated independently. The install
   script should recommend a minimum Ollama version. See DEPENDENCY_AUDIT.md for full CVE list.
 
@@ -165,12 +172,19 @@ also ship-blocking for the API reference.
 - [ ] **Reasoning session pruning.** Pick a turn number and click "Prune" to delete all turns from that
   point to the end of the session.
 - [ ] **Remove synapse module.** Remove synapse entirely in favor of the new synapse_client.
+  _Verified April 10, 2026: `frontal_lobe/synapse.py` still has live importers in `hippocampus/models.py`,
+  `hippocampus/hippocampus.py`, `identity/models.py`, `hypothalamus/models.py`, and
+  `frontal_lobe/synapse_open_router.py` (all pulling `OllamaClient` or `SynapseResponse`). Migration
+  is not safe until those call sites are ported to `synapse_client`._
 - [ ] **Tool call `thought` parameter — make required or improve prompting.** Local models often call
   tools silently (no assistant text). The `thought` parameter exists but isn't required. Either:
   (a) make it required in the tool schema so models must explain themselves, or (b) add system prompt
   instructions demanding tool explanations.
 - [ ] **Remove deprecated `parietal_lobe/registry.py`.** Hardcoded model map still exists. Superseded by
-  Hypothalamus DB-driven routing.
+  Hypothalamus DB-driven routing. _Verified April 10, 2026: file exists on disk but has ZERO importers
+  across the entire `are-self-api/` tree. Safe to `git rm are-self-api/parietal_lobe/registry.py`
+  without touching other code. Sandbox blocked the agent from doing the delete — needs to be done
+  by hand._
 - [ ] **Consolidate and improve MCP engram functions.** The Hippocampus tool functions need cleanup —
   reduce redundancy, improve the interface, make the tool descriptions clearer for small models.
 - [ ] **Fix linters / Ruff configuration.** Ensure linting is consistent across the project. Pin Ruff
@@ -189,9 +203,11 @@ also ship-blocking for the API reference.
 - [ ] **Hypothalamus fixture initial state.** The 4 fixture AIModelProvider records have `is_enabled: true`,
   showing as "Installed" before sync_local runs. Should default to `is_enabled: false` (Available until
   confirmed by sync).
-- [ ] **Share HUMAN_TAG constant.** `HUMAN_TAG = '<<h>>'` lives in `river_of_six_addon.py` but
-  `frontal_lobe.py` uses the raw string `'<<h>>\n'`. Move to a shared constants file. Also use existing
-  `ROLE` constant instead of raw `'user'` string in frontal_lobe.py.
+- [x] **~~Share HUMAN_TAG constant.~~** Done — `HUMAN_TAG` lives in `common.constants` and is imported
+  into `frontal_lobe/frontal_lobe.py` (line 12) alongside `CONTENT`, `ROLE`, and `USER`. Used via
+  `msg[CONTENT] = HUMAN_TAG + '\n' + msg[CONTENT]` in the human-message tagging path. Michael
+  verified `river_of_six_addon.py` also imports from `common.constants` rather than defining its
+  own copy. Fully consolidated.
 - [ ] **IdentityAddonPhase — optional API endpoint.** No ViewSet/router exists for IdentityAddonPhase.
   Frontend hardcodes the 4 phases. If phases ever become user-configurable, a read-only endpoint will
   be needed. Low priority since phases are fixed constants.
