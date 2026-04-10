@@ -197,17 +197,22 @@ also ship-blocking for the API reference.
 
 ## Known Bugs
 
-- [x] **~~Infinite loop on retry LIMIT REACHED.~~** FIXED (April 10, 2026). Root cause was
-  `_process_graph_triggers` unconditionally appending `TYPE_FLOW` to `valid_wire_types` before adding
-  SUCCESS or FAILURE, so any FLOW axon wired from a logic node (Gate, Retry, Delay) always fired
-  alongside the status-driven axon. Fix: added `Effector.LOGIC_EFFECTORS = frozenset({LOGIC_GATE,
-  LOGIC_RETRY, LOGIC_DELAY})` and gated FLOW in `_process_graph_triggers` — logic nodes now emit only
-  SUCCESS or FAILURE; non-logic effectors retain the existing FLOW+SUCCESS / FLOW+FAILURE behavior.
-  Added three regression tests in `central_nervous_system/tests/test_routing.py`:
-  `test_logic_retry_failure_does_not_fire_flow_axon`,
-  `test_logic_gate_success_does_not_fire_flow_axon`, and
-  `test_non_logic_success_still_fires_flow_axon`. **Run locally:**
-  `venv\Scripts\pytest central_nervous_system/tests/test_routing.py -v` on Windows.
+- [ ] **Infinite loop on retry LIMIT REACHED — ROLLED BACK, NEEDS MORE TARGETED FIX.**
+  Attempted fix on April 10, 2026 gated `TYPE_FLOW` on all logic effectors
+  (LOGIC_GATE / LOGIC_RETRY / LOGIC_DELAY) inside `_process_graph_triggers`. This
+  broke real pathways because in practice logic nodes are almost always wired with
+  FLOW axons as the downstream connector — suppressing FLOW meant "logic nodes no
+  longer fire at all." Rolled back the gating; `_process_graph_triggers` again
+  unconditionally appends `AxonType.TYPE_FLOW` to `valid_wire_types` the way it did
+  before. The `Effector.LOGIC_EFFECTORS` constant and the two logic-specific
+  regression tests (`test_logic_retry_failure_does_not_fire_flow_axon`,
+  `test_logic_gate_success_does_not_fire_flow_axon`) were removed with the
+  rollback. Kept `test_non_logic_success_still_fires_flow_axon` as a regression
+  test for the restored always-fire-FLOW behavior. If the retry short-circuit is
+  a real observed issue, the targeted fix is probably narrower: only gate FLOW
+  when `effector_id == LOGIC_RETRY` AND `status_id == FAILED` (the "LIMIT REACHED"
+  path only), leaving gate/delay and retry's happy path untouched. Michael didn't
+  remember this bug, so it may not be reproducible in current pathways.
 
 ## Next Up
 

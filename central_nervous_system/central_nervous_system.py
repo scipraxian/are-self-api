@@ -17,7 +17,6 @@ from .models import (
     AxonType,
     CNSDistributionModeID,
     CNSStatusID,
-    Effector,
     NeuralPathway,
     Neuron,
     NeuronContext,
@@ -298,25 +297,23 @@ class CNS:
     def _process_graph_triggers(self, finished_spike: Spike) -> None:
         """Follows the axons from a finished spike based on Status Logic.
 
-        Logic nodes (LOGIC_GATE, LOGIC_RETRY, LOGIC_DELAY) deterministically
-        return SUCCESS or FAILURE from their own evaluation. FLOW axons
-        wired from a logic node must NOT fire — they would short-circuit
-        the very decision the logic node exists to make (e.g., a retry
-        that hit LIMIT REACHED still firing a downstream "always run"
-        wire). For non-logic effectors FLOW remains an "always fire"
-        wire alongside SUCCESS or FAILURE.
+        FLOW is an "always fire, regardless of result" wire and is appended
+        for every finished spike — including logic nodes. SUCCESS and
+        FAILURE are appended based on terminal status.
+
+        NOTE: A previous fix attempted to gate FLOW on logic nodes
+        (LOGIC_GATE / LOGIC_RETRY / LOGIC_DELAY) to stop retry LIMIT-REACHED
+        failures from also firing a happy-path FLOW wire. That change broke
+        real pathways which depend on FLOW as the downstream connector from
+        logic nodes, so it was rolled back. If the retry short-circuit bug
+        resurfaces, it needs a more targeted fix (e.g. wire retry failures
+        through FAILURE axons in the pathway editor, or gate only
+        LOGIC_RETRY + FAILED — not all logic effectors).
         """
         if not finished_spike.neuron:
             return
 
-        valid_wire_types = []
-
-        is_logic_node = (
-            finished_spike.effector_id is not None
-            and finished_spike.effector_id in Effector.LOGIC_EFFECTORS
-        )
-        if not is_logic_node:
-            valid_wire_types.append(AxonType.TYPE_FLOW)
+        valid_wire_types = [AxonType.TYPE_FLOW]
 
         if finished_spike.status_id == SpikeStatus.SUCCESS:
             valid_wire_types.append(AxonType.TYPE_SUCCESS)
