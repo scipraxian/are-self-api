@@ -65,13 +65,44 @@ also ship-blocking for the API reference.
   IPv6; nginx tries the IPv6 address first, fails (`[fdc4:f303:9324::254]:8000 failed`), and
   falls back to IPv4 successfully. Harmless but noisy. Fix by pinning `resolver` to IPv4 only
   in `nginx/entrypoint.sh`, or by using `host-gateway` with an explicit IPv4 alias.
-- [ ] **Document Cloudflare Tunnel recipe for Cowork users.** Cowork's custom connector flow
-  fetches the MCP endpoint from Anthropic's cloud, which can't reach `127.0.0.1`. Users who
-  want Cowork to drive Are-Self need to stand up their own outbound tunnel. Add a page to
-  `are-self-docs` covering: install `cloudflared`, create a named tunnel, map
-  `<their-subdomain>/mcp` → `https://localhost/mcp`, register the tunnel as a Cloudflare DNS
-  record, then add the public hostname as a Claude connector. Per-user setup only — not a
-  distribution mechanism.
+- [ ] **Set up Cloudflare Tunnel so Cowork can reach the MCP (Michael's personal box).**
+  Cowork's custom connector flow fetches the endpoint from Anthropic's cloud, so `127.0.0.1`
+  is unreachable. Cloudflare Tunnel gives us a publicly-routable hostname backed by an
+  outbound-only connection from the local machine — no router/firewall changes, no public
+  IP exposure. Steps:
+  1. Install `cloudflared` on Windows (MSI from
+     `https://github.com/cloudflare/cloudflared/releases` — `cloudflared-windows-amd64.msi`).
+     Verify: `cloudflared --version`.
+  2. `cloudflared tunnel login` — opens browser, pick `are-self.com`, writes
+     `%USERPROFILE%\.cloudflared\cert.pem` (the account credential).
+  3. `cloudflared tunnel create are-self-mcp` — prints a UUID and writes
+     `%USERPROFILE%\.cloudflared\<uuid>.json` (the tunnel credential).
+  4. Create `%USERPROFILE%\.cloudflared\config.yml`:
+     ```yaml
+     tunnel: are-self-mcp
+     credentials-file: C:\Users\micha\.cloudflared\<uuid>.json
+     ingress:
+       - hostname: mcp.are-self.com
+         service: https://local.are-self.com
+         originRequest:
+           noTLSVerify: false
+       - service: http_status:404
+     ```
+     The origin is `https://local.are-self.com` (not `localhost`) so cloudflared hits the
+     upstream with a hostname that matches our real ZeroSSL cert — strict TLS verify stays on.
+  5. `cloudflared tunnel route dns are-self-mcp mcp.are-self.com` — creates a Cloudflare
+     CNAME to `<uuid>.cfargotunnel.com`. Record is proxied (orange cloud) automatically,
+     which is correct for tunnels (unlike the grey-cloud `local.are-self.com` A record).
+  6. Foreground test: `cloudflared tunnel run are-self-mcp`, then
+     `Invoke-RestMethod -Uri https://mcp.are-self.com/mcp -Method Post -ContentType application/json -Body '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'`
+     should return the same 14 tools as the direct-local probe.
+  7. Service install (runs on boot, no terminal): `cloudflared service install`.
+  8. Add `https://mcp.are-self.com/mcp` as a custom connector in the claude.ai Connectors
+     UI. Are-Self must be running (`are-self.bat` + `docker compose up -d`) for Cowork to
+     get responses — tunnel alone doesn't start the stack.
+  **Per-user only.** This is not a distribution mechanism; each Are-Self user who wants
+  Cowork access would have to run their own tunnel with their own subdomain. A real
+  shareable "Cowork connects to Are-Self" story is still open and is NOT this task.
 - [ ] **Repo cert distribution decision.** Currently `nginx/certs/cert.pem` + `key.pem` live
   outside git. Michael plans to ship the ZeroSSL cert + key in the repo so the 10yo target
   user doesn't have to re-issue one — the cert is for `local.are-self.com` which resolves to
