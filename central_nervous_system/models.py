@@ -164,6 +164,11 @@ class Effector(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
     FRONTAL_LOBE = 8
     DEBUG = 9
 
+    # Logic nodes evaluate status deterministically and fire SUCCESS or
+    # FAILURE only. FLOW axons must NOT fire from these — see
+    # CNS._process_graph_triggers.
+    LOGIC_EFFECTORS = frozenset({LOGIC_GATE, LOGIC_RETRY, LOGIC_DELAY})
+
     executable = models.ForeignKey(
         Executable, on_delete=models.PROTECT, default=1
     )

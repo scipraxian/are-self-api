@@ -170,11 +170,15 @@ also ship-blocking for the API reference.
   reduce redundancy, improve the interface, make the tool descriptions clearer for small models.
 - [ ] **Fix linters / Ruff configuration.** Ensure linting is consistent across the project. Pin Ruff
   config, resolve any conflicting rules.
-- [ ] **Migrate shutdown endpoint out of dashboard.** The shutdown action exists in `dashboard/api.py`
-  (`celery_app.control.shutdown()` + delayed Django process kill). Needs to move to a non-deprecated app
-  (PNS or config) before `dashboard/` is removed. Add a restart endpoint. Frontend buttons needed
-  (tracked in UI tasks). Without this, developers must manually kill/restart Celery workers when deploying
-  code changes — stale workers run old native handlers and produce confusing errors.
+- [ ] **Rename `system-control` endpoint — off style guide.** "System Control" violates the biological
+  naming rule (mechanical/military). Candidates: `homeostasis`, `brainstem`, `medulla`, `autonomic`.
+  Coordinated rename with frontend (`SystemControlPanel` → matching name). Frontend task filed under
+  are-self-ui/TASKS.md.
+- [x] **~~Migrate shutdown endpoint out of dashboard.~~** Canonical endpoint lives at
+  `/api/v2/system-control/` (`peripheral_nervous_system/autonomic_nervous_system.py::SystemControlViewSet`)
+  with shutdown, restart, and status actions. Deprecated shim in `dashboard/api.py` has been removed along
+  with its now-unused imports (`os`, `threading`, `time`, `celery_app`, `AllowAny`-only permission). The
+  `/api/v2/system-control/` URL rename (off biological style guide) is tracked separately above.
 - [ ] **Standardize API URLs to hyphens.** Legacy underscore routes: `engram_tags`, `reasoning_sessions`,
   `reasoning_turns`, `nerve_terminal_*`. Coordinated with frontend — both repos change together.
 - [ ] **Hypothalamus fixture initial state.** The 4 fixture AIModelProvider records have `is_enabled: true`,
@@ -193,13 +197,17 @@ also ship-blocking for the API reference.
 
 ## Known Bugs
 
-- [ ] **Infinite loop on retry LIMIT REACHED.** The retry logic node correctly returns 500 (LIMIT
-  REACHED), firing the FAILURE axon. BUT if the graph has a FLOW axon (type 1) from the retry neuron to
-  a downstream node, that FLOW wire ALSO fires — because FLOW axons fire regardless of spike status. The
-  bug is deeper than stale wires. Investigate `_process_graph_triggers` in
-  `central_nervous_system/central_nervous_system.py` — when a logic node (effector PKs 5, 6, 7) finishes,
-  FLOW axons should NOT fire. Only SUCCESS or FAILURE should fire based on the result code. This is the
-  #1 bug.
+- [x] **~~Infinite loop on retry LIMIT REACHED.~~** FIXED (April 10, 2026). Root cause was
+  `_process_graph_triggers` unconditionally appending `TYPE_FLOW` to `valid_wire_types` before adding
+  SUCCESS or FAILURE, so any FLOW axon wired from a logic node (Gate, Retry, Delay) always fired
+  alongside the status-driven axon. Fix: added `Effector.LOGIC_EFFECTORS = frozenset({LOGIC_GATE,
+  LOGIC_RETRY, LOGIC_DELAY})` and gated FLOW in `_process_graph_triggers` — logic nodes now emit only
+  SUCCESS or FAILURE; non-logic effectors retain the existing FLOW+SUCCESS / FLOW+FAILURE behavior.
+  Added three regression tests in `central_nervous_system/tests/test_routing.py`:
+  `test_logic_retry_failure_does_not_fire_flow_axon`,
+  `test_logic_gate_success_does_not_fire_flow_axon`, and
+  `test_non_logic_success_still_fires_flow_axon`. **Run locally:**
+  `venv\Scripts\pytest central_nervous_system/tests/test_routing.py -v` on Windows.
 
 ## Next Up
 

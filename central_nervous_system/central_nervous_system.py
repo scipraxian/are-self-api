@@ -17,6 +17,7 @@ from .models import (
     AxonType,
     CNSDistributionModeID,
     CNSStatusID,
+    Effector,
     NeuralPathway,
     Neuron,
     NeuronContext,
@@ -50,7 +51,17 @@ class CNS:
         self,
         pathway_id: Optional[uuid.UUID] = None,
         spike_train_id: Optional[uuid.UUID] = None,
+        seed_blackboard: Optional[Dict[str, Any]] = None,
     ):
+        # Seed blackboard is merged into the blackboard of root spikes at
+        # dispatch time. Lets external callers (MCP launch_spike_train,
+        # Celery tasks, test harnesses) pre-load context before the graph
+        # starts firing. Ignored when resuming an existing SpikeTrain by
+        # id — the caller is joining an already-seeded train.
+        self._seed_blackboard: Dict[str, Any] = (
+            dict(seed_blackboard) if seed_blackboard else {}
+        )
+
         if spike_train_id:
             self.spike_train = SpikeTrain.objects.get(id=spike_train_id)
         elif pathway_id:
@@ -285,12 +296,27 @@ class CNS:
             self._create_spike_from_node(node, provenance=None)
 
     def _process_graph_triggers(self, finished_spike: Spike) -> None:
-        """Follows the axons from a finished spike based on Status Logic."""
+        """Follows the axons from a finished spike based on Status Logic.
+
+        Logic nodes (LOGIC_GATE, LOGIC_RETRY, LOGIC_DELAY) deterministically
+        return SUCCESS or FAILURE from their own evaluation. FLOW axons
+        wired from a logic node must NOT fire — they would short-circuit
+        the very decision the logic node exists to make (e.g., a retry
+        that hit LIMIT REACHED still firing a downstream "always run"
+        wire). For non-logic effectors FLOW remains an "always fire"
+        wire alongside SUCCESS or FAILURE.
+        """
         if not finished_spike.neuron:
             return
 
         valid_wire_types = []
-        valid_wire_types.append(AxonType.TYPE_FLOW)
+
+        is_logic_node = (
+            finished_spike.effector_id is not None
+            and finished_spike.effector_id in Effector.LOGIC_EFFECTORS
+        )
+        if not is_logic_node:
+            valid_wire_types.append(AxonType.TYPE_FLOW)
 
         if finished_spike.status_id == SpikeStatus.SUCCESS:
             valid_wire_types.append(AxonType.TYPE_SUCCESS)
@@ -337,7 +363,7 @@ class CNS:
     def _create_spike_from_node(
         self, neuron: Neuron, provenance: Optional[Spike]
     ):
-        starting_blackboard = {}
+        starting_blackboard: Dict[str, Any] = {}
 
         if provenance:
             starting_blackboard = copy.deepcopy(provenance.blackboard)
@@ -351,6 +377,11 @@ class CNS:
             for arg in node_args:
                 if arg.key:
                     starting_blackboard[arg.key] = arg.value
+        elif self._seed_blackboard:
+            # Fresh root spike launched with a pre-loaded blackboard
+            # (e.g. from MCP launch_spike_train). Seed wins at the root
+            # and then flows down-graph the normal way via provenance.
+            starting_blackboard = copy.deepcopy(self._seed_blackboard)
 
         seed_spike = Spike.objects.create(
             spike_train=self.spike_train,
