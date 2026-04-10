@@ -27,12 +27,8 @@ DAPHNE_PORT="${DAPHNE_PORT:-8000}"
 UI_HOST="${UI_HOST:-host.docker.internal}"
 UI_PORT="${UI_PORT:-5173}"
 
-DOCS_HOST="${DOCS_HOST:-host.docker.internal}"
-DOCS_PORT="${DOCS_PORT:-3000}"
-
 DAPHNE_UPSTREAM="http://${DAPHNE_HOST}:${DAPHNE_PORT}"
 UI_UPSTREAM="http://${UI_HOST}:${UI_PORT}"
-DOCS_UPSTREAM="http://${DOCS_HOST}:${DOCS_PORT}"
 
 # Shared proxy settings for a given upstream
 proxy_to() {
@@ -88,15 +84,6 @@ $(proxy_to "$DAPHNE_UPSTREAM")
     # Channels websocket endpoints
     location /ws/ {
 $(proxy_to "$DAPHNE_UPSTREAM")
-    }
-
-    # --- Docusaurus docs (dev server) ---
-    # Proxies to the Docusaurus dev server running on host:3000. Docusaurus
-    # must be configured with baseUrl: '/docs/' so its internal asset URLs
-    # match this prefix. If the dev server isn't running the landing page
-    # will fall back to the public hosted copy at https://are-self.com/docs/.
-    location /docs/ {
-$(proxy_to "$DOCS_UPSTREAM")
     }
 
     # --- Custom landing page at exactly / ---

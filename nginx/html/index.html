@@ -158,7 +158,7 @@
          launch pathways, and watch things spark.</p>
     </a>
 
-    <a class="card" id="docs-card" href="https://are-self.com/docs/" target="_blank" rel="noopener">
+    <a class="card" id="docs-card" href="https://are-self.com" target="_blank" rel="noopener">
       <div class="icon">&#128218;</div>
       <h2>Read the Docs</h2>
       <p id="docs-card-desc">Guides, tutorials, and the full reference for every brain region.
@@ -199,45 +199,51 @@
   </footer>
 
   <script>
-    // Probe the local docs server (Docusaurus on :3000, reverse-proxied
-    // through NGINX at /docs/). If it responds, point the Docs card at
-    // the local copy and say so in the footer. Otherwise leave it on the
-    // public hosted docs.
+    // Probe the Docusaurus dev server at http://localhost:3000 directly.
+    // We can't reverse-proxy it through NGINX because the public site
+    // (are-self.com, GitHub Pages) is configured with Docusaurus
+    // baseUrl '/' — which would break if we changed it — so an <img>
+    // onload trick is the cleanest same-site-free detection method.
+    //
+    // Image loads aren't blocked by CORS or mixed-content the way fetch
+    // is. If the dev server responds with anything (even a 404) the
+    // request doesn't error in the network layer; onerror fires for
+    // "couldn't reach the server at all."
     (function () {
       var card = document.getElementById('docs-card');
       var desc = document.getElementById('docs-card-desc');
       var status = document.getElementById('docs-status');
+      var localUrl = 'http://localhost:3000/';
 
-      // HEAD /docs/ with a short timeout. We're on the same origin, so
-      // no CORS problems.
-      var controller = new AbortController();
-      var timeout = setTimeout(function () { controller.abort(); }, 1500);
+      var probe = new Image();
+      var settled = false;
 
-      fetch('/docs/', { method: 'HEAD', signal: controller.signal })
-        .then(function (r) {
-          clearTimeout(timeout);
-          if (r.ok) {
-            card.href = '/docs/';
-            card.removeAttribute('target');
-            card.removeAttribute('rel');
-            desc.textContent =
-              'Guides, tutorials, and the full reference for every ' +
-              'brain region. (Serving your local copy.)';
-            status.textContent =
-              'Running locally. Local docs server is up — the Docs card ' +
-              'goes to your copy.';
-          } else {
-            status.textContent =
-              'Running locally. Local docs not detected — the Docs card ' +
-              'goes to the public site at are-self.com.';
-          }
-        })
-        .catch(function () {
-          clearTimeout(timeout);
-          status.textContent =
-            'Running locally. Local docs not detected — the Docs card ' +
-            'goes to the public site at are-self.com.';
-        });
+      function markLocal() {
+        if (settled) return;
+        settled = true;
+        card.href = localUrl;
+        desc.textContent =
+          'Guides, tutorials, and the full reference for every ' +
+          'brain region. (Local dev server detected.)';
+        status.textContent =
+          'Running locally. Local docs server is up — the Docs card ' +
+          'opens your copy at localhost:3000.';
+      }
+
+      function markRemote() {
+        if (settled) return;
+        settled = true;
+        status.textContent =
+          'Running locally. Local docs not detected — the Docs card ' +
+          'opens the public site at are-self.com.';
+      }
+
+      probe.onload = markLocal;
+      probe.onerror = markRemote;
+      probe.src = localUrl + 'img/favicon.ico?probe=' + Date.now();
+
+      // Hard timeout in case neither event fires.
+      setTimeout(markRemote, 1500);
     })();
   </script>
 </body>

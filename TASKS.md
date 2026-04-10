@@ -79,12 +79,6 @@ also ship-blocking for the API reference.
   an attacker can MITM the user's own localhost traffic, which they already control). Decide
   and document the rationale in `mcp-server.md`. Re-issue + re-commit every ~80 days to stay
   ahead of the 90-day expiry.
-- [ ] **Docusaurus `baseUrl` restructure side effects.** Changed from `/` to `/docs/` in
-  `are-self-docs/docusaurus.config.js` so NGINX can proxy `/docs/` to the dev server without
-  URL rewriting. Public URLs on `are-self.com` now live under `/docs/`. Audit any hardcoded
-  links in READMEs, social posts, and `are-self.com` root hosting — the root of `are-self.com`
-  needs either a redirect to `/docs/` or a separate marketing landing page.
-
 ## Ship-Blocking — Security Remediation (Before Tuesday Release)
 
 - [ ] **Pin Django to >=6.0.2.** CVE-2025-64459 (CVSS 9.1) — SQL injection via QuerySet.filter(). Affects

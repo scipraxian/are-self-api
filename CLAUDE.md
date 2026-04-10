@@ -212,8 +212,13 @@ and the Docusaurus dev server. Routing:
 | `/api/`, `/api-auth/`    | Daphne |
 | `/admin/`, `/static/`    | Daphne |
 | `/ws/`                   | Daphne (Channels websockets) |
-| `/docs/`                 | Docusaurus dev server on `host:3000` (when running) |
 | everything else          | Vite dev server on `host:5173` (React app) |
+
+(Docusaurus is intentionally NOT reverse-proxied. The public site at
+`https://are-self.com` is GitHub Pages with Docusaurus `baseUrl: '/'`, and
+changing `baseUrl` to make a path-based proxy work breaks the Pages build.
+The landing page probes `http://localhost:3000/` via an `<img>` onload
+trick and opens the dev server in a new tab directly.)
 
 NGINX auto-detects TLS: if `nginx/certs/cert.pem` and `nginx/certs/key.pem` exist it
 serves HTTPS on 443 with an HTTP→HTTPS redirect on 80. Otherwise it serves plain HTTP
