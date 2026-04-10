@@ -197,38 +197,61 @@ JSON-RPC methods. All tool handlers use `sync_to_async` for Django ORM compatibi
 
 **Connecting as a Local MCP Server:**
 
-Are-Self's `/mcp` endpoint speaks standard MCP Streamable HTTP. To connect it to an
-MCP client, point the client at `http://localhost:8000/mcp` (or `https://` if TLS certs
-are configured in `nginx/certs/`).
+Are-Self's `/mcp` endpoint speaks standard MCP Streamable HTTP. The canonical local URL
+is `https://local.are-self.com/mcp` — a Cloudflare DNS A record points `local.are-self.com`
+at `127.0.0.1`, so the hostname works on the user's own machine without any hosts-file
+editing and a real publicly-trusted cert (ZeroSSL) can be issued for it.
 
-NGINX runs in Docker (`docker compose up`) as a reverse proxy in front of Daphne. It
-automatically detects TLS: if `nginx/certs/cert.pem` and `nginx/certs/key.pem` exist,
-it serves HTTPS on port 443. Otherwise it serves plain HTTP on port 80. To enable HTTPS,
-drop a valid cert+key pair into `nginx/certs/` and `docker compose restart nginx`.
+NGINX runs in Docker (`docker compose up`) as a reverse proxy in front of Daphne, Vite,
+and the Docusaurus dev server. Routing:
 
-**Known limitation — Cowork/Claude Desktop custom connectors:** The "Add custom connector"
-UI in Claude Desktop requires `https://` URLs and performs strict CA validation. Self-signed
-certs are rejected. This means connecting Are-Self to Cowork requires either a CA-signed
-certificate or Anthropic adding a localhost exception (tracked at
-`github.com/anthropics/claude-ai-mcp/issues/9`). Claude Code can connect to HTTP MCP
-servers directly via `claude_desktop_config.json` — no HTTPS required.
+| Path | Upstream |
+|------|---------|
+| `/` (exact)              | Static landing page (`nginx/html/index.html`) |
+| `/mcp`, `/mcp/`          | Daphne (Django) — MCP JSON-RPC |
+| `/api/`, `/api-auth/`    | Daphne |
+| `/admin/`, `/static/`    | Daphne |
+| `/ws/`                   | Daphne (Channels websockets) |
+| `/docs/`                 | Docusaurus dev server on `host:3000` (when running) |
+| everything else          | Vite dev server on `host:5173` (React app) |
 
-**Testing the endpoint manually (curl):**
-```bash
-# Initialize
-curl -X POST http://localhost:8000/mcp \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}'
+NGINX auto-detects TLS: if `nginx/certs/cert.pem` and `nginx/certs/key.pem` exist it
+serves HTTPS on 443 with an HTTP→HTTPS redirect on 80. Otherwise it serves plain HTTP
+on 80. The detection runs in `nginx/entrypoint.sh`, which is mounted and invoked via
+an explicit `docker compose` entrypoint override (Windows bind mounts don't preserve
+the exec bit, so the stock `/docker-entrypoint.d/` scanner is bypassed).
 
-# List tools
-curl -X POST http://localhost:8000/mcp \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
+**Connecting Claude Code:**
+```
+claude mcp add --transport http are-self https://local.are-self.com/mcp
+```
+Run from inside the repo root so the config scopes to the project. The 14 Phase 1 tools
+appear as `mcp__are-self__*` inside any `claude` session started in that directory.
 
-# Call a tool
-curl -X POST http://localhost:8000/mcp \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"list_neural_pathways","arguments":{}}}'
+**Cowork → local MCP:** Adding `https://local.are-self.com/mcp` as a custom connector in
+the claude.ai Connectors UI fails because the connector fetch happens from Anthropic's
+cloud, which resolves `local.are-self.com → 127.0.0.1` to its own loopback, not the
+user's. Fixing this requires an outbound tunnel (Cloudflare Tunnel, ngrok, tailscale
+funnel) to expose `/mcp` on a publicly-reachable hostname. This works per-user; it is
+not a distribution mechanism. Tracking at
+`github.com/anthropics/claude-ai-mcp/issues/9`.
+
+**Django settings required for the NGINX fronting:**
+- `CSRF_TRUSTED_ORIGINS` must include `http(s)://local.are-self.com` and plain
+  `http(s)://localhost` (admin POSTs originate from whichever scheme/host the browser
+  used to reach NGINX).
+- URL routing registers **both** `path('mcp', ...)` and `path('mcp/', ...)` because
+  `APPEND_SLASH` middleware cannot redirect POST requests (it would lose the body),
+  so MCP clients hitting either form need an explicit route.
+
+**Testing the endpoint manually (PowerShell):**
+```powershell
+# PowerShell's `curl` is aliased to Invoke-WebRequest; use Invoke-RestMethod for
+# JSON-RPC, or `curl.exe` with single quotes to avoid escape-hell.
+
+$body = '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
+Invoke-RestMethod -Uri https://local.are-self.com/mcp `
+  -Method Post -ContentType application/json -Body $body
 ```
 
 ## Current State (April 7, 2026 — Release Day)
@@ -252,6 +275,10 @@ Logic node (3 modes: retry/gate/wait) with 68 tests. TTS via Piper. Efficiency b
 SystemControlViewSet for shutdown/restart. Effector Editor API with full CRUD. Debug node
 (PK 9). Narrative dump + summary dump endpoints. `<<h>>` human message tagging prevents
 prompt_addon duplication. MCP server at /mcp with 14 tools across 6 brain regions (Phase 1 — request/response only).
+NGINX reverse proxy with HTTP/HTTPS autodetect, real ZeroSSL cert for `local.are-self.com`,
+routing split across Daphne / Vite / Docusaurus, and a custom glassmorphism landing page
+at `/` with probe-based local-vs-external docs link. MCP server verified end-to-end from
+Claude Code against `https://local.are-self.com/mcp` (all 14 tools callable).
 
 **Ship-blocking security:** Django CVE-2025-64459 (CVSS 9.1), Redis CVE-2025-49844 (CVSS 10.0),
 LiteLLM supply chain incident (March 2026), Ollama CVEs including CVE-2024-37032 "Probllama".

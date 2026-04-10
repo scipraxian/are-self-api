@@ -59,6 +59,32 @@ also ship-blocking for the API reference.
   currently in a session, what they're doing, session duration, turn count. Real-time via existing
   dendrite infrastructure.
 
+## NGINX & MCP Follow-ups
+
+- [ ] **IPv6 upstream noise in nginx logs.** `host.docker.internal` resolves to both IPv4 and
+  IPv6; nginx tries the IPv6 address first, fails (`[fdc4:f303:9324::254]:8000 failed`), and
+  falls back to IPv4 successfully. Harmless but noisy. Fix by pinning `resolver` to IPv4 only
+  in `nginx/entrypoint.sh`, or by using `host-gateway` with an explicit IPv4 alias.
+- [ ] **Document Cloudflare Tunnel recipe for Cowork users.** Cowork's custom connector flow
+  fetches the MCP endpoint from Anthropic's cloud, which can't reach `127.0.0.1`. Users who
+  want Cowork to drive Are-Self need to stand up their own outbound tunnel. Add a page to
+  `are-self-docs` covering: install `cloudflared`, create a named tunnel, map
+  `<their-subdomain>/mcp` → `https://localhost/mcp`, register the tunnel as a Cloudflare DNS
+  record, then add the public hostname as a Claude connector. Per-user setup only — not a
+  distribution mechanism.
+- [ ] **Repo cert distribution decision.** Currently `nginx/certs/cert.pem` + `key.pem` live
+  outside git. Michael plans to ship the ZeroSSL cert + key in the repo so the 10yo target
+  user doesn't have to re-issue one — the cert is for `local.are-self.com` which resolves to
+  `127.0.0.1`, so publicly-exposed private-key revocation risk is real but limited (worst case
+  an attacker can MITM the user's own localhost traffic, which they already control). Decide
+  and document the rationale in `mcp-server.md`. Re-issue + re-commit every ~80 days to stay
+  ahead of the 90-day expiry.
+- [ ] **Docusaurus `baseUrl` restructure side effects.** Changed from `/` to `/docs/` in
+  `are-self-docs/docusaurus.config.js` so NGINX can proxy `/docs/` to the dev server without
+  URL rewriting. Public URLs on `are-self.com` now live under `/docs/`. Audit any hardcoded
+  links in READMEs, social posts, and `are-self.com` root hosting — the root of `are-self.com`
+  needs either a redirect to `/docs/` or a separate marketing landing page.
+
 ## Ship-Blocking — Security Remediation (Before Tuesday Release)
 
 - [ ] **Pin Django to >=6.0.2.** CVE-2025-64459 (CVSS 9.1) — SQL injection via QuerySet.filter(). Affects
