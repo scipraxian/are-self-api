@@ -21,6 +21,49 @@ services:
     ports:
       - "6379:6379"
 
+  # 3. The Gateway (Reverse Proxy)
+  #
+  # NGINX sits in front of Daphne, handling TLS termination and
+  # proxying all traffic including the /mcp endpoint.
+  #
+  # TLS mode (automatic):
+  #   - Drop cert.pem + key.pem into nginx/certs/
+  #   - Restart: docker compose restart nginx
+  #   - HTTPS on port 443, HTTP redirect on 80
+  #
+  # HTTP mode (default):
+  #   - No certs? Runs plain HTTP on port 80. Just works.
+  #
+  nginx:
+    image: nginx:alpine
+    container_name: are_self_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/certs:/etc/nginx/certs:ro
+      # Custom landing page served at exactly `/` by the entrypoint-generated
+      # config. Everything else still proxies to Daphne / Vite.
+      - ./nginx/html:/usr/share/nginx/html:ro
+      # Mounted as a plain file (not into /docker-entrypoint.d/) because
+      # Windows bind mounts don't preserve the Linux exec bit, and nginx's
+      # entrypoint scanner ignores non-executable files. We sh the script
+      # ourselves in the entrypoint override below.
+      #
+      # We do NOT mount anything into /etc/nginx/templates/ because the
+      # stock nginx image's 20-envsubst-on-templates.sh would run AFTER
+      # our detect script and clobber its output. Our detect script writes
+      # the final default.conf directly — it is the source of truth.
+      - ./nginx/entrypoint.sh:/detect-certs.sh:ro
+    entrypoint: ["/bin/sh", "-c", "sh /detect-certs.sh && exec /docker-entrypoint.sh nginx -g 'daemon off;'"]
+    environment:
+      # host.docker.internal resolves to the host machine on
+      # Docker Desktop (Windows/Mac). On Linux, use extra_hosts.
+      - DAPHNE_HOST=host.docker.internal
+      - DAPHNE_PORT=8000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
 volumes:
   postgres_data:
-

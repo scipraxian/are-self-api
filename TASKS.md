@@ -38,6 +38,16 @@ also ship-blocking for the API reference.
 - [ ] **Explore 501(c)(3) path with Len Lanzi.** Long-term: tax-deductible donations unlock
   institutional and grant funding. Len is the nonprofit connection.
 
+## Top Priority — Remove Legacy `central_nervous_system/` URL Prefix
+
+- [ ] **The `/central_nervous_system/` URL prefix must GO.** It's a legacy holdover living in the
+  wrong place from the old pre-`/api/v2/` routing scheme. The app itself stays (that's the CNS
+  brain region); only the URL prefix needs to die. Migrate any still-live endpoints onto
+  `/api/v2/` and delete `central_nervous_system.urls.urls` from `config/urls.py`.
+- [ ] **After removal, touch nginx again.** `are-self-api/nginx/entrypoint.sh` currently has a
+  `location /central_nervous_system/` block proxying to Daphne. Delete that block once the
+  Django side is cleaned up, and `docker compose restart nginx` to pick it up.
+
 ## Top Priority — PNS Expansion
 
 - [ ] **Multiple Ollama endpoints.** Secondary machine running Ollama should be usable. These are
@@ -163,6 +173,25 @@ also ship-blocking for the API reference.
   commands like Execute Neural Pathway.
 - [ ] **MCP Client.** Have Are-Self be an MCP client, calling other MCP servers.
 
+## MCP Server — Phase 2
+
+- [ ] **Blackboard write tool** — Pre-load context data onto spike train blackboard before launch. Requires wiring into NeuronContext or a new blackboard field on SpikeTrain.
+- [ ] **SSE streaming via neurotransmitters** — Use the Synaptic Cleft's neurotransmitter system to stream real-time execution updates back through the MCP SSE endpoint. Map Dopamine (success), Cortisol (error), Glutamate (streaming) to MCP notifications.
+- [ ] **Vector similarity engram search** — Replace text-only search with pgvector cosine similarity search. Requires embedding the query via Ollama/Nomic before searching.
+- [ ] **Full Thalamus integration** — Wire send_thalamus_message into the actual Thalamus message pipeline with WebSocket delivery via Channels.
+- [ ] **Authentication layer** — Add token-based auth for the /mcp endpoint. Required before any public deployment.
+- [x] **~~Cowork custom connector registration~~** — **DEFERRED.** Claude Desktop/Cowork
+  custom connectors require `https://` with strict CA validation. Self-signed certs are
+  rejected. Localhost `http://` is rejected. No viable workaround exists without either a
+  CA-signed cert for a real domain or Anthropic adding a localhost exception. Tracked
+  upstream: `github.com/anthropics/claude-ai-mcp/issues/9`. Are-Self's MCP endpoint
+  works correctly — the blocker is on Anthropic's side. Claude Code CAN connect to
+  local HTTP MCP servers (no HTTPS needed). NGINX in Docker is configured to auto-upgrade
+  to HTTPS if a user provides their own cert in `nginx/certs/`.
+- [ ] **Write blackboard tool** — Allow writing arbitrary key-value context data that gets passed to spike train execution. This enables programmatic setup of execution context.
+- [ ] **Read reasoning session tool** — Expose reasoning session history (turns, tool calls, responses) for post-execution analysis.
+- [ ] **Migrate are-self-install.bat to Python.** Cross-platform install script (replaces Windows-only .bat). Must handle: Python venv, pip install, PostgreSQL check, Redis check, Ollama check. Detect OS via `platform.system()`. Target: a 10-year-old runs `python install.py` and everything works.
+
 ## Future
 
 - [ ] **Image Generation Effector.** CNS effector pattern: artist LLM writes generation prompt to
@@ -184,8 +213,10 @@ also ship-blocking for the API reference.
   sessions. Verify: turn creation, tool dispatch, `yield_turn` breaks the loop, `mcp_done` creates a
   conclusion, max turns halts, stop signal halts.
 - [ ] **Test coverage: Hypothalamus routing.** Unit tests for `pick_optimal_model`: preferred model
-  selection, failover strategy steps, circuit breaker tripping/reset, budget gate filtering, vector
-  similarity fallback.
+  selection, failover strategy steps, budget gate filtering, vector similarity fallback.
+  **Partial:** Circuit breaker tests added (April 9, 2026): trip_circuit_breaker increments/backoff,
+  cap at 5 min, overflow protection at extreme counter values, trip_resource_cooldown flat 60s with
+  no counter change. See `hypothalamus/tests/test_api.py::TestAIModelProviderActions`.
 - [ ] **Test coverage: Hippocampus.** Integration tests for engram CRUD: save with vector dedup at 90%
   threshold, update appends text, read links session/spike/identity, search by text and tags.
 - [ ] **Test coverage: Parietal Lobe tools.** Test each MCP tool function in isolation with fixture data.

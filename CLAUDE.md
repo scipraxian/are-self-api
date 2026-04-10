@@ -150,6 +150,87 @@ environment-types, environment-statuses
 executable-arguments, executable-argument-assignments
 ```
 
+## MCP Server (Model Context Protocol)
+
+Are-Self exposes an MCP-compliant endpoint at `/mcp` that allows external clients
+(Claude Desktop, Cowork, Claude Code) to discover and invoke Are-Self tools via
+JSON-RPC 2.0 over Streamable HTTP. This replaces the old `django-rest-framework-mcp`
+library with a custom implementation built on the official MCP protocol spec.
+
+**Architecture:** A thin `MCPToolRegistry` in `mcp_server/server.py` stores tool schemas
+and async handlers. The `mcp_server/django_bridge.py` Django async view implements
+the Streamable HTTP transport — routing `initialize`, `tools/list`, and `tools/call`
+JSON-RPC methods. All tool handlers use `sync_to_async` for Django ORM compatibility.
+
+**Phase 1 Tools (Implemented):**
+
+| Tool | Module | Description |
+|------|--------|-------------|
+| `list_neural_pathways` | cns_tools | List available pathways |
+| `get_neural_pathway` | cns_tools | Pathway detail with neurons/axons |
+| `launch_spike_train` | cns_tools | Fire a pathway, returns spike_train_id |
+| `get_spike_train_status` | cns_tools | Monitor running spike trains |
+| `stop_spike_train` | cns_tools | Graceful stop signal |
+| `list_effectors` | cns_tools | Available effector building blocks |
+| `list_identity_discs` | identity_tools | Deployed identity instances |
+| `list_environments` | environment_tools | Available project environments |
+| `search_engrams` | hippocampus_tools | Text search of memory store |
+| `read_engram` | hippocampus_tools | Read specific memory by ID |
+| `save_engram` | hippocampus_tools | Create new memory with tags |
+| `list_pfc_tasks` | pfc_tools | List tasks from prefrontal cortex |
+| `create_pfc_task` | pfc_tools | Create task assigned to story |
+| `send_thalamus_message` | thalamus_tools | Message through chat relay |
+
+**Phase 2 Planned:**
+- Blackboard write tool (pre-load context before launching spike trains)
+- SSE streaming via neurotransmitter callbacks (real-time execution updates)
+- Vector similarity search for engrams (instead of text-only)
+- Full Thalamus message pipeline (WebSocket delivery)
+- Authentication/authorization layer
+- Cowork custom connector registration
+
+**Key Files:**
+- `mcp_server/server.py` — MCPToolRegistry class and factory
+- `mcp_server/django_bridge.py` — Django async view (JSON-RPC 2.0 dispatch)
+- `mcp_server/urls.py` — URL routing (`/mcp`)
+- `mcp_server/tools/*.py` — Tool implementations by brain region
+
+**Connecting as a Local MCP Server:**
+
+Are-Self's `/mcp` endpoint speaks standard MCP Streamable HTTP. To connect it to an
+MCP client, point the client at `http://localhost:8000/mcp` (or `https://` if TLS certs
+are configured in `nginx/certs/`).
+
+NGINX runs in Docker (`docker compose up`) as a reverse proxy in front of Daphne. It
+automatically detects TLS: if `nginx/certs/cert.pem` and `nginx/certs/key.pem` exist,
+it serves HTTPS on port 443. Otherwise it serves plain HTTP on port 80. To enable HTTPS,
+drop a valid cert+key pair into `nginx/certs/` and `docker compose restart nginx`.
+
+**Known limitation — Cowork/Claude Desktop custom connectors:** The "Add custom connector"
+UI in Claude Desktop requires `https://` URLs and performs strict CA validation. Self-signed
+certs are rejected. This means connecting Are-Self to Cowork requires either a CA-signed
+certificate or Anthropic adding a localhost exception (tracked at
+`github.com/anthropics/claude-ai-mcp/issues/9`). Claude Code can connect to HTTP MCP
+servers directly via `claude_desktop_config.json` — no HTTPS required.
+
+**Testing the endpoint manually (curl):**
+```bash
+# Initialize
+curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}'
+
+# List tools
+curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
+
+# Call a tool
+curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"list_neural_pathways","arguments":{}}}'
+```
+
 ## Current State (April 7, 2026 — Release Day)
 
 **MIT open-source release: TODAY.** All four repos going public. DNS via Cloudflare pointing
@@ -170,7 +251,7 @@ Real-time events flow through the Synaptic Cleft. All brain regions have working
 Logic node (3 modes: retry/gate/wait) with 68 tests. TTS via Piper. Efficiency bonus active.
 SystemControlViewSet for shutdown/restart. Effector Editor API with full CRUD. Debug node
 (PK 9). Narrative dump + summary dump endpoints. `<<h>>` human message tagging prevents
-prompt_addon duplication.
+prompt_addon duplication. MCP server at /mcp with 14 tools across 6 brain regions (Phase 1 — request/response only).
 
 **Ship-blocking security:** Django CVE-2025-64459 (CVSS 9.1), Redis CVE-2025-49844 (CVSS 10.0),
 LiteLLM supply chain incident (March 2026), Ollama CVEs including CVE-2024-37032 "Probllama".
