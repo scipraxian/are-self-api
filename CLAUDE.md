@@ -150,6 +150,115 @@ environment-types, environment-statuses
 executable-arguments, executable-argument-assignments
 ```
 
+## MCP Server (Model Context Protocol)
+
+Are-Self exposes an MCP-compliant endpoint at `/mcp` that allows external clients
+(Claude Desktop, Cowork, Claude Code) to discover and invoke Are-Self tools via
+JSON-RPC 2.0 over Streamable HTTP. This replaces the old `django-rest-framework-mcp`
+library with a custom implementation built on the official MCP protocol spec.
+
+**Architecture:** A thin `MCPToolRegistry` in `mcp_server/server.py` stores tool schemas
+and async handlers. The `mcp_server/django_bridge.py` Django async view implements
+the Streamable HTTP transport — routing `initialize`, `tools/list`, and `tools/call`
+JSON-RPC methods. All tool handlers use `sync_to_async` for Django ORM compatibility.
+
+**Phase 1 Tools (Implemented):**
+
+| Tool | Module | Description |
+|------|--------|-------------|
+| `list_neural_pathways` | cns_tools | List available pathways |
+| `get_neural_pathway` | cns_tools | Pathway detail with neurons/axons |
+| `launch_spike_train` | cns_tools | Fire a pathway, returns spike_train_id |
+| `get_spike_train_status` | cns_tools | Monitor running spike trains |
+| `stop_spike_train` | cns_tools | Graceful stop signal |
+| `list_effectors` | cns_tools | Available effector building blocks |
+| `list_identity_discs` | identity_tools | Deployed identity instances |
+| `list_environments` | environment_tools | Available project environments |
+| `search_engrams` | hippocampus_tools | Text search of memory store |
+| `read_engram` | hippocampus_tools | Read specific memory by ID |
+| `save_engram` | hippocampus_tools | Create new memory with tags |
+| `list_pfc_tasks` | pfc_tools | List tasks from prefrontal cortex |
+| `create_pfc_task` | pfc_tools | Create task assigned to story |
+| `send_thalamus_message` | thalamus_tools | Message through chat relay |
+
+**Phase 2 Planned:**
+- Blackboard write tool (pre-load context before launching spike trains)
+- SSE streaming via neurotransmitter callbacks (real-time execution updates)
+- Vector similarity search for engrams (instead of text-only)
+- Full Thalamus message pipeline (WebSocket delivery)
+- Authentication/authorization layer
+- Cowork custom connector registration
+
+**Key Files:**
+- `mcp_server/server.py` — MCPToolRegistry class and factory
+- `mcp_server/django_bridge.py` — Django async view (JSON-RPC 2.0 dispatch)
+- `mcp_server/urls.py` — URL routing (`/mcp`)
+- `mcp_server/tools/*.py` — Tool implementations by brain region
+
+**Connecting as a Local MCP Server:**
+
+Are-Self's `/mcp` endpoint speaks standard MCP Streamable HTTP. The canonical local URL
+is `https://local.are-self.com/mcp` — a Cloudflare DNS A record points `local.are-self.com`
+at `127.0.0.1`, so the hostname works on the user's own machine without any hosts-file
+editing and a real publicly-trusted cert (ZeroSSL) can be issued for it.
+
+NGINX runs in Docker (`docker compose up`) as a reverse proxy in front of Daphne, Vite,
+and the Docusaurus dev server. Routing:
+
+| Path | Upstream |
+|------|---------|
+| `/` (exact)              | Static landing page (`nginx/html/index.html`) |
+| `/mcp`, `/mcp/`          | Daphne (Django) — MCP JSON-RPC |
+| `/api/`, `/api-auth/`    | Daphne |
+| `/admin/`, `/static/`    | Daphne |
+| `/ws/`                   | Daphne (Channels websockets) |
+| everything else          | Vite dev server on `host:5173` (React app) |
+
+(Docusaurus is intentionally NOT reverse-proxied. The public site at
+`https://are-self.com` is GitHub Pages with Docusaurus `baseUrl: '/'`, and
+changing `baseUrl` to make a path-based proxy work breaks the Pages build.
+The landing page probes `http://localhost:3000/` via an `<img>` onload
+trick and opens the dev server in a new tab directly.)
+
+NGINX auto-detects TLS: if `nginx/certs/cert.pem` and `nginx/certs/key.pem` exist it
+serves HTTPS on 443 with an HTTP→HTTPS redirect on 80. Otherwise it serves plain HTTP
+on 80. The detection runs in `nginx/entrypoint.sh`, which is mounted and invoked via
+an explicit `docker compose` entrypoint override (Windows bind mounts don't preserve
+the exec bit, so the stock `/docker-entrypoint.d/` scanner is bypassed).
+
+**Connecting Claude Code:**
+```
+claude mcp add --transport http are-self https://local.are-self.com/mcp
+```
+Run from inside the repo root so the config scopes to the project. The 14 Phase 1 tools
+appear as `mcp__are-self__*` inside any `claude` session started in that directory.
+
+**Cowork → local MCP:** Adding `https://local.are-self.com/mcp` as a custom connector in
+the claude.ai Connectors UI fails because the connector fetch happens from Anthropic's
+cloud, which resolves `local.are-self.com → 127.0.0.1` to its own loopback, not the
+user's. Fixing this requires an outbound tunnel (Cloudflare Tunnel, ngrok, tailscale
+funnel) to expose `/mcp` on a publicly-reachable hostname. This works per-user; it is
+not a distribution mechanism. Tracking at
+`github.com/anthropics/claude-ai-mcp/issues/9`.
+
+**Django settings required for the NGINX fronting:**
+- `CSRF_TRUSTED_ORIGINS` must include `http(s)://local.are-self.com` and plain
+  `http(s)://localhost` (admin POSTs originate from whichever scheme/host the browser
+  used to reach NGINX).
+- URL routing registers **both** `path('mcp', ...)` and `path('mcp/', ...)` because
+  `APPEND_SLASH` middleware cannot redirect POST requests (it would lose the body),
+  so MCP clients hitting either form need an explicit route.
+
+**Testing the endpoint manually (PowerShell):**
+```powershell
+# PowerShell's `curl` is aliased to Invoke-WebRequest; use Invoke-RestMethod for
+# JSON-RPC, or `curl.exe` with single quotes to avoid escape-hell.
+
+$body = '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
+Invoke-RestMethod -Uri https://local.are-self.com/mcp `
+  -Method Post -ContentType application/json -Body $body
+```
+
 ## Current State (April 7, 2026 — Release Day)
 
 **MIT open-source release: TODAY.** All four repos going public. DNS via Cloudflare pointing
@@ -170,7 +279,11 @@ Real-time events flow through the Synaptic Cleft. All brain regions have working
 Logic node (3 modes: retry/gate/wait) with 68 tests. TTS via Piper. Efficiency bonus active.
 SystemControlViewSet for shutdown/restart. Effector Editor API with full CRUD. Debug node
 (PK 9). Narrative dump + summary dump endpoints. `<<h>>` human message tagging prevents
-prompt_addon duplication.
+prompt_addon duplication. MCP server at /mcp with 14 tools across 6 brain regions (Phase 1 — request/response only).
+NGINX reverse proxy with HTTP/HTTPS autodetect, real ZeroSSL cert for `local.are-self.com`,
+routing split across Daphne / Vite / Docusaurus, and a custom glassmorphism landing page
+at `/` with probe-based local-vs-external docs link. MCP server verified end-to-end from
+Claude Code against `https://local.are-self.com/mcp` (all 14 tools callable).
 
 **Ship-blocking security:** Django CVE-2025-64459 (CVSS 9.1), Redis CVE-2025-49844 (CVSS 10.0),
 LiteLLM supply chain incident (March 2026), Ollama CVEs including CVE-2024-37032 "Probllama".

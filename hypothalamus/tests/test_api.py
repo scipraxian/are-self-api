@@ -160,6 +160,113 @@ class TestAIModelProviderActions(CommonFixturesAPITestCase):
         self.model_provider.refresh_from_db()
         assert self.model_provider.rate_limit_counter == 0
 
+    def test_trip_circuit_breaker_increments_counters(self):
+        """Assert trip_circuit_breaker increments counter and sets cooldown."""
+        self.model_provider.rate_limit_counter = 0
+        self.model_provider.rate_limit_total_failures = 0
+        self.model_provider.save()
+
+        self.model_provider.trip_circuit_breaker()
+        self.model_provider.refresh_from_db()
+
+        assert self.model_provider.rate_limit_counter == 1
+        assert self.model_provider.rate_limit_total_failures == 1
+        assert self.model_provider.rate_limited_on is not None
+        assert self.model_provider.rate_limit_reset_time is not None
+        # First trip: 2^0 * 60s = 60s cooldown
+        cooldown = (
+            self.model_provider.rate_limit_reset_time
+            - self.model_provider.rate_limited_on
+        )
+        assert cooldown.total_seconds() == 60
+
+    def test_trip_circuit_breaker_exponential_backoff(self):
+        """Assert cooldown doubles with each consecutive trip."""
+        self.model_provider.rate_limit_counter = 0
+        self.model_provider.rate_limit_total_failures = 0
+        self.model_provider.save()
+
+        # Trip 3 times, verify escalation
+        expected_seconds = [60, 120, 240]
+        for i, expected in enumerate(expected_seconds):
+            self.model_provider.trip_circuit_breaker()
+            self.model_provider.refresh_from_db()
+            cooldown = (
+                self.model_provider.rate_limit_reset_time
+                - self.model_provider.rate_limited_on
+            )
+            assert cooldown.total_seconds() == expected, (
+                f'Trip {i + 1}: expected {expected}s, got {cooldown.total_seconds()}s'
+            )
+
+    def test_trip_circuit_breaker_caps_at_max_cooldown(self):
+        """Assert cooldown never exceeds MAX_CIRCUIT_BREAKER_COOLDOWN (5 min)."""
+        from hypothalamus.models import AIModelProviderRateLimitMixin
+
+        max_seconds = AIModelProviderRateLimitMixin.MAX_CIRCUIT_BREAKER_COOLDOWN.total_seconds()
+
+        # Simulate many prior failures
+        self.model_provider.rate_limit_counter = 50
+        self.model_provider.rate_limit_total_failures = 50
+        self.model_provider.save()
+
+        self.model_provider.trip_circuit_breaker()
+        self.model_provider.refresh_from_db()
+
+        cooldown = (
+            self.model_provider.rate_limit_reset_time
+            - self.model_provider.rate_limited_on
+        )
+        assert cooldown.total_seconds() <= max_seconds, (
+            f'Cooldown {cooldown.total_seconds()}s exceeded max {max_seconds}s'
+        )
+
+    def test_trip_circuit_breaker_no_overflow_at_extreme_counter(self):
+        """Assert no OverflowError even with an absurd counter value."""
+        self.model_provider.rate_limit_counter = 10000
+        self.model_provider.save()
+
+        # This used to raise OverflowError: date value out of range
+        self.model_provider.trip_circuit_breaker()
+        self.model_provider.refresh_from_db()
+
+        assert self.model_provider.rate_limit_reset_time is not None
+
+    def test_trip_resource_cooldown_flat_and_no_counter_change(self):
+        """Assert resource cooldown is fixed 60s and doesn't touch the counter."""
+        self.model_provider.rate_limit_counter = 0
+        self.model_provider.rate_limit_total_failures = 0
+        self.model_provider.save()
+
+        # Trip it multiple times — cooldown should stay flat
+        for _ in range(5):
+            self.model_provider.trip_resource_cooldown()
+            self.model_provider.refresh_from_db()
+
+            cooldown = (
+                self.model_provider.rate_limit_reset_time
+                - self.model_provider.rate_limited_on
+            )
+            assert cooldown.total_seconds() == 60
+
+        # Counter must not have moved
+        assert self.model_provider.rate_limit_counter == 0
+        assert self.model_provider.rate_limit_total_failures == 0
+
+    def test_resource_cooldown_does_not_affect_existing_counter(self):
+        """Assert resource cooldown doesn't corrupt an in-progress backoff."""
+        # Simulate a provider already at counter=3 from real failures
+        self.model_provider.rate_limit_counter = 3
+        self.model_provider.rate_limit_total_failures = 3
+        self.model_provider.save()
+
+        self.model_provider.trip_resource_cooldown()
+        self.model_provider.refresh_from_db()
+
+        # Counter untouched — next real failure still uses counter=3
+        assert self.model_provider.rate_limit_counter == 3
+        assert self.model_provider.rate_limit_total_failures == 3
+
     def test_toggle_enabled(self):
         """Assert toggle_enabled flips the is_enabled flag."""
         assert self.model_provider.is_enabled is True

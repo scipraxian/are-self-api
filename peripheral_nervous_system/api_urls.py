@@ -13,8 +13,15 @@ from peripheral_nervous_system.autonomic_nervous_system import (
     CeleryWorkerViewSet,
     SystemControlViewSet,
 )
+from peripheral_nervous_system.infrastructure import VitalSignsViewSet
 
 V2_PNS_ROUTER = routers.SimpleRouter()
+V2_PNS_ROUTER.register(
+    r'vital-signs',
+    VitalSignsViewSet,
+    basename='vital-signs',
+)
+
 V2_PNS_ROUTER.register(
     r'beat',
     CeleryBeatViewSet,

@@ -7,6 +7,7 @@ from rest_framework import routers
 from central_nervous_system.urls.api_urls import CNS_ROUTER
 from central_nervous_system.urls.v2_urls import V2_CNS_ROUTER
 from config.api_urls import CONFIG_URLS
+from mcp_server.django_bridge import mcp_endpoint
 from dashboard.api_urls import DASHBOARD_ROUTER
 from environments.api_urls import ENVIRONMENTS_ROUTER
 from frontal_lobe.api_urls import V2_REASONING_ROUTER
@@ -51,5 +52,9 @@ urlpatterns = [
     path(
         'api-auth/', include('rest_framework.urls', namespace='rest_framework')
     ),
-    path('mcp/', include('djangorestframework_mcp.urls')),
+    # Register both /mcp and /mcp/ — MCP clients hit either one, and
+    # Django's APPEND_SLASH middleware can't redirect POSTs (it would lose
+    # the request body). Explicit routes for both avoid the RuntimeError.
+    path('mcp', mcp_endpoint, name='mcp-endpoint'),
+    path('mcp/', mcp_endpoint, name='mcp-endpoint-slash'),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

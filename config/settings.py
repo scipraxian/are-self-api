@@ -53,7 +53,6 @@ INSTALLED_APPS = [
     'occipital_lobe',
     'temporal_lobe',
     'frontal_lobe',
-    'djangorestframework_mcp',
     'rest_framework',
     'django_filters',
     'hippocampus.apps.HippocampusConfig',
@@ -243,6 +242,13 @@ CORS_ORIGIN_ALLOW_ALL = True
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
+    # NGINX reverse proxy. Admin login POSTs originate from whichever
+    # scheme/host the browser used to reach NGINX, so all of these need
+    # to be trusted by Django's CSRF middleware.
+    'http://localhost',
+    'https://localhost',
+    'http://local.are-self.com',
+    'https://local.are-self.com',
 ]
 
 CHANNEL_LAYERS = {

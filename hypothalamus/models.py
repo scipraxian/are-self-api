@@ -279,13 +279,37 @@ class AIModelProviderRateLimitMixin(models.Model):
     class Meta:
         abstract = True
 
+    MAX_CIRCUIT_BREAKER_COOLDOWN = datetime.timedelta(minutes=5)
+    RESOURCE_COOLDOWN = datetime.timedelta(seconds=60)
+
+    def trip_resource_cooldown(self):
+        """Short, flat cooldown for host-resource errors (OOM, etc.).
+
+        Unlike trip_circuit_breaker this does NOT escalate, does NOT
+        increment rate_limit_counter, and always applies the same fixed
+        pause.  The provider is not at fault — the host just needs a
+        moment to free resources.
+        """
+        self.rate_limited_on = timezone.now()
+        self.rate_limit_reset_time = (
+            self.rate_limited_on + self.RESOURCE_COOLDOWN
+        )
+        self.save(
+            update_fields=['rate_limited_on', 'rate_limit_reset_time']
+        )
+
     def trip_circuit_breaker(self):
         self.rate_limited_on = timezone.now()
         self.rate_limit_counter += 1
         self.rate_limit_total_failures += 1
 
-        multiplier = 2 ** (self.rate_limit_counter - 1)
-        cooldown = self.rate_limit_reset_interval * multiplier
+        # Cap the exponent to prevent overflow when computing cooldown
+        capped_exponent = min(self.rate_limit_counter - 1, 10)
+        multiplier = 2 ** capped_exponent
+        cooldown = min(
+            self.rate_limit_reset_interval * multiplier,
+            self.MAX_CIRCUIT_BREAKER_COOLDOWN,
+        )
 
         self.rate_limit_reset_time = self.rate_limited_on + cooldown
         self.save(

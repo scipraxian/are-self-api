@@ -34,15 +34,19 @@ class SpikeTrainFilter(django_filters.FilterSet):
 
 class SpikeFilter(django_filters.FilterSet):
     spike_train_id = django_filters.UUIDFilter(field_name='spike_train')
+    celery_task_id = django_filters.UUIDFilter(field_name='celery_task_id')
     modified__gt = django_filters.IsoDateTimeFilter(
         field_name='modified', lookup_expr='gt'
     )
 
     is_active = django_filters.BooleanFilter(method='filter_is_active')
+    target_hostname = django_filters.CharFilter(
+        field_name='target__hostname', lookup_expr='exact'
+    )
 
     class Meta:
         model = Spike
-        fields = ['spike_train', 'status', 'neuron', 'effector', 'target']
+        fields = ['spike_train', 'status', 'neuron', 'effector', 'target', 'celery_task_id']
 
     def filter_is_active(self, queryset, name, value):
         if value:

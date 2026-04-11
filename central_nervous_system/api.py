@@ -2,7 +2,6 @@ import json
 import logging
 
 from django_filters.rest_framework import DjangoFilterBackend
-from djangorestframework_mcp.decorators import mcp_viewset
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -43,7 +42,6 @@ CATEGORY_SUBGRAPHS = 'Sub-Graphs'
 STATUS_OK = 'ok'
 
 
-@mcp_viewset()
 class EffectorViewSet(viewsets.ReadOnlyModelViewSet):
     """Registry of all available effectors."""
 
@@ -55,7 +53,6 @@ class EffectorViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = EffectorSerializer
 
 
-@mcp_viewset()
 class CNSNeuralPathwayViewSet(viewsets.ModelViewSet):
     """Library of available Protocols (NeuralPathways)."""
 
@@ -111,7 +108,6 @@ class CNSNeuralPathwayViewSet(viewsets.ModelViewSet):
         return Response({'status': STATUS_OK, 'is_favorite': book.is_favorite})
 
 
-@mcp_viewset()
 class CNSNeuralPathwayNodeViewSet(viewsets.ModelViewSet):
     """Graph Nodes CRUD."""
 
@@ -146,7 +142,6 @@ class CNSNeuralPathwayNodeViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-@mcp_viewset()
 class CNSNeuralPathwayConnectionWireViewSet(
     mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet
 ):
@@ -243,7 +238,6 @@ class SpikeTrainViewSet(
         return Response({'status': 'Termination complete.'})
 
 
-@mcp_viewset()
 class SpikeViewSet(
     mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet
 ):
