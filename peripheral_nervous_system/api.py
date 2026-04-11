@@ -1,4 +1,7 @@
+import logging
+
 from asgiref.sync import async_to_sync
+from django.conf import settings
 
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -18,6 +21,8 @@ from peripheral_nervous_system.serializers import (
     NerveTerminalTelemetrySerializer,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class NerveTerminalStatusViewSet(viewsets.ModelViewSet):
     queryset = NerveTerminalStatus.objects.all().order_by('name')
@@ -31,6 +36,30 @@ class NerveTerminalRegistryViewSet(viewsets.ModelViewSet):
         .order_by('hostname')
     )
     serializer_class = NerveTerminalRegistrySerializer
+
+    def list(self, request, *args, **kwargs):
+        """List nerve terminals and kick off a freshness scan.
+
+        Page-load freshness. Hitting the PNS page triggers a scan so
+        the user sees the truth of this moment without having to click
+        the scan button manually. The scan is re-entry-guarded by
+        _SCAN_LOCK and the registrar is compare-then-save, so a stable
+        fleet produces zero broadcasts and the previous loop (scan ->
+        broadcast -> frontend refetch -> list -> scan) terminates on
+        its own after one real state change.
+        """
+        try:
+            async_to_sync(_run_async_scan)(
+                subnet_prefix=getattr(
+                    settings, 'ARE_SELF_SUBNET', '192.168.1.'
+                ),
+                port=getattr(settings, 'ARE_SELF_PORT', 5005),
+            )
+        except Exception as e:
+            # A scan failure should not prevent the user from seeing
+            # whatever state the registry is in.
+            logger.warning('[PNS] Scan on list() failed: %s', e)
+        return super().list(request, *args, **kwargs)
 
     @action(detail=False, methods=['post'])
     def scan(self, request):
@@ -69,4 +98,3 @@ class NerveTerminalEventViewSet(viewsets.ModelViewSet):
         .order_by('-timestamp')
     )
     serializer_class = NerveTerminalEventSerializer
-
