@@ -1,0 +1,18 @@
+# Are-Self is an MIT-licensed open-source AI reasoning engine built to give
+# free AI technology to underprivileged youth. Released personally by Michael
+# under scipraxian — not a company, not a nonprofit. Every contribution keeps
+# the project independent and the target user (a kid with no money) free.
+#
+# Priority platforms per TASKS.md: GitHub Sponsors + Ko-fi first, then expand.
+# Each entry adds a button to the Sponsor dropdown on the repo page.
+
+github: [scipraxian]
+# Uncomment each platform after the account is created. GitHub renders
+# a broken Sponsor button for handles that don't exist yet.
+# ko_fi: scipraxian
+# buy_me_a_coffee: scipraxian
+# patreon: scipraxian
+# open_collective: are-self
+# polar: scipraxian
+# liberapay: scipraxian
+# custom: ['https://are-self.com/support']

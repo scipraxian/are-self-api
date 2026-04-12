@@ -3,7 +3,9 @@ import os
 import pytest
 from django.test import TestCase
 
-from hypothalamus.model_semantic_parser import parse_model_string
+from hypothalamus.parsing_tools.llm_provider_parser.model_semantic_parser import (
+    parse_model_string,
+)
 
 
 @pytest.mark.skip(reason='Requires populated fixture.')

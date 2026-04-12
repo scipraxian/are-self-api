@@ -158,8 +158,9 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
 
         session = (
             self.get_queryset()
-            .select_related('status', 'identity_disc', 'spike',
-                            'spike__spike_train')
+            .select_related(
+                'status', 'identity_disc', 'spike', 'spike__spike_train'
+            )
             .get(pk=pk)
         )
         turns = (
@@ -176,8 +177,12 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         lines.append('SESSION SUMMARY DUMP')
         lines.append('=' * 72)
         lines.append(f'Session ID:    {session.id}')
-        lines.append(f'Status:        {session.status.name if session.status else "?"}')
-        lines.append(f'Identity:      {session.identity_disc.name if session.identity_disc else "Unassigned"}')
+        lines.append(
+            f'Status:        {session.status.name if session.status else "?"}'
+        )
+        lines.append(
+            f'Identity:      {session.identity_disc.name if session.identity_disc else "Unassigned"}'
+        )
         lines.append(f'Created:       {session.created}')
         lines.append(f'Modified:      {session.modified}')
         lines.append(f'Turns:         {turns.count()}')
@@ -196,7 +201,9 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
             if mur:
                 model_name = mur.ai_model.name if mur.ai_model else '?'
                 lines.append(f'Model:  {model_name}')
-                token_line = f'Tokens: in={mur.input_tokens} out={mur.output_tokens}'
+                token_line = (
+                    f'Tokens: in={mur.input_tokens} out={mur.output_tokens}'
+                )
                 if mur.reasoning_tokens:
                     token_line += f' reasoning={mur.reasoning_tokens}'
                 if mur.cache_read_input_tokens:
@@ -211,7 +218,9 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
                 req_payload = mur.request_payload
                 if req_payload and isinstance(req_payload, list):
                     lines.append('')
-                    lines.append(f'  INPUT CONTEXT ({len(req_payload)} messages):')
+                    lines.append(
+                        f'  INPUT CONTEXT ({len(req_payload)} messages):'
+                    )
                     for idx, msg in enumerate(req_payload):
                         role = msg.get('role', '?')
                         content = msg.get('content', '')
@@ -232,7 +241,9 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
                         if content and isinstance(content, str):
                             preview = content[:400]
                             if len(content) > 400:
-                                preview += f'\n    ... ({len(content)} chars total)'
+                                preview += (
+                                    f'\n    ... ({len(content)} chars total)'
+                                )
                             # Indent each line
                             for cl in preview.splitlines():
                                 lines.append(f'    {cl}')
@@ -305,12 +316,13 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
         )
         return response
 
-    @action(detail=True, methods=['post'], url_path='narrative_dump')
+    @action(detail=True, methods=['get'], url_path='narrative_dump')
     def narrative_dump(self, request, pk=None):
         """Returns a detailed narrative of session activity with tool
         execution and error summaries."""
-        from django.http import HttpResponse
         import json
+
+        from django.http import HttpResponse
 
         session = (
             self.get_queryset()
@@ -347,8 +359,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
 
         lines = []
         lines.append(
-            'SESSION NARRATIVE — #%s — %s'
-            % (id_prefix, identity_name)
+            'SESSION NARRATIVE — #%s — %s' % (id_prefix, identity_name)
         )
         lines.append('=' * 88)
 
@@ -370,8 +381,7 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
                     provider_name = mur.ai_model_provider.provider.key
 
         lines.append(
-            '%s · %d turns · %s'
-            % (status_name, turn_count, duration_str)
+            '%s · %d turns · %s' % (status_name, turn_count, duration_str)
         )
         lines.append(
             'Started: %s · Model: %s · %s'
@@ -412,12 +422,13 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
                 # Determine success/failure
                 status_indicator = '✓'
                 if tc.traceback or (
-                    tc.result_payload
-                    and isinstance(tc.result_payload, str)
+                    tc.result_payload and isinstance(tc.result_payload, str)
                 ):
                     try:
                         result = json.loads(tc.result_payload)
-                        if isinstance(result, dict) and not result.get('ok', True):
+                        if isinstance(result, dict) and not result.get(
+                            'ok', True
+                        ):
                             status_indicator = '✗'
                     except (json.JSONDecodeError, TypeError):
                         result_lower = tc.result_payload.lower()
@@ -468,8 +479,12 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
                 elif tc.result_payload and isinstance(tc.result_payload, str):
                     try:
                         result = json.loads(tc.result_payload)
-                        if isinstance(result, dict) and not result.get('ok', True):
-                            error_msg = result.get('error', 'Unknown error')[:60]
+                        if isinstance(result, dict) and not result.get(
+                            'ok', True
+                        ):
+                            error_msg = result.get('error', 'Unknown error')[
+                                :60
+                            ]
                             if len(str(error_msg)) > 60:
                                 error_msg += '...'
                             tool_name = tc.tool.name if tc.tool else '?'

@@ -22,7 +22,10 @@ if %errorlevel% neq 0 (
     goto check_docker
 )
 
-:: Start Docker Containers
+:: Start Docker Containers (Postgres, Redis, NGINX)
+:: NGINX reverse-proxies to Daphne on ports 80/443. Cert autodetect:
+:: drop cert.pem + key.pem in .\nginx\certs\ for HTTPS, otherwise HTTP.
+if not exist ".\nginx\certs" mkdir ".\nginx\certs"
 docker compose up -d
 
 :: 1. Start Celery Worker in a new window
@@ -34,8 +37,16 @@ echo Starting Celery Beats Worker...
 
 :: 2. Start Django Server in its own window
 echo Starting Django Server...
-start "" "http://127.0.0.1:8000"
 start "Are-Self Django Server" cmd /k ".\venv\Scripts\python.exe manage.py runserver"
+
+timeout /t 3 >nul
+echo Start RJS Server
+start "RJS Server" cmd /k "cd /d c:\Users\micha\are-self\are-self-ui\ && npm run dev"
+if exist "C:\Program Files\Google\Chrome\Application\chrome.exe" (
+    start "" "C:\Program Files\Google\Chrome\Application\chrome.exe" --app=http://localhost:5173
+) else (
+    start "" "http://localhost:5173"
+)
 
 
 :: If runserver exits, pause so we can see the error

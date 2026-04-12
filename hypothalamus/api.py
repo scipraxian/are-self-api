@@ -9,6 +9,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from hypothalamus.hypothalamus import Hypothalamus
 from synaptic_cleft.axon_hillok import fire_neurotransmitter
 from synaptic_cleft.neurotransmitters import Acetylcholine
 
@@ -29,6 +30,7 @@ from .models import (
     AIModelRole,
     AIModelSelectionFilter,
     AIModelSyncLog,
+    AIModelSyncReport,
     AIModelTags,
     AIModelVersion,
     FailoverStrategy,
@@ -53,6 +55,7 @@ from .serializers import (
     AIModelSelectionFilterSerializer,
     AIModelSerializer,
     AIModelSyncLogSerializer,
+    AIModelSyncReportSerializer,
     AIModelTagsSerializer,
     AIModeSerializer,
     FailoverStrategySerializer,
@@ -614,6 +617,41 @@ class AIModelViewSet(viewsets.ModelViewSet):
             }
         )
 
+    @action(detail=False, methods=['post'], url_path='sync_catalog')
+    def sync_catalog(self, request):
+        """Full catalog sync: LiteLLM + OpenRouter + Ollama.
+
+        No new taxonomy is created by default. Proposed taxonomy
+        is captured in the attached AIModelSyncReport.
+        """
+        use_cache = request.data.get('use_cache', False)
+        force_rebuild = request.data.get('force_rebuild', False)
+        allow_new_taxonomy = request.data.get('allow_new_taxonomy', False)
+
+        sync_log = Hypothalamus.sync_catalog(
+            use_local_cache=use_cache,
+            force_rebuild=force_rebuild,
+            allow_new_taxonomy=allow_new_taxonomy,
+        )
+
+        if sync_log is None:
+            return Response(
+                {'error': 'Sync already running.'},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        async_to_sync(fire_neurotransmitter)(
+            Acetylcholine(
+                receptor_class='Hypothalamus',
+                dendrite_id='hypothalamus',
+                activity='updated',
+                vesicle={'action': 'sync_catalog'},
+            )
+        )
+
+        serializer = AIModelSyncLogSerializer(sync_log)
+        return Response(serializer.data)
+
 
 class AIModelProviderViewSet(viewsets.ModelViewSet):
     queryset = AIModelProvider.objects.all()
@@ -699,3 +737,8 @@ class AIModelCapabilitiesViewSet(viewsets.ModelViewSet):
 class AIModelRolesViewSet(viewsets.ModelViewSet):
     queryset = AIModelRole.objects.all()
     serializer_class = AIModelRoleSerializer
+
+
+class AIModelSyncReportViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = AIModelSyncReport.objects.all()
+    serializer_class = AIModelSyncReportSerializer

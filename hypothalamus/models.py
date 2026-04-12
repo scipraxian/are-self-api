@@ -279,13 +279,37 @@ class AIModelProviderRateLimitMixin(models.Model):
     class Meta:
         abstract = True
 
+    MAX_CIRCUIT_BREAKER_COOLDOWN = datetime.timedelta(minutes=5)
+    RESOURCE_COOLDOWN = datetime.timedelta(seconds=60)
+
+    def trip_resource_cooldown(self):
+        """Short, flat cooldown for host-resource errors (OOM, etc.).
+
+        Unlike trip_circuit_breaker this does NOT escalate, does NOT
+        increment rate_limit_counter, and always applies the same fixed
+        pause.  The provider is not at fault — the host just needs a
+        moment to free resources.
+        """
+        self.rate_limited_on = timezone.now()
+        self.rate_limit_reset_time = (
+            self.rate_limited_on + self.RESOURCE_COOLDOWN
+        )
+        self.save(
+            update_fields=['rate_limited_on', 'rate_limit_reset_time']
+        )
+
     def trip_circuit_breaker(self):
         self.rate_limited_on = timezone.now()
         self.rate_limit_counter += 1
         self.rate_limit_total_failures += 1
 
-        multiplier = 2 ** (self.rate_limit_counter - 1)
-        cooldown = self.rate_limit_reset_interval * multiplier
+        # Cap the exponent to prevent overflow when computing cooldown
+        capped_exponent = min(self.rate_limit_counter - 1, 10)
+        multiplier = 2 ** capped_exponent
+        cooldown = min(
+            self.rate_limit_reset_interval * multiplier,
+            self.MAX_CIRCUIT_BREAKER_COOLDOWN,
+        )
 
         self.rate_limit_reset_time = self.rate_limited_on + cooldown
         self.save(
@@ -606,3 +630,38 @@ class AIModelDescription(DescriptionMixin, CreatedAndModifiedWithDelta):
     categories = models.ManyToManyField(AIModelCategory, blank=True)
     tags = models.ManyToManyField(AIModelTags, blank=True)
     is_current = models.BooleanField(default=True, db_index=True)
+
+
+class AIModelSyncReport(CreatedMixin):
+    """Captures proposed taxonomy that the sync would have created but didn't.
+
+    Attached 1:1 to an AIModelSyncLog. Human reviews this, updates
+    canonical fixtures, then the next sync picks up the new records.
+    """
+
+    sync_log = models.OneToOneField(
+        AIModelSyncLog,
+        on_delete=models.CASCADE,
+        related_name='sync_report',
+    )
+
+    # Each field is a JSON list of {"raw_slug": "...", "proposed_name": "..."}
+    proposed_families = models.JSONField(default=list)
+    proposed_creators = models.JSONField(default=list)
+    proposed_roles = models.JSONField(default=list)
+    proposed_quantizations = models.JSONField(default=list)
+    proposed_tags = models.JSONField(default=list)
+    proposed_versions = models.JSONField(default=list)
+
+    # Models that couldn't be fully enriched because taxonomy was missing
+    unenriched_model_slugs = models.JSONField(default=list)
+
+    def __str__(self):
+        total = (
+            len(self.proposed_families)
+            + len(self.proposed_creators)
+            + len(self.proposed_roles)
+            + len(self.proposed_tags)
+            + len(self.proposed_versions)
+        )
+        return f'SyncReport ({total} proposed) for {self.sync_log}'

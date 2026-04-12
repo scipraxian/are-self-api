@@ -42,8 +42,16 @@ if %errorlevel% neq 0 (
 )
 
 :: Step 4: Start containers
-echo [4/9] Starting PostgreSQL and Redis containers...
+echo [4/9] Starting PostgreSQL, Redis, and NGINX containers...
+:: NGINX binds ports 80/443. If either is in use on this machine, the
+:: nginx container will fail to start — the rest of the stack still works.
+:: The nginx/certs folder must exist for the bind mount even if empty.
+if not exist ".\nginx\certs" mkdir ".\nginx\certs"
 docker compose up -d
+if %errorlevel% neq 0 (
+    echo   WARNING: docker compose reported an error. If it was the nginx
+    echo   container, check whether ports 80 or 443 are already in use.
+)
 
 :: Step 5: Enable pgvector
 echo [5/9] Enabling pgvector extension...
@@ -95,6 +103,11 @@ echo ========================================================
 echo   INSTALLATION COMPLETE
 echo.
 echo   Launch Are-Self:
-echo     .\are_self.bat
+echo     .\are-self.bat
+echo.
+echo   The Docker stack now includes NGINX as a reverse proxy:
+echo     - HTTP  on port 80  (default)
+echo     - HTTPS on port 443 (drop cert.pem + key.pem in nginx\certs\)
+echo   See are-self-docs for the MCP server connection guide.
 echo ========================================================
 pause

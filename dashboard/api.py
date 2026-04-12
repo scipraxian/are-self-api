@@ -1,7 +1,4 @@
 import logging
-import os
-import threading
-import time
 from datetime import timedelta
 
 from django.db.models import Q
@@ -9,7 +6,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from central_nervous_system.models import NeuralPathway, SpikeTrain
@@ -17,17 +14,10 @@ from central_nervous_system.serializers.serializers import (
     CNSNeuralPathwaySerializer,
     CNSSwimlaneSerializer,
 )
-from config.celery import app as celery_app
 from environments.models import ProjectEnvironment
 from environments.serializers import ProjectEnvironmentSerializer
 
 logger = logging.getLogger(__name__)
-
-
-def delayed_shutdown():
-    """Background thread to kill the Daphne/Django process after returning the HTTP response."""
-    time.sleep(1.0)
-    os._exit(0)
 
 
 class DashboardViewSet(viewsets.ViewSet):
@@ -96,23 +86,3 @@ class DashboardViewSet(viewsets.ViewSet):
             spawns_list, many=True
         ).data
         return Response(response_data)
-
-    @action(detail=False, methods=['post'])
-    def shutdown(self, request):
-        """Triggers a systemic shutdown of Celery workers and the ASGI server.
-
-        DEPRECATED: Use /api/v2/system-control/shutdown/ instead.
-        """
-        logger.warning(
-            '[Dashboard] Using deprecated shutdown endpoint. Use '
-            '/api/v2/system-control/shutdown/ instead.'
-        )
-        # 1. Send shutdown broadcast to Celery workers
-        celery_app.control.shutdown()
-
-        # 2. SpikeTrain a delayed thread to kill the Django process
-        threading.Thread(target=delayed_shutdown).start()
-
-        return Response(
-            {'status': 'System shutdown initiated'}, status=status.HTTP_200_OK
-        )

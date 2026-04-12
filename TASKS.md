@@ -2,11 +2,51 @@
 
 Remaining work, sifted for the backend. See FEATURES.md for what's built.
 
-## Top Priority — Release Day Documentation (April 6, 2026)
+## Release Day Update (April 7, 2026)
+
+**Gemma4 rollback:** Gemma4 changed its output format, breaking the Frontal Lobe reasoning loop.
+Empirical testing showed Qwen outperformed Gemma4 on the Are-Self framework. Rolled back to Qwen
+for release. A parser is being developed to handle Gemma4's new output format post-release.
+
+**OpenRouter sync restored:** The OpenRouter provider sync feature has been brought back but is
+untested. Shipping with this feature enabled — needs documentation in are-self-docs.
+
+**READMEs updated:** All four repo READMEs have been updated for release.
+
+## Top Priority — Release Day Documentation (April 7, 2026)
 
 Documentation is the release-day focus. The Docusaurus site has 34 solid pages and 11 UI walkthrough
 stubs. See "Ship-Blocking — Documentation Infrastructure" below. Docstrings and drf-spectacular are
 also ship-blocking for the API reference.
+
+## Top Priority — Funding & Sponsorship Infrastructure
+
+- [ ] **Set up GitHub FUNDING.yml.** Create `.github/FUNDING.yml` in are-self-api (org-level). Populate
+  with active platform usernames. Platforms to evaluate and set up accounts on:
+  - **GitHub Sponsors** (`github: scipraxian`) — native to where the code lives, lowest friction
+  - **Ko-fi** — no fees on donations, good for one-time tips, easy setup
+  - **Buy Me a Coffee** — similar to Ko-fi, large casual donor base
+  - **Patreon** — recurring memberships, good for building a community tier
+  - **Open Collective** — transparent finances, good for open-source credibility
+  - **Polar** — built for open-source, ties funding to issues/features
+  - **LFX Crowdfunding** — Linux Foundation backed, good for institutional credibility
+  - **Custom links** — PayPal.me, Venmo, or direct donation page on are-self.com
+  Each platform added to FUNDING.yml creates a "Sponsor" button on the GitHub repo. More platforms =
+  more eyeballs. Priority: GitHub Sponsors + Ko-fi first, then expand.
+- [ ] **Add donation/sponsor links to docs site.** Add a "Support Are-Self" page or section to the
+  Docusaurus site with all funding links. Also add to the Discord welcome message.
+- [ ] **Explore 501(c)(3) path with Len Lanzi.** Long-term: tax-deductible donations unlock
+  institutional and grant funding. Len is the nonprofit connection.
+
+## Top Priority — Remove Legacy `central_nervous_system/` URL Prefix
+
+- [ ] **The `/central_nervous_system/` URL prefix must GO.** It's a legacy holdover living in the
+  wrong place from the old pre-`/api/v2/` routing scheme. The app itself stays (that's the CNS
+  brain region); only the URL prefix needs to die. Migrate any still-live endpoints onto
+  `/api/v2/` and delete `central_nervous_system.urls.urls` from `config/urls.py`.
+- [ ] **After removal, touch nginx again.** `are-self-api/nginx/entrypoint.sh` currently has a
+  `location /central_nervous_system/` block proxying to Daphne. Delete that block once the
+  Django side is cleaned up, and `docker compose restart nginx` to pick it up.
 
 ## Top Priority — PNS Expansion
 
@@ -19,6 +59,57 @@ also ship-blocking for the API reference.
   currently in a session, what they're doing, session duration, turn count. Real-time via existing
   dendrite infrastructure.
 
+## NGINX & MCP Follow-ups
+
+- [ ] **IPv6 upstream noise in nginx logs.** `host.docker.internal` resolves to both IPv4 and
+  IPv6; nginx tries the IPv6 address first, fails (`[fdc4:f303:9324::254]:8000 failed`), and
+  falls back to IPv4 successfully. Harmless but noisy. Fix by pinning `resolver` to IPv4 only
+  in `nginx/entrypoint.sh`, or by using `host-gateway` with an explicit IPv4 alias.
+- [ ] **Set up Cloudflare Tunnel so Cowork can reach the MCP (Michael's personal box).**
+  Cowork's custom connector flow fetches the endpoint from Anthropic's cloud, so `127.0.0.1`
+  is unreachable. Cloudflare Tunnel gives us a publicly-routable hostname backed by an
+  outbound-only connection from the local machine — no router/firewall changes, no public
+  IP exposure. Steps:
+  1. Install `cloudflared` on Windows (MSI from
+     `https://github.com/cloudflare/cloudflared/releases` — `cloudflared-windows-amd64.msi`).
+     Verify: `cloudflared --version`.
+  2. `cloudflared tunnel login` — opens browser, pick `are-self.com`, writes
+     `%USERPROFILE%\.cloudflared\cert.pem` (the account credential).
+  3. `cloudflared tunnel create are-self-mcp` — prints a UUID and writes
+     `%USERPROFILE%\.cloudflared\<uuid>.json` (the tunnel credential).
+  4. Create `%USERPROFILE%\.cloudflared\config.yml`:
+     ```yaml
+     tunnel: are-self-mcp
+     credentials-file: C:\Users\micha\.cloudflared\<uuid>.json
+     ingress:
+       - hostname: mcp.are-self.com
+         service: https://local.are-self.com
+         originRequest:
+           noTLSVerify: false
+       - service: http_status:404
+     ```
+     The origin is `https://local.are-self.com` (not `localhost`) so cloudflared hits the
+     upstream with a hostname that matches our real ZeroSSL cert — strict TLS verify stays on.
+  5. `cloudflared tunnel route dns are-self-mcp mcp.are-self.com` — creates a Cloudflare
+     CNAME to `<uuid>.cfargotunnel.com`. Record is proxied (orange cloud) automatically,
+     which is correct for tunnels (unlike the grey-cloud `local.are-self.com` A record).
+  6. Foreground test: `cloudflared tunnel run are-self-mcp`, then
+     `Invoke-RestMethod -Uri https://mcp.are-self.com/mcp -Method Post -ContentType application/json -Body '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'`
+     should return the same 14 tools as the direct-local probe.
+  7. Service install (runs on boot, no terminal): `cloudflared service install`.
+  8. Add `https://mcp.are-self.com/mcp` as a custom connector in the claude.ai Connectors
+     UI. Are-Self must be running (`are-self.bat` + `docker compose up -d`) for Cowork to
+     get responses — tunnel alone doesn't start the stack.
+  **Per-user only.** This is not a distribution mechanism; each Are-Self user who wants
+  Cowork access would have to run their own tunnel with their own subdomain. A real
+  shareable "Cowork connects to Are-Self" story is still open and is NOT this task.
+- [ ] **Repo cert distribution decision.** Currently `nginx/certs/cert.pem` + `key.pem` live
+  outside git. Michael plans to ship the ZeroSSL cert + key in the repo so the 10yo target
+  user doesn't have to re-issue one — the cert is for `local.are-self.com` which resolves to
+  `127.0.0.1`, so publicly-exposed private-key revocation risk is real but limited (worst case
+  an attacker can MITM the user's own localhost traffic, which they already control). Decide
+  and document the rationale in `mcp-server.md`. Re-issue + re-commit every ~80 days to stay
+  ahead of the 90-day expiry.
 ## Ship-Blocking — Security Remediation (Before Tuesday Release)
 
 - [ ] **Pin Django to >=6.0.2.** CVE-2025-64459 (CVSS 9.1) — SQL injection via QuerySet.filter(). Affects
@@ -79,11 +170,15 @@ also ship-blocking for the API reference.
   reduce redundancy, improve the interface, make the tool descriptions clearer for small models.
 - [ ] **Fix linters / Ruff configuration.** Ensure linting is consistent across the project. Pin Ruff
   config, resolve any conflicting rules.
-- [ ] **Migrate shutdown endpoint out of dashboard.** The shutdown action exists in `dashboard/api.py`
-  (`celery_app.control.shutdown()` + delayed Django process kill). Needs to move to a non-deprecated app
-  (PNS or config) before `dashboard/` is removed. Add a restart endpoint. Frontend buttons needed
-  (tracked in UI tasks). Without this, developers must manually kill/restart Celery workers when deploying
-  code changes — stale workers run old native handlers and produce confusing errors.
+- [ ] **Rename `system-control` endpoint — off style guide.** "System Control" violates the biological
+  naming rule (mechanical/military). Candidates: `homeostasis`, `brainstem`, `medulla`, `autonomic`.
+  Coordinated rename with frontend (`SystemControlPanel` → matching name). Frontend task filed under
+  are-self-ui/TASKS.md.
+- [x] **~~Migrate shutdown endpoint out of dashboard.~~** Canonical endpoint lives at
+  `/api/v2/system-control/` (`peripheral_nervous_system/autonomic_nervous_system.py::SystemControlViewSet`)
+  with shutdown, restart, and status actions. Deprecated shim in `dashboard/api.py` has been removed along
+  with its now-unused imports (`os`, `threading`, `time`, `celery_app`, `AllowAny`-only permission). The
+  `/api/v2/system-control/` URL rename (off biological style guide) is tracked separately above.
 - [ ] **Standardize API URLs to hyphens.** Legacy underscore routes: `engram_tags`, `reasoning_sessions`,
   `reasoning_turns`, `nerve_terminal_*`. Coordinated with frontend — both repos change together.
 - [ ] **Hypothalamus fixture initial state.** The 4 fixture AIModelProvider records have `is_enabled: true`,
@@ -102,13 +197,22 @@ also ship-blocking for the API reference.
 
 ## Known Bugs
 
-- [ ] **Infinite loop on retry LIMIT REACHED.** The retry logic node correctly returns 500 (LIMIT
-  REACHED), firing the FAILURE axon. BUT if the graph has a FLOW axon (type 1) from the retry neuron to
-  a downstream node, that FLOW wire ALSO fires — because FLOW axons fire regardless of spike status. The
-  bug is deeper than stale wires. Investigate `_process_graph_triggers` in
-  `central_nervous_system/central_nervous_system.py` — when a logic node (effector PKs 5, 6, 7) finishes,
-  FLOW axons should NOT fire. Only SUCCESS or FAILURE should fire based on the result code. This is the
-  #1 bug.
+- [ ] **Infinite loop on retry LIMIT REACHED — ROLLED BACK, NEEDS MORE TARGETED FIX.**
+  Attempted fix on April 10, 2026 gated `TYPE_FLOW` on all logic effectors
+  (LOGIC_GATE / LOGIC_RETRY / LOGIC_DELAY) inside `_process_graph_triggers`. This
+  broke real pathways because in practice logic nodes are almost always wired with
+  FLOW axons as the downstream connector — suppressing FLOW meant "logic nodes no
+  longer fire at all." Rolled back the gating; `_process_graph_triggers` again
+  unconditionally appends `AxonType.TYPE_FLOW` to `valid_wire_types` the way it did
+  before. The `Effector.LOGIC_EFFECTORS` constant and the two logic-specific
+  regression tests (`test_logic_retry_failure_does_not_fire_flow_axon`,
+  `test_logic_gate_success_does_not_fire_flow_axon`) were removed with the
+  rollback. Kept `test_non_logic_success_still_fires_flow_axon` as a regression
+  test for the restored always-fire-FLOW behavior. If the retry short-circuit is
+  a real observed issue, the targeted fix is probably narrower: only gate FLOW
+  when `effector_id == LOGIC_RETRY` AND `status_id == FAILED` (the "LIMIT REACHED"
+  path only), leaving gate/delay and retry's happy path untouched. Michael didn't
+  remember this bug, so it may not be reproducible in current pathways.
 
 ## Next Up
 
@@ -133,6 +237,25 @@ also ship-blocking for the API reference.
   commands like Execute Neural Pathway.
 - [ ] **MCP Client.** Have Are-Self be an MCP client, calling other MCP servers.
 
+## MCP Server — Phase 2
+
+- [ ] **Blackboard write tool** — Pre-load context data onto spike train blackboard before launch. Requires wiring into NeuronContext or a new blackboard field on SpikeTrain.
+- [ ] **SSE streaming via neurotransmitters** — Use the Synaptic Cleft's neurotransmitter system to stream real-time execution updates back through the MCP SSE endpoint. Map Dopamine (success), Cortisol (error), Glutamate (streaming) to MCP notifications.
+- [ ] **Vector similarity engram search** — Replace text-only search with pgvector cosine similarity search. Requires embedding the query via Ollama/Nomic before searching.
+- [ ] **Full Thalamus integration** — Wire send_thalamus_message into the actual Thalamus message pipeline with WebSocket delivery via Channels.
+- [ ] **Authentication layer** — Add token-based auth for the /mcp endpoint. Required before any public deployment.
+- [x] **~~Cowork custom connector registration~~** — **DEFERRED.** Claude Desktop/Cowork
+  custom connectors require `https://` with strict CA validation. Self-signed certs are
+  rejected. Localhost `http://` is rejected. No viable workaround exists without either a
+  CA-signed cert for a real domain or Anthropic adding a localhost exception. Tracked
+  upstream: `github.com/anthropics/claude-ai-mcp/issues/9`. Are-Self's MCP endpoint
+  works correctly — the blocker is on Anthropic's side. Claude Code CAN connect to
+  local HTTP MCP servers (no HTTPS needed). NGINX in Docker is configured to auto-upgrade
+  to HTTPS if a user provides their own cert in `nginx/certs/`.
+- [ ] **Write blackboard tool** — Allow writing arbitrary key-value context data that gets passed to spike train execution. This enables programmatic setup of execution context.
+- [ ] **Read reasoning session tool** — Expose reasoning session history (turns, tool calls, responses) for post-execution analysis.
+- [ ] **Migrate are-self-install.bat to Python.** Cross-platform install script (replaces Windows-only .bat). Must handle: Python venv, pip install, PostgreSQL check, Redis check, Ollama check. Detect OS via `platform.system()`. Target: a 10-year-old runs `python install.py` and everything works.
+
 ## Future
 
 - [ ] **Image Generation Effector.** CNS effector pattern: artist LLM writes generation prompt to
@@ -154,8 +277,10 @@ also ship-blocking for the API reference.
   sessions. Verify: turn creation, tool dispatch, `yield_turn` breaks the loop, `mcp_done` creates a
   conclusion, max turns halts, stop signal halts.
 - [ ] **Test coverage: Hypothalamus routing.** Unit tests for `pick_optimal_model`: preferred model
-  selection, failover strategy steps, circuit breaker tripping/reset, budget gate filtering, vector
-  similarity fallback.
+  selection, failover strategy steps, budget gate filtering, vector similarity fallback.
+  **Partial:** Circuit breaker tests added (April 9, 2026): trip_circuit_breaker increments/backoff,
+  cap at 5 min, overflow protection at extreme counter values, trip_resource_cooldown flat 60s with
+  no counter change. See `hypothalamus/tests/test_api.py::TestAIModelProviderActions`.
 - [ ] **Test coverage: Hippocampus.** Integration tests for engram CRUD: save with vector dedup at 90%
   threshold, update appends text, read links session/spike/identity, search by text and tags.
 - [ ] **Test coverage: Parietal Lobe tools.** Test each MCP tool function in isolation with fixture data.

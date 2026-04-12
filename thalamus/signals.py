@@ -10,6 +10,7 @@ from frontal_lobe.models import ReasoningSession, ReasoningTurn
 from hypothalamus.models import AIModelProviderUsageRecord
 from identity.models import IdentityDisc
 from parietal_lobe.models import ToolCall
+from peripheral_nervous_system.models import NerveTerminalRegistry
 from prefrontal_cortex.models import PFCEpic, PFCStory, PFCTask
 from synaptic_cleft.axon_hillok import fire_neurotransmitter
 from synaptic_cleft.neurotransmitters import Acetylcholine, Cortisol, Dopamine
@@ -92,14 +93,15 @@ def broadcast_tool_call(sender, instance, **kwargs):
 # ==========================================
 
 
-@receiver(post_save, sender=PFCEpic)
-@receiver(post_save, sender=PFCStory)
-@receiver(post_save, sender=PFCTask)
+@receiver(post_save, sender=AIModelProviderUsageRecord)
 @receiver(post_save, sender=IdentityDisc)
 @receiver(post_save, sender=Iteration)
 @receiver(post_save, sender=IterationShift)
 @receiver(post_save, sender=IterationShiftParticipant)
-@receiver(post_save, sender=AIModelProviderUsageRecord)
+@receiver(post_save, sender=NerveTerminalRegistry)
+@receiver(post_save, sender=PFCEpic)
+@receiver(post_save, sender=PFCStory)
+@receiver(post_save, sender=PFCTask)
 @receiver(post_save, sender=ReasoningSession)
 @receiver(post_save, sender=ReasoningTurn)
 def broadcast_global_entity(sender, instance, **kwargs):

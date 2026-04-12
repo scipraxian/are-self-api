@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from central_nervous_system.central_nervous_system import CNS
-from central_nervous_system.filters import SpikeTrainFilter
+from central_nervous_system.filters import SpikeFilter, SpikeTrainFilter
 from central_nervous_system.models import (
     Axon,
     CNSDistributionMode,
@@ -90,8 +90,13 @@ class SpikeTrainViewSetV2(viewsets.ModelViewSet):
 class SpikeViewSetV2(viewsets.ReadOnlyModelViewSet):
     """Forensics & Telemetry: Fetch massive log payloads only when requested."""
 
-    queryset = Spike.objects.all()
+    queryset = Spike.objects.all().select_related(
+        'status', 'effector', 'target'
+    )
     serializer_class = SpikeDetailSerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_class = SpikeFilter
+    ordering_fields = '__all__'
 
 
 class NeuralPathwayViewSetV2(viewsets.ModelViewSet):
