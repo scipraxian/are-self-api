@@ -5,8 +5,10 @@ from pgvector.django import VectorField
 
 from central_nervous_system.models import Spike
 from common.models import (
+    CreatedMixin,
     DefaultFieldsMixin,
     DescriptionMixin,
+    ModifiedMixin,
     NameMixin,
     UUIDIdMixin,
 )
@@ -102,3 +104,63 @@ def engram_tags_changed(sender, instance, action, **kwargs):
         return
     if action in ['post_add', 'post_remove', 'post_clear']:
         instance.update_vector()
+
+
+class SkillEngram(UUIDIdMixin, CreatedMixin, ModifiedMixin):
+    """Procedural knowledge unit: SKILL.md content + metadata + linked files."""
+
+    RELATED_NAME = 'skill_engrams'
+
+    name = models.CharField(max_length=64, db_index=True, unique=True)
+    description = models.CharField(max_length=200)
+    category = models.CharField(
+        max_length=64, db_index=True, blank=True, default=''
+    )
+    body = models.TextField()
+    yaml_frontmatter = models.JSONField(default=dict, blank=True)
+    vector = VectorField(dimensions=768, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    identity_disc = models.ForeignKey(
+        'identity.IdentityDisc',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name=RELATED_NAME,
+    )
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return f'SkillEngram(name={self.name!r})'
+
+
+class SkillFileAttachment(UUIDIdMixin, CreatedMixin):
+    """A file belonging to a SkillEngram (script, template, reference, asset)."""
+
+    FILE_TYPE_CHOICES = [
+        ('script', 'Script'),
+        ('template', 'Template'),
+        ('reference', 'Reference'),
+        ('asset', 'Asset'),
+    ]
+    RELATED_NAME = 'attached_files'
+
+    skill = models.ForeignKey(
+        SkillEngram,
+        on_delete=models.CASCADE,
+        related_name=RELATED_NAME,
+    )
+    file_type = models.CharField(max_length=16, choices=FILE_TYPE_CHOICES)
+    file_path = models.CharField(max_length=512)
+    file_content = models.TextField(blank=True, default='')
+
+    class Meta:
+        unique_together = [['skill', 'file_path']]
+        ordering = ['file_type', 'file_path']
+
+    def __str__(self):
+        return f'{self.file_type}: {self.file_path}'

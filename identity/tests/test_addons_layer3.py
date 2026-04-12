@@ -4,7 +4,7 @@ from django.utils import timezone
 
 from common.tests.common_test_case import CommonFixturesAPITestCase
 from frontal_lobe.models import ReasoningSession, ReasoningStatusID, ReasoningTurn
-from hippocampus.models import Engram, EngramTag
+from hippocampus.models import Engram, EngramTag, SkillEngram
 from hypothalamus.models import AIModel, AIModelProvider, AIModelProviderUsageRecord, LLMProvider
 from identity.addons.addon_registry import ADDON_REGISTRY
 from identity.addons.memory_snapshot_addon import (
@@ -227,6 +227,65 @@ class SkillsIndexAddonTests(CommonFixturesAPITestCase):
         self.assertLessEqual(len(body), MAX_SKILLS_BLOCK_CHARS)
         self.assertIn('...and ', body)
         self.assertIn(' more', body)
+
+    def test_skill_engram_appears_in_addon(self):
+        """Assert SkillEngram linked to disc shows in addon output."""
+        SkillEngram.objects.create(
+            name='my_new_skill',
+            description='A brand new skill from SkillEngram.',
+            body='# Skill Body',
+            identity_disc=self.disc,
+        )
+        turn = ReasoningTurn.objects.create(
+            session=self.session,
+            turn_number=1,
+            status_id=ReasoningStatusID.ACTIVE,
+        )
+        out = skills_index_addon(turn)
+        self.assertEqual(len(out), 1)
+        body = out[0]['content']
+        self.assertIn('my_new_skill', body)
+        self.assertIn('A brand new skill from SkillEngram.', body)
+
+    def test_skill_engram_no_tool_match_required(self):
+        """Assert SkillEngram does not require tool name match (unlike Engram path)."""
+        SkillEngram.objects.create(
+            name='standalone_skill',
+            description='No matching tool needed.',
+            body='# Independent',
+            identity_disc=self.disc,
+        )
+        turn = ReasoningTurn.objects.create(
+            session=self.session,
+            turn_number=1,
+            status_id=ReasoningStatusID.ACTIVE,
+        )
+        out = skills_index_addon(turn)
+        self.assertEqual(len(out), 1)
+        self.assertIn('standalone_skill', out[0]['content'])
+
+    def test_fallback_to_tagged_engrams_when_no_skill_engrams(self):
+        """Assert tagged Engrams still work when no SkillEngram rows exist."""
+        tool = ToolDefinition.objects.create(
+            name='fallback_tool', description='Fallback desc'
+        )
+        self.disc.enabled_tools.add(tool)
+        st = self._skill_tag()
+        e = Engram.objects.create(
+            name='fallback_tool',
+            description='Old-style skill.',
+            is_active=True,
+        )
+        e.tags.add(st)
+        e.identity_discs.add(self.disc)
+        turn = ReasoningTurn.objects.create(
+            session=self.session,
+            turn_number=1,
+            status_id=ReasoningStatusID.ACTIVE,
+        )
+        out = skills_index_addon(turn)
+        self.assertEqual(len(out), 1)
+        self.assertIn('fallback_tool', out[0]['content'])
 
 
 class PlatformHintAddonTests(CommonFixturesAPITestCase):
