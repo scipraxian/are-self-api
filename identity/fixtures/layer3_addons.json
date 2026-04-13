@@ -1,0 +1,42 @@
+[
+  {
+    "model": "identity.identityaddon",
+    "pk": 15,
+    "fields": {
+      "name": "Memory Snapshot",
+      "description": "Inject active memory entries (user profile and agent notes) from linked Hippocampus engrams.",
+      "phase": 2,
+      "function_slug": "memory_snapshot_addon"
+    }
+  },
+  {
+    "model": "identity.identityaddon",
+    "pk": 16,
+    "fields": {
+      "name": "Skills Index",
+      "description": "Compact table of skill-tagged engrams intersecting enabled tools.",
+      "phase": 2,
+      "function_slug": "skills_index_addon"
+    }
+  },
+  {
+    "model": "identity.identityaddon",
+    "pk": 17,
+    "fields": {
+      "name": "Platform Hint",
+      "description": "Gateway platform-specific response constraints (Discord, Telegram, CLI).",
+      "phase": 2,
+      "function_slug": "platform_hint_addon"
+    }
+  },
+  {
+    "model": "identity.identityaddon",
+    "pk": 18,
+    "fields": {
+      "name": "Tool Guidance",
+      "description": "Extra tool-use encouragement when the prior turn used a weaker tool-calling model.",
+      "phase": 4,
+      "function_slug": "tool_guidance_addon"
+    }
+  }
+]

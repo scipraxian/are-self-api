@@ -5,11 +5,11 @@ services:
     container_name: are_self_db
     restart: always
     environment:
-      POSTGRES_DB: postgres
+      POSTGRES_DB: postgres_talos
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: frith
+      POSTGRES_PASSWORD: Wingsofbronze223
     ports:
-      - "5432:5432"
+      - "5436:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

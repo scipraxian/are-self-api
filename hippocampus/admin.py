@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Engram, EngramTag
+from .models import Engram, EngramTag, SkillEngram, SkillFileAttachment
 
 
 @admin.register(EngramTag)
@@ -66,6 +66,65 @@ class EngramAdmin(admin.ModelAdmin):
         ),
         (
             'System Timestamps',
+            {
+                'fields': ('created', 'modified'),
+                'classes': ('collapse',),
+            },
+        ),
+    )
+
+
+class SkillFileAttachmentInline(admin.TabularInline):
+    model = SkillFileAttachment
+    extra = 0
+    readonly_fields = ('created',)
+    fields = ('file_type', 'file_path', 'file_content', 'created')
+
+
+@admin.register(SkillEngram)
+class SkillEngramAdmin(admin.ModelAdmin):
+    list_display = ('name', 'category', 'is_active', 'created')
+    list_filter = ('is_active', 'category')
+    search_fields = ('name', 'description', 'body')
+    readonly_fields = ('created', 'modified', 'vector_display')
+    inlines = [SkillFileAttachmentInline]
+
+    def vector_display(self, obj):
+        """Displays the vector dimensions or None."""
+        if obj.vector is None:
+            return 'None'
+        return f'Vector({len(obj.vector)} dimensions)'
+
+    vector_display.short_description = 'Vector'
+
+    fieldsets = (
+        (
+            None,
+            {
+                'fields': (
+                    'name',
+                    'description',
+                    'category',
+                    'is_active',
+                    'identity_disc',
+                )
+            },
+        ),
+        (
+            'Content',
+            {
+                'fields': ('body', 'yaml_frontmatter'),
+            },
+        ),
+        (
+            'Embedding',
+            {
+                'fields': ('vector_display',),
+                'classes': ('collapse',),
+            },
+        ),
+        (
+            'Timestamps',
             {
                 'fields': ('created', 'modified'),
                 'classes': ('collapse',),

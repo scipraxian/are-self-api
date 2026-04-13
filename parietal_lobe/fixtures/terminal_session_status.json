@@ -1,0 +1,30 @@
+[
+  {
+    "model": "parietal_lobe.terminalsessionstatus",
+    "pk": 1,
+    "fields": {
+      "name": "running"
+    }
+  },
+  {
+    "model": "parietal_lobe.terminalsessionstatus",
+    "pk": 2,
+    "fields": {
+      "name": "completed"
+    }
+  },
+  {
+    "model": "parietal_lobe.terminalsessionstatus",
+    "pk": 3,
+    "fields": {
+      "name": "killed"
+    }
+  },
+  {
+    "model": "parietal_lobe.terminalsessionstatus",
+    "pk": 4,
+    "fields": {
+      "name": "failed"
+    }
+  }
+]

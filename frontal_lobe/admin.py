@@ -5,6 +5,7 @@ from .models import (
     ReasoningSession,
     ReasoningStatus,
     ReasoningTurn,
+    ReasoningTurnKind,
     SessionConclusion,
 )
 
@@ -15,6 +16,8 @@ class ReasoningTurnInline(admin.TabularInline):
     fields = (
         'turn_number',
         'status',
+        'turn_kind',
+        'is_compressed',
         'inference_time',
     )
     readonly_fields = (
@@ -38,7 +41,7 @@ class ReasoningSessionAdmin(admin.ModelAdmin):
     )
     list_filter = ('status', 'created')
     search_fields = ('id',)
-    readonly_fields = ('created', 'modified', 'delta')
+    readonly_fields = ('created', 'modified', 'delta', 'interrupt_snapshot')
     list_select_related = ('status', 'identity_disc', 'participant', 'spike')
     inlines = [ReasoningTurnInline]
 
@@ -60,6 +63,8 @@ class ReasoningTurnAdmin(admin.ModelAdmin):
         'turn_number',
         'session',
         'status',
+        'turn_kind',
+        'is_compressed',
         'inference_time',
     )
     list_filter = ('status', 'created')
@@ -82,6 +87,12 @@ class SessionConclusionAdmin(admin.ModelAdmin):
 
 @admin.register(ReasoningStatus)
 class ReasoningStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ('name',)
+
+
+@admin.register(ReasoningTurnKind)
+class ReasoningTurnKindAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
     search_fields = ('name',)
 

@@ -54,8 +54,7 @@ def _file_generator(root_path):
                 return
 
 
-@sync_to_async
-def _grep_sync(
+def grep_sync(
     path: str,
     pattern: str,
     case_insensitive: bool = True,
@@ -137,6 +136,9 @@ def _grep_sync(
     return output
 
 
+_async_grep = sync_to_async(grep_sync)
+
+
 async def execute(
     path: str,
     pattern: str,
@@ -144,4 +146,4 @@ async def execute(
     page: int = 1,
 ) -> str:
     """Recursively searches for a regex pattern starting at path."""
-    return await _grep_sync(path, pattern, case_insensitive, page)
+    return await _async_grep(path, pattern, case_insensitive, page)

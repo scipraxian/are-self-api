@@ -6,8 +6,10 @@ from common.models import (
     DefaultFieldsMixin,
     DescriptionMixin,
     ModifiedMixin,
+    NameMixin,
+    UUIDIdMixin,
 )
-from frontal_lobe.models import ReasoningStatusMixin, ReasoningTurn
+from frontal_lobe.models import ReasoningSession, ReasoningStatusMixin, ReasoningTurn
 
 
 class ToolParameterType(DefaultFieldsMixin, DescriptionMixin):
@@ -129,3 +131,46 @@ class ToolCall(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
 
     def __str__(self):
         return f'ToolCall: {self.tool.name} in Turn {self.turn.turn_number}'
+
+
+class TerminalSessionStatusID:
+    RUNNING = 1
+    COMPLETED = 2
+    KILLED = 3
+    FAILED = 4
+
+
+class TerminalSessionStatus(NameMixin, TerminalSessionStatusID):
+    """Lookup for shell session lifecycle."""
+
+    IDs = TerminalSessionStatusID
+
+    class Meta:
+        verbose_name_plural = 'Terminal Session Statuses'
+
+
+class TerminalSession(UUIDIdMixin, CreatedMixin, ModifiedMixin):
+    """Background shell session tracked for mcp_terminal poll/kill."""
+
+    RELATED_NAME = 'terminal_sessions'
+
+    pid = models.IntegerField()
+    command = models.TextField()
+    workdir = models.CharField(max_length=1024, blank=True, default='')
+    stdout_buffer = models.TextField(blank=True, default='')
+    stderr_buffer = models.TextField(blank=True, default='')
+    status = models.ForeignKey(
+        TerminalSessionStatus,
+        on_delete=models.PROTECT,
+        default=TerminalSessionStatusID.RUNNING,
+    )
+    reasoning_session = models.ForeignKey(
+        ReasoningSession,
+        on_delete=models.CASCADE,
+        related_name=RELATED_NAME,
+        null=True,
+        blank=True,
+    )
+
+    def __str__(self):
+        return f'TerminalSession {self.id} pid={self.pid}'

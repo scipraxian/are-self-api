@@ -5,6 +5,7 @@ from typing import Optional
 from django.db import models
 
 from common.models import (
+    BigIdMixin,
     CreatedAndModifiedWithDelta,
     CreatedMixin,
     DefaultFieldsMixin,
@@ -24,6 +25,23 @@ class ReasoningStatusID:
     ERROR = 6
     ATTENTION_REQUIRED = 7
     STOPPED = 8
+    INTERRUPTED = 9
+
+
+class ReasoningTurnKindID:
+    """Lookup IDs for ReasoningTurn.turn_kind (context compression audit)."""
+
+    NORMAL = 1
+    SUMMARY = 2
+
+
+class ReasoningTurnKind(BigIdMixin, NameMixin, ReasoningTurnKindID):
+    """Classifies turns for Layer 2 compression (e.g. LLM summary rows)."""
+
+    IDs = ReasoningTurnKindID
+
+    class Meta:
+        verbose_name_plural = 'Reasoning Turn Kinds'
 
 
 class ReasoningStatus(NameMixin, ReasoningStatusID):
@@ -94,6 +112,9 @@ class ReasoningSession(
     # Queued messages from users or other agents during a turn.
     swarm_message_queue = models.JSONField(default=list, blank=True)
 
+    # Layer 2 interrupt: partial assistant text and metadata when Spike is STOPPING.
+    interrupt_snapshot = models.JSONField(default=dict, blank=True)
+
     @property
     def current_level(self):
         """Fast Leveling: Every 100 XP is a new level."""
@@ -136,6 +157,13 @@ class ReasoningTurn(
         null=True,
         blank=True,
     )
+
+    turn_kind = models.ForeignKey(
+        ReasoningTurnKind,
+        on_delete=models.PROTECT,
+        default=ReasoningTurnKindID.NORMAL,
+    )
+    is_compressed = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['turn_number']

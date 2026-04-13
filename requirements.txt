@@ -1,3 +1,21 @@
+Django>=6.0
+celery>=5.3             # Task Queue
+redis>=5.0              # Broker & Cache
+channels>=4.0           # WebSockets (Real-time logs)
+daphne>=4.0             # ASGI Server for Channels
+django-htmx>=1.17       # Frontend interactivity
+psutil>=5.9             # System/Process management
+requests>=2.31          # HTTP checks
+scapy>=2.5              # Network Scanning (For your auto-discovery)
+colorlog>=6.7           # Pretty console output
+django-celery-results>=2.5
+ipython>=8.12           # Interactive Python shell
+yapf>=0.43.0            # Python formatter
+django-extensions>=3.2  # Useful admin features
+django-stubs>=5.2.8     # Type hints for Django
+pytest-django>=4.11.1      # Testing
+isort>=7.0.0            # Python import sorter
+celery-types>=0.24.0
 # === Django Core ===
 Django>=6.0.2                   # CVE-2025-64459 (CVSS 9.1) — SQL injection. Pinned to patched.
 djangorestframework>=3.15.2     # CVE-2024-21520 — XSS in break_long_headers. Pinned to patched.
@@ -32,7 +50,15 @@ psutil>=5.9                     # System/Process management
 requests>=2.31                  # HTTP checks
 colorlog>=6.7
 Markdown>=3.10
-html2text
+uvicorn>=0.30
+websockets>=14.0
+
+pytest
+coverage
+pygtail  # depreciated
 aiofiles
 watchfiles>=1.1.1
 tenacity
+asgiref
+httpx>=0.27
+trafilatura>=1.6

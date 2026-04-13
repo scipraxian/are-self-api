@@ -1,5 +1,6 @@
 import importlib
 import inspect
+import json
 import logging
 from typing import Any, Dict
 
@@ -67,6 +68,8 @@ class ParietalMCP:
 
             # Await the execution safely
             result = await tool_func(**safe_args)
+            if isinstance(result, (dict, list)):
+                return json.dumps(result, default=str)
             return str(result)
 
         except ImportError:

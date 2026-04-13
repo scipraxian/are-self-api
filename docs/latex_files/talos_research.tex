@@ -1,0 +1,271 @@
+\documentclass[11pt]{article}
+% Packages used:
+% - geometry (standard; no special installation/flags)
+% - microtype (standard; no special installation/flags)
+% - amsmath (standard; no special installation/flags)
+% - amssymb (standard; no special installation/flags)
+% - booktabs (standard; no special installation/flags)
+% - array (standard; no special installation/flags)
+% - enumitem (standard; no special installation/flags)
+% - hyperref (standard; no special installation/flags)
+% - url (standard; no special installation/flags)
+% Compilation flags: none required.
+
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{url}
+
+\hypersetup{
+	pdftitle={Talos: A Django Control Plane for Graph-Based Orchestration and Autonomous Reasoning},
+	pdfauthor={Talos Project},
+	colorlinks=true,
+	linkcolor=blue,
+	citecolor=blue,
+	urlcolor=blue
+}
+
+\newcommand{\areself}{\textbf{[are-self]}}
+
+\title{Talos: A Django Control Plane for Graph-Based Orchestration and Autonomous Reasoning}
+\author{Talos Project}
+\date{\textbf{March 2026}}
+
+\begin{document}
+	\maketitle
+	
+	\begin{abstract}
+		\label{are-self:abstract}
+		\areself Talos is a Django control plane that couples two systems: (A) a graph-based orchestration engine that launches and monitors build or automation steps across the local machine and remote agents; and (B) an autonomous reasoning engine that staffs identity-driven AI workers, gives them tools, stores their memory, and lets them manipulate an Agile work graph. The system is built around persistent, typed state rather than transient in-memory orchestration. The orchestration side executes labeled directed graphs of Neurons and Axons as waves of Spikes, driven by Celery tasks, with a formal transition rule $L_{\text{enabled}}(s)$ over edge labels $\{\text{flow}, \text{success}, \text{failure}\}$. The cognition side implements a turn-based reasoning loop with a game-like focus/XP economy, vector-based long-term memory (Hippocampus), and a work-allocation gatekeeper (Prefrontal Cortex) that decides whether an AI worker has actionable work before creating a session. This document presents the main points and breakthroughs of Talos, grounded in the codebase and doc-generator documentation \cite{talosLiveCodebase,talosCombined,talosCNS,talosFrontal,talosParietal,talosHippocampus,talosTemporal,talosPFC,talosIdentity,talosSynaptic,talosOccipital,talosPNS,talosEnvironments}.
+	\end{abstract}
+	
+	\section{Introduction}
+	\label{are-self:intro}
+	\areself The development of AI-assisted automation platforms has reached a point where orchestration and reasoning must be tightly integrated. Talos addresses this by providing a single Django application that unifies graph-based workflow execution with identity-driven AI cognition. The live runtime is the \texttt{central\_nervous\_system} stack plus brain-themed apps: frontal\_lobe (reasoning), parietal\_lobe (tools), hippocampus (memory), temporal\_lobe (scheduler), prefrontal\_cortex (work allocation), identity (persona), synaptic\_cleft (websocket bus), and occipital\_lobe (log digestion) \cite{talosLiveCodebase}.
+	
+	\paragraph{Contributions.}
+	\label{are-self:contributions}
+	\begin{itemize}[leftmargin=1.4em]
+		\item \areself We describe Talos as a persisted state machine platform where the CNS executes external work as graph waves and the frontal/parietal/hippocampus/temporal stack executes internal cognitive work as turn waves \cite{talosLiveCodebase}.
+		\item \areself We present the CNS graph model $G = (V, E, \lambda)$ with a formal transition rule for wave dispatch, blackboard propagation, and hierarchical subgraph composition \cite{talosCNS,talosCombined}.
+		\item \areself We formalize the reasoning loop architecture: identity-driven prompts, L1/L2 history cache, focus/XP economy, tool fizzle condition, and novelty-based memory rewards \cite{talosFrontal,talosParietal,talosHippocampus}.
+		\item \areself We document the temporal scheduler and Prefrontal Cortex work-eligibility gate: Temporal Lobe decides \emph{when} an AI could work; Prefrontal Cortex decides \emph{whether} it should work \cite{talosTemporal,talosPFC}.
+		\item \areself We summarize the unified mathematical structure across modules: context resolution precedence, economy systems, and state machines \cite{talosCombined}.
+	\end{itemize}
+	
+	\section{Background and Problem Statement}
+	\subsection{Orchestration and cognition as separate concerns}
+	\areself Traditional automation platforms treat workflow orchestration and AI reasoning as separate domains. Talos unifies them: a reasoning run is another kind of spike execution, invoked via the native handler \texttt{run\_frontal\_lobe}. The same graph vocabulary (SpikeTrain, Spike, Effector) applies to both process execution and LLM turn loops \cite{talosLiveCodebase,talosCNS}.
+	
+	\subsection{The need for persistent, typed state}
+	\areself Talos is built around persistent, typed state. Almost every important runtime decision is driven by database rows and then executed asynchronously. This design enables inspectable state, audit trails, and recovery from failures without losing execution context \cite{talosLiveCodebase}.
+	
+	\subsection{Context: local, remote, and native execution}
+	\areself The GenericEffectorCaster routes each spike to either a native Python handler (e.g., \texttt{run\_frontal\_lobe}, \texttt{run\_temporal\_lobe}) or to NerveTerminal for local/remote process execution. NerveTerminal uses the same pipeline for both local and remote: async subprocess plus log tailing, yielding \texttt{NerveTerminalEvent} (T\_LOG, T\_EXIT). Remote execution is JSON-over-TCP \cite{talosPNS,talosLiveCodebase}.
+	
+	\section{Method: Talos Architecture Overview}
+	\label{are-self:method-overview}
+	\subsection{Premise: brain-themed modular decomposition}
+	\areself Talos decomposes functionality into modules named after brain regions. The CNS is the graph engine; the frontal lobe is the reasoning loop; the parietal lobe is the tool bridge; the hippocampus is long-term memory; the temporal lobe is the scheduler; the prefrontal cortex is the work gatekeeper; the identity module defines persona; the synaptic cleft is the event bus; the occipital lobe digests logs \cite{talosCombined,talosLiveCodebase}.
+	
+	\subsection{Orchestration and cognition pillars}
+	\areself The architecture has two pillars: (i) \emph{Orchestration}---CNS graph execution, PNS agent discovery and execution, environments for context---and (ii) \emph{Cognition}---frontal lobe (reasoning), parietal lobe (tools), hippocampus (memory), temporal lobe (scheduling), prefrontal cortex (work allocation), identity (persona) \cite{talosCombined}.
+	
+	\subsection{Cross-module architecture}
+	\areself The combined documentation defines the cross-module flow: CNS connects to PNS and environments; CNS invokes frontal lobe and temporal lobe; frontal lobe connects to parietal lobe, hippocampus, and identity; temporal lobe connects to prefrontal cortex; prefrontal cortex invokes frontal lobe \cite{talosCombined}.
+	
+	\subsection{Two core methodological advances}
+	\areself Two core advances comprise Talos:
+	\begin{enumerate}[leftmargin=1.6em, label=(\Alph*)]
+		\item \areself Graph-based orchestration with labeled transition semantics and Celery-driven self-driving dispatch.
+		\item \areself Identity-driven autonomous reasoning with focus/XP economy, vector memory, and Agile work integration.
+	\end{enumerate}
+	
+	\section{Method A: Central Nervous System and Graph Orchestration}
+	\label{are-self:cns}
+	\subsection{Static graph model}
+	\areself The CNS static graph is $G = (V, E, \lambda)$ where $V$ = Neurons, $E \subseteq V \times V$ = Axons, and $\lambda(e) \in \{\text{flow}, \text{success}, \text{failure}\}$. The runtime is an unfolding execution tree of Spikes, not a simple replay of $G$ \cite{talosCNS,talosCombined}.
+	
+	\subsection{Transition rule and wave dispatch}
+	\areself For finished spike $s$ with $\sigma(s) \in \{\text{SUCCESS}, \text{FAILED}\}$:
+	$$
+	L_{\text{enabled}}(s) = \{\text{flow}\} \cup \begin{cases} \{\text{success}\} & \sigma(s)=\text{SUCCESS} \\ \{\text{failure}\} & \sigma(s)=\text{FAILED} \end{cases}
+	$$
+	For each $e = (\nu(s), v)$ with $\lambda(e) \in L_{\text{enabled}}(s)$: create spike at $v$. The \texttt{cast\_cns\_spell} Celery task executes one spike; in \texttt{finally}, it always calls \texttt{check\_next\_wave}, making the engine self-driving \cite{talosCNS,talosLiveCodebase}.
+	
+	\subsection{Context resolution precedence}
+	\areself Context composition: $C = \text{metadata} \oplus \text{env} \oplus \text{blackboard} \oplus \text{effector} \oplus \text{neuron}$. Precedence (rightmost wins): neuron $>$ effector $>$ blackboard $>$ env $>$ metadata \cite{talosCNS,talosCombined}.
+	
+	\subsection{Blackboard propagation and hierarchical composition}
+	\areself Child spikes copy the parent's blackboard. If a Neuron has \texttt{invoked\_pathway}, Talos creates a child SpikeTrain; the parent spike becomes DELEGATED. On child completion, signals map the terminal status back to the parent \cite{talosCNS,talosLiveCodebase}.
+	
+	\subsection{Distribution modes}
+	\areself After spike creation, Talos chooses cardinality: LOCAL\_SERVER (1), ONE\_AVAILABLE\_AGENT (1 if online), ALL\_ONLINE\_AGENTS ($n_{\text{online}}$), SPECIFIC\_TARGETS ($n_{\text{targets}}$) \cite{talosCNS,talosCombined}.
+	
+	\section{Method B: The Reasoning Engine}
+	\label{are-self:reasoning}
+	\subsection{Frontal Lobe: turn loop and prompt assembly}
+	\areself The frontal lobe orchestrates ReasoningSession and ReasoningTurn. Each turn assembles: (1) system identity prompt, (2) L1/L2 history cache, (3) volatile addon messages, (4) sensory trigger (engram catalog). L1: last 2 turns full; L2: older turns with truncated tool results and pruned monologue \cite{talosFrontal,talosLiveCodebase}.
+	
+	\subsection{Session economy}
+	\areself Session level and focus cap \cite{talosFrontal,talosCombined}:
+	$$
+	\text{current\_level} = \lfloor \text{total\_xp} / 100 \rfloor + 1, \quad \text{max\_focus} = 10 + \lfloor (\text{current\_level} - 1) \cdot 0.5 \rfloor
+	$$
+	Efficiency bonus: if $\text{len}(\text{thought\_process}) \leq \text{current\_level} \cdot 1000$, grant +1 focus and +5 XP \cite{talosFrontal}.
+	
+	\subsection{Parietal Lobe: tool bridge and focus economy}
+	\areself The parietal lobe builds JSON schemas from \texttt{IdentityDisc.enabled\_tools}, augments descriptions with \texttt{[COST: X Focus | REWARD: +Y XP]}, and executes tool calls sorted by \texttt{focus\_modifier} descending. Fizzle: $\Delta f < 0 \land f + \Delta f < 0 \Rightarrow$ tool not executed \cite{talosParietal,talosCombined}.
+	
+	\subsection{Hippocampus: vector memory and novelty rewards}
+	\areself Embedding $\phi : \mathcal{T} \to \mathbb{R}^{768}$; similarity $\text{sim}(\mathbf{a}, \mathbf{b}) = 1 - d_{\cos}(\mathbf{a}, \mathbf{b})$. Intercept: $\text{max\_sim} \geq 0.90 \Rightarrow$ save rejected. Novelty: $\text{novelty} = \max(0, 1 - \text{similarity})$. Rewards: $\text{focus\_yield} = \max(1, \lfloor 10 \cdot \text{novelty} \rfloor)$, $\text{xp\_yield} = \max(5, \lfloor 100 \cdot \text{novelty} \rfloor)$ \cite{talosHippocampus,talosCombined}.
+	
+	\subsection{Identity and addons}
+	\areself IdentityDisc provides system prompt, model, tools, addons. Addons (focus, deadline, agile) inject dynamic context per turn. The agile addon maps shifts to work instructions: SIFTING (PM refinement), EXECUTING (worker stories), SLEEPING (reflection) \cite{talosIdentity,talosLiveCodebase}.
+	
+	\subsection{Temporal Lobe and Prefrontal Cortex}
+	\areself Temporal Lobe: iteration state WAITING $\to$ RUNNING $\to$ FINISHED; participant SELECTED $\to$ ACTIVATED $\to$ COMPLETED. Prefrontal Cortex: $W(\text{shift}, \text{identity\_type}, \text{disc}, \text{env})$ is a finite table. If no work, worker is stood down to SELECTED \cite{talosTemporal,talosPFC,talosCombined}.
+	
+	\section{Talos Module Schema}
+	\label{are-self:module-schema}
+	Table~\ref{tab:talos-modules} summarizes the Talos module structure \cite{talosCombined,talosLiveCodebase}.
+	
+	\begin{table*}[t]
+		\centering
+		\caption{Talos module schema.\areself}
+		\label{tab:talos-modules}
+		\footnotesize
+		\begin{tabular}{@{}p{0.20\linewidth}p{0.15\linewidth}>{\raggedright\arraybackslash}p{0.45\linewidth}@{}}
+			\toprule
+			\textbf{Module} & \textbf{Key Structure} & \textbf{Purpose} \\
+			\midrule
+			central\_nervous\_system & $G=(V,E,\lambda)$, $L_{\text{enabled}}(s)$ & Graph engine, wave dispatch, blackboard propagation \\
+			frontal\_lobe & Session level, max\_focus, efficiency bonus & AI reasoning loop, prompt assembly, L1/L2 cache \\
+			parietal\_lobe & Tool schema, fizzle, focus/XP update & Tool bridge, ParietalMCP, cost/reward \\
+			prefrontal\_cortex & $\mathcal{G}_{\text{PFC}}$, $W(\text{shift}, \text{type})$ & Agile work graph, work-eligibility gatekeeper \\
+			temporal\_lobe & Iteration state machine, shift sequence & Scheduler, metronome, Ouroboros \\
+			hippocampus & $\phi$, cosine similarity, novelty, focus\_yield & Durable memory, vector embeddings, intercept \\
+			identity & Addon composition, ADDON\_REGISTRY & Persona, system prompt, addons \\
+			synaptic\_cleft & $\mathcal{E}_{\text{synapse}}$, group $G(s)$ & Websocket event bus, neurotransmitters \\
+			peripheral\_nervous\_system & NerveTerminal, discovery & Local/remote execution, agent discovery \\
+			environments & Single selection, VariableRenderer & Project context, variable interpolation \\
+			occipital\_lobe & Error blocks, token budget & Log digestion, error extraction \\
+			\bottomrule
+		\end{tabular}
+	\end{table*}
+	
+	\section{Supporting Systems}
+	\label{are-self:supporting}
+	\subsection{Synaptic Cleft: event taxonomy}
+	\areself $\mathcal{E}_{\text{synapse}} = \{\text{LOG}, \text{STATUS}, \text{BLACKBOARD}\}$. Glutamate $\mapsto$ LOG; Dopamine/Cortisol $\mapsto$ STATUS; Acetylcholine $\mapsto$ BLACKBOARD. Group: $G(s) = \text{``spike\_log\_''} \oplus \text{str}(s)$ \cite{talosSynaptic,talosCombined}.
+	
+	\subsection{Occipital Lobe: log budget}
+	\areself $\text{max\_char\_limit} = (\text{max\_token\_budget} - 2000) \times 4$. Error blocks: 5 lines before, 10 after; max 5 blocks \cite{talosOccipital,talosCombined}.
+	
+	\subsection{Environments: context and selection}
+	\areself At most one ProjectEnvironment has \texttt{selected=True}. VariableRenderer uses Django template syntax for interpolation. Context precedence places env between metadata and blackboard \cite{talosEnvironments}.
+	
+	\section{State Machines and Invariants}
+	\label{are-self:invariants}
+	Table~\ref{tab:state-machines} summarizes key state machines \cite{talosCombined}.
+	
+	\begin{table}[t]
+		\centering
+		\caption{Talos state machines.\areself}
+		\label{tab:state-machines}
+		\small
+		\begin{tabular}{@{}p{0.22\linewidth}>{\raggedright\arraybackslash}p{0.38\linewidth}>{\raggedright\arraybackslash}p{0.32\linewidth}@{}}
+			\toprule
+			\textbf{Entity} & \textbf{States} & \textbf{Terminal} \\
+			\midrule
+			Spike & CREATED, PENDING, RUNNING, SUCCESS, FAILED, ABORTED, DELEGATED, STOPPING, STOPPED & SUCCESS, FAILED, ABORTED, STOPPED \\
+			SpikeTrain & CREATED, RUNNING, SUCCESS, FAILED, STOPPING, STOPPED & SUCCESS, FAILED, STOPPED \\
+			ReasoningSession & PENDING, ACTIVE, PAUSED, COMPLETED, MAXED\_OUT, ERROR, ATTENTION\_REQUIRED, STOPPED & COMPLETED, MAXED\_OUT, ERROR, STOPPED \\
+			Iteration & WAITING, RUNNING, FINISHED, CANCELLED, BLOCKED\_BY\_USER, ERROR & FINISHED, etc. \\
+			IterationShiftParticipant & SELECTED, ACTIVATED, COMPLETED, PAUSED, ERROR & COMPLETED, etc. \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Invariants}
+	\areself From the combined documentation: (1) CNS: at most one Begin Play neuron per pathway; \texttt{cast\_cns\_spell} always calls \texttt{check\_next\_wave} in finally. (2) Environments: at most one ProjectEnvironment with selected=True. (3) Hippocampus: vector dim = 768; intercept threshold = 0.90. (4) PFC: no ReasoningSession without \texttt{\_is\_available\_work} True. (5) Temporal: at most one active temporal SpikeTrain per environment \cite{talosCombined}.
+	
+	\section{Limitations and Assumptions}
+	\label{are-self:limitations}
+	\areself The graph is not guaranteed acyclic; retrigger prevention is via ``has descendants'' check. The prompt-window heuristic \texttt{num\_ctx = floor(payload\_size/3) + 2048} is not tokenizer-accurate. Occipital lobe uses 1 token $\approx$ 4 chars. Stale pending spikes ($>$ 5 min) are marked FAILED; zombie detection uses 20 minute cutoff \cite{talosCombined,talosCNS,talosFrontal,talosTemporal}.
+	
+	\section{Conclusion}
+	\label{are-self:conclusion}
+	\areself Talos is a Django control plane that unifies graph-based orchestration with identity-driven autonomous reasoning. The CNS executes labeled directed graphs as self-driving waves of Spikes, with formal transition semantics, blackboard propagation, and hierarchical subgraphs. The cognition stack implements a turn-based reasoning loop with focus/XP economy, vector memory with novelty rewards, and a work-eligibility gatekeeper that prevents spinning up AI workers without actionable work. The architecture is grounded in persistent, typed state and a brain-themed modular decomposition documented in the codebase and doc-generator \cite{talosLiveCodebase,talosCombined,talosCNS,talosFrontal,talosParietal,talosHippocampus,talosTemporal,talosPFC,talosIdentity}.
+	
+	\clearpage
+	\begin{thebibliography}{99}
+		
+		\bibitem{talosLiveCodebase}
+		Talos Live Codebase Analysis. \texttt{docs/LIVE\_CODEBASE\_ANALYSIS.md}.
+		
+		\bibitem{talosCombined}
+		Talos Backend Combined Mathematical Structure. \texttt{docs/doc-generator/combined\_\_documentation.md}.
+		
+		\bibitem{talosCNS}
+		Central Nervous System Documentation. \texttt{docs/doc-generator/central\_nervous\_system\_\_documentation.md}.
+		
+		\bibitem{talosFrontal}
+		Frontal Lobe Documentation. \texttt{docs/doc-generator/frontal\_lobe\_\_documentation.md}.
+		
+		\bibitem{talosParietal}
+		Parietal Lobe Documentation. \texttt{docs/doc-generator/parietal\_lobe\_\_documentation.md}.
+		
+		\bibitem{talosHippocampus}
+		Hippocampus Documentation. \texttt{docs/doc-generator/hippocampus\_\_documentation.md}.
+		
+		\bibitem{talosTemporal}
+		Temporal Lobe Documentation. \texttt{docs/doc-generator/temporal\_lobe\_\_documentation.md}.
+		
+		\bibitem{talosPFC}
+		Prefrontal Cortex Documentation. \texttt{docs/doc-generator/prefrontal\_cortex\_\_documentation.md}.
+		
+		\bibitem{talosIdentity}
+		Identity Documentation. \texttt{docs/doc-generator/identity\_\_documentation.md}.
+		
+		\bibitem{talosSynaptic}
+		Synaptic Cleft Documentation. \texttt{docs/doc-generator/synaptic\_cleft\_\_documentation.md}.
+		
+		\bibitem{talosOccipital}
+		Occipital Lobe Documentation. \texttt{docs/doc-generator/occipital\_lobe\_\_documentation.md}.
+		
+		\bibitem{talosPNS}
+		Peripheral Nervous System Documentation. \texttt{docs/doc-generator/peripheral\_nervous\_system\_\_documentation.md}.
+		
+		\bibitem{talosEnvironments}
+		Environments Documentation. \texttt{docs/doc-generator/environments\_\_documentation.md}.
+		
+	\end{thebibliography}
+	
+	\appendix
+	
+	\section{CNS Transition Rule (Formal)}
+	\label{are-self:appendix-transition}
+	\areself The enabled edge labels for finished spike $s$:
+	$$
+	L_{\text{enabled}}(s) = \{\text{flow}\} \cup \begin{cases}
+	\{\text{success}\} & \text{if } \sigma(s) = \text{SUCCESS} \\
+	\{\text{failure}\} & \text{if } \sigma(s) = \text{FAILED}
+	\end{cases}
+	$$
+	For each $e = (\nu(s), v)$ with $\lambda(e) \in L_{\text{enabled}}(s)$: create spike at $v$.
+	
+	\section{Hippocampus Novelty and Rewards}
+	\label{are-self:appendix-hippocampus}
+	\areself When save is not intercepted:
+	$$
+	\text{novelty} = \max(0, 1 - \text{similarity}), \quad
+	\text{focus\_yield} = \max\left(1, \lfloor 10 \cdot \text{novelty} \rfloor\right), \quad
+	\text{xp\_yield} = \max\left(5, \lfloor 100 \cdot \text{novelty} \rfloor\right)
+	$$
+	
+\end{document}

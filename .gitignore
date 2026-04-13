@@ -42,3 +42,6 @@ _talos_concatenated_source.txt
 .aider.conf.yml
 .aider.input.history
 .aider.tags.cache.v4/cache.db
+
+uv_cli.ps1
+testing.py
