@@ -2,6 +2,56 @@
 
 Remaining work, sifted for the backend. See FEATURES.md for what's built.
 
+## In Progress — Nerve Terminal Scan Reconcile (April 11, 2026)
+
+**Status:** Shipped initial fix with test coverage (8 tests, all passing against standalone
+smoke harness — Postgres unavailable in sandbox). A regression was caught before close-out:
+the UI agent cards "blink on/off" and the refresh button flashes constantly. Root cause is
+known, fix is scoped, not yet applied.
+
+**What was shipped:**
+
+- `NerveTerminalStatus.CHECKING = 4` (model const + fixture + data migration
+  `peripheral_nervous_system/migrations/0002_checking_status.py`).
+- `_run_async_scan` in `peripheral_nervous_system/peripheral_nervous_system.py` now flips
+  every live row to CHECKING, probes, upserts pongs to ONLINE, then flips stragglers to
+  OFFLINE. Guarded by module-level `_SCAN_LOCK = asyncio.Lock()` to prevent stampede.
+- `NerveTerminalRegistryViewSet.list()` (in `peripheral_nervous_system/api.py`) kicks a scan
+  via `async_to_sync`, degrades gracefully on scan failure (try/except, logs warning, still
+  returns DB state).
+- `peripheral_nervous_system/tests/test_nerve_terminal_scan_reconcile.py` — 8 tests
+  covering found→online, online→offline, mixed, already-offline untouched, CHECKING is
+  transient, concurrent-scan skip, list() triggers scan, list() resilient to scan failure.
+
+**The regression (highest priority when session resumes):**
+The scan does per-row `.save()` in three phases, each firing its own acetylcholine. The
+frontend subscribes to `NerveTerminalRegistry` broadcasts (`PNSPage.tsx:220`) and calls
+`handleRefresh()` on each one, which hits the list endpoint → rekicks the scan (lock skips
+the work but the DB returns partially-reconciled CHECKING rows to the UI). Result: UI churn,
+blinking cards, blinking refresh button.
+
+**Planned surgical fix (scoped, not started):**
+
+1. Drop `_mark_live_terminals_checking` entirely. No CHECKING transient write — too noisy.
+2. `_register_agent_in_db`: compare-then-save. No `.save()` when (status, ip, version)
+   already match the discovered identity — kills the "ONLINE over ONLINE" broadcast storm.
+3. `_mark_unreachable_offline` stays — these are real state transitions and SHOULD broadcast.
+4. Remove the `list()` → scan kick. The scan is already wired to spike execution + the
+   explicit `POST /scan` endpoint; piggybacking on every list() means every dendrite
+   refetch rekicks a scan.
+5. Update tests to match the new broadcast-on-change-only semantics (the CHECKING-transient
+   test becomes "CHECKING is never written by the scan" instead).
+
+**Follow-up pass (separate, if Michael wants):**
+
+- Split the monolithic `handleRefresh` on the frontend into per-topic refetchers so a
+  `NerveTerminalRegistry` broadcast doesn't also refetch celery-workers / beat / spikes.
+- Convert vitals (`/api/v2/vital-signs/vitals/`) from 3s polling to event-driven
+  neurotransmitter push from the vitals collector. Currently the ONE sanctioned polling
+  exception in PNSPage (line 125). Browser does NOT already have this data.
+- Investigate `/api/v2/celery-workers/` 3s response time — likely a synchronous broker
+  round-trip inside the view.
+
 ## Release Day Update (April 7, 2026)
 
 **Gemma4 rollback:** Gemma4 changed its output format, breaking the Frontal Lobe reasoning loop.
@@ -21,21 +71,23 @@ also ship-blocking for the API reference.
 
 ## Top Priority — Funding & Sponsorship Infrastructure
 
+update the docs with the norepinephrine in the pns for django.
+
 - [ ] **Set up GitHub FUNDING.yml.** _Partially done — `are-self-api/.github/FUNDING.yml` exists with
   `github: [scipraxian]` active. The other platforms are commented out pending account creation (to
   avoid GitHub rendering broken Sponsor buttons). Remaining work is account creation + uncommenting,
   which is out-of-repo._ Create `.github/FUNDING.yml` in are-self-api (org-level). Populate
   with active platform usernames. Platforms to evaluate and set up accounts on:
-  - **GitHub Sponsors** (`github: scipraxian`) — native to where the code lives, lowest friction
-  - **Ko-fi** — no fees on donations, good for one-time tips, easy setup
-  - **Buy Me a Coffee** — similar to Ko-fi, large casual donor base
-  - **Patreon** — recurring memberships, good for building a community tier
-  - **Open Collective** — transparent finances, good for open-source credibility
-  - **Polar** — built for open-source, ties funding to issues/features
-  - **LFX Crowdfunding** — Linux Foundation backed, good for institutional credibility
-  - **Custom links** — PayPal.me, Venmo, or direct donation page on are-self.com
-  Each platform added to FUNDING.yml creates a "Sponsor" button on the GitHub repo. More platforms =
-  more eyeballs. Priority: GitHub Sponsors + Ko-fi first, then expand.
+    - **GitHub Sponsors** (`github: scipraxian`) — native to where the code lives, lowest friction
+    - **Ko-fi** — no fees on donations, good for one-time tips, easy setup
+    - **Buy Me a Coffee** — similar to Ko-fi, large casual donor base
+    - **Patreon** — recurring memberships, good for building a community tier
+    - **Open Collective** — transparent finances, good for open-source credibility
+    - **Polar** — built for open-source, ties funding to issues/features
+    - **LFX Crowdfunding** — Linux Foundation backed, good for institutional credibility
+    - **Custom links** — PayPal.me, Venmo, or direct donation page on are-self.com
+      Each platform added to FUNDING.yml creates a "Sponsor" button on the GitHub repo. More platforms =
+      more eyeballs. Priority: GitHub Sponsors + Ko-fi first, then expand.
 - [ ] **Add donation/sponsor links to docs site.** Add a "Support Are-Self" page or section to the
   Docusaurus site with all funding links. Also add to the Discord welcome message.
 - [ ] **Explore 501(c)(3) path with Len Lanzi.** Long-term: tax-deductible donations unlock
@@ -73,39 +125,39 @@ also ship-blocking for the API reference.
   is unreachable. Cloudflare Tunnel gives us a publicly-routable hostname backed by an
   outbound-only connection from the local machine — no router/firewall changes, no public
   IP exposure. Steps:
-  1. Install `cloudflared` on Windows (MSI from
-     `https://github.com/cloudflare/cloudflared/releases` — `cloudflared-windows-amd64.msi`).
-     Verify: `cloudflared --version`.
-  2. `cloudflared tunnel login` — opens browser, pick `are-self.com`, writes
-     `%USERPROFILE%\.cloudflared\cert.pem` (the account credential).
-  3. `cloudflared tunnel create are-self-mcp` — prints a UUID and writes
-     `%USERPROFILE%\.cloudflared\<uuid>.json` (the tunnel credential).
-  4. Create `%USERPROFILE%\.cloudflared\config.yml`:
-     ```yaml
-     tunnel: are-self-mcp
-     credentials-file: C:\Users\micha\.cloudflared\<uuid>.json
-     ingress:
-       - hostname: mcp.are-self.com
-         service: https://local.are-self.com
-         originRequest:
-           noTLSVerify: false
-       - service: http_status:404
-     ```
-     The origin is `https://local.are-self.com` (not `localhost`) so cloudflared hits the
-     upstream with a hostname that matches our real ZeroSSL cert — strict TLS verify stays on.
-  5. `cloudflared tunnel route dns are-self-mcp mcp.are-self.com` — creates a Cloudflare
-     CNAME to `<uuid>.cfargotunnel.com`. Record is proxied (orange cloud) automatically,
-     which is correct for tunnels (unlike the grey-cloud `local.are-self.com` A record).
-  6. Foreground test: `cloudflared tunnel run are-self-mcp`, then
-     `Invoke-RestMethod -Uri https://mcp.are-self.com/mcp -Method Post -ContentType application/json -Body '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'`
-     should return the same 14 tools as the direct-local probe.
-  7. Service install (runs on boot, no terminal): `cloudflared service install`.
-  8. Add `https://mcp.are-self.com/mcp` as a custom connector in the claude.ai Connectors
-     UI. Are-Self must be running (`are-self.bat` + `docker compose up -d`) for Cowork to
-     get responses — tunnel alone doesn't start the stack.
-  **Per-user only.** This is not a distribution mechanism; each Are-Self user who wants
-  Cowork access would have to run their own tunnel with their own subdomain. A real
-  shareable "Cowork connects to Are-Self" story is still open and is NOT this task.
+    1. Install `cloudflared` on Windows (MSI from
+       `https://github.com/cloudflare/cloudflared/releases` — `cloudflared-windows-amd64.msi`).
+       Verify: `cloudflared --version`.
+    2. `cloudflared tunnel login` — opens browser, pick `are-self.com`, writes
+       `%USERPROFILE%\.cloudflared\cert.pem` (the account credential).
+    3. `cloudflared tunnel create are-self-mcp` — prints a UUID and writes
+       `%USERPROFILE%\.cloudflared\<uuid>.json` (the tunnel credential).
+    4. Create `%USERPROFILE%\.cloudflared\config.yml`:
+       ```yaml
+       tunnel: are-self-mcp
+       credentials-file: C:\Users\micha\.cloudflared\<uuid>.json
+       ingress:
+         - hostname: mcp.are-self.com
+           service: https://local.are-self.com
+           originRequest:
+             noTLSVerify: false
+         - service: http_status:404
+       ```
+       The origin is `https://local.are-self.com` (not `localhost`) so cloudflared hits the
+       upstream with a hostname that matches our real ZeroSSL cert — strict TLS verify stays on.
+    5. `cloudflared tunnel route dns are-self-mcp mcp.are-self.com` — creates a Cloudflare
+       CNAME to `<uuid>.cfargotunnel.com`. Record is proxied (orange cloud) automatically,
+       which is correct for tunnels (unlike the grey-cloud `local.are-self.com` A record).
+    6. Foreground test: `cloudflared tunnel run are-self-mcp`, then
+       `Invoke-RestMethod -Uri https://mcp.are-self.com/mcp -Method Post -ContentType application/json -Body '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'`
+       should return the same 14 tools as the direct-local probe.
+    7. Service install (runs on boot, no terminal): `cloudflared service install`.
+    8. Add `https://mcp.are-self.com/mcp` as a custom connector in the claude.ai Connectors
+       UI. Are-Self must be running (`are-self.bat` + `docker compose up -d`) for Cowork to
+       get responses — tunnel alone doesn't start the stack.
+       **Per-user only.** This is not a distribution mechanism; each Are-Self user who wants
+       Cowork access would have to run their own tunnel with their own subdomain. A real
+       shareable "Cowork connects to Are-Self" story is still open and is NOT this task.
 - [ ] **Repo cert distribution decision.** Currently `nginx/certs/cert.pem` + `key.pem` live
   outside git. Michael plans to ship the ZeroSSL cert + key in the repo so the 10yo target
   user doesn't have to re-issue one — the cert is for `local.are-self.com` which resolves to
@@ -113,6 +165,7 @@ also ship-blocking for the API reference.
   an attacker can MITM the user's own localhost traffic, which they already control). Decide
   and document the rationale in `mcp-server.md`. Re-issue + re-commit every ~80 days to stay
   ahead of the 90-day expiry.
+
 ## Ship-Blocking — Security Remediation (Before Tuesday Release)
 
 - [x] **~~Pin Django to >=6.0.2.~~** Done — `Django>=6.0.2` is pinned in `requirements.txt` with the
@@ -145,7 +198,11 @@ also ship-blocking for the API reference.
 - [ ] **Google-style docstrings for all viewsets, serializers, and public methods.** Prerequisite for
   Swagger/OpenAPI auto-generation. Run through each Django app and add docstrings to every ViewSet class,
   every serializer class, and every public method. Format: Google-style (`Args:`, `Returns:`, `Raises:`).
-  Priority order: Frontal Lobe, CNS, Hippocampus, Hypothalamus, Identity, then the rest.
+  _Baseline April 10, 2026: 76 ViewSets total, ~25 currently carry a docstring._
+  _Biggest gaps — work here first: Hypothalamus (20 VS, ~1 documented), Parietal Lobe (7/0),_
+  _PFC (6/0), Hippocampus (2/0). Already in good shape: Temporal Lobe (5/5), Frontal Lobe (2/2)._
+  _Priority order: Hypothalamus → Parietal Lobe → PFC → Hippocampus → CNS (9/6) → Identity (7/2) →_
+  _PNS (8/4) → environments (8/4) → the rest._
 - [ ] **drf-spectacular integration for /api/docs/.** Install `drf-spectacular`, add to INSTALLED_APPS,
   wire `SpectacularAPIView` + `SpectacularSwaggerView` at `/api/docs/`. Generates interactive OpenAPI
   docs from DRF viewsets + docstrings. This gives scientists and developers a try-it-in-the-browser
@@ -172,19 +229,20 @@ also ship-blocking for the API reference.
 - [ ] **Reasoning session pruning.** Pick a turn number and click "Prune" to delete all turns from that
   point to the end of the session.
 - [ ] **Remove synapse module.** Remove synapse entirely in favor of the new synapse_client.
-  _Verified April 10, 2026: `frontal_lobe/synapse.py` still has live importers in `hippocampus/models.py`,
-  `hippocampus/hippocampus.py`, `identity/models.py`, `hypothalamus/models.py`, and
-  `frontal_lobe/synapse_open_router.py` (all pulling `OllamaClient` or `SynapseResponse`). Migration
-  is not safe until those call sites are ported to `synapse_client`._
+  _Re-verified April 10, 2026. Five live importers, but the real blocker is narrower than a rename:_
+  _- `hippocampus/models.py`, `hippocampus/hippocampus.py`, `identity/models.py`,_
+  _  `hypothalamus/models.py` all import `OllamaClient` for one purpose only: calling `.embed()`_
+  _ to build vectors. `synapse_client.SynapseClient` has no `embed()` method, so there is no_
+  _ drop-in replacement._
+  _- `frontal_lobe/synapse_open_router.py` imports `SynapseResponse`, which **does** exist on_
+  _  `synapse_client` — that one is a mechanical rename._
+  _Real first step: add an embeddings surface (either `SynapseClient.embed()` or a small_
+  _dedicated `frontal_lobe/embeddings.py` helper), cut the four model files over, then retire_
+  _`frontal_lobe/synapse.py` along with its tests._
 - [ ] **Tool call `thought` parameter — make required or improve prompting.** Local models often call
   tools silently (no assistant text). The `thought` parameter exists but isn't required. Either:
   (a) make it required in the tool schema so models must explain themselves, or (b) add system prompt
   instructions demanding tool explanations.
-- [ ] **Remove deprecated `parietal_lobe/registry.py`.** Hardcoded model map still exists. Superseded by
-  Hypothalamus DB-driven routing. _Verified April 10, 2026: file exists on disk but has ZERO importers
-  across the entire `are-self-api/` tree. Safe to `git rm are-self-api/parietal_lobe/registry.py`
-  without touching other code. Sandbox blocked the agent from doing the delete — needs to be done
-  by hand._
 - [ ] **Consolidate and improve MCP engram functions.** The Hippocampus tool functions need cleanup —
   reduce redundancy, improve the interface, make the tool descriptions clearer for small models.
 - [ ] **Fix linters / Ruff configuration.** Ensure linting is consistent across the project. Pin Ruff
@@ -200,6 +258,15 @@ also ship-blocking for the API reference.
   `/api/v2/system-control/` URL rename (off biological style guide) is tracked separately above.
 - [ ] **Standardize API URLs to hyphens.** Legacy underscore routes: `engram_tags`, `reasoning_sessions`,
   `reasoning_turns`, `nerve_terminal_*`. Coordinated with frontend — both repos change together.
+  _Verified April 10, 2026: every underscore server route has matching UI consumers_
+  _(`EngramEditor.tsx`, `HippocampusPage.tsx`, `SessionChat.tsx`, `ReasoningPanels.tsx`,_
+  _`FrontalLobeView.tsx`, `FrontalLobeDetail.tsx`, `ReasoningGraph3D.tsx`, `PNSPage.tsx`).Mechanical sweep — safe once
+  greenlit._
+- [ ] **Purge residual `/api/v1/` consumers.** Despite the v2 push, the UI still calls
+  `/api/v1/node-contexts` (13 sites), `/api/v1/reasoning_sessions/` (7 sites), and
+  `/api/v1/environments` (4 sites). Either re-point these to the v2 equivalents or,
+  if v2 truly does not host these yet, declare the v2 gap and fill it. Pairs with a
+  matching UI cleanup task.
 - [ ] **Hypothalamus fixture initial state.** The 4 fixture AIModelProvider records have `is_enabled: true`,
   showing as "Installed" before sync_local runs. Should default to `is_enabled: false` (Available until
   confirmed by sync).
@@ -260,10 +327,15 @@ also ship-blocking for the API reference.
 
 ## MCP Server — Phase 2
 
-- [ ] **Blackboard write tool** — Pre-load context data onto spike train blackboard before launch. Requires wiring into NeuronContext or a new blackboard field on SpikeTrain.
-- [ ] **SSE streaming via neurotransmitters** — Use the Synaptic Cleft's neurotransmitter system to stream real-time execution updates back through the MCP SSE endpoint. Map Dopamine (success), Cortisol (error), Glutamate (streaming) to MCP notifications.
-- [ ] **Vector similarity engram search** — Replace text-only search with pgvector cosine similarity search. Requires embedding the query via Ollama/Nomic before searching.
-- [ ] **Full Thalamus integration** — Wire send_thalamus_message into the actual Thalamus message pipeline with WebSocket delivery via Channels.
+- [ ] **Blackboard write tool** — Pre-load context data onto spike train blackboard before launch. Requires wiring into
+  NeuronContext or a new blackboard field on SpikeTrain.
+- [ ] **SSE streaming via neurotransmitters** — Use the Synaptic Cleft's neurotransmitter system to stream real-time
+  execution updates back through the MCP SSE endpoint. Map Dopamine (success), Cortisol (error), Glutamate (streaming)
+  to MCP notifications.
+- [ ] **Vector similarity engram search** — Replace text-only search with pgvector cosine similarity search. Requires
+  embedding the query via Ollama/Nomic before searching.
+- [ ] **Full Thalamus integration** — Wire send_thalamus_message into the actual Thalamus message pipeline with
+  WebSocket delivery via Channels.
 - [ ] **Authentication layer** — Add token-based auth for the /mcp endpoint. Required before any public deployment.
 - [x] **~~Cowork custom connector registration~~** — **DEFERRED.** Claude Desktop/Cowork
   custom connectors require `https://` with strict CA validation. Self-signed certs are
@@ -273,9 +345,13 @@ also ship-blocking for the API reference.
   works correctly — the blocker is on Anthropic's side. Claude Code CAN connect to
   local HTTP MCP servers (no HTTPS needed). NGINX in Docker is configured to auto-upgrade
   to HTTPS if a user provides their own cert in `nginx/certs/`.
-- [ ] **Write blackboard tool** — Allow writing arbitrary key-value context data that gets passed to spike train execution. This enables programmatic setup of execution context.
-- [ ] **Read reasoning session tool** — Expose reasoning session history (turns, tool calls, responses) for post-execution analysis.
-- [ ] **Migrate are-self-install.bat to Python.** Cross-platform install script (replaces Windows-only .bat). Must handle: Python venv, pip install, PostgreSQL check, Redis check, Ollama check. Detect OS via `platform.system()`. Target: a 10-year-old runs `python install.py` and everything works.
+- [ ] **Write blackboard tool** — Allow writing arbitrary key-value context data that gets passed to spike train
+  execution. This enables programmatic setup of execution context.
+- [ ] **Read reasoning session tool** — Expose reasoning session history (turns, tool calls, responses) for
+  post-execution analysis.
+- [ ] **Migrate are-self-install.bat to Python.** Cross-platform install script (replaces Windows-only .bat). Must
+  handle: Python venv, pip install, PostgreSQL check, Redis check, Ollama check. Detect OS via `platform.system()`.
+  Target: a 10-year-old runs `python install.py` and everything works.
 
 ## Future
 
@@ -315,5 +391,8 @@ also ship-blocking for the API reference.
   candidates: Frontal Lobe loop, Hippocampus, Parietal Lobe tool execution. Keep async for WebSocket
   streaming (Glutamate), Nerve Terminal, and genuine concurrent I/O. Convert the rest to synchronous with
   a single `sync_to_async` wrap at the Celery boundary.
-- [ ] **Stabilize DRF API contract.** Audit all ViewSets and serializers for consistency. Ensure Thalamus
-  chat history endpoint returns the Vercel AI SDK `parts
+- [ ] **Stabilize DRF API contract.** Audit all ViewSets and serializers for consistency. Ensure the
+  Thalamus chat history endpoint returns the Vercel AI SDK `parts` schema
+  (`text` / `reasoning` / `tool-call` / `tool-result`) so the backend matches what
+  `are-self-ui/src/components/SessionChat.tsx` already parses. Frontend side is done; this is the
+  server-side parity pass.

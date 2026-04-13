@@ -178,6 +178,14 @@ LOGGING = {
             'class': 'synaptic_cleft.norepinephrine_handler.NorepinephrineHandler',
             'level': 'INFO',
             'formatter': 'verbose',
+            'receptor_class': 'CeleryWorker',
+        },
+        'django_norepinephrine': {
+            'class': 'synaptic_cleft.norepinephrine_handler.NorepinephrineHandler',
+            'level': 'INFO',
+            'formatter': 'verbose',
+            'receptor_class': 'Django',
+            'skipped_prefixes': ['synaptic_cleft', 'channels', 'redis', 'asyncio'],
         },
     },
     'loggers': {
@@ -225,6 +233,16 @@ LOGGING = {
             'handlers': ['console', 'norepinephrine'],
             'level': 'INFO',
             'propagate': True,
+        },
+        # Django request errors (4xx/5xx) → receptor_class='Django'.
+        # NOTE: daphne.server is intentionally NOT here. Daphne's access
+        # log fires on every HTTP request AND every WebSocket frame, and
+        # broadcasting those through the WebSocket transport that Daphne
+        # itself runs creates an infinite feedback loop.
+        'django.request': {
+            'handlers': ['console', 'django_norepinephrine'],
+            'level': 'INFO',
+            'propagate': False,
         },
     },
 }

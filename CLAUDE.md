@@ -3,6 +3,13 @@
 The single source of truth for any AI agent working on the are-self-api codebase.
 Read completely before making any changes.
 
+> **Active thread (April 11, 2026):** Nerve Terminal scan reconcile shipped with a
+> regression — UI cards blink because every per-row `.save()` in the scan fires an
+> acetylcholine broadcast that the frontend re-lists on. See TASKS.md → "In Progress —
+> Nerve Terminal Scan Reconcile" for the full diagnosis and the planned surgical fix.
+> Resume there.
+
+
 ## The Developer
 
 Michael is a 30+ year programming veteran building Are-Self as an MIT-licensed AI reasoning
