@@ -75,5 +75,5 @@ async def mcp_code_exec(
     session_id: str = '',
     turn_id: str = '',
 ) -> Dict[str, Any]:
-    """Run Python code with hermes_tools importable from PYTHONPATH."""
+    """Run Python code with personal_agent_tools importable from PYTHONPATH."""
     return await asyncio.to_thread(_code_exec_sync, code, int(timeout), workdir)

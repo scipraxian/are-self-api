@@ -1,5 +1,5 @@
 """
-Hermes-compatible synchronous helpers for child Python processes (mcp_code_exec).
+Synchronous helpers for child Python processes (mcp_code_exec).
 
 These wrap Are-Self MCP filesystem primitives; they are not copied from Hermes.
 """

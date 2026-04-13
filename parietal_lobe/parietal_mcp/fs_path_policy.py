@@ -1,5 +1,5 @@
 """
-Shared filesystem path policy for MCP tools and hermes_tools shim.
+Shared filesystem path policy for MCP tools and personal_agent_tools shim.
 
 Write paths must be relative and stay under Django BASE_DIR when not absolute.
 """

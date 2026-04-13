@@ -18,26 +18,7 @@
       "Bash(echo \"EXIT_CODE=$?\")",
       "Bash(ls identity/migrations/*.py)",
       "Bash(./venv/Scripts/pytest frontal_lobe/tests/test_narrative_dump.py -x --tb=short)",
-      "Bash(./venv/Scripts/pytest parietal_lobe/parietal_mcp/mcp_ticket_functions/tests/test_mcp_ticket_search.py central_nervous_system/tests/test_logic_node.py -x --tb=short)",
-      "Bash(./venv/Scripts/pytest synaptic_cleft -x --tb=short)",
-      "Bash(./venv/Scripts/pytest synaptic_cleft::SynapticDendriteTests::test_joins_correct_group -x --tb=long)",
-      "Bash(./venv/Scripts/pytest \"synaptic_cleft/tests.py::SynapticDendriteTests::test_joins_correct_group\" -x --tb=long)",
-      "Bash(./venv/Scripts/pytest \"synaptic_cleft/tests.py::SynapticDendriteTests::test_connect_accepts\" -x --tb=long)",
-      "Bash(./venv/Scripts/pytest synaptic_cleft --tb=short)",
-      "Bash(./venv/Scripts/pytest \"synaptic_cleft/tests.py::SynapticDendriteTests::test_connect_accepts\" \"synaptic_cleft/tests.py::WebSocketURLRoutingTests::test_spike_route\" --tb=short)",
-      "Bash(./venv/Scripts/pytest \"synaptic_cleft/tests.py::SynapticDendriteTests::test_connect_accepts\" \"synaptic_cleft/tests.py::SynapticDendriteTests::test_disconnect_completes\" --tb=short)",
-      "Bash(venv/Scripts/python manage.py makemigrations hippocampus --name skill_engram)",
-      "Bash(ls venv/Scripts/python*)",
-      "Bash(ls venv/bin/python*)",
-      "Read(//c/Users/scfre/CursorProjects/talos/**)",
-      "Bash(\"C:/Users/scfre/CursorProjects/talos/venv/Scripts/python.exe\" manage.py makemigrations hippocampus --name skill_engram)",
-      "Bash(\"C:/Users/scfre/CursorProjects/talos/venv/Scripts/python.exe\" manage.py migrate hippocampus)",
-      "Bash(\"C:/Users/scfre/CursorProjects/talos/venv/Scripts/pytest.exe\" hippocampus/tests/test_skill_engram.py -v)",
-      "Bash(\"C:/Users/scfre/CursorProjects/talos/venv/Scripts/pytest.exe\" parietal_lobe/tests/test_skills_tools.py -v)",
-      "Bash(\"C:/Users/scfre/CursorProjects/talos/venv/Scripts/pytest.exe\" parietal_lobe/tests/test_skills_tools.py -v --tb=short)",
-      "Bash(\"C:/Users/scfre/CursorProjects/talos/venv/Scripts/pytest.exe\" identity/tests/test_addons_layer3.py -v --tb=short)",
-      "Bash(\"C:/Users/scfre/CursorProjects/talos/venv/Scripts/python.exe\" manage.py migrate_skills_from_hermes --help)",
-      "Bash(\"C:/Users/scfre/CursorProjects/talos/venv/Scripts/pytest.exe\" hippocampus/tests/test_skill_engram.py parietal_lobe/tests/test_skills_tools.py identity/tests/test_addons_layer3.py -v --tb=short)"
+      "Bash(./venv/Scripts/pytest parietal_lobe/parietal_mcp/mcp_ticket_functions/tests/test_mcp_ticket_search.py central_nervous_system/tests/test_logic_node.py -x --tb=short)"
     ]
   }
 }

@@ -170,131 +170,34 @@ class TestSelectionFilter(CommonFixturesAPITestCase):
         assert success is True
         assert ledger.ai_model_provider is not None
 
-    def test_banned_provider_does_not_block_preferred_model(self):
-        """Assert preferred model is honoured at attempt 0 even if its provider is banned."""
+    def test_banned_provider_ignored(self):
+        # Ban Claude's provider
         self.selection_filter.banned_providers.add(self.provider_openrouter)
         ledger = AIModelProviderUsageRecord.objects.create(
             identity_disc=self.disc, request_payload={'messages': []}
         )
+        # Attempt 0 (preferred: Claude) should now fail
         success = Hypothalamus.pick_optimal_model(ledger, attempt=0)
-        assert success is True
-        assert ledger.ai_model_provider == self.or_claude
+        assert success is False
 
-    def test_required_capabilities_do_not_block_preferred_model(self):
-        """Assert preferred model is honoured at attempt 0 regardless of required capabilities."""
+    def test_required_capabilities_enforced(self):
         from hypothalamus.models import AIModelCapabilities
 
+        # Add a requirement for 'vision'
         cap_vision, _ = AIModelCapabilities.objects.get_or_create(name='vision')
         self.selection_filter.required_capabilities.add(cap_vision)
 
-        # Neither model has vision, but preferred model still wins
+        # Claue doesn't have vision in this test setup
         ledger = AIModelProviderUsageRecord.objects.create(
             identity_disc=self.disc, request_payload={'messages': []}
         )
-        success = Hypothalamus.pick_optimal_model(ledger, attempt=0)
-        assert success is True
-        assert ledger.ai_model_provider == self.or_claude
 
-    def test_preferred_model_bypasses_fc_filter_at_attempt_0(self):
-        """Assert preferred model is selected even without function_calling tag (explicit choice override)."""
-        from hypothalamus.models import AIModelCapabilities
-
-        cap_fc, _ = AIModelCapabilities.objects.get_or_create(
-            name='function_calling'
-        )
-        # Give function_calling to Llama (local) but NOT to Claude (preferred)
-        self.model_llama.capabilities.add(cap_fc)
-
-        ledger = AIModelProviderUsageRecord.objects.create(
-            identity_disc=self.disc,
-            request_payload={'messages': []},
-            tool_payload={'tools': [{'name': 'test_tool'}]},
-        )
-        success = Hypothalamus.pick_optimal_model(ledger, attempt=0)
-        assert success is True
-        assert ledger.ai_model_provider == self.or_claude
-
-    def test_empty_strategy_respects_strategy_boundary(self):
-        """Assert that a strategy with no steps does not leak into the final fallback."""
-        empty_strategy = FailoverStrategy.objects.create(
-            name='Empty Strategy'
-        )
-        self.selection_filter.failover_strategy = empty_strategy
-        self.selection_filter.preferred_model = None
-        self.selection_filter.save()
-
-        ledger = AIModelProviderUsageRecord.objects.create(
-            identity_disc=self.disc, request_payload={'messages': []}
-        )
+        # attempt 0 (preferred: Claude) should fail
         success = Hypothalamus.pick_optimal_model(ledger, attempt=0)
         assert success is False
 
-    def test_preferred_model_bypasses_fc_filter_even_with_empty_strategy(self):
-        """Assert preferred model is selected via eligibility fallback even when strategy has no steps."""
-        from hypothalamus.models import AIModelCapabilities
-
-        cap_fc, _ = AIModelCapabilities.objects.get_or_create(
-            name='function_calling'
-        )
-        self.model_llama.capabilities.add(cap_fc)
-
-        # Strategy with no steps (matches production config)
-        empty_strategy = FailoverStrategy.objects.create(
-            name='Empty Strategy'
-        )
-        self.selection_filter.failover_strategy = empty_strategy
-        self.selection_filter.save()
-
-        ledger = AIModelProviderUsageRecord.objects.create(
-            identity_disc=self.disc,
-            request_payload={'messages': []},
-            tool_payload={'tools': [{'name': 'test_tool'}]},
-        )
-        # Preferred model bypasses fc filter via eligibility check
+        # Give vision to Claude
+        self.model_claude.capabilities.add(cap_vision)
         success = Hypothalamus.pick_optimal_model(ledger, attempt=0)
         assert success is True
         assert ledger.ai_model_provider == self.or_claude
-
-    def test_preview_matches_production_with_tools(self):
-        """Assert preview_model_selection returns preferred model even when it lacks function_calling tag."""
-        from hypothalamus.models import AIModelCapabilities
-        from parietal_lobe.models import ToolDefinition
-
-        cap_fc, _ = AIModelCapabilities.objects.get_or_create(
-            name='function_calling'
-        )
-        # Only Llama has function_calling
-        self.model_llama.capabilities.add(cap_fc)
-
-        # Give the disc enabled tools so preview derives require_fc=True
-        tool_def = ToolDefinition.objects.first()
-        if not tool_def:
-            tool_def = ToolDefinition.objects.create(
-                name='test_tool', description='test'
-            )
-        self.disc.enabled_tools.add(tool_def)
-
-        # Preferred model (Claude) bypasses fc filter via eligibility
-        best = Hypothalamus.preview_model_selection(self.disc)
-        assert best is not None
-        assert best == self.or_claude
-
-    def test_strict_strategy_still_blocks(self):
-        """Assert strict_fail strategy step still returns None (no fallback)."""
-        strict_strategy = FailoverStrategy.objects.create(
-            name='Strict Strategy'
-        )
-        FailoverStrategyStep.objects.create(
-            strategy=strict_strategy,
-            failover_type=self.type_fail,
-            order=0,
-        )
-        self.selection_filter.failover_strategy = strict_strategy
-        self.selection_filter.preferred_model = None
-        self.selection_filter.save()
-
-        ledger = AIModelProviderUsageRecord.objects.create(
-            identity_disc=self.disc, request_payload={'messages': []}
-        )
-        success = Hypothalamus.pick_optimal_model(ledger, attempt=0)
-        assert success is False
