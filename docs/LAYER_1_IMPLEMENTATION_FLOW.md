@@ -2,7 +2,7 @@
 
 This document captures **Mermaid flow diagrams** for the Layer 1 core MCP tool suite: how tools connect to the gateway, how `mcp_session_search` routes queries across corpora and databases, and how `mcp_browser` manages Playwright pages, `@eN` refs, and actions.
 
-See also [LAYER_1_CORE_TOOLS_PLAN.md](LAYER_1_CORE_TOOLS_PLAN.md) for the full tool list and specifications.
+See also [LAYER_1_CORE_TOOLS_PLAN.md](deprecated/LAYER_1_CORE_TOOLS_PLAN.md) for the full tool list and specifications.
 
 ---
 
