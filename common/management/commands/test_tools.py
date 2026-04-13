@@ -127,9 +127,9 @@ class Command(BaseCommand):
             )
         )
 
-        # ── Phase 1: Static schema checks ───────────────────────────
+        # ── Step 1: Static schema checks ───────────────────────────
         self.stdout.write(
-            self.style.HTTP_INFO('📋 Phase 1: Static Schema Checks\n')
+            self.style.HTTP_INFO('📋 Step 1: Static Schema Checks\n')
         )
         all_schemas: List[Dict[str, Any]] = []
         schema_issues: Dict[int, List[str]] = {}
@@ -151,10 +151,10 @@ class Command(BaseCommand):
             if self.verbose:
                 self.stdout.write(f'      {json.dumps(schema, indent=6)}\n')
 
-        # ── Phase 2: Live isolation tests ────────────────────────────
+        # ── Step 2: Live isolation tests ────────────────────────────
         self.stdout.write(
             self.style.HTTP_INFO(
-                f'\n\n🔬 Phase 2: Live Isolation Tests\n'
+                f'\n\n🔬 Step 2: Live Isolation Tests\n'
                 f'  Sending one request per tool...\n'
             )
         )
@@ -184,7 +184,7 @@ class Command(BaseCommand):
                         self.style.ERROR(f'       {str(error)[:400]}')
                     )
 
-        # ── Phase 3: Combined test if all pass individually ─────────
+        # ── Step 3: Combined test if all pass individually ─────────
         failed = [r for r in results if r['status'] != 'OK']
 
         if not failed:
@@ -533,11 +533,11 @@ python manage.py test_tools --api-key sk-or-xxxxx
 
 **What it does:**
 
-1. **Phase 1** — Pulls every `ToolDefinition` from the DB, builds the schema the same way your runtime does, and runs static checks (name validity, nesting depth, `$ref` detection, enum sizes, schema bloat)
+1. **Step 1** — Pulls every `ToolDefinition` from the DB, builds the schema the same way your runtime does, and runs static checks (name validity, nesting depth, `$ref` detection, enum sizes, schema bloat)
 
-2. **Phase 2** — Sends one HTTP request per tool in isolation. If a single tool fails on its own, you've found your culprit immediately
+2. **Step 2** — Sends one HTTP request per tool in isolation. If a single tool fails on its own, you've found your culprit immediately
 
-3. **Phase 3** — If everything passes individually but you still get 400s in production, it runs a combined test followed by binary search to find which *group* of tools breaks it — usually hitting a total schema size or tool count limit on the model
+3. **Step 3** — If everything passes individually but you still get 400s in production, it runs a combined test followed by binary search to find which *group* of tools breaks it — usually hitting a total schema size or tool count limit on the model
 
 The `TYPE_MAP` dict at the top maps your `ToolParameterType` PKs to JSON Schema strings. Adjust if your PKs don't match (1=String, 2=Number, etc.).
 """

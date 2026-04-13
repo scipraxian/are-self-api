@@ -1,8 +1,9 @@
-"""Discord platform adapter (discord.py integration in a later phase)."""
+"""Discord platform adapter; discord.py integration not yet wired."""
 
 import logging
 from typing import Any, Awaitable, Callable, Optional
 
+from talos_gateway.adapters.base_patterns import iter_chunked_payloads
 from talos_gateway.contracts import DeliveryPayload
 
 logger = logging.getLogger('talos_gateway.adapters.discord')
@@ -36,8 +37,6 @@ class DiscordAdapter(object):
 
     async def send_chunked(self, payload: DeliveryPayload) -> dict:
         """Chunk to ``MAX_MESSAGE_LENGTH`` then send each chunk."""
-        from talos_gateway.adapters.base_patterns import iter_chunked_payloads
-
         last: dict = {'success': False}
         for chunk in iter_chunked_payloads(payload, self.MAX_MESSAGE_LENGTH):
             last = await self.send(chunk)

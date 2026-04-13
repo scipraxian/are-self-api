@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import sys
+import random
 from typing import Optional
 
 from django.core.management.base import BaseCommand
@@ -19,6 +20,28 @@ from talos_gateway.cli.display import (
 )
 
 logger = logging.getLogger('talos_gateway.management.run_cli')
+
+
+def _write_flush(text: str) -> None:
+    """Write to stdout and flush immediately for streaming."""
+    sys.stdout.write(text)
+    sys.stdout.flush()
+
+
+def _cli_listen_on_token(token: str) -> None:
+    _write_flush(format_token_delta(token))
+
+
+def _cli_listen_on_complete(content: str, session_status: str) -> None:
+    _write_flush(format_response_complete(content, session_status) + '\n')
+
+
+def _cli_listen_on_status(status: str) -> None:
+    _write_flush('[status] %s\n' % status)
+
+
+def _cli_listen_on_error(code: str, message: str) -> None:
+    _write_flush(format_error(code, message) + '\n')
 
 
 async def run_cli_main_async(
@@ -56,14 +79,10 @@ async def run_cli_main_async(
 
         listener_task = asyncio.create_task(
             client.listen(
-                on_token=lambda t: _write_flush(format_token_delta(t)),
-                on_complete=lambda c, s: _write_flush(
-                    format_response_complete(c, s) + '\n'
-                ),
-                on_status=lambda s: _write_flush('[status] %s\n' % s),
-                on_error=lambda c, m: _write_flush(
-                    format_error(c, m) + '\n'
-                ),
+                on_token=_cli_listen_on_token,
+                on_complete=_cli_listen_on_complete,
+                on_status=_cli_listen_on_status,
+                on_error=_cli_listen_on_error,
             )
         )
 
@@ -132,12 +151,6 @@ async def run_cli_main_async(
         await client.disconnect()
 
 
-def _write_flush(text: str) -> None:
-    """Write to stdout and flush immediately for streaming."""
-    sys.stdout.write(text)
-    sys.stdout.flush()
-
-
 class Command(BaseCommand):
     """``python manage.py run_cli`` — interactive CLI agent REPL."""
 
@@ -147,6 +160,7 @@ class Command(BaseCommand):
     )
 
     def add_arguments(self, parser):
+        rand_float = random.random()
         parser.add_argument(
             '--host',
             default='127.0.0.1',
@@ -160,7 +174,7 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             '--channel',
-            default='cli-default',
+            default=f'cli-{rand_float:0.4f}',
             help='Channel ID for session mapping (default: cli-default)',
         )
         parser.add_argument(

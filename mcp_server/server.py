@@ -9,8 +9,8 @@ Rather than using FastMCP's built-in HTTP server (which conflicts with
 Daphne/Channels), this module implements a thin registry that stores tool
 schemas and async handlers, then dispatches via a Django async view.
 
-Phase 1: Request/response tools (list, launch, read, write)
-Phase 2: Streaming via neurotransmitter callbacks (SSE notifications)
+Current scope: request/response tools (list, launch, read, write).
+Planned: streaming via neurotransmitter callbacks (SSE notifications).
 """
 
 import json

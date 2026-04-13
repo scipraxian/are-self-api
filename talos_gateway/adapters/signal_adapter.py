@@ -1,8 +1,9 @@
-"""Signal messenger adapter (signal-cli in a later phase)."""
+"""Signal messenger adapter; signal-cli integration not yet wired."""
 
 import logging
 from typing import Any, Awaitable, Callable, Optional
 
+from talos_gateway.adapters.base_patterns import iter_chunked_payloads
 from talos_gateway.contracts import DeliveryPayload
 
 logger = logging.getLogger('talos_gateway.adapters.signal')
@@ -36,8 +37,6 @@ class SignalAdapter(object):
 
     async def send_chunked(self, payload: DeliveryPayload) -> dict:
         """Chunk long messages then send each part."""
-        from talos_gateway.adapters.base_patterns import iter_chunked_payloads
-
         last: dict = {'success': False}
         for chunk in iter_chunked_payloads(payload, self.MAX_MESSAGE_LENGTH):
             last = await self.send(chunk)

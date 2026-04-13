@@ -3,8 +3,8 @@ Thalamus Tools
 ==============
 
 MCP tools for sending messages through the thalamus chat relay.
-Phase 1 logs and acknowledges. Phase 2 wires into the full
-Thalamus message pipeline with WebSocket delivery.
+Currently logs and acknowledges; full Thalamus delivery with
+WebSocket neurotransmitters is not yet wired.
 """
 
 import logging
@@ -28,8 +28,7 @@ def register_thalamus_tools(registry: MCPToolRegistry) -> None:
             identity_disc_id or 'none',
             message[:100],
         )
-        # Phase 1: Log-only. Phase 2 will create a
-        # ThalamusMessage and fire a neurotransmitter.
+        # Log-only for now; future: create ThalamusMessage and fire neurotransmitter.
         return {
             'message': 'Message sent.',
             'delivered': True,
@@ -40,8 +39,7 @@ def register_thalamus_tools(registry: MCPToolRegistry) -> None:
         name='send_thalamus_message',
         description=(
             'Send a message through the thalamus chat relay. '
-            'Phase 1 logs the message. Phase 2 will deliver '
-            'via WebSocket neurotransmitters.'
+            'Currently logs only; WebSocket delivery is not yet implemented.'
         ),
         input_schema={
             'type': 'object',

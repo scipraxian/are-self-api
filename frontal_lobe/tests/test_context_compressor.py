@@ -1,4 +1,4 @@
-"""Tests for Layer 2A context compression."""
+"""Tests for context window compression."""
 
 from django.test import SimpleTestCase
 
@@ -10,8 +10,8 @@ from frontal_lobe.context_compressor import (
     estimate_message_list_tokens,
     estimate_tokens,
     messages_already_summarized,
-    phase1_prune_tool_messages,
-    phase3_aggressive_prune,
+    aggressive_prune_to_latest_tool,
+    prune_inner_tool_messages,
 )
 from frontal_lobe.models import (
     ReasoningSession,
@@ -41,8 +41,8 @@ class TestEstimateTokens(SimpleTestCase):
         self.assertLessEqual(abs(est - baseline), max(1, baseline // 5))
 
 
-class TestPhase1Prune(SimpleTestCase):
-    """Assert Phase 1 keeps first two and last two tool messages."""
+class TestPruneInnerToolMessages(SimpleTestCase):
+    """Assert inner tool pruning keeps first two and last two tool messages."""
 
     def test_no_change_when_four_or_fewer_tools(self):
         msgs = [
@@ -51,14 +51,14 @@ class TestPhase1Prune(SimpleTestCase):
             {'role': 'tool', 'name': 'c', 'content': '3'},
             {'role': 'tool', 'name': 'd', 'content': '4'},
         ]
-        out = phase1_prune_tool_messages(msgs)
+        out = prune_inner_tool_messages(msgs)
         self.assertEqual(out, msgs)
 
     def test_replaces_middle_tool_messages(self):
         msgs = []
         for i in range(6):
             msgs.append({'role': 'tool', 'name': f't{i}', 'content': f'body{i}'})
-        out = phase1_prune_tool_messages(msgs)
+        out = prune_inner_tool_messages(msgs)
         self.assertTrue(out[0]['content'].startswith('body'))
         self.assertTrue(out[1]['content'].startswith('body'))
         self.assertTrue(out[4]['content'].startswith('body'))
@@ -68,7 +68,7 @@ class TestPhase1Prune(SimpleTestCase):
             self.assertIn(f't{j}', out[j]['content'])
 
 
-class TestPhase3(SimpleTestCase):
+class TestAggressivePruneToLatestTool(SimpleTestCase):
     """Assert aggressive pruning keeps only the last tool result."""
 
     def test_keeps_last_tool_only(self):
@@ -79,7 +79,7 @@ class TestPhase3(SimpleTestCase):
             {'role': 'tool', 'name': 'y', 'content': 't2'},
             {'role': 'assistant', 'content': 'done'},
         ]
-        out = phase3_aggressive_prune(msgs)
+        out = aggressive_prune_to_latest_tool(msgs)
         tool_roles = [m for m in out if m['role'] == 'tool']
         self.assertEqual(len(tool_roles), 1)
         self.assertEqual(tool_roles[0]['content'], 't2')
@@ -110,7 +110,7 @@ class TestContextCompressorIntegration(CommonFixturesAPITestCase):
         out = comp.compress(msgs, threshold_tokens=10_000)
         self.assertEqual(out, msgs)
 
-    def test_phase2_creates_summary_turn(self):
+    def test_middle_summary_creates_summary_turn(self):
         long_middle = 'word ' * 5000
         msgs = [
             {'role': 'system', 'content': 'sys'},

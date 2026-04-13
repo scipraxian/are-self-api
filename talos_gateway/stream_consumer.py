@@ -59,16 +59,21 @@ def _error_payload(code: str, message: str) -> dict[str, Any]:
 
 
 class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
-    """JSON channel for inbound CLI messages; outbound LLM token stream (Layer 2)."""
+    """JSON channel for inbound CLI messages; outbound LLM token stream."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._session_group: Optional[str] = None
 
     async def connect(self) -> None:
         """Accept WebSocket; optionally join a ReasoningSession channel group."""
-        self._session_group: Optional[str] = None
         raw_qs = self.scope.get('query_string') or b''
+
         try:
             query_string = raw_qs.decode('utf-8')
         except UnicodeDecodeError:
             query_string = ''
+
         params = parse_qs(query_string)
         raw_sid = (params.get('session_id') or [None])[0]
         if raw_sid:
@@ -82,7 +87,7 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
             else:
                 self._session_group = reasoning_session_group_name(sid)
                 await self.channel_layer.group_add(
-                    self._session_group,
+                    self._session_group or "",
                     self.channel_name,
                 )
                 logger.debug(
@@ -239,10 +244,11 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
             return
 
         try:
+            # TODO: Fix unresolved attribute typing
             result = await orchestrator.handle_inbound(envelope)
-        except Exception:
+        except Exception as exc:
             logger.exception(
-                '[GatewayTokenStreamConsumer] handle_inbound failed.'
+                '[GatewayTokenStreamConsumer] handle_inbound failed: %s.', exc
             )
             await self.send(
                 text_data=json.dumps(
@@ -298,7 +304,7 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
 
         self._session_group = reasoning_session_group_name(sid)
         await self.channel_layer.group_add(
-            self._session_group,
+            self._session_group or "",
             self.channel_name,
         )
         logger.debug(
@@ -313,7 +319,7 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
         )
 
     async def _handle_interrupt(self) -> None:
-        """Interrupt the active reasoning session."""
+        """Interrupt the active reasoning session from the frontal lobe."""
         if not self._session_group:
             await self.send(
                 text_data=json.dumps(
@@ -380,10 +386,10 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
         channel_id = data.get('channel_id', 'cli-%s' % id(self))
         try:
             sm = SessionManager()
-            gs, rs = sm.create_session(CLI_PLATFORM, channel_id)
-        except Exception:
+            gs, rs = await sync_to_async(sm.create_session)(CLI_PLATFORM, channel_id)
+        except Exception as exc:
             logger.exception(
-                '[GatewayTokenStreamConsumer] create_session failed.'
+                '[GatewayTokenStreamConsumer] create_session failed: %s.', exc
             )
             await self.send(
                 text_data=json.dumps(
@@ -400,7 +406,8 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
 
         self._session_group = reasoning_session_group_name(rs.pk)
         await self.channel_layer.group_add(
-            self._session_group,
+            # TODO: Find cleaner sol, this is a cheap fix
+            self._session_group or "",
             self.channel_name,
         )
         logger.debug(

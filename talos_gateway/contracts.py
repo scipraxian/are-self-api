@@ -1,4 +1,4 @@
-"""Pydantic contracts for normalized platform I/O (Layer 4)."""
+"""Pydantic contracts for normalized platform I/O."""
 
 import base64
 from datetime import datetime

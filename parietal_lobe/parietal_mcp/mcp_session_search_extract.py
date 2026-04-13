@@ -1,5 +1,5 @@
 """
-Pure helpers to build searchable text from reasoning ledgers (Layer 1 session search).
+Pure helpers to build searchable text from reasoning ledgers (session search).
 
 No I/O; safe for unit tests. Module-level functions only (STYLE_GUIDE.md).
 """

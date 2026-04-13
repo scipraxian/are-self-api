@@ -1,1 +1,1 @@
-"""Talos gateway: platform integration and delivery (Layer 4)."""
+"""Are-Self gateway: platform integration and delivery."""

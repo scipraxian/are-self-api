@@ -1,4 +1,4 @@
-"""Text-to-speech service: provider dispatch, cache, and retry (Layer 4)."""
+"""Text-to-speech service: provider dispatch, cache, and retry."""
 
 import asyncio
 import hashlib

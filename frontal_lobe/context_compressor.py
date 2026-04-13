@@ -1,4 +1,4 @@
-"""Layer 2A: context window compression for long reasoning sessions."""
+"""Context window compression for long reasoning sessions."""
 
 import logging
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
@@ -23,7 +23,7 @@ ROLE_USER = 'user'
 ROLE_ASSISTANT = 'assistant'
 NAME = 'name'
 
-# Phase 1 placeholder must stay stable for idempotence checks.
+# Tool-result placeholder prefix must stay stable for idempotence checks.
 TOOL_PLACEHOLDER_PREFIX = '[Tool call to '
 
 SUMMARY_SENTINEL = '[Conversation summary — prior middle segment]'
@@ -67,7 +67,7 @@ def _tool_display_name(message: Dict[str, Any]) -> str:
     return 'tool'
 
 
-def phase1_prune_tool_messages(
+def prune_inner_tool_messages(
     messages: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
     """Keep first 2 and last 2 tool results; replace middle with placeholders."""
@@ -90,7 +90,7 @@ def phase1_prune_tool_messages(
     return out
 
 
-def phase3_aggressive_prune(
+def aggressive_prune_to_latest_tool(
     messages: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
     """Last resort: discard all tool results except the most recent."""
@@ -171,7 +171,7 @@ def _collapse_middle_with_summary(
 
 
 def messages_already_summarized(messages: List[Dict[str, Any]]) -> bool:
-    """Idempotence: detect prior Phase 2 summary in the message list."""
+    """Idempotence: detect prior middle-segment summary in the message list."""
     for m in messages:
         c = m.get(CONTENT)
         if isinstance(c, str) and c.strip().startswith(SUMMARY_SENTINEL):
@@ -197,7 +197,7 @@ class ContextCompressor(object):
         summarize_fn: Optional[Callable[[str], str]] = None,
     ) -> List[Dict[str, Any]]:
         """
-        Apply compression phases until under threshold or exhausted.
+        Apply compression steps until under threshold or exhausted.
 
         summarize_fn: optional sync callable taking concatenated middle text, returns summary.
         """
@@ -207,14 +207,14 @@ class ContextCompressor(object):
             return current
 
         if messages_already_summarized(current):
-            current = phase3_aggressive_prune(current)
+            current = aggressive_prune_to_latest_tool(current)
             return current
 
-        current = phase1_prune_tool_messages(current)
+        current = prune_inner_tool_messages(current)
         current_tokens = estimate_message_list_tokens(current)
         if current_tokens < threshold_tokens:
             logger.info(
-                '[ContextCompressor] Phase 1 pruned tool messages for session %s.',
+                '[ContextCompressor] Inner tool messages pruned for session %s.',
                 self.reasoning_session.id,
             )
             return current
@@ -231,14 +231,14 @@ class ContextCompressor(object):
                 current_tokens = estimate_message_list_tokens(current)
                 if current_tokens < threshold_tokens:
                     logger.info(
-                        '[ContextCompressor] Phase 2 summarized middle for session %s.',
+                        '[ContextCompressor] Middle segment summarized for session %s.',
                         self.reasoning_session.id,
                     )
                     return current
 
-        current = phase3_aggressive_prune(current)
+        current = aggressive_prune_to_latest_tool(current)
         logger.info(
-            '[ContextCompressor] Phase 3 aggressive prune for session %s.',
+            '[ContextCompressor] Aggressive tool-result prune for session %s.',
             self.reasoning_session.id,
         )
         return current

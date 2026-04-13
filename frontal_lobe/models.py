@@ -36,7 +36,7 @@ class ReasoningTurnKindID:
 
 
 class ReasoningTurnKind(BigIdMixin, NameMixin, ReasoningTurnKindID):
-    """Classifies turns for Layer 2 compression (e.g. LLM summary rows)."""
+    """Classifies turns for context compression audit (e.g. LLM summary rows)."""
 
     IDs = ReasoningTurnKindID
 
@@ -112,7 +112,7 @@ class ReasoningSession(
     # Queued messages from users or other agents during a turn.
     swarm_message_queue = models.JSONField(default=list, blank=True)
 
-    # Layer 2 interrupt: partial assistant text and metadata when Spike is STOPPING.
+    # Interrupt snapshot: partial assistant text and metadata when Spike is STOPPING.
     interrupt_snapshot = models.JSONField(default=dict, blank=True)
 
     @property

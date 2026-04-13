@@ -1,4 +1,4 @@
-"""Tests for Layer 3 identity addons (memory snapshot, skills, platform, tool guidance)."""
+"""Tests for extended identity addons (memory snapshot, skills, platform, tool guidance)."""
 
 from django.utils import timezone
 
@@ -481,14 +481,14 @@ class ToolGuidanceAddonTests(CommonFixturesAPITestCase):
         self.assertLessEqual(len(body), MAX_TOOL_GUIDANCE_CHARS)
 
 
-class Layer3RegistryTests(CommonFixturesAPITestCase):
-    """Assert Layer 3 fixture slugs resolve in ADDON_REGISTRY."""
+class ExtendedAddonRegistryTests(CommonFixturesAPITestCase):
+    """Assert extended-addon fixture slugs resolve in ADDON_REGISTRY."""
 
     fixtures = list(CommonFixturesAPITestCase.fixtures) + [
         'identity/fixtures/layer3_addons.json',
     ]
 
-    def test_layer3_slugs_registered(self):
+    def test_extended_addon_slugs_registered(self):
         """Assert all four function_slug values from fixtures are callable."""
         for slug in (
             'memory_snapshot_addon',

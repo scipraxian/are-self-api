@@ -65,8 +65,8 @@ def register_hippocampus_tools(registry: MCPToolRegistry) -> None:
         name='search_engrams',
         description=(
             'Search Are-Self\'s memory store (hippocampus) for '
-            'engrams matching a text query. Phase 2 will add '
-            'vector similarity search.'
+            'engrams matching a text query. Vector similarity search '
+            'is not yet implemented.'
         ),
         input_schema={
             'type': 'object',

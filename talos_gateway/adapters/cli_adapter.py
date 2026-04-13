@@ -1,4 +1,4 @@
-"""Local CLI / terminal adapter (Layer 4)."""
+"""Local CLI / terminal adapter."""
 
 import logging
 from typing import Any, Awaitable, Callable, Optional

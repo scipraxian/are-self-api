@@ -33,7 +33,7 @@ class TranscriptionResultContractTests(SimpleTestCase):
         self.assertIsNone(restored.error)
 
     def test_failure_has_empty_text_and_error(self):
-        """Assert STT failure matches Layer 4 semantics (§7.1)."""
+        """Assert STT failure matches outbound delivery semantics."""
         result = stt_failure_result('voxtral', 'binary not found')
         self.assertFalse(result.success)
         self.assertEqual(result.text, '')
@@ -62,7 +62,7 @@ class SynthesisResultContractTests(SimpleTestCase):
         self.assertIsNone(restored.error)
 
     def test_failure_has_no_audio_path_and_error(self):
-        """Assert TTS failure matches Layer 4 semantics (§7.1)."""
+        """Assert TTS failure matches outbound delivery semantics."""
         result = tts_failure_result('edge', 'network error')
         self.assertFalse(result.success)
         self.assertIsNone(result.audio_path)

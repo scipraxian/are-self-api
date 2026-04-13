@@ -29,7 +29,7 @@ class SynthesisResult(BaseModel):
 
 
 def stt_failure_result(provider: str, error_message: str) -> TranscriptionResult:
-    """Build a typed STT failure per Layer 4 error table.
+    """Build a typed STT failure.
 
     No transcript text; ``error`` is set.
     """
@@ -60,7 +60,7 @@ def stt_success_result(
 
 
 def tts_failure_result(provider: str, error_message: str) -> SynthesisResult:
-    """Build a typed TTS failure per Layer 4 error table.
+    """Build a typed TTS failure for outbound delivery.
 
     No audio path; ``error`` is set.
     """

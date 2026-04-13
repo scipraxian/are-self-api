@@ -38,7 +38,7 @@ class SessionManager(object):
         platform: str,
         channel_id: str,
         _envelope: PlatformEnvelope,
-    ) -> tuple[GatewaySession, ReasoningSession] | tuple[GatewaySession | None, ReasoningSession]:
+    ) -> Tuple[GatewaySession, ReasoningSession]:
         """Return gateway row and reasoning session; create rows when absent."""
         timeout_minutes = int(self.config.get('session_timeout_minutes', 60))
         cutoff = timezone.now() - timedelta(minutes=timeout_minutes)

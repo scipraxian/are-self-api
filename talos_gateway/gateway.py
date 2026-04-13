@@ -4,6 +4,7 @@ import importlib
 import logging
 from typing import Any, Optional, Type
 
+from asgiref.sync import sync_to_async
 from django.conf import settings
 
 from talos_gateway.contracts import PlatformEnvelope
@@ -98,7 +99,7 @@ class GatewayOrchestrator(object):
         envelope: PlatformEnvelope,
     ) -> dict[str, Any]:
         """Resolve session and queue inbound user content."""
-        gs, rs = self.session_manager.resolve_session(
+        gs, rs = await sync_to_async(self.session_manager.resolve_session)(
             envelope.platform,
             envelope.channel_id,
             envelope,

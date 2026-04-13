@@ -12,7 +12,7 @@ class DiscordAdapterTests(SimpleTestCase):
     """Tests for DiscordAdapter (SDK mocked by stub implementation)."""
 
     def test_platform_name_and_max_length(self):
-        """Assert convention constants match Layer 4 defaults."""
+        """Assert convention constants match gateway defaults."""
         adapter = DiscordAdapter({})
         self.assertEqual(adapter.PLATFORM_NAME, 'discord')
         self.assertEqual(adapter.MAX_MESSAGE_LENGTH, 2000)

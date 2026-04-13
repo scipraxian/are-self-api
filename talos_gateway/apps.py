@@ -3,12 +3,12 @@
 from django.apps import AppConfig
 
 
-class TalosGatewayConfig(AppConfig):
-    """Configuration for the Talos gateway (Layer 4) app."""
+class AreSelfGatewayConfig(AppConfig):
+    """Configuration for the Are-Self gateway app."""
 
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'talos_gateway'
-    verbose_name = 'Talos Gateway'
+    verbose_name = 'Are-Self Gateway'
 
     def ready(self) -> None:
         import talos_gateway.signals  # noqa: F401

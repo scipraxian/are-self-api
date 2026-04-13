@@ -1,15 +1,16 @@
-"""Generic HTTP webhook adapter (Layer 4)."""
+"""Generic HTTP webhook adapter."""
 
 import logging
 from typing import Any, Awaitable, Callable, Optional
 
+from talos_gateway.adapters.base_patterns import iter_chunked_payloads
 from talos_gateway.contracts import DeliveryPayload
 
 logger = logging.getLogger('talos_gateway.adapters.webhook')
 
 
 class WebhookAdapter(object):
-    """Outbound webhook stub; real HTTP is added in a later phase."""
+    """Outbound webhook stub; real HTTP not yet implemented."""
 
     # Placeholder MAX_MESSAGE_LENGTH
     PLATFORM_NAME = 'webhook'
@@ -36,8 +37,6 @@ class WebhookAdapter(object):
 
     async def send_chunked(self, payload: DeliveryPayload) -> dict:
         """Chunk long messages then send each part."""
-        from talos_gateway.adapters.base_patterns import iter_chunked_payloads
-
         last: dict = {'success': False}
         for chunk in iter_chunked_payloads(payload, self.MAX_MESSAGE_LENGTH):
             last = await self.send(chunk)

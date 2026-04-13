@@ -1,1 +1,1 @@
-"""Talos gateway migrations."""
+"""Are-Self gateway migrations for talos_gateway."""

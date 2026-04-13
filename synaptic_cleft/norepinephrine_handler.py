@@ -48,7 +48,7 @@ class NorepinephrineHandler(logging.Handler):
     """Broadcasts log records to the Synaptic Cleft as Norepinephrine molecules.
 
     Constructor kwargs (passed via Django LOGGING dictConfig):
-        receptor_class: Layer 1 routing target. Defaults to 'CeleryWorker'.
+        receptor_class: WebSocket receptor / domain for routing. Defaults to 'CeleryWorker'.
         skipped_prefixes: Tuple of logger name prefixes to silently drop.
             Defaults to infrastructure loggers that would cause recursion.
     """

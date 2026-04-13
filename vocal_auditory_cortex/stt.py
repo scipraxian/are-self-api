@@ -1,4 +1,4 @@
-"""Speech-to-text service: provider dispatch and retry policy (Layer 4)."""
+"""Speech-to-text service: provider dispatch and retry policy."""
 
 import asyncio
 import importlib

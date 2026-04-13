@@ -1,4 +1,4 @@
-"""Tests for Layer 2C interrupt polling and session INTERRUPTED status."""
+"""Tests for interrupt polling and session INTERRUPTED status."""
 
 from unittest.mock import patch
 from uuid import uuid4

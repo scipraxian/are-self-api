@@ -1,1 +1,1 @@
-"""Vocal–auditory cortex: STT and TTS services (Layer 4)."""
+"""Vocal–auditory cortex: STT and TTS services."""

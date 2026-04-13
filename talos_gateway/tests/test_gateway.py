@@ -39,7 +39,7 @@ class GatewayOrchestratorTests(CommonFixturesAPITestCase):
         self.assertEqual(orch.adapters['cli'].PLATFORM_NAME, 'cli')
 
     def test_start_all_drops_failing_adapter(self):
-        """Assert adapter.start failure removes that adapter (Layer 4 §7.1)."""
+        """Assert adapter.start failure removes that adapter."""
 
         class BrokenAdapter(object):
             """Raises on start."""

@@ -37,7 +37,7 @@ INTERRUPT_SNAPSHOT = 'interrupt_snapshot'
 
 
 def spike_is_stopping(spike_id: Optional[UUID]) -> bool:
-    """Sync poll of Spike status for Layer 2 interrupt (no async ORM)."""
+    """Sync poll of Spike status for interrupt handling (no async ORM)."""
     if spike_id is None:
         return False
     try:
@@ -520,7 +520,7 @@ class FrontalLobe:
 
         If ``stream_to_channels`` is True and ``stream_callback`` is omitted,
         token deltas are sent to the Django Channels group for this
-        ``ReasoningSession`` (Layer 2 §3.2). Clients must connect to the gateway
+        ``ReasoningSession``. Gateway clients must connect to the gateway
         WebSocket with ``?session_id=<uuid>`` and join that group.
         """
         logger.debug(f'[FrontalLobe] Waking up for Spike {self.spike_id}')

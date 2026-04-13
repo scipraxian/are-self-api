@@ -10,7 +10,7 @@ Endpoint: /mcp (mounted in config/urls.py)
 
 Supports:
 - POST: JSON-RPC 2.0 requests (initialize, tools/list, tools/call)
-- GET:  SSE stream for server notifications (Phase 2)
+- GET:  SSE stream for server notifications (not yet implemented)
 - DELETE: Session termination
 """
 
@@ -156,9 +156,9 @@ async def _dispatch(method: str, params: dict) -> dict:
 
 
 def _handle_get_sse(request) -> HttpResponse:
-    """SSE stream for server-initiated notifications (Phase 2)."""
+    """SSE stream for server-initiated notifications (stub)."""
     return JsonResponse(
-        {'message': 'SSE notifications — Phase 2'},
+        {'message': 'SSE notifications — not yet implemented'},
         status=501,
     )
 

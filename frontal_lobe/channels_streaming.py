@@ -1,4 +1,4 @@
-"""Layer 2 §3.2: optional Django Channels fan-out for LLM token deltas."""
+"""Optional Django Channels fan-out for LLM token deltas."""
 
 import logging
 from uuid import UUID
@@ -11,7 +11,7 @@ GROUP_PREFIX = 'session_'
 
 
 def reasoning_session_group_name(session_id: UUID) -> str:
-    """Channels group name for a ReasoningSession (Layer 2 §3.2)."""
+    """Channels group name for a ReasoningSession token stream."""
     return '%s%s' % (GROUP_PREFIX, session_id)
 
 

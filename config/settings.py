@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'occipital_lobe',
     'temporal_lobe',
     'frontal_lobe',
+    'talos_gateway',
     'rest_framework',
     'django_filters',
     'hippocampus.apps.HippocampusConfig',
@@ -101,11 +102,11 @@ ASGI_APPLICATION = 'config.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',  # Default name
+        'NAME': 'postgres_talos',  # Default name
         'USER': 'postgres',  # Default user
-        'PASSWORD': 'Wingsofbronze22!',
+        'PASSWORD': 'Wingsofbronze223',
         'HOST': 'localhost',
-        'PORT': '5434',
+        'PORT': '5436',
     }
 }
 

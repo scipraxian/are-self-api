@@ -1,4 +1,4 @@
-"""Tests for Layer 2 §3.2 Channels token streaming."""
+"""Tests for Channels token streaming from the frontal lobe."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4

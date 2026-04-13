@@ -19,7 +19,7 @@ async def send_with_retries(
     payload: DeliveryPayload,
     sleep_fn: Callable[[float], Any],
 ) -> dict:
-    """Call ``adapter.send`` with retries per Layer 4 §7.2.
+    """Call ``adapter.send`` with retries.
 
     Up to three attempts. Backoff 1s then 3s after failures. No retry on
     403/404. On 429, wait ``retry_after_seconds`` from the result if set.

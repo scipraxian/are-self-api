@@ -19,7 +19,7 @@ JSON_KEY = 'json'
 
 class Neurotransmitter(BaseModel):
     """
-    The base envelope for the synaptic 2-layer routing matrix.
+    Base envelope for WebSocket routing (receptor, dendrite, molecule, activity).
 
     e.g.
     {
@@ -35,16 +35,16 @@ class Neurotransmitter(BaseModel):
     }
     """
 
-    # Layer 1 Router (The Django Channels Group) -> e.g., "IdentityDisc"
+    # receptor_class: Django Channels group / domain (e.g. "IdentityDisc")
     receptor_class: str
 
-    # Layer 2 Router (The Frontend Cache Key) -> e.g., "2873", "uuid", or None for Collections
+    # dendrite_id: Scoped subscription key (e.g. PK, uuid, or None for collections)
     dendrite_id: str | None
 
-    # Layer 3 Router (The Neurotransmitter Type) -> Auto-populates via __init__
+    # molecule: Packet type; subclass name is set in __init__
     molecule: str = 'Neurotransmitter'
 
-    # Layer 4 Router (The Action Verb) -> e.g., "created", "updated", "streaming", "attention_required"
+    # activity: Action verb (e.g. "created", "updated", "streaming", "attention_required")
     activity: str = 'transmitting'
 
     # The Payload

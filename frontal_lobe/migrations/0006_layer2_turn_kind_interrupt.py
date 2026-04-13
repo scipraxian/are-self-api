@@ -1,4 +1,4 @@
-# Layer 2 Frontal Lobe: ReasoningTurnKind, INTERRUPTED status, compression fields
+# ReasoningTurnKind, INTERRUPTED status, compression and interrupt fields
 
 import django.db.models.deletion
 import frontal_lobe.models

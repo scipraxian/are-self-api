@@ -1,4 +1,4 @@
-"""WebSocket message types for the local gateway CLI (Layer 4 Phase 1)."""
+"""WebSocket message types for the local gateway CLI."""
 
 from typing import Any
 
