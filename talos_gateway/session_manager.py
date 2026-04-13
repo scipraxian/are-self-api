@@ -97,3 +97,44 @@ class SessionManager(object):
         gs.last_activity = timezone.now()
         gs.save(update_fields=['last_activity', 'modified'])
         return gs, gs.reasoning_session
+
+    def list_sessions(self, platform: str) -> list[dict]:
+        """Return active sessions for a platform as serializable dicts."""
+        rows = (
+            GatewaySession.objects.filter(
+                platform=platform,
+                status_id=GatewaySessionStatusID.ACTIVE,
+            )
+            .select_related('reasoning_session', 'reasoning_session__identity_disc')
+            .order_by('-last_activity')
+        )
+        results: list[dict] = []
+        for gs in rows:
+            rs = gs.reasoning_session
+            disc = getattr(rs, 'identity_disc', None)
+            results.append({
+                'session_id': str(rs.pk),
+                'channel_id': gs.channel_id,
+                'status': str(gs.status_id),
+                'last_activity': gs.last_activity.isoformat(),
+                'identity_disc_name': str(disc) if disc else '',
+            })
+        return results
+
+    def create_session(
+        self, platform: str, channel_id: str
+    ) -> Tuple[GatewaySession, ReasoningSession]:
+        """Create a new gateway + reasoning session pair without an envelope."""
+        identity_disc = self._resolve_identity_disc()
+        rs = ReasoningSession.objects.create(
+            identity_disc=identity_disc,
+            status_id=ReasoningStatusID.PENDING,
+        )
+        gs = GatewaySession.objects.create(
+            platform=platform,
+            channel_id=channel_id,
+            reasoning_session=rs,
+            status_id=GatewaySessionStatusID.ACTIVE,
+            last_activity=timezone.now(),
+        )
+        return gs, rs

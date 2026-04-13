@@ -27,12 +27,16 @@ from talos_gateway.ws_protocol import (
     WS_ERR_NO_GATEWAY,
     WS_ERR_UNKNOWN_TYPE,
     WS_ERR_VALIDATION,
+    WS_MSG_CREATE_SESSION,
+    WS_MSG_CREATE_SESSION_ACK,
     WS_MSG_INBOUND,
     WS_MSG_INBOUND_ACK,
     WS_MSG_INTERRUPT,
     WS_MSG_INTERRUPT_ACK,
     WS_MSG_JOIN_SESSION,
     WS_MSG_JOIN_SESSION_ACK,
+    WS_MSG_LIST_SESSIONS,
+    WS_MSG_LIST_SESSIONS_ACK,
     WS_MSG_RESPONSE_COMPLETE,
     WS_MSG_SESSION_STATUS,
 )
@@ -619,6 +623,122 @@ class GatewayInterruptWebSocketTests(SimpleTestCase):
             data = json.loads(raw)
             self.assertEqual(data['type'], 'error')
             self.assertEqual(data['code'], WS_ERR_VALIDATION)
+            await communicator.disconnect()
+
+        asyncio.run(_run())
+
+
+# ------------------------------------------------------------------
+# Story 2.1 — Session management WebSocket message tests
+# ------------------------------------------------------------------
+
+
+@override_settings(
+    CHANNEL_LAYERS={
+        'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}
+    },
+    TALOS_GATEWAY={
+        'platforms': {'cli': {'enabled': True}},
+        'default_identity_disc': THALAMUS_DISC_PK,
+        'session_timeout_minutes': 60,
+    },
+)
+class GatewaySessionManagementWebSocketTests(TransactionTestCase):
+    """WebSocket tests for list_sessions and create_session message types."""
+
+    fixtures = list(CommonFixturesAPITestCase.fixtures) + [
+        'talos_gateway/fixtures/initial_data.json',
+    ]
+
+    @classmethod
+    def setUpClass(cls):
+        _EMBED_PATCH.start()
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        _EMBED_PATCH.stop()
+
+    def tearDown(self) -> None:
+        clear_active_gateway_orchestrator()
+        super().tearDown()
+
+    @patch('thalamus.signals.async_to_sync', _noop_async_to_sync)
+    @patch('talos_gateway.signals.async_to_sync', _noop_async_to_sync)
+    @patch('asgiref.sync.async_to_sync', _noop_async_to_sync)
+    def test_list_sessions_returns_ack_with_sessions(self, *_mocks):
+        """Assert list_sessions message returns list_sessions_ack with session data."""
+        from talos_gateway.session_manager import SessionManager
+
+        sm = SessionManager()
+        _gs, rs = sm.create_session('cli', 'chan-ws-list')
+
+        async def _run() -> None:
+            communicator = WebsocketCommunicator(
+                _gateway_application(),
+                '/ws/gateway/stream/',
+            )
+            connected, _ = await communicator.connect()
+            self.assertTrue(connected)
+
+            await communicator.send_to(
+                text_data=json.dumps({'type': WS_MSG_LIST_SESSIONS})
+            )
+            raw = await communicator.receive_from()
+            data = json.loads(raw)
+            self.assertEqual(data['type'], WS_MSG_LIST_SESSIONS_ACK)
+            self.assertIsInstance(data['sessions'], list)
+            self.assertGreaterEqual(len(data['sessions']), 1)
+            found = [s for s in data['sessions'] if s['session_id'] == str(rs.pk)]
+            self.assertEqual(len(found), 1)
+            self.assertEqual(found[0]['channel_id'], 'chan-ws-list')
+            await communicator.disconnect()
+
+        asyncio.run(_run())
+
+    @patch('thalamus.signals.async_to_sync', _noop_async_to_sync)
+    @patch('talos_gateway.signals.async_to_sync', _noop_async_to_sync)
+    @patch('asgiref.sync.async_to_sync', _noop_async_to_sync)
+    def test_create_session_returns_ack_and_joins_group(self, *_mocks):
+        """Assert create_session returns session_id and auto-joins the channels group."""
+
+        async def _run() -> None:
+            communicator = WebsocketCommunicator(
+                _gateway_application(),
+                '/ws/gateway/stream/',
+            )
+            connected, _ = await communicator.connect()
+            self.assertTrue(connected)
+
+            await communicator.send_to(
+                text_data=json.dumps({
+                    'type': WS_MSG_CREATE_SESSION,
+                    'channel_id': 'chan-ws-create',
+                })
+            )
+            raw = await communicator.receive_from()
+            data = json.loads(raw)
+            self.assertEqual(data['type'], WS_MSG_CREATE_SESSION_ACK)
+            self.assertIn('session_id', data)
+            self.assertIn('channel_id', data)
+            self.assertEqual(data['channel_id'], 'chan-ws-create')
+
+            session_id = data['session_id']
+            from channels.layers import get_channel_layer
+
+            layer = get_channel_layer()
+            group = 'session_%s' % session_id
+            await layer.group_send(group, {
+                'type': 'response_complete',
+                'content': 'auto-joined test',
+                'session_status': '1',
+            })
+
+            raw2 = await communicator.receive_from()
+            data2 = json.loads(raw2)
+            self.assertEqual(data2['type'], WS_MSG_RESPONSE_COMPLETE)
+            self.assertEqual(data2['content'], 'auto-joined test')
             await communicator.disconnect()
 
         asyncio.run(_run())

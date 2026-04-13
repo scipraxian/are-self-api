@@ -51,6 +51,7 @@ requests>=2.31                  # HTTP checks
 colorlog>=6.7
 Markdown>=3.10
 uvicorn>=0.30
+websockets>=14.0
 
 pytest
 coverage

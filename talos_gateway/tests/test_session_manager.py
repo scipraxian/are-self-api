@@ -85,3 +85,42 @@ class SessionManagerTests(CommonFixturesAPITestCase):
         _, rs_new = sm.resolve_session('cli', 'chan-sm-3', env)
         self.assertNotEqual(rs_new.pk, old_pk)
         self.assertEqual(ReasoningSession.objects.filter(pk=old_pk).count(), 1)
+
+    def test_list_sessions_returns_active_cli_sessions(self):
+        """Assert list_sessions returns dicts with expected fields for active CLI sessions."""
+        sm = SessionManager()
+        gs, rs = sm.create_session('cli', 'chan-list-1')
+        results = sm.list_sessions('cli')
+        self.assertEqual(len(results), 1)
+        row = results[0]
+        self.assertEqual(row['session_id'], str(rs.pk))
+        self.assertEqual(row['channel_id'], 'chan-list-1')
+        self.assertIn('status', row)
+        self.assertIn('last_activity', row)
+        self.assertIn('identity_disc_name', row)
+
+    def test_list_sessions_excludes_other_platforms(self):
+        """Assert list_sessions for cli excludes discord sessions."""
+        sm = SessionManager()
+        sm.create_session('cli', 'chan-list-cli')
+        sm.create_session('discord', 'chan-list-disc')
+        results = sm.list_sessions('cli')
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]['channel_id'], 'chan-list-cli')
+
+    def test_list_sessions_empty_when_none_exist(self):
+        """Assert list_sessions returns empty list when no sessions exist."""
+        sm = SessionManager()
+        results = sm.list_sessions('cli')
+        self.assertEqual(results, [])
+
+    def test_create_session_returns_gateway_and_reasoning_session(self):
+        """Assert create_session creates both GatewaySession and ReasoningSession."""
+        sm = SessionManager()
+        gs, rs = sm.create_session('cli', 'chan-create-1')
+        self.assertIsInstance(gs, GatewaySession)
+        self.assertIsInstance(rs, ReasoningSession)
+        self.assertEqual(gs.platform, 'cli')
+        self.assertEqual(gs.channel_id, 'chan-create-1')
+        self.assertEqual(gs.reasoning_session_id, rs.pk)
+        self.assertEqual(str(rs.identity_disc_id), THALAMUS_DISC_PK)

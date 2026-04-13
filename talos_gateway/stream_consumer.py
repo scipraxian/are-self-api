@@ -26,11 +26,15 @@ from frontal_lobe.channels_streaming import (
 )
 from talos_gateway.gateway import get_active_gateway_orchestrator
 from talos_gateway.runtime import handle_interrupt
+from talos_gateway.session_manager import SessionManager
 from talos_gateway.ws_protocol import (
+    CLI_PLATFORM,
     WS_ERR_INVALID_JSON,
     WS_ERR_NO_GATEWAY,
     WS_ERR_UNKNOWN_TYPE,
     WS_ERR_VALIDATION,
+    WS_MSG_CREATE_SESSION,
+    WS_MSG_CREATE_SESSION_ACK,
     WS_MSG_ERROR,
     WS_MSG_INBOUND,
     WS_MSG_INBOUND_ACK,
@@ -38,6 +42,8 @@ from talos_gateway.ws_protocol import (
     WS_MSG_INTERRUPT_ACK,
     WS_MSG_JOIN_SESSION,
     WS_MSG_JOIN_SESSION_ACK,
+    WS_MSG_LIST_SESSIONS,
+    WS_MSG_LIST_SESSIONS_ACK,
     WS_MSG_RESPONSE_COMPLETE,
     WS_MSG_SESSION_STATUS,
     WS_MSG_TOKEN_DELTA,
@@ -134,6 +140,8 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
         WS_MSG_INBOUND,
         WS_MSG_JOIN_SESSION,
         WS_MSG_INTERRUPT,
+        WS_MSG_LIST_SESSIONS,
+        WS_MSG_CREATE_SESSION,
     })
 
     async def receive(
@@ -187,6 +195,14 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
 
         if msg_type == WS_MSG_INTERRUPT:
             await self._handle_interrupt()
+            return
+
+        if msg_type == WS_MSG_LIST_SESSIONS:
+            await self._handle_list_sessions()
+            return
+
+        if msg_type == WS_MSG_CREATE_SESSION:
+            await self._handle_create_session(data)
             return
 
         if msg_type != WS_MSG_INBOUND:
@@ -328,5 +344,73 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
             text_data=json.dumps({
                 'type': WS_MSG_INTERRUPT_ACK,
                 **result,
+            })
+        )
+
+    async def _handle_list_sessions(self) -> None:
+        """Return active CLI sessions to the WebSocket client.
+
+        ORM called synchronously from async context, matching the pattern
+        used by ``GatewayOrchestrator.handle_inbound`` (``resolve_session``).
+        ``DJANGO_ALLOW_ASYNC_UNSAFE`` must be set in the gateway process.
+        """
+        try:
+            sm = SessionManager()
+            sessions = sm.list_sessions(CLI_PLATFORM)
+        except Exception:
+            logger.exception('[GatewayTokenStreamConsumer] list_sessions failed.')
+            await self.send(
+                text_data=json.dumps(
+                    _error_payload(WS_ERR_VALIDATION, 'list_sessions failed')
+                )
+            )
+            return
+        await self.send(
+            text_data=json.dumps({
+                'type': WS_MSG_LIST_SESSIONS_ACK,
+                'sessions': sessions,
+            })
+        )
+
+    async def _handle_create_session(self, data: dict[str, Any]) -> None:
+        """Create a new session and auto-join its channel group.
+
+        ORM called synchronously — see ``_handle_list_sessions`` docstring.
+        """
+        channel_id = data.get('channel_id', 'cli-%s' % id(self))
+        try:
+            sm = SessionManager()
+            gs, rs = sm.create_session(CLI_PLATFORM, channel_id)
+        except Exception:
+            logger.exception(
+                '[GatewayTokenStreamConsumer] create_session failed.'
+            )
+            await self.send(
+                text_data=json.dumps(
+                    _error_payload(WS_ERR_VALIDATION, 'create_session failed')
+                )
+            )
+            return
+
+        if self._session_group:
+            await self.channel_layer.group_discard(
+                self._session_group,
+                self.channel_name,
+            )
+
+        self._session_group = reasoning_session_group_name(rs.pk)
+        await self.channel_layer.group_add(
+            self._session_group,
+            self.channel_name,
+        )
+        logger.debug(
+            '[GatewayTokenStreamConsumer] Created and joined session %s.',
+            rs.pk,
+        )
+        await self.send(
+            text_data=json.dumps({
+                'type': WS_MSG_CREATE_SESSION_ACK,
+                'session_id': str(rs.pk),
+                'channel_id': gs.channel_id,
             })
         )
