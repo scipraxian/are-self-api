@@ -235,20 +235,20 @@ class TestNeuroMuscularJunction:
                 f'Log path was not resolved! Got: {kwargs["log_path"]}')
 
     @pytest.mark.asyncio
-    async def test_blackboard_exhale_persistence(self, mock_head,
+    async def test_axoplasm_exhale_persistence(self, mock_head,
                                                  mock_env_utils):
         """Verify native python tools can mutate memory and the Caster preserves it."""
 
         # 1. Setup Initial Memory
-        mock_head.blackboard = {'state': 'initial'}
+        mock_head.axoplasm = {'state': 'initial'}
         mock_head.save()
 
         # 2. Mock a native Python Tool (e.g., an AI Parser)
         async def mock_ai_handler(spike_id):
             # Native tools interact with the DB directly
             h = await sync_to_async(Spike.objects.get)(id=spike_id)
-            h.blackboard['state'] = 'mutated'
-            await sync_to_async(h.save)(update_fields=['blackboard'])
+            h.axoplasm['state'] = 'mutated'
+            await sync_to_async(h.save)(update_fields=['axoplasm'])
             return 200, 'AI Analysis Complete'
 
         # 3. Hijack the Caster's Native Handler routing
@@ -271,12 +271,12 @@ class TestNeuroMuscularJunction:
 
             # 4. Assert the Caster did NOT cause amnesia
             mock_head.refresh_from_db()
-            assert mock_head.blackboard.get('state') == 'mutated'
+            assert mock_head.axoplasm.get('state') == 'mutated'
 
-    def test_unified_pipeline_blackboard_interception(self, mock_head,
+    def test_unified_pipeline_axoplasm_interception(self, mock_head,
                                                       mock_env_utils):
-        """Verify the Caster intercepts ::blackboard_set, mutates memory, and strips the log."""
-        mock_head.blackboard = {}
+        """Verify the Caster intercepts ::axoplasm_set, mutates memory, and strips the log."""
+        mock_head.axoplasm = {}
         mock_head.execution_log = ''
         mock_head.application_log = ''
 
@@ -284,9 +284,9 @@ class TestNeuroMuscularJunction:
 
         # Mixed log output mimicking a CLI tool sending secret commands
         log_payload = ('Standard log line 1\n'
-                       '::blackboard_set status_msg::All systems nominal\n'
+                       '::axoplasm_set status_msg::All systems nominal\n'
                        'Standard log line 2\n'
-                       '::blackboard_set error_count::0\n')
+                       '::axoplasm_set error_count::0\n')
 
         events = [
             NerveTerminalEvent(
@@ -304,29 +304,29 @@ class TestNeuroMuscularJunction:
 
             caster.execute()
 
-            # 1. Assert Blackboard Mutations
+            # 1. Assert Axoplasm Mutations
             assert (
-                mock_head.blackboard.get('status_msg') == 'All systems nominal')
-            assert mock_head.blackboard.get('error_count') == '0'
+                mock_head.axoplasm.get('status_msg') == 'All systems nominal')
+            assert mock_head.axoplasm.get('error_count') == '0'
 
             # 2. Assert Log Stripping
-            assert '::blackboard_set' not in mock_head.execution_log
+            assert '::axoplasm_set' not in mock_head.execution_log
             assert 'Standard log line 1' in mock_head.application_log
             assert 'Standard log line 2' in mock_head.application_log
 
-    def test_blackboard_interception_edge_cases(self, mock_head,
+    def test_axoplasm_interception_edge_cases(self, mock_head,
                                                 mock_env_utils):
-        """Verify robust parsing of ::blackboard_set with weird spacing, empty DB fields, and JSON."""
-        mock_head.blackboard = None  # Simulate an uninitialized JSONField
+        """Verify robust parsing of ::axoplasm_set with weird spacing, empty DB fields, and JSON."""
+        mock_head.axoplasm = None  # Simulate an uninitialized JSONField
         mock_head.execution_log = ''
 
         caster = NeuroMuscularJunction(mock_head.id)
 
         # Edge cases
         log_payload = (
-            '::blackboard_set   weird_spacing  ::  value with spaces  \n'
-            '::blackboard_set empty_val::\n'
-            '::blackboard_set json_data::{"key": "val", "nested": "data"}\n')
+            '::axoplasm_set   weird_spacing  ::  value with spaces  \n'
+            '::axoplasm_set empty_val::\n'
+            '::axoplasm_set json_data::{"key": "val", "nested": "data"}\n')
 
         events = [
             NerveTerminalEvent(
@@ -344,15 +344,15 @@ class TestNeuroMuscularJunction:
             caster.execute()
 
             # Assert Initialization and Extraction
-            assert isinstance(mock_head.blackboard, dict)
-            assert (mock_head.blackboard.get('weird_spacing') ==
+            assert isinstance(mock_head.axoplasm, dict)
+            assert (mock_head.axoplasm.get('weird_spacing') ==
                     'value with spaces')
-            assert mock_head.blackboard.get('empty_val') == ''
-            assert (mock_head.blackboard.get('json_data') ==
+            assert mock_head.axoplasm.get('empty_val') == ''
+            assert (mock_head.axoplasm.get('json_data') ==
                     '{"key": "val", "nested": "data"}')
 
             # Assert Scrubbing
-            assert '::blackboard_set' not in mock_head.execution_log
+            assert '::axoplasm_set' not in mock_head.execution_log
 
 
 @pytest.mark.django_db

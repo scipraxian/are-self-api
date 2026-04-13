@@ -549,7 +549,7 @@ class NeuronTelemetrySerializer(serializers.ModelSerializer):
     command = serializers.SerializerMethodField()
     agent = serializers.SerializerMethodField()
     average_delta = serializers.SerializerMethodField()
-    blackboard = serializers.JSONField(read_only=True)
+    axoplasm = serializers.JSONField(read_only=True)
     context_matrix = serializers.SerializerMethodField()
     reasoning_session_id = serializers.SerializerMethodField()
 
@@ -566,7 +566,7 @@ class NeuronTelemetrySerializer(serializers.ModelSerializer):
             'command',
             'delta',
             'average_delta',
-            'blackboard',
+            'axoplasm',
             'context_matrix',
             'reasoning_session_id',
             'spike_train',

@@ -104,8 +104,8 @@ The CNS doesn't know about reasoning or AI. It's a generic directed-graph execut
 effectors happens to start a reasoning session in the Frontal Lobe is just configuration. Other effectors launch
 processes, push code, or call APIs.
 
-Spikes carry a **blackboard** — a JSON dict that accumulates data as the train passes through neurons. Each effector can
-read from and write to the blackboard. This is how context flows through the execution graph without tight coupling
+Spikes carry **axoplasm** — a JSON dict that accumulates data as the train passes through neurons. Each effector can
+read from and write to the axoplasm. This is how context flows through the execution graph without tight coupling
 between neurons.
 
 ### Frontal Lobe (`frontal_lobe/`)

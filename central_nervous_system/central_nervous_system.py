@@ -50,21 +50,21 @@ class CNS:
         self,
         pathway_id: Optional[uuid.UUID] = None,
         spike_train_id: Optional[uuid.UUID] = None,
-        seed_blackboard: Optional[Dict[str, Any]] = None,
+        seed_cerebrospinal_fluid: Optional[Dict[str, Any]] = None,
     ):
-        # Seed blackboard is merged into the blackboard of root spikes at
-        # dispatch time. Lets external callers (MCP launch_spike_train,
-        # Celery tasks, test harnesses) pre-load context before the graph
-        # starts firing. Ignored when resuming an existing SpikeTrain by
-        # id — the caller is joining an already-seeded train.
-        self._seed_blackboard: Dict[str, Any] = (
-            dict(seed_blackboard) if seed_blackboard else {}
-        )
+        # Seed cerebrospinal_fluid is stored on the SpikeTrain and merged into
+        # the axoplasm of root spikes at dispatch time. Lets external callers
+        # (MCP launch_spike_train, Celery tasks, test harnesses) pre-load
+        # context before the graph starts firing. Ignored when resuming an
+        # existing SpikeTrain by id — the caller is joining an
+        # already-seeded train.
 
         if spike_train_id:
             self.spike_train = SpikeTrain.objects.get(id=spike_train_id)
         elif pathway_id:
-            self.spike_train = self._create_spawn(pathway_id)
+            self.spike_train = self._create_spawn(
+                pathway_id, seed_cerebrospinal_fluid
+            )
         else:
             raise ValueError('Must provide either spike_train_id or pathway_id')
 
@@ -226,13 +226,22 @@ class CNS:
     # Internal Logic
     # =========================================================================
 
-    def _create_spawn(self, pathway_id: uuid.UUID) -> SpikeTrain:
+    def _create_spawn(
+        self,
+        pathway_id: uuid.UUID,
+        seed_cerebrospinal_fluid: Optional[Dict[str, Any]] = None,
+    ) -> SpikeTrain:
         book = NeuralPathway.objects.get(id=pathway_id)
         active_env = ProjectEnvironment.objects.filter(selected=True).first()
         spike_train = SpikeTrain.objects.create(
             pathway=book,
             status_id=SpikeTrainStatus.CREATED,
             environment=active_env,
+            cerebrospinal_fluid=(
+                dict(seed_cerebrospinal_fluid)
+                if seed_cerebrospinal_fluid
+                else {}
+            ),
         )
         self.spike_train = spike_train
         return spike_train
@@ -360,25 +369,27 @@ class CNS:
     def _create_spike_from_node(
         self, neuron: Neuron, provenance: Optional[Spike]
     ):
-        starting_blackboard: Dict[str, Any] = {}
+        starting_axoplasm: Dict[str, Any] = {}
 
         if provenance:
-            starting_blackboard = copy.deepcopy(provenance.blackboard)
+            starting_axoplasm = copy.deepcopy(provenance.axoplasm)
         elif self.spike_train.parent_spike:
-            starting_blackboard = copy.deepcopy(
-                self.spike_train.parent_spike.blackboard
+            starting_axoplasm = copy.deepcopy(
+                self.spike_train.parent_spike.axoplasm
             )
             node_args = NeuronContext.objects.filter(
                 neuron=self.spike_train.parent_spike.neuron
             )
             for arg in node_args:
                 if arg.key:
-                    starting_blackboard[arg.key] = arg.value
-        elif self._seed_blackboard:
-            # Fresh root spike launched with a pre-loaded blackboard
-            # (e.g. from MCP launch_spike_train). Seed wins at the root
+                    starting_axoplasm[arg.key] = arg.value
+        elif self.spike_train.cerebrospinal_fluid:
+            # Fresh root spike launched with a pre-loaded cerebrospinal_fluid
+            # (e.g. from MCP launch_spike_train). CSF wins at the root
             # and then flows down-graph the normal way via provenance.
-            starting_blackboard = copy.deepcopy(self._seed_blackboard)
+            starting_axoplasm = copy.deepcopy(
+                self.spike_train.cerebrospinal_fluid
+            )
 
         seed_spike = Spike.objects.create(
             spike_train=self.spike_train,
@@ -387,7 +398,7 @@ class CNS:
             provenance=provenance,
             target=None,
             status_id=SpikeStatus.CREATED,
-            blackboard=starting_blackboard,
+            axoplasm=starting_axoplasm,
         )
 
         logger.info(
@@ -465,7 +476,7 @@ class CNS:
             provenance=seed.provenance,
             target=agent,
             status_id=SpikeStatus.PENDING,
-            blackboard=copy.deepcopy(seed.blackboard),
+            axoplasm=copy.deepcopy(seed.axoplasm),
         )
         transaction.on_commit(lambda: fire_spike.delay(new_spike.id))
 

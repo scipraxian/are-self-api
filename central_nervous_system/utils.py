@@ -73,9 +73,10 @@ def resolve_environment_context(
 
     Hierarchy of Variable Precedence (Lowest to Highest):
     1. Global Environment (ProjectEnvironment context)
-    2. Effector Defaults (EffectorContext)
-    3. Node Overrides (NeuronContext)
-    4. Runtime Injection (SpikeTrain.context_data)
+    2. SpikeTrain.cerebrospinal_fluid (train-level defaults)
+    3. Spike.axoplasm (runtime state)
+    4. Effector Defaults (EffectorContext)
+    5. Node Overrides (NeuronContext)
     """
     metadata: Dict[str, Any] = {}
     spike = None
@@ -154,8 +155,18 @@ def resolve_environment_context(
                     context_data[var.key] = var.value
         return context_data
 
-    if spike.blackboard and isinstance(spike.blackboard, dict):
-        context_data.update(spike.blackboard)
+    # Add SpikeTrain.cerebrospinal_fluid layer (train-level defaults)
+    if (
+        spike
+        and spike.spike_train
+        and spike.spike_train.cerebrospinal_fluid
+        and isinstance(spike.spike_train.cerebrospinal_fluid, dict)
+    ):
+        context_data.update(spike.spike_train.cerebrospinal_fluid)
+
+    # Add Spike.axoplasm layer (runtime state, overrides CSF)
+    if spike.axoplasm and isinstance(spike.axoplasm, dict):
+        context_data.update(spike.axoplasm)
 
     if spike.effector:
         effector_vars = EffectorContext.objects.filter(effector=spike.effector)

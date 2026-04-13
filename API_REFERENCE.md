@@ -114,7 +114,7 @@ The Central Nervous System is the beating heart of Are-Self. It fires spike trai
 
 ### Spike Trains
 
-Spike trains represent individual reasoning runs. Each spike train traverses a pathway, executing neurons and triggering effectors while maintaining state on a shared blackboard.
+Spike trains represent individual reasoning runs. Each spike train traverses a pathway, executing neurons and triggering effectors while maintaining state on shared cerebrospinal_fluid.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -137,7 +137,7 @@ Spikes are the individual firing events that occur during a spike train's execut
 |--------|----------|-------------|
 | GET | `/api/v1/spikes/` | List spikes across all spike trains |
 | GET | `/api/v1/spikes/{id}/` | Spike forensics: retrieve detailed execution trace |
-| GET | `/api/v2/spikes/` | Read-only spike telemetry (includes application_log, execution_log, blackboard) |
+| GET | `/api/v2/spikes/` | Read-only spike telemetry (includes application_log, execution_log, axoplasm) |
 
 ### Neural Pathways
 

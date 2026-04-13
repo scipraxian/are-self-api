@@ -138,7 +138,7 @@ class FrontalLobe:
                     )
                 self.session = existing
             else:
-                # Extract identity_disc from context (spike blackboard, neuron context, or effector context)
+                # Extract identity_disc from context (spike axoplasm, neuron context, or effector context)
                 identity_disc_id = None
                 identity_disc_value = raw_context.get('identity_disc')
                 if identity_disc_value:

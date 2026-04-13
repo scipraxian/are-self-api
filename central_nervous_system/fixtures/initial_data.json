@@ -457,7 +457,7 @@
   "pk": 5,
   "fields": {
     "created": "2026-04-04T00:00:00.000Z",
-    "description": "Conditional branch based on blackboard state. Routes to SUCCESS or FAILURE axon.",
+    "description": "Conditional branch based on axoplasm state. Routes to SUCCESS or FAILURE axon.",
     "modified": "2026-04-04T00:00:00.000Z",
     "name": "Gate",
     "is_favorite": false,
@@ -472,7 +472,7 @@
   "pk": 6,
   "fields": {
     "created": "2026-04-04T00:00:00.000Z",
-    "description": "Loop control via blackboard counter. Retries up to max_retries then fires FAILURE.",
+    "description": "Loop control via axoplasm counter. Retries up to max_retries then fires FAILURE.",
     "modified": "2026-04-04T00:00:00.000Z",
     "name": "Retry",
     "is_favorite": false,
@@ -949,7 +949,7 @@
   "pk": 9,
   "fields": {
     "created": "2026-04-04T00:00:00.000Z",
-    "description": "Logs blackboard state and neuron context to the worker log. Drop into any pathway for visibility.",
+    "description": "Logs axoplasm state and neuron context to the worker log. Drop into any pathway for visibility.",
     "modified": "2026-04-04T00:00:00.000Z",
     "name": "Debug",
     "is_favorite": true,

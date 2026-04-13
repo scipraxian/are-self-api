@@ -142,20 +142,20 @@ def register_cns_tools(registry: MCPToolRegistry) -> None:
     async def launch_spike_train(
         pathway_id: str,
         environment_id: Optional[str] = None,
-        blackboard: Optional[Dict[str, Any]] = None,
+        cerebrospinal_fluid: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Fire a neural pathway — creates and starts a SpikeTrain.
 
-        The optional `blackboard` dict is merged into every root spike
-        of the new train before it fires. Values propagate down-graph
+        The optional `cerebrospinal_fluid` dict is merged into every root
+        spike of the new train before it fires. Values propagate down-graph
         via the normal provenance copy in _create_spike_from_node, so
-        effectors can read them from spike.blackboard like any other
+        effectors can read them from spike.axoplasm like any other
         context data. This is the MCP equivalent of pre-loading the
         neuron context, but scoped to this single launch.
         """
 
-        seed_bb: Dict[str, Any] = (
-            dict(blackboard) if isinstance(blackboard, dict) else {}
+        seed_csf: Dict[str, Any] = (
+            dict(cerebrospinal_fluid) if isinstance(cerebrospinal_fluid, dict) else {}
         )
 
         @sync_to_async
@@ -164,7 +164,7 @@ def register_cns_tools(registry: MCPToolRegistry) -> None:
 
             cns = CNS(
                 pathway_id=UUID(pathway_id),
-                seed_blackboard=seed_bb,
+                seed_cerebrospinal_fluid=seed_csf,
             )
             spike_train = cns.spike_train
             pathway_name = (
@@ -177,7 +177,7 @@ def register_cns_tools(registry: MCPToolRegistry) -> None:
                 'spike_train_id': str(spike_train.id),
                 'status': 'started',
                 'pathway_name': pathway_name,
-                'seeded_keys': sorted(seed_bb.keys()),
+                'seeded_keys': sorted(seed_csf.keys()),
             }
 
         try:
@@ -201,10 +201,10 @@ def register_cns_tools(registry: MCPToolRegistry) -> None:
         description=(
             'Launch a neural pathway execution. Creates a SpikeTrain '
             'and begins firing. Returns the spike_train_id for '
-            'monitoring. Pass an optional `blackboard` dict to '
+            'monitoring. Pass an optional `cerebrospinal_fluid` dict to '
             'pre-load context data onto every root spike of the new '
             'train — values propagate down-graph like any other '
-            'blackboard state.'
+            'axoplasm state.'
         ),
         input_schema={
             'type': 'object',
@@ -219,13 +219,13 @@ def register_cns_tools(registry: MCPToolRegistry) -> None:
                         'Optional environment context UUID'
                     ),
                 },
-                'blackboard': {
+                'cerebrospinal_fluid': {
                     'type': 'object',
                     'description': (
                         'Optional flat key/value dict merged into '
-                        'the root spike blackboard before the train '
-                        'fires. Values propagate down-graph via '
-                        'provenance. Use this to pre-load prompts, '
+                        'the SpikeTrain cerebrospinal_fluid before '
+                        'the train fires. Values propagate down-graph '
+                        'via provenance. Use this to pre-load prompts, '
                         'targets, or any effector-specific context.'
                     ),
                     'additionalProperties': True,

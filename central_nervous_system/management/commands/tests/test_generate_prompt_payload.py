@@ -3,29 +3,29 @@ import uuid
 
 from django.core.management import call_command
 
-from common.tests.common_test_case import CommonFixturesAPITestCase
-
 from central_nervous_system.management.commands.generate_prompt_payload import (
-    BLACKBOARD_RESULT_KEY,)
+    AXOPLASM_RESULT_KEY,
+)
 from central_nervous_system.models import (
+    NeuralPathway,
     Spike,
     SpikeStatus,
     SpikeTrain,
     SpikeTrainStatus,
-    NeuralPathway,
 )
+from common.tests.common_test_case import CommonFixturesAPITestCase
 
 
 class GeneratePromptPayloadTest(CommonFixturesAPITestCase):
-
     def setUp(self):
         # 1. Setup minimal relational infrastructure
         self.book = NeuralPathway.objects.create(name='Payload Test Protocol')
         self.spike_train = SpikeTrain.objects.create(
-            pathway=self.book, status_id=SpikeTrainStatus.CREATED)
+            pathway=self.book, status_id=SpikeTrainStatus.CREATED
+        )
 
-        # 2. Pre-load the blackboard with a raw template and a variable to resolve
-        initial_blackboard = {
+        # 2. Pre-load the axoplasm with a raw template and a variable to resolve
+        initial_axoplasm = {
             'prompt': 'Analyze this error log: {{ error_msg }}',
             'error_msg': 'Fatal Exception in PlayerController.cpp',
         }
@@ -33,14 +33,15 @@ class GeneratePromptPayloadTest(CommonFixturesAPITestCase):
         self.spike = Spike.objects.create(
             spike_train=self.spike_train,
             status_id=SpikeStatus.CREATED,
-            blackboard=initial_blackboard,
+            axoplasm=initial_axoplasm,
         )
         self.generated_file_path = None
 
     def tearDown(self):
         # Prevent test suite from leaving physical temp files on the OS
         if self.generated_file_path and os.path.exists(
-                self.generated_file_path):
+            self.generated_file_path
+        ):
             os.remove(self.generated_file_path)
 
     def test_generate_prompt_payload_command(self):
@@ -55,16 +56,16 @@ class GeneratePromptPayloadTest(CommonFixturesAPITestCase):
             # extract the path from the logs
             found_path = None
             for record in log_capture.output:
-                if ('::blackboard_set' in record and
-                        BLACKBOARD_RESULT_KEY in record):
-                    # Format: ::blackboard_set local_prompt_path::/tmp/path
+                if '::axoplasm_set' in record and AXOPLASM_RESULT_KEY in record:
+                    # Format: ::axoplasm_set local_prompt_path::/tmp/path
                     parts = record.split('::')
                     if len(parts) >= 3:
                         found_path = parts[2].strip()
                         break
 
-            self.assertIsNotNone(found_path,
-                                 'Did not find blackboard instruction in logs')
+            self.assertIsNotNone(
+                found_path, 'Did not find axoplasm instruction in logs'
+            )
             self.generated_file_path = found_path
 
         # Refresh is irrelevant now since command is read-only

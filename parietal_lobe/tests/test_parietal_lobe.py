@@ -39,7 +39,7 @@ class ParietalLobeTest(CommonFixturesAPITestCase):
             pathway=self.book, status_id=SpikeTrainStatus.RUNNING)
         self.spike = Spike.objects.create(spike_train=self.spike_train,
                                           status_id=SpikeStatus.RUNNING,
-                                          blackboard={})
+                                          axoplasm={})
 
         self.session = ReasoningSession.objects.create(
             spike=self.spike,

@@ -82,7 +82,7 @@ async def test_mcp_record_operations():
         id=spike_id,
         spike_train=spike_train,
         status=spike_status,
-        blackboard={'initial': 'value'},
+        axoplasm={'initial': 'value'},
     )
 
     # 4. Test mcp_inspect_record
@@ -97,8 +97,8 @@ async def test_mcp_record_operations():
 
     data = json.loads(result)
     assert data['id']['value'] == str(spike_id)
-    assert 'blackboard' in data
-    assert 'value' in data['blackboard']
+    assert 'axoplasm' in data
+    assert 'value' in data['axoplasm']
 
     # 5. Test mcp_query_model (Basic Filters)
     print(f'Testing mcp_query_model for Spike')
@@ -130,12 +130,12 @@ async def test_mcp_record_operations():
     data = json.loads(result)
     assert 'Total Records:' in data['meta']
 
-    # 6. Test mcp_update_blackboard
-    print(f'Testing mcp_update_blackboard for {spike_id}')
+    # 6. Test mcp_update_axoplasm
+    print(f'Testing mcp_update_axoplasm for {spike_id}')
     new_key = 'status'
     new_value = 'active'
     result = await ParietalMCP.execute(
-        'mcp_update_blackboard',
+        'mcp_update_axoplasm',
         {
             'spike_id': str(spike_id),
             'key': new_key,
@@ -147,7 +147,7 @@ async def test_mcp_record_operations():
 
     # Verify update
     await asyncio.to_thread(spike.refresh_from_db)
-    assert spike.blackboard.get(new_key) == new_value
+    assert spike.axoplasm.get(new_key) == new_value
 
     # 7. Test mcp_read_record_field
     print(f'Testing mcp_read_record_field for {spike_id}')
@@ -157,7 +157,7 @@ async def test_mcp_record_operations():
             'app_label': 'central_nervous_system',
             'model_name': 'Spike',
             'record_id': str(spike_id),
-            'field_name': 'blackboard',
+            'field_name': 'axoplasm',
         },
     )
 
@@ -172,7 +172,7 @@ async def test_mcp_record_operations():
             'app_label': 'central_nervous_system',
             'model_name': 'Spike',
             'record_id': str(spike_id),
-            'field_name': 'blackboard',
+            'field_name': 'axoplasm',
             'pattern': 'active',
         },
     )

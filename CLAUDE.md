@@ -189,7 +189,7 @@ JSON-RPC methods. All tool handlers use `sync_to_async` for Django ORM compatibi
 | `send_thalamus_message` | thalamus_tools | Message through chat relay |
 
 **Phase 2 Planned:**
-- Blackboard write tool (pre-load context before launching spike trains)
+- Cerebrospinal fluid write tool (pre-load context before launching spike trains)
 - SSE streaming via neurotransmitter callbacks (real-time execution updates)
 - Vector similarity search for engrams (instead of text-only)
 - Full Thalamus message pipeline (WebSocket delivery)
@@ -366,8 +366,8 @@ PKs 5-100 are reserved for canonical effectors. The frontend uses these PKs (not
 slugs) to determine which custom React Flow node component to render.
 
 **Debug node:** Effector PK 9. Native handler `debug_node` in
-`central_nervous_system/effectors/effector_casters/debug_node.py`. Logs blackboard state and
-neuron context at INFO level. Useful for diagnosing blackboard data flow between spikes.
+`central_nervous_system/effectors/effector_casters/debug_node.py`. Logs axoplasm state and
+neuron context at INFO level. Useful for diagnosing axoplasm data flow between spikes.
 Configurable via NeuronContext key `debug_label` (defaults to "DEBUG").
 
 **Formatting:** 88-char lines (Black default). Single quotes. No trailing commas in function

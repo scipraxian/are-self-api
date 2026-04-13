@@ -36,11 +36,11 @@
 #             pathway=self.book, status_id=SpikeTrainStatus.RUNNING)
 #         self.spike = Spike.objects.create(spike_train=self.spike_train,
 #                                              status_id=SpikeStatus.RUNNING,
-#                                              blackboard={})
+#                                              axoplasm={})
 #
 #         # FIX 2: Setup an MCP Tool with the strict 'mcp_' nomenclature
 #         self.tool_def, _ = ToolDefinition.objects.get_or_create(
-#             name='mcp_update_blackboard',)
+#             name='mcp_update_axoplasm',)
 #
 #         t_str, _ = ToolParameterType.objects.get_or_create(name='string')
 #         p_head_id, _ = ToolParameter.objects.get_or_create(
@@ -88,10 +88,10 @@
 #
 #         # Turn 1: Model requests a tool call (using correct mcp_ name)
 #         resp_turn_1 = OllamaResponse(
-#             content='I need to update the blackboard.',
+#             content='I need to update the axoplasm.',
 #             tool_calls=[{
 #                 ParietalLobe.T_FUNC: {
-#                     ParietalLobe.T_NAME: 'mcp_update_blackboard',
+#                     ParietalLobe.T_NAME: 'mcp_update_axoplasm',
 #                     ParietalLobe.T_ARGS: {
 #                         'head_id': str(self.spike.id),
 #                         'key': 'test_var',
@@ -106,7 +106,7 @@
 #
 #         # Turn 2: Model finishes the job
 #         resp_turn_2 = OllamaResponse(
-#             content='Blackboard updated. I am done.',
+#             content='Axoplasm updated. I am done.',
 #             tool_calls=[],
 #             tokens_input=10,
 #             tokens_output=10,
@@ -122,7 +122,7 @@
 #
 #         # Verify the tool ACTUALLY ran and mutated the database
 #         await sync_to_async(self.spike.refresh_from_db)()
-#         self.assertEqual(self.spike.blackboard.get('test_var'), 'alpha')
+#         self.assertEqual(self.spike.axoplasm.get('test_var'), 'alpha')
 #         self.assertEqual(mock_instance.chat.call_count, 2)
 #
 #     @pytest.mark.asyncio

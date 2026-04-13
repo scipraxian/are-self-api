@@ -67,14 +67,14 @@ class LogicNodeTestBase(CommonFixturesAPITestCase):
             status_id=SpikeStatus.RUNNING,
         )
 
-    def _make_spike(self, blackboard=None, provenance=None):
+    def _make_spike(self, axoplasm=None, provenance=None):
         """Create a spike on the test neuron."""
         return Spike.objects.create(
             spike_train=self.train,
             neuron=self.neuron,
             effector=self.effector,
             status_id=SpikeStatus.RUNNING,
-            blackboard=blackboard or {},
+            axoplasm=axoplasm or {},
             provenance=provenance,
         )
 
@@ -94,12 +94,12 @@ class LogicNodeTestBase(CommonFixturesAPITestCase):
 
 
 class RetryModeTest(LogicNodeTestBase):
-    """Assert retry mode counts via blackboard, not provenance walking."""
+    """Assert retry mode counts via axoplasm, not provenance walking."""
 
     def test_first_iteration_returns_success(self):
         """Assert first retry attempt returns 200 (LOOPING)."""
         self._set_context(logic_mode=MODE_RETRY, max_retries=3)
-        spike = self._make_spike(blackboard={})
+        spike = self._make_spike(axoplasm={})
 
         code, msg = self._run(spike)
 
@@ -107,32 +107,32 @@ class RetryModeTest(LogicNodeTestBase):
         self.assertIn('LOOPING', msg)
         self.assertIn('attempt 1 of 4', msg)
 
-    def test_writes_loop_count_to_blackboard(self):
-        """Assert retry mode writes loop_count to the blackboard."""
+    def test_writes_loop_count_to_axoplasm(self):
+        """Assert retry mode writes loop_count to the axoplasm."""
         self._set_context(logic_mode=MODE_RETRY, max_retries=3)
-        spike = self._make_spike(blackboard={})
+        spike = self._make_spike(axoplasm={})
 
         self._run(spike)
         spike.refresh_from_db()
 
-        self.assertEqual(spike.blackboard[BB_LOOP_COUNT], 1)
+        self.assertEqual(spike.axoplasm[BB_LOOP_COUNT], 1)
 
     def test_mid_loop_continues(self):
         """Assert loop continues when count is under max_retries."""
         self._set_context(logic_mode=MODE_RETRY, max_retries=3)
-        spike = self._make_spike(blackboard={BB_LOOP_COUNT: 1})
+        spike = self._make_spike(axoplasm={BB_LOOP_COUNT: 1})
 
         code, msg = self._run(spike)
 
         self.assertEqual(code, 200)
         self.assertIn('attempt 2 of 4', msg)
         spike.refresh_from_db()
-        self.assertEqual(spike.blackboard[BB_LOOP_COUNT], 2)
+        self.assertEqual(spike.axoplasm[BB_LOOP_COUNT], 2)
 
     def test_limit_reached_returns_failure(self):
         """Assert retry returns 500 when loop_count reaches max_retries."""
         self._set_context(logic_mode=MODE_RETRY, max_retries=3)
-        spike = self._make_spike(blackboard={BB_LOOP_COUNT: 3})
+        spike = self._make_spike(axoplasm={BB_LOOP_COUNT: 3})
 
         code, msg = self._run(spike)
 
@@ -160,7 +160,7 @@ class RetryModeTest(LogicNodeTestBase):
     def test_single_retry_loops_then_stops(self):
         """Assert max_retries=1 loops once then hits limit."""
         self._set_context(logic_mode=MODE_RETRY, max_retries=1)
-        spike = self._make_spike(blackboard={})
+        spike = self._make_spike(axoplasm={})
 
         # First pass: loop_count 0 < 1, LOOPING
         code, msg = self._run(spike)
@@ -168,7 +168,7 @@ class RetryModeTest(LogicNodeTestBase):
         self.assertIn('LOOPING', msg)
 
         spike.refresh_from_db()
-        self.assertEqual(spike.blackboard[BB_LOOP_COUNT], 1)
+        self.assertEqual(spike.axoplasm[BB_LOOP_COUNT], 1)
 
         # Second pass: loop_count 1 >= 1, LIMIT REACHED
         code, msg = self._run(spike)
@@ -176,16 +176,16 @@ class RetryModeTest(LogicNodeTestBase):
         self.assertIn('LIMIT REACHED', msg)
 
     def test_blackboard_preserves_other_keys(self):
-        """Assert retry mode only touches loop_count, leaves other keys."""
+        """Assert retry mode only touches loop_count, leaves other axoplasm keys."""
         self._set_context(logic_mode=MODE_RETRY, max_retries=3)
-        spike = self._make_spike(blackboard={'task_type': 'art', 'score': '95'})
+        spike = self._make_spike(axoplasm={'task_type': 'art', 'score': '95'})
 
         self._run(spike)
         spike.refresh_from_db()
 
-        self.assertEqual(spike.blackboard['task_type'], 'art')
-        self.assertEqual(spike.blackboard['score'], '95')
-        self.assertEqual(spike.blackboard[BB_LOOP_COUNT], 1)
+        self.assertEqual(spike.axoplasm['task_type'], 'art')
+        self.assertEqual(spike.axoplasm['score'], '95')
+        self.assertEqual(spike.axoplasm[BB_LOOP_COUNT], 1)
 
     def test_negative_max_retries_passes_through(self):
         """Assert negative max_retries value is treated as pass-through."""
@@ -208,28 +208,28 @@ class RetryModeTest(LogicNodeTestBase):
         self.assertIn('pass-through', msg)
 
     def test_loop_count_starts_at_zero_when_missing(self):
-        """Assert missing loop_count in blackboard is treated as 0."""
+        """Assert missing loop_count in axoplasm is treated as 0."""
         self._set_context(logic_mode=MODE_RETRY, max_retries=2)
-        spike = self._make_spike(blackboard={'some_other_key': 'value'})
+        spike = self._make_spike(axoplasm={'some_other_key': 'value'})
 
         code, msg = self._run(spike)
 
         self.assertEqual(code, 200)
         self.assertIn('attempt 1 of 3', msg)
         spike.refresh_from_db()
-        self.assertEqual(spike.blackboard[BB_LOOP_COUNT], 1)
+        self.assertEqual(spike.axoplasm[BB_LOOP_COUNT], 1)
 
     def test_limit_does_not_write_blackboard(self):
-        """Assert blackboard is not written when limit is reached."""
+        """Assert axoplasm is not written when limit is reached."""
         self._set_context(logic_mode=MODE_RETRY, max_retries=2)
-        spike = self._make_spike(blackboard={BB_LOOP_COUNT: 2})
+        spike = self._make_spike(axoplasm={BB_LOOP_COUNT: 2})
 
         code, _msg = self._run(spike)
 
         self.assertEqual(code, 500)
         spike.refresh_from_db()
         # loop_count stays at 2, not incremented
-        self.assertEqual(spike.blackboard[BB_LOOP_COUNT], 2)
+        self.assertEqual(spike.axoplasm[BB_LOOP_COUNT], 2)
 
 
 # ── Retry Delay (backward compat: retry_delay vs delay) ─────
@@ -246,7 +246,7 @@ class RetryDelayTest(LogicNodeTestBase):
     def test_retry_delay_key_is_read(self, mock_sleep):
         """Assert 'retry_delay' context key triggers sleep."""
         self._set_context(logic_mode=MODE_RETRY, max_retries=3, retry_delay=2)
-        spike = self._make_spike(blackboard={})
+        spike = self._make_spike(axoplasm={})
 
         code, msg = self._run(spike)
 
@@ -261,7 +261,7 @@ class RetryDelayTest(LogicNodeTestBase):
     def test_no_retry_delay_no_sleep(self, mock_sleep):
         """Assert no sleep when retry_delay is not set."""
         self._set_context(logic_mode=MODE_RETRY, max_retries=3)
-        spike = self._make_spike(blackboard={})
+        spike = self._make_spike(axoplasm={})
 
         self._run(spike)
 
@@ -279,7 +279,7 @@ class RetryDelayTest(LogicNodeTestBase):
         This test would have caught the frontend/backend key mismatch.
         """
         self._set_context(logic_mode=MODE_RETRY, max_retries=3, delay=99)
-        spike = self._make_spike(blackboard={})
+        spike = self._make_spike(axoplasm={})
 
         self._run(spike)
 
@@ -290,15 +290,15 @@ class RetryDelayTest(LogicNodeTestBase):
 
 
 class GateModeTest(LogicNodeTestBase):
-    """Assert gate mode checks blackboard keys against conditions."""
+    """Assert gate mode checks axoplasm keys against conditions."""
 
     def test_exists_passes_when_key_present(self):
-        """Assert gate passes when key exists in blackboard."""
+        """Assert gate passes when key exists in axoplasm."""
         self._set_context(
             logic_mode=MODE_GATE, gate_key='task_type',
             gate_operator=OP_EXISTS,
         )
-        spike = self._make_spike(blackboard={'task_type': 'art'})
+        spike = self._make_spike(axoplasm={'task_type': 'art'})
 
         code, msg = self._run(spike)
 
@@ -306,12 +306,12 @@ class GateModeTest(LogicNodeTestBase):
         self.assertIn('PASS', msg)
 
     def test_exists_fails_when_key_missing(self):
-        """Assert gate fails when key is not in blackboard."""
+        """Assert gate fails when key is not in axoplasm."""
         self._set_context(
             logic_mode=MODE_GATE, gate_key='task_type',
             gate_operator=OP_EXISTS,
         )
-        spike = self._make_spike(blackboard={})
+        spike = self._make_spike(axoplasm={})
 
         code, msg = self._run(spike)
 
@@ -324,7 +324,7 @@ class GateModeTest(LogicNodeTestBase):
             logic_mode=MODE_GATE, gate_key='task_type',
             gate_operator=OP_EXISTS,
         )
-        spike = self._make_spike(blackboard={'task_type': ''})
+        spike = self._make_spike(axoplasm={'task_type': ''})
 
         code, msg = self._run(spike)
 
@@ -337,7 +337,7 @@ class GateModeTest(LogicNodeTestBase):
             logic_mode=MODE_GATE, gate_key='count',
             gate_operator=OP_EXISTS,
         )
-        spike = self._make_spike(blackboard={'count': 0})
+        spike = self._make_spike(axoplasm={'count': 0})
 
         code, msg = self._run(spike)
 
@@ -345,36 +345,36 @@ class GateModeTest(LogicNodeTestBase):
         self.assertIn('PASS', msg)
 
     def test_equals_passes_on_match(self):
-        """Assert gate passes when blackboard value equals expected."""
+        """Assert gate passes when axoplasm value equals expected."""
         self._set_context(
             logic_mode=MODE_GATE, gate_key='task_type',
             gate_operator=OP_EQUALS, gate_value='art',
         )
-        spike = self._make_spike(blackboard={'task_type': 'art'})
+        spike = self._make_spike(axoplasm={'task_type': 'art'})
 
         code, msg = self._run(spike)
 
         self.assertEqual(code, 200)
 
     def test_equals_fails_on_mismatch(self):
-        """Assert gate fails when blackboard value does not equal expected."""
+        """Assert gate fails when axoplasm value does not equal expected."""
         self._set_context(
             logic_mode=MODE_GATE, gate_key='task_type',
             gate_operator=OP_EQUALS, gate_value='art',
         )
-        spike = self._make_spike(blackboard={'task_type': 'code'})
+        spike = self._make_spike(axoplasm={'task_type': 'code'})
 
         code, msg = self._run(spike)
 
         self.assertEqual(code, 500)
 
     def test_not_equals_passes_on_mismatch(self):
-        """Assert gate passes when blackboard value differs from expected."""
+        """Assert gate passes when axoplasm value differs from expected."""
         self._set_context(
             logic_mode=MODE_GATE, gate_key='task_type',
             gate_operator=OP_NOT_EQUALS, gate_value='art',
         )
-        spike = self._make_spike(blackboard={'task_type': 'code'})
+        spike = self._make_spike(axoplasm={'task_type': 'code'})
 
         code, msg = self._run(spike)
 
@@ -386,7 +386,7 @@ class GateModeTest(LogicNodeTestBase):
             logic_mode=MODE_GATE, gate_key='task_type',
             gate_operator=OP_NOT_EQUALS, gate_value='art',
         )
-        spike = self._make_spike(blackboard={'task_type': 'art'})
+        spike = self._make_spike(axoplasm={'task_type': 'art'})
 
         code, msg = self._run(spike)
 
@@ -398,7 +398,7 @@ class GateModeTest(LogicNodeTestBase):
             logic_mode=MODE_GATE, gate_key='score',
             gate_operator=OP_GT, gate_value='50',
         )
-        spike = self._make_spike(blackboard={'score': '75'})
+        spike = self._make_spike(axoplasm={'score': '75'})
 
         code, msg = self._run(spike)
 
@@ -410,19 +410,19 @@ class GateModeTest(LogicNodeTestBase):
             logic_mode=MODE_GATE, gate_key='score',
             gate_operator=OP_GT, gate_value='50',
         )
-        spike = self._make_spike(blackboard={'score': '50'})
+        spike = self._make_spike(axoplasm={'score': '50'})
 
         code, msg = self._run(spike)
 
         self.assertEqual(code, 500)
 
     def test_gt_fails_when_less(self):
-        """Assert gate GT fails when blackboard value is less."""
+        """Assert gate GT fails when axoplasm value is less."""
         self._set_context(
             logic_mode=MODE_GATE, gate_key='score',
             gate_operator=OP_GT, gate_value='50',
         )
-        spike = self._make_spike(blackboard={'score': '25'})
+        spike = self._make_spike(axoplasm={'score': '25'})
 
         code, msg = self._run(spike)
 
@@ -434,7 +434,7 @@ class GateModeTest(LogicNodeTestBase):
             logic_mode=MODE_GATE, gate_key='score',
             gate_operator=OP_LT, gate_value='50',
         )
-        spike = self._make_spike(blackboard={'score': '25'})
+        spike = self._make_spike(axoplasm={'score': '25'})
 
         code, msg = self._run(spike)
 
@@ -446,19 +446,19 @@ class GateModeTest(LogicNodeTestBase):
             logic_mode=MODE_GATE, gate_key='score',
             gate_operator=OP_LT, gate_value='50',
         )
-        spike = self._make_spike(blackboard={'score': '50'})
+        spike = self._make_spike(axoplasm={'score': '50'})
 
         code, msg = self._run(spike)
 
         self.assertEqual(code, 500)
 
     def test_lt_fails_when_greater(self):
-        """Assert gate LT fails when blackboard value is greater."""
+        """Assert gate LT fails when axoplasm value is greater."""
         self._set_context(
             logic_mode=MODE_GATE, gate_key='score',
             gate_operator=OP_LT, gate_value='50',
         )
-        spike = self._make_spike(blackboard={'score': '75'})
+        spike = self._make_spike(axoplasm={'score': '75'})
 
         code, msg = self._run(spike)
 
@@ -467,7 +467,7 @@ class GateModeTest(LogicNodeTestBase):
     def test_no_gate_key_returns_failure(self):
         """Assert gate mode with no gate_key configured returns 500."""
         self._set_context(logic_mode=MODE_GATE)
-        spike = self._make_spike(blackboard={'anything': 'here'})
+        spike = self._make_spike(axoplasm={'anything': 'here'})
 
         code, msg = self._run(spike)
 
@@ -480,7 +480,7 @@ class GateModeTest(LogicNodeTestBase):
             logic_mode=MODE_GATE, gate_key='score',
             gate_operator='contains', gate_value='foo',
         )
-        spike = self._make_spike(blackboard={'score': 'foobar'})
+        spike = self._make_spike(axoplasm={'score': 'foobar'})
 
         code, msg = self._run(spike)
 
@@ -488,12 +488,12 @@ class GateModeTest(LogicNodeTestBase):
         self.assertIn('unknown operator', msg)
 
     def test_numeric_comparison_with_non_numeric_value(self):
-        """Assert GT with non-numeric blackboard value returns FAIL (0.0 > N)."""
+        """Assert GT with non-numeric axoplasm value returns FAIL (0.0 > N)."""
         self._set_context(
             logic_mode=MODE_GATE, gate_key='score',
             gate_operator=OP_GT, gate_value='50',
         )
-        spike = self._make_spike(blackboard={'score': 'not_a_number'})
+        spike = self._make_spike(axoplasm={'score': 'not_a_number'})
 
         code, msg = self._run(spike)
 
@@ -506,7 +506,7 @@ class GateModeTest(LogicNodeTestBase):
             logic_mode=MODE_GATE, gate_key='missing_key',
             gate_operator=OP_EQUALS, gate_value='something',
         )
-        spike = self._make_spike(blackboard={})
+        spike = self._make_spike(axoplasm={})
 
         code, msg = self._run(spike)
 
@@ -519,8 +519,8 @@ class GateModeTest(LogicNodeTestBase):
             logic_mode=MODE_GATE, gate_key='name',
             gate_operator=OP_EQUALS, gate_value='hello',
         )
-        # Blackboard has value with trailing whitespace
-        spike = self._make_spike(blackboard={'name': ' hello '})
+        # Axoplasm has value with trailing whitespace
+        spike = self._make_spike(axoplasm={'name': ' hello '})
 
         code, msg = self._run(spike)
 
@@ -528,12 +528,12 @@ class GateModeTest(LogicNodeTestBase):
         self.assertEqual(code, 200)
 
     def test_gate_with_empty_blackboard(self):
-        """Assert gate handles spike with empty blackboard gracefully."""
+        """Assert gate handles spike with empty axoplasm gracefully."""
         self._set_context(
             logic_mode=MODE_GATE, gate_key='key',
             gate_operator=OP_EXISTS,
         )
-        spike = self._make_spike(blackboard={})
+        spike = self._make_spike(axoplasm={})
 
         code, msg = self._run(spike)
 
@@ -619,7 +619,7 @@ class UnknownModeTest(LogicNodeTestBase):
     def test_mode_is_case_insensitive(self):
         """Assert mode matching is case-insensitive."""
         self._set_context(logic_mode='RETRY', max_retries=2)
-        spike = self._make_spike(blackboard={})
+        spike = self._make_spike(axoplasm={})
 
         code, msg = self._run(spike)
 
@@ -629,7 +629,7 @@ class UnknownModeTest(LogicNodeTestBase):
     def test_mode_with_whitespace_is_trimmed(self):
         """Assert whitespace around mode value is stripped."""
         self._set_context(logic_mode='  gate  ', gate_key='k', gate_operator=OP_EXISTS)
-        spike = self._make_spike(blackboard={'k': 'v'})
+        spike = self._make_spike(axoplasm={'k': 'v'})
 
         code, msg = self._run(spike)
 
@@ -689,28 +689,28 @@ class RetryLifecycleTest(LogicNodeTestBase):
     def test_full_3_retry_cycle(self):
         """Walk through a complete 3-retry cycle: 3 LOOPs then LIMIT."""
         self._set_context(logic_mode=MODE_RETRY, max_retries=3)
-        spike = self._make_spike(blackboard={})
+        spike = self._make_spike(axoplasm={})
 
         # Iteration 0 -> LOOP (count becomes 1)
         code, msg = self._run(spike)
         self.assertEqual(code, 200)
         self.assertIn('attempt 1 of 4', msg)
         spike.refresh_from_db()
-        self.assertEqual(spike.blackboard[BB_LOOP_COUNT], 1)
+        self.assertEqual(spike.axoplasm[BB_LOOP_COUNT], 1)
 
         # Iteration 1 -> LOOP (count becomes 2)
         code, msg = self._run(spike)
         self.assertEqual(code, 200)
         self.assertIn('attempt 2 of 4', msg)
         spike.refresh_from_db()
-        self.assertEqual(spike.blackboard[BB_LOOP_COUNT], 2)
+        self.assertEqual(spike.axoplasm[BB_LOOP_COUNT], 2)
 
         # Iteration 2 -> LOOP (count becomes 3)
         code, msg = self._run(spike)
         self.assertEqual(code, 200)
         self.assertIn('attempt 3 of 4', msg)
         spike.refresh_from_db()
-        self.assertEqual(spike.blackboard[BB_LOOP_COUNT], 3)
+        self.assertEqual(spike.axoplasm[BB_LOOP_COUNT], 3)
 
         # Iteration 3 -> LIMIT REACHED
         code, msg = self._run(spike)

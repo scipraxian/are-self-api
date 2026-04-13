@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 async def debug_node(spike_id: uuid.UUID) -> tuple[int, str]:
     """
-    Debug Node — logs blackboard state and neuron context to the worker log.
+    Debug Node — logs axoplasm state and neuron context to the worker log.
 
     Drop this into any pathway to get visibility at that point in the graph.
     Reads NeuronContext for a custom `debug_label` key (defaults to 'DEBUG').
@@ -30,23 +30,23 @@ async def debug_node(spike_id: uuid.UUID) -> tuple[int, str]:
     else:
         ctx_dict = {}
 
-    bb_keys = list(spike.blackboard.keys()) if spike.blackboard else []
+    axoplasm_keys = list(spike.axoplasm.keys()) if spike.axoplasm else []
 
     logger.info(
         '[DEBUG NODE] <%s> Spike %s | Train %s | Neuron %s | '
-        'Blackboard keys: %s | Context: %s',
+        'Axoplasm keys: %s | Context: %s',
         label,
         spike.id,
         spike.spike_train_id,
         spike.neuron_id or 'N/A',
-        bb_keys,
+        axoplasm_keys,
         ctx_dict,
     )
 
-    if spike.blackboard:
-        for key, value in spike.blackboard.items():
+    if spike.axoplasm:
+        for key, value in spike.axoplasm.items():
             preview = str(value)[:200]
-            logger.info('[DEBUG NODE] <%s>   BB[%s] = %s', label, key, preview)
+            logger.info('[DEBUG NODE] <%s>   Axoplasm[%s] = %s', label, key, preview)
 
-    output = f'[{label}] Blackboard: {bb_keys} | Context: {list(ctx_dict.keys())}'
+    output = f'[{label}] Axoplasm: {axoplasm_keys} | Context: {list(ctx_dict.keys())}'
     return 200, output

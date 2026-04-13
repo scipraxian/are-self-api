@@ -279,7 +279,7 @@ update the docs with the norepinephrine in the pns for django.
   Frontend hardcodes the 4 phases. If phases ever become user-configurable, a read-only endpoint will
   be needed. Low priority since phases are fixed constants.
 - [ ] **`prompt` context variable injection.** The `prompt` context variable is NOT being injected into
-  the session's prompt. The context variable resolution chain (spike blackboard → effector context →
+  the session's prompt. The context variable resolution chain (spike axoplasm → effector context →
   neuron context) needs auditing — variables are stored but not consumed by `_get_rendered_objective()`
   or wherever the prompt is assembled.
 
@@ -309,7 +309,7 @@ update the docs with the norepinephrine in the pns for django.
   persisted as a ReasoningTurn. Two bugs: (1) swarm_message_queue not receiving/processing inbound messages
   during a live session, (2) messages not saved. **Paired with UI task.**
 - [ ] **Error Handler Effector.** A native handler that fires when a spike fails (wired via TYPE_FAILURE
-  axon). Reads error context from the blackboard (`error_message`, `failed_effector`, `result_code`).
+  axon). Reads error context from the axoplasm (`error_message`, `failed_effector`, `result_code`).
   Can dispatch notifications — log to engram, fire a Cortisol neurotransmitter, write a PFC comment on
   the failed task, or escalate to the Thalamus standing session.
 - [ ] **Clean requirements.txt.** Pin versions, remove unused/deprecated packages. Verify every package
@@ -327,8 +327,8 @@ update the docs with the norepinephrine in the pns for django.
 
 ## MCP Server — Phase 2
 
-- [ ] **Blackboard write tool** — Pre-load context data onto spike train blackboard before launch. Requires wiring into
-  NeuronContext or a new blackboard field on SpikeTrain.
+- [ ] **Cerebrospinal fluid write tool** — Pre-load context data onto spike train cerebrospinal_fluid before launch. Requires wiring into
+  NeuronContext or a new cerebrospinal_fluid field on SpikeTrain.
 - [ ] **SSE streaming via neurotransmitters** — Use the Synaptic Cleft's neurotransmitter system to stream real-time
   execution updates back through the MCP SSE endpoint. Map Dopamine (success), Cortisol (error), Glutamate (streaming)
   to MCP notifications.
@@ -345,7 +345,7 @@ update the docs with the norepinephrine in the pns for django.
   works correctly — the blocker is on Anthropic's side. Claude Code CAN connect to
   local HTTP MCP servers (no HTTPS needed). NGINX in Docker is configured to auto-upgrade
   to HTTPS if a user provides their own cert in `nginx/certs/`.
-- [ ] **Write blackboard tool** — Allow writing arbitrary key-value context data that gets passed to spike train
+- [ ] **Write cerebrospinal fluid tool** — Allow writing arbitrary key-value context data that gets passed to spike train
   execution. This enables programmatic setup of execution context.
 - [ ] **Read reasoning session tool** — Expose reasoning session history (turns, tool calls, responses) for
   post-execution analysis.
@@ -356,14 +356,14 @@ update the docs with the norepinephrine in the pns for django.
 ## Future
 
 - [ ] **Image Generation Effector.** CNS effector pattern: artist LLM writes generation prompt to
-  blackboard, effector POSTs to `{{image_gen_endpoint}}`, saves result, writes path back to blackboard.
+  axoplasm, effector POSTs to `{{image_gen_endpoint}}`, saves result, writes path back to axoplasm.
   Decoupled from any specific backend (InvokeAI, ComfyUI, etc.). TTS is already built as Parietal Lobe
   tool — that's the PoC for binary creation.
 - [ ] **Branching Canonical Pathway.** Modality routing via logic node. PM/dispatcher inspects PFC task,
-  logic node routes based on blackboard state: code → worker branch, art → artist branch. Depends on
+  logic node routes based on axoplasm state: code → worker branch, art → artist branch. Depends on
   image generation effector.
 - [ ] **Self-improving pathway testing harness.** The testing harness IS a CNS neural pathway — no new
-  framework. 7B model + 30B evaluator in a loop. The spike train IS the test run, the blackboard IS the
+  framework. 7B model + 30B evaluator in a loop. The spike train IS the test run, the axoplasm IS the
   assertion state, the summary_dump IS the test report.
 - [ ] **Addon stage/lifecycle system.** Addons fire conditionally based on session state instead of every
   turn. Would allow moving focus mechanics into a dedicated focus addon.

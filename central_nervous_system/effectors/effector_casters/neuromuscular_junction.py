@@ -51,12 +51,12 @@ from temporal_lobe.temporal_lobe import run_temporal_lobe
 
 logger = logging.getLogger(__name__)
 
-BLACKBOARD_SET_KEY = '::blackboard_set '
-BLACKBOARD_SET_KEY_REGEX = re.compile(
-    r'^.*?::blackboard_set\s+(.+?)::(.*)$', flags=re.MULTILINE
+AXOPLASM_SET_KEY = '::axoplasm_set '
+AXOPLASM_SET_KEY_REGEX = re.compile(
+    r'^.*?::axoplasm_set\s+(.+?)::(.*)$', flags=re.MULTILINE
 )
-BLACKBOARD_SET_STRIPPER = re.compile(
-    r'^.*?::blackboard_set\s+.*?::.*$\n?', flags=re.MULTILINE
+AXOPLASM_SET_STRIPPER = re.compile(
+    r'^.*?::axoplasm_set\s+.*?::.*$\n?', flags=re.MULTILINE
 )
 
 # Native Python Handlers
@@ -285,7 +285,7 @@ class NeuroMuscularJunction:
     EXECUTION_LOG_FIELD = 'execution_log'
     APPLICATION_LOG_FIELD = 'application_log'
     STATUS_FIELD = 'status'
-    BLACKBOARD_FIELD = 'blackboard'
+    AXOPLASM_FIELD = 'axoplasm'
 
     def __init__(self, spike_id: uuid.UUID):
         self.spike_id = spike_id
@@ -455,33 +455,33 @@ class NeuroMuscularJunction:
             async for event in event_stream:
                 if event.type == NerveTerminalConstants.T_LOG:
                     text_to_log = event.text
-                    if BLACKBOARD_SET_KEY in text_to_log:
-                        self._log_info('Blackboard update detected.')
+                    if AXOPLASM_SET_KEY in text_to_log:
+                        self._log_info('Axoplasm update detected.')
                         matches = list(
-                            BLACKBOARD_SET_KEY_REGEX.finditer(text_to_log)
+                            AXOPLASM_SET_KEY_REGEX.finditer(text_to_log)
                         )
                         for match in matches:
                             key = match.group(1).strip()
                             val = match.group(2).strip()
-                            if not isinstance(self.spike.blackboard, dict):
-                                self.spike.blackboard = {}
-                            self.spike.blackboard[key] = val
+                            if not isinstance(self.spike.axoplasm, dict):
+                                self.spike.axoplasm = {}
+                            self.spike.axoplasm[key] = val
                             self._log_info(
-                                f'Blackboard updated with {key}={val}.'
+                                f'Axoplasm updated with {key}={val}.'
                             )
                             # Release Acetylcholine for memory updates!
                             await fire_neurotransmitter(
                                 Acetylcholine(
                                     receptor_class='Spike',
                                     dendrite_id=str(self.spike.id),
-                                    activity='blackboard_updated',
+                                    activity='axoplasm_updated',
                                     vesicle={
                                         'key': key,
                                         'value': val,
                                     },
                                 )
                             )
-                        text_to_log = BLACKBOARD_SET_STRIPPER.sub(
+                        text_to_log = AXOPLASM_SET_STRIPPER.sub(
                             '', text_to_log
                         )
                     if text_to_log:
@@ -525,7 +525,7 @@ class NeuroMuscularJunction:
                 )
                 new_status = SpikeStatus.FAILED
 
-        await self._save_head(fields=[self.BLACKBOARD_FIELD])
+        await self._save_head(fields=[self.AXOPLASM_FIELD])
 
         self.status = new_status
         await self._update_status(new_status)

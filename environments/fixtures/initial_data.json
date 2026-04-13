@@ -1275,7 +1275,7 @@
   "pk": 14,
   "fields": {
     "created": "2026-01-28T16:14:59.681Z",
-    "description": "Flow control: gate, retry, and delay modes via blackboard state.",
+    "description": "Flow control: gate, retry, and delay modes via axoplasm state.",
     "modified": "2026-01-28T16:14:59.681Z",
     "name": "Pathway Logic Node",
     "internal": true,
@@ -1350,7 +1350,7 @@
   "pk": 19,
   "fields": {
     "created": "2026-04-04T00:00:00.000Z",
-    "description": "Logs blackboard state and neuron context to the worker log. For pathway debugging.",
+    "description": "Logs axoplasm state and neuron context to the worker log. For pathway debugging.",
     "modified": "2026-04-04T00:00:00.000Z",
     "name": "Debug Node",
     "internal": true,
