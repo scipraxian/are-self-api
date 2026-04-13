@@ -162,7 +162,7 @@ def ai_execute_task(spike_id):
 
 def ai_update_blackboard(spike_id: str, key: str, value: str) -> str:
     """
-    Updates a value in the Spike blackboard, altering the state
+    Updates a value in the Spike axoplasm, altering the state
     for downstream graph routing.
     """
 
@@ -175,19 +175,19 @@ def ai_update_blackboard(spike_id: str, key: str, value: str) -> str:
         spike = Spike.objects.get(id=val_uuid)
 
         # Guard against uninitialized JSON fields
-        if not isinstance(spike.blackboard, dict):
-            spike.blackboard = {}
+        if not isinstance(spike.axoplasm, dict):
+            spike.axoplasm = {}
 
-        spike.blackboard[key] = value
-        spike.save(update_fields=['blackboard'])
+        spike.axoplasm[key] = value
+        spike.save(update_fields=['axoplasm'])
 
         logger.info(
-            f'[Parietal] Blackboard mutated for Spike {spike_id}: {key}={value}'
+            f'[Parietal] Axoplasm mutated for Spike {spike_id}: {key}={value}'
         )
-        return f"Success: Blackboard updated. {key} is now '{value}'."
+        return f"Success: Axoplasm updated. {key} is now '{value}'."
 
     except Spike.DoesNotExist:
         return f'Error: Spike {spike_id} not found.'
     except Exception as e:
-        logger.error(f'[Parietal] Blackboard update failed: {e}')
-        return f'Error updating blackboard: {str(e)}'
+        logger.error(f'[Parietal] Axoplasm update failed: {e}')
+        return f'Error updating axoplasm: {str(e)}'

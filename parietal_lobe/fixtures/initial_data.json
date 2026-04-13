@@ -146,9 +146,9 @@
   "pk": 4,
   "fields": {
     "created": "2026-02-18T12:00:00Z",
-    "description": "Updates the CNS Blackboard. WARNING: This does NOT save to your memory. The Blackboard is ONLY used to route the underlying CNS execution graph..",
+    "description": "Updates the CNS Axoplasm. WARNING: This does NOT save to your memory. The Axoplasm is ONLY used to route the underlying CNS execution graph..",
     "modified": "2026-04-02T18:41:54.587Z",
-    "name": "mcp_update_blackboard",
+    "name": "mcp_update_axoplasm",
     "is_async": true,
     "use_type": 4
   }

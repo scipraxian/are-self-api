@@ -59,19 +59,27 @@ class NorepinephrineHandlerTests(CommonTestCase):
     """Tests for the NorepinephrineHandler logging handler."""
 
     def test_handler_reentrancy_guard(self):
-        """Assert handler does not recurse when _firing is True."""
+        """Assert handler drops the record when the lock is already held."""
         handler = NorepinephrineHandler()
-        handler._firing = True
-        record = logging.LogRecord(
-            name='test',
-            level=logging.INFO,
-            pathname='',
-            lineno=0,
-            msg='Should be dropped',
-            args=(),
-            exc_info=None,
-        )
-        handler.emit(record)
+        # Simulate "a broadcast is already in flight" by holding the lock.
+        handler._lock_fire.acquire()
+        try:
+            with patch(
+                'synaptic_cleft.norepinephrine_handler.fire_neurotransmitter'
+            ) as mock_fire:
+                record = logging.LogRecord(
+                    name='central_nervous_system',
+                    level=logging.INFO,
+                    pathname='',
+                    lineno=0,
+                    msg='Should be dropped',
+                    args=(),
+                    exc_info=None,
+                )
+                handler.emit(record)
+                mock_fire.assert_not_called()
+        finally:
+            handler._lock_fire.release()
 
     def test_handler_skips_infrastructure_loggers(self):
         """Assert handler ignores synaptic_cleft, channels, daphne, redis, asyncio loggers."""
@@ -131,6 +139,71 @@ class NorepinephrineHandlerTests(CommonTestCase):
         assert transmitter.vesicle['level'] == 'INFO'
         assert 'Spike abc-123 started' in transmitter.vesicle['message']
         assert transmitter.vesicle['lineno'] == 42
+
+
+    @patch(
+        'synaptic_cleft.norepinephrine_handler.async_to_sync'
+    )
+    def test_handler_uses_custom_receptor_class(self, mock_async_to_sync):
+        """Assert receptor_class kwarg overrides the default CeleryWorker."""
+        mock_fire = MagicMock()
+        mock_async_to_sync.return_value = mock_fire
+
+        handler = NorepinephrineHandler(receptor_class='Django')
+        handler.setFormatter(
+            logging.Formatter('[%(levelname)s] %(message)s')
+        )
+        record = logging.LogRecord(
+            name='django.request',
+            level=logging.WARNING,
+            pathname='base.py',
+            lineno=10,
+            msg='Not Found: /missing',
+            args=(),
+            exc_info=None,
+        )
+        handler.emit(record)
+
+        mock_fire.assert_called_once()
+        transmitter = mock_fire.call_args[0][0]
+        self.assertEqual(transmitter.receptor_class, 'Django')
+
+    def test_handler_uses_custom_skipped_prefixes(self):
+        """Assert skipped_prefixes kwarg overrides the default skip list.
+
+        A handler with a custom skip list that omits 'daphne' should
+        let daphne records through. The default handler blocks them.
+        """
+        custom_handler = NorepinephrineHandler(
+            skipped_prefixes=['synaptic_cleft', 'channels'],
+        )
+        default_handler = NorepinephrineHandler()
+
+        record = logging.LogRecord(
+            name='daphne.server',
+            level=logging.INFO,
+            pathname='',
+            lineno=0,
+            msg='Daphne lifecycle event',
+            args=(),
+            exc_info=None,
+        )
+
+        with patch(
+            'synaptic_cleft.norepinephrine_handler.fire_neurotransmitter'
+        ) as mock_fire:
+            # Default handler should skip daphne.
+            default_handler.emit(record)
+            mock_fire.assert_not_called()
+
+        with patch(
+            'synaptic_cleft.norepinephrine_handler.async_to_sync'
+        ) as mock_async_to_sync:
+            mock_fire = MagicMock()
+            mock_async_to_sync.return_value = mock_fire
+            # Custom handler should let daphne through.
+            custom_handler.emit(record)
+            mock_fire.assert_called_once()
 
 
 class CeleryWorkerAPITests(CommonTestCase):

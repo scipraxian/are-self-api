@@ -206,7 +206,7 @@ class SpikeDetailSerializer(SpikeSerializer):
         fields = SpikeSerializer.Meta.fields + [
             'application_log',
             'execution_log',
-            'blackboard',
+            'axoplasm',
         ]
 
 

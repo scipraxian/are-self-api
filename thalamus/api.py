@@ -96,7 +96,7 @@ class ThalamusViewSet(viewsets.ViewSet):
             neuron=cc_neuron,
             effector_id=cc_neuron.effector_id,
             status_id=1,
-            blackboard={},
+            axoplasm={},
         )
 
         new_session = ReasoningSession.objects.create(

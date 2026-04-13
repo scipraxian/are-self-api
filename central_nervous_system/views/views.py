@@ -29,7 +29,7 @@ def generate_spawn_dump(spike_train, depth=0, summary=False):
     Args:
         spike_train: The SpikeTrain instance to dump.
         depth: Current recursion depth (for indentation).
-        summary: If True, truncates logs and blackboard for reviewable output.
+        summary: If True, truncates logs and axoplasm for reviewable output.
     """
     indent = '    ' * depth
 
@@ -75,12 +75,12 @@ def generate_spawn_dump(spike_train, depth=0, summary=False):
         yield f'{indent}Command:    {cmd_str}\n'
         yield f'{indent}Result RC:  {spike.result_code}\n'
 
-        # Output the Blackboard state
-        if spike.blackboard:
-            bb_text = json.dumps(spike.blackboard)
+        # Output the Axoplasm state
+        if spike.axoplasm:
+            bb_text = json.dumps(spike.axoplasm)
             if summary and len(bb_text) > 500:
                 bb_text = bb_text[:500] + f'... ({len(bb_text)} chars total)'
-            yield f'{indent}Blackboard: {bb_text}\n'
+            yield f'{indent}Axoplasm: {bb_text}\n'
 
         yield f'\n{indent}[SPELL LOG (Tool Output)]\n'
         yield f'{indent}-------------------------\n'

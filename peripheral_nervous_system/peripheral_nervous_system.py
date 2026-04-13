@@ -5,11 +5,18 @@ from typing import List, NamedTuple, Optional, Tuple
 
 from asgiref.sync import sync_to_async
 from django.conf import settings
+from django.db import transaction
 from django.utils import timezone
 
 from peripheral_nervous_system.models import NerveTerminalRegistry, NerveTerminalStatus
 
 logger = logging.getLogger(__name__)
+
+# Single scan-in-progress lock. Guards against the view-triggered scan
+# stampede where post_save acetylcholine from the first scan causes the
+# frontend to re-list which would re-kick the scan. Held for the duration
+# of a single _run_async_scan call.
+_SCAN_LOCK = asyncio.Lock()
 
 
 # --- 1. CONSTANTS & TYPES ---
@@ -67,30 +74,85 @@ async def scan_and_register(
 
 async def _run_async_scan(subnet_prefix: str, port: int) -> List[str]:
     """
-    Orchestrator: Scans subnet asynchronously and registers found agents.
+    Orchestrator: Scans the subnet and reconciles NerveTerminalRegistry.
+
+    Flow:
+        1. Launch all probes in parallel.
+        2. As each PONG arrives, upsert that agent to ONLINE. The
+           registrar is compare-then-save so a no-op scan does not
+           fire acetylcholine.
+        3. After all probes finish, any currently non-OFFLINE row that
+           was NOT seen this round is flipped to OFFLINE (per-row
+           .save() so each dying card gets its own neurotransmitter).
+
+    There is no CHECKING transient write: those per-row saves turned
+    every scan into a broadcast storm that made the UI churn. Only real
+    state transitions are written to the DB.
+
+    Re-entry is guarded by _SCAN_LOCK: if a scan is already running, this
+    call returns immediately with an empty list.
     """
-    # 1. Launch Probes (Parallel)
-    tasks = []
-    # Scan 1-254
-    for i in range(1, 255):
-        ip = f'{subnet_prefix}{i}'
-        tasks.append(_probe_agent(ip, port))
+    if _SCAN_LOCK.locked():
+        logger.info('Scan already in progress; skipping re-entrant scan.')
+        return []
 
-    logger.info(f'Scanning subnet {subnet_prefix}x on port {port}...')
+    async with _SCAN_LOCK:
+        # 1. Launch Probes (Parallel)
+        tasks = []
+        # Scan 1-254
+        for i in range(1, 255):
+            ip = f'{subnet_prefix}{i}'
+            tasks.append(_probe_agent(ip, port))
 
-    # 2. Gather Results
-    results = await asyncio.gather(*tasks)
-    found_identities = [res for res in results if res is not None]
+        logger.info(f'Scanning subnet {subnet_prefix}x on port {port}...')
 
-    logger.info(f'Scan complete. Found {len(found_identities)} agents.')
+        # 2. Gather Results
+        results = await asyncio.gather(*tasks)
+        found_identities = [res for res in results if res is not None]
 
-    # 3. Register (Serial DB Writes)
-    registered_names = []
-    for identity in found_identities:
-        name = await _register_agent_in_db(identity)
-        registered_names.append(name)
+        logger.info(f'Scan complete. Found {len(found_identities)} agents.')
 
-    return registered_names
+        # 3. Register ONLINE (Serial DB Writes, no-op save when unchanged)
+        registered_names = []
+        registered_ids = set()
+        for identity in found_identities:
+            name = await _register_agent_in_db(identity)
+            registered_names.append(name)
+            registered_ids.add(identity.unique_id)
+
+        # 4. Anything non-OFFLINE that we did not see this round is
+        #    unreachable -> OFFLINE.
+        await _mark_unreachable_offline(registered_ids)
+
+        return registered_names
+
+
+@sync_to_async
+def _mark_unreachable_offline(found_ids: set) -> int:
+    """Flip live NerveTerminalRegistry rows that did not PONG to OFFLINE.
+
+    "Live" means any row whose status is not already OFFLINE. Rows whose
+    unique id was registered this round are excluded (they were just
+    upserted to ONLINE).
+
+    Iterates and .save()s individually so each row's post_save fires its
+    own acetylcholine -- these are real state transitions and the UI
+    should see them.
+
+    Returns the number of rows transitioned, for logging/tests.
+    """
+    count = 0
+    with transaction.atomic():
+        stale_qs = NerveTerminalRegistry.objects.exclude(
+            status_id=NerveTerminalStatus.OFFLINE
+        ).exclude(id__in=found_ids)
+        for terminal in stale_qs:
+            terminal.status_id = NerveTerminalStatus.OFFLINE
+            terminal.save(update_fields=['status', 'modified'])
+            count += 1
+    if count:
+        logger.info(f'Marked {count} unreachable nerve terminals OFFLINE.')
+    return count
 
 
 async def _probe_agent(ip: str, port: int) -> Optional[AgentIdentity]:
@@ -181,24 +243,65 @@ async def _probe_agent(ip: str, port: int) -> Optional[AgentIdentity]:
 
 @sync_to_async
 def _register_agent_in_db(identity: AgentIdentity) -> str:
-    """Upsert RemoteTarget based on Hardware UUID and Status ID."""
+    """Upsert RemoteTarget based on Hardware UUID and Status ID.
+
+    Compare-then-save: if the row already exists and (status, ip, version)
+    already match the discovered identity, this function does NOT touch
+    the database. That no-op is the whole point -- it prevents a stable
+    agent from firing an acetylcholine broadcast on every scan and
+    triggering a frontend refetch storm. last_seen is intentionally left
+    stale in the no-op path; it is advisory, not load-bearing.
+    """
 
     # Validation: Ensure we have the NamedTuple before accessing unique_id
     if not hasattr(identity, 'unique_id'):
         logger.error(f'Invalid identity object: {identity}')
         return 'Unknown'
 
-    target, created = NerveTerminalRegistry.objects.update_or_create(
-        id=identity.unique_id,
-        defaults=dict(
-            hostname=identity.hostname.upper().split('.')[0],
-            ip_address=identity.ip_address,
-            version=identity.version,
-            last_seen=timezone.now(),
-            status_id=NerveTerminalStatus.ONLINE,
-        ),
-    )
+    normalized_hostname = identity.hostname.upper().split('.')[0]
 
-    action = 'Registered' if created else 'Updated'
-    logger.info(f'[{action}] {target.hostname} ({target.ip_address})')
+    try:
+        existing = NerveTerminalRegistry.objects.get(id=identity.unique_id)
+    except NerveTerminalRegistry.DoesNotExist:
+        existing = None
+
+    if existing is not None:
+        unchanged = (
+            existing.status_id == NerveTerminalStatus.ONLINE
+            and existing.ip_address == identity.ip_address
+            and existing.version == identity.version
+        )
+        if unchanged:
+            logger.debug(
+                '[Unchanged] %s (%s) -- skipping no-op save',
+                existing.hostname,
+                existing.ip_address,
+            )
+            return existing.hostname
+
+        existing.hostname = normalized_hostname
+        existing.ip_address = identity.ip_address
+        existing.version = identity.version
+        existing.last_seen = timezone.now()
+        existing.status_id = NerveTerminalStatus.ONLINE
+        existing.save(update_fields=[
+            'hostname',
+            'ip_address',
+            'version',
+            'last_seen',
+            'status',
+            'modified',
+        ])
+        logger.info(f'[Updated] {existing.hostname} ({existing.ip_address})')
+        return existing.hostname
+
+    target = NerveTerminalRegistry.objects.create(
+        id=identity.unique_id,
+        hostname=normalized_hostname,
+        ip_address=identity.ip_address,
+        version=identity.version,
+        last_seen=timezone.now(),
+        status_id=NerveTerminalStatus.ONLINE,
+    )
+    logger.info(f'[Registered] {target.hostname} ({target.ip_address})')
     return target.hostname

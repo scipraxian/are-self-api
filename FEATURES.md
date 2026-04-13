@@ -6,20 +6,20 @@ What's built and working in the backend. Organized by brain region.
 
 Directed-graph execution engine. Neural Pathways define graphs of Neurons connected by Axons. Spike Trains
 traverse pathways, creating Spikes that execute Effectors (native Python handlers or Celery tasks). Spikes
-carry a blackboard (JSON dict) that accumulates context as the train passes through neurons. The CNS is
+carry axoplasm (JSON dict) that accumulates context as the train passes through neurons. The CNS is
 generic — it doesn't know about AI. It just fires graphs.
 
 NeuroMuscularJunction handles spike dispatch. `_update_status` is the single source of truth for spike
 status — sets both `self.status` on the instance and saves to DB. Internal effectors return (200, msg) for
 SUCCESS and (500, msg) for FAILURE. N-way spike log merge API with cursor-based delta updates for the
-forensics UI. Wire-type logging on axon firing (FLOW/SUCCESS/FAILURE). Deep-copy blackboard between
+forensics UI. Wire-type logging on axon firing (FLOW/SUCCESS/FAILURE). Deep-copy axoplasm between
 sibling spikes to prevent nested dict mutation.
 
-**Logic node** supports 3 modes: retry (blackboard-driven loop counting with configurable max_retries and
+**Logic node** supports 3 modes: retry (axoplasm-driven loop counting with configurable max_retries and
 retry_delay), gate (conditional branching via key/operator/value checks), and wait (pure delay). Config via
 NeuronContext keys. Returns SUCCESS or FAILURE axon. 68 tests.
 
-**Debug node (PK 9)** logs blackboard state and neuron context at INFO level. Configurable via `debug_label`.
+**Debug node (PK 9)** logs axoplasm state and neuron context at INFO level. Configurable via `debug_label`.
 
 **Canonical effector PKs:** BEGIN_PLAY=1, LOGIC_GATE=5, LOGIC_RETRY=6, LOGIC_DELAY=7, FRONTAL_LOBE=8,
 DEBUG=9. PKs 5-100 reserved for canonical effectors.

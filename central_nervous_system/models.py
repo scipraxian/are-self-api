@@ -391,6 +391,7 @@ class SpikeTrain(
         NeuralPathway, on_delete=models.SET_NULL, null=True, blank=True
     )
     status = models.ForeignKey(SpikeTrainStatus, on_delete=models.PROTECT)
+    cerebrospinal_fluid = models.JSONField(default=dict, blank=True)
 
     parent_spike = models.ForeignKey(
         'Spike',
@@ -512,7 +513,7 @@ class Spike(UUIDIdMixin, CreatedAndModifiedWithDelta):
     execution_log = models.TextField(blank=True)
     result_code = models.IntegerField(null=True, blank=True)
 
-    blackboard = models.JSONField(default=dict, blank=True)
+    axoplasm = models.JSONField(default=dict, blank=True)
 
     @property
     def is_active(self):  # TODO: DEPRECIATED LEGACY REMOVE, use is_alive.

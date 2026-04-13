@@ -93,19 +93,19 @@ class CNSGraphRoutingTest(CommonFixturesAPITestCase):
         mock_fire_spike_delay.assert_called_with(child_spike.id)
 
     @patch('central_nervous_system.central_nervous_system.fire_spike.delay')
-    def test_seed_blackboard_populates_root_spike(
+    def test_seed_cerebrospinal_fluid_populates_root_spike(
         self, mock_fire_spike_delay
     ):
-        """Assert CNS(seed_blackboard=...) pre-loads the root spike blackboard.
+        """Assert CNS(seed_cerebrospinal_fluid=...) pre-loads the root spike axoplasm.
 
-        Regression test for the MCP `launch_spike_train` blackboard pre-load
-        feature. Values passed in at CNS construction time must land on the
-        root spike's blackboard before dispatch, so effectors (and downstream
+        Regression test for the MCP `launch_spike_train` cerebrospinal_fluid
+        pre-load feature. Values passed in at CNS construction time must land on
+        the root spike's axoplasm before dispatch, so effectors (and downstream
         spikes via provenance copy) can read them.
         """
         cns = CNS(
             pathway_id=self.book.id,
-            seed_blackboard={'prompt': 'hello', 'target': 42},
+            seed_cerebrospinal_fluid={'prompt': 'hello', 'target': 42},
         )
 
         with self.captureOnCommitCallbacks(execute=True):
@@ -114,17 +114,17 @@ class CNSGraphRoutingTest(CommonFixturesAPITestCase):
         root_spike = Spike.objects.get(
             spike_train=cns.spike_train, neuron=self.neuron1
         )
-        self.assertEqual(root_spike.blackboard.get('prompt'), 'hello')
-        self.assertEqual(root_spike.blackboard.get('target'), 42)
+        self.assertEqual(root_spike.axoplasm.get('prompt'), 'hello')
+        self.assertEqual(root_spike.axoplasm.get('target'), 42)
 
     @patch('central_nervous_system.central_nervous_system.fire_spike.delay')
-    def test_seed_blackboard_propagates_to_child_spike(
+    def test_seed_cerebrospinal_fluid_propagates_to_child_spike(
         self, mock_fire_spike_delay
     ):
-        """Assert seed blackboard flows from root to child via provenance."""
+        """Assert seed cerebrospinal_fluid flows from root to child via provenance."""
         cns = CNS(
             pathway_id=self.book.id,
-            seed_blackboard={'carry': 'through'},
+            seed_cerebrospinal_fluid={'carry': 'through'},
         )
 
         with self.captureOnCommitCallbacks(execute=True):
@@ -144,11 +144,11 @@ class CNSGraphRoutingTest(CommonFixturesAPITestCase):
             neuron=self.neuron2,
             provenance=root_spike,
         )
-        self.assertEqual(child_spike.blackboard.get('carry'), 'through')
+        self.assertEqual(child_spike.axoplasm.get('carry'), 'through')
 
     @patch('central_nervous_system.central_nervous_system.fire_spike.delay')
-    def test_no_seed_blackboard_starts_empty(self, mock_fire_spike_delay):
-        """Assert omitting seed_blackboard preserves the legacy empty-start."""
+    def test_no_seed_cerebrospinal_fluid_starts_empty(self, mock_fire_spike_delay):
+        """Assert omitting seed_cerebrospinal_fluid preserves the legacy empty-start."""
         cns = CNS(pathway_id=self.book.id)
 
         with self.captureOnCommitCallbacks(execute=True):
@@ -157,7 +157,7 @@ class CNSGraphRoutingTest(CommonFixturesAPITestCase):
         root_spike = Spike.objects.get(
             spike_train=cns.spike_train, neuron=self.neuron1
         )
-        self.assertEqual(root_spike.blackboard, {})
+        self.assertEqual(root_spike.axoplasm, {})
 
     @patch('central_nervous_system.central_nervous_system.fire_spike.delay')
     def test_non_logic_success_still_fires_flow_axon(

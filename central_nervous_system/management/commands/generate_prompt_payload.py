@@ -11,8 +11,8 @@ from central_nervous_system.utils import resolve_environment_context
 logger = logging.getLogger(__name__)
 
 
-BLACKBOARD_FIELD_NAME = 'blackboard'
-BLACKBOARD_RESULT_KEY = 'local_prompt_path'
+AXOPLASM_FIELD_NAME = 'axoplasm'
+AXOPLASM_RESULT_KEY = 'local_prompt_path'
 DEFAULT_TARGET_KEY = 'prompt'
 HEAD_ARGUMENT = '--spike_id'
 SPIKE_ID = 'spike_id'
@@ -61,5 +61,5 @@ class Command(BaseCommand):
         with os.fdopen(fd, 'w', encoding='utf-8', errors='replace') as f:
             f.write(rendered_payload)
 
-        logger.info(f'::blackboard_set {BLACKBOARD_RESULT_KEY}::{temp_path}')
+        logger.info(f'::axoplasm_set {AXOPLASM_RESULT_KEY}::{temp_path}')
         logger.info('generate_prompt_payload Command Complete.')

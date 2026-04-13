@@ -3,6 +3,13 @@
 The single source of truth for any AI agent working on the are-self-api codebase.
 Read completely before making any changes.
 
+> **Active thread (April 11, 2026):** Nerve Terminal scan reconcile shipped with a
+> regression — UI cards blink because every per-row `.save()` in the scan fires an
+> acetylcholine broadcast that the frontend re-lists on. See TASKS.md → "In Progress —
+> Nerve Terminal Scan Reconcile" for the full diagnosis and the planned surgical fix.
+> Resume there.
+
+
 ## The Developer
 
 Michael is a 30+ year programming veteran building Are-Self as an MIT-licensed AI reasoning
@@ -182,7 +189,7 @@ JSON-RPC methods. All tool handlers use `sync_to_async` for Django ORM compatibi
 | `send_thalamus_message` | thalamus_tools | Message through chat relay |
 
 **Phase 2 Planned:**
-- Blackboard write tool (pre-load context before launching spike trains)
+- Cerebrospinal fluid write tool (pre-load context before launching spike trains)
 - SSE streaming via neurotransmitter callbacks (real-time execution updates)
 - Vector similarity search for engrams (instead of text-only)
 - Full Thalamus message pipeline (WebSocket delivery)
@@ -359,8 +366,8 @@ PKs 5-100 are reserved for canonical effectors. The frontend uses these PKs (not
 slugs) to determine which custom React Flow node component to render.
 
 **Debug node:** Effector PK 9. Native handler `debug_node` in
-`central_nervous_system/effectors/effector_casters/debug_node.py`. Logs blackboard state and
-neuron context at INFO level. Useful for diagnosing blackboard data flow between spikes.
+`central_nervous_system/effectors/effector_casters/debug_node.py`. Logs axoplasm state and
+neuron context at INFO level. Useful for diagnosing axoplasm data flow between spikes.
 Configurable via NeuronContext key `debug_label` (defaults to "DEBUG").
 
 **Formatting:** 88-char lines (Black default). Single quotes. No trailing commas in function

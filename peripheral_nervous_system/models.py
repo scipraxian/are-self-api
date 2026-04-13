@@ -16,6 +16,7 @@ class NerveTerminalStatus(DefaultFieldsMixin):
     OFFLINE = 1
     ONLINE = 2
     IN_USE = 3
+    CHECKING = 4
 
 
 class NerveTerminalRegistry(UUIDIdMixin, CreatedMixin, ModifiedMixin):

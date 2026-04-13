@@ -25,7 +25,7 @@ def db_setup():
     # Create Spikes
     spike_1 = Spike.objects.create(spike_train=spike_train,
                                       status=head_status_active,
-                                      blackboard={"var": "alpha"})
+                                      axoplasm={"var": "alpha"})
     spike_2 = Spike.objects.create(spike_train=spike_train,
                                       status=head_status_error,
                                       application_log="Fatal error on line 42")
@@ -44,7 +44,7 @@ async def test_gateway_dynamic_routing(db_setup):
     """Ensures the ParietalMCP gateway actually routes to the correct file."""
     spike_id = str(db_setup["spike_1"].id)
 
-    result = await ParietalMCP.execute("mcp_update_blackboard", {
+    result = await ParietalMCP.execute("mcp_update_axoplasm", {
         "spike_id": spike_id,
         "key": "test_gateway",
         "value": "routed"
@@ -53,7 +53,7 @@ async def test_gateway_dynamic_routing(db_setup):
     assert "Success" in result
 
     await asyncio.to_thread(db_setup["spike_1"].refresh_from_db)
-    assert db_setup["spike_1"].blackboard.get("test_gateway") == "routed"
+    assert db_setup["spike_1"].axoplasm.get("test_gateway") == "routed"
 
 
 @pytest.mark.django_db(transaction=True)
@@ -79,7 +79,7 @@ async def test_mcp_query_model_q_string_logic(db_setup):
     """Ensures the AI can write raw Q() objects for complex queries."""
     # Test an OR query that should return both spikes
     q_string = (f"Q(status_id={db_setup['status_error_id']}) | Q("
-                f"blackboard__var='alpha')")
+                f"axoplasm__var='alpha')")
 
     result = await ParietalMCP.execute("mcp_query_model", {
         "model_name": "Spike",

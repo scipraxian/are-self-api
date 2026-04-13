@@ -4,7 +4,7 @@ from enum import Enum
 class NeurotransmitterEvent(str, Enum):
     LOG = 'spike.log'
     STATUS = 'spike.status'
-    BLACKBOARD = 'spike.blackboard'
+    AXOPLASM = 'spike.axoplasm'
 
 
 class LogChannel(str, Enum):

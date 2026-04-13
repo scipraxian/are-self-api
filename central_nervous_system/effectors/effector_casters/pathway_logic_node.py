@@ -32,18 +32,18 @@ OP_NOT_EQUALS = 'not_equals'
 OP_GT = 'gt'
 OP_LT = 'lt'
 
-# Blackboard key written by retry mode.
+# Axoplasm key written by retry mode.
 BB_LOOP_COUNT = 'loop_count'
 
 
 async def pathway_logic_node(spike_id: str) -> tuple[int, str]:
-    """CNS Logic Node — flow control via blackboard state.
+    """CNS Logic Node — flow control via axoplasm state.
 
     Configuration lives in NeuronContext (per-node, set in graph editor):
         logic_mode:    retry | gate | wait  (default: retry for backwards compat)
         max_retries:   int  (retry mode — max loop iterations)
         delay:         int  (retry/wait modes — seconds to sleep)
-        gate_key:      str  (gate mode — blackboard key to check)
+        gate_key:      str  (gate mode — axoplasm key to check)
         gate_operator: exists | equals | not_equals | gt | lt  (gate mode)
         gate_value:    str  (gate mode — expected value)
 
@@ -63,10 +63,10 @@ async def pathway_logic_node(spike_id: str) -> tuple[int, str]:
     mode = str(context.get(CTX_LOGIC_MODE, MODE_RETRY)).strip().lower()
 
     logger.info(
-        '[LogicNode] Spike %s | mode=%s | neuron=%s | bb_keys=%s',
+        '[LogicNode] Spike %s | mode=%s | neuron=%s | axoplasm_keys=%s',
         spike_id, mode,
         spike.neuron_id if spike.neuron else 'N/A',
-        list((spike.blackboard or {}).keys()),
+        list((spike.axoplasm or {}).keys()),
     )
 
     if mode == MODE_RETRY:
@@ -101,9 +101,9 @@ async def _handle_retry(spike: Spike, context: dict) -> tuple[int, str]:
         )
         return 200, 'Retry mode: max_retries=0, pass-through.'
 
-    # Read loop count from blackboard — starts at 0, increments each pass.
-    # No provenance walking needed. The blackboard carries forward.
-    bb = spike.blackboard or {}
+    # Read loop count from axoplasm — starts at 0, increments each pass.
+    # No provenance walking needed. The axoplasm carries forward.
+    bb = spike.axoplasm or {}
     current_count = _safe_int(bb.get(BB_LOOP_COUNT, 0))
 
     log_msg = (
@@ -113,8 +113,8 @@ async def _handle_retry(spike: Spike, context: dict) -> tuple[int, str]:
 
     if current_count < max_retries:
         # Increment and write back for the next iteration.
-        spike.blackboard[BB_LOOP_COUNT] = current_count + 1
-        await sync_to_async(spike.save)(update_fields=['blackboard'])
+        spike.axoplasm[BB_LOOP_COUNT] = current_count + 1
+        await sync_to_async(spike.save)(update_fields=['axoplasm'])
         logger.info('[LogicNode] %s -> LOOPING', log_msg)
         return 200, f'{log_msg} -> LOOPING'
     else:
@@ -123,7 +123,7 @@ async def _handle_retry(spike: Spike, context: dict) -> tuple[int, str]:
 
 
 def _handle_gate(spike: Spike, context: dict) -> tuple[int, str]:
-    """Check a blackboard key against a condition."""
+    """Check an axoplasm key against a condition."""
     gate_key = str(context.get(CTX_GATE_KEY, '')).strip()
     operator = str(context.get(CTX_GATE_OPERATOR, OP_EXISTS)).strip().lower()
     gate_value = str(context.get(CTX_GATE_VALUE, '')).strip()
@@ -131,7 +131,7 @@ def _handle_gate(spike: Spike, context: dict) -> tuple[int, str]:
     if not gate_key:
         return 500, 'Gate mode: no gate_key configured.'
 
-    bb = spike.blackboard or {}
+    bb = spike.axoplasm or {}
     bb_raw = bb.get(gate_key)
     key_exists = bb_raw is not None
 
