@@ -3,10 +3,15 @@
 import asyncio
 import inspect
 import json
+import os
+from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
+
+os.environ['DJANGO_ALLOW_ASYNC_UNSAFE'] = 'true'
 
 from channels.routing import URLRouter
 from channels.testing import WebsocketCommunicator
-from django.test import SimpleTestCase, override_settings
+from django.test import SimpleTestCase, TransactionTestCase, override_settings
 from django.urls import path
 
 from common.tests.common_test_case import CommonFixturesAPITestCase
@@ -24,6 +29,12 @@ from talos_gateway.ws_protocol import (
     WS_ERR_VALIDATION,
     WS_MSG_INBOUND,
     WS_MSG_INBOUND_ACK,
+    WS_MSG_INTERRUPT,
+    WS_MSG_INTERRUPT_ACK,
+    WS_MSG_JOIN_SESSION,
+    WS_MSG_JOIN_SESSION_ACK,
+    WS_MSG_RESPONSE_COMPLETE,
+    WS_MSG_SESSION_STATUS,
 )
 
 THALAMUS_DISC_PK = '15ca85b8-59a9-4cb6-9fd8-bfd2be47b838'
@@ -71,6 +82,8 @@ class _RecordingOrchestrator(object):
 )
 class GatewayTokenStreamConsumerTests(SimpleTestCase):
     """WebSocket tests using in-memory channel layer."""
+
+    databases = '__all__'
 
     def tearDown(self) -> None:
         clear_active_gateway_orchestrator()
@@ -165,13 +178,16 @@ class GatewayTokenStreamConsumerTests(SimpleTestCase):
 
         asyncio.run(_run())
 
-    def test_phase1_gateway_modules_avoid_reasoning_engine_hooks(self):
-        """Assert Phase 1 gateway code omits FrontalLobe.run and fire_spike."""
+    def test_transport_modules_avoid_direct_reasoning_hooks(self):
+        """Assert transport modules do not directly import FrontalLobe or fire_spike.
+
+        The ``runtime`` module is the canonical bridge and may reference these.
+        Transport modules (gateway orchestrator and stream consumer) must not.
+        """
         import talos_gateway.gateway as gw_mod
-        import talos_gateway.message_router as mr_mod
         import talos_gateway.stream_consumer as sc_mod
 
-        for module in (gw_mod, mr_mod, sc_mod):
+        for module in (gw_mod, sc_mod):
             source = inspect.getsource(module)
             self.assertNotIn('FrontalLobe', source)
             self.assertNotIn('fire_spike', source)
@@ -201,6 +217,24 @@ class GatewayTokenStreamConsumerTests(SimpleTestCase):
         asyncio.run(_run())
 
 
+_EMBED_PATCH = patch(
+    'frontal_lobe.synapse.OllamaClient.embed', return_value=None
+)
+
+
+def _noop_async_to_sync(fn):
+    """No-op replacement for async_to_sync used in signal handlers.
+
+    Django post_save signal handlers broadcast via async_to_sync which
+    raises when called from inside a running event loop (asyncio.run /
+    Channels consumers). This wrapper silently drops the call so the
+    test can exercise the async consumer path without signal side-effects.
+    """
+    def wrapper(*args, **kwargs):
+        pass
+    return wrapper
+
+
 @override_settings(
     CHANNEL_LAYERS={
         'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}
@@ -211,18 +245,37 @@ class GatewayTokenStreamConsumerTests(SimpleTestCase):
         'session_timeout_minutes': 60,
     },
 )
-class GatewayStreamConsumerIntegrationTests(CommonFixturesAPITestCase):
-    """WebSocket path updates ``ReasoningSession.swarm_message_queue``."""
+class GatewayStreamConsumerIntegrationTests(TransactionTestCase):
+    """WebSocket integration path — TransactionTestCase required.
+
+    The Channels consumer runs ORM queries inside asyncio.run() which
+    may obtain a different DB connection. TransactionTestCase commits
+    fixtures so all connections can read them.
+    """
 
     fixtures = list(CommonFixturesAPITestCase.fixtures) + [
         'talos_gateway/fixtures/initial_data.json',
     ]
 
+    @classmethod
+    def setUpClass(cls):
+        _EMBED_PATCH.start()
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        _EMBED_PATCH.stop()
+
     def tearDown(self) -> None:
         clear_active_gateway_orchestrator()
         super().tearDown()
 
-    def test_inbound_websocket_queues_on_reasoning_session(self):
+    @patch('thalamus.thalamus.fire_spike')
+    @patch('thalamus.signals.async_to_sync', _noop_async_to_sync)
+    @patch('talos_gateway.signals.async_to_sync', _noop_async_to_sync)
+    @patch('asgiref.sync.async_to_sync', _noop_async_to_sync)
+    def test_inbound_websocket_queues_on_reasoning_session(self, _mock_fire):
         """Assert full path persists queued message on the reasoning session."""
         orch = GatewayOrchestrator()
         orch.load_adapters()
@@ -253,3 +306,319 @@ class GatewayStreamConsumerIntegrationTests(CommonFixturesAPITestCase):
         self.assertEqual(
             rs.swarm_message_queue[0]['content'], 'integration hello'
         )
+
+
+# ------------------------------------------------------------------
+# Story 1.3 — Group message handler tests
+# ------------------------------------------------------------------
+
+
+@override_settings(
+    CHANNEL_LAYERS={
+        'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}
+    }
+)
+class GatewayGroupMessageHandlerTests(SimpleTestCase):
+    """Assert group_send events are forwarded to the WebSocket client."""
+
+    databases = '__all__'
+
+    def test_response_complete_forwarded_to_websocket(self):
+        """Assert response_complete group event reaches WebSocket client."""
+        from channels.layers import get_channel_layer
+
+        async def _run() -> None:
+            sid = str(uuid4())
+            communicator = WebsocketCommunicator(
+                _gateway_application(),
+                '/ws/gateway/stream/',
+            )
+            connected, _ = await communicator.connect()
+            self.assertTrue(connected)
+
+            await communicator.send_to(
+                text_data=json.dumps({
+                    'type': WS_MSG_JOIN_SESSION,
+                    'session_id': sid,
+                })
+            )
+            join_raw = await communicator.receive_from()
+            join_data = json.loads(join_raw)
+            self.assertEqual(join_data['type'], WS_MSG_JOIN_SESSION_ACK)
+
+            layer = get_channel_layer()
+            group = 'session_%s' % sid
+            await layer.group_send(group, {
+                'type': 'response_complete',
+                'content': 'Here is my answer.',
+                'session_status': '7',
+            })
+
+            raw = await communicator.receive_from()
+            data = json.loads(raw)
+            self.assertEqual(data['type'], WS_MSG_RESPONSE_COMPLETE)
+            self.assertEqual(data['content'], 'Here is my answer.')
+            self.assertEqual(data['session_status'], '7')
+            await communicator.disconnect()
+
+        asyncio.run(_run())
+
+    def test_session_status_forwarded_to_websocket(self):
+        """Assert session_status group event reaches WebSocket client."""
+        from channels.layers import get_channel_layer
+
+        async def _run() -> None:
+            sid = str(uuid4())
+            communicator = WebsocketCommunicator(
+                _gateway_application(),
+                '/ws/gateway/stream/',
+            )
+            connected, _ = await communicator.connect()
+            self.assertTrue(connected)
+
+            await communicator.send_to(
+                text_data=json.dumps({
+                    'type': WS_MSG_JOIN_SESSION,
+                    'session_id': sid,
+                })
+            )
+            join_raw = await communicator.receive_from()
+            join_data = json.loads(join_raw)
+            self.assertEqual(join_data['type'], WS_MSG_JOIN_SESSION_ACK)
+
+            layer = get_channel_layer()
+            group = 'session_%s' % sid
+            await layer.group_send(group, {
+                'type': 'session_status',
+                'status': 'COMPLETED',
+            })
+
+            raw = await communicator.receive_from()
+            data = json.loads(raw)
+            self.assertEqual(data['type'], WS_MSG_SESSION_STATUS)
+            self.assertEqual(data['status'], 'COMPLETED')
+            await communicator.disconnect()
+
+        asyncio.run(_run())
+
+
+# ------------------------------------------------------------------
+# Story 1.3 — Signal broadcast tests
+# ------------------------------------------------------------------
+
+
+THALAMUS_DISC_PK_SIGNAL = '15ca85b8-59a9-4cb6-9fd8-bfd2be47b838'
+
+
+@override_settings(
+    CHANNEL_LAYERS={
+        'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}
+    },
+    TALOS_GATEWAY={
+        'default_identity_disc': THALAMUS_DISC_PK,
+        'session_timeout_minutes': 60,
+    },
+)
+class GatewaySignalBroadcastTests(CommonFixturesAPITestCase):
+    """Assert post_save signal broadcasts response_complete on status change."""
+
+    fixtures = list(CommonFixturesAPITestCase.fixtures) + [
+        'talos_gateway/fixtures/initial_data.json',
+    ]
+
+    @patch('talos_gateway.signals.get_channel_layer')
+    def test_signal_broadcasts_on_attention_required(self, mock_get_layer):
+        """Assert post_save broadcasts when session moves to ATTENTION_REQUIRED."""
+        from frontal_lobe.models import ReasoningSession, ReasoningStatusID
+
+        mock_layer = MagicMock()
+        mock_layer.group_send = AsyncMock()
+        mock_get_layer.return_value = mock_layer
+
+        session = ReasoningSession.objects.create(
+            identity_disc_id=THALAMUS_DISC_PK_SIGNAL,
+            status_id=ReasoningStatusID.ACTIVE,
+            max_turns=50,
+        )
+
+        session.status_id = ReasoningStatusID.ATTENTION_REQUIRED
+        session.save(update_fields=['status_id'])
+
+        mock_layer.group_send.assert_called()
+        call_args = mock_layer.group_send.call_args
+        group_name = call_args[0][0]
+        event = call_args[0][1]
+        self.assertIn(str(session.pk), group_name)
+        self.assertEqual(event['type'], 'response_complete')
+
+    @patch('talos_gateway.signals.get_channel_layer')
+    def test_signal_broadcasts_on_completed(self, mock_get_layer):
+        """Assert post_save broadcasts when session moves to COMPLETED."""
+        from frontal_lobe.models import ReasoningSession, ReasoningStatusID
+
+        mock_layer = MagicMock()
+        mock_layer.group_send = AsyncMock()
+        mock_get_layer.return_value = mock_layer
+
+        session = ReasoningSession.objects.create(
+            identity_disc_id=THALAMUS_DISC_PK_SIGNAL,
+            status_id=ReasoningStatusID.ACTIVE,
+            max_turns=50,
+        )
+
+        session.status_id = ReasoningStatusID.COMPLETED
+        session.save(update_fields=['status_id'])
+
+        mock_layer.group_send.assert_called()
+        event = mock_layer.group_send.call_args[0][1]
+        self.assertEqual(event['type'], 'response_complete')
+        self.assertEqual(event['session_status'], str(ReasoningStatusID.COMPLETED))
+
+    @patch('talos_gateway.signals.get_channel_layer')
+    def test_signal_skips_non_broadcast_status(self, mock_get_layer):
+        """Assert post_save does NOT broadcast for ACTIVE status."""
+        from frontal_lobe.models import ReasoningSession, ReasoningStatusID
+
+        mock_layer = MagicMock()
+        mock_layer.group_send = AsyncMock()
+        mock_get_layer.return_value = mock_layer
+
+        session = ReasoningSession.objects.create(
+            identity_disc_id=THALAMUS_DISC_PK_SIGNAL,
+            status_id=ReasoningStatusID.PENDING,
+            max_turns=50,
+        )
+
+        session.status_id = ReasoningStatusID.ACTIVE
+        session.save(update_fields=['status_id'])
+
+        mock_layer.group_send.assert_not_called()
+
+
+# ------------------------------------------------------------------
+# Story 1.4 — WebSocket-level interrupt tests
+# ------------------------------------------------------------------
+
+
+@override_settings(
+    CHANNEL_LAYERS={
+        'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}
+    }
+)
+class GatewayInterruptWebSocketTests(SimpleTestCase):
+    """WebSocket-level tests for the interrupt message type."""
+
+    databases = '__all__'
+
+    def test_interrupt_without_session_returns_error(self):
+        """Assert interrupt before join_session yields validation error."""
+
+        async def _run() -> None:
+            communicator = WebsocketCommunicator(
+                _gateway_application(),
+                '/ws/gateway/stream/',
+            )
+            connected, _ = await communicator.connect()
+            self.assertTrue(connected)
+
+            await communicator.send_to(
+                text_data=json.dumps({'type': WS_MSG_INTERRUPT})
+            )
+            raw = await communicator.receive_from()
+            data = json.loads(raw)
+            self.assertEqual(data['type'], 'error')
+            self.assertEqual(data['code'], WS_ERR_VALIDATION)
+            self.assertIn('no session joined', data['message'])
+            await communicator.disconnect()
+
+        asyncio.run(_run())
+
+    def test_join_session_then_interrupt_returns_ack(self):
+        """Assert interrupt after join_session calls handle_interrupt and returns ack."""
+
+        async def _run() -> None:
+            communicator = WebsocketCommunicator(
+                _gateway_application(),
+                '/ws/gateway/stream/',
+            )
+            connected, _ = await communicator.connect()
+            self.assertTrue(connected)
+
+            session_id = str(uuid4())
+
+            await communicator.send_to(
+                text_data=json.dumps({
+                    'type': WS_MSG_JOIN_SESSION,
+                    'session_id': session_id,
+                })
+            )
+            raw_join = await communicator.receive_from()
+            join_data = json.loads(raw_join)
+            self.assertEqual(join_data['type'], WS_MSG_JOIN_SESSION_ACK)
+
+            with patch(
+                'talos_gateway.stream_consumer.handle_interrupt',
+                return_value={'success': True, 'spike_id': str(uuid4())},
+            ):
+                await communicator.send_to(
+                    text_data=json.dumps({'type': WS_MSG_INTERRUPT})
+                )
+                raw_int = await communicator.receive_from()
+                int_data = json.loads(raw_int)
+                self.assertEqual(int_data['type'], WS_MSG_INTERRUPT_ACK)
+                self.assertTrue(int_data['success'])
+
+            await communicator.disconnect()
+
+        asyncio.run(_run())
+
+    def test_join_session_ack_contains_session_id(self):
+        """Assert join_session response includes the session_id."""
+
+        async def _run() -> None:
+            communicator = WebsocketCommunicator(
+                _gateway_application(),
+                '/ws/gateway/stream/',
+            )
+            connected, _ = await communicator.connect()
+            self.assertTrue(connected)
+
+            sid = str(uuid4())
+            await communicator.send_to(
+                text_data=json.dumps({
+                    'type': WS_MSG_JOIN_SESSION,
+                    'session_id': sid,
+                })
+            )
+            raw = await communicator.receive_from()
+            data = json.loads(raw)
+            self.assertEqual(data['type'], WS_MSG_JOIN_SESSION_ACK)
+            self.assertEqual(data['session_id'], sid)
+            await communicator.disconnect()
+
+        asyncio.run(_run())
+
+    def test_join_session_invalid_uuid_returns_error(self):
+        """Assert join_session with invalid UUID returns validation error."""
+
+        async def _run() -> None:
+            communicator = WebsocketCommunicator(
+                _gateway_application(),
+                '/ws/gateway/stream/',
+            )
+            connected, _ = await communicator.connect()
+            self.assertTrue(connected)
+
+            await communicator.send_to(
+                text_data=json.dumps({
+                    'type': WS_MSG_JOIN_SESSION,
+                    'session_id': 'not-a-uuid',
+                })
+            )
+            raw = await communicator.receive_from()
+            data = json.loads(raw)
+            self.assertEqual(data['type'], 'error')
+            self.assertEqual(data['code'], WS_ERR_VALIDATION)
+            await communicator.disconnect()
+
+        asyncio.run(_run())

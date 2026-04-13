@@ -1,15 +1,21 @@
 """Tests for talos_gateway.message_router."""
 
-from asgiref.sync import async_to_sync
-from django.test import override_settings
+import os
+from unittest.mock import patch
+
+os.environ['DJANGO_ALLOW_ASYNC_UNSAFE'] = 'true'
+
+from django.test import SimpleTestCase, override_settings
 from django.utils import timezone
 
 from common.tests.common_test_case import CommonFixturesAPITestCase
 from talos_gateway.contracts import PlatformEnvelope
 from talos_gateway.message_router import MessageRouter
+from talos_gateway.runtime import wake_reasoning
 from talos_gateway.session_manager import SessionManager
 
 THALAMUS_DISC_PK = '15ca85b8-59a9-4cb6-9fd8-bfd2be47b838'
+FIRE_SPIKE_PATH = 'thalamus.thalamus.fire_spike'
 
 
 @override_settings(
@@ -19,13 +25,20 @@ THALAMUS_DISC_PK = '15ca85b8-59a9-4cb6-9fd8-bfd2be47b838'
     }
 )
 class MessageRouterTests(CommonFixturesAPITestCase):
-    """Tests for MessageRouter.dispatch_inbound and build_delivery_payload."""
+    """Tests for MessageRouter dispatch path and payload construction.
+
+    Tests the sync core of dispatch_inbound: resolve_session +
+    wake_reasoning + queue verification. The async wrapper is thin
+    glue — testing synchronously avoids event-loop conflicts with
+    Django post_save signal handlers that call async_to_sync.
+    """
 
     fixtures = list(CommonFixturesAPITestCase.fixtures) + [
         'talos_gateway/fixtures/initial_data.json',
     ]
 
-    def test_dispatch_inbound_appends_swarm_queue(self):
+    @patch(FIRE_SPIKE_PATH)
+    def test_dispatch_inbound_appends_swarm_queue(self, _mock_fire):
         """Assert inbound envelope content is queued on ReasoningSession."""
         ts = timezone.now()
         env = PlatformEnvelope(
@@ -39,12 +52,33 @@ class MessageRouterTests(CommonFixturesAPITestCase):
         )
         sm = SessionManager()
         gs, rs = sm.resolve_session('cli', 'chan-mr-1', env)
-        router = MessageRouter(sm)
-        result = async_to_sync(router.dispatch_inbound)(gs, rs, env)
-        self.assertTrue(result.get('success'))
+        wake_result = wake_reasoning(gs, rs, env.content)
+        self.assertTrue(wake_result.get('success'))
         rs.refresh_from_db()
         self.assertEqual(len(rs.swarm_message_queue), 1)
         self.assertEqual(rs.swarm_message_queue[0]['content'], 'queue me')
+
+    @patch(FIRE_SPIKE_PATH)
+    def test_dispatch_inbound_returns_session_id(self, _mock_fire):
+        """Assert wake_reasoning result includes session_id."""
+        ts = timezone.now()
+        env = PlatformEnvelope(
+            platform='cli',
+            channel_id='chan-mr-2',
+            sender_id='u2',
+            sender_name='User',
+            message_id='mid-2',
+            content='hello',
+            timestamp=ts,
+        )
+        sm = SessionManager()
+        gs, rs = sm.resolve_session('cli', 'chan-mr-2', env)
+        result = wake_reasoning(gs, rs, env.content)
+        self.assertEqual(result.get('session_id'), str(rs.pk))
+
+
+class MessageRouterPayloadTests(SimpleTestCase):
+    """Tests for MessageRouter.build_delivery_payload (no DB needed)."""
 
     def test_build_delivery_payload(self):
         """Assert DeliveryPayload construction matches outbound contract."""

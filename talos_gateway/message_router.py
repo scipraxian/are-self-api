@@ -6,6 +6,7 @@ from typing import Any, Optional
 from frontal_lobe.models import ReasoningSession
 from talos_gateway.contracts import DeliveryPayload, PlatformEnvelope
 from talos_gateway.models import GatewaySession
+from talos_gateway.runtime import wake_reasoning
 from talos_gateway.session_manager import SessionManager
 
 logger = logging.getLogger('talos_gateway.message_router')
@@ -25,24 +26,24 @@ class MessageRouter(object):
         reasoning_session: ReasoningSession,
         envelope: PlatformEnvelope,
     ) -> dict[str, Any]:
-        """Append user content to ``swarm_message_queue``."""
-        queue = list(reasoning_session.swarm_message_queue or [])
-        queue.append(
-            {
-                'role': 'user',
-                'content': envelope.content,
-                'message_id': envelope.message_id,
-                'sender_id': envelope.sender_id,
-            }
+        """Queue user content and wake reasoning via the canonical path."""
+        wake_result = wake_reasoning(
+            gateway_session, reasoning_session, envelope.content,
         )
-        reasoning_session.swarm_message_queue = queue
-        reasoning_session.save(update_fields=['swarm_message_queue'])
+        reasoning_session.refresh_from_db()
+        queue = list(reasoning_session.swarm_message_queue or [])
         logger.debug(
-            '[MessageRouter] Queued message for session %s (depth=%s).',
+            '[MessageRouter] Dispatched message for session %s (depth=%s, action=%s).',
             reasoning_session.pk,
             len(queue),
+            wake_result.get('action'),
         )
-        return {'success': True, 'queue_depth': len(queue)}
+        return {
+            'success': True,
+            'queue_depth': len(queue),
+            'action': wake_result.get('action', ''),
+            'session_id': str(reasoning_session.pk),
+        }
 
     def build_delivery_payload(
         self,

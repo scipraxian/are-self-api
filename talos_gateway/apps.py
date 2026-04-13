@@ -9,3 +9,6 @@ class TalosGatewayConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'talos_gateway'
     verbose_name = 'Talos Gateway'
+
+    def ready(self) -> None:
+        import talos_gateway.signals  # noqa: F401
