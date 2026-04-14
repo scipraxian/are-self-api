@@ -64,4 +64,4 @@ class TestIdentityDiscM2MWrite(CommonFixturesAPITestCase):
         tools = response.data['enabled_tools']
         assert len(tools) == 1
         assert isinstance(tools[0], dict)
-        assert tools[0]['id'] == self.tool.pk
+        assert tools[0]['id'] == str(self.tool.pk)

@@ -3,7 +3,7 @@ import logging
 import re
 import uuid
 from dataclasses import dataclass
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 
 from django.http import HttpRequest, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404
@@ -78,29 +78,29 @@ DEFAULT_UI_JSON_DICT = {KEY_X: 100, KEY_Y: 100}
 
 @dataclass
 class NeuronPayload:
-    effector_id: int | None
-    invoked_pathway_id: str | None  # UUID
+    effector_id: Optional[str]  # UUID
+    invoked_pathway_id: Optional[str]  # UUID
     x: int
     y: int
 
 
 @dataclass
 class MovePayload:
-    neuron_id: int
+    neuron_id: str  # UUID
     x: int
     y: int
 
 
 @dataclass
 class ConnectPayload:
-    source_neuron_id: int
-    target_neuron_id: int
+    source_neuron_id: str  # UUID
+    target_neuron_id: str  # UUID
     type: str  # 'flow', 'success', 'fail'
 
 
 @dataclass
 class DeletePayload:
-    neuron_id: int
+    neuron_id: str  # UUID
 
 
 # --- VIEW ROUTER ---
@@ -315,7 +315,7 @@ def handle_add_neuron(pathway: NeuralPathway, payload: dict) -> JsonResponse:
         effector_id = dummy_effector.id
     else:
         # Standard Spell
-        if int(effector_id) == Effector.BEGIN_PLAY:
+        if effector_id is not None and uuid.UUID(str(effector_id)) == Effector.BEGIN_PLAY:
             if pathway.neurons.filter(is_root=True).exists():
                 return JsonResponse(
                     {'error': 'Begin Play neuron already exists.'}, status=400

@@ -33,11 +33,11 @@ class ShiftDefaultParticipant(models.Model):
         return f'{self.participant} - {self.shift}'
 
 
-class IterationDefinition(NameMixin):
+class IterationDefinition(UUIDIdMixin, NameMixin):
     pass
 
 
-class IterationShiftDefinition(models.Model):
+class IterationShiftDefinition(UUIDIdMixin):
     definition = models.ForeignKey(
         IterationDefinition, on_delete=models.CASCADE
     )

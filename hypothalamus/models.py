@@ -622,7 +622,7 @@ class AIModelDescriptionCache(CreatedMixin):
     cached_library = models.JSONField(default=dict)
 
 
-class AIModelDescription(DescriptionMixin, CreatedAndModifiedWithDelta):
+class AIModelDescription(UUIDIdMixin, DescriptionMixin, CreatedAndModifiedWithDelta):
     """Parsed from Description Cache."""
 
     ai_models = models.ManyToManyField(AIModel, blank=True)

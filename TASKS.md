@@ -324,6 +324,20 @@ update the docs with the norepinephrine in the pns for django.
 - [ ] **MCP Server.** Have Are-Self be an MCP server, allowing other MCP clients to connect and execute
   commands like Execute Neural Pathway.
 - [ ] **MCP Client.** Have Are-Self be an MCP client, calling other MCP servers.
+- [ ] **Remove redundant `CREATE EXTENSION vector` steps.** As of Pass 1 UUID migration,
+  `common/migrations/0001_initial.py` calls `pgvector.django.VectorExtension()` and every
+  `VectorField`-using app depends on it transitively. The manual `CREATE EXTENSION IF NOT EXISTS vector`
+  step in `are-self-install.bat` (line 58) and the matching line in the README manual-install
+  instructions are now redundant and actively misleading — someone troubleshooting a fresh install
+  could waste time chasing whether the extension "ran properly" when Django migrations handle it.
+  Remove both. (README already cleaned; `.bat` pending.)
+- [ ] **UUID migration Pass 2 — fixture separation + plugin extraction.** Pass 1 flipped 18
+  plugin-extensible models from integer to UUID PKs (`uuid-migration` branch, gated on frontend
+  companion PR). Pass 2 splits monolithic `initial_data.json` into per-tier files (starter / test /
+  plugin bundles), extracts the Unreal flow as the first installable plugin bundle, moves generic
+  log-merge utilities from `ue_tools/` to `occipital_lobe/`, splits `log_parser.py` into generic
+  core + UE-specific plugin pieces, removes `ollama_fixture_generator.py`, and wires the `plugins`
+  Django app (Michael is doing the `startapp` himself). Requires Pass 1 merged to `main` first.
 - [ ] **Plugin Garden — 3rd-party plugin marketplace.** Are-Self ships with 3–4 first-party plugins
   (Unreal first, others TBD), all install/uninstall-able via the plugins API. Beyond the shipped set,
   stand up a "garden" where 3rd parties can publish plugins and users can browse/install them.
@@ -379,6 +393,14 @@ update the docs with the norepinephrine in the pns for django.
 - [ ] **Self-improving pathway testing harness.** The testing harness IS a CNS neural pathway — no new
   framework. 7B model + 30B evaluator in a loop. The spike train IS the test run, the axoplasm IS the
   assertion state, the summary_dump IS the test report.
+- [ ] **Occipital lobe folder-change detection → environment test pathway.** OS-level file watcher
+  (inotify / FSEvents / ReadDirectoryChangesW) lives in `occipital_lobe/` as a visual-cortex-style
+  intake layer. Folder change events route to the associated `ProjectEnvironment`'s test-suite
+  neural pathway and fire it automatically. Reactive, per-environment — edit a file in a checkout,
+  that environment's tests run, results land in the existing spike/neuron/context graph. No new
+  models required — uses existing effector/pathway machinery end-to-end. Generalizable beyond
+  tests: "watch a folder, fire a pathway" is useful for research dirs, download folders,
+  screenshot folders, etc. Occipital lobe as the general OS-event intake region.
 - [ ] **Addon stage/lifecycle system.** Addons fire conditionally based on session state instead of every
   turn. Would allow moving focus mechanics into a dedicated focus addon.
 - [ ] **Nerve Terminal video stream.** Add a third stream alongside STDOUT and log-file tailing: live video

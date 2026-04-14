@@ -88,8 +88,14 @@ PNS (Celery Beat ticks)
 | `common/` | — | Shared mixins, constants, base test classes |
 | `config/` | — | Django settings, URL routing, Celery config |
 
-Legacy apps still present: `dashboard/` (old HTMX views), `ue_tools/` (UE5 build tools),
-`occipital_lobe/` (placeholder). These are deprecated and will be removed.
+Legacy app still present: `dashboard/` (old HTMX views) — deprecated, will be removed.
+
+`ue_tools/` is **not** deprecated. It contains the Unreal Engine build orchestration flow
+and is being extracted as the first installable plugin in the forthcoming plugin architecture
+(Pass 2). `occipital_lobe/` is **not** a placeholder — it is the planned home for
+OS-level file-watcher intake (visual-cortex-style event detection that routes folder changes
+to the associated environment's neural pathways) and for the generic log-merge utilities
+currently living in `ue_tools/`.
 
 ## Key Code Paths
 
@@ -317,8 +323,9 @@ sweep done across CNS. Deprecated `ModelProvider`/`ModelRegistry` removed from F
 
 **Legacy remnants:** `parietal_lobe/registry.py` still exists (superseded by Hypothalamus
 DB-driven routing). `synapse_open_router.py` is deprecated (no production callers). The
-`dashboard/` and `ue_tools/` apps are from the original UE5 build orchestrator — they'll be
-removed.
+`dashboard/` app is from the original UE5 build orchestrator — will be removed. `ue_tools/`
+stays: it becomes the first installable plugin bundle in Pass 2 (plugin architecture),
+with its generic log-merge utilities relocating to `occipital_lobe/`.
 
 ## Style Guide (Enforced)
 
@@ -356,14 +363,35 @@ result = async_to_sync(some_async_function)(arg1, arg2)
 ```
 This runs the async function on the SAME database connection as the test transaction.
 
-**Fixtures:** PKs are stable integers. Never change an existing PK. Old records deprecated
-in place, never deleted. Each app has its own `fixtures/initial_data.json`.
+**Fixtures:** Integer-vs-UUID PK split as of Pass 1 UUID migration (April 2026).
 
-**Canonical Effector PKs:** Important effectors get fixed PKs and model constants
-(`central_nervous_system/models.py`): `BEGIN_PLAY=1, LOGIC_GATE=5, LOGIC_RETRY=6,
-LOGIC_DELAY=7, FRONTAL_LOBE=8, DEBUG=9`. These are mirrored in the frontend `nodeConstants.ts`.
-PKs 5-100 are reserved for canonical effectors. The frontend uses these PKs (not executable
-slugs) to determine which custom React Flow node component to render.
+*Integer PKs (stay stable, never change):* protocol enums and canonical vocabulary tables
+that core owns exclusively and plugins never extend — `SpikeStatus`, `AxonType`,
+`CNSDistributionMode`, `IdentityAddonPhase`, `BudgetPeriod`, `AIModelCapabilities`,
+`AIModelRole`, `AIModelQuantization`, and the hypothalamus lookup tables (`AIModelFamily`,
+`SyncStatus`, etc.). Never change an existing integer PK. Old records deprecated in place,
+never deleted.
+
+*UUID PKs (plugin-extensible):* models that plugins may ship additional rows for —
+`Effector`, `EffectorContext`, `EffectorArgumentAssignment`, `Neuron`, `NeuronContext`,
+`Axon`, `Executable`, `ExecutableSwitch`, `ExecutableArgument`, `ExecutableArgumentAssignment`,
+`ContextVariable`, `ToolDefinition`, `ToolParameter`, `ToolParameterAssignment`,
+`ParameterEnum`, `AIModelDescription`, `IterationDefinition`, `IterationShiftDefinition`.
+Plus the already-UUID models (`Identity`, `IdentityDisc`, `ProjectEnvironment`, `NeuralPathway`).
+
+Each app still has its own `fixtures/initial_data.json`. Fixture separation into per-tier
+files (starter / test / plugin bundles) is Pass 2 work.
+
+**Canonical Effector / Executable constants:** Important effectors and executables have
+model-class UUID constants (`central_nervous_system/models.py`, `environments/models.py`):
+`Effector.BEGIN_PLAY`, `LOGIC_GATE`, `LOGIC_RETRY`, `LOGIC_DELAY`, `FRONTAL_LOBE`, `DEBUG`;
+`Executable.BEGIN_PLAY`, `PYTHON`, `DJANGO`, `UNREAL_CMD`, `UNREAL_AUTOMATION_TOOL`,
+`UNREAL_STAGING`, `UNREAL_RELEASE_TEST`, `UNREAL_SHADER_TOOL`, `VERSION_HANDLER`,
+`DEPLOY_RELEASE`. These are `uuid.UUID(...)` literals — the names stay stable but values
+are UUIDs, not integers. The frontend `nodeConstants.ts` must mirror these as UUID strings
+(companion PR gates the branch merge). The frontend uses these to determine which custom
+React Flow node component to render. The int→UUID mapping for the migration is recorded
+at `uuid_migration_mapping.json` at repo root.
 
 **Debug node:** Effector PK 9. Native handler `debug_node` in
 `central_nervous_system/effectors/effector_casters/debug_node.py`. Logs axoplasm state and

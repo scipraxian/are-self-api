@@ -71,7 +71,7 @@ class EffectorViewSetV2Test(CommonFixturesAPITestCase):
         payload = {
             'name': 'Test New Effector',
             'description': 'Created by test',
-            'executable': 1,
+            'executable': str(Executable.BEGIN_PLAY),
             'distribution_mode': 1,
         }
         response = self.client.post(
@@ -116,7 +116,7 @@ class EffectorViewSetV2Test(CommonFixturesAPITestCase):
         """DELETE /api/v2/effectors/{id}/ removes the effector."""
         effector = Effector.objects.create(
             name='Disposable Effector',
-            executable_id=1,
+            executable_id=Executable.BEGIN_PLAY,
         )
         eff_id = effector.id
 
