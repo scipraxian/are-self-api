@@ -5,7 +5,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from ue_tools.log_parser import LogConstants, LogEntry, LogParserFactory
+from occipital_lobe.log_parser import LogConstants, LogEntry, LogParserFactory
 
 logger = logging.getLogger(__name__)
 

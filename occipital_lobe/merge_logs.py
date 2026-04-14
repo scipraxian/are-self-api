@@ -1,4 +1,4 @@
-from ue_tools.log_parser import LogConstants, LogParserFactory
+from occipital_lobe.log_parser import LogConstants, LogParserFactory
 
 
 def merge_logs(local_content, remote_content):

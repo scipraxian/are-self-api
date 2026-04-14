@@ -1,17 +1,51 @@
+"""Unreal Engine log parser strategies.
+
+Extends the generic core in `occipital_lobe.log_parser` with Unreal-flavored
+regex patterns, constants, and streaming strategies for UE Build/UAT logs
+and Runtime (Editor/Server/Client/Agent) logs. UE strategies register
+themselves with the shared `LogParserFactory` at module import time.
+
+Re-exports `LogEntry`, `LogSession`, `LogStats`, `LogParserFactory`, and
+`merge_sessions` from the core so existing `from ue_tools.log_parser import
+...` call sites keep working. The `LogConstants` exposed here is a UE-
+augmented subclass of the core class — tests and UE callers see both the
+generic fields and UE-specific keys/formats/process labels on the same
+symbol.
+"""
+
 import re
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import List
+
+from occipital_lobe.log_parser import LogConstants as _BaseLogConstants
+from occipital_lobe.log_parser import (
+    LogEntry,
+    LogParserFactory,
+    LogParserStrategy,
+    LogSession,
+    LogStats,
+    merge_sessions,
+)
+
+__all__ = [
+    'LogConstants',
+    'LogEntry',
+    'LogParserFactory',
+    'LogParserStrategy',
+    'LogPatterns',
+    'LogSession',
+    'LogStats',
+    'UEBuildLogStrategy',
+    'UELogParserStrategy',
+    'UERunLogStrategy',
+    'merge_sessions',
+]
 
 
-class LogConstants(object):
-    """Constants for dictionary keys and semantic labels."""
-    # Strategy Types
-    TYPE_BUILD = 'build'
-    TYPE_RUN = 'run'
+class LogConstants(_BaseLogConstants):
+    """UE-extended constants — adds Unreal-specific keys, formats, labels."""
 
-    # Metadata Keys
+    # Metadata Keys (UE-specific)
     KEY_CAMERA = 'camera'
     KEY_GPU_MS = 'gpu_ms'
     KEY_OPEN_HANDLES = 'open_file_handles'
@@ -20,38 +54,24 @@ class LogConstants(object):
     KEY_BUILD_OUTCOME = 'build_outcome'
     KEY_COOK_STATS = 'has_cook_stats'
 
-    # Sources
-    SOURCE_UNKNOWN = 'unknown'
-
-    # Outcomes
-    OUTCOME_SUCCESS = 'SUCCESS'
-    OUTCOME_FAILURE = 'FAILURE'
-
-    # Date Formats
+    # Date Formats (UE-specific)
     FMT_ANCHOR = '%m/%d/%Y %I:%M:%S %p'
     FMT_UE_TIMESTAMP = '%Y.%m.%d-%H.%M.%S:%f'
-    FMT_AGENT_TIME = '%H:%M:%S'
 
-    # Process Names
+    # Process Names (UE-specific)
     PROC_SYSTEM = 'System'
     PROC_EDITOR = 'Editor'
     PROC_AGENT = 'Agent'
     PROC_UAT = 'UAT'
 
-    # Categories
+    # Categories (UE-specific)
     CAT_LOG_START = 'LogStart'
     CAT_AGENT_LOG = 'AgentLog'
-    CAT_INFO = 'Info'
     CAT_BUILD_STATUS = 'BuildStatus'
-
-    # Levels
-    LVL_DISPLAY = 'Display'
-    LVL_ERROR = 'Error'
-    LVL_WARNING = 'Warning'
 
 
 class LogPatterns(object):
-    """Central repository for Log Regex Patterns."""
+    """Central repository for UE log regex patterns."""
     # Anchor: "Log started at 1/8/2026 10:13:29 AM"
     ANCHOR = re.compile(
         r'Log started at (\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2}:\d{2} [AP]M)')
@@ -80,95 +100,16 @@ class LogPatterns(object):
     COOK_STATS = re.compile(r'OpenFileHandles=(\d+).*VirtualMemory=(\d+)MiB')
 
 
-@dataclass
-class LogStats:
-    """Accumulator for session statistics."""
-    error_count: int = 0
-    warning_count: int = 0
-    duration_seconds: float = 0.0
-    gpu_frames_captured: int = 0
-    avg_gpu_ms: float = 0.0
-    cook_virtual_mem_mb: int = 0
-    cook_open_handles: int = 0
-    build_outcome: Optional[str] = None
+class UELogParserStrategy(LogParserStrategy):
+    """UE-specific intermediate base.
 
-
-@dataclass
-class LogEntry:
-    """The atomic unit of a log."""
-    timestamp: datetime
-    line_num: int
-    process: str
-    category: str
-    level: str
-    message: str
-    raw: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    source: str = LogConstants.SOURCE_UNKNOWN
-
-
-@dataclass
-class LogSession:
-    """Container for a parsed log session."""
-    entries: List[LogEntry] = field(default_factory=list)
-    stats: LogStats = field(default_factory=LogStats)
-    source_name: str = LogConstants.SOURCE_UNKNOWN
-
-
-class LogParserStrategy(ABC):
-    """Abstract Base Class for stateful log parsing strategies."""
-
-    def __init__(self, source_name: str = LogConstants.SOURCE_UNKNOWN):
-        self.source_name = source_name
-        self.current_timestamp: datetime = datetime.now()
-        self.stats = LogStats()
-        self._pending_entry: Optional[LogEntry] = None
-        self._line_counter = 0
-
-    @abstractmethod
-    def parse_chunk(self, lines: List[str]) -> List[LogEntry]:
-        """Process a list of lines and return completed entries."""
-        pass
-
-    def flush(self) -> List[LogEntry]:
-        """Return any remaining pending entry."""
-        if self._pending_entry:
-            e = self._pending_entry
-            # CRITICAL FIX: Must enrich the final entry before returning it
-            self._enrich_entry(e)
-            self._pending_entry = None
-            return [e]
-        return []
-
-    def _finalize_pending(self) -> Optional[LogEntry]:
-        """Completes the current entry and updates stats."""
-        if self._pending_entry:
-            entry = self._pending_entry
-            self._enrich_entry(entry)
-            self._pending_entry = None
-            return entry
-        return None
-
-    def _create_pending(self, dt: datetime, process: str, category: str,
-                        level: str, message: str, raw: str):
-        """Starts a new pending entry."""
-        safe_level = level if level else LogConstants.LVL_DISPLAY
-        self._pending_entry = LogEntry(timestamp=dt,
-                                       line_num=self._line_counter,
-                                       process=process,
-                                       category=category,
-                                       level=safe_level,
-                                       message=message,
-                                       raw=raw,
-                                       source=self.source_name)
+    Adds GPU profiling / cook stats / build outcome enrichment on top of
+    the generic error/warning counters provided by the core base.
+    """
 
     def _enrich_entry(self, entry: LogEntry) -> None:
-        """Map/Reduce logic. Updates stats in-place."""
-        # 1. Counters
-        if LogConstants.LVL_ERROR in entry.level or LogConstants.LVL_ERROR in entry.message:
-            self.stats.error_count += 1
-        if LogConstants.LVL_WARNING in entry.level or LogConstants.LVL_WARNING in entry.message:
-            self.stats.warning_count += 1
+        # 1. Generic counters
+        super()._enrich_entry(entry)
 
         # 2. GPU Profiling
         m_gpu = LogPatterns.GPU_PROFILE.search(entry.message)
@@ -200,15 +141,8 @@ class LogParserStrategy(ABC):
             entry.metadata[
                 LogConstants.KEY_BUILD_OUTCOME] = LogConstants.OUTCOME_FAILURE
 
-    def _resolve_agent_time(self, time_str: str) -> datetime:
-        try:
-            t = datetime.strptime(time_str, LogConstants.FMT_AGENT_TIME).time()
-            return datetime.combine(self.current_timestamp.date(), t)
-        except ValueError:
-            return self.current_timestamp
 
-
-class UEBuildLogStrategy(LogParserStrategy):
+class UEBuildLogStrategy(UELogParserStrategy):
     """
     Strategy for Build/UAT Logs (Implicit Mode).
     """
@@ -286,7 +220,7 @@ class UEBuildLogStrategy(LogParserStrategy):
         return completed
 
 
-class UERunLogStrategy(LogParserStrategy):
+class UERunLogStrategy(UELogParserStrategy):
     """
     Strategy for Runtime/Server/Client Logs (Explicit Mode).
     """
@@ -344,35 +278,6 @@ class UERunLogStrategy(LogParserStrategy):
         return completed
 
 
-class LogParserFactory(object):
-    """Factory to create the correct strategy."""
-
-    @staticmethod
-    def create(log_type: str, source_label: str) -> LogParserStrategy:
-        if log_type == LogConstants.TYPE_BUILD:
-            return UEBuildLogStrategy(source_name=source_label)
-        elif log_type == LogConstants.TYPE_RUN:
-            return UERunLogStrategy(source_name=source_label)
-        else:
-            raise ValueError(f'Unknown log type: {log_type}')
-
-
-def merge_sessions(session_a: LogSession, session_b: LogSession) -> LogSession:
-    """Combines two log sessions into a single chronological stream."""
-    merged = LogSession()
-    merged.source_name = f'{session_a.source_name}+{session_b.source_name}'
-
-    merged.entries = session_a.entries + session_b.entries
-    merged.entries.sort(key=lambda x: x.timestamp)
-
-    merged.stats.error_count = (
-        session_a.stats.error_count + session_b.stats.error_count)
-    merged.stats.warning_count = (
-        session_a.stats.warning_count + session_b.stats.warning_count)
-
-    if merged.entries:
-        start = merged.entries[0].timestamp
-        end = merged.entries[-1].timestamp
-        merged.stats.duration_seconds = (end - start).total_seconds()
-
-    return merged
+# Register UE strategies with the shared factory at import time.
+LogParserFactory.register(LogConstants.TYPE_BUILD, UEBuildLogStrategy)
+LogParserFactory.register(LogConstants.TYPE_RUN, UERunLogStrategy)

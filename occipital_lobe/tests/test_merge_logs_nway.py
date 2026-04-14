@@ -3,8 +3,10 @@
 import unittest
 from datetime import datetime
 
-from ue_tools.log_parser import LogEntry
-from ue_tools.merge_logs_nway import (
+import ue_tools.log_parser  # noqa: F401  # registers UE strategies with LogParserFactory
+
+from occipital_lobe.log_parser import LogEntry
+from occipital_lobe.merge_logs_nway import (
     TOLERANCE_SECONDS,
     MergedRow,
     NWayMergeResult,
