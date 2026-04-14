@@ -324,6 +324,20 @@ update the docs with the norepinephrine in the pns for django.
 - [ ] **MCP Server.** Have Are-Self be an MCP server, allowing other MCP clients to connect and execute
   commands like Execute Neural Pathway.
 - [ ] **MCP Client.** Have Are-Self be an MCP client, calling other MCP servers.
+- [ ] **Plugin Garden — 3rd-party plugin marketplace.** Are-Self ships with 3–4 first-party plugins
+  (Unreal first, others TBD), all install/uninstall-able via the plugins API. Beyond the shipped set,
+  stand up a "garden" where 3rd parties can publish plugins and users can browse/install them.
+  NASA doesn't want Unreal; someone else might. Everything past core is a plugin, every plugin is
+  toggleable, and the garden is the discovery layer. Needs: publication format (signed bundle?),
+  registry/index service, trust model, versioning/compat checks against core, install UI. Priority:
+  wanted now, not later.
+- [ ] **Move generic log-merge utilities to occipital_lobe.** `ue_tools/merge_logs.py` and
+  `ue_tools/merge_logs_nway.py` are format-agnostic timeline correlators (heap-sorted entries,
+  tolerance-window row grouping, `(label, content)` tuples in → `MergedRow`/`NWayMergeResult` out).
+  Only the underlying `log_parser.py` is UE-flavored. Move the merge functions to `occipital_lobe/`,
+  keep/rename the parser layer so non-UE callers can plug in their own `LogEntry` producers, and
+  update imports. Pattern: same shape as extracting `mcp_run_unreal_diagnostic_parser` for the
+  Unreal plugin — generic stays in core, UE-specific goes to the plugin bundle.
 
 ## MCP Server — Phase 2
 
@@ -367,6 +381,14 @@ update the docs with the norepinephrine in the pns for django.
   assertion state, the summary_dump IS the test report.
 - [ ] **Addon stage/lifecycle system.** Addons fire conditionally based on session state instead of every
   turn. Would allow moving focus mechanics into a dedicated focus addon.
+- [ ] **Nerve Terminal video stream.** Add a third stream alongside STDOUT and log-file tailing: live video
+  of the application the terminal is running. Brings the Nerve Terminal to 3 streams total (stdout, log
+  file, video). Capture the target app's window/screen on the agent side, encode, and pipe back over the
+  existing async generator contract so consumers get frames the same way they get log lines. Needs: capture
+  backend (per-OS — likely ffmpeg/gdigrab on Windows, avfoundation on macOS, x11grab on Linux), encoding
+  choice (H.264/WebRTC vs. MJPEG over WS), a new `StreamEvent` source (`'video'`) with binary payload
+  support, frontend player wired into the existing terminal view, and backpressure/frame-drop handling so
+  a slow consumer doesn't stall stdout or log streams.
 
 ## Backlog
 
