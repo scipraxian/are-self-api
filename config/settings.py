@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'synaptic_cleft.apps.SynapticCleftConfig',
     'hypothalamus.apps.HypothalamusConfig',
+    'neuroplasticity.apps.NeuroplasticityConfig',
 ]
 
 MIDDLEWARE = [
@@ -185,7 +186,12 @@ LOGGING = {
             'level': 'INFO',
             'formatter': 'verbose',
             'receptor_class': 'Django',
-            'skipped_prefixes': ['synaptic_cleft', 'channels', 'redis', 'asyncio'],
+            'skipped_prefixes': [
+                'synaptic_cleft',
+                'channels',
+                'redis',
+                'asyncio',
+            ],
         },
     },
     'loggers': {

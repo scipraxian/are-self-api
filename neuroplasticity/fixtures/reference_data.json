@@ -1,0 +1,79 @@
+[
+  {
+    "model": "neuroplasticity.neuralmodifierstatus",
+    "pk": 1,
+    "fields": {
+      "name": "Discovered"
+    }
+  },
+  {
+    "model": "neuroplasticity.neuralmodifierstatus",
+    "pk": 2,
+    "fields": {
+      "name": "Installed"
+    }
+  },
+  {
+    "model": "neuroplasticity.neuralmodifierstatus",
+    "pk": 3,
+    "fields": {
+      "name": "Enabled"
+    }
+  },
+  {
+    "model": "neuroplasticity.neuralmodifierstatus",
+    "pk": 4,
+    "fields": {
+      "name": "Disabled"
+    }
+  },
+  {
+    "model": "neuroplasticity.neuralmodifierstatus",
+    "pk": 5,
+    "fields": {
+      "name": "Broken"
+    }
+  },
+  {
+    "model": "neuroplasticity.neuralmodifierinstallationeventtype",
+    "pk": 1,
+    "fields": {
+      "name": "Install"
+    }
+  },
+  {
+    "model": "neuroplasticity.neuralmodifierinstallationeventtype",
+    "pk": 2,
+    "fields": {
+      "name": "Uninstall"
+    }
+  },
+  {
+    "model": "neuroplasticity.neuralmodifierinstallationeventtype",
+    "pk": 3,
+    "fields": {
+      "name": "Enable"
+    }
+  },
+  {
+    "model": "neuroplasticity.neuralmodifierinstallationeventtype",
+    "pk": 4,
+    "fields": {
+      "name": "Disable"
+    }
+  },
+  {
+    "model": "neuroplasticity.neuralmodifierinstallationeventtype",
+    "pk": 5,
+    "fields": {
+      "name": "Load Failed"
+    }
+  },
+  {
+    "model": "neuroplasticity.neuralmodifierinstallationeventtype",
+    "pk": 6,
+    "fields": {
+      "name": "Hash Mismatch"
+    }
+  }
+]
