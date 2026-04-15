@@ -1108,21 +1108,6 @@
     }
   },
   {
-    "model": "hypothalamus.aimodelselectionfilter",
-    "pk": 1,
-    "fields": {
-      "name": "Core Engineering Task",
-      "failover_strategy": 4,
-      "preferred_model": null,
-      "local_failover": null,
-      "required_capabilities": [],
-      "banned_providers": [],
-      "preferred_categories": [],
-      "preferred_tags": [],
-      "preferred_roles": []
-    }
-  },
-  {
     "model": "hypothalamus.failoverstrategy",
     "pk": 4,
     "fields": {
