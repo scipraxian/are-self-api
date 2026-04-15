@@ -1,0 +1,2086 @@
+[
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "03d82842-99f0-4ffb-8eb3-128e21785794",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
+      "value": "checkout"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "04a2e26c-b67f-4186-8b19-fd9c86835c53",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "parameter": "7672cbed-f22e-4896-852f-b7220e9a90ce",
+      "value": "CREATE"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "052e6f35-9d12-4365-b1f3-d5479b358690",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
+      "value": "log"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "05ba0841-12db-47ac-9236-275504e02185",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "parameter": "e2b6e573-a1b3-46cd-bee1-f47e201dbce6",
+      "value": "comment"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "0beba480-4765-4a14-a277-06869cbe248e",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "parameter": "043ac700-e2ed-48b7-bd07-347e1f724ab1",
+      "value": "CREATE"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "116264c1-a16d-486b-b54c-ddf129cd3229",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
+      "value": "stash"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "151f42b4-5a52-4844-95ef-dac70f56ba68",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "parameter": "7aa7e380-2131-4af6-b08e-7174f084e5ab",
+      "value": "STORY"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "2625caa1-0994-4328-b8fe-47443efc08b5",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "parameter": "043ac700-e2ed-48b7-bd07-347e1f724ab1",
+      "value": "UPDATE"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "2ea797d4-1d1d-4107-8060-527aecaa3fc0",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
+      "value": "add"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "305e5fff-b64c-4a71-a45a-a371cf9dce3f",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
+      "value": "branch"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "355e3432-9f2e-40af-9ed2-2690143f9fae",
+    "fields": {
+      "created": "2026-04-04T12:00:00Z",
+      "modified": "2026-04-04T12:00:00Z",
+      "parameter": "5411fce2-b136-4bb4-bc53-f62b1b48ddef",
+      "value": "male"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "35b32888-1f37-4606-bb2b-e7e46dfd4141",
+    "fields": {
+      "created": "2026-04-04T12:00:00Z",
+      "modified": "2026-04-04T12:00:00Z",
+      "parameter": "5411fce2-b136-4bb4-bc53-f62b1b48ddef",
+      "value": "child"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "37f82748-e2c1-4d7e-8e01-d1545f6d2b76",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "parameter": "e2b6e573-a1b3-46cd-bee1-f47e201dbce6",
+      "value": "search"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "417575cb-6cbd-4a9d-92de-deb3dc2cdfb7",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "parameter": "41e78666-0070-4097-84e6-59d8277275d7",
+      "value": "read"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "56cef637-f4fe-45d3-9de0-c32b1dd59dd5",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
+      "value": "diff"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "60fbbb3c-c356-4c26-a8ea-9e6dffbd230b",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
+      "value": "commit"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "67a54708-a179-4e7c-abdc-4b7c3814e58d",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "parameter": "043ac700-e2ed-48b7-bd07-347e1f724ab1",
+      "value": "count"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "6d17d765-e37a-425f-8416-1be6e6307a39",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "parameter": "5a4d499b-be43-4def-93a8-603953739a24",
+      "value": "SUCCESS"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "746def02-b4a3-4b37-b335-ee881baeadb2",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "parameter": "043ac700-e2ed-48b7-bd07-347e1f724ab1",
+      "value": "READ"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "7b6ddf18-ae31-47cb-a9dd-d362a82f071b",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "parameter": "5a4d499b-be43-4def-93a8-603953739a24",
+      "value": "FAILURE"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "7ff68c91-3487-4b17-8656-2d7851624d8c",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "parameter": "41e78666-0070-4097-84e6-59d8277275d7",
+      "value": "patch"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "8f23a4f1-4057-477c-9901-40ac7cdf33af",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "parameter": "043ac700-e2ed-48b7-bd07-347e1f724ab1",
+      "value": "COMMENT"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "92da801b-51f9-4cc1-8e7b-136980439fdb",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "parameter": "41e78666-0070-4097-84e6-59d8277275d7",
+      "value": "grep"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "9a93e787-9efa-4004-92d4-7adc63d2f861",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "parameter": "41e78666-0070-4097-84e6-59d8277275d7",
+      "value": "list"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "a6314c00-7e87-44de-9fe7-fb5ea1b6eb77",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "parameter": "7aa7e380-2131-4af6-b08e-7174f084e5ab",
+      "value": "EPIC"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "aa0f6cf1-7570-461d-92f4-612ba77331ca",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "parameter": "043ac700-e2ed-48b7-bd07-347e1f724ab1",
+      "value": "list"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "b0f92476-becc-406d-a906-7b63a4b15737",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "parameter": "7672cbed-f22e-4896-852f-b7220e9a90ce",
+      "value": "UPDATE"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "b2675b54-9e32-476f-b1bb-7ca5049c6d73",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
+      "value": "status"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "b517150f-ee1d-49ef-8b06-d5f624f7b794",
+    "fields": {
+      "created": "2026-04-04T12:00:00Z",
+      "modified": "2026-04-04T12:00:00Z",
+      "parameter": "5411fce2-b136-4bb4-bc53-f62b1b48ddef",
+      "value": "female"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "bb58c145-adde-46f0-b761-e048b0b092bc",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-01T12:00:00Z",
+      "parameter": "7aa7e380-2131-4af6-b08e-7174f084e5ab",
+      "value": "TASK"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "c0d3a8bd-4144-4628-90a3-88cec498e814",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "parameter": "7672cbed-f22e-4896-852f-b7220e9a90ce",
+      "value": "COMPLETE"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "c98619b6-1429-4dd9-aa88-9be7f0b00a22",
+    "fields": {
+      "created": "2026-04-04T12:00:00Z",
+      "modified": "2026-04-04T12:00:00Z",
+      "parameter": "5411fce2-b136-4bb4-bc53-f62b1b48ddef",
+      "value": "narrator"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "db0d0e0f-cf5c-4d2f-b81a-fa73e71d1e4b",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "parameter": "e2b6e573-a1b3-46cd-bee1-f47e201dbce6",
+      "value": "create"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "dfe00424-02d5-4c0c-b97e-ab168f31098b",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "parameter": "e2b6e573-a1b3-46cd-bee1-f47e201dbce6",
+      "value": "update"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "e65cc882-a0b6-47eb-aa93-02887e273dbc",
+    "fields": {
+      "created": "2026-04-04T12:00:00Z",
+      "modified": "2026-04-04T12:00:00Z",
+      "parameter": "5411fce2-b136-4bb4-bc53-f62b1b48ddef",
+      "value": "whisper"
+    }
+  },
+  {
+    "model": "parietal_lobe.parameterenum",
+    "pk": "ed668b33-4384-4891-a8fc-2889ffde0fb6",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "parameter": "5a4d499b-be43-4def-93a8-603953739a24",
+      "value": "NEEDS_CLARIFICATION"
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": "0d3891ba-e915-444b-8ec2-7d4f6fb1cde0",
+    "fields": {
+      "created": "2026-04-04T12:00:00Z",
+      "description": "Convert text to speech and save as a WAV file. Uses Piper TTS locally — no GPU, no internet, no cost. Output saves to the audio_root environment path. Available voices: male, female, child, narrator, whisper.",
+      "modified": "2026-04-04T12:00:00Z",
+      "name": "mcp_tts",
+      "is_async": true,
+      "use_type": 2
+    }
+  },
+  {
+    "model": "parietal_lobe.tooldefinition",
+    "pk": "1672746c-8bcd-4c92-8154-7adb2cba3f5a",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Updates the CNS Axoplasm. WARNING: This does NOT save to your memory. The Axoplasm is ONLY used to route the underlying CNS execution graph..",
+      "modified": "2026-04-02T18:41:54.587Z",
+      "name": "mcp_update_axoplasm",
+      "is_async": true,
+      "use_type": 4
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "005f73ed-b6ee-4f94-9957-214bb832c4ec",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Boolean Success.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "goal_achieved",
+      "type": 4
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "043ac700-e2ed-48b7-bd07-347e1f724ab1",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Action type.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "action",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "04f696db-cd64-4618-a050-a03c37b8d756",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Action String.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "recommended_action",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "058b3a99-0bd4-40f0-a607-40ee182a6448",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "DB Field Name.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "field_name",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "0753598a-64ad-4fb2-af86-b0c8f990aac7",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Text Summary.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "summary",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "0a9e1b1e-2941-45a3-ab01-6585c2e0c44e",
+    "fields": {
+      "created": "2026-03-27T12:00:00Z",
+      "description": "When true, pause the session and wait for the human. When false, keep working.",
+      "modified": "2026-03-27T12:00:00Z",
+      "name": "yield_turn",
+      "type": 4
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "0f10e88d-d4fd-4b37-b430-62bbeec6a809",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "The Why and the Who.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "perspective",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "114849bb-becb-43e6-bf83-5bebf47d8779",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "The integer ID of the goal (for UPDATE or COMPLETE).",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "goal_id",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "144d23a0-7091-4759-b0e2-00ab812b0324",
+    "fields": {
+      "created": "2026-03-15T19:19:37.356Z",
+      "description": "State your reasoning for using this tool.",
+      "modified": "2026-03-15T19:19:37.356Z",
+      "name": "thought",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "196561fc-3a9b-48b3-9c29-aba5a1219c35",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Fact string.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "fact",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "20f7ebba-16c2-4860-8036-116173753522",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Priority 1-4.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "priority",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "26e51560-7865-4af9-90f9-dbdfdf752472",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Django Model Name.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "model_name",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "2912462e-dfd8-4d7f-99fb-9413cdc28673",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Q Object String.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "q_string",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "34271573-25a2-4273-ab73-efeff8546611",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Exceptions to the DoD.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "dod_exceptions",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "3ac2996d-5f4c-4680-9307-bdc20285d3a6",
+    "fields": {
+      "created": "2026-02-23T14:22:58.300Z",
+      "description": "",
+      "modified": "2026-02-23T14:22:58.300Z",
+      "name": "next_goal_suggestion",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "3c397f55-6034-4c0f-8cfd-670f44f5d3c5",
+    "fields": {
+      "created": "2026-03-11T12:00:00Z",
+      "description": "Generic field value used for create (name), update (new value), or comment (body text).",
+      "modified": "2026-03-11T12:00:00Z",
+      "name": "field_value",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "41b193fb-4a86-4206-b432-92559d9f505a",
+    "fields": {
+      "created": "2026-02-20T20:37:37.764Z",
+      "description": "The UUID of the Engram.",
+      "modified": "2026-02-20T20:37:37.764Z",
+      "name": "engram_id",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "41e78666-0070-4097-84e6-59d8277275d7",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "description": "Filesystem action to perform.",
+      "modified": "2026-03-10T12:00:00Z",
+      "name": "fs_action",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "47ac97ce-e42e-4529-b0a2-8aefe71e75c6",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "The parent Epic or Story UUID.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "parent_id",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "4887e67a-4e93-483d-b8ef-b21183824374",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Status string.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "status",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "4e4c94fb-83e5-4174-9dc4-139fe547f0d9",
+    "fields": {
+      "created": "2026-03-17T12:00:00Z",
+      "description": "Optional background details or context to help the human answer.",
+      "modified": "2026-03-17T12:00:00Z",
+      "name": "details",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "522c1d5a-8bd9-4b41-922d-c540ba4ecca0",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Dependencies required to complete.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "dependencies",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "5236f0e1-73e0-4112-8ee4-43ff7a973c7e",
+    "fields": {
+      "created": "2026-03-15T19:19:37.366Z",
+      "description": "A concise, factual summary of what you just did and what you need to do next. This is your memory.",
+      "modified": "2026-03-15T19:19:37.366Z",
+      "name": "note_for_next_turn",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "5411fce2-b136-4bb4-bc53-f62b1b48ddef",
+    "fields": {
+      "created": "2026-04-04T12:00:00Z",
+      "description": "Voice to use: male, female, child, narrator, whisper.",
+      "modified": "2026-04-04T12:00:00Z",
+      "name": "voice",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "5540b3d1-dcf3-467a-b996-f3770516671a",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Regex pattern to match.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "pattern",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "5a4d499b-be43-4def-93a8-603953739a24",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Enum Status.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "outcome_status",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "5f8a1882-b6a6-4382-a62f-e4ef5b45b8d6",
+    "fields": {
+      "created": "2026-02-23T14:23:14.246Z",
+      "description": "",
+      "modified": "2026-02-23T14:23:14.246Z",
+      "name": "system_persona_and_prompt_feedback",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "6226f3e2-fb92-44ef-9c2d-41719972b67f",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "The description of the goal.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "goal_text",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "694aba23-1a89-4962-9d10-047411e79358",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "The short 2-3 word title.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "name",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "75042e4e-e551-4031-83c5-23b7d4754ad8",
+    "fields": {
+      "created": "2026-03-17T12:00:00Z",
+      "description": "The specific question or prompt you want to ask the human.",
+      "modified": "2026-03-17T12:00:00Z",
+      "name": "question",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "7672cbed-f22e-4896-852f-b7220e9a90ce",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Action (CREATE, UPDATE, COMPLETE).",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "goal_action",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "76b5ada7-0c43-4a9e-b9f7-413531435916",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Search Query.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "query",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "772159fa-9fab-4e41-be94-87bbc82611ea",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Float 0-1.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "relevance",
+      "type": 2
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "7aa7e380-2131-4af6-b08e-7174f084e5ab",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Item type: EPIC, STORY, TASK",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "item_type",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "7b7ff365-df74-42d5-8850-46328a6f4c25",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "General description.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "description",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "7befa23c-4fc6-40d9-9ca6-65055d10609d",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "The UUID of the item.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "item_id",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "810a728d-2a5b-4e4b-86ff-65427fba2e36",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Demo specifics.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "demo_specifics",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "826de4d1-d7a5-4cf1-a3e0-601addc0dd3b",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Filter Dict.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "filters",
+      "type": 6
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "8b86225c-2d92-45fd-82e8-ab2707cb173c",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Ignore case (default True).",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "case_insensitive",
+      "type": 4
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "93b3438d-d2fd-4fee-947b-4be61d89cea7",
+    "fields": {
+      "created": "2026-03-15T19:19:37.363Z",
+      "description": "Text to display directly to the human user.",
+      "modified": "2026-03-15T19:19:37.363Z",
+      "name": "message_to_user",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "95b07b83-1871-45ae-a1af-d5bcaa839094",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Comma tags.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "tags",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "a41c4a55-429e-4f80-a640-81bfae3ffb59",
+    "fields": {
+      "created": "2026-02-23T15:09:02.498Z",
+      "description": "The target URL.",
+      "modified": "2026-02-23T15:09:02.499Z",
+      "name": "url",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "a479a414-9309-4031-8d56-cf7f2136ddb1",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Record UUID/ID.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "record_id",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "a74b9bae-3d2e-4223-b4a6-7fe49192e66b",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Django App Label.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "app_label",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "a8f744ef-8b72-4b5d-a73e-37d163413659",
+    "fields": {
+      "created": "2026-02-21T20:53:49.883Z",
+      "description": "New data to append.",
+      "modified": "2026-02-21T20:53:49.883Z",
+      "name": "additional_fact",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "aeb1329e-f6cc-4e8a-82b9-bfa3c6e153e4",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Variable Key.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "key",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "b27ff074-a21b-4d7b-b76b-7185dd11c1ea",
+    "fields": {
+      "created": "2026-02-20T20:37:37.814Z",
+      "description": "A highly descriptive, short index title (e.g. OS_SPECS).",
+      "modified": "2026-02-20T20:37:37.814Z",
+      "name": "title",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "b95ac897-df12-42d3-80fa-0af53c82c744",
+    "fields": {
+      "created": "2026-04-04T12:00:00Z",
+      "description": "Name for the output WAV file (saved to audio_root).",
+      "modified": "2026-04-04T12:00:00Z",
+      "name": "filename",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "bd144e2b-49f4-4b43-9a5d-82842d8ddc49",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Spike UUID.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "spike_id",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "bdd6c096-c5f4-4005-9cb5-a7724d08087f",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "File system path.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "path",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "c0ad4616-c48c-4d3f-8756-f81430d9d872",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Session UUID.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "session_id",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "c38b2c9c-6a74-4353-9d8f-e920f68cd6b7",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Bulleted list of negative assertions.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "outside",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "c4b557b3-9870-45b6-9522-f3c8544479a4",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Line number start.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "start_line",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "c66e1cd0-f25b-4c9d-9242-41c3e14dc17c",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Variable Value.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "value",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "c971ecb2-5766-44a8-8b2c-bbcd379700aa",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Existing ID.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "update_id",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "cd28b9a4-afeb-4c11-9779-0aa0c5a36d76",
+    "fields": {
+      "created": "2026-03-05T12:00:00Z",
+      "description": "A JSON object containing the field names and values to apply. (Deprecated for mcp_ticket in favor of flat field_name/field_value.)",
+      "modified": "2026-03-05T12:00:00Z",
+      "name": "payload",
+      "type": 6
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "description": "Git action to perform.",
+      "modified": "2026-03-10T12:00:00Z",
+      "name": "git_action",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "d24cfc01-1f71-4272-a963-8b9fee82fef1",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Complexity (Focus bid).",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "complexity",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "e2b6e573-a1b3-46cd-bee1-f47e201dbce6",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "description": "Ticket action to perform (create, update, search, comment). (Deprecated for mcp_ticket; use the top-level 'action' parameter instead.)",
+      "modified": "2026-03-10T12:00:00Z",
+      "name": "ticket_action",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "f007b240-7424-4d76-bc7a-0d1a3dbcc8d0",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Bulleted list starting with Assert.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "assertions",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "f07e2530-83eb-481f-a35f-42f9a9867597",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Page number to read (starts at 1).",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "page",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "f7050b29-399d-4d96-aacb-fbf3f7c79004",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "description": "Dict of arguments for the selected action. (Deprecated for mcp_ticket in favor of flat arguments.)",
+      "modified": "2026-03-10T12:00:00Z",
+      "name": "params",
+      "type": 6
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "f7522790-2152-4f8c-a70c-20f75cca17ac",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "description": "Line count limit.",
+      "modified": "2026-02-18T12:00:00Z",
+      "name": "max_lines",
+      "type": 3
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameter",
+    "pk": "fb7beaa1-f32f-4893-92fa-0aa62730f5f1",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "description": "Comment text.",
+      "modified": "2026-03-01T12:00:00Z",
+      "name": "text",
+      "type": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "12cae632-67dd-44e6-952f-7ab3ad55d6c8",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "1672746c-8bcd-4c92-8154-7adb2cba3f5a",
+      "parameter": "c66e1cd0-f25b-4c9d-9242-41c3e14dc17c",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "1536b53e-1966-4383-98dc-28238a3a3705",
+    "fields": {
+      "created": "2026-03-01T12:00:00Z",
+      "modified": "2026-03-11T12:00:00Z",
+      "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
+      "parameter": "cd28b9a4-afeb-4c11-9779-0aa0c5a36d76",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "1619c85c-fc95-45b6-a991-70cc4d575027",
+    "fields": {
+      "created": "2026-03-27T18:00:00Z",
+      "modified": "2026-03-27T18:00:00Z",
+      "tool": "d26a121e-cade-4f83-80a8-44947c4115ab",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": false,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "1d42ac41-cd8b-4375-bac6-272240a81fd1",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "36151a8b-3c82-4a61-8a7f-b1392b1fb81c",
+      "parameter": "26e51560-7865-4af9-90f9-dbdfdf752472",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "1ec46b2e-aa35-402c-ab2d-521a0e6da60d",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "1fe2d9dd-0b59-4caf-aa24-3ff09f17a6d9",
+      "parameter": "058b3a99-0bd4-40f0-a607-40ee182a6448",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "1f0aa98b-56a4-460f-8177-8e582da84b96",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-11T12:00:00Z",
+      "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
+      "parameter": "043ac700-e2ed-48b7-bd07-347e1f724ab1",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "232b49f3-945f-426a-bd37-c3f4c95c6ea3",
+    "fields": {
+      "created": "2026-02-23T15:50:43.825Z",
+      "modified": "2026-02-23T15:50:43.825Z",
+      "tool": "4967bb81-ceaf-40f2-95b9-38dd07983172",
+      "parameter": "f07e2530-83eb-481f-a35f-42f9a9867597",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "250e0c17-6162-446f-92eb-487ee6b15481",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "tool": "c4ef2e80-59b7-49cd-86cc-1e988db9976e",
+      "parameter": "41e78666-0070-4097-84e6-59d8277275d7",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "2b9c9b6b-b48e-48d3-93d2-994ed9166885",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "2479e316-4277-4d4c-8ed9-44be01142fe4",
+      "parameter": "2912462e-dfd8-4d7f-99fb-9413cdc28673",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "2cc0f580-b3fc-4ef8-a9aa-371fa06d25c5",
+    "fields": {
+      "created": "2026-03-27T12:00:00Z",
+      "modified": "2026-03-27T12:00:00Z",
+      "tool": "92efa6a9-9392-4124-b10b-5c7a0ea61e08",
+      "parameter": "93b3438d-d2fd-4fee-947b-4be61d89cea7",
+      "required": true,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "32b80519-3832-4ee4-8e74-e4aa01d91c4c",
+    "fields": {
+      "created": "2026-03-27T18:00:00Z",
+      "modified": "2026-03-27T18:00:00Z",
+      "tool": "abacd3a1-bcf1-4236-8b5c-7a39d37de0eb",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": false,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "35196461-d7b0-4233-9a8e-fcc223f3a58b",
+    "fields": {
+      "created": "2026-03-17T12:00:00Z",
+      "modified": "2026-03-17T12:00:00Z",
+      "tool": "aa061f89-6961-4ca6-9c33-7f0480e030ce",
+      "parameter": "75042e4e-e551-4031-83c5-23b7d4754ad8",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "36c31585-d204-425d-a9a4-7a3eb2a82000",
+    "fields": {
+      "created": "2026-02-21T20:53:49.905Z",
+      "modified": "2026-02-21T20:53:49.905Z",
+      "tool": "8f80e108-0e43-4509-8c4c-d1259f393ad7",
+      "parameter": "a8f744ef-8b72-4b5d-a73e-37d163413659",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "396ec807-c8bf-49b5-b391-510c3624f259",
+    "fields": {
+      "created": "2026-03-11T12:00:00Z",
+      "modified": "2026-03-11T12:00:00Z",
+      "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
+      "parameter": "058b3a99-0bd4-40f0-a607-40ee182a6448",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "3977b689-ea1f-41e2-a385-cb7c2c9fa991",
+    "fields": {
+      "created": "2026-04-04T12:00:00Z",
+      "modified": "2026-04-04T12:00:00Z",
+      "tool": "0d3891ba-e915-444b-8ec2-7d4f6fb1cde0",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "3efd927b-0633-4c0e-aaeb-f890b10f28c7",
+    "fields": {
+      "created": "2026-02-23T15:09:02.526Z",
+      "modified": "2026-02-23T15:09:02.526Z",
+      "tool": "4967bb81-ceaf-40f2-95b9-38dd07983172",
+      "parameter": "bd144e2b-49f4-4b43-9a5d-82842d8ddc49",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "46f8f871-b3db-45ff-9e80-f749d709bb7a",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-11T12:00:00Z",
+      "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
+      "parameter": "f7050b29-399d-4d96-aacb-fbf3f7c79004",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "4d1a995b-36b8-4107-89f7-8a31f7da9d0b",
+    "fields": {
+      "created": "2026-03-27T18:00:00Z",
+      "modified": "2026-03-27T18:00:00Z",
+      "tool": "5cb73221-3a7a-4e49-9342-bb3f7021c6f1",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": false,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "4ec2c999-8679-4b5c-aac1-1837642fbdb5",
+    "fields": {
+      "created": "2026-04-04T12:00:00Z",
+      "modified": "2026-04-04T12:00:00Z",
+      "tool": "0d3891ba-e915-444b-8ec2-7d4f6fb1cde0",
+      "parameter": "fb7beaa1-f32f-4893-92fa-0aa62730f5f1",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "4f887082-1e93-4291-8f44-520090d0d56f",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "1fe2d9dd-0b59-4caf-aa24-3ff09f17a6d9",
+      "parameter": "f07e2530-83eb-481f-a35f-42f9a9867597",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "50922875-7cd6-4b3e-8622-49832066349c",
+    "fields": {
+      "created": "2026-03-27T12:00:00Z",
+      "modified": "2026-03-27T12:00:00Z",
+      "tool": "92efa6a9-9392-4124-b10b-5c7a0ea61e08",
+      "parameter": "5236f0e1-73e0-4112-8ee4-43ff7a973c7e",
+      "required": true,
+      "prune_after_turns": 6
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "5146b92c-43a0-4118-8b9b-df3b269a220f",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "d26a121e-cade-4f83-80a8-44947c4115ab",
+      "parameter": "058b3a99-0bd4-40f0-a607-40ee182a6448",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "550a9cf7-be76-4e4b-8000-36bf97b5f271",
+    "fields": {
+      "created": "2026-03-11T12:00:00Z",
+      "modified": "2026-03-11T12:00:00Z",
+      "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
+      "parameter": "76b5ada7-0c43-4a9e-b9f7-413531435916",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "5c4fd74f-d8a0-493d-b254-ea746247fc10",
+    "fields": {
+      "created": "2026-02-21T20:53:49.907Z",
+      "modified": "2026-02-21T20:53:49.907Z",
+      "tool": "a5034848-16a9-4648-90b7-b13d3bc00792",
+      "parameter": "41b193fb-4a86-4206-b432-92559d9f505a",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "5f0c7263-5268-4fba-84e6-1c75f21716d4",
+    "fields": {
+      "created": "2026-03-17T12:00:00Z",
+      "modified": "2026-03-17T12:00:00Z",
+      "tool": "aa061f89-6961-4ca6-9c33-7f0480e030ce",
+      "parameter": "c0ad4616-c48c-4d3f-8756-f81430d9d872",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "5ff77c54-bac7-4d96-a0e4-4e763c44e310",
+    "fields": {
+      "created": "2026-02-21T20:53:49.903Z",
+      "modified": "2026-02-21T20:53:49.903Z",
+      "tool": "8f80e108-0e43-4509-8c4c-d1259f393ad7",
+      "parameter": "41b193fb-4a86-4206-b432-92559d9f505a",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "628fe817-5316-4eef-87e8-17e9bc14c097",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "d26a121e-cade-4f83-80a8-44947c4115ab",
+      "parameter": "5540b3d1-dcf3-467a-b996-f3770516671a",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "6537b279-2342-4148-8c2b-d2bce11b8cf8",
+    "fields": {
+      "created": "2026-03-11T12:00:00Z",
+      "modified": "2026-03-11T12:00:00Z",
+      "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
+      "parameter": "7aa7e380-2131-4af6-b08e-7174f084e5ab",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "65f00780-c1cd-445b-a36f-c830a639f7e5",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "d26a121e-cade-4f83-80a8-44947c4115ab",
+      "parameter": "a479a414-9309-4031-8d56-cf7f2136ddb1",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "67d609e0-d6ba-41d1-b7f3-f4ca7af0faa8",
+    "fields": {
+      "created": "2026-03-27T12:00:00Z",
+      "modified": "2026-03-27T12:00:00Z",
+      "tool": "92efa6a9-9392-4124-b10b-5c7a0ea61e08",
+      "parameter": "0a9e1b1e-2941-45a3-ab01-6585c2e0c44e",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "696e9012-7413-4f0d-9761-88c594905a36",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "tool": "63db5e88-e3a3-4c1f-9df0-42eac3fbc522",
+      "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "6aa19432-fb59-4263-a09c-866c0a4c92f6",
+    "fields": {
+      "created": "2026-03-15T19:19:37.370Z",
+      "modified": "2026-03-18T17:05:00.712Z",
+      "tool": "b4c8fbec-8f5d-4995-85b0-e4e8adff12e3",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": true,
+      "prune_after_turns": 2
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "72148afd-f6d8-4488-85e0-421950c9f5dc",
+    "fields": {
+      "created": "2026-02-25T12:00:00Z",
+      "modified": "2026-02-25T12:00:00Z",
+      "tool": "d3138f37-1df1-42e9-b0fb-75ca21aaeb73",
+      "parameter": "c0ad4616-c48c-4d3f-8756-f81430d9d872",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "7588c53e-36a9-4c9a-bdd1-34ff251c1863",
+    "fields": {
+      "created": "2026-03-15T19:19:37.376Z",
+      "modified": "2026-03-18T17:05:00.710Z",
+      "tool": "b4c8fbec-8f5d-4995-85b0-e4e8adff12e3",
+      "parameter": "93b3438d-d2fd-4fee-947b-4be61d89cea7",
+      "required": false,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "76a7b573-21c5-46fc-ad83-9dfa7a01aa43",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "2479e316-4277-4d4c-8ed9-44be01142fe4",
+      "parameter": "f07e2530-83eb-481f-a35f-42f9a9867597",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "7781c471-41e9-47af-9077-8ee19acc6813",
+    "fields": {
+      "created": "2026-02-23T15:09:02.520Z",
+      "modified": "2026-02-23T15:09:02.520Z",
+      "tool": "abacd3a1-bcf1-4236-8b5c-7a39d37de0eb",
+      "parameter": "a41c4a55-429e-4f80-a640-81bfae3ffb59",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "7caea198-fcee-4249-a117-b9caae14a35d",
+    "fields": {
+      "created": "2026-03-27T18:00:00Z",
+      "modified": "2026-03-27T18:00:00Z",
+      "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": false,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "829fc615-273c-4ab2-9f6b-c070c1e6c755",
+    "fields": {
+      "created": "2026-02-23T15:09:02.513Z",
+      "modified": "2026-02-23T15:09:02.513Z",
+      "tool": "ec21f60f-93be-4ec9-8ac4-6253e2fed735",
+      "parameter": "76b5ada7-0c43-4a9e-b9f7-413531435916",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "8336041e-e578-4f0d-8f65-46f587365e25",
+    "fields": {
+      "created": "2026-02-21T20:53:49.898Z",
+      "modified": "2026-02-21T20:53:49.898Z",
+      "tool": "03811f75-517a-4de4-8420-8fda7481c6cf",
+      "parameter": "b27ff074-a21b-4d7b-b76b-7185dd11c1ea",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "83f6cb7a-6f6c-4d26-8cff-859018d9b2a1",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "36151a8b-3c82-4a61-8a7f-b1392b1fb81c",
+      "parameter": "a479a414-9309-4031-8d56-cf7f2136ddb1",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "88a19c1c-c78d-4ff6-8a87-f78647c1dd27",
+    "fields": {
+      "created": "2026-03-27T18:00:00Z",
+      "modified": "2026-03-27T18:00:00Z",
+      "tool": "a5034848-16a9-4648-90b7-b13d3bc00792",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": false,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "8e25ce92-e5e6-4e73-8c19-c802fdbaadb8",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "tool": "c4ef2e80-59b7-49cd-86cc-1e988db9976e",
+      "parameter": "f7050b29-399d-4d96-aacb-fbf3f7c79004",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "8ec3d174-e215-4a76-8c74-672622ef5855",
+    "fields": {
+      "created": "2026-03-27T18:00:00Z",
+      "modified": "2026-03-27T18:00:00Z",
+      "tool": "1672746c-8bcd-4c92-8154-7adb2cba3f5a",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": false,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "8f9f681e-796d-40ed-9a4a-72ad99eced31",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "1672746c-8bcd-4c92-8154-7adb2cba3f5a",
+      "parameter": "bd144e2b-49f4-4b43-9a5d-82842d8ddc49",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "8fd853b7-e221-4d13-b348-1dcd307af657",
+    "fields": {
+      "created": "2026-02-21T20:53:49.908Z",
+      "modified": "2026-02-21T20:53:49.908Z",
+      "tool": "5cb73221-3a7a-4e49-9342-bb3f7021c6f1",
+      "parameter": "76b5ada7-0c43-4a9e-b9f7-413531435916",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "912fa903-64de-48e8-8196-e4afba19ee2f",
+    "fields": {
+      "created": "2026-03-27T18:00:00Z",
+      "modified": "2026-03-27T18:00:00Z",
+      "tool": "8f80e108-0e43-4509-8c4c-d1259f393ad7",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": false,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "92da7d93-bb89-4bc1-abd2-64c03248efbd",
+    "fields": {
+      "created": "2026-03-27T18:00:00Z",
+      "modified": "2026-03-27T18:00:00Z",
+      "tool": "1fe2d9dd-0b59-4caf-aa24-3ff09f17a6d9",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": false,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "934623d0-2968-4c42-98f5-03cadb9b33c2",
+    "fields": {
+      "created": "2026-03-17T12:00:00Z",
+      "modified": "2026-03-17T12:00:00Z",
+      "tool": "aa061f89-6961-4ca6-9c33-7f0480e030ce",
+      "parameter": "4e4c94fb-83e5-4174-9dc4-139fe547f0d9",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "943e2803-3c69-4bcf-96a8-ef19f466a172",
+    "fields": {
+      "created": "2026-03-27T18:00:00Z",
+      "modified": "2026-03-27T18:00:00Z",
+      "tool": "4967bb81-ceaf-40f2-95b9-38dd07983172",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": false,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "99029d03-8f0d-4a2c-b4be-4513633dd150",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "d26a121e-cade-4f83-80a8-44947c4115ab",
+      "parameter": "26e51560-7865-4af9-90f9-dbdfdf752472",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "9bf984a9-c4d0-4c08-9994-7f094bf6027c",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
+      "parameter": "0753598a-64ad-4fb2-af86-b0c8f990aac7",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "9c5e3951-d5ff-47d3-a4a8-948f16c91b0e",
+    "fields": {
+      "created": "2026-03-27T18:00:00Z",
+      "modified": "2026-03-27T18:00:00Z",
+      "tool": "2479e316-4277-4d4c-8ed9-44be01142fe4",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": false,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "9e1a68d2-df06-42f1-9de5-cedeccd329f7",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "2479e316-4277-4d4c-8ed9-44be01142fe4",
+      "parameter": "26e51560-7865-4af9-90f9-dbdfdf752472",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "a4fb8cec-d835-4d1d-ab8d-16d91d22e4c5",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
+      "parameter": "c0ad4616-c48c-4d3f-8756-f81430d9d872",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "a852772e-04cc-4f1c-8d75-3aaea2b14642",
+    "fields": {
+      "created": "2026-03-27T18:00:00Z",
+      "modified": "2026-03-27T18:00:00Z",
+      "tool": "03811f75-517a-4de4-8420-8fda7481c6cf",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": false,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "abb17eeb-9945-42c0-8063-8e1589b7d60e",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
+      "parameter": "5a4d499b-be43-4def-93a8-603953739a24",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "ad27a7f4-f99d-44f9-9e00-10763f8a77cf",
+    "fields": {
+      "created": "2026-03-27T18:00:00Z",
+      "modified": "2026-03-27T18:00:00Z",
+      "tool": "d3138f37-1df1-42e9-b0fb-75ca21aaeb73",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": false,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "adb89e5e-4fb7-4c03-baef-8954fd0ba398",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "2479e316-4277-4d4c-8ed9-44be01142fe4",
+      "parameter": "826de4d1-d7a5-4cf1-a3e0-601addc0dd3b",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "afc082e2-35c0-470f-b4d5-9151a9709386",
+    "fields": {
+      "created": "2026-03-15T19:19:37.380Z",
+      "modified": "2026-03-18T17:05:00.711Z",
+      "tool": "b4c8fbec-8f5d-4995-85b0-e4e8adff12e3",
+      "parameter": "5236f0e1-73e0-4112-8ee4-43ff7a973c7e",
+      "required": true,
+      "prune_after_turns": 6
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "b2e38df1-9916-4061-b588-8ba4f9860095",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
+      "parameter": "04f696db-cd64-4618-a050-a03c37b8d756",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "b375ebb2-a9a9-4efb-9102-6d99ff893ce1",
+    "fields": {
+      "created": "2026-03-10T12:00:00Z",
+      "modified": "2026-03-10T12:00:00Z",
+      "tool": "63db5e88-e3a3-4c1f-9df0-42eac3fbc522",
+      "parameter": "f7050b29-399d-4d96-aacb-fbf3f7c79004",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "b76aef71-28b8-4833-82fc-f3df202fddc7",
+    "fields": {
+      "created": "2026-02-23T14:23:21.141Z",
+      "modified": "2026-02-23T14:23:21.141Z",
+      "tool": "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
+      "parameter": "5f8a1882-b6a6-4382-a62f-e4ef5b45b8d6",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "b7bd1b86-d56c-4dec-a37d-3f80b4b53034",
+    "fields": {
+      "created": "2026-04-04T12:00:00Z",
+      "modified": "2026-04-04T12:00:00Z",
+      "tool": "0d3891ba-e915-444b-8ec2-7d4f6fb1cde0",
+      "parameter": "5411fce2-b136-4bb4-bc53-f62b1b48ddef",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "ba4094ea-f78d-4e2e-98e4-b4226593feae",
+    "fields": {
+      "created": "2026-03-11T12:00:00Z",
+      "modified": "2026-03-11T12:00:00Z",
+      "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
+      "parameter": "47ac97ce-e42e-4529-b0a2-8aefe71e75c6",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "ba4ea906-005d-4beb-92e9-30c62aea8efe",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "1672746c-8bcd-4c92-8154-7adb2cba3f5a",
+      "parameter": "aeb1329e-f6cc-4e8a-82b9-bfa3c6e153e4",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "c32b5c05-7a42-44fc-a94e-cbb8f4a11efa",
+    "fields": {
+      "created": "2026-03-27T18:00:00Z",
+      "modified": "2026-03-27T18:00:00Z",
+      "tool": "36151a8b-3c82-4a61-8a7f-b1392b1fb81c",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": false,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "c54dbe02-5e06-406d-b73d-0d3c75548a94",
+    "fields": {
+      "created": "2026-03-27T18:00:00Z",
+      "modified": "2026-03-27T18:00:00Z",
+      "tool": "63db5e88-e3a3-4c1f-9df0-42eac3fbc522",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": false,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "c5c16724-4900-4833-acbf-2b26610ef2ce",
+    "fields": {
+      "created": "2026-02-21T20:53:49.902Z",
+      "modified": "2026-02-21T20:53:49.902Z",
+      "tool": "8f80e108-0e43-4509-8c4c-d1259f393ad7",
+      "parameter": "c0ad4616-c48c-4d3f-8756-f81430d9d872",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "c9edeca2-f6ae-4f01-aa0b-44bd080bc680",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
+      "parameter": "005f73ed-b6ee-4f94-9957-214bb832c4ec",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "ca3506ac-8c9e-4437-8855-e7404ecb0aa1",
+    "fields": {
+      "created": "2026-03-27T18:00:00Z",
+      "modified": "2026-03-27T18:00:00Z",
+      "tool": "c4ef2e80-59b7-49cd-86cc-1e988db9976e",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": false,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "d46b7e02-9f96-46e9-b849-22c85d2ace61",
+    "fields": {
+      "created": "2026-02-21T20:53:49.906Z",
+      "modified": "2026-02-21T20:53:49.906Z",
+      "tool": "a5034848-16a9-4648-90b7-b13d3bc00792",
+      "parameter": "c0ad4616-c48c-4d3f-8756-f81430d9d872",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "daec17e7-16d2-4912-9fe9-fdc7640f8f4c",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "1fe2d9dd-0b59-4caf-aa24-3ff09f17a6d9",
+      "parameter": "26e51560-7865-4af9-90f9-dbdfdf752472",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "dc801be7-e922-48ed-858a-81a12f861190",
+    "fields": {
+      "created": "2026-02-21T20:53:49.900Z",
+      "modified": "2026-02-21T20:53:49.900Z",
+      "tool": "03811f75-517a-4de4-8420-8fda7481c6cf",
+      "parameter": "196561fc-3a9b-48b3-9c29-aba5a1219c35",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "df7fe9b6-e4bc-42e1-82f9-e3f2d7f003ef",
+    "fields": {
+      "created": "2026-02-21T20:53:49.909Z",
+      "modified": "2026-02-21T20:53:49.909Z",
+      "tool": "5cb73221-3a7a-4e49-9342-bb3f7021c6f1",
+      "parameter": "95b07b83-1871-45ae-a1af-d5bcaa839094",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "e541a649-aa4b-4289-b0f2-3c94dfb17e57",
+    "fields": {
+      "created": "2026-03-11T12:00:00Z",
+      "modified": "2026-03-11T12:00:00Z",
+      "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
+      "parameter": "3c397f55-6034-4c0f-8cfd-670f44f5d3c5",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "e61eecdf-6daf-4d6e-9a99-3baf7c93da83",
+    "fields": {
+      "created": "2026-02-21T20:53:49.896Z",
+      "modified": "2026-02-21T20:53:49.896Z",
+      "tool": "03811f75-517a-4de4-8420-8fda7481c6cf",
+      "parameter": "c0ad4616-c48c-4d3f-8756-f81430d9d872",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "e712f8bb-7d53-4e38-b56f-64c0884a806a",
+    "fields": {
+      "created": "2026-03-27T12:00:00Z",
+      "modified": "2026-03-27T12:00:00Z",
+      "tool": "92efa6a9-9392-4124-b10b-5c7a0ea61e08",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": true,
+      "prune_after_turns": 2
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "e8fd54a3-95d6-4504-893a-8ea14294c480",
+    "fields": {
+      "created": "2026-02-23T14:23:21.138Z",
+      "modified": "2026-02-23T14:23:21.138Z",
+      "tool": "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
+      "parameter": "3ac2996d-5f4c-4680-9307-bdc20285d3a6",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "ec1f5fca-0b24-42d5-a29d-8fcccb601c90",
+    "fields": {
+      "created": "2026-04-04T12:00:00Z",
+      "modified": "2026-04-04T12:00:00Z",
+      "tool": "0d3891ba-e915-444b-8ec2-7d4f6fb1cde0",
+      "parameter": "b95ac897-df12-42d3-80fa-0af53c82c744",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "ec6dba68-a1b5-4b90-a016-1149d6309c84",
+    "fields": {
+      "created": "2026-03-27T18:00:00Z",
+      "modified": "2026-03-27T18:00:00Z",
+      "tool": "ec21f60f-93be-4ec9-8ac4-6253e2fed735",
+      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
+      "required": false,
+      "prune_after_turns": 1
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "f323b4c2-d253-411a-8cfb-56f5bb9a324b",
+    "fields": {
+      "created": "2026-02-21T20:53:49.901Z",
+      "modified": "2026-02-21T20:53:49.901Z",
+      "tool": "03811f75-517a-4de4-8420-8fda7481c6cf",
+      "parameter": "95b07b83-1871-45ae-a1af-d5bcaa839094",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "f4df1b97-b04d-4467-be14-582ede31589f",
+    "fields": {
+      "created": "2026-02-18T12:00:00Z",
+      "modified": "2026-02-18T12:00:00Z",
+      "tool": "1fe2d9dd-0b59-4caf-aa24-3ff09f17a6d9",
+      "parameter": "a479a414-9309-4031-8d56-cf7f2136ddb1",
+      "required": true,
+      "prune_after_turns": 0
+    }
+  },
+  {
+    "model": "parietal_lobe.toolparameterassignment",
+    "pk": "f99b23d4-cbad-4640-9712-90ae09daef05",
+    "fields": {
+      "created": "2026-03-11T12:00:00Z",
+      "modified": "2026-03-11T12:00:00Z",
+      "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
+      "parameter": "7befa23c-4fc6-40d9-9ca6-65055d10609d",
+      "required": false,
+      "prune_after_turns": 0
+    }
+  }
+]

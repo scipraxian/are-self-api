@@ -365,6 +365,30 @@ update the docs with the norepinephrine in the pns for django.
     `petri_dish.json`). Delete the old file. Update `CommonTestCase` /
     `CommonFixturesAPITestCase` explicit per-app fixture paths. Update
     `are-self-install.bat` to load immutables → zygote → phenotypes. Tests green.
+    **Step 1 (April 15, 2026):** First CC pass completed — 22 scratch
+    `.step1.json` files staged across all apps, 1017 rows classified, every
+    `initial_data.json` SHA-256 byte-identical, `STEP1_REPORT.md` written.
+    Review surfaced 7 decision items (§6.1–6.7 + §7 DEFAULT_ENVIRONMENT).
+    All 7 rulings captured. §7 resolved by hand — new simple default env
+    `b7e4c2a1-3f8d-4a9e-9c1f-2d5a8b6f4e21` with `are_self_root`/`venv_root`
+    ContextVariables; `ProjectEnvironment.DEFAULT_ENVIRONMENT` repointed.
+    **Step 1 completion pass (pending, CC):** apply rulings — BEGIN_PLAY
+    stays in zygote, shared `920e7245-...` "Project" ExecutableArgument
+    moves to `environments/zygote.json` (semantic smell TODO, not blocker);
+    Deploy/RecordPSOs + all UE-named pathways → `unreal_modifier.json`
+    (grep to expand UE Executable root list first);
+    IterationDefinition/IterationShiftDefinition → new
+    `temporal_lobe/zygote.json`, Iteration instances → phenotype;
+    hypothalamus zygote = 3 rows exactly (nomic-embed-text +
+    qwen2.5-coder:7b + qwen2.5-coder:32b), pre-staged 4-model version and
+    scratch both deleted; entire parietal tool suite (all ToolDefinitions,
+    ToolParameters, ToolParameterAssignments, ParameterEnums) →
+    `parietal_lobe/zygote.json`; django_celery_beat rows stay in
+    `genetic_immutables.json`; `petri_dish.json` written per app with
+    test-only row deltas only (composes with genetic_immutables via common
+    test class — wiring is Step 2, not now). Rename scratch → final, delete
+    all `.step1.json`, re-verify `initial_data.json` SHA-256, cross-FK
+    sanity check, write `STEP1_COMPLETE_REPORT.md`.
   - **Task 5c.** Repeat the split for every remaining app top-down through the closure
     order. UE-flavored rows held aside in a scratch file, not written to core tiers.
     Bisectable per-app commits.

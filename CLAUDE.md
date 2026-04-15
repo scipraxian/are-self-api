@@ -3,14 +3,30 @@
 The single source of truth for any AI agent working on the are-self-api codebase.
 Read completely before making any changes.
 
-> **Active thread (April 15, 2026):** `uuid-migration` branch, Pass 2 in progress.
-> Pass 1 (18 plugin-extensible models flipped to UUID PKs, 433 tests passing) is
-> locked. Pass 2 splits every app's `initial_data.json` into the four biological
-> fixture tiers (`genetic_immutables` → `zygote` → `initial_phenotypes` →
-> `petri_dish`), extracts the Unreal flow as the first `NeuralModifier` bundle
-> under `neuroplasticity/modifier_genome/unreal/`, and wires the
-> `./manage.py build_modifier` + contribution-aware loader. The `neuroplasticity`
-> app is registered; its models and `reference_data.json` seed are on disk.
+> **Active thread (April 15, 2026):** `uuid-migration` branch, Pass 2 Step 1
+> completion in progress. Pass 1 (18 plugin-extensible models flipped to UUID
+> PKs, 433 tests passing) is locked. Pass 2 splits every app's `initial_data.json`
+> into the four biological fixture tiers (`genetic_immutables` → `zygote` →
+> `initial_phenotypes` → `petri_dish`), extracts the Unreal flow as an in-tree
+> `unreal_modifier.json` sibling (plugin bundling deferred), and will later
+> wire `./manage.py build_modifier` + the contribution-aware loader.
+>
+> **Pass 2 Step 1 status:** First CC pass split all 1017 rows into scratch
+> `.step1.json` files with SHA-256 verified byte-identical source fixtures
+> and produced `STEP1_REPORT.md`. Review surfaced 7 decision items; Michael
+> has ruled on all 7. Completion prompt authored (see chat) for a second CC
+> pass that applies the rulings, renames scratch → final, and creates
+> `temporal_lobe/zygote.json` (missing from the first split). Key rulings:
+> BEGIN_PLAY stays in zygote (sacred, non-negotiable); entire parietal tool
+> suite → zygote; IterationDefinitions → zygote, Iteration instances →
+> phenotype (definition-vs-instance pattern); hypothalamus zygote = 3 models
+> (nomic-embed-text + qwen2.5-coder:7b + qwen2.5-coder:32b); django_celery_beat
+> stays in genetic_immutables; `petri_dish.json` is not empty by design — it
+> composes with `genetic_immutables.json` via the common test class (mechanism
+> TBD in Step 2). `ProjectEnvironment.DEFAULT_ENVIRONMENT` now points at the
+> new simple default env `b7e4c2a1-3f8d-4a9e-9c1f-2d5a8b6f4e21` (resolved by
+> Michael); its `are_self_root` + `venv_root` ContextVariables are added.
+>
 > Tasks 2 (hypothalamus zygote seed), 3 (log-merge move to occipital_lobe),
 > 4 (log_parser split + LogParserFactory), and 4.5 (three `environments`
 > models flipped to UUID) are staged but not yet committed. See

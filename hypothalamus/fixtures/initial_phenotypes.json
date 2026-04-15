@@ -1,0 +1,786 @@
+[
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "12148f63-0277-4fa9-80a6-edefc02ef0f8",
+    "fields": {
+      "description": "OpenAI's open-weight models. Designed for powerful reasoning, agentic tasks, and versatile developer use cases. Available in 20B and 120B sizes with tool use and thinking support.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        11
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "13fcfee9-bcf4-41fb-a925-b5ef3e601c7b",
+    "fields": {
+      "description": "IBM's enterprise foundation models for code and language. Designed for tool-based use cases, RAG, and code intelligence. Available in dense and MoE architectures.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        14
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "1ef41fa6-0c56-4fcc-8125-f523543f81cb",
+    "fields": {
+      "description": "Mistral AI's edge deployment family. Designed for wide hardware compatibility including mobile and IoT devices. Vision and tool capable.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        25
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "22fe8d50-ab80-4123-a8bb-a237223fd75c",
+    "fields": {
+      "description": "HuggingFace's compact models. Tiny models (135M-1.7B) for edge devices, trained on high-quality curated data.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        40
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "288a7c2a-4c74-4ea6-a587-f52b7e1cb812",
+    "fields": {
+      "description": "DeepSeek's open reasoning and coding models. The R1 series uses chain-of-thought thinking tokens and approaches frontier model performance on math, logic, and code. The V3 series uses MoE with 671B total parameters.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        8
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "29a375f1-2d03-4156-ae02-30643324d5c1",
+    "fields": {
+      "description": "Snowflake's text embedding models. Optimized for enterprise retrieval performance across multiple sizes.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        32
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "2fdf4b8b-cc80-4a57-9057-7131db535ca0",
+    "fields": {
+      "description": "Upstage's compact language models. Designed for single-turn conversation and efficient deployment.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        30
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "30ef1589-7a0a-4789-94ed-60c592ce8e67",
+    "fields": {
+      "description": "Code-specialized Qwen models optimized for code generation, reasoning, fixing, and agentic coding workflows. Support function calling and long context for repository-scale understanding.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [
+        "3ca370b6-5e75-5058-9172-4b4e376c408d"
+      ],
+      "families": [
+        3
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "3dfe8d39-8445-4493-b1bf-8b083b7e9e3e",
+    "fields": {
+      "description": "Moonshot AI's multimodal and reasoning models. MoE architecture with strong coding agent performance.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        37
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "45a24ad5-e343-4858-8e41-cb540d03c1aa",
+    "fields": {
+      "description": "BigCode's open code generation models. Trained transparently on permissive-licensed code. Available from 3B to 15B parameters.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        18
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "47fad160-1d22-4044-b62f-23c6c3e2afa4",
+    "fields": {
+      "description": "Qwen's vision-language models. Process images and video alongside text with strong visual understanding and reasoning capabilities.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        41
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "5dce657d-36de-4aeb-bcd4-4144bb8e68c5",
+    "fields": {
+      "description": "Microsoft Research's small language models. Demonstrate that carefully curated training data can produce models that punch well above their weight class in reasoning, math, and coding.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        7
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "5e2406b0-665d-45e9-a82c-8cabc021118d",
+    "fields": {
+      "description": "UC Berkeley's chat model based on Llama. One of the earliest high-quality open chat models, trained on user-shared conversations.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        27
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "64643360-1c78-4f45-916d-57f759ced73d",
+    "fields": {
+      "description": "Shanghai AI Lab's open language models. Outstanding reasoning capability in compact sizes.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        42
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "64c8c6ae-537e-4d09-8b71-973f00d5a1f1",
+    "fields": {
+      "description": "Google's efficient 4B parameter model from the Gemma 3 family. Vision-capable — processes images alongside text. Strong performance relative to its size. 128K token context window.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [
+        "c2c359f7-4474-5a33-a1ba-2bf2a26bf5b1"
+      ],
+      "families": [
+        4
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "69bfa318-a67a-46b4-bcb4-a1b31c6c47d4",
+    "fields": {
+      "description": "01.AI's bilingual language models. High-performing in English and Chinese.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        26
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "69d23e97-88d2-4822-9170-2cb02b39d091",
+    "fields": {
+      "description": "Nomic AI's open embedding models. Produce 768-dimensional vectors with large token context windows. The default embedding engine for Are-Self's Hippocampus memory system.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [
+        "39168c4d-ed2a-54e5-98ce-1c992dff4ec8"
+      ],
+      "families": [
+        10
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "6f4c6674-ca5d-4dac-a8d2-3f5c731df7f1",
+    "fields": {
+      "description": "Open-source reasoning models built by distilling DeepSeek-R1's chain-of-thought capabilities into smaller models.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        44
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "73301989-7d9d-4dc5-a3cc-c06068a6049c",
+    "fields": {
+      "description": "Databricks' open general-purpose MoE model. 132B total parameters designed for enterprise use.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        35
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "7b4c9624-352f-4bc2-a845-42169204fa26",
+    "fields": {
+      "description": "Alibaba's code-specialized 7B model from the Qwen 2.5 Coder series. Significant improvements in code generation, code reasoning, and code fixing. Supports function calling for tool-use workflows. 128K context.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [
+        "3ca370b6-5e75-5058-9172-4b4e376c408d"
+      ],
+      "families": [
+        3
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "7b514e17-d0f0-4df8-aefd-e458bd499fa6",
+    "fields": {
+      "description": "Meta's open-source large language model family. Ranges from 1B to 405B parameters. Known for strong instruction following, multilingual support, and tool use. The most widely deployed open model family in the world. Llama 3.2 introduced compact 1B/3B models; Llama 3.1 scaled to 405B; Llama 4 added MoE architecture with vision.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [
+        "e04b72ca-d3f7-57c0-b222-22f195ec0067"
+      ],
+      "families": [
+        1
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "8500438e-e4ca-4a09-86c5-68d08ef91efc",
+    "fields": {
+      "description": "Large Language and Vision Assistant. End-to-end trained multimodal models combining vision encoders with language models for general-purpose visual and language understanding.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        19
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "85d18b81-1ff5-4e1d-96de-1e667681f1f2",
+    "fields": {
+      "description": "DeepCogito's hybrid reasoning models. Outperform counterparts from Llama, DeepSeek, and Qwen at similar sizes across standard benchmarks.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        28
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "8a0dbc87-ca20-4a26-94c4-001221f66b8f",
+    "fields": {
+      "description": "Zhipu AI's General Language Model family. Strong multilingual performance with thinking and tool support. GLM-4.7 Flash is the strongest in the 30B class, balancing performance and efficiency.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        12
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "8d2f4301-61fb-4c00-9f1d-4fe0e0bcc1a1",
+    "fields": {
+      "description": "Alibaba's multilingual large language model family. Pretrained on up to 18 trillion tokens. Supports 128K context with strong performance across English, Chinese, and many other languages. Known for excellent coding, math, and reasoning capabilities.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        2
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "9266b6c9-8e3a-4617-a902-33f0e4183503",
+    "fields": {
+      "description": "NousResearch's instruction-tuned models. General purpose with strong tool use. Built on various base models (Llama, Mixtral) with high-quality training data.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        16
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "92e6fc6d-b42b-4678-8e8f-4260aa79d4dc",
+    "fields": {
+      "description": "Cohere's enterprise language models. Optimized for conversational interaction, retrieval-augmented generation, and long context tasks. Strong tool use capabilities.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        13
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "95cbb0f5-2940-4b10-96d5-a5e7e07a1635",
+    "fields": {
+      "description": "Qwen's dedicated reasoning model. Uses extended thinking tokens for complex problem-solving with tool use support.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        29
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "9960be36-324d-40ce-8565-1df56a924303",
+    "fields": {
+      "description": "BAAI's embedding models. Versatile multi-functionality, multi-linguality, and multi-granularity for retrieval tasks.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        31
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "9d741d78-418b-4438-b56d-4e64b6fbfa81",
+    "fields": {
+      "description": "Technology Innovation Institute's open language models. Designed for summarization, text generation, and conversational use. Available from 7B to 180B.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        20
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "ad339a5a-8351-434d-8063-4a383a434f8b",
+    "fields": {
+      "description": "Google's code-specialized Gemma models. Code completion, generation, and mathematical reasoning.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        43
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "aebfe132-1a27-49ee-9687-e6f424d55e74",
+    "fields": {
+      "description": "Mixedbread AI's embedding models. State-of-the-art large embeddings for semantic search and retrieval.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        33
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "b0d56c8a-fca7-4df5-82c0-71291aae9bc4",
+    "fields": {
+      "description": "LG AI Research's bilingual models. Strong in English and Korean with excellent reasoning and coding capabilities.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        36
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "b245f9b5-5a9d-4df5-b24a-680ef920967b",
+    "fields": {
+      "description": "Meta's code-specialized Llama models. Trained on code-heavy datasets for generation, completion, and code discussion. Available from 7B to 70B.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        15
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "b329cf1e-dee0-499f-a800-548c5518bf64",
+    "fields": {
+      "description": "A high-performing open embedding model with a large token context window. Produces 768-dimensional vectors. The default embedding engine for Are-Self's Hippocampus memory system. Optimized for retrieval, clustering, and semantic search tasks.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [
+        "39168c4d-ed2a-54e5-98ce-1c992dff4ec8"
+      ],
+      "families": [
+        10
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "b7ba2b55-ff6d-4e59-9c81-1c4aed435194",
+    "fields": {
+      "description": "DeepSeek's code-specialized models. Trained on 2 trillion code and natural language tokens. Strong code generation and understanding across many programming languages.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        9
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "b80de57a-91b0-41d4-9507-d49a5e5df125",
+    "fields": {
+      "description": "Mistral's Mixture-of-Experts models. Multiple expert networks activated selectively for high throughput and quality. Available in 8x7B and 8x22B configurations.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        6
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "c6e3d23a-faaf-46da-b013-7f94fecfa724",
+    "fields": {
+      "description": "MiniMax's language models for coding, agentic workflows, and professional productivity.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        38
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "ca7fdf9b-e56e-4dd2-ade7-76c5024657f5",
+    "fields": {
+      "description": "NVIDIA's enterprise-grade language models. Customized for helpfulness in enterprise applications. Strong tool use and instruction following.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        21
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "cc34ac17-7058-4459-86df-233816255d98",
+    "fields": {
+      "description": "Meta's compact 3B parameter model from the Llama 3.2 release. Fast inference on minimal hardware. Strong instruction following and tool use for its size. 128K token context window.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [
+        "e04b72ca-d3f7-57c0-b222-22f195ec0067"
+      ],
+      "families": [
+        1
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "d3869ace-f24c-46cf-b7a8-f75bc73a3157",
+    "fields": {
+      "description": "Mistral AI's reasoning model. Small, efficient 24B model with thinking token support for complex reasoning tasks.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        24
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "d6dc87d9-3981-49b4-9b2f-2b0933c4ffbf",
+    "fields": {
+      "description": "Mistral AI's model for software engineering agents. Excels at codebase exploration, multi-file editing, and powering coding agents.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        23
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "dc7158f7-c717-437e-a92d-6eb51e70beef",
+    "fields": {
+      "description": "Liquid AI's hybrid models for edge deployment. Designed for efficient on-device inference.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        39
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "e0ca77d4-96c2-4118-a7ce-1b04ab667d6e",
+    "fields": {
+      "description": "Eric Hartford's uncensored fine-tunes. General purpose local models enabling coding, math, agentic tasks, and function calling without alignment restrictions.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        17
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "e94bfd98-0d9f-4e12-870e-1fdde5157e90",
+    "fields": {
+      "description": "Mistral AI's first dedicated code generation model. 22B parameters optimized specifically for code tasks.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        22
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "efd41699-c2fa-4c28-8241-76580d97b94d",
+    "fields": {
+      "description": "Google DeepMind's lightweight open models. Efficient and capable, designed to run well on consumer hardware including laptops and phones. Gemma 3 added vision capabilities and 128K context.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [
+        "c2c359f7-4474-5a33-a1ba-2bf2a26bf5b1"
+      ],
+      "families": [
+        4
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "f471b6ea-7a21-4d09-a9a9-9993b069a604",
+    "fields": {
+      "description": "Mistral AI's core model family. Strong multilingual performance with efficient architectures. Known for excellent instruction following and tool use at compact sizes.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        5
+      ],
+      "categories": [],
+      "tags": []
+    }
+  },
+  {
+    "model": "hypothalamus.aimodeldescription",
+    "pk": "fc884091-7de9-4e1b-a367-d48ec4eca5b3",
+    "fields": {
+      "description": "Allen Institute for AI's open language models. Designed to enable the science of language models with fully open data, code, and training recipes.",
+      "is_current": true,
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "ai_models": [],
+      "families": [
+        34
+      ],
+      "categories": [],
+      "tags": []
+    }
+  }
+]
