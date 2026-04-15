@@ -85,8 +85,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ProjectEnvironmentContextKey',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(db_index=True, max_length=254, unique=True)),
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
             ],
             options={
                 'abstract': False,
@@ -95,8 +95,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ProjectEnvironmentStatus',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(db_index=True, max_length=254, unique=True)),
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
             ],
             options={
                 'abstract': False,
@@ -105,8 +105,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ProjectEnvironmentType',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(db_index=True, max_length=254, unique=True)),
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
             ],
             options={
                 'abstract': False,

@@ -1425,112 +1425,112 @@
   },
   {
     "model": "environments.projectenvironmentcontextkey",
-    "pk": 1,
+    "pk": "662f350c-1595-5d5d-ba23-04259ca765be",
     "fields": {
       "name": "project_name"
     }
   },
   {
     "model": "environments.projectenvironmentcontextkey",
-    "pk": 2,
+    "pk": "f88bfedf-6e56-5cad-83a8-82eebe5f2a81",
     "fields": {
       "name": "project_root"
     }
   },
   {
     "model": "environments.projectenvironmentcontextkey",
-    "pk": 3,
+    "pk": "0bde5681-79ff-5e60-91ec-de58c576caad",
     "fields": {
       "name": "engine_root"
     }
   },
   {
     "model": "environments.projectenvironmentcontextkey",
-    "pk": 4,
+    "pk": "911ee78c-4251-5681-a235-18a2028a0474",
     "fields": {
       "name": "test_root"
     }
   },
   {
     "model": "environments.projectenvironmentcontextkey",
-    "pk": 5,
+    "pk": "fa470a08-db2a-5058-8da3-5b58895ea1b4",
     "fields": {
       "name": "are_self_root"
     }
   },
   {
     "model": "environments.projectenvironmentcontextkey",
-    "pk": 6,
+    "pk": "3ed50a36-7cec-564c-b234-9db5adce58f6",
     "fields": {
       "name": "staging_root"
     }
   },
   {
     "model": "environments.projectenvironmentcontextkey",
-    "pk": 7,
+    "pk": "ea4eed7a-7b0e-5566-9a9e-3c27ff7efd66",
     "fields": {
       "name": "shader_cache_root"
     }
   },
   {
     "model": "environments.projectenvironmentcontextkey",
-    "pk": 8,
+    "pk": "e76b574b-08a0-5ded-992c-787de0f24c51",
     "fields": {
       "name": "environment_cache_root"
     }
   },
   {
     "model": "environments.projectenvironmentcontextkey",
-    "pk": 9,
+    "pk": "e24f0d30-670d-55fa-8db7-7c0e91e2fc89",
     "fields": {
       "name": "prerelease_root"
     }
   },
   {
     "model": "environments.projectenvironmentcontextkey",
-    "pk": 10,
+    "pk": "cadef741-8ebe-5e69-b0f2-a3a3c732a16a",
     "fields": {
       "name": "production_root"
     }
   },
   {
     "model": "environments.projectenvironmentcontextkey",
-    "pk": 11,
+    "pk": "d6cbba9c-d8f8-57e4-98c5-be3072f227ba",
     "fields": {
       "name": "uproject"
     }
   },
   {
     "model": "environments.projectenvironmentcontextkey",
-    "pk": 12,
+    "pk": "d0af4b3d-a6cb-5d15-bc49-b8e9948fbb50",
     "fields": {
       "name": "venv_root"
     }
   },
   {
     "model": "environments.projectenvironmentcontextkey",
-    "pk": 13,
+    "pk": "3baa118f-dd49-5aa6-8ab7-a3f75d809484",
     "fields": {
       "name": "network_prerelease_root"
     }
   },
   {
     "model": "environments.projectenvironmentstatus",
-    "pk": 1,
+    "pk": "e1bb67a5-1b86-5636-9464-be50af5c7863",
     "fields": {
       "name": "Online"
     }
   },
   {
     "model": "environments.projectenvironmenttype",
-    "pk": 1,
+    "pk": "8a5e6540-92bf-5e73-a26a-4ff3e6185bd9",
     "fields": {
       "name": "Unreal 5.6.1"
     }
   },
   {
     "model": "environments.projectenvironmenttype",
-    "pk": 2,
+    "pk": "04701d65-e722-5c7c-8f06-10bc53413a36",
     "fields": {
       "name": "ReactJS"
     }
@@ -1543,8 +1543,8 @@
       "description": "Default UE Environment",
       "modified": "2026-04-02T19:32:59.129Z",
       "name": "Default Environment",
-      "type": 1,
-      "status": 1,
+      "type": "8a5e6540-92bf-5e73-a26a-4ff3e6185bd9",
+      "status": "e1bb67a5-1b86-5636-9464-be50af5c7863",
       "available": true,
       "selected": true,
       "default_iteration_definition": "9dfa8918-1dc9-4a52-b708-347883fc25bf"
@@ -1558,8 +1558,8 @@
       "description": null,
       "modified": "2026-02-13T15:28:35.948Z",
       "name": "HSH Python",
-      "type": 1,
-      "status": 1,
+      "type": "8a5e6540-92bf-5e73-a26a-4ff3e6185bd9",
+      "status": "e1bb67a5-1b86-5636-9464-be50af5c7863",
       "available": true,
       "selected": false,
       "default_iteration_definition": null
@@ -1573,8 +1573,8 @@
       "description": "",
       "modified": "2026-04-02T19:32:56.782Z",
       "name": "Are-Self-UI",
-      "type": 2,
-      "status": 1,
+      "type": "04701d65-e722-5c7c-8f06-10bc53413a36",
+      "status": "e1bb67a5-1b86-5636-9464-be50af5c7863",
       "available": true,
       "selected": false,
       "default_iteration_definition": "9dfa8918-1dc9-4a52-b708-347883fc25bf"
@@ -1585,7 +1585,7 @@
     "pk": "57eddeed-967b-4b20-825d-eae921d25e4e",
     "fields": {
       "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
-      "key": 1,
+      "key": "662f350c-1595-5d5d-ba23-04259ca765be",
       "value": "HSHVacancy"
     }
   },
@@ -1594,7 +1594,7 @@
     "pk": "33e49e1c-d94a-49c6-bc94-e378baf99402",
     "fields": {
       "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
-      "key": 2,
+      "key": "f88bfedf-6e56-5cad-83a8-82eebe5f2a81",
       "value": "C:\\Users\\micha\\Documents\\Unreal Projects\\HSHVacancy"
     }
   },
@@ -1603,7 +1603,7 @@
     "pk": "909dab2c-985b-4b41-b261-5745c1fc48e0",
     "fields": {
       "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
-      "key": 3,
+      "key": "0bde5681-79ff-5e60-91ec-de58c576caad",
       "value": "C:\\Program Files\\Epic Games\\UE_5.6"
     }
   },
@@ -1612,7 +1612,7 @@
     "pk": "9952c457-2343-4b35-a8e3-c227a32d50df",
     "fields": {
       "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
-      "key": 5,
+      "key": "fa470a08-db2a-5058-8da3-5b58895ea1b4",
       "value": "{{BASE_DIR}}"
     }
   },
@@ -1621,7 +1621,7 @@
     "pk": "b5f3c601-2868-47ed-b7b2-9dfa4770a590",
     "fields": {
       "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
-      "key": 4,
+      "key": "911ee78c-4251-5681-a235-18a2028a0474",
       "value": "C:\\are-self-bin\\0_test"
     }
   },
@@ -1630,7 +1630,7 @@
     "pk": "5b3d780a-78a5-4192-b2d7-e5a49eb33f04",
     "fields": {
       "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
-      "key": 6,
+      "key": "3ed50a36-7cec-564c-b234-9db5adce58f6",
       "value": "C:\\are-self-bin\\1_staging"
     }
   },
@@ -1639,7 +1639,7 @@
     "pk": "fa66caf6-f591-4212-97be-46c088df48a3",
     "fields": {
       "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
-      "key": 7,
+      "key": "ea4eed7a-7b0e-5566-9a9e-3c27ff7efd66",
       "value": "C:\\are-self-bin\\2_shader_cache"
     }
   },
@@ -1648,7 +1648,7 @@
     "pk": "35e3c0a5-a55d-4a8d-b0a3-67f57937e82e",
     "fields": {
       "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
-      "key": 8,
+      "key": "e76b574b-08a0-5ded-992c-787de0f24c51",
       "value": "C:\\are-self-bin\\3_environment_cache"
     }
   },
@@ -1657,7 +1657,7 @@
     "pk": "dca36e60-09ea-4eeb-bc1b-3061e8bf83b4",
     "fields": {
       "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
-      "key": 9,
+      "key": "e24f0d30-670d-55fa-8db7-7c0e91e2fc89",
       "value": "C:\\are-self-bin\\4_prerelease"
     }
   },
@@ -1666,7 +1666,7 @@
     "pk": "bd52f95c-c661-4689-90b3-e4e77ea6d6cb",
     "fields": {
       "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
-      "key": 10,
+      "key": "cadef741-8ebe-5e69-b0f2-a3a3c732a16a",
       "value": "C:\\are-self-bin\\5_main"
     }
   },
@@ -1675,7 +1675,7 @@
     "pk": "0f1c79ee-52f0-4e90-ab5f-82ba11a399f7",
     "fields": {
       "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
-      "key": 11,
+      "key": "d6cbba9c-d8f8-57e4-98c5-be3072f227ba",
       "value": "HSHVacancy.uproject"
     }
   },
@@ -1684,7 +1684,7 @@
     "pk": "0c52be0c-160f-4bb3-97b7-37990a1c2868",
     "fields": {
       "environment": "4d82fab0-c62d-4204-a316-476476c10a55",
-      "key": 2,
+      "key": "f88bfedf-6e56-5cad-83a8-82eebe5f2a81",
       "value": "C:\\hsh_python"
     }
   },
@@ -1693,7 +1693,7 @@
     "pk": "994a5f0b-799f-48ff-910c-5b4d5d307c7b",
     "fields": {
       "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
-      "key": 12,
+      "key": "d0af4b3d-a6cb-5d15-bc49-b8e9948fbb50",
       "value": "{{BASE_DIR}}\\venv"
     }
   },
@@ -1702,7 +1702,7 @@
     "pk": "5b74927d-713d-43ab-a35c-5cbafdb2e403",
     "fields": {
       "environment": "4d82fab0-c62d-4204-a316-476476c10a55",
-      "key": 12,
+      "key": "d0af4b3d-a6cb-5d15-bc49-b8e9948fbb50",
       "value": "{{BASE_DIR}}/venv"
     }
   },
@@ -1711,7 +1711,7 @@
     "pk": "cac3a37f-c52d-44be-96de-bffaad51f2e8",
     "fields": {
       "environment": "4d82fab0-c62d-4204-a316-476476c10a55",
-      "key": 5,
+      "key": "fa470a08-db2a-5058-8da3-5b58895ea1b4",
       "value": "{{BASE_DIR}}"
     }
   },
@@ -1720,7 +1720,7 @@
     "pk": "b412f51a-a3ab-40db-8613-d86b5517ac55",
     "fields": {
       "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
-      "key": 13,
+      "key": "3baa118f-dd49-5aa6-8ab7-a3f75d809484",
       "value": "are-self-bin\\4_prerelease"
     }
   },
@@ -1729,7 +1729,7 @@
     "pk": "0d2ff4a3-adb2-4f34-9756-3dd5640ab7eb",
     "fields": {
       "environment": "c1b7a124-a50b-4710-aa85-154736a839bc",
-      "key": 1,
+      "key": "662f350c-1595-5d5d-ba23-04259ca765be",
       "value": "Are-Self-UI"
     }
   },
@@ -1738,7 +1738,7 @@
     "pk": "bb1576aa-3896-4903-8e34-e2cd13634cd6",
     "fields": {
       "environment": "c1b7a124-a50b-4710-aa85-154736a839bc",
-      "key": 2,
+      "key": "f88bfedf-6e56-5cad-83a8-82eebe5f2a81",
       "value": "C:\\are-self-ui\\src"
     }
   },
@@ -1747,7 +1747,7 @@
     "pk": "2a6c404a-dca3-45a7-b62e-36e731a67afa",
     "fields": {
       "environment": "c1b7a124-a50b-4710-aa85-154736a839bc",
-      "key": 5,
+      "key": "fa470a08-db2a-5058-8da3-5b58895ea1b4",
       "value": "{{BASE_DIR}}"
     }
   },
@@ -1756,7 +1756,7 @@
     "pk": "ed679fff-96fa-4128-9eb3-fa61b7dc8f59",
     "fields": {
       "environment": "c1b7a124-a50b-4710-aa85-154736a839bc",
-      "key": 12,
+      "key": "d0af4b3d-a6cb-5d15-bc49-b8e9948fbb50",
       "value": "{{BASE_DIR}}/venv/"
     }
   }

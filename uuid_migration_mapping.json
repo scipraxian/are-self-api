@@ -711,5 +711,27 @@
     "6": "2350d615-2ead-437f-baca-f85733351598",
     "7": "9686f1d5-afba-4f27-9afa-c2618957cb09",
     "8": "36de15ba-f7fe-4623-9006-36faed836bbf"
+  },
+  "environments.projectenvironmentcontextkey": {
+    "1": "662f350c-1595-5d5d-ba23-04259ca765be",
+    "2": "f88bfedf-6e56-5cad-83a8-82eebe5f2a81",
+    "3": "0bde5681-79ff-5e60-91ec-de58c576caad",
+    "4": "911ee78c-4251-5681-a235-18a2028a0474",
+    "5": "fa470a08-db2a-5058-8da3-5b58895ea1b4",
+    "6": "3ed50a36-7cec-564c-b234-9db5adce58f6",
+    "7": "ea4eed7a-7b0e-5566-9a9e-3c27ff7efd66",
+    "8": "e76b574b-08a0-5ded-992c-787de0f24c51",
+    "9": "e24f0d30-670d-55fa-8db7-7c0e91e2fc89",
+    "10": "cadef741-8ebe-5e69-b0f2-a3a3c732a16a",
+    "11": "d6cbba9c-d8f8-57e4-98c5-be3072f227ba",
+    "12": "d0af4b3d-a6cb-5d15-bc49-b8e9948fbb50",
+    "13": "3baa118f-dd49-5aa6-8ab7-a3f75d809484"
+  },
+  "environments.projectenvironmentstatus": {
+    "1": "e1bb67a5-1b86-5636-9464-be50af5c7863"
+  },
+  "environments.projectenvironmenttype": {
+    "1": "8a5e6540-92bf-5e73-a26a-4ff3e6185bd9",
+    "2": "04701d65-e722-5c7c-8f06-10bc53413a36"
   }
 }

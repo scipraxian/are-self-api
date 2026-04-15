@@ -105,17 +105,17 @@ class ExecutableSupplementaryFileOrPath(DefaultFieldsMixin):
     path = models.CharField(max_length=500, help_text='Full path to the file.')
 
 
-class ProjectEnvironmentContextKey(NameMixin):
+class ProjectEnvironmentContextKey(UUIDIdMixin, NameMixin):
     pass
 
 
-class ProjectEnvironmentStatus(NameMixin):
+class ProjectEnvironmentStatus(UUIDIdMixin, NameMixin):
     """Lookup for Environment Status (e.g. Active, Archived)."""
 
     pass
 
 
-class ProjectEnvironmentType(NameMixin):
+class ProjectEnvironmentType(UUIDIdMixin, NameMixin):
     """Lookup for Environment Type (e.g. UE5, Unity, Custom)."""
 
     pass
