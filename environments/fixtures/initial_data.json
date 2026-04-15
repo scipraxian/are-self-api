@@ -1537,16 +1537,31 @@
   },
   {
     "model": "environments.projectenvironment",
-    "pk": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+    "pk": "b7e4c2a1-3f8d-4a9e-9c1f-2d5a8b6f4e21",
     "fields": {
-      "created": "2026-02-11T15:33:50.687Z",
-      "description": "Default UE Environment",
-      "modified": "2026-04-02T19:32:59.129Z",
+      "created": "2026-04-15T00:00:00Z",
+      "description": "Simple default environment (zygote)",
+      "modified": "2026-04-15T00:00:00Z",
       "name": "Default Environment",
       "type": "8a5e6540-92bf-5e73-a26a-4ff3e6185bd9",
       "status": "e1bb67a5-1b86-5636-9464-be50af5c7863",
       "available": true,
       "selected": true,
+      "default_iteration_definition": null
+    }
+  },
+  {
+    "model": "environments.projectenvironment",
+    "pk": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+    "fields": {
+      "created": "2026-02-11T15:33:50.687Z",
+      "description": "Default UE Environment",
+      "modified": "2026-04-02T19:32:59.129Z",
+      "name": "Default UE Environment",
+      "type": "8a5e6540-92bf-5e73-a26a-4ff3e6185bd9",
+      "status": "e1bb67a5-1b86-5636-9464-be50af5c7863",
+      "available": true,
+      "selected": false,
       "default_iteration_definition": "9dfa8918-1dc9-4a52-b708-347883fc25bf"
     }
   },
@@ -1693,6 +1708,24 @@
     "pk": "994a5f0b-799f-48ff-910c-5b4d5d307c7b",
     "fields": {
       "environment": "44b23b94-6aae-4205-ae67-2f8c021c67aa",
+      "key": "d0af4b3d-a6cb-5d15-bc49-b8e9948fbb50",
+      "value": "{{BASE_DIR}}\\venv"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": "a1f2c3d4-5e6b-47a8-9c01-1122334455aa",
+    "fields": {
+      "environment": "b7e4c2a1-3f8d-4a9e-9c1f-2d5a8b6f4e21",
+      "key": "fa470a08-db2a-5058-8da3-5b58895ea1b4",
+      "value": "{{BASE_DIR}}"
+    }
+  },
+  {
+    "model": "environments.contextvariable",
+    "pk": "a1f2c3d4-5e6b-47a8-9c01-1122334455bb",
+    "fields": {
+      "environment": "b7e4c2a1-3f8d-4a9e-9c1f-2d5a8b6f4e21",
       "key": "d0af4b3d-a6cb-5d15-bc49-b8e9948fbb50",
       "value": "{{BASE_DIR}}\\venv"
     }

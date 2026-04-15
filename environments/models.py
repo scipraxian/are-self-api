@@ -39,15 +39,31 @@ class Executable(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     """Reference to an executable usable by Are-Self."""
 
     BEGIN_PLAY = uuid.UUID('974ed732-6f2d-47f4-9482-18d17c73086e')
-    PYTHON = uuid.UUID('558806d7-d009-4e89-8e4e-86979dcd0594')  # venv/Scripts/python.exe
-    DJANGO = uuid.UUID('11915177-a32b-4883-8c9f-e137c528c20d')  # venv/Scripts/python.exe manage.py
-    UNREAL_CMD = uuid.UUID('3ee78993-faa3-401b-8187-c771e11c4564')  # C:\\Program Files\\Epic Games\\UE_5.6/Engine/Binaries/Win64/UnrealEditor-Cmd.exe
-    UNREAL_AUTOMATION_TOOL = uuid.UUID('3ced43ee-5504-493a-a4b7-15040bb17100')  # C:\\Program Files\\Epic Games\\UE_5.6/Engine/Build/BatchFiles/RunUAT.bat
-    UNREAL_STAGING = uuid.UUID('efb5d7dc-9922-43ec-b108-5af5f029b71d')  # C:\steambuild\Windows\HSHVacancy.exe
-    UNREAL_RELEASE_TEST = uuid.UUID('6e487387-9608-4481-8f5c-9b0741585633')  # C:\steambuild\ReleaseTest\HSHVacancy.exe
-    UNREAL_SHADER_TOOL = uuid.UUID('0fb093f4-8c4a-4f40-ad1b-234e4f516f4f')  # C:\\Program Files\\Epic Games\\UE_5.6/Engine/Binaries/Win64/ShaderPipelineCacheTools.exe
+    PYTHON = uuid.UUID(
+        '558806d7-d009-4e89-8e4e-86979dcd0594'
+    )  # venv/Scripts/python.exe
+    DJANGO = uuid.UUID(
+        '11915177-a32b-4883-8c9f-e137c528c20d'
+    )  # venv/Scripts/python.exe manage.py
+    UNREAL_CMD = uuid.UUID(
+        '3ee78993-faa3-401b-8187-c771e11c4564'
+    )  # C:\\Program Files\\Epic Games\\UE_5.6/Engine/Binaries/Win64/UnrealEditor-Cmd.exe
+    UNREAL_AUTOMATION_TOOL = uuid.UUID(
+        '3ced43ee-5504-493a-a4b7-15040bb17100'
+    )  # C:\\Program Files\\Epic Games\\UE_5.6/Engine/Build/BatchFiles/RunUAT.bat
+    UNREAL_STAGING = uuid.UUID(
+        'efb5d7dc-9922-43ec-b108-5af5f029b71d'
+    )  # C:\steambuild\Windows\HSHVacancy.exe
+    UNREAL_RELEASE_TEST = uuid.UUID(
+        '6e487387-9608-4481-8f5c-9b0741585633'
+    )  # C:\steambuild\ReleaseTest\HSHVacancy.exe
+    UNREAL_SHADER_TOOL = uuid.UUID(
+        '0fb093f4-8c4a-4f40-ad1b-234e4f516f4f'
+    )  # C:\\Program Files\\Epic Games\\UE_5.6/Engine/Binaries/Win64/ShaderPipelineCacheTools.exe
     VERSION_HANDLER = uuid.UUID('1d037234-c8c2-4d51-bc65-41597c0becd2')
-    DEPLOY_RELEASE = uuid.UUID('5fbd152c-23bf-4951-840f-491f4fff918a')  # depreciated.
+    DEPLOY_RELEASE = uuid.UUID(
+        '5fbd152c-23bf-4951-840f-491f4fff918a'
+    )  # depreciated.
 
     internal = models.BooleanField(
         default=False, help_text='Internal Python Function'
@@ -86,9 +102,7 @@ class Executable(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
 class ExecutableArgumentAssignment(UUIDIdMixin):
     executable = models.ForeignKey(Executable, on_delete=models.CASCADE)
     order = models.IntegerField(default=10)
-    argument = models.ForeignKey(
-        ExecutableArgument, on_delete=models.CASCADE
-    )
+    argument = models.ForeignKey(ExecutableArgument, on_delete=models.CASCADE)
 
     class Meta(object):
         ordering = ['order']
@@ -124,7 +138,7 @@ class ProjectEnvironmentType(UUIDIdMixin, NameMixin):
 class ProjectEnvironment(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     """Defines the context for a specific Application/Project."""
 
-    DEFAULT_ENVIRONMENT = uuid.UUID('44b23b94-6aae-4205-ae67-2f8c021c67aa')
+    DEFAULT_ENVIRONMENT = uuid.UUID('b7e4c2a1-3f8d-4a9e-9c1f-2d5a8b6f4e21')
 
     type = models.ForeignKey(ProjectEnvironmentType, on_delete=models.PROTECT)
     status = models.ForeignKey(
