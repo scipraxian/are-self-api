@@ -3,11 +3,23 @@
 The single source of truth for any AI agent working on the are-self-api codebase.
 Read completely before making any changes.
 
-> **Active thread (April 11, 2026):** Nerve Terminal scan reconcile shipped with a
-> regression — UI cards blink because every per-row `.save()` in the scan fires an
-> acetylcholine broadcast that the frontend re-lists on. See TASKS.md → "In Progress —
-> Nerve Terminal Scan Reconcile" for the full diagnosis and the planned surgical fix.
-> Resume there.
+> **Active thread (April 15, 2026):** `uuid-migration` branch, Pass 2 in progress.
+> Pass 1 (18 plugin-extensible models flipped to UUID PKs, 433 tests passing) is
+> locked. Pass 2 splits every app's `initial_data.json` into the four biological
+> fixture tiers (`genetic_immutables` → `zygote` → `initial_phenotypes` →
+> `petri_dish`), extracts the Unreal flow as the first `NeuralModifier` bundle
+> under `neuroplasticity/modifier_genome/unreal/`, and wires the
+> `./manage.py build_modifier` + contribution-aware loader. The `neuroplasticity`
+> app is registered; its models and `reference_data.json` seed are on disk.
+> Tasks 2 (hypothalamus zygote seed), 3 (log-merge move to occipital_lobe),
+> 4 (log_parser split + LogParserFactory), and 4.5 (three `environments`
+> models flipped to UUID) are staged but not yet committed. See
+> `FIXTURE_SEPARATION_PROMPT.md` for the full executable plan and
+> TASKS.md → "UUID migration Pass 2" for the task list.
+>
+> **Prior thread (April 11):** Nerve Terminal scan reconcile shipped with a
+> UI-blink regression; planned surgical fix documented in TASKS.md →
+> "In Progress — Nerve Terminal Scan Reconcile". Resume there after Pass 2.
 
 
 ## The Developer
@@ -91,11 +103,20 @@ PNS (Celery Beat ticks)
 Legacy app still present: `dashboard/` (old HTMX views) — deprecated, will be removed.
 
 `ue_tools/` is **not** deprecated. It contains the Unreal Engine build orchestration flow
-and is being extracted as the first installable plugin in the forthcoming plugin architecture
-(Pass 2). `occipital_lobe/` is **not** a placeholder — it is the planned home for
-OS-level file-watcher intake (visual-cortex-style event detection that routes folder changes
-to the associated environment's neural pathways) and for the generic log-merge utilities
-currently living in `ue_tools/`.
+and is being extracted as the first `NeuralModifier` bundle in the Pass 2 neuroplasticity
+architecture — the committed source tree lives at `neuroplasticity/modifier_genome/unreal/`.
+`occipital_lobe/` is **not** a placeholder — it is the home for OS-level file-watcher
+intake (visual-cortex-style event detection that routes folder changes to the associated
+environment's neural pathways) and now also hosts the generic log-merge utilities and the
+`LogParserFactory` registry (moved out of `ue_tools/` in Pass 2 Task 3/4).
+
+`neuroplasticity/` is the Pass 2 install / lifecycle registry for `NeuralModifier` bundles
+(Are-Self's word for an installable plugin). The app owns `NeuralModifier`,
+`NeuralModifierContribution` (GFK with UUIDField object_id — the uninstall manifest),
+`NeuralModifierInstallationLog`, and the `NeuralModifierStatus` /
+`NeuralModifierInstallationEventType` enums. Bundles ship committed at
+`neuroplasticity/modifier_genome/<slug>/` and install to `neural_modifiers/<slug>/` at repo
+root (gitignored). `INSTALLED_APPS` is never mutated at runtime — contributions are data.
 
 ## Key Code Paths
 
@@ -324,8 +345,13 @@ sweep done across CNS. Deprecated `ModelProvider`/`ModelRegistry` removed from F
 **Legacy remnants:** `parietal_lobe/registry.py` still exists (superseded by Hypothalamus
 DB-driven routing). `synapse_open_router.py` is deprecated (no production callers). The
 `dashboard/` app is from the original UE5 build orchestrator — will be removed. `ue_tools/`
-stays: it becomes the first installable plugin bundle in Pass 2 (plugin architecture),
-with its generic log-merge utilities relocating to `occipital_lobe/`.
+stays: it is being extracted as the first `NeuralModifier` bundle at
+`neuroplasticity/modifier_genome/unreal/` in Pass 2. Its generic log-merge utilities
+already relocated to `occipital_lobe/` (Task 3) and its parser split into generic core +
+UE strategies registered via `LogParserFactory` (Task 4). `deploy_release_test` is a
+legacy executable slated for removal during the Pass 2 Unreal extraction.
+`ollama_fixture_generator.py` is obsolete — its output is captured as frozen literals in
+`hypothalamus/fixtures/zygote.json` and the script will be deleted in Pass 2 Task 5d.
 
 ## Style Guide (Enforced)
 
@@ -363,24 +389,47 @@ result = async_to_sync(some_async_function)(arg1, arg2)
 ```
 This runs the async function on the SAME database connection as the test transaction.
 
-**Fixtures:** Integer-vs-UUID PK split as of Pass 1 UUID migration (April 2026).
+**Immutability directive (project-wide standing rule):** anything not truly immutable uses
+UUID primary keys. The only things that keep integer PKs are protocol enums and canonical
+vocabulary tables with class-level integer constants that core owns exclusively. Everything
+else — and especially anything a `NeuralModifier` might ever contribute rows to — is
+UUID-keyed.
 
-*Integer PKs (stay stable, never change):* protocol enums and canonical vocabulary tables
-that core owns exclusively and plugins never extend — `SpikeStatus`, `AxonType`,
-`CNSDistributionMode`, `IdentityAddonPhase`, `BudgetPeriod`, `AIModelCapabilities`,
-`AIModelRole`, `AIModelQuantization`, and the hypothalamus lookup tables (`AIModelFamily`,
-`SyncStatus`, etc.). Never change an existing integer PK. Old records deprecated in place,
-never deleted.
+**Fixtures — four biological tiers (Pass 2, in progress):**
 
-*UUID PKs (plugin-extensible):* models that plugins may ship additional rows for —
-`Effector`, `EffectorContext`, `EffectorArgumentAssignment`, `Neuron`, `NeuronContext`,
-`Axon`, `Executable`, `ExecutableSwitch`, `ExecutableArgument`, `ExecutableArgumentAssignment`,
-`ContextVariable`, `ToolDefinition`, `ToolParameter`, `ToolParameterAssignment`,
-`ParameterEnum`, `AIModelDescription`, `IterationDefinition`, `IterationShiftDefinition`.
-Plus the already-UUID models (`Identity`, `IdentityDisc`, `ProjectEnvironment`, `NeuralPathway`).
+1. **`genetic_immutables.json`** — integer-PK protocol enums and canonical vocabulary
+   tables: `SpikeStatus`, `AxonType`, `CNSDistributionMode`, `NeuralModifierStatus`,
+   `NeuralModifierInstallationEventType`, `IdentityAddonPhase`, `BudgetPeriod`,
+   `AIModelCapabilities`, `AIModelRole`, `AIModelQuantization`, `AIModelFamily`,
+   `SyncStatus`, etc. Loaded by install, Docker, and tests. Never renumber, never delete.
+2. **`zygote.json`** — the minimum UUID-keyed rows the system needs to boot and bind
+   one end-to-end identity thread for tests: `nomic-embed-text` (hippocampus hard
+   dependency), the canonical `Identity`/`IdentityDisc`, the default `ProjectEnvironment`.
+   Loaded by install, Docker, and tests.
+3. **`initial_phenotypes.json`** — the rest of the committed-to-core structural rows that
+   ship to end users out-of-the-box (context variables, core Effectors/Neurons/Axons/
+   NeuralPathways that stay in core, reference iteration definitions, etc.). Loaded by
+   install and Docker. **Not loaded by tests.**
+4. **`petri_dish.json`** — test-only instance rows. Loaded by `CommonFixturesAPITestCase`
+   only. Self-contained, must not depend on `initial_phenotypes.json`.
 
-Each app still has its own `fixtures/initial_data.json`. Fixture separation into per-tier
-files (starter / test / plugin bundles) is Pass 2 work.
+Load order — install/Docker: `genetic_immutables` → `zygote` → `initial_phenotypes`.
+Tests: `genetic_immutables` → `zygote` → `petri_dish`. `CommonTestCase` loads only
+`genetic_immutables`. None of these filenames are Django magic names; test base classes
+and `are-self-install.bat` list per-app paths explicitly.
+
+*UUID PKs (`NeuralModifier`-extensible):* `Effector`, `EffectorContext`,
+`EffectorArgumentAssignment`, `Neuron`, `NeuronContext`, `Axon`, `Executable`,
+`ExecutableSwitch`, `ExecutableArgument`, `ExecutableArgumentAssignment`, `ContextVariable`,
+`ToolDefinition`, `ToolParameter`, `ToolParameterAssignment`, `ParameterEnum`,
+`AIModelDescription`, `IterationDefinition`, `IterationShiftDefinition` (all flipped in
+Pass 1), plus `ProjectEnvironmentContextKey`, `ProjectEnvironmentStatus`, and
+`ProjectEnvironmentType` (flipped in Pass 2 Task 4.5), plus the already-UUID models
+(`Identity`, `IdentityDisc`, `ProjectEnvironment`, `NeuralPathway`).
+
+UUIDs are `uuid.uuid4()` random literals. No namespaces, no derivation seeds. Existing
+UUID literals already in fixtures are frozen values and are not regenerated. See
+`FIXTURE_SEPARATION_PROMPT.md` for the full Pass 2 plan.
 
 **Canonical Effector / Executable constants:** Important effectors and executables have
 model-class UUID constants (`central_nervous_system/models.py`, `environments/models.py`):

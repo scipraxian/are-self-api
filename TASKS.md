@@ -331,27 +331,79 @@ update the docs with the norepinephrine in the pns for django.
   instructions are now redundant and actively misleading — someone troubleshooting a fresh install
   could waste time chasing whether the extension "ran properly" when Django migrations handle it.
   Remove both. (README already cleaned; `.bat` pending.)
-- [ ] **UUID migration Pass 2 — fixture separation + plugin extraction.** Pass 1 flipped 18
-  plugin-extensible models from integer to UUID PKs (`uuid-migration` branch, gated on frontend
-  companion PR). Pass 2 splits monolithic `initial_data.json` into per-tier files (starter / test /
-  plugin bundles), extracts the Unreal flow as the first installable plugin bundle, moves generic
-  log-merge utilities from `ue_tools/` to `occipital_lobe/`, splits `log_parser.py` into generic
-  core + UE-specific plugin pieces, removes `ollama_fixture_generator.py`, and wires the `plugins`
-  Django app (Michael is doing the `startapp` himself). Requires Pass 1 merged to `main` first.
-- [ ] **Plugin Garden — 3rd-party plugin marketplace.** Are-Self ships with 3–4 first-party plugins
-  (Unreal first, others TBD), all install/uninstall-able via the plugins API. Beyond the shipped set,
-  stand up a "garden" where 3rd parties can publish plugins and users can browse/install them.
-  NASA doesn't want Unreal; someone else might. Everything past core is a plugin, every plugin is
-  toggleable, and the garden is the discovery layer. Needs: publication format (signed bundle?),
-  registry/index service, trust model, versioning/compat checks against core, install UI. Priority:
-  wanted now, not later.
-- [ ] **Move generic log-merge utilities to occipital_lobe.** `ue_tools/merge_logs.py` and
-  `ue_tools/merge_logs_nway.py` are format-agnostic timeline correlators (heap-sorted entries,
-  tolerance-window row grouping, `(label, content)` tuples in → `MergedRow`/`NWayMergeResult` out).
-  Only the underlying `log_parser.py` is UE-flavored. Move the merge functions to `occipital_lobe/`,
-  keep/rename the parser layer so non-UE callers can plug in their own `LogEntry` producers, and
-  update imports. Pattern: same shape as extracting `mcp_run_unreal_diagnostic_parser` for the
-  Unreal plugin — generic stays in core, UE-specific goes to the plugin bundle.
+- [ ] **UUID migration Pass 2 — fixture tier split + Unreal NeuralModifier extraction.**
+  Pass 1 flipped 18 plugin-extensible models from integer to UUID PKs on the `uuid-migration`
+  branch, 433 tests passing, gated on the frontend companion PR. Pass 2 is the bundle /
+  fixture side of the same branch. Full executable plan in `FIXTURE_SEPARATION_PROMPT.md`.
+  Vocabulary is locked: **`neuroplasticity`** app, **`NeuralModifier`** (Are-Self's word
+  for a plugin bundle), **`modifier_genome/`** (committed source tree), **`neural_modifiers/`**
+  (gitignored runtime install tree at repo root), **`modifier_data.json`** (bundle payload),
+  **`build_modifier`** (manage command). No "plugin" in new code. Every new UUID is
+  `uuid.uuid4()` random; existing UUID literals in fixtures are frozen. Scope:
+  - **Task 1.** Orientation + transitive-closure inventory (no code changes, report only).
+  - **Task 2** *(staged)*. `hypothalamus/fixtures/zygote.json` seed with the 4 boot-critical
+    AIModel rows. `ollama_fixture_generator.py` deletion deferred to Task 5d.
+  - **Task 3** *(staged)*. Move `ue_tools/merge_logs.py` + `merge_logs_nway.py` and tests
+    to `occipital_lobe/`. Flip the import in
+    `central_nervous_system/views/spike_merge_viewset.py`.
+  - **Task 4** *(staged)*. Split `log_parser.py` into generic core in
+    `occipital_lobe/log_parser.py` (`LogConstants`, `LogStats`, `LogEntry`, `LogSession`,
+    `LogParserStrategy` ABC, `LogParserFactory`, `merge_sessions`) and UE-augmented layer
+    in `ue_tools/log_parser.py` (registers UE strategies via `LogParserFactory.register`
+    at import time). Side-effect registration seams marked
+    `# noqa: F401 # registers UE strategies with LogParserFactory`.
+  - **Task 4.5** *(staged)*. Flip `ProjectEnvironmentContextKey`,
+    `ProjectEnvironmentStatus`, and `ProjectEnvironmentType` to UUID PKs (immutability
+    directive — they're half genetic, half UE-flavored, so they can't stay integer).
+    `environments/migrations/0001_initial.py` patched in place;
+    `environments/fixtures/initial_data.json` has 16 PK flips + FK rewrites;
+    `uuid_migration_mapping.json` has three new top-level entries. Literals are frozen.
+  - **Task 5a.** Rename `neuroplasticity/fixtures/reference_data.json` →
+    `genetic_immutables.json`. Prove the rename plumbing.
+  - **Task 5b.** Split `environments/fixtures/initial_data.json` into the four biological
+    tiers (`genetic_immutables.json`, `zygote.json`, `initial_phenotypes.json`,
+    `petri_dish.json`). Delete the old file. Update `CommonTestCase` /
+    `CommonFixturesAPITestCase` explicit per-app fixture paths. Update
+    `are-self-install.bat` to load immutables → zygote → phenotypes. Tests green.
+  - **Task 5c.** Repeat the split for every remaining app top-down through the closure
+    order. UE-flavored rows held aside in a scratch file, not written to core tiers.
+    Bisectable per-app commits.
+  - **Task 5d.** Create `neuroplasticity/modifier_genome/unreal/` with `manifest.json`,
+    `modifier_data.json` (held-aside rows from 5c), `code/` (scaffolded), `README.md`.
+    `.gitkeep` in `modifier_genome/`; `/neural_modifiers/` gitignored at repo root.
+    Delete `ollama_fixture_generator.py`. Remove legacy `deploy_release_test` Executable.
+  - **Task 6.** Wire `./manage.py build_modifier <slug>` and the contribution-aware loader.
+    Loader walks `neural_modifiers/*/`, verifies `manifest_hash` against
+    `NeuralModifier.manifest_hash`, extends `sys.path` with each bundle's `code/`, imports
+    the manifest-declared entry-point modules (triggers side-effect registration into
+    `central_nervous_system/neuromuscular_junction.py` native-handler dict and
+    `occipital_lobe/log_parser.py` `LogParserFactory` registry), records one
+    `NeuralModifierContribution` row per loaded DB object. Uninstall walks
+    `NeuralModifier.iter_contributed_objects()` in install order, deletes targets,
+    deletes contribution rows, removes bundle directory, flips status. `INSTALLED_APPS`
+    is never mutated. Tests cover install → enable → disable → uninstall + BROKEN paths
+    (hash mismatch, load failure).
+  - **Task 7.** Docs pass. Update `CLAUDE.md` and `STYLE_GUIDE.md` fixtures sections.
+    Rewrite `neuroplasticity/models.py` docstrings to use locked neuroplasticity
+    vocabulary (currently still says "plugin" / "plugins_runtime" / "plugin_data.json").
+    Mark `FIXTURE_SEPARATION_PROMPT.md` complete. Add Future entries below.
+
+  Requires Pass 1 merged to `main` first. Frontend `nodeConstants.ts` companion PR
+  gates the final merge of the whole migration.
+
+- [ ] **Move generic log-merge utilities to occipital_lobe.** *(Done in Pass 2 Task 3 —
+  staged on `uuid-migration`, not yet committed. Keep this entry until commit lands,
+  then close.)*
+
+- [ ] **Modifier Garden — 3rd-party `NeuralModifier` marketplace.** Are-Self ships with
+  3–4 first-party `NeuralModifier` bundles (Unreal first, others TBD), all
+  install/uninstall-able via the neuroplasticity API. Beyond the shipped set, stand up
+  a "garden" where 3rd parties can publish bundles and users can browse/install them.
+  NASA doesn't want Unreal; someone else might. Everything past core is a modifier,
+  every modifier is toggleable, and the garden is the discovery layer. Needs:
+  publication format (signed bundle?), registry/index service, trust model,
+  versioning/compat checks against core, install UI. Depends on Pass 2 Tasks 5–6
+  shipping first. Priority: wanted now, not later.
 
 ## MCP Server — Phase 2
 
@@ -383,6 +435,28 @@ update the docs with the norepinephrine in the pns for django.
 
 ## Future
 
+- [ ] **Rebuild `core_dump` as `biopsy` — four-tier-aware dumpdata wrapper.** The existing
+  `common/management/commands/core_dump.py` is a blacklist-based `dumpdata` wrapper that
+  writes one `initial_data.json` per app. After Pass 2 it's obsolete — fixtures live in
+  four tiers and a contribution-aware `NeuralModifier` system owns a chunk of the row
+  space. Replace with a `biopsy` management command:
+  - Preserve the `TRANSACTIONAL_MODELS` blacklist; add `neuroplasticity` to it.
+  - Model-level: integer PK → `genetic_immutables.json`. UUID PK → row-level routing.
+  - Row-level: rows that are `NeuralModifierContribution` targets are **skipped** (they
+    belong to a bundle, not core). A `ZYGOTE_ROWS` allowlist routes to `zygote.json`.
+    Everything else routes to `initial_phenotypes.json`.
+  - `petri_dish.json` is never generated — it stays hand-maintained.
+  - Emit a per-app / per-tier row-count summary at the end of the run.
+  Not public-facing; this is a maintenance tool for rebuilding the shipped fixture set
+  when structural models change. Pass 2 hand-splits instead of tool-generating, so this
+  is post-delivery.
+- [ ] **Immutability audit sweep.** Walk every model in the repo and verify the standing
+  directive: anything not truly immutable has a UUID primary key. Pass 1 caught 18
+  models; Pass 2 Task 4.5 caught three more (`ProjectEnvironmentContextKey`, `Status`,
+  `Type`). There are likely a few more lurking in apps that weren't in Pass 1's scope
+  (check `parietal_lobe`, `temporal_lobe`, `peripheral_nervous_system`, `prefrontal_cortex`
+  especially). Produce a report, then flip anything that shouldn't be integer-keyed in a
+  small follow-up migration pass.
 - [ ] **Image Generation Effector.** CNS effector pattern: artist LLM writes generation prompt to
   axoplasm, effector POSTs to `{{image_gen_endpoint}}`, saves result, writes path back to axoplasm.
   Decoupled from any specific backend (InvokeAI, ComfyUI, etc.). TTS is already built as Parietal Lobe
