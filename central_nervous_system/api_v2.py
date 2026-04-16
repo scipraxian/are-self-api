@@ -126,6 +126,16 @@ class NeuralPathwayViewSetV2(viewsets.ModelViewSet):
             return NeuralPathwayDetailSerializer
         return NeuralPathwaySerializer
 
+    def perform_create(self, serializer):
+        pathway = serializer.save()
+        # Every new pathway gets a Begin Play root neuron automatically.
+        Neuron.objects.create(
+            pathway=pathway,
+            effector_id=Effector.BEGIN_PLAY,
+            is_root=True,
+            ui_json='{"x": 100, "y": 200}',
+        )
+
     @action(detail=True, methods=['post'])
     def toggle_favorite(self, request, pk=None):
         pathway = self.get_object()

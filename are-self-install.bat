@@ -3,7 +3,7 @@ TITLE Are-Self Installer
 
 echo ========================================================
 echo   ARE-SELF INSTALLER
-echo   Setting up the AI Reasoning Engine...
+echo   Setting up the AI Swarm Engine...
 echo ========================================================
 echo.
 
@@ -70,6 +70,7 @@ if %errorlevel% neq 0 (
 echo [7/8] Loading initial data...
 .\venv\Scripts\python.exe manage.py loaddata genetic_immutables.json
 .\venv\Scripts\python.exe manage.py loaddata zygote.json
+.\venv\Scripts\python.exe manage.py loaddata initial_phenotypes.json
 
 :: Step 8: Create superuser
 echo [8/9] Creating admin superuser...

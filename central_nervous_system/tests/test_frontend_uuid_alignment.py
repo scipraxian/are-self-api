@@ -191,6 +191,76 @@ class APIV2UUIDSerializationTest(CommonFixturesAPITestCase):
             self.assertEqual(str(data['id']), str(expected_uuid))
 
 
+class PathwayCreationAutoRootTest(CommonFixturesAPITestCase):
+    """
+    Creating a pathway via the v2 API must automatically seed a
+    Begin Play root neuron so the pathway is immediately launchable.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.client = self.test_client
+
+    def test_new_pathway_has_begin_play_root(self):
+        """POST /api/v2/neuralpathways/ auto-creates a BEGIN_PLAY root neuron."""
+        response = self.client.post(
+            '/api/v2/neuralpathways/',
+            {'name': 'Auto-Root Test Pathway'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 201)
+        pathway_id = response.json()['id']
+
+        # Fetch the full detail (includes neurons)
+        detail = self.client.get(f'/api/v2/neuralpathways/{pathway_id}/')
+        self.assertEqual(detail.status_code, 200)
+        neurons = detail.json().get('neurons', [])
+
+        self.assertEqual(
+            len(neurons), 1,
+            f'Expected exactly 1 auto-created neuron, got {len(neurons)}',
+        )
+
+        root = neurons[0]
+        self.assertTrue(root['is_root'], 'Auto-created neuron must be is_root=True')
+        self.assertEqual(
+            root['effector'],
+            str(Effector.BEGIN_PLAY),
+            f"Root neuron effector should be BEGIN_PLAY ({Effector.BEGIN_PLAY}), "
+            f"got {root['effector']}",
+        )
+
+    def test_new_pathway_root_has_ui_position(self):
+        """The auto-created root neuron has a valid ui_json position."""
+        response = self.client.post(
+            '/api/v2/neuralpathways/',
+            {'name': 'Position Test Pathway'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 201)
+        pathway_id = response.json()['id']
+
+        neuron = Neuron.objects.get(pathway_id=pathway_id)
+        self.assertIsNotNone(neuron.ui_json)
+        import json as _json
+        pos = _json.loads(neuron.ui_json)
+        self.assertIn('x', pos)
+        self.assertIn('y', pos)
+
+    def test_new_pathway_root_is_begin_play_in_db(self):
+        """Direct DB check: the auto-created neuron references Effector.BEGIN_PLAY."""
+        response = self.client.post(
+            '/api/v2/neuralpathways/',
+            {'name': 'DB Check Pathway'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 201)
+        pathway_id = response.json()['id']
+
+        root = Neuron.objects.get(pathway_id=pathway_id, is_root=True)
+        self.assertEqual(root.effector_id, Effector.BEGIN_PLAY)
+
+
 class NodeConstantsFileParseTest(TestCase):
     """
     Parse the actual nodeConstants.ts file and verify its UUIDs match
