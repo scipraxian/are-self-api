@@ -63,17 +63,7 @@ class CommonTestCase(APITestCase):
 
 
 class CommonFixturesAPITestCase(CommonTestCase):
-    fixtures = [
-        # gi tier
-        'central_nervous_system/fixtures/genetic_immutables.json',
-        'environments/fixtures/genetic_immutables.json',
-        'frontal_lobe/fixtures/genetic_immutables.json',
-        'hypothalamus/fixtures/genetic_immutables.json',
-        'identity/fixtures/genetic_immutables.json',
-        'parietal_lobe/fixtures/genetic_immutables.json',
-        'peripheral_nervous_system/fixtures/genetic_immutables.json',
-        'prefrontal_cortex/fixtures/genetic_immutables.json',
-        'temporal_lobe/fixtures/genetic_immutables.json',
+    fixtures = list(CommonTestCase.fixtures) + [
         # zygote tier
         'central_nervous_system/fixtures/zygote.json',
         'environments/fixtures/zygote.json',
@@ -88,9 +78,6 @@ class CommonFixturesAPITestCase(CommonTestCase):
         'identity/fixtures/initial_phenotypes.json',
         'parietal_lobe/fixtures/initial_phenotypes.json',
         'temporal_lobe/fixtures/initial_phenotypes.json',
-        # unreal_modifier (temporary — until UE bundle extraction, Task 5d)
-        'central_nervous_system/fixtures/unreal_modifier.json',
-        'environments/fixtures/unreal_modifier.json',
         # petri_dish tier
         'central_nervous_system/fixtures/petri_dish.json',
         'environments/fixtures/petri_dish.json',
