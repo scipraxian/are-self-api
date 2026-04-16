@@ -169,38 +169,14 @@
       "rate_limit_counter": 0,
       "rate_limit_total_failures": 0,
       "is_enabled": true,
-      "ai_model": "3ca370b6-5e75-5058-9172-4b4e376c408d",
+      "ai_model": "b02d348c-3303-4c3d-a5ac-241da3d6f026",
       "provider": 64,
-      "provider_unique_model_id": "ollama/qwen2.5-coder:7b",
+      "provider_unique_model_id": "ollama/qwen3-coder:30b",
       "mode": 2,
       "max_tokens": null,
       "max_input_tokens": null,
       "max_output_tokens": null,
       "disabled_capabilities": []
-    }
-  },
-  {
-    "model": "hypothalamus.aimodel",
-    "pk": "3ca370b6-5e75-5058-9172-4b4e376c408d",
-    "fields": {
-      "name": "qwen2.5-coder:7b",
-      "description": null,
-      "creator": 2,
-      "parameter_size": 7.0,
-      "family": 3,
-      "version": null,
-      "context_length": 131072,
-      "enabled": true,
-      "deprecation_date": null,
-      "roles": [
-        3,
-        1
-      ],
-      "quantizations": [],
-      "capabilities": [
-        2,
-        1
-      ]
     }
   },
   {

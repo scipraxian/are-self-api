@@ -14,6 +14,7 @@ from central_nervous_system.models import (
     Spike,
     SpikeTrain,
 )
+from environments.models import ProjectEnvironment
 from environments.serializers import (
     ExecutableArgumentSerializer,
     ExecutableSerializer,
@@ -123,7 +124,18 @@ class NeuronSerializer(serializers.ModelSerializer):
         source='effector.name', read_only=True
     )
     invoked_pathway_name = serializers.CharField(
-        source='invoked_pathway.name', read_only=True
+        source='invoked_pathway.name', read_only=True, default=None
+    )
+    environment = serializers.PrimaryKeyRelatedField(
+        queryset=ProjectEnvironment.objects.all(),
+        allow_null=True,
+        required=False
+    )
+    environment_name = serializers.CharField(
+        source='environment.name', read_only=True, default=None
+    )
+    distribution_mode_name = serializers.CharField(
+        source='distribution_mode.name', read_only=True, default=None
     )
 
     class Meta:
@@ -138,15 +150,35 @@ class NeuronSerializer(serializers.ModelSerializer):
             'ui_json',
             'is_root',
             'distribution_mode',
+            'distribution_mode_name',
+            'environment',
+            'environment_name',
         ]
 
 
 class NeuralPathwaySerializer(serializers.ModelSerializer):
     tags = CNSTagSerializer(many=True, read_only=True)
+    environment = serializers.PrimaryKeyRelatedField(
+        queryset=ProjectEnvironment.objects.all(),
+        allow_null=True,
+        required=False
+    )
+    environment_name = serializers.CharField(
+        source='environment.name', read_only=True, default=None
+    )
 
     class Meta:
         model = NeuralPathway
-        fields = ['id', 'name', 'description', 'is_favorite', 'tags', 'ui_json']
+        fields = [
+            'id',
+            'name',
+            'description',
+            'is_favorite',
+            'tags',
+            'ui_json',
+            'environment',
+            'environment_name',
+        ]
 
 
 class NeuralPathwayDetailSerializer(NeuralPathwaySerializer):

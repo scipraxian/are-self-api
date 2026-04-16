@@ -36,6 +36,42 @@ Read completely before making any changes.
 > **Prior thread (April 11):** Nerve Terminal scan reconcile shipped with a
 > UI-blink regression; planned surgical fix documented in TASKS.md →
 > "In Progress — Nerve Terminal Scan Reconcile". Resume there after Pass 2.
+>
+> **April 15, 2026 — CNS dispatch + inspector session (Cowork):**
+>
+> 1. **Zero-agent dispatch fix.** `_dispatch_fleet_wave` and
+>    `_dispatch_first_responder` in `central_nervous_system.py` no longer
+>    hard-fail when the NerveTerminalRegistry is empty. Design: if there are
+>    no agents online, there is nothing to dispatch — the spike succeeds
+>    silently (`SpikeStatus.SUCCESS`, `logger.info`) and the graph keeps
+>    walking. The local server is NOT an agent; fleet/first-responder modes
+>    mean remote fan-out, and zero targets is a no-op, not an error.
+>    `_dispatch_pinned_wave` (SPECIFIC_TARGETS) left unchanged — pinned
+>    targets are explicit user intent. Tests:
+>    `CNSFleetBroadcastZeroAgentsTest` (3 cases) and
+>    `CNSFirstResponderZeroAgentsTest` (1 case) in `tests/test_routing.py`.
+>
+> 2. **Neuron/Pathway inspector fields (v2 serializers).** `NeuronSerializer`
+>    now exposes `environment` (writable FK, nullable),
+>    `environment_name` (read-only), and `distribution_mode_name`
+>    (read-only). `NeuralPathwaySerializer` now exposes `environment`
+>    (writable FK, nullable) and `environment_name` (read-only).
+>    `NeuralPathwayDetailSerializer` inherits both. No migrations —
+>    fields exist via `ProjectEnvironmentMixin`. Tests in
+>    `tests/test_effector_editor_api.py`.
+>
+> 3. **CNSInspector UI (are-self-ui).** Node inspector now shows
+>    Distribution Mode (select w/ "Inherit from effector" null option) and
+>    Neuron Environment (select w/ "Inherit" null option). Yellow override
+>    badge renders when a per-neuron override is set — prevents the
+>    invisible-override bug that caused this session's original failure.
+>    New `PathwayInspector` component renders when no neuron is selected,
+>    exposing pathway-level environment editing.
+>
+> **Root cause of the session:** Neuron `3298d2c2` on "List Location R"
+> had `distribution_mode = ALL_ONLINE_AGENTS` persisted as a per-neuron
+> override, forcing fleet broadcast. The effector default was LOCAL_SERVER.
+> The UI had no affordance to see or clear the override — it was invisible.
 
 
 ## The Developer

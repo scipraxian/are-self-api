@@ -283,6 +283,46 @@ update the docs with the norepinephrine in the pns for django.
   neuron context) needs auditing — variables are stored but not consumed by `_get_rendered_objective()`
   or wherever the prompt is assembled.
 
+## Completed — CNS Dispatch + Inspector (April 15, 2026)
+
+**Session type:** Cowork (Claude Opus). Triggered by 100% test failures with
+`[CNS] No agents online for fleet broadcast.` after migrating to new fixture styles.
+
+**Root cause:** Neuron `3298d2c2` on "List Location R" pathway had a rogue
+`distribution_mode = ALL_ONLINE_AGENTS` override (the effector default was
+LOCAL_SERVER). The CNSInspector UI had no way to view or edit `neuron.distribution_mode`
+or `neuron.environment` — the override was completely invisible.
+
+**Changes shipped (3 files backend, 5 files frontend):**
+
+- [x] **Zero-agent dispatch — no-op, not failure.** `_dispatch_fleet_wave` and
+  `_dispatch_first_responder` in `central_nervous_system/central_nervous_system.py`
+  now set `SpikeStatus.SUCCESS` + `logger.info` when the NerveTerminalRegistry is
+  empty. The local server is not an agent — fleet broadcast to zero targets is a
+  no-op. `_dispatch_pinned_wave` (SPECIFIC_TARGETS) left as-is (pinned targets are
+  explicit user intent). 4 new tests in `tests/test_routing.py`:
+  `CNSFleetBroadcastZeroAgentsTest` (fleet succeeds, graph continues) and
+  `CNSFirstResponderZeroAgentsTest` (first-responder succeeds).
+- [x] **v2 serializer environment/mode fields.** `NeuronSerializer` in
+  `serializers_v2.py` now exposes `environment` (writable FK, nullable),
+  `environment_name` (read-only), `distribution_mode_name` (read-only).
+  `NeuralPathwaySerializer` exposes `environment` (writable FK, nullable) and
+  `environment_name` (read-only). `NeuralPathwayDetailSerializer` inherits both.
+  No migrations needed. Tests in `tests/test_effector_editor_api.py`.
+- [x] **CNSInspector — Distribution Mode + Environment.** `CNSInspector.tsx` now
+  shows a Distribution Mode select (populated from `/api/v2/distribution-modes/`,
+  "Inherit from effector" = null, PATCHes neuron) and a Neuron Environment select
+  (from `/api/v2/environments/`, same pattern). Yellow override badge when set.
+  Types updated in `types.ts`.
+- [x] **PathwayInspector — new component.** `PathwayInspector.tsx` renders in the
+  right panel of `CNSEditPage.tsx` when no neuron is selected. Exposes pathway-level
+  environment editing via PATCH to `/api/v2/neuralpathways/{id}/`.
+
+**Known gap (not blocking):** The v1 serializers (`serializers/serializers.py`) do NOT
+expose the new environment fields. If anything still hits v1 routes, the override
+remains invisible there. The v1→v2 migration is tracked separately under
+"Purge residual `/api/v1/` consumers" below.
+
 ## Known Bugs
 
 - [ ] **Infinite loop on retry LIMIT REACHED — ROLLED BACK, NEEDS MORE TARGETED FIX.**
