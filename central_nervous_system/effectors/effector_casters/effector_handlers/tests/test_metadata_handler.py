@@ -27,7 +27,10 @@ MODULE_PATH = (
 
 
 class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
-    fixtures = list(CommonFixturesAPITestCase.fixtures) + ['central_nervous_system/fixtures/unreal_modifier.json']
+    fixtures = list(CommonFixturesAPITestCase.fixtures) + [
+        'environments/fixtures/unreal_modifier.json',
+        'central_nervous_system/fixtures/unreal_modifier.json',
+    ]
     def setUp(self):
         self.status_running = SpikeStatus.objects.get(id=SpikeStatus.RUNNING)
         self.spawn_running = SpikeTrainStatus.objects.get(

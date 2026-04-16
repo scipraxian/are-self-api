@@ -29,7 +29,13 @@
       "Bash(venv/Scripts/pytest -x)",
       "Bash(venv/Scripts/pytest -x central_nervous_system/effectors/effector_casters/effector_handlers/tests/test_metadata_handler.py -s)",
       "Bash(venv/Scripts/pytest central_nervous_system/effectors/effector_casters/effector_handlers/tests/test_metadata_handler.py -v)",
-      "Bash(venv/Scripts/pytest central_nervous_system/effectors/effector_casters/effector_handlers/tests/test_metadata_handler.py)"
+      "Bash(venv/Scripts/pytest central_nervous_system/effectors/effector_casters/effector_handlers/tests/test_metadata_handler.py)",
+      "Bash(venv/Scripts/pytest central_nervous_system/effectors/effector_casters/tests/test_neuromuscular_junction_simple.py -v)",
+      "Bash(venv/Scripts/python -c ' *)",
+      "Bash(venv/Scripts/python *)",
+      "Bash(venv/Scripts/pytest central_nervous_system/tests/test_v2_spiketrain_filters.py -v)",
+      "Bash(venv/Scripts/pytest peripheral_nervous_system/tests/test_nerve_terminal_scan_reconcile.py -v)",
+      "Bash(venv/Scripts/pytest central_nervous_system/tests/test_sample_pathway.py -v)"
     ]
   }
 }
