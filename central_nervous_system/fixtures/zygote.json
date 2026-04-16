@@ -81,6 +81,21 @@
       "created": "2026-02-17T18:23:16.500Z",
       "description": "DEPRECATED — moved to PK 8",
       "modified": "2026-04-16T13:55:36.911Z",
+      "name": "Frontal Lobe Node - Depreciated.",
+      "is_favorite": false,
+      "executable": "24e213d0-92c1-4b77-8a35-f6998075efc0",
+      "distribution_mode": 1,
+      "tags": [],
+      "switches": []
+    }
+  },
+  {
+    "model": "central_nervous_system.effector",
+    "pk": "64c0995a-cbd2-47d3-a452-e36ea4d46154",
+    "fields": {
+      "created": "2026-02-17T18:23:16.500Z",
+      "description": null,
+      "modified": "2026-02-17T18:26:37.884Z",
       "name": "Frontal Lobe Node",
       "is_favorite": false,
       "executable": "24e213d0-92c1-4b77-8a35-f6998075efc0",

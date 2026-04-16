@@ -2,24 +2,24 @@ import json
 import os
 from unittest.mock import mock_open, patch
 
-from common.tests.common_test_case import CommonFixturesAPITestCase
-
-from environments.models import Executable
-from central_nervous_system.models import (
-    Spike,
-    SpikeStatus,
-    SpikeTrain,
-    SpikeTrainStatus,
-    Effector,
-    NeuralPathway,
-)
 from central_nervous_system.effectors.effector_casters.effector_handlers.effector_handler_codes import (
     HANDLER_INTERNAL_ERROR_CODE,
     HANDLER_SUCCESS_CODE,
     HANDLER_WRITE_ERROR_CODE,
 )
 from central_nervous_system.effectors.effector_casters.effector_handlers.version_metadata_handler import (
-    update_version_metadata,)
+    update_version_metadata,
+)
+from central_nervous_system.models import (
+    Effector,
+    NeuralPathway,
+    Spike,
+    SpikeStatus,
+    SpikeTrain,
+    SpikeTrainStatus,
+)
+from common.tests.common_test_case import CommonFixturesAPITestCase
+from environments.models import Executable
 
 MODULE_PATH = (
     'central_nervous_system.effectors.effector_casters.effector_handlers.version_metadata_handler'
@@ -27,7 +27,7 @@ MODULE_PATH = (
 
 
 class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
-
+    fixtures = list(CommonFixturesAPITestCase.fixtures) + ['central_nervous_system/fixtures/unreal_modifier.json']
     def setUp(self):
         self.status_running = SpikeStatus.objects.get(id=SpikeStatus.RUNNING)
         self.spawn_running = SpikeTrainStatus.objects.get(

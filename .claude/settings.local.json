@@ -25,7 +25,11 @@
       "Bash(./venv/Scripts/pytest \"synaptic_cleft/tests.py::SynapticDendriteTests::test_connect_accepts\" -x --tb=long)",
       "Bash(./venv/Scripts/pytest synaptic_cleft --tb=short)",
       "Bash(./venv/Scripts/pytest \"synaptic_cleft/tests.py::SynapticDendriteTests::test_connect_accepts\" \"synaptic_cleft/tests.py::WebSocketURLRoutingTests::test_spike_route\" --tb=short)",
-      "Bash(./venv/Scripts/pytest \"synaptic_cleft/tests.py::SynapticDendriteTests::test_connect_accepts\" \"synaptic_cleft/tests.py::SynapticDendriteTests::test_disconnect_completes\" --tb=short)"
+      "Bash(./venv/Scripts/pytest \"synaptic_cleft/tests.py::SynapticDendriteTests::test_connect_accepts\" \"synaptic_cleft/tests.py::SynapticDendriteTests::test_disconnect_completes\" --tb=short)",
+      "Bash(venv/Scripts/pytest -x)",
+      "Bash(venv/Scripts/pytest -x central_nervous_system/effectors/effector_casters/effector_handlers/tests/test_metadata_handler.py -s)",
+      "Bash(venv/Scripts/pytest central_nervous_system/effectors/effector_casters/effector_handlers/tests/test_metadata_handler.py -v)",
+      "Bash(venv/Scripts/pytest central_nervous_system/effectors/effector_casters/effector_handlers/tests/test_metadata_handler.py)"
     ]
   }
 }

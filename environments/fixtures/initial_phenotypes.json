@@ -1,68 +1,5 @@
 [
   {
-    "model": "environments.contextvariable",
-    "pk": "0c52be0c-160f-4bb3-97b7-37990a1c2868",
-    "fields": {
-      "environment": "4d82fab0-c62d-4204-a316-476476c10a55",
-      "key": "f88bfedf-6e56-5cad-83a8-82eebe5f2a81",
-      "value": "C:\\hsh_python"
-    }
-  },
-  {
-    "model": "environments.contextvariable",
-    "pk": "0d2ff4a3-adb2-4f34-9756-3dd5640ab7eb",
-    "fields": {
-      "environment": "c1b7a124-a50b-4710-aa85-154736a839bc",
-      "key": "662f350c-1595-5d5d-ba23-04259ca765be",
-      "value": "Are-Self-UI"
-    }
-  },
-  {
-    "model": "environments.contextvariable",
-    "pk": "2a6c404a-dca3-45a7-b62e-36e731a67afa",
-    "fields": {
-      "environment": "c1b7a124-a50b-4710-aa85-154736a839bc",
-      "key": "fa470a08-db2a-5058-8da3-5b58895ea1b4",
-      "value": "{{BASE_DIR}}"
-    }
-  },
-  {
-    "model": "environments.contextvariable",
-    "pk": "5b74927d-713d-43ab-a35c-5cbafdb2e403",
-    "fields": {
-      "environment": "4d82fab0-c62d-4204-a316-476476c10a55",
-      "key": "d0af4b3d-a6cb-5d15-bc49-b8e9948fbb50",
-      "value": "{{BASE_DIR}}/venv"
-    }
-  },
-  {
-    "model": "environments.contextvariable",
-    "pk": "bb1576aa-3896-4903-8e34-e2cd13634cd6",
-    "fields": {
-      "environment": "c1b7a124-a50b-4710-aa85-154736a839bc",
-      "key": "f88bfedf-6e56-5cad-83a8-82eebe5f2a81",
-      "value": "C:\\are-self-ui\\src"
-    }
-  },
-  {
-    "model": "environments.contextvariable",
-    "pk": "cac3a37f-c52d-44be-96de-bffaad51f2e8",
-    "fields": {
-      "environment": "4d82fab0-c62d-4204-a316-476476c10a55",
-      "key": "fa470a08-db2a-5058-8da3-5b58895ea1b4",
-      "value": "{{BASE_DIR}}"
-    }
-  },
-  {
-    "model": "environments.contextvariable",
-    "pk": "ed679fff-96fa-4128-9eb3-fa61b7dc8f59",
-    "fields": {
-      "environment": "c1b7a124-a50b-4710-aa85-154736a839bc",
-      "key": "d0af4b3d-a6cb-5d15-bc49-b8e9948fbb50",
-      "value": "{{BASE_DIR}}/venv/"
-    }
-  },
-  {
     "model": "environments.executable",
     "pk": "77668144-2aa6-435f-8e61-0ea547217fae",
     "fields": {
@@ -109,56 +46,6 @@
   },
   {
     "model": "environments.executableargument",
-    "pk": "1039da3b-f648-4efb-a524-19d17737bf58",
-    "fields": {
-      "created": "2026-01-30T16:34:15.931Z",
-      "modified": "2026-01-30T16:34:15.931Z",
-      "name": "Compiled SPC File",
-      "argument": "HSHVacancy_PCD3D_SM6.spc"
-    }
-  },
-  {
-    "model": "environments.executableargument",
-    "pk": "1741c851-24bc-4120-b503-3e838b3115a6",
-    "fields": {
-      "created": "2026-01-27T22:43:48.676Z",
-      "modified": "2026-01-27T23:08:47.766Z",
-      "name": "Local Pre-Release Folder",
-      "argument": "{{prerelease_root}}"
-    }
-  },
-  {
-    "model": "environments.executableargument",
-    "pk": "1aa7b7cc-19ad-45f5-9add-59464086919a",
-    "fields": {
-      "created": "2026-02-11T16:30:44.368Z",
-      "modified": "2026-02-11T16:30:44.368Z",
-      "name": "Spell Test Argument",
-      "argument": "This should be project_name {{project_name}}"
-    }
-  },
-  {
-    "model": "environments.executableargument",
-    "pk": "1bd3bc61-8083-4369-9bf2-1b8538b5df1e",
-    "fields": {
-      "created": "2026-02-08T17:46:49.433Z",
-      "modified": "2026-02-08T17:46:49.433Z",
-      "name": "Pre-Release Logs",
-      "argument": "{{prerelease_root}}\\Windows\\{{project_name}}\\Saved\\Logs"
-    }
-  },
-  {
-    "model": "environments.executableargument",
-    "pk": "23419b25-e42f-4648-ad49-def29d3685f7",
-    "fields": {
-      "created": "2026-01-31T20:19:54.140Z",
-      "modified": "2026-01-31T20:19:54.140Z",
-      "name": "Llama3 Model",
-      "argument": "llama3"
-    }
-  },
-  {
-    "model": "environments.executableargument",
     "pk": "2429cc22-faf4-4581-9c68-b214727cb271",
     "fields": {
       "created": "2026-02-16T18:47:50.424Z",
@@ -189,52 +76,12 @@
   },
   {
     "model": "environments.executableargument",
-    "pk": "3014f63b-37fd-433a-8d02-573a5aa36a95",
-    "fields": {
-      "created": "2026-01-30T18:35:43.800Z",
-      "modified": "2026-01-30T18:35:43.800Z",
-      "name": "Prerelease Pipeline Caches Folder",
-      "argument": "{{prerelease_root}}\\Windows\\{{project_name}}\\Content\\PipelineCaches"
-    }
-  },
-  {
-    "model": "environments.executableargument",
-    "pk": "3108ce82-fead-4942-9101-a4b880d15181",
-    "fields": {
-      "created": "2026-01-30T16:32:41.643Z",
-      "modified": "2026-01-30T16:32:41.643Z",
-      "name": "Compiled Shader Cache Folder",
-      "argument": "{{project_root}}\\Content\\PipelineCaches"
-    }
-  },
-  {
-    "model": "environments.executableargument",
     "pk": "3769bb0e-750e-4ddf-a6a8-7a9e38dbdb3f",
     "fields": {
       "created": "2026-01-31T20:19:32.005Z",
       "modified": "2026-01-31T20:19:32.005Z",
       "name": "Ollama Run",
       "argument": "run"
-    }
-  },
-  {
-    "model": "environments.executableargument",
-    "pk": "42753cc5-cfe3-4ca0-9132-40e0c9f1d7a9",
-    "fields": {
-      "created": "2026-02-08T17:51:08.618Z",
-      "modified": "2026-02-08T17:51:08.618Z",
-      "name": "Pre-Release User Config",
-      "argument": "{{prerelease_root}}\\Windows\\{{project_name}}\\Saved\\Config"
-    }
-  },
-  {
-    "model": "environments.executableargument",
-    "pk": "6072b897-e5a4-4bea-9e90-6eb6b0eacf9a",
-    "fields": {
-      "created": "2026-01-31T14:28:11.107Z",
-      "modified": "2026-01-31T14:28:23.674Z",
-      "name": "Cached SaveGames Folder",
-      "argument": "{{environment_cache_root}}\\Saved\\SaveGames"
     }
   },
   {
@@ -259,16 +106,6 @@
   },
   {
     "model": "environments.executableargument",
-    "pk": "95c8d51b-0769-4d85-a18f-891a4178b081",
-    "fields": {
-      "created": "2026-01-31T20:33:16.600Z",
-      "modified": "2026-01-31T20:33:16.600Z",
-      "name": "llama3.2:3b",
-      "argument": "llama3.2:3b"
-    }
-  },
-  {
-    "model": "environments.executableargument",
     "pk": "98190213-bc55-43b8-ba0c-56350331dc43",
     "fields": {
       "created": "2026-01-30T16:29:38.051Z",
@@ -289,32 +126,12 @@
   },
   {
     "model": "environments.executableargument",
-    "pk": "b772f146-52eb-4e00-8285-75a64c981599",
-    "fields": {
-      "created": "2026-01-31T20:24:58.474Z",
-      "modified": "2026-01-31T20:24:58.474Z",
-      "name": "LLM Prompt 1",
-      "argument": "{{ prompt }} Context: {{ provenance.application_log }} {{ provenance.execution_log }}"
-    }
-  },
-  {
-    "model": "environments.executableargument",
     "pk": "c098b2a3-d7b8-4820-a8d4-99d85f97b280",
     "fields": {
       "created": "2026-02-16T18:59:05.758Z",
       "modified": "2026-02-16T18:59:05.758Z",
       "name": "Prompt Key",
       "argument": "--key=prompt"
-    }
-  },
-  {
-    "model": "environments.executableargument",
-    "pk": "c4d207aa-46fd-4259-ad59-f06deada0ba8",
-    "fields": {
-      "created": "2026-01-31T15:51:48.415Z",
-      "modified": "2026-01-31T15:51:48.415Z",
-      "name": "Intermediate Folder",
-      "argument": "{{project_root}}\\Intermediate"
     }
   },
   {
@@ -329,117 +146,12 @@
   },
   {
     "model": "environments.executableargument",
-    "pk": "c6baeb32-947d-4d7d-834b-e6bf756a1cf4",
-    "fields": {
-      "created": "2026-01-31T14:28:59.875Z",
-      "modified": "2026-01-31T14:28:59.875Z",
-      "name": "Prerelease SaveGames Folder",
-      "argument": "{{prerelease_root}}\\Windows\\{{project_name}}\\Saved\\SaveGames"
-    }
-  },
-  {
-    "model": "environments.executableargument",
-    "pk": "ceb749f6-c979-402a-b5d7-5a6fa0f5a385",
-    "fields": {
-      "created": "2026-01-27T22:42:52.057Z",
-      "modified": "2026-01-27T22:55:43.025Z",
-      "name": "Network Server Pre-Release Folder",
-      "argument": "\\\\{{server}}\\{{prerelease_root}}"
-    }
-  },
-  {
-    "model": "environments.executableargument",
-    "pk": "d134ad17-d6bf-42a9-8a96-c56c6c2a70a3",
-    "fields": {
-      "created": "2026-01-31T20:33:39.809Z",
-      "modified": "2026-01-31T20:33:39.809Z",
-      "name": "gemma3:27b",
-      "argument": "gemma3:27b"
-    }
-  },
-  {
-    "model": "environments.executableargument",
-    "pk": "d64432fb-9433-45c9-beab-b81636f73964",
-    "fields": {
-      "created": "2026-02-16T18:47:26.334Z",
-      "modified": "2026-02-16T18:48:16.940Z",
-      "name": "local_prompt_path",
-      "argument": "{{local_prompt_path}}"
-    }
-  },
-  {
-    "model": "environments.executableargument",
-    "pk": "ee44c8f2-db45-410c-9fe4-8c83fdd3852b",
-    "fields": {
-      "created": "2026-02-16T18:39:55.793Z",
-      "modified": "2026-02-16T18:39:55.793Z",
-      "name": "Generate Prompt Payload",
-      "argument": "generate_prompt_payload"
-    }
-  },
-  {
-    "model": "environments.executableargument",
-    "pk": "f82efc0a-b19a-476c-bcaa-8a72c9560766",
-    "fields": {
-      "created": "2026-01-30T16:27:56.809Z",
-      "modified": "2026-01-30T16:27:56.809Z",
-      "name": "Local Shader Cache",
-      "argument": "{{shader_cache_root}}"
-    }
-  },
-  {
-    "model": "environments.executableargument",
     "pk": "ff218722-1af3-44a0-9ca6-e0c03ef0e260",
     "fields": {
       "created": "2026-01-31T16:07:56.600Z",
       "modified": "2026-01-31T16:07:56.600Z",
       "name": "Django Manage.py",
       "argument": "manage.py"
-    }
-  },
-  {
-    "model": "environments.executableargumentassignment",
-    "pk": "003ccf38-da19-4146-a6cd-6c239aef32b4",
-    "fields": {
-      "executable": "77668144-2aa6-435f-8e61-0ea547217fae",
-      "order": 2,
-      "argument": "95c8d51b-0769-4d85-a18f-891a4178b081"
-    }
-  },
-  {
-    "model": "environments.executableargumentassignment",
-    "pk": "56fb68d3-83eb-4420-9f58-13b851c4e088",
-    "fields": {
-      "executable": "77668144-2aa6-435f-8e61-0ea547217fae",
-      "order": 1,
-      "argument": "3769bb0e-750e-4ddf-a6a8-7a9e38dbdb3f"
-    }
-  },
-  {
-    "model": "environments.executableargumentassignment",
-    "pk": "599ffdda-2568-4428-95ed-6176c4d0547e",
-    "fields": {
-      "executable": "dfe7b955-d22f-4630-a1f9-36b1ff59c591",
-      "order": 10,
-      "argument": "08cd6894-e96b-4845-975d-8c78818f148d"
-    }
-  },
-  {
-    "model": "environments.executableargumentassignment",
-    "pk": "8a9fdc11-8395-4231-bae7-00d2e0c5e0f0",
-    "fields": {
-      "executable": "c8cb58b0-341b-43d3-bfcf-8d31dca28375",
-      "order": 10,
-      "argument": "74744801-b5b3-4e92-9a62-5cb76f7a5802"
-    }
-  },
-  {
-    "model": "environments.executableargumentassignment",
-    "pk": "a5a9cb32-008e-47d8-ba4a-8865d9a7bcaa",
-    "fields": {
-      "executable": "11915177-a32b-4883-8c9f-e137c528c20d",
-      "order": 10,
-      "argument": "ff218722-1af3-44a0-9ca6-e0c03ef0e260"
     }
   },
   {
@@ -459,7 +171,7 @@
     "fields": {
       "created": "2026-01-28T16:16:56.915Z",
       "modified": "2026-01-28T16:17:57.974Z",
-      "name": "SpellBook Retry 2",
+      "name": "Retry 2",
       "flag": "retry=",
       "value": "2"
     }
@@ -525,7 +237,7 @@
     "fields": {
       "created": "2026-01-28T16:17:14.913Z",
       "modified": "2026-01-30T19:50:08.698Z",
-      "name": "SpellBook Delay 1",
+      "name": "Delay 1",
       "flag": "delay=",
       "value": "1"
     }
@@ -536,20 +248,9 @@
     "fields": {
       "created": "2026-01-30T19:50:27.302Z",
       "modified": "2026-01-30T19:50:27.302Z",
-      "name": "SpellBook Delay 5",
+      "name": "Delay 5",
       "flag": "delay=",
       "value": "5"
-    }
-  },
-  {
-    "model": "environments.executableswitch",
-    "pk": "6069b8ad-dccf-4a35-a2eb-28293cb8c087",
-    "fields": {
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z",
-      "name": "Unreal Warnings as Errors",
-      "flag": "-warningsaserrors",
-      "value": ""
     }
   },
   {
@@ -560,28 +261,6 @@
       "modified": "2026-01-27T22:37:05.486Z",
       "name": "RoboCopy Multi-thread",
       "flag": "/MT:8",
-      "value": ""
-    }
-  },
-  {
-    "model": "environments.executableswitch",
-    "pk": "7352181d-01d8-41df-9d8b-9dba1e8238fa",
-    "fields": {
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T00:00:00Z",
-      "name": "UAT Package",
-      "flag": "-package",
-      "value": ""
-    }
-  },
-  {
-    "model": "environments.executableswitch",
-    "pk": "78a3a464-ac23-456b-9af1-cb22a34850dd",
-    "fields": {
-      "created": "2026-01-21T00:00:00Z",
-      "modified": "2026-01-21T19:42:44.635Z",
-      "name": "Clean",
-      "flag": "-clean",
       "value": ""
     }
   },
@@ -641,57 +320,6 @@
     }
   },
   {
-    "model": "environments.projectenvironment",
-    "pk": "4d82fab0-c62d-4204-a316-476476c10a55",
-    "fields": {
-      "created": "2026-02-11T20:15:38.794Z",
-      "description": null,
-      "modified": "2026-02-13T15:28:35.948Z",
-      "name": "HSH Python",
-      "type": "8a5e6540-92bf-5e73-a26a-4ff3e6185bd9",
-      "status": "e1bb67a5-1b86-5636-9464-be50af5c7863",
-      "available": true,
-      "selected": false,
-      "default_iteration_definition": null
-    }
-  },
-  {
-    "model": "environments.projectenvironment",
-    "pk": "c1b7a124-a50b-4710-aa85-154736a839bc",
-    "fields": {
-      "created": "2026-03-04T13:31:03.894Z",
-      "description": "",
-      "modified": "2026-04-02T19:32:56.782Z",
-      "name": "Are-Self-UI",
-      "type": "04701d65-e722-5c7c-8f06-10bc53413a36",
-      "status": "e1bb67a5-1b86-5636-9464-be50af5c7863",
-      "available": true,
-      "selected": false,
-      "default_iteration_definition": "9dfa8918-1dc9-4a52-b708-347883fc25bf"
-    }
-  },
-  {
-    "model": "environments.projectenvironmentcontextkey",
-    "pk": "0bde5681-79ff-5e60-91ec-de58c576caad",
-    "fields": {
-      "name": "engine_root"
-    }
-  },
-  {
-    "model": "environments.projectenvironmentcontextkey",
-    "pk": "3baa118f-dd49-5aa6-8ab7-a3f75d809484",
-    "fields": {
-      "name": "network_prerelease_root"
-    }
-  },
-  {
-    "model": "environments.projectenvironmentcontextkey",
-    "pk": "3ed50a36-7cec-564c-b234-9db5adce58f6",
-    "fields": {
-      "name": "staging_root"
-    }
-  },
-  {
     "model": "environments.projectenvironmentcontextkey",
     "pk": "662f350c-1595-5d5d-ba23-04259ca765be",
     "fields": {
@@ -707,51 +335,9 @@
   },
   {
     "model": "environments.projectenvironmentcontextkey",
-    "pk": "cadef741-8ebe-5e69-b0f2-a3a3c732a16a",
-    "fields": {
-      "name": "production_root"
-    }
-  },
-  {
-    "model": "environments.projectenvironmentcontextkey",
-    "pk": "d6cbba9c-d8f8-57e4-98c5-be3072f227ba",
-    "fields": {
-      "name": "uproject"
-    }
-  },
-  {
-    "model": "environments.projectenvironmentcontextkey",
-    "pk": "e24f0d30-670d-55fa-8db7-7c0e91e2fc89",
-    "fields": {
-      "name": "prerelease_root"
-    }
-  },
-  {
-    "model": "environments.projectenvironmentcontextkey",
-    "pk": "e76b574b-08a0-5ded-992c-787de0f24c51",
-    "fields": {
-      "name": "environment_cache_root"
-    }
-  },
-  {
-    "model": "environments.projectenvironmentcontextkey",
-    "pk": "ea4eed7a-7b0e-5566-9a9e-3c27ff7efd66",
-    "fields": {
-      "name": "shader_cache_root"
-    }
-  },
-  {
-    "model": "environments.projectenvironmentcontextkey",
     "pk": "f88bfedf-6e56-5cad-83a8-82eebe5f2a81",
     "fields": {
       "name": "project_root"
-    }
-  },
-  {
-    "model": "environments.projectenvironmenttype",
-    "pk": "04701d65-e722-5c7c-8f06-10bc53413a36",
-    "fields": {
-      "name": "ReactJS"
     }
   }
 ]
