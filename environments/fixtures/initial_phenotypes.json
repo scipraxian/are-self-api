@@ -64,21 +64,6 @@
   },
   {
     "model": "environments.executable",
-    "pk": "558806d7-d009-4e89-8e4e-86979dcd0594",
-    "fields": {
-      "created": "2026-01-21T00:00:00Z",
-      "description": "Standard Python Interpreter.",
-      "modified": "2026-02-12T22:16:40.306Z",
-      "name": "PYTHON",
-      "internal": false,
-      "working_path": "{{venv_root}}",
-      "executable": "{{venv_root}}/Scripts/python.exe",
-      "log": "",
-      "switches": []
-    }
-  },
-  {
-    "model": "environments.executable",
     "pk": "77668144-2aa6-435f-8e61-0ea547217fae",
     "fields": {
       "created": "2026-01-31T20:20:21.722Z",
@@ -90,31 +75,6 @@
       "executable": "ollama",
       "log": "",
       "switches": []
-    }
-  },
-  {
-    "model": "environments.executable",
-    "pk": "ef611428-bac0-4ce9-a872-70864e91b600",
-    "fields": {
-      "created": "2026-03-05T13:34:11.882Z",
-      "description": "",
-      "modified": "2026-03-05T13:35:24.891Z",
-      "name": "Engage Temporal Lobe",
-      "internal": true,
-      "working_path": "",
-      "executable": "run_temporal_lobe",
-      "log": "",
-      "switches": []
-    }
-  },
-  {
-    "model": "environments.executableargument",
-    "pk": "0878da24-abcc-4931-b139-87a0ed076038",
-    "fields": {
-      "created": "2026-01-31T16:10:31.725Z",
-      "modified": "2026-01-31T16:10:31.725Z",
-      "name": "Python  Unbuffered",
-      "argument": "-u"
     }
   },
   {
@@ -269,42 +229,12 @@
   },
   {
     "model": "environments.executableargument",
-    "pk": "4c3e5c7f-459b-482b-9d1e-0fec0cc7e3d8",
-    "fields": {
-      "created": "2026-01-27T17:23:00.022Z",
-      "modified": "2026-01-27T17:23:00.022Z",
-      "name": "Get UUID",
-      "argument": "Get-CimInstance Win32_ComputerSystemProduct | Select-Object -ExpandProperty UUID"
-    }
-  },
-  {
-    "model": "environments.executableargument",
-    "pk": "53f77432-e7ab-45d4-a2cf-8fbc4c822588",
-    "fields": {
-      "created": "2026-01-31T16:08:51.014Z",
-      "modified": "2026-02-28T23:04:09.791Z",
-      "name": "dumpscripts",
-      "argument": "{{are_self_root}}\\central_nervous_system\\effectors\\dumpscripts.py"
-    }
-  },
-  {
-    "model": "environments.executableargument",
     "pk": "6072b897-e5a4-4bea-9e90-6eb6b0eacf9a",
     "fields": {
       "created": "2026-01-31T14:28:11.107Z",
       "modified": "2026-01-31T14:28:23.674Z",
       "name": "Cached SaveGames Folder",
       "argument": "{{environment_cache_root}}\\Saved\\SaveGames"
-    }
-  },
-  {
-    "model": "environments.executableargument",
-    "pk": "679dd31c-709a-41a8-8b69-a44c643880f7",
-    "fields": {
-      "created": "2026-01-31T15:23:49.006Z",
-      "modified": "2026-01-31T16:12:08.563Z",
-      "name": "Are-Self Root",
-      "argument": "{{are_self_root}}"
     }
   },
   {
@@ -329,16 +259,6 @@
   },
   {
     "model": "environments.executableargument",
-    "pk": "89714d07-c757-4648-b1f5-db7ed5b96abb",
-    "fields": {
-      "created": "2026-02-10T18:44:45.466Z",
-      "modified": "2026-02-10T18:44:45.467Z",
-      "name": "List Folder",
-      "argument": "ls"
-    }
-  },
-  {
-    "model": "environments.executableargument",
     "pk": "95c8d51b-0769-4d85-a18f-891a4178b081",
     "fields": {
       "created": "2026-01-31T20:33:16.600Z",
@@ -355,16 +275,6 @@
       "modified": "2026-01-30T16:29:38.051Z",
       "name": "Copy-Item Force Create Folder",
       "argument": "-Force"
-    }
-  },
-  {
-    "model": "environments.executableargument",
-    "pk": "ad478572-9161-4499-ac47-1c9ba9e6d412",
-    "fields": {
-      "created": "2026-02-12T22:07:06.628Z",
-      "modified": "2026-02-12T22:07:06.628Z",
-      "name": "Project Root",
-      "argument": "{{project_root}}"
     }
   },
   {
@@ -521,15 +431,6 @@
       "executable": "c8cb58b0-341b-43d3-bfcf-8d31dca28375",
       "order": 10,
       "argument": "74744801-b5b3-4e92-9a62-5cb76f7a5802"
-    }
-  },
-  {
-    "model": "environments.executableargumentassignment",
-    "pk": "8d43c089-60d3-4313-80a0-1a05b6cd4c6f",
-    "fields": {
-      "executable": "558806d7-d009-4e89-8e4e-86979dcd0594",
-      "order": 1,
-      "argument": "0878da24-abcc-4931-b139-87a0ed076038"
     }
   },
   {

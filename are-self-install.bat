@@ -68,16 +68,18 @@ if %errorlevel% neq 0 (
 
 :: Step 7: Load fixtures
 echo [7/8] Loading initial data...
-.\venv\Scripts\python.exe manage.py loaddata initial_data.json
+.\venv\Scripts\python.exe manage.py loaddata genetic_immutables.json
+.\venv\Scripts\python.exe manage.py loaddata zygote.json
 
 :: Step 8: Create superuser
 echo [8/9] Creating admin superuser...
 set DJANGO_SUPERUSER_USERNAME=admin
 set DJANGO_SUPERUSER_EMAIL=admin@are-self.com
 set DJANGO_SUPERUSER_PASSWORD=admin
+
 .\venv\Scripts\python.exe manage.py createsuperuser --noinput 2>nul
-if %errorlevel% equ 0 (
-    echo   Superuser created (admin/admin).
+if not errorlevel 1 (
+    echo   Superuser created [admin/admin].
 ) else (
     echo   Superuser already exists, skipping.
 )
@@ -97,6 +99,7 @@ if %errorlevel% neq 0 (
 
 echo   Pulling embedding model...
 ollama pull nomic-embed-text
+:: TODO: add the 2 default models.
 
 echo.
 echo ========================================================

@@ -99,5 +99,44 @@
     "fields": {
       "name": "Unreal 5.6.1"
     }
+  },
+  {
+    "model": "environments.executable",
+    "pk": "558806d7-d009-4e89-8e4e-86979dcd0594",
+    "fields": {
+      "created": "2026-01-21T00:00:00Z",
+      "description": "Standard Python Interpreter.",
+      "modified": "2026-02-12T22:16:40.306Z",
+      "name": "PYTHON",
+      "internal": false,
+      "working_path": "{{venv_root}}",
+      "executable": "{{venv_root}}/Scripts/python.exe",
+      "log": "",
+      "switches": []
+    }
+  },
+  {
+    "model": "environments.executableargumentassignment",
+    "pk": "8d43c089-60d3-4313-80a0-1a05b6cd4c6f",
+    "fields": {
+      "executable": "558806d7-d009-4e89-8e4e-86979dcd0594",
+      "order": 1,
+      "argument": "0878da24-abcc-4931-b139-87a0ed076038"
+    }
+  },
+  {
+    "model": "environments.executable",
+    "pk": "ef611428-bac0-4ce9-a872-70864e91b600",
+    "fields": {
+      "created": "2026-03-05T13:34:11.882Z",
+      "description": "",
+      "modified": "2026-03-05T13:35:24.891Z",
+      "name": "Engage Temporal Lobe",
+      "internal": true,
+      "working_path": "",
+      "executable": "run_temporal_lobe",
+      "log": "",
+      "switches": []
+    }
   }
 ]
