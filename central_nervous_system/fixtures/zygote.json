@@ -302,6 +302,20 @@
     }
   },
   {
+    "model": "central_nervous_system.neuralpathway",
+    "pk": "04c3997f-d5f3-402f-952a-519bbd7e4dee",
+    "fields": {
+      "created": "2026-04-17T00:00:00Z",
+      "description": "Standing pathway for the Thalamus. Routes human chat bubble input into the AI's standing ReasoningSession via the Frontal Lobe Node.",
+      "modified": "2026-04-17T00:00:00Z",
+      "name": "Thalamus",
+      "environment": null,
+      "is_favorite": false,
+      "ui_json": "{}",
+      "tags": []
+    }
+  },
+  {
     "model": "central_nervous_system.neuron",
     "pk": "0be65477-0855-46f0-ba69-73af964abebd",
     "fields": {
@@ -471,6 +485,32 @@
     }
   },
   {
+    "model": "central_nervous_system.neuron",
+    "pk": "76178652-cc96-4045-9e70-5797bcb9d361",
+    "fields": {
+      "environment": null,
+      "is_root": true,
+      "pathway": "04c3997f-d5f3-402f-952a-519bbd7e4dee",
+      "effector": "a74a9b1a-7326-4dff-9013-d640433b3bf7",
+      "ui_json": "{\"x\": 100, \"y\": 100}",
+      "invoked_pathway": null,
+      "distribution_mode": null
+    }
+  },
+  {
+    "model": "central_nervous_system.neuron",
+    "pk": "fa968150-d84a-481d-a3b5-ec6ed710c165",
+    "fields": {
+      "environment": null,
+      "is_root": false,
+      "pathway": "04c3997f-d5f3-402f-952a-519bbd7e4dee",
+      "effector": "64c0995a-cbd2-47d3-a452-e36ea4d46154",
+      "ui_json": "{\"x\": 400, \"y\": 100}",
+      "invoked_pathway": null,
+      "distribution_mode": null
+    }
+  },
+  {
     "model": "central_nervous_system.axon",
     "pk": "090fafd4-c733-40ce-9d60-8678a5d94984",
     "fields": {
@@ -567,6 +607,17 @@
       "pathway": "4bb635e9-8c6c-41e4-8ca5-70744837b7a2",
       "source": "bdf1b105-1c9b-439f-9b2b-3006fcf1a5a3",
       "target": "63be4aeb-e78b-470c-ac02-8141cd4ce476"
+    }
+  },
+  {
+    "model": "central_nervous_system.axon",
+    "pk": "30574650-c2ad-4ce7-b49c-ac3998cb24b9",
+    "fields": {
+      "modified": "2026-04-17T00:00:00Z",
+      "type": 1,
+      "pathway": "04c3997f-d5f3-402f-952a-519bbd7e4dee",
+      "source": "76178652-cc96-4045-9e70-5797bcb9d361",
+      "target": "fa968150-d84a-481d-a3b5-ec6ed710c165"
     }
   },
   {

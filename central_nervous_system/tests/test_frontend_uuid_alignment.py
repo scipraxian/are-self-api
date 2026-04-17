@@ -22,6 +22,8 @@ from central_nervous_system.models import (
     SpikeTrain,
     EffectorContext,
 )
+from environments.models import ProjectEnvironment
+from identity.models import Identity, IdentityDisc
 from common.tests.common_test_case import CommonFixturesAPITestCase
 
 
@@ -103,6 +105,98 @@ class EffectorUUIDFixtureTest(CommonFixturesAPITestCase):
         """DEBUG effector has a recognizable name."""
         eff = Effector.objects.get(pk=Effector.DEBUG)
         self.assertIn('debug', eff.name.lower())
+
+
+class NeuralPathwayUUIDFixtureTest(CommonFixturesAPITestCase):
+    """
+    Canary for NeuralPathway UUID constants.
+
+    Any class-level UUID on NeuralPathway (e.g. `NeuralPathway.THALAMUS`) must
+    resolve to a real row after fixtures load. A failure here means a tier
+    fixture dropped or orphaned the row during a refactor.
+    """
+
+    def test_thalamus_pathway_exists_in_database(self):
+        """NeuralPathway.THALAMUS must exist in the loaded fixtures."""
+        exists = NeuralPathway.objects.filter(pk=NeuralPathway.THALAMUS).exists()
+        self.assertTrue(
+            exists,
+            f'NeuralPathway.THALAMUS ({NeuralPathway.THALAMUS}) not found in DB — '
+            f'thalamus/api.py:interact will 500 with DoesNotExist. '
+            f'Check central_nervous_system/fixtures/zygote.json.',
+        )
+
+    def test_thalamus_pathway_has_non_root_neuron(self):
+        """
+        thalamus/api.py:interact depends on a non-root Neuron on this pathway
+        (`cc_neuron = Neuron.objects.filter(pathway_id=..., is_root=False).first()`).
+        Without one, line 97 (`effector_id=cc_neuron.effector_id`) AttributeErrors.
+        """
+        non_root = Neuron.objects.filter(
+            pathway_id=NeuralPathway.THALAMUS, is_root=False
+        ).first()
+        self.assertIsNotNone(
+            non_root,
+            'Thalamus pathway has no non-root Neuron — '
+            'the interact endpoint cannot spawn a Spike.',
+        )
+        self.assertIsNotNone(
+            non_root.effector_id,
+            'Thalamus non-root Neuron has no effector — '
+            'the interact endpoint will fail at Spike creation.',
+        )
+
+
+class IdentityUUIDFixtureTest(CommonFixturesAPITestCase):
+    """
+    Canary for Identity / IdentityDisc UUID constants.
+
+    `thalamus/api.py` creates a ReasoningSession with
+    `identity_disc_id=IdentityDisc.THALAMUS`, and Identity.THALAMUS is the
+    matching persona row. Both must exist after fixtures load.
+    """
+
+    def test_identity_thalamus_exists_in_database(self):
+        """Identity.THALAMUS must exist in the loaded fixtures."""
+        exists = Identity.objects.filter(pk=Identity.THALAMUS).exists()
+        self.assertTrue(
+            exists,
+            f'Identity.THALAMUS ({Identity.THALAMUS}) not found in DB — '
+            f'check identity/fixtures/zygote.json.',
+        )
+
+    def test_identity_disc_thalamus_exists_in_database(self):
+        """IdentityDisc.THALAMUS must exist in the loaded fixtures."""
+        exists = IdentityDisc.objects.filter(pk=IdentityDisc.THALAMUS).exists()
+        self.assertTrue(
+            exists,
+            f'IdentityDisc.THALAMUS ({IdentityDisc.THALAMUS}) not found in DB — '
+            f'ReasoningSession creation in thalamus/api.py will fail. '
+            f'Check identity/fixtures/zygote.json.',
+        )
+
+
+class ProjectEnvironmentUUIDFixtureTest(CommonFixturesAPITestCase):
+    """
+    Canary for ProjectEnvironment UUID constants.
+
+    `central_nervous_system/utils.py:_hydrate_metadata` does
+    `ProjectEnvironment.objects.get(id=ProjectEnvironment.DEFAULT_ENVIRONMENT)`
+    on the core CNS context hydration path. A missing row takes the whole
+    reasoning loop down.
+    """
+
+    def test_default_environment_exists_in_database(self):
+        """ProjectEnvironment.DEFAULT_ENVIRONMENT must exist in the loaded fixtures."""
+        exists = ProjectEnvironment.objects.filter(
+            pk=ProjectEnvironment.DEFAULT_ENVIRONMENT
+        ).exists()
+        self.assertTrue(
+            exists,
+            f'ProjectEnvironment.DEFAULT_ENVIRONMENT '
+            f'({ProjectEnvironment.DEFAULT_ENVIRONMENT}) not found in DB — '
+            f'_hydrate_metadata will 500. Check environments/fixtures/zygote.json.',
+        )
 
 
 class APIV2UUIDSerializationTest(CommonFixturesAPITestCase):
