@@ -66,27 +66,13 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-:: Step 7: Load fixtures
-echo [7/8] Loading initial data...
-.\venv\Scripts\python.exe manage.py loaddata genetic_immutables.json
-.\venv\Scripts\python.exe manage.py loaddata zygote.json
-.\venv\Scripts\python.exe manage.py loaddata initial_phenotypes.json
-
-:: Step 8: Create superuser
-echo [8/9] Creating admin superuser...
-set DJANGO_SUPERUSER_USERNAME=admin
-set DJANGO_SUPERUSER_EMAIL=admin@are-self.com
-set DJANGO_SUPERUSER_PASSWORD=admin
-
-.\venv\Scripts\python.exe manage.py createsuperuser --noinput 2>nul
-if not errorlevel 1 (
-    echo   Superuser created [admin/admin].
-) else (
-    echo   Superuser already exists, skipping.
-)
-
-:: Step 9: Ollama + Embedding Model
-echo [9/9] Checking Ollama...
+:: Step 7: Ollama + Embedding Model
+:: Must happen BEFORE fixtures: zygote.json seeds the nomic-embed-text AIModel row
+:: that the Hippocampus uses to embed Engrams. Anything that touches an Engram
+:: (including signals fired during later fixture loads or first-run health checks)
+:: will hit OllamaClient.embed() and fail if the daemon isn't up and the model
+:: isn't pulled.
+echo [7/9] Checking Ollama...
 ollama --version >nul 2>&1
 if %errorlevel% neq 0 (
     echo   Ollama not found. Installing...
@@ -98,9 +84,41 @@ if %errorlevel% neq 0 (
     )
 )
 
+:check_ollama
+ollama list >nul 2>&1
+if %errorlevel% neq 0 (
+    echo   Waiting for Ollama daemon...
+    timeout /t 3 >nul
+    goto check_ollama
+)
+
 echo   Pulling embedding model...
 ollama pull nomic-embed-text
+if %errorlevel% neq 0 (
+    echo ERROR: Failed to pull nomic-embed-text. Fixtures will fail without it.
+    pause
+    exit /b 1
+)
 :: TODO: add the 2 default models.
+
+:: Step 8: Load fixtures
+echo [8/9] Loading initial data...
+.\venv\Scripts\python.exe manage.py loaddata genetic_immutables.json
+.\venv\Scripts\python.exe manage.py loaddata zygote.json
+.\venv\Scripts\python.exe manage.py loaddata initial_phenotypes.json
+
+:: Step 9: Create superuser
+echo [9/9] Creating admin superuser...
+set DJANGO_SUPERUSER_USERNAME=admin
+set DJANGO_SUPERUSER_EMAIL=admin@are-self.com
+set DJANGO_SUPERUSER_PASSWORD=admin
+
+.\venv\Scripts\python.exe manage.py createsuperuser --noinput 2>nul
+if not errorlevel 1 (
+    echo   Superuser created [admin/admin].
+) else (
+    echo   Superuser already exists, skipping.
+)
 
 echo.
 echo ========================================================
