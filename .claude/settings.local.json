@@ -16,7 +16,9 @@
       "Bash(venv/Scripts/python manage.py *)",
       "Bash(venv/Scripts/pytest *)",
       "Bash(./venv/Scripts/python.exe manage.py *)",
-      "Bash(docker exec *)"
+      "Bash(docker exec *)",
+      "Bash(venv/Scripts/python.exe manage.py *)",
+      "Bash(venv/Scripts/python.exe -c ' *)"
     ]
   }
 }

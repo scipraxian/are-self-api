@@ -145,6 +145,10 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+# Neuroplasticity — NeuralModifier bundle roots. Tests override these.
+MODIFIER_GENOME_ROOT = BASE_DIR / 'neuroplasticity' / 'modifier_genome'
+NEURAL_MODIFIERS_ROOT = BASE_DIR / 'neural_modifiers'
+
 # Celery
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'django-db'
