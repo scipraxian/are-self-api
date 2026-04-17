@@ -432,10 +432,22 @@ remains invisible there. The v1→v2 migration is tracked separately under
   - **Task 5c.** Repeat the split for every remaining app top-down through the closure
     order. UE-flavored rows held aside in a scratch file, not written to core tiers.
     Bisectable per-app commits.
-  - **Task 5d.** Create `neuroplasticity/modifier_genome/unreal/` with `manifest.json`,
-    `modifier_data.json` (held-aside rows from 5c), `code/` (scaffolded), `README.md`.
-    `.gitkeep` in `modifier_genome/`; `/neural_modifiers/` gitignored at repo root.
-    Delete `ollama_fixture_generator.py`. Remove legacy `deploy_release_test` Executable.
+  - **Task 5d.** *(Done — Commit A on `uuid-migration`.)* Created
+    `neuroplasticity/modifier_genome/unreal/` with `manifest.json`,
+    `modifier_data.json` (255 rows = 87 environments + 168 CNS, env-first
+    concatenation, SHA-256 `49cfbca50b56988eb7aea72a0f0fdde8c557c63edf7653e52f6e158a81155d47`),
+    `code/are_self_unreal/{__init__,handlers,log_parsers}.py` no-op stubs, and
+    `README.md`. `.gitkeep` added in `modifier_genome/`; `/neural_modifiers/`
+    added to repo-root `.gitignore`. Scratch `central_nervous_system/fixtures/unreal_modifier.json`
+    and `environments/fixtures/unreal_modifier.json` (and their `.step1_backup/`
+    counterparts) deleted. `ollama_fixture_generator.py` was already deleted by
+    the hypothalamus UUID propagation commit (`1e98e303`); no extra step needed.
+    Legacy `deploy_release_test` Executable already dropped in Step 1
+    (per `STEP1_COMPLETE_REPORT.md` §2). Updated
+    `central_nervous_system/effectors/effector_casters/effector_handlers/tests/test_metadata_handler.py`
+    to load the new bundle `modifier_data.json` instead of the deleted scratch
+    fixtures. **Follow-up (Michael): wire `are-self-install.bat` to call
+    `./manage.py build_modifier unreal` post-migrate.**
   - **Task 6.** Wire `./manage.py build_modifier <slug>` and the contribution-aware loader.
     Loader walks `neural_modifiers/*/`, verifies `manifest_hash` against
     `NeuralModifier.manifest_hash`, extends `sys.path` with each bundle's `code/`, imports

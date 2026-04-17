@@ -28,8 +28,7 @@ MODULE_PATH = (
 
 class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
     fixtures = list(CommonFixturesAPITestCase.fixtures) + [
-        'environments/fixtures/unreal_modifier.json',
-        'central_nervous_system/fixtures/unreal_modifier.json',
+        'neuroplasticity/modifier_genome/unreal/modifier_data.json',
     ]
     def setUp(self):
         self.status_running = SpikeStatus.objects.get(id=SpikeStatus.RUNNING)
