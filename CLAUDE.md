@@ -404,8 +404,8 @@ stays: it is being extracted as the first `NeuralModifier` bundle at
 already relocated to `occipital_lobe/` (Task 3) and its parser split into generic core +
 UE strategies registered via `LogParserFactory` (Task 4). `deploy_release_test` is a
 legacy executable slated for removal during the Pass 2 Unreal extraction.
-`ollama_fixture_generator.py` is obsolete — its output is captured as frozen literals in
-`hypothalamus/fixtures/zygote.json` and the script will be deleted in Pass 2 Task 5d.
+`ollama_fixture_generator.py` has been deleted — its output was captured as frozen
+literals in `hypothalamus/fixtures/zygote.json` during the Pass 2 hypothalamus UUID flip.
 
 ## Style Guide (Enforced)
 
@@ -451,11 +451,15 @@ UUID-keyed.
 
 **Fixtures — four biological tiers (Pass 2, in progress):**
 
-1. **`genetic_immutables.json`** — integer-PK protocol enums and canonical vocabulary
-   tables: `SpikeStatus`, `AxonType`, `CNSDistributionMode`, `NeuralModifierStatus`,
-   `NeuralModifierInstallationEventType`, `IdentityAddonPhase`, `BudgetPeriod`,
-   `AIModelCapabilities`, `AIModelRole`, `AIModelQuantization`, `AIModelFamily`,
-   `SyncStatus`, etc. Loaded by install, Docker, and tests. Never renumber, never delete.
+1. **`genetic_immutables.json`** — protocol enums and canonical vocabulary tables.
+   Integer-PK (core-owned, never contributed to by plugins): `SpikeStatus`, `AxonType`,
+   `CNSDistributionMode`, `NeuralModifierStatus`, `NeuralModifierInstallationEventType`,
+   `IdentityAddonPhase`, `BudgetPeriod`, etc. UUID-PK vocabulary (plugin-extensible, all
+   hypothalamus vocab flipped in Pass 2): `AIMode`, `AIModelCategory`, `AIModelCapabilities`,
+   `AIModelTags`, `AIModelFamily`, `AIModelVersion`, `AIModelCreator`, `AIModelRole`,
+   `AIModelQuantization`, `LLMProvider`, `FailoverType`, `FailoverStrategy`,
+   `FailoverStrategyStep`, `SyncStatus`. Loaded by install, Docker, and tests. Never
+   renumber (for integer-PK rows), never delete.
 2. **`zygote.json`** — the minimum UUID-keyed rows the system needs to boot and bind
    one end-to-end identity thread for tests: `nomic-embed-text` (hippocampus hard
    dependency), the canonical `Identity`/`IdentityDisc`, the default `ProjectEnvironment`.
@@ -478,8 +482,20 @@ and `are-self-install.bat` list per-app paths explicitly.
 `ToolDefinition`, `ToolParameter`, `ToolParameterAssignment`, `ParameterEnum`,
 `AIModelDescription`, `IterationDefinition`, `IterationShiftDefinition` (all flipped in
 Pass 1), plus `ProjectEnvironmentContextKey`, `ProjectEnvironmentStatus`, and
-`ProjectEnvironmentType` (flipped in Pass 2 Task 4.5), plus the already-UUID models
-(`Identity`, `IdentityDisc`, `ProjectEnvironment`, `NeuralPathway`).
+`ProjectEnvironmentType` (flipped in Pass 2 Task 4.5), plus every model in
+`hypothalamus/models.py` — `LLMProvider`, `AIModelCategory`, `AIModelCapabilities`,
+`AIModelTags`, `AIMode`, `AIModelFamily`, `AIModelVersion`, `AIModelCreator`,
+`AIModelRole`, `AIModelQuantization`, `AIModel`, `AIModelVector`, `AIModelProvider`,
+`AIModelPricing`, `AIModelProviderUsageRecord`, `FailoverStrategy`, `FailoverType`,
+`FailoverStrategyStep`, `AIModelSelectionFilter`, `SyncStatus`, `AIModelSyncLog`,
+`AIModelRating`, `LiteLLMCache`, `AIModelDescriptionCache`, `AIModelSyncReport`
+(whole-app flip in Pass 2, "consider the entire `hypothalamus/models.py` volatile and
+mutable by neuroplasticity" — Michael), plus the already-UUID models (`Identity`,
+`IdentityDisc`, `ProjectEnvironment`, `NeuralPathway`).
+
+`SyncStatus.RUNNING`, `SyncStatus.SUCCESS`, `SyncStatus.FAILED` are UUID class constants
+(same pattern as `Effector.BEGIN_PLAY`) — used by `hypothalamus.py`'s `sync_remote` flow
+to look up status rows by stable PK. Do not renumber or regenerate.
 
 UUIDs are `uuid.uuid4()` random literals. No namespaces, no derivation seeds. Existing
 UUID literals already in fixtures are frozen values and are not regenerated. See

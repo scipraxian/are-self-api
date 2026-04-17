@@ -5,42 +5,18 @@
     "fields": {
       "name": "nomic-embed-text",
       "description": null,
-      "creator": 12,
+      "creator": "39983fd3-4b8b-4947-abb4-aad9c85016ce",
       "parameter_size": 0.137,
-      "family": 10,
+      "family": "21c8f259-0c29-49ea-9f4b-cf9828babda0",
       "version": null,
       "context_length": 8192,
       "enabled": true,
       "deprecation_date": null,
       "roles": [
-        5
+        "c1c7b15d-ec41-4a99-9811-db050b6bf4aa"
       ],
       "quantizations": [],
       "capabilities": []
-    }
-  },
-  {
-    "model": "hypothalamus.aimodel",
-    "pk": "b02d348c-3303-4c3d-a5ac-241da3d6f026",
-    "fields": {
-      "name": "qwen3-coder:30b",
-      "description": null,
-      "creator": 2,
-      "parameter_size": 30.0,
-      "family": 3,
-      "version": null,
-      "context_length": 131072,
-      "enabled": true,
-      "deprecation_date": null,
-      "roles": [
-        1,
-        3
-      ],
-      "quantizations": [],
-      "capabilities": [
-        1,
-        2
-      ]
     }
   },
   {
@@ -49,73 +25,27 @@
     "fields": {
       "name": "llama3.2:3b",
       "description": null,
-      "creator": 1,
+      "creator": "fd52a828-5a3e-405d-b1d8-5071ed523c23",
       "parameter_size": 3.0,
-      "family": 1,
+      "family": "8bd7fd47-46d7-4553-9557-26a971eccc0f",
       "version": null,
       "context_length": 131072,
       "enabled": true,
       "deprecation_date": null,
       "roles": [
-        1,
-        2
+        "46a83ec0-0c7f-4d91-a0f3-db05fb21a07c",
+        "da0cd250-438e-4cbf-89bf-741eabe00892"
       ],
       "quantizations": [],
       "capabilities": [
-        2,
-        1
+        "b69bd18f-80d5-42a2-87d3-60d4739d5c19",
+        "f541008c-17c0-4459-9264-da9d0b580714"
       ]
     }
   },
   {
-    "model": "hypothalamus.aimodelpricing",
-    "pk": 1,
-    "fields": {
-      "created": "2026-04-01T00:00:00.000Z",
-      "modified": "2026-04-01T00:00:00.000Z",
-      "is_current": true,
-      "is_active": true,
-      "model_provider": 3000,
-      "input_cost_per_token": "0.000000000000000",
-      "output_cost_per_token": "0.000000000000000",
-      "input_cost_per_character": null,
-      "output_cost_per_character": null,
-      "input_cost_per_token_above_128k_tokens": null,
-      "output_cost_per_token_above_128k_tokens": null,
-      "output_cost_per_character_above_128k_tokens": null,
-      "output_cost_per_reasoning_token": null,
-      "cache_read_input_token_cost": null,
-      "cache_creation_input_token_cost": null,
-      "input_cost_per_audio_token": null,
-      "output_vector_size": null
-    }
-  },
-  {
-    "model": "hypothalamus.aimodelpricing",
-    "pk": 2,
-    "fields": {
-      "created": "2026-04-01T00:00:00.000Z",
-      "modified": "2026-04-01T00:00:00.000Z",
-      "is_current": true,
-      "is_active": true,
-      "model_provider": 3001,
-      "input_cost_per_token": "0.000000000000000",
-      "output_cost_per_token": "0.000000000000000",
-      "input_cost_per_character": null,
-      "output_cost_per_character": null,
-      "input_cost_per_token_above_128k_tokens": null,
-      "output_cost_per_token_above_128k_tokens": null,
-      "output_cost_per_character_above_128k_tokens": null,
-      "output_cost_per_reasoning_token": null,
-      "cache_read_input_token_cost": null,
-      "cache_creation_input_token_cost": null,
-      "input_cost_per_audio_token": null,
-      "output_vector_size": null
-    }
-  },
-  {
     "model": "hypothalamus.aimodelprovider",
-    "pk": 3000,
+    "pk": "4d95bb0e-9a86-496f-aac5-a43cb15c0c2f",
     "fields": {
       "created": "2026-04-01T00:00:00.000Z",
       "modified": "2026-04-01T00:00:00.000Z",
@@ -126,9 +56,9 @@
       "rate_limit_total_failures": 0,
       "is_enabled": true,
       "ai_model": "39168c4d-ed2a-54e5-98ce-1c992dff4ec8",
-      "provider": 64,
+      "provider": "2d1e9817-679c-4ff3-a39e-f80114646f56",
       "provider_unique_model_id": "ollama/nomic-embed-text",
-      "mode": 3,
+      "mode": "189bc4ba-8a69-4e46-88b5-12456ea39bc6",
       "max_tokens": null,
       "max_input_tokens": null,
       "max_output_tokens": null,
@@ -137,7 +67,7 @@
   },
   {
     "model": "hypothalamus.aimodelprovider",
-    "pk": 3001,
+    "pk": "ea53fce3-93e4-4e1c-ae9a-34a6ab0f5d30",
     "fields": {
       "created": "2026-04-01T00:00:00.000Z",
       "modified": "2026-04-01T00:00:00.000Z",
@@ -148,9 +78,9 @@
       "rate_limit_total_failures": 0,
       "is_enabled": true,
       "ai_model": "e04b72ca-d3f7-57c0-b222-22f195ec0067",
-      "provider": 64,
+      "provider": "2d1e9817-679c-4ff3-a39e-f80114646f56",
       "provider_unique_model_id": "ollama/llama3.2:3b",
-      "mode": 2,
+      "mode": "9983f92c-bb69-48b9-a279-1b15dc7e455f",
       "max_tokens": null,
       "max_input_tokens": null,
       "max_output_tokens": null,
@@ -158,71 +88,59 @@
     }
   },
   {
-    "model": "hypothalamus.aimodelprovider",
-    "pk": 3002,
+    "model": "hypothalamus.aimodelpricing",
+    "pk": "6a2f0a00-f3f8-4427-b9ad-2b6ae5efe0f0",
     "fields": {
       "created": "2026-04-01T00:00:00.000Z",
       "modified": "2026-04-01T00:00:00.000Z",
-      "rate_limited_on": null,
-      "rate_limit_reset_time": null,
-      "rate_limit_reset_interval": "00:01:00",
-      "rate_limit_counter": 0,
-      "rate_limit_total_failures": 0,
-      "is_enabled": true,
-      "ai_model": "b02d348c-3303-4c3d-a5ac-241da3d6f026",
-      "provider": 64,
-      "provider_unique_model_id": "ollama/qwen3-coder:30b",
-      "mode": 2,
-      "max_tokens": null,
-      "max_input_tokens": null,
-      "max_output_tokens": null,
-      "disabled_capabilities": []
+      "is_current": true,
+      "is_active": true,
+      "model_provider": "4d95bb0e-9a86-496f-aac5-a43cb15c0c2f",
+      "input_cost_per_token": "0.000000000000000",
+      "output_cost_per_token": "0.000000000000000",
+      "input_cost_per_character": null,
+      "output_cost_per_character": null,
+      "input_cost_per_token_above_128k_tokens": null,
+      "output_cost_per_token_above_128k_tokens": null,
+      "output_cost_per_character_above_128k_tokens": null,
+      "output_cost_per_reasoning_token": null,
+      "cache_read_input_token_cost": null,
+      "cache_creation_input_token_cost": null,
+      "input_cost_per_audio_token": null,
+      "output_vector_size": null
     }
   },
   {
-    "model": "hypothalamus.aimodelselectionfilter",
-    "pk": 1,
+    "model": "hypothalamus.aimodelpricing",
+    "pk": "fc4f1e6a-d8c1-4725-8523-9953e4c50a34",
     "fields": {
-      "name": "Local PM",
-      "failover_strategy": 6,
-      "preferred_model": 3001,
-      "local_failover": 3001,
-      "required_capabilities": [],
-      "banned_providers": [],
-      "preferred_categories": [],
-      "preferred_tags": [],
-      "preferred_roles": []
+      "created": "2026-04-01T00:00:00.000Z",
+      "modified": "2026-04-01T00:00:00.000Z",
+      "is_current": true,
+      "is_active": true,
+      "model_provider": "ea53fce3-93e4-4e1c-ae9a-34a6ab0f5d30",
+      "input_cost_per_token": "0.000000000000000",
+      "output_cost_per_token": "0.000000000000000",
+      "input_cost_per_character": null,
+      "output_cost_per_character": null,
+      "input_cost_per_token_above_128k_tokens": null,
+      "output_cost_per_token_above_128k_tokens": null,
+      "output_cost_per_character_above_128k_tokens": null,
+      "output_cost_per_reasoning_token": null,
+      "cache_read_input_token_cost": null,
+      "cache_creation_input_token_cost": null,
+      "input_cost_per_audio_token": null,
+      "output_vector_size": null
     }
   },
   {
     "model": "hypothalamus.aimodelselectionfilter",
-    "pk": 2,
-    "fields": {
-      "name": "Local Coder",
-      "failover_strategy": 6,
-      "preferred_model": 3002,
-      "local_failover": 3002,
-      "required_capabilities": [
-        2
-      ],
-      "banned_providers": [],
-      "preferred_categories": [],
-      "preferred_tags": [],
-      "preferred_roles": [
-        2,
-        3,
-        4
-      ]
-    }
-  },
-  {
-    "model": "hypothalamus.aimodelselectionfilter",
-    "pk": 3,
+    "pk": "7091dd45-c03e-40fe-a7d9-12f698e91292",
     "fields": {
       "name": "Thalamus",
-      "failover_strategy": 6,
-      "preferred_model": 3001,
-      "local_failover": 3001,
+      "failover_strategy": "89094016-922d-43be-98f3-bf96b5daa18e",
+      "preferred_model": "ea53fce3-93e4-4e1c-ae9a-34a6ab0f5d30",
+      "local_failover": "ea53fce3-93e4-4e1c-ae9a-34a6ab0f5d30",
       "required_capabilities": [],
       "banned_providers": [],
       "preferred_categories": [],

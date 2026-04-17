@@ -1,5 +1,6 @@
 import datetime
 import os
+from uuid import UUID
 
 from django.conf import settings
 from django.db import models
@@ -15,7 +16,7 @@ from common.models import (
     NameMixin,
     UUIDIdMixin,
 )
-class LLMProvider(DefaultFieldsMixin, DescriptionMixin):
+class LLMProvider(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     """Provider-level network configuration for LLM backends (LiteLLM)."""
 
     key = models.CharField(
@@ -69,31 +70,31 @@ class LLMProvider(DefaultFieldsMixin, DescriptionMixin):
         return bool(key and key.strip())
 
 
-class AIModelCategory(NameMixin, DescriptionMixin):
+class AIModelCategory(UUIDIdMixin, NameMixin, DescriptionMixin):
     """I saw this word."""
 
     pass
 
 
-class AIModelCapabilities(NameMixin, DescriptionMixin):
+class AIModelCapabilities(UUIDIdMixin, NameMixin, DescriptionMixin):
     """Dynamically tracks things like 'vision', 'function_calling', 'reasoning'."""
 
     pass
 
 
-class AIModelTags(NameMixin, DescriptionMixin):
+class AIModelTags(UUIDIdMixin, NameMixin, DescriptionMixin):
     """Everything Else we come across, tag it."""
 
     pass
 
 
-class AIMode(NameMixin, DescriptionMixin):
+class AIMode(UUIDIdMixin, NameMixin, DescriptionMixin):
     """Mode for AI models, e.g., 'chat', 'embedding', 'completion'."""
 
     pass
 
 
-class AIModelFamily(NameMixin, DescriptionMixin):
+class AIModelFamily(UUIDIdMixin, NameMixin, DescriptionMixin):
     """Groups models into conceptual lineages (e.g., 'Claude 3.5', 'Llama 3')."""
 
     slug = models.SlugField(unique=True, default='llama-3-70b-instruct')
@@ -110,26 +111,26 @@ class AIModelFamily(NameMixin, DescriptionMixin):
         verbose_name_plural = 'AI Model Families'
 
 
-class AIModelVersion(NameMixin, DescriptionMixin):
+class AIModelVersion(UUIDIdMixin, NameMixin, DescriptionMixin):
     """Version of an AI model, e.g., '1.0', '2.0', '3.0'."""
 
     pass
 
 
-class AIModelCreator(NameMixin, DescriptionMixin):
+class AIModelCreator(UUIDIdMixin, NameMixin, DescriptionMixin):
     """The organization or group that trained the model (e.g., Meta, Alibaba, Mistral)."""
 
     class Meta:
         verbose_name_plural = 'AI Model Creators'
 
 
-class AIModelRole(NameMixin, DescriptionMixin):
+class AIModelRole(UUIDIdMixin, NameMixin, DescriptionMixin):
     """The intended use-case or fine-tuning style (e.g., instruct, base, coder, uncensored)."""
 
     pass
 
 
-class AIModelQuantization(NameMixin, DescriptionMixin):
+class AIModelQuantization(UUIDIdMixin, NameMixin, DescriptionMixin):
     """The compression format, crucial for local hardware routing (e.g., q4_0, awq, fp16)."""
 
     pass
@@ -254,7 +255,7 @@ class AIModel(UUIDIdMixin, NameMixin, DescriptionMixin):
         self.save(update_fields=['vector'])
 
 
-class AIModelVector(models.Model):
+class AIModelVector(UUIDIdMixin, models.Model):
     """Offloads the heavy 768-dimensional vector to keep AIModel queries and fixtures clean."""
 
     ai_model = models.OneToOneField(
@@ -336,7 +337,7 @@ class AIModelProviderRateLimitMixin(models.Model):
 
 
 class AIModelProvider(
-    CreatedMixin, ModifiedMixin, AIModelProviderRateLimitMixin
+    UUIDIdMixin, CreatedMixin, ModifiedMixin, AIModelProviderRateLimitMixin
 ):
     is_enabled = models.BooleanField(default=True, db_index=True)
 
@@ -427,11 +428,11 @@ class AIModelPricingAbstract(AIModelFinOpsAbstract):
         ordering = ['-is_current', 'model_provider__provider__key']
 
 
-class AIModelPricing(AIModelPricingAbstract):
+class AIModelPricing(UUIDIdMixin, AIModelPricingAbstract):
     pass
 
 
-class AIModelProviderUsageRecord(AIModelFinOpsAbstract):
+class AIModelProviderUsageRecord(UUIDIdMixin, AIModelFinOpsAbstract):
     """The individual transaction receipt."""
 
     RELATED_NAME = 'usage_records'
@@ -480,7 +481,7 @@ class AIModelProviderUsageRecord(AIModelFinOpsAbstract):
     )
 
 
-class FailoverStrategy(NameMixin, DescriptionMixin):
+class FailoverStrategy(UUIDIdMixin, NameMixin, DescriptionMixin):
     """
     A reusable, ordered sequence of failover steps.
     The strategy is defined entirely by its assignments — no scalar flags needed.
@@ -493,7 +494,7 @@ class FailoverStrategy(NameMixin, DescriptionMixin):
         verbose_name_plural = 'Failover Strategies'
 
 
-class FailoverType(NameMixin, DescriptionMixin):
+class FailoverType(UUIDIdMixin, NameMixin, DescriptionMixin):
     """
     A discrete failover step, e.g.:
     'family_failover', 'vector_search', 'local_fallback', 'strict_fail'
@@ -505,7 +506,7 @@ class FailoverType(NameMixin, DescriptionMixin):
         verbose_name_plural = 'Failover Types'
 
 
-class FailoverStrategyStep(models.Model):
+class FailoverStrategyStep(UUIDIdMixin, models.Model):
     """
     One step in a FailoverStrategy's execution chain.
     """
@@ -530,7 +531,7 @@ class FailoverStrategyStep(models.Model):
         ]  # Prevent duplicate priority slots
 
 
-class AIModelSelectionFilter(NameMixin):
+class AIModelSelectionFilter(UUIDIdMixin, NameMixin):
     """
     Defines the routing policy for a Persona or Task.
     Acts as a pre-filter before Hypothalamus vector selection.
@@ -580,13 +581,13 @@ class AIModelSelectionFilter(NameMixin):
     preferred_roles = models.ManyToManyField(AIModelRole, blank=True)
 
 
-class SyncStatus(NameMixin):
-    RUNNING = 1
-    SUCCESS = 2
-    FAILED = 3
+class SyncStatus(UUIDIdMixin, NameMixin):
+    RUNNING = UUID('d5f70087-3690-4c3d-b03a-35d04a9846c0')
+    SUCCESS = UUID('87a8b8f9-63e1-4f7b-933a-a7e51bb786e6')
+    FAILED = UUID('8c55e942-09ac-4e96-b086-a54838d099ef')
 
 
-class AIModelSyncLog(CreatedAndModifiedWithDelta):
+class AIModelSyncLog(UUIDIdMixin, CreatedAndModifiedWithDelta):
     status = models.ForeignKey(
         SyncStatus, on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -600,7 +601,7 @@ class AIModelSyncLog(CreatedAndModifiedWithDelta):
         return f'Sync {self.created.strftime("%Y-%m-%d %H:%M")} - {self.status}'
 
 
-class AIModelRating(CreatedMixin):
+class AIModelRating(UUIDIdMixin, CreatedMixin):
     ai_model = models.ForeignKey(
         AIModel, on_delete=models.CASCADE, related_name='elo_ratings'
     )
@@ -614,11 +615,11 @@ class AIModelRating(CreatedMixin):
         indexes = [models.Index(fields=['ai_model', 'is_current'])]
 
 
-class LiteLLMCache(CreatedMixin):
+class LiteLLMCache(UUIDIdMixin, CreatedMixin):
     cached_catalog = models.JSONField(default=dict)
 
 
-class AIModelDescriptionCache(CreatedMixin):
+class AIModelDescriptionCache(UUIDIdMixin, CreatedMixin):
     cached_library = models.JSONField(default=dict)
 
 
@@ -632,7 +633,7 @@ class AIModelDescription(UUIDIdMixin, DescriptionMixin, CreatedAndModifiedWithDe
     is_current = models.BooleanField(default=True, db_index=True)
 
 
-class AIModelSyncReport(CreatedMixin):
+class AIModelSyncReport(UUIDIdMixin, CreatedMixin):
     """Captures proposed taxonomy that the sync would have created but didn't.
 
     Attached 1:1 to an AIModelSyncLog. Human reviews this, updates
