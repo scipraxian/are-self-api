@@ -33,13 +33,28 @@ class SessionManager(object):
             )
         return disc
 
+    def _resolve_identity_for_envelope(
+        self, envelope: PlatformEnvelope,
+    ) -> IdentityDisc:
+        """Use envelope-supplied IdentityDisc if present, else default fallback."""
+        if envelope.identity_disc_id:
+            return IdentityDisc.objects.get(pk=envelope.identity_disc_id)
+        return self._resolve_identity_disc()
+
     def resolve_session(
         self,
         platform: str,
         channel_id: str,
-        _envelope: PlatformEnvelope,
+        envelope: PlatformEnvelope,
     ) -> Tuple[GatewaySession, ReasoningSession]:
-        """Return gateway row and reasoning session; create rows when absent."""
+        """Return gateway row and reasoning session; create rows when absent.
+
+        Identity is pinned at session-creation: an envelope-supplied
+        ``identity_disc_id`` is honored only when a new ``ReasoningSession`` is
+        created (genesis or post-timeout rotation). Subsequent inbound
+        messages on an existing live gateway session reuse that session's
+        original ``identity_disc`` even if the envelope carries a different id.
+        """
         timeout_minutes = int(self.config.get('session_timeout_minutes', 60))
         cutoff = timezone.now() - timedelta(minutes=timeout_minutes)
 
@@ -53,9 +68,7 @@ class SessionManager(object):
         )
 
         if gs is not None and gs.last_activity < cutoff:
-            identity_disc = gs.reasoning_session.identity_disc
-            if identity_disc is None:
-                identity_disc = self._resolve_identity_disc()
+            identity_disc = self._resolve_identity_for_envelope(envelope)
             new_rs = ReasoningSession.objects.create(
                 identity_disc=identity_disc,
                 status_id=ReasoningStatusID.PENDING,
@@ -80,7 +93,7 @@ class SessionManager(object):
             return gs, new_rs
 
         if gs is None:
-            identity_disc = self._resolve_identity_disc()
+            identity_disc = self._resolve_identity_for_envelope(envelope)
             rs = ReasoningSession.objects.create(
                 identity_disc=identity_disc,
                 status_id=ReasoningStatusID.PENDING,

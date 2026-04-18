@@ -54,9 +54,15 @@ class DisplayCallbacks(object):
 class CliClient(object):
     """Async WebSocket client speaking the gateway stream protocol."""
 
-    def __init__(self, ws_url: str, channel_id: str) -> None:
+    def __init__(
+        self,
+        ws_url: str,
+        channel_id: str,
+        identity_disc_id: Optional[str] = None,
+    ) -> None:
         self.ws_url = ws_url
         self.channel_id = channel_id
+        self.identity_disc_id = identity_disc_id
         self._ws: Optional[Any] = None
         self._pending: dict[str, asyncio.Future] = {}
         self._reader_task: Optional[asyncio.Task] = None
@@ -107,6 +113,8 @@ class CliClient(object):
             'message_id': str(uuid4()),
             'content': content,
         }
+        if self.identity_disc_id:
+            payload['identity_disc_id'] = self.identity_disc_id
         return await self._request(payload)
 
     async def send_interrupt(self) -> dict:
