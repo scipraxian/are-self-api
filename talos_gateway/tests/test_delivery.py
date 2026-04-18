@@ -113,3 +113,32 @@ class TestDeliveryService(SimpleTestCase):
         result = await service.send(payload)
         self.assertTrue(result['success'])
         self.assertEqual(len(adapter.calls), 2)
+
+    async def test_cli_platform_is_noop_and_returns_success(self):
+        """Assert CLI platform short-circuits without calling any adapter.
+
+        CLI delivery is streamed via the Channels group bound to the
+        reasoning session; ``DeliveryService`` should never drive it
+        through an adapter even if one is somehow registered.
+        """
+        adapter = FakeClockAdapter()
+        service = DeliveryService({'cli': adapter})
+        payload = DeliveryPayload(
+            platform='cli',
+            channel_id='chan-noop',
+            content='streamed via channels',
+        )
+        result = await service.send(payload)
+        self.assertTrue(result.get('success'))
+        self.assertEqual(adapter.calls, [])
+
+    async def test_cli_platform_short_circuits_without_registered_adapter(self):
+        """Assert CLI platform returns success even when no adapter is registered."""
+        service = DeliveryService({})
+        payload = DeliveryPayload(
+            platform='cli',
+            channel_id='chan-noop-2',
+            content='no adapter',
+        )
+        result = await service.send(payload)
+        self.assertTrue(result.get('success'))

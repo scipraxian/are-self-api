@@ -742,3 +742,190 @@ class GatewaySessionManagementWebSocketTests(TransactionTestCase):
             await communicator.disconnect()
 
         asyncio.run(_run())
+
+
+# ------------------------------------------------------------------
+# Epic 2 revision — request_id echo contract
+# ------------------------------------------------------------------
+
+
+@override_settings(
+    CHANNEL_LAYERS={
+        'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}
+    },
+    TALOS_GATEWAY={
+        'platforms': {'cli': {'enabled': True}},
+        'default_identity_disc': THALAMUS_DISC_PK,
+        'session_timeout_minutes': 60,
+    },
+)
+class GatewayRequestIdEchoTests(TransactionTestCase):
+    """Assert every ``*_ack`` frame echoes ``request_id`` when the client sends it."""
+
+    fixtures = list(CommonFixturesAPITestCase.fixtures) + [
+        'talos_gateway/fixtures/initial_data.json',
+    ]
+
+    @classmethod
+    def setUpClass(cls):
+        _EMBED_PATCH.start()
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        _EMBED_PATCH.stop()
+
+    def tearDown(self) -> None:
+        clear_active_gateway_orchestrator()
+        super().tearDown()
+
+    @patch('thalamus.thalamus.fire_spike')
+    @patch('thalamus.signals.async_to_sync', _noop_async_to_sync)
+    @patch('talos_gateway.signals.async_to_sync', _noop_async_to_sync)
+    @patch('asgiref.sync.async_to_sync', _noop_async_to_sync)
+    def test_inbound_ack_echoes_request_id(self, *_mocks):
+        """Assert inbound_ack includes the request_id supplied on the request."""
+        orch = GatewayOrchestrator()
+        orch.load_adapters()
+        set_active_gateway_orchestrator(orch)
+
+        async def _run() -> None:
+            body = json.dumps({
+                'type': WS_MSG_INBOUND,
+                'channel_id': 'chan-req-echo',
+                'message_id': 'mid-req-echo',
+                'content': 'echo test',
+                'request_id': 'req-abc-1',
+            })
+            data = await _ws_connect_send_receive(body)
+            self.assertEqual(data['type'], WS_MSG_INBOUND_ACK)
+            self.assertEqual(data['request_id'], 'req-abc-1')
+
+        asyncio.run(_run())
+
+    @patch('thalamus.signals.async_to_sync', _noop_async_to_sync)
+    @patch('talos_gateway.signals.async_to_sync', _noop_async_to_sync)
+    @patch('asgiref.sync.async_to_sync', _noop_async_to_sync)
+    def test_create_session_ack_echoes_request_id(self, *_mocks):
+        """Assert create_session_ack echoes request_id."""
+
+        async def _run() -> None:
+            communicator = WebsocketCommunicator(
+                _gateway_application(),
+                '/ws/gateway/stream/',
+            )
+            connected, _ = await communicator.connect()
+            self.assertTrue(connected)
+
+            await communicator.send_to(text_data=json.dumps({
+                'type': WS_MSG_CREATE_SESSION,
+                'channel_id': 'chan-echo-create',
+                'request_id': 'req-create-2',
+            }))
+            raw = await communicator.receive_from()
+            data = json.loads(raw)
+            self.assertEqual(data['type'], WS_MSG_CREATE_SESSION_ACK)
+            self.assertEqual(data['request_id'], 'req-create-2')
+            await communicator.disconnect()
+
+        asyncio.run(_run())
+
+    @patch('thalamus.signals.async_to_sync', _noop_async_to_sync)
+    @patch('talos_gateway.signals.async_to_sync', _noop_async_to_sync)
+    @patch('asgiref.sync.async_to_sync', _noop_async_to_sync)
+    def test_list_sessions_ack_echoes_request_id(self, *_mocks):
+        """Assert list_sessions_ack echoes request_id."""
+
+        async def _run() -> None:
+            communicator = WebsocketCommunicator(
+                _gateway_application(),
+                '/ws/gateway/stream/',
+            )
+            connected, _ = await communicator.connect()
+            self.assertTrue(connected)
+
+            await communicator.send_to(text_data=json.dumps({
+                'type': WS_MSG_LIST_SESSIONS,
+                'request_id': 'req-list-3',
+            }))
+            raw = await communicator.receive_from()
+            data = json.loads(raw)
+            self.assertEqual(data['type'], WS_MSG_LIST_SESSIONS_ACK)
+            self.assertEqual(data['request_id'], 'req-list-3')
+            await communicator.disconnect()
+
+        asyncio.run(_run())
+
+
+@override_settings(
+    CHANNEL_LAYERS={
+        'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}
+    }
+)
+class GatewayJoinInterruptRequestIdEchoTests(SimpleTestCase):
+    """Assert join_session_ack / interrupt_ack echo request_id."""
+
+    databases = '__all__'
+
+    def test_join_session_ack_echoes_request_id(self):
+        """Assert join_session_ack echoes the request_id when supplied."""
+
+        async def _run() -> None:
+            communicator = WebsocketCommunicator(
+                _gateway_application(),
+                '/ws/gateway/stream/',
+            )
+            connected, _ = await communicator.connect()
+            self.assertTrue(connected)
+
+            sid = str(uuid4())
+            await communicator.send_to(text_data=json.dumps({
+                'type': WS_MSG_JOIN_SESSION,
+                'session_id': sid,
+                'request_id': 'req-join-4',
+            }))
+            raw = await communicator.receive_from()
+            data = json.loads(raw)
+            self.assertEqual(data['type'], WS_MSG_JOIN_SESSION_ACK)
+            self.assertEqual(data['request_id'], 'req-join-4')
+            self.assertEqual(data['session_id'], sid)
+            await communicator.disconnect()
+
+        asyncio.run(_run())
+
+    def test_interrupt_ack_echoes_request_id(self):
+        """Assert interrupt_ack echoes request_id after joining a session."""
+
+        async def _run() -> None:
+            communicator = WebsocketCommunicator(
+                _gateway_application(),
+                '/ws/gateway/stream/',
+            )
+            connected, _ = await communicator.connect()
+            self.assertTrue(connected)
+
+            sid = str(uuid4())
+            await communicator.send_to(text_data=json.dumps({
+                'type': WS_MSG_JOIN_SESSION,
+                'session_id': sid,
+            }))
+            await communicator.receive_from()
+
+            with patch(
+                'talos_gateway.stream_consumer.handle_interrupt',
+                return_value={'success': True, 'spike_id': 'sp-1'},
+            ):
+                await communicator.send_to(text_data=json.dumps({
+                    'type': WS_MSG_INTERRUPT,
+                    'request_id': 'req-int-5',
+                }))
+                raw = await communicator.receive_from()
+                data = json.loads(raw)
+                self.assertEqual(data['type'], WS_MSG_INTERRUPT_ACK)
+                self.assertEqual(data['request_id'], 'req-int-5')
+                self.assertTrue(data['success'])
+
+            await communicator.disconnect()
+
+        asyncio.run(_run())

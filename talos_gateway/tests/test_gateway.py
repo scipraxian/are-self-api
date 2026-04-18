@@ -31,12 +31,16 @@ class GatewayOrchestratorTests(CommonFixturesAPITestCase):
         'talos_gateway/fixtures/initial_data.json',
     ]
 
-    def test_load_adapters_instantiates_cli(self):
-        """Assert enabled platforms produce adapter instances."""
+    def test_load_adapters_skips_cli(self):
+        """Assert CLI platform is never loaded as an adapter.
+
+        CLI delivery streams via the Channels group; there is no
+        adapter-driven outbound path and ``DeliveryService.send``
+        short-circuits ``platform='cli'``.
+        """
         orch = GatewayOrchestrator()
         orch.load_adapters()
-        self.assertIn('cli', orch.adapters)
-        self.assertEqual(orch.adapters['cli'].PLATFORM_NAME, 'cli')
+        self.assertNotIn('cli', orch.adapters)
 
     def test_start_all_drops_failing_adapter(self):
         """Assert adapter.start failure removes that adapter."""

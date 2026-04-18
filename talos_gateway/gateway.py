@@ -56,10 +56,21 @@ class GatewayOrchestrator(object):
         self.message_router = MessageRouter(self.session_manager)
 
     def load_adapters(self) -> None:
-        """Instantiate enabled adapters from ``TALOS_GATEWAY['platforms']``."""
+        """Instantiate enabled adapters from ``TALOS_GATEWAY['platforms']``.
+
+        The ``cli`` platform is deliberately skipped: CLI traffic flows
+        through the Channels group bound to the reasoning session, not
+        an adapter. See ``DeliveryService.send`` for the short-circuit.
+        """
         platforms = self.config.get('platforms', {})
         for name, platform_cfg in platforms.items():
             if not platform_cfg.get('enabled', True):
+                continue
+            if name == 'cli':
+                logger.debug(
+                    '[GatewayOrchestrator] Skipping cli adapter; '
+                    'delivery is streamed via Channels group.'
+                )
                 continue
             try:
                 cls = discover_adapter_class(name)

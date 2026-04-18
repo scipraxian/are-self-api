@@ -53,9 +53,32 @@ from talos_gateway.ws_protocol import (
 logger = logging.getLogger('talos_gateway.stream_consumer')
 
 
-def _error_payload(code: str, message: str) -> dict[str, Any]:
-    """Build a JSON-serializable WebSocket error frame."""
-    return {'type': WS_MSG_ERROR, 'code': code, 'message': message}
+def _error_payload(
+    code: str,
+    message: str,
+    request_id: Optional[str] = None,
+) -> dict[str, Any]:
+    """Build a JSON-serializable WebSocket error frame.
+
+    When ``request_id`` is supplied the client can correlate the error to
+    the originating request; unsolicited errors omit it.
+    """
+    payload: dict[str, Any] = {
+        'type': WS_MSG_ERROR,
+        'code': code,
+        'message': message,
+    }
+    if request_id:
+        payload['request_id'] = request_id
+    return payload
+
+
+def _extract_request_id(data: dict[str, Any]) -> Optional[str]:
+    """Return a string ``request_id`` from an inbound frame, else ``None``."""
+    raw = data.get('request_id')
+    if isinstance(raw, str) and raw:
+        return raw
+    return None
 
 
 class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
@@ -193,21 +216,22 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
             return
 
         msg_type = data.get('type')
+        request_id = _extract_request_id(data)
 
         if msg_type == WS_MSG_JOIN_SESSION:
-            await self._handle_join_session(data)
+            await self._handle_join_session(data, request_id)
             return
 
         if msg_type == WS_MSG_INTERRUPT:
-            await self._handle_interrupt()
+            await self._handle_interrupt(request_id)
             return
 
         if msg_type == WS_MSG_LIST_SESSIONS:
-            await self._handle_list_sessions()
+            await self._handle_list_sessions(request_id)
             return
 
         if msg_type == WS_MSG_CREATE_SESSION:
-            await self._handle_create_session(data)
+            await self._handle_create_session(data, request_id)
             return
 
         if msg_type != WS_MSG_INBOUND:
@@ -216,6 +240,7 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
                     _error_payload(
                         WS_ERR_UNKNOWN_TYPE,
                         'unsupported message type: %s' % (msg_type,),
+                        request_id,
                     )
                 )
             )
@@ -228,6 +253,7 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
                     _error_payload(
                         WS_ERR_NO_GATEWAY,
                         'gateway orchestrator is not running',
+                        request_id,
                     )
                 )
             )
@@ -238,14 +264,13 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
         except ValueError as exc:
             await self.send(
                 text_data=json.dumps(
-                    _error_payload(WS_ERR_VALIDATION, str(exc))
+                    _error_payload(WS_ERR_VALIDATION, str(exc), request_id)
                 )
             )
             return
 
         try:
-            # TODO: Fix unresolved attribute typing
-            result = await orchestrator.handle_inbound(envelope)
+            result: dict[str, Any] = await orchestrator.handle_inbound(envelope)
         except Exception as exc:
             logger.exception(
                 '[GatewayTokenStreamConsumer] handle_inbound failed: %s.', exc
@@ -255,20 +280,26 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
                     _error_payload(
                         WS_ERR_VALIDATION,
                         'inbound handling failed',
+                        request_id,
                     )
                 )
             )
             return
 
-        await self.send(
-            text_data=json.dumps({'type': WS_MSG_INBOUND_ACK, 'result': result})
-        )
+        ack: dict[str, Any] = {'type': WS_MSG_INBOUND_ACK, 'result': result}
+        if request_id:
+            ack['request_id'] = request_id
+        await self.send(text_data=json.dumps(ack))
 
     # ------------------------------------------------------------------
     # Message-type handlers
     # ------------------------------------------------------------------
 
-    async def _handle_join_session(self, data: dict[str, Any]) -> None:
+    async def _handle_join_session(
+        self,
+        data: dict[str, Any],
+        request_id: Optional[str],
+    ) -> None:
         """Join a reasoning session channel group after connection."""
         raw_sid = data.get('session_id')
         if not raw_sid:
@@ -277,6 +308,7 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
                     _error_payload(
                         WS_ERR_VALIDATION,
                         'session_id is required for join_session',
+                        request_id,
                     )
                 )
             )
@@ -290,12 +322,12 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
                     _error_payload(
                         WS_ERR_VALIDATION,
                         'session_id must be a valid UUID',
+                        request_id,
                     )
                 )
             )
             return
 
-        # Leave previous group if switching sessions.
         if self._session_group:
             await self.channel_layer.group_discard(
                 self._session_group,
@@ -304,21 +336,22 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
 
         self._session_group = reasoning_session_group_name(sid)
         await self.channel_layer.group_add(
-            self._session_group or "",
+            self._session_group or '',
             self.channel_name,
         )
         logger.debug(
             '[GatewayTokenStreamConsumer] Joined group %s via join_session.',
             self._session_group,
         )
-        await self.send(
-            text_data=json.dumps({
-                'type': WS_MSG_JOIN_SESSION_ACK,
-                'session_id': str(sid),
-            })
-        )
+        ack: dict[str, Any] = {
+            'type': WS_MSG_JOIN_SESSION_ACK,
+            'session_id': str(sid),
+        }
+        if request_id:
+            ack['request_id'] = request_id
+        await self.send(text_data=json.dumps(ack))
 
-    async def _handle_interrupt(self) -> None:
+    async def _handle_interrupt(self, request_id: Optional[str]) -> None:
         """Interrupt the active reasoning session from the frontal lobe."""
         if not self._session_group:
             await self.send(
@@ -326,6 +359,7 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
                     _error_payload(
                         WS_ERR_VALIDATION,
                         'no session joined; send join_session first',
+                        request_id,
                     )
                 )
             )
@@ -340,20 +374,19 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
                     _error_payload(
                         WS_ERR_VALIDATION,
                         'could not resolve session from group',
+                        request_id,
                     )
                 )
             )
             return
 
         result = await sync_to_async(handle_interrupt)(session_id)
-        await self.send(
-            text_data=json.dumps({
-                'type': WS_MSG_INTERRUPT_ACK,
-                **result,
-            })
-        )
+        ack: dict[str, Any] = {'type': WS_MSG_INTERRUPT_ACK, **result}
+        if request_id:
+            ack['request_id'] = request_id
+        await self.send(text_data=json.dumps(ack))
 
-    async def _handle_list_sessions(self) -> None:
+    async def _handle_list_sessions(self, request_id: Optional[str]) -> None:
         """Return active CLI sessions to the WebSocket client.
 
         ORM called synchronously from async context, matching the pattern
@@ -367,18 +400,25 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
             logger.exception('[GatewayTokenStreamConsumer] list_sessions failed.')
             await self.send(
                 text_data=json.dumps(
-                    _error_payload(WS_ERR_VALIDATION, 'list_sessions failed')
+                    _error_payload(
+                        WS_ERR_VALIDATION, 'list_sessions failed', request_id
+                    )
                 )
             )
             return
-        await self.send(
-            text_data=json.dumps({
-                'type': WS_MSG_LIST_SESSIONS_ACK,
-                'sessions': sessions,
-            })
-        )
+        ack: dict[str, Any] = {
+            'type': WS_MSG_LIST_SESSIONS_ACK,
+            'sessions': sessions,
+        }
+        if request_id:
+            ack['request_id'] = request_id
+        await self.send(text_data=json.dumps(ack))
 
-    async def _handle_create_session(self, data: dict[str, Any]) -> None:
+    async def _handle_create_session(
+        self,
+        data: dict[str, Any],
+        request_id: Optional[str],
+    ) -> None:
         """Create a new session and auto-join its channel group.
 
         ORM called synchronously — see ``_handle_list_sessions`` docstring.
@@ -393,7 +433,9 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
             )
             await self.send(
                 text_data=json.dumps(
-                    _error_payload(WS_ERR_VALIDATION, 'create_session failed')
+                    _error_payload(
+                        WS_ERR_VALIDATION, 'create_session failed', request_id
+                    )
                 )
             )
             return
@@ -406,18 +448,18 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
 
         self._session_group = reasoning_session_group_name(rs.pk)
         await self.channel_layer.group_add(
-            # TODO: Find cleaner sol, this is a cheap fix
-            self._session_group or "",
+            self._session_group or '',
             self.channel_name,
         )
         logger.debug(
             '[GatewayTokenStreamConsumer] Created and joined session %s.',
             rs.pk,
         )
-        await self.send(
-            text_data=json.dumps({
-                'type': WS_MSG_CREATE_SESSION_ACK,
-                'session_id': str(rs.pk),
-                'channel_id': gs.channel_id,
-            })
-        )
+        ack: dict[str, Any] = {
+            'type': WS_MSG_CREATE_SESSION_ACK,
+            'session_id': str(rs.pk),
+            'channel_id': gs.channel_id,
+        }
+        if request_id:
+            ack['request_id'] = request_id
+        await self.send(text_data=json.dumps(ack))

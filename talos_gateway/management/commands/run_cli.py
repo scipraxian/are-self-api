@@ -8,7 +8,7 @@ from typing import Optional
 
 from django.core.management.base import BaseCommand
 
-from talos_gateway.cli.client import CliClient
+from talos_gateway.cli.client import CliClient, DisplayCallbacks
 from talos_gateway.cli.display import (
     format_error,
     format_response_complete,
@@ -53,8 +53,14 @@ async def run_cli_main_async(
     """Connect to the gateway WebSocket and run the interactive REPL."""
     ws_url = 'ws://%s:%s/ws/gateway/stream/' % (host, port)
     client = CliClient(ws_url, channel)
+    callbacks = DisplayCallbacks(
+        on_token=_cli_listen_on_token,
+        on_complete=_cli_listen_on_complete,
+        on_status=_cli_listen_on_status,
+        on_error=_cli_listen_on_error,
+    )
 
-    await client.connect()
+    await client.start(callbacks)
     try:
         if session:
             result = await client.send_join_session(session)
@@ -77,78 +83,62 @@ async def run_cli_main_async(
         voice_enabled = False
         pending_attachment: Optional[str] = None
 
-        listener_task = asyncio.create_task(
-            client.listen(
-                on_token=_cli_listen_on_token,
-                on_complete=_cli_listen_on_complete,
-                on_status=_cli_listen_on_status,
-                on_error=_cli_listen_on_error,
+        while True:
+            line = await asyncio.get_event_loop().run_in_executor(
+                None, sys.stdin.readline
             )
-        )
+            if not line:
+                break
 
-        try:
-            while True:
-                line = await asyncio.get_event_loop().run_in_executor(
-                    None, sys.stdin.readline
+            cmd, args = parse_cli_input(line)
+
+            if cmd == 'quit':
+                break
+            elif cmd == 'new':
+                r = await client.send_create_session()
+                session_id = r.get('session_id', '')
+                sys.stdout.write(
+                    format_session_info(
+                        session_id, 'new', r.get('channel_id', '')
+                    ) + '\n'
                 )
-                if not line:
-                    break
+            elif cmd == 'sessions':
+                sessions = await client.send_list_sessions()
+                sys.stdout.write(format_session_list(sessions) + '\n')
+            elif cmd == 'select':
+                r = await client.send_join_session(args)
+                sys.stdout.write(
+                    format_session_info(
+                        r.get('session_id', args), 'joined', ''
+                    ) + '\n'
+                )
+            elif cmd == 'interrupt':
+                r = await client.send_interrupt()
+                sys.stdout.write('[interrupt] %s\n' % r)
+            elif cmd == 'attach':
+                pending_attachment = args
+                sys.stdout.write(
+                    '[attach] Queued: %s (sent with next message)\n' % args
+                )
+            elif cmd == 'voice':
+                voice_enabled = not voice_enabled
+                sys.stdout.write(
+                    '[voice] %s\n'
+                    % ('enabled' if voice_enabled else 'disabled')
+                )
+            elif cmd == 'status':
+                sys.stdout.write(
+                    format_session_info(session_id, 'active', channel)
+                    + '\n'
+                )
+            elif cmd == 'message':
+                await client.send_message(args)
+                if pending_attachment:
+                    pending_attachment = None
 
-                cmd, args = parse_cli_input(line)
-
-                if cmd == 'quit':
-                    break
-                elif cmd == 'new':
-                    r = await client.send_create_session()
-                    session_id = r.get('session_id', '')
-                    sys.stdout.write(
-                        format_session_info(
-                            session_id, 'new', r.get('channel_id', '')
-                        ) + '\n'
-                    )
-                elif cmd == 'sessions':
-                    sessions = await client.send_list_sessions()
-                    sys.stdout.write(format_session_list(sessions) + '\n')
-                elif cmd == 'select':
-                    r = await client.send_join_session(args)
-                    sys.stdout.write(
-                        format_session_info(
-                            r.get('session_id', args), 'joined', ''
-                        ) + '\n'
-                    )
-                elif cmd == 'interrupt':
-                    r = await client.send_interrupt()
-                    sys.stdout.write('[interrupt] %s\n' % r)
-                elif cmd == 'attach':
-                    pending_attachment = args
-                    sys.stdout.write(
-                        '[attach] Queued: %s (sent with next message)\n' % args
-                    )
-                elif cmd == 'voice':
-                    voice_enabled = not voice_enabled
-                    sys.stdout.write(
-                        '[voice] %s\n'
-                        % ('enabled' if voice_enabled else 'disabled')
-                    )
-                elif cmd == 'status':
-                    sys.stdout.write(
-                        format_session_info(session_id, 'active', channel)
-                        + '\n'
-                    )
-                elif cmd == 'message':
-                    await client.send_message(args)
-                    if pending_attachment:
-                        pending_attachment = None
-
-                sys.stdout.flush()
-        finally:
-            listener_task.cancel()
-            try:
-                await listener_task
-            except asyncio.CancelledError:
-                pass
+            sys.stdout.flush()
     finally:
-        await client.disconnect()
+        await client.stop()
 
 
 class Command(BaseCommand):

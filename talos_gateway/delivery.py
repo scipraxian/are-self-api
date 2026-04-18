@@ -13,6 +13,8 @@ PERMANENT_FAILURE_CODES = frozenset({403, 404})
 MAX_SEND_ATTEMPTS = 3
 BACKOFF_SECONDS = (1.0, 3.0)
 
+CLI_PLATFORM = 'cli'
+
 
 async def send_with_retries(
     adapter: Any,
@@ -57,7 +59,20 @@ class DeliveryService(object):
         self.adapters = adapters
 
     async def send(self, payload: DeliveryPayload) -> dict:
-        """Deliver payload to the configured platform adapter."""
+        """Deliver payload to the configured platform adapter.
+
+        CLI traffic is streamed to the client via the Channels group
+        bound to the reasoning session (see ``TokenChannelSender``);
+        there is no adapter-driven outbound path, so the service
+        short-circuits with a success result.
+        """
+        if payload.platform == CLI_PLATFORM:
+            logger.debug(
+                '[DeliveryService] CLI delivery is streamed via Channels '
+                'group; skipping adapter send for channel %s.',
+                payload.channel_id,
+            )
+            return {'success': True, 'status_code': 200, 'platform': CLI_PLATFORM}
         adapter = self.adapters.get(payload.platform)
         if adapter is None:
             logger.warning(
