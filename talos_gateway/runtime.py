@@ -137,7 +137,7 @@ def _ensure_spike(reasoning_session: ReasoningSession) -> Spike:
         neuron=neuron,
         effector_id=neuron.effector_id,
         status_id=SpikeStatus.PENDING,
-        blackboard={},
+        axoplasm={},
     )
 
     # 4. Link spike to the session and set it ready for injection.

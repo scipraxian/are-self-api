@@ -3,6 +3,8 @@
 import logging
 from typing import Any, Optional
 
+from asgiref.sync import sync_to_async
+
 from frontal_lobe.models import ReasoningSession
 from talos_gateway.contracts import DeliveryPayload, PlatformEnvelope
 from talos_gateway.models import GatewaySession
@@ -27,10 +29,8 @@ class MessageRouter(object):
         envelope: PlatformEnvelope,
     ) -> dict[str, Any]:
         """Queue user content and wake reasoning via the canonical path."""
-        wake_result = wake_reasoning(
-            gateway_session, reasoning_session, envelope.content,
-        )
-        reasoning_session.refresh_from_db()
+        wake_result = await sync_to_async(wake_reasoning)(gateway_session, reasoning_session, envelope.content)
+        await sync_to_async(reasoning_session.refresh_from_db)()
         queue = list(reasoning_session.swarm_message_queue or [])
         logger.debug(
             '[MessageRouter] Dispatched message for session %s (depth=%s, action=%s).',
