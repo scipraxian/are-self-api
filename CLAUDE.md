@@ -3,35 +3,49 @@
 The single source of truth for any AI agent working on the are-self-api codebase.
 Read completely before making any changes.
 
-> **Active thread (April 15, 2026):** `uuid-migration` branch, Pass 2 Step 1
-> completion in progress. Pass 1 (18 plugin-extensible models flipped to UUID
-> PKs, 433 tests passing) is locked. Pass 2 splits every app's `initial_data.json`
-> into the four biological fixture tiers (`genetic_immutables` → `zygote` →
-> `initial_phenotypes` → `petri_dish`), extracts the Unreal flow as an in-tree
-> `unreal_modifier.json` sibling (plugin bundling deferred), and will later
-> wire `./manage.py build_modifier` + the contribution-aware loader.
+> **Active thread (April 18, 2026):** `uuid-migration` branch, Pass 2
+> Tasks 5d + 6 shipped and merged to main. Pass 1 (18 NeuralModifier-extensible
+> models flipped to UUID PKs, 433 tests passing) is locked. Pass 2 has now:
+> (a) split every app's `initial_data.json` into the four biological fixture
+> tiers (`genetic_immutables` → `zygote` → `initial_phenotypes` →
+> `petri_dish`), (b) extracted the Unreal flow as an in-tree
+> `neuroplasticity/modifier_genome/unreal/` bundle (commit bf2e11d, Task 5d),
+> and (c) landed the full NeuralModifier lifecycle — `./manage.py
+> build_modifier` plus `enable_modifier` / `disable_modifier` /
+> `uninstall_modifier` / `list_modifiers`, the contribution-aware loader
+> at `neuroplasticity/loader.py`, the apps.py boot hook, and
+> `tests/test_modifier_lifecycle.py` with 9 passing tests covering the
+> install / uninstall / BROKEN paths (commit 15ceb37, Task 6). The
+> hypothalamus end-to-end UUID propagation landed in commit 1e98e303
+> (GeneralDread, 25 files, +761/-2752), with the UI companion shipped.
 >
-> **Pass 2 Step 1 status:** First CC pass split all 1017 rows into scratch
-> `.step1.json` files with SHA-256 verified byte-identical source fixtures
-> and produced `STEP1_REPORT.md`. Review surfaced 7 decision items; Michael
-> has ruled on all 7. Completion prompt authored (see chat) for a second CC
-> pass that applies the rulings, renames scratch → final, and creates
-> `temporal_lobe/zygote.json` (missing from the first split). Key rulings:
-> BEGIN_PLAY stays in zygote (sacred, non-negotiable); entire parietal tool
-> suite → zygote; IterationDefinitions → zygote, Iteration instances →
-> phenotype (definition-vs-instance pattern); hypothalamus zygote = 3 models
-> (nomic-embed-text + qwen2.5-coder:7b + qwen2.5-coder:32b); django_celery_beat
-> stays in genetic_immutables; `petri_dish.json` is not empty by design — it
-> composes with `genetic_immutables.json` via the common test class (mechanism
-> TBD in Step 2). `ProjectEnvironment.DEFAULT_ENVIRONMENT` now points at the
-> new simple default env `b7e4c2a1-3f8d-4a9e-9c1f-2d5a8b6f4e21` (resolved by
-> Michael); its `are_self_root` + `venv_root` ContextVariables are added.
+> **Pass 2 Step 1 status:** complete. All 1017 rows split into the four
+> tiers with SHA-256 verified byte-identical source fixtures. Michael
+> ruled on all 7 Step 1 decision items. Rulings locked in: BEGIN_PLAY
+> stays in zygote (sacred, non-negotiable); entire parietal tool suite →
+> zygote; IterationDefinitions → zygote, Iteration instances → phenotype
+> (definition-vs-instance pattern); hypothalamus zygote = 3 models
+> (nomic-embed-text + qwen2.5-coder:7b + qwen2.5-coder:32b);
+> django_celery_beat stays in genetic_immutables; `petri_dish.json` is
+> not empty by design — it composes with `genetic_immutables.json` via
+> the common test class. `ProjectEnvironment.DEFAULT_ENVIRONMENT` points
+> at the simple default env `b7e4c2a1-3f8d-4a9e-9c1f-2d5a8b6f4e21`; its
+> `are_self_root` + `venv_root` ContextVariables are in place.
 >
 > Tasks 2 (hypothalamus zygote seed), 3 (log-merge move to occipital_lobe),
-> 4 (log_parser split + LogParserFactory), and 4.5 (three `environments`
-> models flipped to UUID) are staged but not yet committed. See
-> `FIXTURE_SEPARATION_PROMPT.md` for the full executable plan and
-> TASKS.md → "UUID migration Pass 2" for the task list.
+> 4 (log_parser split + LogParserFactory), 4.5 (three `environments`
+> models flipped to UUID), 5d (Unreal modifier_genome scaffold), and 6
+> (build_modifier + loader + lifecycle tests) are all landed. NeuralModifier
+> install UI (modifier-garden page with per-bundle install buttons) is
+> Michael's domain — not a CC prompt. What's left to finish the
+> NeuralModifier feature area (Tasks 8–15: dogfood the Unreal bundle,
+> bundle-time `NATIVE_HANDLERS` + `LogParserFactory` registration,
+> hash-mismatch proof, orphan-uninstall path, MCP tool-set integration,
+> bundle-author docs, upgrade/version/dependency model) lives in
+> `NEURAL_MODIFIER_COMPLETION_PLAN.md` at repo root. TASKS.md →
+> "UUID migration Pass 2" is the historical task list; the Pass 2
+> executable prompt and the Step 1 reports were nuked April 18 because
+> their work landed.
 >
 > **Prior thread (April 11):** Nerve Terminal scan reconcile shipped with a
 > UI-blink regression; planned surgical fix documented in TASKS.md →
@@ -165,7 +179,7 @@ environment's neural pathways) and now also hosts the generic log-merge utilitie
 `LogParserFactory` registry (moved out of `ue_tools/` in Pass 2 Task 3/4).
 
 `neuroplasticity/` is the Pass 2 install / lifecycle registry for `NeuralModifier` bundles
-(Are-Self's word for an installable plugin). The app owns `NeuralModifier`,
+(Are-Self's word for an installable extension bundle). The app owns `NeuralModifier`,
 `NeuralModifierContribution` (GFK with UUIDField object_id — the uninstall manifest),
 `NeuralModifierInstallationLog`, and the `NeuralModifierStatus` /
 `NeuralModifierInstallationEventType` enums. Bundles ship committed at
@@ -452,10 +466,11 @@ UUID-keyed.
 **Fixtures — four biological tiers (Pass 2, in progress):**
 
 1. **`genetic_immutables.json`** — protocol enums and canonical vocabulary tables.
-   Integer-PK (core-owned, never contributed to by plugins): `SpikeStatus`, `AxonType`,
-   `CNSDistributionMode`, `NeuralModifierStatus`, `NeuralModifierInstallationEventType`,
-   `IdentityAddonPhase`, `BudgetPeriod`, etc. UUID-PK vocabulary (plugin-extensible, all
-   hypothalamus vocab flipped in Pass 2): `AIMode`, `AIModelCategory`, `AIModelCapabilities`,
+   Integer-PK (core-owned, never contributed to by NeuralModifiers): `SpikeStatus`,
+   `AxonType`, `CNSDistributionMode`, `NeuralModifierStatus`,
+   `NeuralModifierInstallationEventType`, `IdentityAddonPhase`, `BudgetPeriod`, etc.
+   UUID-PK vocabulary (NeuralModifier-extensible, all hypothalamus vocab flipped in
+   Pass 2): `AIMode`, `AIModelCategory`, `AIModelCapabilities`,
    `AIModelTags`, `AIModelFamily`, `AIModelVersion`, `AIModelCreator`, `AIModelRole`,
    `AIModelQuantization`, `LLMProvider`, `FailoverType`, `FailoverStrategy`,
    `FailoverStrategyStep`, `SyncStatus`. Loaded by install, Docker, and tests. Never
@@ -498,8 +513,7 @@ mutable by neuroplasticity" — Michael), plus the already-UUID models (`Identit
 to look up status rows by stable PK. Do not renumber or regenerate.
 
 UUIDs are `uuid.uuid4()` random literals. No namespaces, no derivation seeds. Existing
-UUID literals already in fixtures are frozen values and are not regenerated. See
-`FIXTURE_SEPARATION_PROMPT.md` for the full Pass 2 plan.
+UUID literals already in fixtures are frozen values and are not regenerated.
 
 **Canonical Effector / Executable constants:** Important effectors and executables have
 model-class UUID constants (`central_nervous_system/models.py`, `environments/models.py`):
@@ -509,8 +523,7 @@ model-class UUID constants (`central_nervous_system/models.py`, `environments/mo
 `DEPLOY_RELEASE`. These are `uuid.UUID(...)` literals — the names stay stable but values
 are UUIDs, not integers. The frontend `nodeConstants.ts` must mirror these as UUID strings
 (companion PR gates the branch merge). The frontend uses these to determine which custom
-React Flow node component to render. The int→UUID mapping for the migration is recorded
-at `uuid_migration_mapping.json` at repo root.
+React Flow node component to render.
 
 **Debug node:** Effector PK 9. Native handler `debug_node` in
 `central_nervous_system/effectors/effector_casters/debug_node.py`. Logs axoplasm state and

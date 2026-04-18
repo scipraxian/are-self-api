@@ -1,10 +1,11 @@
 """Neuroplasticity: the NeuralModifier install / lifecycle registry.
 
-A NeuralModifier is Are-Self's word for an installed plugin bundle. Bundles
-live on disk at `plugins_runtime/{slug}/` (manifest.json, plugin_data.json,
-code/, README.md) and are immutable post-install. This app is the source of
-truth for *which* modifiers are installed, *what* each one contributed to
-the database, and the audit trail of install / enable / disable events.
+A NeuralModifier is Are-Self's word for an installed extension bundle.
+Bundles live on disk at `neural_modifiers/{slug}/` (manifest.json,
+modifier_data.json, code/, README.md) and are immutable post-install.
+This app is the source of truth for *which* modifiers are installed,
+*what* each one contributed to the database, and the audit trail of
+install / enable / disable events.
 """
 
 from typing import Generator, Optional
@@ -26,9 +27,9 @@ class NeuralModifierStatus(NameMixin):
                           |           |           |
                           +-----------+-----------+--> BROKEN
 
-    DISCOVERED: `plugins_runtime/{slug}/` exists and manifest parsed, but
-        plugin_data.json has not been loaded and code is not on sys.path.
-    INSTALLED:  manifest validated, plugin_data.json loaded, contributions
+    DISCOVERED: `neural_modifiers/{slug}/` exists and manifest parsed, but
+        modifier_data.json has not been loaded and code is not on sys.path.
+    INSTALLED:  manifest validated, modifier_data.json loaded, contributions
         recorded, code available for import. Not yet wired into MCP.
     ENABLED:    INSTALLED plus actively contributing to the MCP tool-set
         builder and live tool resolution.
@@ -51,9 +52,9 @@ class NeuralModifierStatus(NameMixin):
 
 
 class NeuralModifier(DefaultFieldsMixin):
-    """An installed plugin bundle registered with the running system.
+    """An installed NeuralModifier bundle registered with the running system.
 
-    One row per bundle in `plugins_runtime/`. The `slug` is the stable
+    One row per bundle in `neural_modifiers/`. The `slug` is the stable
     identifier matching the on-disk directory name; `name` (from
     NameMixin) is the human-readable display name mirrored from the
     manifest at install time. `manifest_json` caches the full manifest
@@ -108,16 +109,17 @@ class NeuralModifierContribution(CreatedMixin):
     """One row per DB object a NeuralModifier created on install.
 
     This is the uninstall manifest in table form. When a modifier's
-    plugin_data.json loads and creates an Effector, NeuralPathway,
+    modifier_data.json loads and creates an Effector, NeuralPathway,
     ContextVariable, etc., a Contribution row is written pointing at it
     via GenericForeignKey. Uninstall iterates these rows, deletes each
     target, then deletes the contribution rows themselves.
 
-    The `object_id` column is a UUIDField because every plugin-extensible
-    model in Are-Self was migrated to UUID primary keys in the Pass 1
-    `uuid-migration` branch — that migration is the prerequisite for this
-    table existing at all. Protocol enums (SpikeStatus, AxonType, etc.)
-    stayed integer-keyed and are never contribution targets.
+    The `object_id` column is a UUIDField because every
+    NeuralModifier-extensible model in Are-Self was migrated to UUID
+    primary keys in the Pass 1 `uuid-migration` branch — that migration
+    is the prerequisite for this table existing at all. Protocol enums
+    (SpikeStatus, AxonType, etc.) stayed integer-keyed and are never
+    contribution targets.
     """
 
     neural_modifier = models.ForeignKey(

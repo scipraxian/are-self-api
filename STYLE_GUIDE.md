@@ -155,9 +155,31 @@ sections only when parameter names aren't self-explanatory.
 
 ## Fixtures
 
-Tool definitions, parameters, and assignments live in `initial_data.json` fixtures. PKs are stable integers used as
-class-level constants. Never change an existing PK. Add new records with the next available PK. Old records are
-deprecated in place, never deleted, because existing sessions reference them.
+Structural seed data lives in **four biological tiers**, not in `initial_data.json` (Pass 2,
+April 2026). Every app that seeds rows owns some subset of:
+
+1. **`genetic_immutables.json`** — protocol enums and canonical vocabulary tables. Integer
+   PKs are stable class-level constants and behave like the old `initial_data.json` rule:
+   never renumber, never delete (sessions, logs, and tests reference them by PK). UUID-PK
+   vocabulary rows (hypothalamus catalog, failover types, sync status, etc.) also live
+   here; their UUID literals are equally frozen once committed.
+2. **`zygote.json`** — the minimum UUID-keyed rows needed to boot and bind one end-to-end
+   identity thread. Loaded by install, Docker, and tests.
+3. **`initial_phenotypes.json`** — the rest of the committed-to-core structural rows that
+   ship out-of-the-box. Loaded by install and Docker. Not loaded by tests.
+4. **`petri_dish.json`** — test-only instance rows. Loaded by `CommonFixturesAPITestCase`
+   only. Self-contained; must not depend on `initial_phenotypes.json`.
+
+All UUIDs are `uuid.uuid4()` random literals — no namespaces, no derivation seeds. Existing
+UUID literals already in fixtures are frozen values and are not regenerated. Integer PKs
+keep the old "never renumber, never delete" discipline. Deprecated rows stay in place so
+historical sessions still resolve them.
+
+Runtime-contributed rows (`NeuralModifier` bundles) do **not** ship via any of these four
+tiers. They land through the contribution-aware loader and are tracked in
+`NeuralModifierContribution`. See `CLAUDE.md` → "Fixtures" for the app-by-app tier
+breakdown and `NEURAL_MODIFIER_COMPLETION_PLAN.md` for what's left to finish the bundle
+feature area.
 
 ## Line Length
 
