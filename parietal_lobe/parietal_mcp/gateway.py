@@ -1,9 +1,53 @@
 import importlib
 import inspect
 import logging
-from typing import Any, Dict
+from typing import Any, Callable, Dict
 
 logger = logging.getLogger(__name__)
+
+
+_PARIETAL_TOOL_REGISTRY: Dict[str, Callable] = {}
+
+
+def register_parietal_tool(tool_name: str, handler: Callable) -> None:
+    """Register a bundle-contributed parietal MCP tool.
+
+    Args:
+        tool_name: Must start with 'mcp_' (enforced).
+        handler: The async callable that implements the tool. Its
+            signature is inspected at dispatch time the same way core
+            tools are — drop hallucinated args, enforce required args,
+            etc.
+
+    Raises:
+        ValueError: if `tool_name` does not start with 'mcp_'.
+        RuntimeError: if `tool_name` is already registered (by any
+            source — core dynamic-import collision detection is left
+            to dispatch time; this guard only covers registry
+            collisions between bundles).
+    """
+    if not tool_name.startswith('mcp_'):
+        raise ValueError(
+            f"Parietal tool name '{tool_name}' must start with 'mcp_'."
+        )
+    if tool_name in _PARIETAL_TOOL_REGISTRY:
+        raise RuntimeError(
+            f"Parietal tool '{tool_name}' is already registered."
+        )
+    _PARIETAL_TOOL_REGISTRY[tool_name] = handler
+    logger.debug('[ParietalMCP] Registered bundle tool %s.', tool_name)
+
+
+def unregister_parietal_tool(tool_name: str) -> None:
+    """Remove a registered tool. No-op if absent.
+
+    Used by the NeuralModifier uninstall path to clean up. Never
+    raises on missing keys — uninstall must be idempotent.
+    """
+    if _PARIETAL_TOOL_REGISTRY.pop(tool_name, None) is not None:
+        logger.debug(
+            '[ParietalMCP] Unregistered bundle tool %s.', tool_name
+        )
 
 
 class ParietalMCP:
@@ -24,16 +68,18 @@ class ParietalMCP:
             )
 
         try:
-            module_path = f'parietal_lobe.parietal_mcp.{tool_name}'
-            tool_module = importlib.import_module(module_path)
+            tool_func = _PARIETAL_TOOL_REGISTRY.get(tool_name)
 
-            tool_func = getattr(tool_module, tool_name, None)
+            if tool_func is None:
+                module_path = f'parietal_lobe.parietal_mcp.{tool_name}'
+                tool_module = importlib.import_module(module_path)
+                tool_func = getattr(tool_module, tool_name, None)
 
-            if not tool_func:
-                return (
-                    f"Error: Function '{tool_name}' not found inside "
-                    f"module '{module_path}'."
-                )
+                if not tool_func:
+                    return (
+                        f"Error: Function '{tool_name}' not found inside "
+                        f"module '{module_path}'."
+                    )
 
             # --- ARMOR: Hallucination Defense ---
             # Inspect the target function's signature and drop any invented arguments.
