@@ -1,5 +1,6 @@
 import json
 import os
+import uuid
 from unittest.mock import mock_open, patch
 
 from central_nervous_system.effectors.effector_casters.effector_handlers.effector_handler_codes import (
@@ -21,28 +22,30 @@ from central_nervous_system.models import (
 from common.tests.common_test_case import CommonFixturesAPITestCase
 from environments.models import Executable
 
-MODULE_PATH = (
-    'central_nervous_system.effectors.effector_casters.effector_handlers.version_metadata_handler'
-)
+MODULE_PATH = 'central_nervous_system.effectors.effector_casters.effector_handlers.version_metadata_handler'
 
 
 class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
     fixtures = list(CommonFixturesAPITestCase.fixtures) + [
         'neuroplasticity/modifier_genome/unreal/modifier_data.json',
     ]
+
     def setUp(self):
         self.status_running = SpikeStatus.objects.get(id=SpikeStatus.RUNNING)
         self.spawn_running = SpikeTrainStatus.objects.get(
-            id=SpikeTrainStatus.RUNNING)
+            id=SpikeTrainStatus.RUNNING
+        )
 
+        version_handler = uuid.UUID('1d037234-c8c2-4d51-bc65-41597c0becd2')
         self.effector = Effector.objects.create(
             name='Version Spell',
-            executable_id=Executable.VERSION_HANDLER,
+            executable_id=version_handler,
         )
         self.book = NeuralPathway.objects.create(name='Test Book')
 
         self.spike_train = SpikeTrain.objects.create(
-            pathway=self.book, status_id=SpikeTrainStatus.RUNNING)
+            pathway=self.book, status_id=SpikeTrainStatus.RUNNING
+        )
 
         self.spike = Spike.objects.create(
             spike_train=self.spike_train,
@@ -59,11 +62,10 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
 
         # Mock OS operations
         with (
-                patch('os.path.exists') as mock_exists,
-                patch('os.makedirs') as mock_mkdirs,
-                patch('builtins.open', new_callable=mock_open) as mock_file,
-                patch(f'{MODULE_PATH}.getpass.getuser',
-                      return_value='TestBuilder'),
+            patch('os.path.exists') as mock_exists,
+            patch('os.makedirs') as mock_mkdirs,
+            patch('builtins.open', new_callable=mock_open) as mock_file,
+            patch(f'{MODULE_PATH}.getpass.getuser', return_value='TestBuilder'),
         ):
             # 1. Directory exists, File does not
             def exists_side_effect(path):
@@ -86,7 +88,8 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
             handle = mock_file()
             # Aggregate all write calls to handle json.dump chunking
             written_content = ''.join(
-                call.args[0] for call in handle.write.call_args_list)
+                call.args[0] for call in handle.write.call_args_list
+            )
             written_data = json.loads(written_content)
 
             self.assertIn('Build', written_data)
@@ -95,29 +98,32 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
 
     @patch('central_nervous_system.models.Effector.get_full_command')
     @patch(f'{MODULE_PATH}.log_system')
-    def test_updates_existing_file_preserving_data(self, mock_log,
-                                                   mock_command):
+    def test_updates_existing_file_preserving_data(
+        self, mock_log, mock_command
+    ):
         """Verify it updates 'Build' block but keeps existing 'Game' config."""
         target_path = 'C:/Fake/AppVersion.json'
         mock_command.return_value = ['exe', target_path]
 
-        existing_content = json.dumps({
-            'Game': {
-                'Name': 'ExistingGame',
-                'Major': 9,
-                'Minor': 9,
-                'Patch': 9,
-            },
-            'OldBuild': 'LegacyData',
-        })
+        existing_content = json.dumps(
+            {
+                'Game': {
+                    'Name': 'ExistingGame',
+                    'Major': 9,
+                    'Minor': 9,
+                    'Patch': 9,
+                },
+                'OldBuild': 'LegacyData',
+            }
+        )
 
         with (
-                patch('os.path.exists', return_value=True),
-                patch(
-                    'builtins.open',
-                    new_callable=mock_open,
-                    read_data=existing_content,
-                ) as mock_file,
+            patch('os.path.exists', return_value=True),
+            patch(
+                'builtins.open',
+                new_callable=mock_open,
+                read_data=existing_content,
+            ) as mock_file,
         ):
             code, log = update_version_metadata(self.spike.id)
 
@@ -126,12 +132,14 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
             # Get the data written back to the file
             handle = mock_file()
             written_content = ''.join(
-                call.args[0] for call in handle.write.call_args_list)
+                call.args[0] for call in handle.write.call_args_list
+            )
             data = json.loads(written_content)
 
             # Assertions
-            self.assertEqual(data['Game']['Major'], 9,
-                             'Should preserve existing Game data')
+            self.assertEqual(
+                data['Game']['Major'], 9, 'Should preserve existing Game data'
+            )
             self.assertIn('Build', data, 'Should inject Build block')
             self.assertIn('OldBuild', data, 'Should preserve unrelated keys')
 
@@ -143,12 +151,12 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
         mock_command.return_value = ['exe', target_path]
 
         with (
-                patch('os.path.exists', return_value=True),
-                patch(
-                    'builtins.open',
-                    new_callable=mock_open,
-                    read_data='{ bad_json: ',
-                ) as mock_file,
+            patch('os.path.exists', return_value=True),
+            patch(
+                'builtins.open',
+                new_callable=mock_open,
+                read_data='{ bad_json: ',
+            ) as mock_file,
         ):
             code, log = update_version_metadata(self.spike.id)
 
@@ -158,7 +166,8 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
             # Verify it wrote a fresh valid structure
             handle = mock_file()
             written_content = ''.join(
-                call.args[0] for call in handle.write.call_args_list)
+                call.args[0] for call in handle.write.call_args_list
+            )
             data = json.loads(written_content)
             self.assertEqual(data['Game']['Name'], 'HSH: Vacancy')
 
@@ -172,8 +181,8 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
         # FIX: Raise OSError instead of PermissionError to hit the generic catch block
         # which returns HANDLER_WRITE_ERROR_CODE and logs "Could not create directory"
         with (
-                patch('os.path.exists', return_value=False),
-                patch('os.makedirs', side_effect=OSError('Generic OS Failure')),
+            patch('os.path.exists', return_value=False),
+            patch('os.makedirs', side_effect=OSError('Generic OS Failure')),
         ):
             code, log = update_version_metadata(self.spike.id)
 
@@ -190,8 +199,8 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
         # FIX: Set exists=False. This skips the 'read' block (which catches OSError)
         # and forces execution into the 'write' block, where the side_effect triggers.
         with (
-                patch('os.path.exists', return_value=False),
-                patch('builtins.open', side_effect=IOError('Disk Full')),
+            patch('os.path.exists', return_value=False),
+            patch('builtins.open', side_effect=IOError('Disk Full')),
         ):
             code, log = update_version_metadata(self.spike.id)
 
