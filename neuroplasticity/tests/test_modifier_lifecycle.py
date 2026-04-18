@@ -112,7 +112,7 @@ class ModifierLifecycleTestCase(TestCase):
     never reached.
     """
 
-    fixtures = ['neuroplasticity/fixtures/reference_data.json']
+    fixtures = ['neuroplasticity/fixtures/genetic_immutables.json']
 
     def setUp(self):
         super().setUp()

@@ -58,7 +58,6 @@ class UnrealBundleInstallTestCase(CommonTestCase):
     """
 
     fixtures = list(CommonTestCase.fixtures) + [
-        'neuroplasticity/fixtures/reference_data.json',
         'central_nervous_system/fixtures/zygote.json',
         'environments/fixtures/zygote.json',
         'hypothalamus/fixtures/zygote.json',
