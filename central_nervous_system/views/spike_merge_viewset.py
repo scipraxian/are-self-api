@@ -7,7 +7,6 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-import ue_tools.log_parser  # noqa: F401  # registers UE strategies with LogParserFactory
 from central_nervous_system.models import Spike, SpikeStatus
 from occipital_lobe.merge_logs_nway import (
     merge_delta,

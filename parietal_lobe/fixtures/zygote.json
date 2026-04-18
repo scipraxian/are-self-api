@@ -433,18 +433,6 @@
   },
   {
     "model": "parietal_lobe.tooldefinition",
-    "pk": "4967bb81-ceaf-40f2-95b9-38dd07983172",
-    "fields": {
-      "created": "2026-02-23T15:09:02.523Z",
-      "description": "Parse Unreal Engine logs for a specific Spike and return a structural summary.",
-      "modified": "2026-02-23T15:09:02.523Z",
-      "name": "mcp_run_unreal_diagnostic_parser",
-      "is_async": true,
-      "use_type": 3
-    }
-  },
-  {
-    "model": "parietal_lobe.tooldefinition",
     "pk": "5cb73221-3a7a-4e49-9342-bb3f7021c6f1",
     "fields": {
       "created": "2026-02-18T12:00:00Z",
@@ -1389,18 +1377,6 @@
   },
   {
     "model": "parietal_lobe.toolparameterassignment",
-    "pk": "232b49f3-945f-426a-bd37-c3f4c95c6ea3",
-    "fields": {
-      "created": "2026-02-23T15:50:43.825Z",
-      "modified": "2026-02-23T15:50:43.825Z",
-      "tool": "4967bb81-ceaf-40f2-95b9-38dd07983172",
-      "parameter": "f07e2530-83eb-481f-a35f-42f9a9867597",
-      "required": false,
-      "prune_after_turns": 0
-    }
-  },
-  {
-    "model": "parietal_lobe.toolparameterassignment",
     "pk": "250e0c17-6162-446f-92eb-487ee6b15481",
     "fields": {
       "created": "2026-03-10T12:00:00Z",
@@ -1492,18 +1468,6 @@
       "tool": "0d3891ba-e915-444b-8ec2-7d4f6fb1cde0",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": false,
-      "prune_after_turns": 0
-    }
-  },
-  {
-    "model": "parietal_lobe.toolparameterassignment",
-    "pk": "3efd927b-0633-4c0e-aaeb-f890b10f28c7",
-    "fields": {
-      "created": "2026-02-23T15:09:02.526Z",
-      "modified": "2026-02-23T15:09:02.526Z",
-      "tool": "4967bb81-ceaf-40f2-95b9-38dd07983172",
-      "parameter": "bd144e2b-49f4-4b43-9a5d-82842d8ddc49",
-      "required": true,
       "prune_after_turns": 0
     }
   },
@@ -1889,18 +1853,6 @@
       "parameter": "4e4c94fb-83e5-4174-9dc4-139fe547f0d9",
       "required": false,
       "prune_after_turns": 0
-    }
-  },
-  {
-    "model": "parietal_lobe.toolparameterassignment",
-    "pk": "943e2803-3c69-4bcf-96a8-ef19f466a172",
-    "fields": {
-      "created": "2026-03-27T18:00:00Z",
-      "modified": "2026-03-27T18:00:00Z",
-      "tool": "4967bb81-ceaf-40f2-95b9-38dd07983172",
-      "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
-      "required": false,
-      "prune_after_turns": 1
     }
   },
   {

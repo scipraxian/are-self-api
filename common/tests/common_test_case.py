@@ -85,6 +85,13 @@ class CommonFixturesAPITestCase(CommonTestCase):
         'identity/fixtures/petri_dish.json',
         'parietal_lobe/fixtures/petri_dish.json',
         'temporal_lobe/fixtures/petri_dish.json',
+        # Unreal NeuralModifier bundle data. Loaded as a plain fixture
+        # here so the every-test baseline matches a live install of the
+        # bundle (identity zygote carries a cross-bundle M2M reference
+        # to mcp_run_unreal_diagnostic_parser, which lives in the
+        # bundle). Django defers the M2M until all fixtures load, so
+        # ordering does not matter.
+        'neuroplasticity/modifier_genome/unreal/modifier_data.json',
         # FORBIDDEN: NEVER ADD THIS AGAIN FORBIDDEN
         # 'peripheral_nervous_system/fixtures/test_agents.json',
     ]

@@ -3,7 +3,7 @@ from occipital_lobe.log_parser import LogConstants, LogParserFactory
 
 def merge_logs(local_content, remote_content):
     """
-    Parses and merges log chunks using the State-of-the-Art ue_tools parser.
+    Parses and merges log chunks using LogParserFactory strategies.
     Now aligns events within a tolerance window to the same row.
     """
     # 1. Parse Local (Editor/UAT format)

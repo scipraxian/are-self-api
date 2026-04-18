@@ -17,9 +17,6 @@ from central_nervous_system.effectors.effector_casters.begin_play_node import (
 from central_nervous_system.effectors.effector_casters.debug_node import (
     debug_node,
 )
-from central_nervous_system.effectors.effector_casters.effector_handlers.version_metadata_handler import (
-    update_version_metadata,
-)
 from central_nervous_system.effectors.effector_casters.pathway_logic_node import (
     pathway_logic_node,
 )
@@ -66,7 +63,6 @@ AXOPLASM_SET_STRIPPER = re.compile(
 NATIVE_HANDLERS = dict(
     begin_play=begin_play,
     debug_node=debug_node,
-    update_version_metadata=update_version_metadata,  # TODO: move to management
     scan_and_register=scan_and_register,  # TODO: move to management
     pathway_logic_neuron=pathway_logic_node,
     run_frontal_lobe=run_frontal_lobe,

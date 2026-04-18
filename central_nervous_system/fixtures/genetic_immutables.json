@@ -194,13 +194,6 @@
   },
   {
     "model": "environments.projectenvironmenttype",
-    "pk": "8a5e6540-92bf-5e73-a26a-4ff3e6185bd9",
-    "fields": {
-      "name": "Unreal 5.6.1"
-    }
-  },
-  {
-    "model": "environments.projectenvironmenttype",
     "pk": "65a5bf17-4a6a-41a5-9972-b049b6acd113",
     "fields": {
       "name": "Python"

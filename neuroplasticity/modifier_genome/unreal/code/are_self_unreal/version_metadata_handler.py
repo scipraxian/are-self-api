@@ -9,7 +9,6 @@ import time
 from typing import Any, Dict, Tuple
 from uuid import UUID
 
-from central_nervous_system.models import Spike
 from central_nervous_system.effectors.effector_casters.effector_handlers.effector_handler_codes import (
     HANDLER_FILE_NOT_FOUND_CODE,
     HANDLER_INTERNAL_ERROR_CODE,
@@ -17,6 +16,7 @@ from central_nervous_system.effectors.effector_casters.effector_handlers.effecto
     HANDLER_SUCCESS_CODE,
     HANDLER_WRITE_ERROR_CODE,
 )
+from central_nervous_system.models import Spike
 from central_nervous_system.utils import (
     get_active_environment,
     log_system,
@@ -31,24 +31,25 @@ _DEFAULT_GAME_NAME = 'HSH: Vacancy'
 
 
 def update_version_metadata(spike_id: UUID) -> Tuple[int, str]:
-    """Updates the application version JSON file with build metadata.
+    """Update the application version JSON file with build metadata.
 
     Args:
-        spike_id: UUID: The Spike execution context.
+        spike_id: The Spike execution context.
 
     Returns:
-        Tuple[int, str]: (exit_code, log_output)
-            exit_code = 0 for success, 1 for failure
+        Tuple[int, str]: (exit_code, log_output). exit_code = 200 for
+            success; any other HANDLER_*_CODE for failure.
     """
-    logging.info(f'Updating version metadata for spike {spike_id}...')
+    logging.info('Updating version metadata for spike %s...', spike_id)
     spike = Spike.objects.get(id=spike_id)
     effector = spike.effector
 
     env = get_active_environment(spike)
     full_context = resolve_environment_context(spike_id=spike.id)
 
-    full_cmd = effector.get_full_command(environment=env,
-                                      extra_context=full_context)
+    full_cmd = effector.get_full_command(
+        environment=env, extra_context=full_context
+    )
 
     args_list = full_cmd[1:]
     if not args_list:
@@ -69,7 +70,8 @@ def update_version_metadata(spike_id: UUID) -> Tuple[int, str]:
             log.append(f'Created directory: {directory}')
         except PermissionError:
             log.append(
-                f'Error: No permission to create the directory {directory}')
+                f'Error: No permission to create the directory {directory}'
+            )
             return HANDLER_PERMISSIONS_ERROR_CODE, '\n'.join(log)
         except OSError as e:
             log.append(f'[ERROR] Could not create directory {directory}: {e}')
@@ -83,13 +85,15 @@ def update_version_metadata(spike_id: UUID) -> Tuple[int, str]:
                     data = json.load(f)
                 except json.JSONDecodeError:
                     log.append(
-                        f'[WARNING] {target_path} is corrupt. Re-initializing.')
+                        f'[WARNING] {target_path} is corrupt. Re-initializing.'
+                    )
         except PermissionError:
             log.append(f'Error: No permission to read {target_path}')
             return HANDLER_PERMISSIONS_ERROR_CODE, '\n'.join(log)
         except OSError as e:
             log.append(
-                f'[WARNING] Could not read {target_path}: {e}. Re-initializing.'
+                f'[WARNING] Could not read {target_path}: {e}. '
+                f'Re-initializing.'
             )
             return HANDLER_INTERNAL_ERROR_CODE, '\n'.join(log)
 
@@ -139,5 +143,6 @@ def update_version_metadata(spike_id: UUID) -> Tuple[int, str]:
         return HANDLER_INTERNAL_ERROR_CODE, '\n'.join(log)
 
     log.append('[SUCCESS] Version Stamp Applied.')
-    logging.info(f'[Success]: {"\n".join(log)}')
+    newline = '\n'
+    logging.info(f'[Success]: {newline.join(log)}')
     return HANDLER_SUCCESS_CODE, '\n'.join(log)

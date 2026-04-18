@@ -8,9 +8,6 @@ from central_nervous_system.effectors.effector_casters.effector_handlers.effecto
     HANDLER_SUCCESS_CODE,
     HANDLER_WRITE_ERROR_CODE,
 )
-from central_nervous_system.effectors.effector_casters.effector_handlers.version_metadata_handler import (
-    update_version_metadata,
-)
 from central_nervous_system.models import (
     Effector,
     NeuralPathway,
@@ -20,9 +17,14 @@ from central_nervous_system.models import (
     SpikeTrainStatus,
 )
 from common.tests.common_test_case import CommonFixturesAPITestCase
-from environments.models import Executable
+from neuroplasticity.modifier_genome.unreal.code.are_self_unreal.version_metadata_handler import (
+    update_version_metadata,
+)
 
-MODULE_PATH = 'central_nervous_system.effectors.effector_casters.effector_handlers.version_metadata_handler'
+MODULE_PATH = (
+    'neuroplasticity.modifier_genome.unreal.code.are_self_unreal.'
+    'version_metadata_handler'
+)
 
 
 class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
@@ -56,18 +58,18 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
     @patch('central_nervous_system.models.Effector.get_full_command')
     @patch(f'{MODULE_PATH}.log_system')  # Mute DB logging for speed
     def test_creates_new_file_if_missing(self, mock_log, mock_command):
-        """Verify it creates a fresh JSON file if one doesn't exist."""
+        """Assert it creates a fresh JSON file if one doesn't exist."""
         target_path = 'C:/Fake/Content/AppVersion.json'
         mock_command.return_value = ['exe', target_path]
 
-        # Mock OS operations
         with (
             patch('os.path.exists') as mock_exists,
             patch('os.makedirs') as mock_mkdirs,
             patch('builtins.open', new_callable=mock_open) as mock_file,
-            patch(f'{MODULE_PATH}.getpass.getuser', return_value='TestBuilder'),
+            patch(
+                f'{MODULE_PATH}.getpass.getuser', return_value='TestBuilder'
+            ),
         ):
-            # 1. Directory exists, File does not
             def exists_side_effect(path):
                 if path == os.path.dirname(target_path):
                     return True
@@ -77,16 +79,12 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
 
             mock_exists.side_effect = exists_side_effect
 
-            # Execute
             code, log = update_version_metadata(self.spike.id)
 
-            # Verify
             self.assertEqual(code, HANDLER_SUCCESS_CODE)
             self.assertIn('[SUCCESS]', log)
 
-            # Check Write Content
             handle = mock_file()
-            # Aggregate all write calls to handle json.dump chunking
             written_content = ''.join(
                 call.args[0] for call in handle.write.call_args_list
             )
@@ -101,7 +99,7 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
     def test_updates_existing_file_preserving_data(
         self, mock_log, mock_command
     ):
-        """Verify it updates 'Build' block but keeps existing 'Game' config."""
+        """Assert it updates 'Build' block but keeps existing 'Game' config."""
         target_path = 'C:/Fake/AppVersion.json'
         mock_command.return_value = ['exe', target_path]
 
@@ -129,14 +127,12 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
 
             self.assertEqual(code, HANDLER_SUCCESS_CODE)
 
-            # Get the data written back to the file
             handle = mock_file()
             written_content = ''.join(
                 call.args[0] for call in handle.write.call_args_list
             )
             data = json.loads(written_content)
 
-            # Assertions
             self.assertEqual(
                 data['Game']['Major'], 9, 'Should preserve existing Game data'
             )
@@ -146,7 +142,7 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
     @patch('central_nervous_system.models.Effector.get_full_command')
     @patch(f'{MODULE_PATH}.log_system')
     def test_recovers_from_corrupt_json(self, mock_log, mock_command):
-        """Verify it handles broken JSON by re-initializing the file."""
+        """Assert it handles broken JSON by re-initializing the file."""
         target_path = 'C:/Fake/Corrupt.json'
         mock_command.return_value = ['exe', target_path]
 
@@ -163,7 +159,6 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
             self.assertEqual(code, HANDLER_SUCCESS_CODE)
             self.assertIn('is corrupt', log)
 
-            # Verify it wrote a fresh valid structure
             handle = mock_file()
             written_content = ''.join(
                 call.args[0] for call in handle.write.call_args_list
@@ -174,12 +169,10 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
     @patch('central_nervous_system.models.Effector.get_full_command')
     @patch(f'{MODULE_PATH}.log_system')
     def test_handles_directory_creation_failure(self, mock_log, mock_command):
-        """Verify it returns specific error code if directory creation fails."""
+        """Assert it returns specific error code if directory creation fails."""
         target_path = 'Z:/Protected/AppVersion.json'
         mock_command.return_value = ['exe', target_path]
 
-        # FIX: Raise OSError instead of PermissionError to hit the generic catch block
-        # which returns HANDLER_WRITE_ERROR_CODE and logs "Could not create directory"
         with (
             patch('os.path.exists', return_value=False),
             patch('os.makedirs', side_effect=OSError('Generic OS Failure')),
@@ -192,12 +185,10 @@ class VersionMetadataHandlerTest(CommonFixturesAPITestCase):
     @patch('central_nervous_system.models.Effector.get_full_command')
     @patch(f'{MODULE_PATH}.log_system')
     def test_handles_file_write_failure(self, mock_log, mock_command):
-        """Verify it returns internal error code if file write fails."""
+        """Assert it returns internal error code if file write fails."""
         target_path = 'C:/Locked/AppVersion.json'
         mock_command.return_value = ['exe', target_path]
 
-        # FIX: Set exists=False. This skips the 'read' block (which catches OSError)
-        # and forces execution into the 'write' block, where the side_effect triggers.
         with (
             patch('os.path.exists', return_value=False),
             patch('builtins.open', side_effect=IOError('Disk Full')),

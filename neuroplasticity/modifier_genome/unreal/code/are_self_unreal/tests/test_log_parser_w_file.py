@@ -1,7 +1,12 @@
 import os
 import unittest
 
-from ue_tools.log_parser import LogConstants, LogParserFactory, LogSession, merge_sessions
+from neuroplasticity.modifier_genome.unreal.code.are_self_unreal.log_parsers import (
+    LogConstants,
+    LogParserFactory,
+    LogSession,
+    merge_sessions,
+)
 
 
 class TestLogParserWithRealFiles(unittest.TestCase):
@@ -26,7 +31,7 @@ class TestLogParserWithRealFiles(unittest.TestCase):
 
     def test_build_strategy_streaming(self):
         """
-        Verify Build Log Parsing with STREAMING (Chunked Input).
+        Assert Build Log Parsing with STREAMING (Chunked Input).
         Logic: Feed header in Chunk 1, Cook stats in Chunk 2.
         Assert: Timestamp from Chunk 1 is inherited by Chunk 2.
         Assert: EXACT count of 768 entries (Regression Lock).
@@ -66,7 +71,7 @@ class TestLogParserWithRealFiles(unittest.TestCase):
 
     def test_run_strategy_precision(self):
         """
-        Verify Runtime Log Parsing (Explicit).
+        Assert Runtime Log Parsing (Explicit).
         """
         lines = self.read_file('run')
         strategy = LogParserFactory.create(LogConstants.TYPE_RUN, 'run_test')
@@ -83,7 +88,7 @@ class TestLogParserWithRealFiles(unittest.TestCase):
 
     def test_client_server_merge(self):
         """
-        Verify merging two EXPLICIT streams.
+        Assert merging two EXPLICIT streams.
         """
         client_lines = self.read_file('client')
         server_lines = self.read_file('server')

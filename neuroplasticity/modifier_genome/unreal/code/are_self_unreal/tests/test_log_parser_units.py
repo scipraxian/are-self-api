@@ -1,9 +1,15 @@
 import unittest
 from datetime import datetime
 
-from ue_tools.log_parser import (LogConstants, LogEntry, LogParserFactory,
-                                 LogPatterns, LogSession, UERunLogStrategy,
-                                 merge_sessions)
+from neuroplasticity.modifier_genome.unreal.code.are_self_unreal.log_parsers import (
+    LogConstants,
+    LogEntry,
+    LogParserFactory,
+    LogPatterns,
+    LogSession,
+    UERunLogStrategy,
+    merge_sessions,
+)
 
 
 class TestLogPatterns(unittest.TestCase):
@@ -122,7 +128,7 @@ class TestStrategies(unittest.TestCase):
         self.assertEqual(entries[0].timestamp.date(), base_date)
 
     def test_stack_trace_accumulation(self):
-        """Verify orphan lines attach to previous entry."""
+        """Assert orphan lines attach to previous entry."""
         strat = LogParserFactory.create(LogConstants.TYPE_RUN, "run")
 
         lines = [

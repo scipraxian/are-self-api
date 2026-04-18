@@ -1,11 +1,33 @@
-"""Placeholder for Unreal Engine native handlers.
+"""Unreal Engine native-handler and parietal-tool registration.
 
-When populated, this module imports the NMJ native-handler registry from
-central_nervous_system.neuromuscular_junction and registers UE-specific
-handlers (UNREAL_CMD, UNREAL_AUTOMATION_TOOL, UNREAL_STAGING,
-UNREAL_RELEASE_TEST, UNREAL_SHADER_TOOL, VERSION_HANDLER) against it.
-
-Currently a no-op so the bundle loads cleanly. The actual handler
-implementations migrate in a follow-up pass once the bundle pipeline
-is proven.
+Imports the NMJ native-handler registry and the ParietalMCP registry
+surfaces and registers the UE pieces at import time. boot_bundles()
+pops this module from sys.modules on every AppConfig.ready and
+re-imports it, so registration must be idempotent — unregister first,
+then register — or the second import would raise RuntimeError on the
+already-registered slug.
 """
+
+from central_nervous_system.effectors.effector_casters.neuromuscular_junction import (
+    register_native_handler,
+    unregister_native_handler,
+)
+from parietal_lobe.parietal_mcp.gateway import (
+    register_parietal_tool,
+    unregister_parietal_tool,
+)
+
+from .mcp_run_unreal_diagnostic_parser import (
+    mcp_run_unreal_diagnostic_parser,
+)
+from .version_metadata_handler import update_version_metadata
+
+
+unregister_native_handler('update_version_metadata')
+register_native_handler('update_version_metadata', update_version_metadata)
+
+unregister_parietal_tool('mcp_run_unreal_diagnostic_parser')
+register_parietal_tool(
+    'mcp_run_unreal_diagnostic_parser',
+    mcp_run_unreal_diagnostic_parser,
+)

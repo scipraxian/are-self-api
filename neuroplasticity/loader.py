@@ -152,9 +152,12 @@ def install_bundle(slug: str) -> NeuralModifier:
 
 
 def uninstall_bundle(slug: str) -> NeuralModifier:
-    """Walk contributions in install order, delete targets, prune disk.
+    """Walk contributions in reverse-install order, delete targets, prune disk.
 
     The NeuralModifier row itself is preserved; status flips to DISCOVERED.
+    Reverse order unwinds intra-bundle FK chains: children (later-created)
+    get deleted before parents (earlier-created), so PROTECT constraints
+    inside the bundle's own graph don't trip.
     """
     modifier = NeuralModifier.objects.get(slug=slug)
     log = NeuralModifierInstallationLog.objects.create(
@@ -162,7 +165,7 @@ def uninstall_bundle(slug: str) -> NeuralModifier:
         installation_manifest=modifier.manifest_json,
     )
 
-    contributions = list(modifier.contributions.order_by('created'))
+    contributions = list(modifier.contributions.order_by('-created'))
     target_count = len(contributions)
     deleted = 0
     for contribution in contributions:

@@ -1,7 +1,13 @@
 import os
 import random
 import unittest
-from ue_tools.log_parser import LogConstants, LogParserFactory, LogSession, merge_sessions
+
+from neuroplasticity.modifier_genome.unreal.code.are_self_unreal.log_parsers import (
+    LogConstants,
+    LogParserFactory,
+    LogSession,
+    merge_sessions,
+)
 
 
 class TestLogParserStreaming(unittest.TestCase):
@@ -62,7 +68,7 @@ class TestLogParserStreaming(unittest.TestCase):
     def test_build_log_drip_feed(self):
         """
         Extreme Stress Test: Build Log fed 1 to 5 lines at a time.
-        Verifies that state (Timestamp Inheritance) is preserved across hundreds of tiny chunks.
+        Assert state (Timestamp Inheritance) is preserved across hundreds of tiny chunks.
         """
         entries, stats = self._stream_content(LogConstants.TYPE_BUILD, 'build', 1, 5)
 
@@ -82,7 +88,7 @@ class TestLogParserStreaming(unittest.TestCase):
     def test_run_log_jagged_feed(self):
         """
         Stress Test: Run Log fed in variable chunks.
-        Verifies stack trace accumulation isn't broken by chunk boundaries.
+        Assert stack trace accumulation isn't broken by chunk boundaries.
         """
         # Run logs have lots of stack traces. If a chunk splits a trace,
         # the parser must hold the pending entry until the next chunk.
@@ -99,7 +105,7 @@ class TestLogParserStreaming(unittest.TestCase):
 
     def test_build_log_timestamp_update_mid_stream(self):
         """
-        Specific Logic Verify: Ensure that when the Cooker starts (explicit timestamp),
+        Specific Logic Verify: Assert that when the Cooker starts (explicit timestamp),
         the Strategy updates its state immediately, even if that line was the last one in a chunk.
         """
         # We simulate this by reading until we find the cook line, then chunking specifically there.
@@ -143,7 +149,7 @@ class TestLogParserStreaming(unittest.TestCase):
 
     def test_merge_sessions_streaming(self):
         """
-        Verify that two independent streams (Client/Server) can be ingested
+        Assert that two independent streams (Client/Server) can be ingested
         in random chunks and then successfully merged into a single chronological
         timeline. This ensures 'battle_stream' logic works with fragmented packets.
         """

@@ -3,8 +3,13 @@
 import unittest
 from datetime import datetime
 
-import ue_tools.log_parser  # noqa: F401  # registers UE strategies with LogParserFactory
-
+# The Unreal log-parser strategies live in the `unreal` NeuralModifier
+# bundle. Tests don't boot the bundle runtime, so import the source tree
+# directly to fire the LogParserFactory.register(...) calls this test
+# depends on.
+from neuroplasticity.modifier_genome.unreal.code.are_self_unreal import (  # noqa: F401
+    log_parsers,
+)
 from occipital_lobe.log_parser import LogEntry
 from occipital_lobe.merge_logs_nway import (
     TOLERANCE_SECONDS,

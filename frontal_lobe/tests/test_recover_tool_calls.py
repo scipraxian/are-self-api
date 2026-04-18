@@ -270,7 +270,7 @@ class RecoverToolCallsFromContentTest(TestCase):
         content = (
             '{"thoughts": "The user has reiterated the core objective '
             'and provided a sequence of actions: 1) Use '
-            'mcp_run_unreal_diagnostic_parser (already done). '
+            'mcp_engram_search (already done). '
             '2) Inspect the record (already planned/done). '
             'I must maintain focus.", "tool_calls": []}'
         )
@@ -288,7 +288,7 @@ class RecoverToolCallsFromContentTest(TestCase):
                     'function': {
                         'name': 'mcp_engram_search',
                         'arguments': {
-                            'query': 'Unreal 5.6.1 diagnostic issues',
+                            'query': 'generic diagnostic issues',
                             'tags': '',
                             'thought': 'Searching for prior knowledge.',
                         },
