@@ -13,7 +13,7 @@ ReasoningTurn. Both failure modes are guarded and logged independently.
 import logging
 
 from asgiref.sync import async_to_sync
-from django.db.models.signals import post_save
+from django.db.models.signals import m2m_changed, post_save
 from django.dispatch import receiver
 
 from frontal_lobe.digest_builder import (
@@ -21,6 +21,7 @@ from frontal_lobe.digest_builder import (
     digest_to_vesicle,
 )
 from frontal_lobe.models import ReasoningTurn, ReasoningTurnDigest
+from hippocampus.models import Engram
 from synaptic_cleft.axon_hillok import fire_neurotransmitter
 from synaptic_cleft.neurotransmitters import Acetylcholine
 
@@ -60,6 +61,51 @@ def write_reasoning_turn_digest(sender, instance, **kwargs):
         return
 
     broadcast_digest(digest)
+
+
+@receiver(m2m_changed, sender=Engram.source_turns.through)
+def refresh_digest_on_engram_link_change(
+    sender, instance, action, reverse, model, pk_set, **kwargs
+):
+    """Rebuild digests for turns whose engram links changed.
+
+    Fires on ``post_add``/``post_remove``. For ``post_clear`` ``pk_set``
+    is ``None`` — clears are rare and the next explicit add will repaint,
+    so we skip them.
+
+    Forward direction (``engram.source_turns.add(turn)``): ``instance``
+    is the Engram and ``pk_set`` is the turn ids. Reverse direction
+    (``turn.engrams.add(engram)``): ``instance`` is the ReasoningTurn
+    and ``pk_set`` is the engram ids.
+
+    Turns without a ``model_usage_record`` are still digest-ineligible
+    (same gate as the post_save receiver), so we filter them out
+    rather than silently creating stub digests. Per-turn try/except
+    isolates builder failures so one bad turn does not abort the
+    rest.
+    """
+    if action not in ('post_add', 'post_remove'):
+        return
+    if not pk_set:
+        return
+
+    if reverse:
+        turn_ids = [instance.id]
+    else:
+        turn_ids = list(pk_set)
+
+    for turn in ReasoningTurn.objects.filter(
+        id__in=turn_ids, model_usage_record__isnull=False
+    ):
+        try:
+            digest = build_and_save_digest(turn)
+        except Exception:
+            logger.exception(
+                '[FrontalLobe] Engram M2M digest refresh failed for turn %s',
+                turn.id,
+            )
+            continue
+        broadcast_digest(digest)
 
 
 def broadcast_digest(digest: ReasoningTurnDigest) -> None:

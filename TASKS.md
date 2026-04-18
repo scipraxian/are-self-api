@@ -2,6 +2,176 @@
 
 Remaining work, sifted for the backend. See FEATURES.md for what's built.
 
+## In Progress — ReasoningTurnDigest Side-car + Push-First Broadcast (April 18, 2026)
+
+**Status:** Backend plumbing landed in this Cowork session. Frontend cutover and
+a REST pull fallback are still open. Nuke-and-rebuild for demo data — no
+backfill command.
+
+**Why:** `ReasoningGraph3D.tsx` currently hits
+`/api/v1/reasoning_sessions/{id}/graph_data/` which returns the entire session
+as one blob — every `ReasoningTurn.model_usage_record.response_payload`,
+every ToolCall, every Engram. On the target machine (GPU + RAM already pegged
+by Ollama) the blob load wedges the UI. The fix is incremental digest pushes
+during the live session, with the fat payload fetched only on explicit click.
+
+**Design (locked in by Michael):**
+
+- **NO polling.** Primary path is push via Acetylcholine. A REST pull is a
+  safety-net fallback, not the main path.
+- **Sidecar, not fields on `ReasoningTurn`.** A new 1:1 table
+  (`ReasoningTurnDigest`) with `OneToOneField(primary_key=True)` to the
+  turn. Satisfies the immutability / UUID-PK directive without adding a
+  separate id column. Digest is discardable and recomputable from the turn.
+- **Trigger:** `post_save` on `ReasoningTurn` when `model_usage_record` is
+  populated (the turn has finished its LLM round-trip). Skips raw=True
+  fixture loads.
+- **Acetylcholine broadcast:** `receptor_class='ReasoningTurnDigest'` (NOT
+  `ReasoningSession` — the digest is itself a domain entity, per the
+  `receptor_class` convention in CLAUDE.md). Vesicle carries the ENTIRE
+  digest payload so the UI doesn't have to round-trip on push.
+- **Nuke-and-rebuild.** Zero active users; Michael has been wiping for demo
+  videos anyway. No backfill management command.
+
+**What landed this session (backend):**
+
+- `frontal_lobe/models.py` — `ReasoningTurnDigest` model + its migration
+  (Michael wrote these by hand). Fields: `turn` (OneToOneField PK),
+  `session` (FK), `turn_number`, `status_name`, `model_name`, `tokens_in`,
+  `tokens_out`, `excerpt`, `tool_calls_summary` (JSONField list),
+  `engram_ids` (JSONField list).
+- `frontal_lobe/digest_builder.py` — pure functions:
+  `build_and_save_digest(turn)` (idempotent `update_or_create` upsert),
+  `build_digest_payload(turn)` (assembles the kwargs),
+  `digest_to_vesicle(digest)` (serializes to the on-wire shape). Extractors:
+  `resolve_status_name`, `resolve_model_name`, `extract_excerpt` (mirrors
+  the UI's `extractThoughtFromUsageRecord` — handles both direct
+  `{role, content}` and OpenAI `choices[0].message` shapes),
+  `build_tool_calls_summary` (compact `{tool_name, success, target}` —
+  explicitly NOT args or result_payload), `build_engram_ids`. Constants:
+  `EXCERPT_MAX_LEN=300`, `TOOL_TARGET_MAX_LEN=120`, `TOOL_TARGET_KEYS=
+  ('target', 'path', 'name', 'id', 'file')`, `MCP_RESPOND_TOOL=
+  'mcp_respond_to_user'`. No side effects outside the one
+  `update_or_create` call.
+- `frontal_lobe/signals.py` — `@receiver(post_save, sender=ReasoningTurn)`
+  on `write_reasoning_turn_digest`. Skips raw=True and skips when
+  `instance.model_usage_record_id is None`. Calls
+  `build_and_save_digest()` inside try/except; failure logs
+  `[FrontalLobe] Failed to build digest for turn %s` and returns without
+  broadcasting. On success, `broadcast_digest(digest)` fires Acetylcholine
+  with `receptor_class='ReasoningTurnDigest'`, `dendrite_id=str(turn_id)`,
+  `activity='saved'`, `vesicle=digest_to_vesicle(digest)`. Broadcast
+  failure is independently caught + logged; digest stays saved.
+- `frontal_lobe/apps.py` — `ready()` imports `signals` for side-effect
+  registration.
+
+**Companion UI work shipped this session (see `are-self-ui/TASKS.md`):**
+
+- `ReasoningPanels.tsx` — session-card delete (`DELETE /api/v1/reasoning_sessions/{id}/`
+  — v1 and v2 routers mount the same ModelViewSet, no backend change
+  needed), turn count + datetime + relative "ago" via `formatAgo()`.
+- `types.ts` — `ReasoningSessionData` gained `turns_count?: number` and
+  `modified?: string`. `ReasoningSessionMinimalSerializer` already exposed
+  both, so no backend serializer work was needed.
+
+**What's landed since the Cowork session (April 18):**
+
+- [x] **~~`DigestSerializer` + `graph_data?since_turn_number=N` pull fallback.~~**
+  `DigestSerializer` in `frontal_lobe/serializers.py` is keyed identical
+  to `digest_to_vesicle` (a custom `_IsoformatDateTimeField` keeps
+  `created`/`modified` byte-identical to the vesicle so push/pull do
+  not drift). `ReasoningSessionViewSet.graph_data` now reads
+  `?since_turn_number=N` (defaults to -1 — returns the full history
+  when omitted, since real turns start at 1), 400s on non-integer
+  input, and returns `DigestSerializer(qs, many=True).data` ordered by
+  `turn_number`. The old blob shape is gone; `ReasoningSessionGraphSerializer`
+  and `SessionConclusionSerializer` were removed with it.
+- [x] **~~Tests for the digest signal + builder.~~**
+  `frontal_lobe/tests/test_digest.py` — 16 tests across
+  `DigestSignalTest` (skip paths, broadcast wiring, idempotence, raw=True,
+  builder-failure log isolation) and `DigestBuilderTest` (excerpt across
+  direct/OpenAI/mcp_respond shapes, truncation, malformed payloads,
+  missing FK chain, tool-call summary tri-state, unfiltered engram_ids,
+  serializer/vesicle dict equality, payload defaults). Full project
+  suite: 527 passed, 8 skipped, 0 failed.
+
+**What's still open:**
+
+- [ ] **Frontend cutover.** `ReasoningGraph3D.tsx` (and the inspectors that
+  currently read `response_payload` out of the blob:
+  `FrontalLobeView.tsx`, `FrontalLobeDetail.tsx`, `ReasoningPanels.tsx`,
+  `SessionChat.tsx`) swap the blob GET for
+  `useDendrite('ReasoningTurnDigest', null)` + a client-side filter on
+  `vesicle.session_id`. Full per-turn payload (request/response, full tool
+  args/results) is fetched on explicit click via
+  `/api/v2/reasoning_turns/{id}/` — never cached on the session object.
+  Paired UI task in `are-self-ui/TASKS.md`.
+- [ ] **Apply the migration + nuke-and-rebuild demo data.** Michael's
+  call; not a CC task.
+
+**Open sub-decisions (Michael to rule, not blocking initial cutover):**
+
+- Filter `engram_ids` on `is_active=True`? Currently unfiltered — the
+  frontend decides what to render. Leaning: keep unfiltered; the digest
+  is a view, not an authority.
+- Additional `TOOL_TARGET_KEYS` beyond `('target', 'path', 'name', 'id',
+  'file')`? Kept small on purpose — purely cosmetic.
+
+**Related items closed by this work (see below):**
+
+- "Reasoning session deletion" is frontend-done (DELETE against the
+  existing v1 route works). Pruning stays deferred — can't trim
+  mid-session without respinning tool-call side effects.
+- "ReasoningGraph3D — large sessions take forever to load" on the UI side
+  is partially addressed: the digest side-car + push is the "pre-compute
+  at turn close" arm of the April 13 plan. The
+  `graph_data?since_turn_number=N` + frontend cutover pieces are still
+  open above.
+
+## Recently Done — Sessions filter on engrams + stable id on tool_calls_summary (2026-04-18)
+
+Two targeted backend fixes that unblock the UI side of the digest cutover:
+
+- **`EngramViewSet` now accepts `?sessions=<uuid>`** alongside the existing
+  `?identity_discs=` filter (`hippocampus/api.py`). Same `.distinct()`
+  pattern. The frontend uses this to pull the engrams for a single session
+  in one shot when the reasoning graph mounts, so engram nodes render on
+  the 3D graph again (approach-(b) override of the original digest-cutover
+  approach-(a) decision — engrams are core domain data, not
+  inspector-only).
+- **`tool_calls_summary` entries now carry `id: str(call.id)`**
+  (`frontal_lobe/digest_builder.py` → `build_tool_calls_summary`). Without
+  a stable id the frontend had to match tool sub-nodes to their
+  `ToolCall` rows by array index, which is fragile across retries /
+  deletions / reorderings. The id lets the tool inspector look up the
+  exact row on the fetched turn by pk. Model help_text and migration
+  help_text updated in-place to reflect the new shape (pure metadata,
+  no SQL change).
+- New test `hippocampus/tests/test_engram_api.py::TestEngramFilterBySession::test_filter_engrams_by_session`
+  covers the filter. `frontal_lobe/tests/test_digest.py::DigestBuilderTest::test_build_tool_calls_summary_empty_and_populated`
+  and `DigestRefreshTest::test_digest_refreshes_after_tool_call_added`
+  updated to assert the new id key matches `ToolCall.pk` as a string.
+  Full pytest suite: 532 passed, 8 skipped, 0 failed.
+
+## Recently Done — Digest refresh on tool_calls and engram writes (2026-04-18)
+
+The digest side-car landed earlier in the day wired to a single `post_save`
+on `ReasoningTurn` — the one where `model_usage_record` is first attached.
+In that moment `turn.tool_calls` and `turn.engrams` are both empty: ToolCall
+rows are created by `ParietalLobe.process_tool_calls()` *after* the save,
+and Engram M2M links are written from the hippocampus on its own timeline
+without re-saving the turn. Net effect: `tool_calls_summary` and
+`engram_ids` were empty for every completed turn in the UI. Fix A in
+`frontal_lobe/frontal_lobe.py` — after `process_tool_calls` returns, call
+`build_and_save_digest(turn) + broadcast_digest(digest)` directly
+(idempotent upsert, no extra UPDATE on the turn). Fix B in
+`frontal_lobe/signals.py` — new `m2m_changed` receiver on
+`Engram.source_turns.through` rebuilds and re-broadcasts the digest on
+`post_add`/`post_remove`, gated to turns that already have a usage record.
+Four new tests in `frontal_lobe/tests/test_digest.py` (builder-with-tools,
+engram add, engram remove, no-usage-record gate). Full pytest suite: 531
+passed, 8 skipped, 0 failed.
+
 ## In Progress — Nerve Terminal Scan Reconcile (April 11, 2026)
 
 **Status:** Shipped initial fix with test coverage (8 tests, all passing against standalone
@@ -225,9 +395,20 @@ update the docs with the norepinephrine in the pns for django.
 - [ ] **Frontal Lobe session Parietal tab — drill-through broken.** Items in the Parietal tab of a
   Frontal Lobe session are not clickable/drillable. Same issue for Parietal actions in the right
   inspector window. Proposed fix: drill to zoom the matching 3D node so the full call is visible.
-- [ ] **Reasoning session deletion.** Need the ability to delete a reasoning session.
-- [ ] **Reasoning session pruning.** Pick a turn number and click "Prune" to delete all turns from that
-  point to the end of the session.
+- [x] **~~Reasoning session deletion.~~** Shipped April 18, 2026 as a UI-only
+  change — the existing `ReasoningSessionViewSet` DELETE route (mounted under
+  both `/api/v1/` and `/api/v2/` off the same router registry) handles it;
+  no backend work was needed. Frontend added a trash-button to each
+  cognitive-threads card in `ReasoningPanels.tsx` with stopPropagation +
+  confirm, local-state filter, and `onSelectSession('')` when the active
+  thread is the one being deleted.
+- [ ] **Reasoning session pruning.** DEFERRED. Pick a turn number and click
+  "Prune" to delete all turns from that point to the end of the session.
+  Michael called this out April 18 — can't just lop turns, the side effects
+  (tool calls, engrams, PFC task transitions) have already happened. A real
+  prune means respinning or reversing downstream state, which is a much
+  bigger design problem. For now, the delete-whole-session flow is the
+  escape hatch.
 - [ ] **Remove synapse module.** Remove synapse entirely in favor of the new synapse_client.
   _Re-verified April 10, 2026. Five live importers, but the real blocker is narrower than a rename:_
   _- `hippocampus/models.py`, `hippocampus/hippocampus.py`, `identity/models.py`,_
@@ -371,105 +552,57 @@ remains invisible there. The v1→v2 migration is tracked separately under
   instructions are now redundant and actively misleading — someone troubleshooting a fresh install
   could waste time chasing whether the extension "ran properly" when Django migrations handle it.
   Remove both. (README already cleaned; `.bat` pending.)
-- [ ] **UUID migration Pass 2 — fixture tier split + Unreal NeuralModifier extraction.**
-  Pass 1 flipped 18 plugin-extensible models from integer to UUID PKs on the `uuid-migration`
-  branch, 433 tests passing, gated on the frontend companion PR. Pass 2 is the bundle /
-  fixture side of the same branch. Full executable plan in `FIXTURE_SEPARATION_PROMPT.md`.
-  Vocabulary is locked: **`neuroplasticity`** app, **`NeuralModifier`** (Are-Self's word
-  for a plugin bundle), **`modifier_genome/`** (committed source tree), **`neural_modifiers/`**
-  (gitignored runtime install tree at repo root), **`modifier_data.json`** (bundle payload),
-  **`build_modifier`** (manage command). No "plugin" in new code. Every new UUID is
-  `uuid.uuid4()` random; existing UUID literals in fixtures are frozen. Scope:
-  - **Task 1.** Orientation + transitive-closure inventory (no code changes, report only).
-  - **Task 2** *(staged)*. `hypothalamus/fixtures/zygote.json` seed with the 4 boot-critical
-    AIModel rows. `ollama_fixture_generator.py` deletion deferred to Task 5d.
-  - **Task 3** *(staged)*. Move `ue_tools/merge_logs.py` + `merge_logs_nway.py` and tests
-    to `occipital_lobe/`. Flip the import in
-    `central_nervous_system/views/spike_merge_viewset.py`.
-  - **Task 4** *(staged)*. Split `log_parser.py` into generic core in
-    `occipital_lobe/log_parser.py` (`LogConstants`, `LogStats`, `LogEntry`, `LogSession`,
-    `LogParserStrategy` ABC, `LogParserFactory`, `merge_sessions`) and UE-augmented layer
-    in `ue_tools/log_parser.py` (registers UE strategies via `LogParserFactory.register`
-    at import time). Side-effect registration seams marked
-    `# noqa: F401 # registers UE strategies with LogParserFactory`.
-  - **Task 4.5** *(staged)*. Flip `ProjectEnvironmentContextKey`,
-    `ProjectEnvironmentStatus`, and `ProjectEnvironmentType` to UUID PKs (immutability
-    directive — they're half genetic, half UE-flavored, so they can't stay integer).
-    `environments/migrations/0001_initial.py` patched in place;
-    `environments/fixtures/initial_data.json` has 16 PK flips + FK rewrites;
-    `uuid_migration_mapping.json` has three new top-level entries. Literals are frozen.
-  - **Task 5a.** Rename `neuroplasticity/fixtures/reference_data.json` →
-    `genetic_immutables.json`. Prove the rename plumbing.
-  - **Task 5b.** Split `environments/fixtures/initial_data.json` into the four biological
-    tiers (`genetic_immutables.json`, `zygote.json`, `initial_phenotypes.json`,
-    `petri_dish.json`). Delete the old file. Update `CommonTestCase` /
-    `CommonFixturesAPITestCase` explicit per-app fixture paths. Update
-    `are-self-install.bat` to load immutables → zygote → phenotypes. Tests green.
-    **Step 1 (April 15, 2026):** First CC pass completed — 22 scratch
-    `.step1.json` files staged across all apps, 1017 rows classified, every
-    `initial_data.json` SHA-256 byte-identical, `STEP1_REPORT.md` written.
-    Review surfaced 7 decision items (§6.1–6.7 + §7 DEFAULT_ENVIRONMENT).
-    All 7 rulings captured. §7 resolved by hand — new simple default env
-    `b7e4c2a1-3f8d-4a9e-9c1f-2d5a8b6f4e21` with `are_self_root`/`venv_root`
-    ContextVariables; `ProjectEnvironment.DEFAULT_ENVIRONMENT` repointed.
-    **Step 1 completion pass (pending, CC):** apply rulings — BEGIN_PLAY
-    stays in zygote, shared `920e7245-...` "Project" ExecutableArgument
-    moves to `environments/zygote.json` (semantic smell TODO, not blocker);
-    Deploy/RecordPSOs + all UE-named pathways → `unreal_modifier.json`
-    (grep to expand UE Executable root list first);
-    IterationDefinition/IterationShiftDefinition → new
-    `temporal_lobe/zygote.json`, Iteration instances → phenotype;
-    hypothalamus zygote = 3 rows exactly (nomic-embed-text +
-    qwen2.5-coder:7b + qwen2.5-coder:32b), pre-staged 4-model version and
-    scratch both deleted; entire parietal tool suite (all ToolDefinitions,
-    ToolParameters, ToolParameterAssignments, ParameterEnums) →
-    `parietal_lobe/zygote.json`; django_celery_beat rows stay in
-    `genetic_immutables.json`; `petri_dish.json` written per app with
-    test-only row deltas only (composes with genetic_immutables via common
-    test class — wiring is Step 2, not now). Rename scratch → final, delete
-    all `.step1.json`, re-verify `initial_data.json` SHA-256, cross-FK
-    sanity check, write `STEP1_COMPLETE_REPORT.md`.
-  - **Task 5c.** Repeat the split for every remaining app top-down through the closure
-    order. UE-flavored rows held aside in a scratch file, not written to core tiers.
-    Bisectable per-app commits.
-  - **Task 5d.** *(Done — Commit A on `uuid-migration`.)* Created
-    `neuroplasticity/modifier_genome/unreal/` with `manifest.json`,
-    `modifier_data.json` (255 rows = 87 environments + 168 CNS, env-first
-    concatenation, SHA-256 `49cfbca50b56988eb7aea72a0f0fdde8c557c63edf7653e52f6e158a81155d47`),
-    `code/are_self_unreal/{__init__,handlers,log_parsers}.py` no-op stubs, and
-    `README.md`. `.gitkeep` added in `modifier_genome/`; `/neural_modifiers/`
-    added to repo-root `.gitignore`. Scratch `central_nervous_system/fixtures/unreal_modifier.json`
-    and `environments/fixtures/unreal_modifier.json` (and their `.step1_backup/`
-    counterparts) deleted. `ollama_fixture_generator.py` was already deleted by
-    the hypothalamus UUID propagation commit (`1e98e303`); no extra step needed.
-    Legacy `deploy_release_test` Executable already dropped in Step 1
-    (per `STEP1_COMPLETE_REPORT.md` §2). Updated
-    `central_nervous_system/effectors/effector_casters/effector_handlers/tests/test_metadata_handler.py`
-    to load the new bundle `modifier_data.json` instead of the deleted scratch
-    fixtures. **Follow-up (Michael): wire `are-self-install.bat` to call
-    `./manage.py build_modifier unreal` post-migrate.**
-  - **Task 6.** Wire `./manage.py build_modifier <slug>` and the contribution-aware loader.
-    Loader walks `neural_modifiers/*/`, verifies `manifest_hash` against
-    `NeuralModifier.manifest_hash`, extends `sys.path` with each bundle's `code/`, imports
-    the manifest-declared entry-point modules (triggers side-effect registration into
-    `central_nervous_system/neuromuscular_junction.py` native-handler dict and
-    `occipital_lobe/log_parser.py` `LogParserFactory` registry), records one
-    `NeuralModifierContribution` row per loaded DB object. Uninstall walks
-    `NeuralModifier.iter_contributed_objects()` in install order, deletes targets,
-    deletes contribution rows, removes bundle directory, flips status. `INSTALLED_APPS`
-    is never mutated. Tests cover install → enable → disable → uninstall + BROKEN paths
-    (hash mismatch, load failure).
-  - **Task 7.** Docs pass. Update `CLAUDE.md` and `STYLE_GUIDE.md` fixtures sections.
-    Rewrite `neuroplasticity/models.py` docstrings to use locked neuroplasticity
-    vocabulary (currently still says "plugin" / "plugins_runtime" / "plugin_data.json").
-    Mark `FIXTURE_SEPARATION_PROMPT.md` complete. Add Future entries below.
+- [x] **~~UUID migration Pass 2 — fixture tier split + Unreal NeuralModifier extraction.~~**
+  **DONE (Tasks 1–7 landed on `uuid-migration`, April 11–18).** Pass 1 flipped 18
+  NeuralModifier-extensible models from integer to UUID PKs. Pass 2 delivered: the
+  four-tier fixture split across every app (`genetic_immutables.json` →
+  `zygote.json` → `initial_phenotypes.json` → `petri_dish.json`), the log-merge
+  and log-parser moves to `occipital_lobe/` with `LogParserFactory.register()`
+  (occipital_lobe/log_parser.py:149), three `environments` models flipped to
+  UUID (Task 4.5), the Unreal `modifier_genome/unreal/` scaffold + populated
+  `modifier_data.json` (commit `bf2e11d`), the full NeuralModifier lifecycle
+  (`build_modifier` + `enable_modifier` / `disable_modifier` /
+  `uninstall_modifier` / `list_modifiers`, `neuroplasticity/loader.py`, apps.py
+  boot hook, `tests/test_modifier_lifecycle.py` 9 cases, commit `15ceb37`), and
+  the docs pass (models.py / CLAUDE.md / STYLE_GUIDE.md "plugin" vocabulary
+  scrubbed; April 18). Vocabulary is locked: `neuroplasticity` app,
+  `NeuralModifier`, `modifier_genome/`, `neural_modifiers/`, `modifier_data.json`,
+  `build_modifier`. No "plugin" in new code. `uuid.uuid4()` only.
 
-  Requires Pass 1 merged to `main` first. Frontend `nodeConstants.ts` companion PR
-  gates the final merge of the whole migration.
+  **Superseded planning artifacts (all nuked April 18 after their work landed):**
+  `FIXTURE_SEPARATION_PROMPT.md`, `STEP1_REPORT.md`, `STEP1_COMPLETE_REPORT.md`,
+  `UUID_MIGRATION_PROMPT.md`, `uuid_migration_mapping.json`, `.step1_backup/`,
+  `CC_PROMPT_hypothalamus_uuid_migration.md`, `CC_PROMPT_neuroplasticity_5d_and_6.md`.
+  Hypothalamus UUID propagation + UI companion landed in commit `1e98e303`. The
+  dead `Executable.UNREAL_*` / `VERSION_HANDLER` / `DEPLOY_RELEASE` class
+  constants were removed from `environments/models.py` April 18; `Executable`
+  now carries only `BEGIN_PLAY`, `PYTHON`, `DJANGO`.
 
-- [ ] **Move generic log-merge utilities to occipital_lobe.** *(Done in Pass 2 Task 3 —
-  staged on `uuid-migration`, not yet committed. Keep this entry until commit lands,
-  then close.)*
+  **What's left for the NeuralModifier feature area** (Tasks 8–15): dogfood
+  the Unreal bundle by moving the three surviving UE-duplicated rows out of
+  the new fixture tiers (`mcp_run_unreal_diagnostic_parser` `ToolDefinition`
+  in `parietal_lobe/fixtures/zygote.json` + its handler module
+  `parietal_lobe/parietal_mcp/mcp_run_unreal_diagnostic_parser.py`, and the
+  `"Unreal 5.6.1"` `ProjectEnvironmentType` at pk
+  `8a5e6540-92bf-5e73-a26a-4ff3e6185bd9` in
+  `central_nervous_system/fixtures/genetic_immutables.json`) plus
+  `update_version_metadata` out of core `NATIVE_HANDLERS`; bundle-time
+  registration surfaces for the Parietal MCP gateway and `NATIVE_HANDLERS`
+  (`register_parietal_tool` / `unregister_parietal_tool` in
+  `parietal_lobe/parietal_mcp/gateway.py` + `register_native_handler` /
+  `unregister_native_handler` in
+  `central_nervous_system/effectors/effector_casters/neuromuscular_junction.py`
+  — landed April 18 with 12 new tests, full suite 509 passed / 8 skipped /
+  0 failed; no handlers moved, pure plumbing);
+  hash-mismatch BROKEN proof; orphan-contribution uninstall path; Parietal
+  tool-set status-gating (Task 13 scopes `parietal_lobe/parietal_mcp/`, **not**
+  the external `mcp_server/` endpoint — two different MCPs); bundle-author
+  docs; upgrade/version/dependency model. Plan lives at
+  `NEURAL_MODIFIER_COMPLETION_PLAN.md` in repo root.
+
+  **Standing rulings (Michael):** NeuralModifier bundles install via the
+  modifier-garden UI, not via `install.bat`. `initial_data.json` files are
+  Michael-only-delete. No UUIDv5/namespaces/deterministic seeding.
 
 - [ ] **Modifier Garden — 3rd-party `NeuralModifier` marketplace.** Are-Self ships with
   3–4 first-party `NeuralModifier` bundles (Unreal first, others TBD), all

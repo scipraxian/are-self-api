@@ -3,7 +3,56 @@
 The single source of truth for any AI agent working on the are-self-api codebase.
 Read completely before making any changes.
 
-> **Active thread (April 18, 2026):** `uuid-migration` branch, Pass 2
+> **Active thread (April 18, 2026 — Cowork continuation):** ReasoningTurnDigest
+> side-car + push-first digest broadcast. The `graph_data/` blob load was
+> pegging the UI on a machine whose GPU and RAM are already spoken for by
+> Ollama inference — we are replacing blob-load with incremental digest
+> pushes. Michael added the `ReasoningTurnDigest` model and its migration by
+> hand (OneToOneField(primary_key=True) side-car on ReasoningTurn — nothing
+> here is authoritative, the turn is; the digest is discardable and can be
+> nuke-and-rebuilt). Backend pieces landed this session:
+>   - `frontal_lobe/digest_builder.py` — pure builder: `build_and_save_digest`
+>     (idempotent upsert), `build_digest_payload`, `digest_to_vesicle`. Pulls
+>     `status_name`, `model_name`, `tokens_in/out`, `excerpt`
+>     (mirrors the UI's `extractThoughtFromUsageRecord` — direct `role` shape
+>     AND OpenAI `choices[0].message` shape), `tool_calls_summary` (compact
+>     `{tool_name, success, target}` — NOT args or result_payload),
+>     `engram_ids`. No side effects outside the update_or_create.
+>   - `frontal_lobe/signals.py` — `post_save(ReasoningTurn)` skips raw=True
+>     fixture loads and skips when `model_usage_record_id is None` (the turn
+>     hasn't finished its round-trip yet — nothing to digest). Builds the
+>     digest, then fires Acetylcholine with `receptor_class='ReasoningTurnDigest'`
+>     (NOT `ReasoningSession` — the digest is itself a domain entity per the
+>     `receptor_class` convention) and the full `digest_to_vesicle(digest)`
+>     as the vesicle. Build failures abort the broadcast; broadcast failures
+>     do not roll back the digest. Both modes independently try/except + logged.
+>   - `frontal_lobe/apps.py` — `ready()` imports `signals` for side-effect
+>     registration.
+>
+> **Design decisions locked in (Michael):** NO polling (push via Acetylcholine
+> only; a REST pull fallback `graph_data?since_turn_number=N` is planned as a
+> safety net, not the primary path). Sidecar = new 1:1 table, NOT fields on
+> the fat `ReasoningTurn`. Trigger = `post_save` when `model_usage_record`
+> exists. Nuke-and-rebuild — no backfill management command. Acetylcholine
+> `receptor_class='ReasoningTurnDigest'`. Vesicle contains the ENTIRE digest
+> payload (frontend never needs a round-trip on push).
+>
+> **Companion UI work shipped this session (`are-self-ui`):** session-card
+> delete button (DELETE `/api/v1/reasoning_sessions/{id}/` — v1 and v2
+> mount the same `ModelViewSet`, no backend change needed), cognitive-threads
+> list now shows turn count + datetime + relative "ago" via `formatAgo()`,
+> `ReasoningSessionData` gained `turns_count` and `modified`. Pruning
+> (mid-session trim) is deferred — side effects persist, can't just lop turns.
+>
+> **What's left on this thread:** DigestSerializer + `graph_data?since_turn_number=N`
+> REST pull fallback; frontend cutover — `ReasoningGraph3D` swaps blob load for
+> `useDendrite('ReasoningTurnDigest', null)` + client-side `vesicle.session_id`
+> filter; migration applied against the live DB + nuke-and-rebuild demo data;
+> tests for the digest signal. Open sub-decisions: `is_active` filtering on
+> `engram_ids` (currently unfiltered — frontend decides), additional
+> TOOL_TARGET_KEYS beyond `('target', 'path', 'name', 'id', 'file')`.
+>
+> **Prior thread (April 11–17):** `uuid-migration` branch, Pass 2
 > Tasks 5d + 6 shipped and merged to main. Pass 1 (18 NeuralModifier-extensible
 > models flipped to UUID PKs, 433 tests passing) is locked. Pass 2 has now:
 > (a) split every app's `initial_data.json` into the four biological fixture
@@ -35,17 +84,80 @@ Read completely before making any changes.
 > Tasks 2 (hypothalamus zygote seed), 3 (log-merge move to occipital_lobe),
 > 4 (log_parser split + LogParserFactory), 4.5 (three `environments`
 > models flipped to UUID), 5d (Unreal modifier_genome scaffold), and 6
-> (build_modifier + loader + lifecycle tests) are all landed. NeuralModifier
-> install UI (modifier-garden page with per-bundle install buttons) is
-> Michael's domain — not a CC prompt. What's left to finish the
-> NeuralModifier feature area (Tasks 8–15: dogfood the Unreal bundle,
-> bundle-time `NATIVE_HANDLERS` + `LogParserFactory` registration,
-> hash-mismatch proof, orphan-uninstall path, MCP tool-set integration,
-> bundle-author docs, upgrade/version/dependency model) lives in
-> `NEURAL_MODIFIER_COMPLETION_PLAN.md` at repo root. TASKS.md →
-> "UUID migration Pass 2" is the historical task list; the Pass 2
-> executable prompt and the Step 1 reports were nuked April 18 because
-> their work landed.
+> (build_modifier + loader + lifecycle tests) are all landed. The dead
+> `Executable.UNREAL_CMD` / `.UNREAL_AUTOMATION_TOOL` / `.UNREAL_STAGING`
+> / `.UNREAL_RELEASE_TEST` / `.UNREAL_SHADER_TOOL` / `.VERSION_HANDLER` /
+> `.DEPLOY_RELEASE` class constants were removed from
+> `environments/models.py` (Michael, April 18) — had no live Python
+> callers, suite stayed green. `Executable` now carries only
+> `BEGIN_PLAY`, `PYTHON`, `DJANGO`.
+>
+> NeuralModifier install UI (modifier-garden page with per-bundle install
+> buttons) is Michael's domain — not a CC prompt. What's left to finish
+> the NeuralModifier feature area lives in
+> `NEURAL_MODIFIER_COMPLETION_PLAN.md` at repo root as Tasks 8–15:
+> dogfood the Unreal bundle (the three UE-duplicated core fixture rows
+> that survived outside legacy `initial_data.json` are
+> `mcp_run_unreal_diagnostic_parser` `ToolDefinition` in
+> `parietal_lobe/fixtures/zygote.json`, its handler file
+> `parietal_lobe/parietal_mcp/mcp_run_unreal_diagnostic_parser.py`, and
+> the `"Unreal 5.6.1"` `ProjectEnvironmentType` at pk
+> `8a5e6540-92bf-5e73-a26a-4ff3e6185bd9` in
+> `central_nervous_system/fixtures/genetic_immutables.json` — all three
+> move to the bundle per Michael's April 18 ruling; `update_version_metadata`
+> also still lives in core `NATIVE_HANDLERS` and moves too), bundle-time
+> registration surfaces for `NATIVE_HANDLERS` and the Parietal MCP
+> gateway (landed April 18 — see below), hash-mismatch BROKEN proof,
+> orphan-contribution uninstall path, Parietal tool-set status-gating
+> (Task 13 — `parietal_lobe/parietal_mcp/`, **not** the external
+> `mcp_server/` endpoint; those are two different MCPs, `mcp_server` is
+> excluded from the plan per Michael), bundle-author docs,
+> upgrade/version/dependency model.
+>
+> **Landed (April 18):** Bundle-time handler registration surfaces.
+> `register_parietal_tool` / `unregister_parietal_tool` live in
+> `parietal_lobe/parietal_mcp/gateway.py` — module-level
+> `_PARIETAL_TOOL_REGISTRY: Dict[str, Callable]` is checked first in
+> `ParietalMCP.execute()`; only when the registry miss occurs does the
+> code fall through to the pre-existing
+> `importlib.import_module(f'parietal_lobe.parietal_mcp.{tool_name}')`
+> + `getattr` path. Everything downstream of that (signature
+> inspection, hallucination-defense arg filter, required-arg check,
+> `await tool_func(**safe_args)`, exception handling) is unchanged.
+> `register_native_handler` / `unregister_native_handler` live in
+> `central_nervous_system/effectors/effector_casters/neuromuscular_junction.py`
+> — `NATIVE_HANDLERS` stays the only backing dict; collisions against
+> core slugs or prior bundle registrations raise `RuntimeError`;
+> unregister is idempotent `.pop(..., None)`. 12 new tests (7 parietal
+> in `parietal_lobe/parietal_mcp/tests/test_tool_registration.py` + 5
+> native-handler in
+> `central_nervous_system/effectors/effector_casters/tests/test_native_handler_registration.py`),
+> each test class snapshotting + restoring its registry in
+> `setUp`/`tearDown`. Full suite 509 passed, 8 skipped, 0 failed.
+> No handlers actually moved in this commit — pure plumbing.
+> `LogParserFactory.register()` at `occipital_lobe/log_parser.py:149`
+> already existed; not touched. `CC_PROMPT_handler_registration.md`
+> gets deleted with the landing commit per Michael's policy.
+>
+> **Next:** Task 8 in the completion plan — the dogfood moves of the
+> three surviving UE-duplicated rows plus `update_version_metadata`
+> into the Unreal bundle, using the registration surfaces now in
+> place. The Unreal bundle's entry module starts calling
+> `register_parietal_tool('mcp_run_unreal_diagnostic_parser', ...)`
+> and `register_native_handler('update_version_metadata', ...)` at
+> import time.
+>
+> TASKS.md → "UUID migration Pass 2" is the historical task list. The
+> Pass 2 executable prompt, the Step 1 reports, the two landed CC
+> prompts, `uuid_migration_mapping.json`, and `.step1_backup/` were
+> nuked April 18 because their work landed. Standing rulings locked in
+> during that cleanup pass: NeuralModifier bundles install via a
+> modifier-garden UI (not via `install.bat`); `initial_data.json` files
+> are **Michael-only-delete** — never propose removing them; no
+> UUIDv5/namespaces/deterministic seeding (`uuid.uuid4()` only);
+> `STEP1_COMPLETE_REPORT.md` (now nuked) was the source of "dangling
+> FKs / qwen3-coder:30b needs provider / pricing missing" smells —
+> those are all resolved and must not be recited as current.
 >
 > **Prior thread (April 11):** Nerve Terminal scan reconcile shipped with a
 > UI-blink regression; planned surgical fix documented in TASKS.md →

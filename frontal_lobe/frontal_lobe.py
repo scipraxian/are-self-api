@@ -12,11 +12,13 @@ from central_nervous_system.utils import resolve_environment_context
 from common.constants import CONTENT, HUMAN_TAG, ROLE, USER
 from environments.variable_renderer import VariableRenderer
 from frontal_lobe.constants import FrontalLobeConstants
+from frontal_lobe.digest_builder import build_and_save_digest
 from frontal_lobe.models import (
     ReasoningSession,
     ReasoningStatusID,
     ReasoningTurn,
 )
+from frontal_lobe.signals import broadcast_digest
 from frontal_lobe.synapse_client import (
     SynapseClient,
     recover_tool_calls_from_content,
@@ -390,6 +392,8 @@ class FrontalLobe:
             await self.parietal_lobe.process_tool_calls(
                 turn_record=turn_record, tool_calls_data=tool_calls_data
             )
+            digest = await sync_to_async(build_and_save_digest)(turn_record)
+            await sync_to_async(broadcast_digest)(digest)
             await sync_to_async(self.session.refresh_from_db)(
                 fields=[STATUS_ID]
             )

@@ -357,17 +357,17 @@ class DigestBuilderTest(CommonTestCase):
     # --- tool call summary ------------------------------------------------
 
     def test_build_tool_calls_summary_empty_and_populated(self):
-        """Assert ToolCall rows collapse to {tool_name, success, target}."""
+        """Assert ToolCall rows collapse to {id, tool_name, success, target}."""
         self.assertEqual(build_tool_calls_summary(self.turn), [])
 
-        ToolCall.objects.create(
+        ok_call = ToolCall.objects.create(
             turn=self.turn,
             tool=self.tool,
             arguments=json.dumps({'target': 'foo.py'}),
             call_id='call_ok',
             status_id=ReasoningStatusID.COMPLETED,
         )
-        ToolCall.objects.create(
+        err_call = ToolCall.objects.create(
             turn=self.turn,
             tool=self.tool,
             arguments='{}',
@@ -381,9 +381,11 @@ class DigestBuilderTest(CommonTestCase):
         self.assertIn('foo.py', by_id)
         self.assertEqual(by_id['foo.py']['success'], True)
         self.assertEqual(by_id['foo.py']['tool_name'], 'test_tool')
+        self.assertEqual(by_id['foo.py']['id'], str(ok_call.id))
         # The error row has no target.
         error_row = [s for s in summary if s['target'] == ''][0]
         self.assertEqual(error_row['success'], False)
+        self.assertEqual(error_row['id'], str(err_call.id))
 
     # --- engram ids -------------------------------------------------------
 
@@ -453,3 +455,129 @@ class DigestBuilderTest(CommonTestCase):
         self.assertEqual(payload['excerpt'], '')
         self.assertEqual(payload['tool_calls_summary'], [])
         self.assertEqual(payload['engram_ids'], [])
+
+
+# ---------------------------------------------------------------------------
+# Digest refresh tests — tool-call execution and engram M2M wiring
+# ---------------------------------------------------------------------------
+
+
+class DigestRefreshTest(CommonTestCase):
+    """Assert the digest is rebuilt when tool calls and engram links land.
+
+    The post_save receiver fires exactly once — at the save where
+    ``model_usage_record`` is first attached. ToolCall rows are written
+    after that save (inside ``ParietalLobe.process_tool_calls``) and
+    Engram source-turn M2M links are written from the hippocampus on
+    its own timeline. Neither path re-saves the turn, so without an
+    explicit refresh the digest stays frozen with empty
+    ``tool_calls_summary``/``engram_ids``.
+    """
+
+    def setUp(self):
+        super().setUp()
+        _make_session_graph(self)
+
+    def test_digest_refreshes_after_tool_call_added(self):
+        """Assert a rebuild picks up a ToolCall written after the initial digest."""
+        usage = _make_usage_record(
+            response_payload={'role': 'assistant', 'content': 'Hi'},
+            ai_model_provider=self.ai_model_provider,
+        )
+        turn = ReasoningTurn.objects.create(
+            session=self.session,
+            turn_number=1,
+            status_id=ReasoningStatusID.COMPLETED,
+            model_usage_record=usage,
+        )
+        initial = ReasoningTurnDigest.objects.get(turn=turn)
+        self.assertEqual(initial.tool_calls_summary, [])
+
+        call = ToolCall.objects.create(
+            turn=turn,
+            tool=self.tool,
+            arguments=json.dumps({'target': 'after.py'}),
+            call_id='call_after',
+            status_id=ReasoningStatusID.COMPLETED,
+        )
+
+        refreshed = build_and_save_digest(turn)
+        self.assertEqual(refreshed.pk, initial.pk)
+        self.assertEqual(len(refreshed.tool_calls_summary), 1)
+        entry = refreshed.tool_calls_summary[0]
+        self.assertEqual(entry['tool_name'], 'test_tool')
+        self.assertEqual(entry['success'], True)
+        self.assertEqual(entry['target'], 'after.py')
+        self.assertEqual(entry['id'], str(call.id))
+
+    def test_digest_refreshes_on_engram_source_turn_add(self):
+        """Assert engram.source_turns.add rebuilds the digest with the new id."""
+        usage = _make_usage_record(
+            response_payload={'role': 'assistant', 'content': 'Hi'},
+            ai_model_provider=self.ai_model_provider,
+        )
+        turn = ReasoningTurn.objects.create(
+            session=self.session,
+            turn_number=1,
+            status_id=ReasoningStatusID.COMPLETED,
+            model_usage_record=usage,
+        )
+        self.assertEqual(
+            ReasoningTurnDigest.objects.get(turn=turn).engram_ids, []
+        )
+
+        engram = Engram.objects.create(
+            name='mem-refresh', description='linked mem', is_active=True
+        )
+        engram.source_turns.add(turn)
+
+        digest = ReasoningTurnDigest.objects.get(turn=turn)
+        self.assertEqual(digest.engram_ids, [str(engram.id)])
+
+    def test_digest_refreshes_on_engram_source_turn_remove(self):
+        """Assert engram_ids clears after engram.source_turns.remove(turn)."""
+        usage = _make_usage_record(
+            response_payload={'role': 'assistant', 'content': 'Hi'},
+            ai_model_provider=self.ai_model_provider,
+        )
+        turn = ReasoningTurn.objects.create(
+            session=self.session,
+            turn_number=1,
+            status_id=ReasoningStatusID.COMPLETED,
+            model_usage_record=usage,
+        )
+        engram = Engram.objects.create(
+            name='mem-refresh-remove',
+            description='will be unlinked',
+            is_active=True,
+        )
+        engram.source_turns.add(turn)
+        self.assertEqual(
+            ReasoningTurnDigest.objects.get(turn=turn).engram_ids,
+            [str(engram.id)],
+        )
+
+        engram.source_turns.remove(turn)
+
+        digest = ReasoningTurnDigest.objects.get(turn=turn)
+        self.assertEqual(digest.engram_ids, [])
+
+    def test_m2m_change_skips_turn_without_usage_record(self):
+        """Assert the m2m receiver does not materialize stub digests."""
+        turn = ReasoningTurn.objects.create(
+            session=self.session,
+            turn_number=1,
+            status_id=ReasoningStatusID.ACTIVE,
+        )
+        self.assertFalse(
+            ReasoningTurnDigest.objects.filter(turn=turn).exists()
+        )
+
+        engram = Engram.objects.create(
+            name='mem-orphan', description='pre-usage', is_active=True
+        )
+        engram.source_turns.add(turn)
+
+        self.assertFalse(
+            ReasoningTurnDigest.objects.filter(turn=turn).exists()
+        )

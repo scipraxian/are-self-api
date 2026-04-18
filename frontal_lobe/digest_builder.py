@@ -214,16 +214,20 @@ def _truncate(text: str) -> str:
 
 
 def build_tool_calls_summary(turn: ReasoningTurn) -> List[Dict[str, Any]]:
-    """Collapse the turn's ToolCall rows to {tool_name, success, target}.
+    """Collapse the turn's ToolCall rows to {id, tool_name, success, target}.
 
     Args and result_payload are intentionally excluded — the whole
     point of the digest is to not ship them in list responses. Fetch
-    /api/v2/reasoning_turns/{id}/ for the full bodies.
+    /api/v2/reasoning_turns/{id}/ for the full bodies; the ``id``
+    field lets the frontend look up the matching ToolCall on the
+    fetched turn by stable pk instead of by array index (index
+    matching breaks if a ToolCall is deleted, reordered, or retried).
     """
     summaries: List[Dict[str, Any]] = []
     calls = turn.tool_calls.select_related('tool', 'status').all()
     for call in calls:
         summaries.append({
+            'id': str(call.id),
             'tool_name': _tool_name(call),
             'success': _tool_success(call),
             'target': _tool_target(call),

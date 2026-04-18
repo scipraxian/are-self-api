@@ -290,10 +290,12 @@ class ReasoningTurnDigest(CreatedAndModifiedWithDelta):
         default=list,
         blank=True,
         help_text=(
-            'List of {tool_name, success, target} dicts summarizing the '
-            "turn's ToolCall records. Enough to render the Parietal "
-            'Lobe chips. Args and result_payload intentionally '
-            'excluded — fetch the turn detail for those.'
+            'List of {id, tool_name, success, target} dicts summarizing '
+            "the turn's ToolCall records. Enough to render the Parietal "
+            'Lobe chips. The id is the ToolCall pk (as a string) so the '
+            'frontend can look up the full row on the fetched turn by '
+            'stable id instead of array index. Args and result_payload '
+            'intentionally excluded — fetch the turn detail for those.'
         ),
     )
     engram_ids = models.JSONField(
