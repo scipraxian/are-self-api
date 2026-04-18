@@ -26,6 +26,7 @@ class PlatformEnvelope(BaseModel):
     sender_name: str
     message_id: str
     content: str
+    identity_disc_id: Optional[str] = None
     attachments: list[Attachment] = Field(default_factory=list)
     voice_audio: Optional[bytes] = None
     reply_to: Optional[str] = None

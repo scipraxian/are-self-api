@@ -100,9 +100,12 @@ def _null_callbacks() -> DisplayCallbacks:
 
 async def _start_client_with_fake_ws(
     callbacks: Optional[DisplayCallbacks] = None,
+    identity_disc_id: Optional[str] = None,
 ) -> tuple[CliClient, _FakeWebSocket]:
     """Instantiate CliClient and bind a ``_FakeWebSocket`` in-place of connect."""
-    client = CliClient('ws://unused/test', 'cli-test')
+    client = CliClient(
+        'ws://unused/test', 'cli-test', identity_disc_id=identity_disc_id,
+    )
     ws = _FakeWebSocket()
 
     async def _fake_connect(_url: str) -> _FakeWebSocket:
@@ -511,6 +514,54 @@ class CliClientPayloadShapeTests(SimpleTestCase):
 
         sessions = asyncio.run(_run())
         self.assertEqual(sessions, [{'session_id': 's1', 'channel_id': 'c1'}])
+
+    def test_send_message_omits_identity_disc_id_by_default(self):
+        """Assert inbound frame does not carry identity_disc_id when unset."""
+
+        async def _run() -> None:
+            client, ws = await _start_client_with_fake_ws()
+            try:
+                task = asyncio.create_task(client.send_message('hi'))
+                await asyncio.sleep(0)
+                sent = ws.last_sent_json
+                self.assertNotIn('identity_disc_id', sent)
+
+                ws.push({
+                    'type': WS_MSG_INBOUND_ACK,
+                    'request_id': sent['request_id'],
+                    'result': {'success': True},
+                })
+                await asyncio.wait_for(task, timeout=1.0)
+            finally:
+                await client.stop()
+
+        asyncio.run(_run())
+
+    def test_send_message_includes_identity_disc_id_when_set(self):
+        """Assert inbound frame carries identity_disc_id when configured."""
+
+        async def _run() -> None:
+            client, ws = await _start_client_with_fake_ws(
+                identity_disc_id='disc-uuid-xyz',
+            )
+            try:
+                task = asyncio.create_task(client.send_message('hi'))
+                await asyncio.sleep(0)
+                sent = ws.last_sent_json
+                self.assertEqual(
+                    sent.get('identity_disc_id'), 'disc-uuid-xyz'
+                )
+
+                ws.push({
+                    'type': WS_MSG_INBOUND_ACK,
+                    'request_id': sent['request_id'],
+                    'result': {'success': True},
+                })
+                await asyncio.wait_for(task, timeout=1.0)
+            finally:
+                await client.stop()
+
+        asyncio.run(_run())
 
     def test_send_create_session_payload(self):
         """Assert create_session frame includes channel_id and request_id."""

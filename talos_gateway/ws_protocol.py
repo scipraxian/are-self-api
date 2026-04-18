@@ -68,6 +68,12 @@ def platform_envelope_from_inbound_payload(
     if reply_to is not None and not isinstance(reply_to, str):
         raise ValueError('reply_to must be a string or null')
 
+    identity_disc_id = data.get('identity_disc_id')
+    if identity_disc_id is not None and not isinstance(identity_disc_id, str):
+        raise ValueError('identity_disc_id must be a string or null')
+    if isinstance(identity_disc_id, str) and not identity_disc_id:
+        identity_disc_id = None
+
     return PlatformEnvelope(
         platform=CLI_PLATFORM,
         channel_id=channel_id,
@@ -76,6 +82,7 @@ def platform_envelope_from_inbound_payload(
         sender_name=sender_name,
         message_id=str(message_id),
         content=content,
+        identity_disc_id=identity_disc_id,
         reply_to=reply_to,
         timestamp=timezone.now(),
     )

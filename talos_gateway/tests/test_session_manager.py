@@ -12,6 +12,7 @@ from talos_gateway.models import GatewaySession
 from talos_gateway.session_manager import SessionManager
 
 THALAMUS_DISC_PK = '15ca85b8-59a9-4cb6-9fd8-bfd2be47b838'
+ALT_DISC_PK = '0db0d16e-8c98-48a5-8ef4-38a86579a4b2'
 
 
 @override_settings(
@@ -113,6 +114,86 @@ class SessionManagerTests(CommonFixturesAPITestCase):
         sm = SessionManager()
         results = sm.list_sessions('cli')
         self.assertEqual(results, [])
+
+    def test_envelope_identity_disc_id_used_for_new_session(self):
+        """Assert envelope.identity_disc_id pins identity on a fresh session."""
+        ts = timezone.now()
+        env = PlatformEnvelope(
+            platform='cli',
+            channel_id='chan-sm-id-1',
+            sender_id='u',
+            sender_name='User',
+            message_id='m1',
+            content='hi',
+            identity_disc_id=ALT_DISC_PK,
+            timestamp=ts,
+        )
+        sm = SessionManager()
+        _, rs = sm.resolve_session('cli', 'chan-sm-id-1', env)
+        self.assertEqual(str(rs.identity_disc_id), ALT_DISC_PK)
+
+    def test_envelope_identity_used_after_timeout_rotation(self):
+        """Assert envelope.identity_disc_id wins on post-timeout rotation."""
+        ts = timezone.now()
+        env_initial = PlatformEnvelope(
+            platform='cli',
+            channel_id='chan-sm-id-2',
+            sender_id='u',
+            sender_name='User',
+            message_id='m1',
+            content='a',
+            timestamp=ts,
+        )
+        sm = SessionManager()
+        gs, rs_old = sm.resolve_session('cli', 'chan-sm-id-2', env_initial)
+        self.assertEqual(str(rs_old.identity_disc_id), THALAMUS_DISC_PK)
+
+        GatewaySession.objects.filter(pk=gs.pk).update(
+            last_activity=timezone.now() - timedelta(minutes=120)
+        )
+        env_rotate = PlatformEnvelope(
+            platform='cli',
+            channel_id='chan-sm-id-2',
+            sender_id='u',
+            sender_name='User',
+            message_id='m2',
+            content='b',
+            identity_disc_id=ALT_DISC_PK,
+            timestamp=timezone.now(),
+        )
+        _, rs_new = sm.resolve_session('cli', 'chan-sm-id-2', env_rotate)
+        self.assertNotEqual(rs_new.pk, rs_old.pk)
+        self.assertEqual(str(rs_new.identity_disc_id), ALT_DISC_PK)
+
+    def test_envelope_identity_ignored_when_session_still_live(self):
+        """Assert live session keeps original identity even if envelope changes it."""
+        ts = timezone.now()
+        env_initial = PlatformEnvelope(
+            platform='cli',
+            channel_id='chan-sm-id-3',
+            sender_id='u',
+            sender_name='User',
+            message_id='m1',
+            content='a',
+            timestamp=ts,
+        )
+        sm = SessionManager()
+        _, rs_first = sm.resolve_session('cli', 'chan-sm-id-3', env_initial)
+        env_second = PlatformEnvelope(
+            platform='cli',
+            channel_id='chan-sm-id-3',
+            sender_id='u',
+            sender_name='User',
+            message_id='m2',
+            content='b',
+            identity_disc_id=ALT_DISC_PK,
+            timestamp=timezone.now(),
+        )
+        _, rs_second = sm.resolve_session('cli', 'chan-sm-id-3', env_second)
+        self.assertEqual(rs_first.pk, rs_second.pk)
+        self.assertEqual(
+            str(rs_second.identity_disc_id), THALAMUS_DISC_PK
+        )
 
     def test_create_session_returns_gateway_and_reasoning_session(self):
         """Assert create_session creates both GatewaySession and ReasoningSession."""
