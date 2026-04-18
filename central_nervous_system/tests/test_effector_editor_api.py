@@ -15,8 +15,10 @@ from central_nervous_system.models import (
     CNSDistributionMode,
     Effector,
     EffectorContext,
+    Neuron,
+    NeuralPathway,
 )
-from environments.models import Executable
+from environments.models import Executable, ProjectEnvironment
 
 
 class EffectorViewSetV2Test(CommonFixturesAPITestCase):
@@ -71,7 +73,7 @@ class EffectorViewSetV2Test(CommonFixturesAPITestCase):
         payload = {
             'name': 'Test New Effector',
             'description': 'Created by test',
-            'executable': 1,
+            'executable': str(Executable.BEGIN_PLAY),
             'distribution_mode': 1,
         }
         response = self.client.post(
@@ -116,7 +118,7 @@ class EffectorViewSetV2Test(CommonFixturesAPITestCase):
         """DELETE /api/v2/effectors/{id}/ removes the effector."""
         effector = Effector.objects.create(
             name='Disposable Effector',
-            executable_id=1,
+            executable_id=Executable.BEGIN_PLAY,
         )
         eff_id = effector.id
 
@@ -283,3 +285,106 @@ class ExecutableViewSetCRUDTest(CommonFixturesAPITestCase):
         self.assertIn('switches_detail', data)
         self.assertIn('argument_assignments', data)
         self.assertIn('rendered_executable', data)
+
+
+class NeuronEnvironmentAPITest(CommonFixturesAPITestCase):
+    """Tests for environment and distribution_mode fields on Neuron via v2 API."""
+
+    def setUp(self):
+        super().setUp()
+        self.client = self.test_client
+        # Get or create a neural pathway and neuron for testing
+        self.pathway = NeuralPathway.objects.first() or NeuralPathway.objects.create(
+            name='Test Pathway'
+        )
+        self.effector = Effector.objects.first()
+        self.neuron = Neuron.objects.create(
+            pathway=self.pathway,
+            effector=self.effector,
+        )
+        self.environment = ProjectEnvironment.objects.first()
+
+    def test_neuron_retrieve_includes_environment_and_distribution_mode(self):
+        """GET /api/v2/neurons/{id}/ includes environment and distribution_mode_name."""
+        response = self.client.get(f'/api/v2/neurons/{self.neuron.id}/')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        # Should have the new fields
+        self.assertIn('environment', data)
+        self.assertIn('environment_name', data)
+        self.assertIn('distribution_mode_name', data)
+
+    def test_neuron_patch_environment_fk(self):
+        """PATCH /api/v2/neurons/{id}/ can set environment FK."""
+        if not self.environment:
+            self.skipTest('No ProjectEnvironment available in fixtures')
+
+        response = self.client.patch(
+            f'/api/v2/neurons/{self.neuron.id}/',
+            data={'environment': str(self.environment.id)},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.neuron.refresh_from_db()
+        self.assertEqual(self.neuron.environment_id, self.environment.id)
+
+    def test_neuron_patch_environment_null(self):
+        """PATCH /api/v2/neurons/{id}/ can clear environment FK (set to null)."""
+        self.neuron.environment = self.environment
+        self.neuron.save()
+
+        response = self.client.patch(
+            f'/api/v2/neurons/{self.neuron.id}/',
+            data={'environment': None},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.neuron.refresh_from_db()
+        self.assertIsNone(self.neuron.environment_id)
+
+
+class NeuralPathwayEnvironmentAPITest(CommonFixturesAPITestCase):
+    """Tests for environment field on NeuralPathway via v2 API."""
+
+    def setUp(self):
+        super().setUp()
+        self.client = self.test_client
+        self.pathway = NeuralPathway.objects.create(name='Test Pathway for Env')
+        self.environment = ProjectEnvironment.objects.first()
+
+    def test_pathway_retrieve_includes_environment(self):
+        """GET /api/v2/neuralpathways/{id}/ includes environment and environment_name."""
+        response = self.client.get(f'/api/v2/neuralpathways/{self.pathway.id}/')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        # Should have the new fields
+        self.assertIn('environment', data)
+        self.assertIn('environment_name', data)
+
+    def test_pathway_patch_environment_fk(self):
+        """PATCH /api/v2/neuralpathways/{id}/ can set environment FK."""
+        if not self.environment:
+            self.skipTest('No ProjectEnvironment available in fixtures')
+
+        response = self.client.patch(
+            f'/api/v2/neuralpathways/{self.pathway.id}/',
+            data={'environment': str(self.environment.id)},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.pathway.refresh_from_db()
+        self.assertEqual(self.pathway.environment_id, self.environment.id)
+
+    def test_pathway_patch_environment_null(self):
+        """PATCH /api/v2/neuralpathways/{id}/ can clear environment FK (set to null)."""
+        self.pathway.environment = self.environment
+        self.pathway.save()
+
+        response = self.client.patch(
+            f'/api/v2/neuralpathways/{self.pathway.id}/',
+            data={'environment': None},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.pathway.refresh_from_db()
+        self.assertIsNone(self.pathway.environment_id)

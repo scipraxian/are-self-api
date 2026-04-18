@@ -152,20 +152,24 @@ class CNSDistributionMode(NameMixin, DescriptionMixin):
         verbose_name = 'CNS Distribution Mode'
 
 
-class Effector(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
+class Effector(
+    UUIDIdMixin, DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin
+):
     """
     A configured action (Tool + specific Switches).
     """
 
-    BEGIN_PLAY = 1
-    LOGIC_GATE = 5
-    LOGIC_RETRY = 6
-    LOGIC_DELAY = 7
-    FRONTAL_LOBE = 8
-    DEBUG = 9
+    BEGIN_PLAY = UUID('a74a9b1a-7326-4dff-9013-d640433b3bf7')
+    LOGIC_GATE = UUID('3aa7a066-232a-4710-b387-a9033771e8dd')
+    LOGIC_RETRY = UUID('644c234f-c810-494b-8339-7829a143e099')
+    LOGIC_DELAY = UUID('0094c230-0784-4522-8e87-9c25dcab5a7f')
+    FRONTAL_LOBE = UUID('64c0995a-cbd2-47d3-a452-e36ea4d46154')
+    DEBUG = UUID('8eb0d85b-35f5-4095-9b10-37a2e6fefbef')
 
     executable = models.ForeignKey(
-        Executable, on_delete=models.PROTECT, default=1
+        Executable,
+        on_delete=models.PROTECT,
+        default=UUID('974ed732-6f2d-47f4-9482-18d17c73086e'),
     )
     switches = models.ManyToManyField(ExecutableSwitch, blank=True)
     distribution_mode = models.ForeignKey(
@@ -234,7 +238,7 @@ class Effector(DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin):
         return command_list
 
 
-class EffectorContext(models.Model):
+class EffectorContext(UUIDIdMixin):
     effector = models.ForeignKey(Effector, on_delete=models.CASCADE)
     key = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
     value = models.TextField(blank=True)
@@ -262,7 +266,7 @@ class EffectorTarget(models.Model):
         return f'{self.effector.name} -> {self.target}'
 
 
-class EffectorArgumentAssignment(models.Model):
+class EffectorArgumentAssignment(UUIDIdMixin):
     effector = models.ForeignKey(Effector, on_delete=models.CASCADE)
     order = models.IntegerField(default=10)
     argument = models.ForeignKey(
@@ -296,7 +300,7 @@ class NeuralPathway(
         return self.name
 
 
-class Neuron(ProjectEnvironmentMixin):
+class Neuron(UUIDIdMixin, ProjectEnvironmentMixin):
     """
     A visual instance of a Effector on the Graph.
     Allows the same Effector (e.g., 'Wait') to be used
@@ -330,7 +334,7 @@ class Neuron(ProjectEnvironmentMixin):
         return f'Neuron {self.id}: {self.effector.name}'
 
 
-class NeuronContext(models.Model):
+class NeuronContext(UUIDIdMixin):
     neuron = models.ForeignKey(Neuron, on_delete=models.CASCADE)
     key = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
     value = models.TextField(blank=True)
@@ -345,7 +349,7 @@ class AxonType(NameMixin):
     pass
 
 
-class Axon(ModifiedMixin):
+class Axon(UUIDIdMixin, ModifiedMixin):
     """
     The Wire. Connects two NODES (not effectors).
     Trigger Condition: Fires when 'source' finishes with 'status'.

@@ -1,0 +1,107 @@
+[
+  {
+    "model": "environments.executable",
+    "pk": "11915177-a32b-4883-8c9f-e137c528c20d",
+    "fields": {
+      "created": "2026-01-21T00:00:00Z",
+      "description": "Python Interpreter intended for manage.py commands.",
+      "modified": "2026-02-12T22:17:08.081Z",
+      "name": "DJANGO",
+      "internal": false,
+      "working_path": "{{venv_root}}",
+      "executable": "{{venv_root}}/Scripts/python.exe",
+      "log": "{{are_self_root}}\\logs\\django.log",
+      "switches": []
+    }
+  },
+  {
+    "model": "environments.executable",
+    "pk": "24e213d0-92c1-4b77-8a35-f6998075efc0",
+    "fields": {
+      "created": "2026-02-17T18:22:31.543Z",
+      "description": "",
+      "modified": "2026-03-05T13:31:35.304Z",
+      "name": "Engage Frontal Lobe",
+      "internal": true,
+      "working_path": "",
+      "executable": "run_frontal_lobe",
+      "log": "",
+      "switches": []
+    }
+  },
+  {
+    "model": "environments.executable",
+    "pk": "6fb7f8af-60b6-4f04-aa07-d4d36c680e38",
+    "fields": {
+      "created": "2026-01-27T19:15:25.963Z",
+      "description": null,
+      "modified": "2026-01-27T19:15:25.963Z",
+      "name": "Scan for Peripheral Nervous Systems",
+      "internal": true,
+      "working_path": "",
+      "executable": "scan_and_register",
+      "log": "",
+      "switches": []
+    }
+  },
+  {
+    "model": "environments.executable",
+    "pk": "6fcad69c-37de-4706-ac5e-a34ad3e6be9f",
+    "fields": {
+      "created": "2026-01-27T22:45:40.160Z",
+      "description": null,
+      "modified": "2026-01-27T23:04:33.455Z",
+      "name": "robocopy",
+      "internal": false,
+      "working_path": "",
+      "executable": "robocopy",
+      "log": "",
+      "switches": []
+    }
+  },
+  {
+    "model": "environments.executable",
+    "pk": "974ed732-6f2d-47f4-9482-18d17c73086e",
+    "fields": {
+      "created": "2026-01-21T00:00:00Z",
+      "description": "Starts a Graph.",
+      "modified": "2026-01-21T00:00:00Z",
+      "name": "BEGIN_PLAY",
+      "internal": true,
+      "working_path": "",
+      "executable": "begin_play",
+      "log": "",
+      "switches": []
+    }
+  },
+  {
+    "model": "environments.executable",
+    "pk": "c8cb58b0-341b-43d3-bfcf-8d31dca28375",
+    "fields": {
+      "created": "2026-01-27T17:17:28.671Z",
+      "description": null,
+      "modified": "2026-01-27T17:25:24.532Z",
+      "name": "Windows Powershell Command",
+      "internal": false,
+      "working_path": "",
+      "executable": "powershell",
+      "log": "",
+      "switches": []
+    }
+  },
+  {
+    "model": "environments.executable",
+    "pk": "dfe7b955-d22f-4630-a1f9-36b1ff59c591",
+    "fields": {
+      "created": "2026-01-31T15:17:06.378Z",
+      "description": null,
+      "modified": "2026-01-31T15:47:32.212Z",
+      "name": "Windows Command (CMD)",
+      "internal": false,
+      "working_path": "",
+      "executable": "cmd.exe",
+      "log": "",
+      "switches": []
+    }
+  }
+]

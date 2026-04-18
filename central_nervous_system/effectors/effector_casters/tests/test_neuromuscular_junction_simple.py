@@ -1,17 +1,18 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from common.tests.common_test_case import CommonFixturesAPITestCase
-
-from environments.models import Executable
+from central_nervous_system.effectors.effector_casters.neuromuscular_junction import (
+    NeuroMuscularJunction,
+)
 from central_nervous_system.models import (
+    Effector,
+    NeuralPathway,
     Spike,
     SpikeStatus,
     SpikeTrain,
     SpikeTrainStatus,
-    Effector,
-    NeuralPathway,
 )
-from central_nervous_system.effectors.effector_casters.neuromuscular_junction import NeuroMuscularJunction
+from common.tests.common_test_case import CommonFixturesAPITestCase
+from environments.models import Executable
 
 MODULE_PATH = 'central_nervous_system.effectors.effector_casters.neuromuscular_junction'
 
@@ -84,7 +85,7 @@ class NeuroMuscularJunctionTest(CommonFixturesAPITestCase):
 
         # Case 2: Internal Handler -> Local Python
         internal_exe = Executable.objects.get(
-            id=Executable.VERSION_HANDLER)
+            id=Executable.BEGIN_PLAY)
         caster.effector.executable = internal_exe
 
         loop.run_until_complete(caster._executable_router())

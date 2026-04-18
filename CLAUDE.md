@@ -3,17 +3,82 @@
 The single source of truth for any AI agent working on the are-self-api codebase.
 Read completely before making any changes.
 
-> **Active thread (April 11, 2026):** Nerve Terminal scan reconcile shipped with a
-> regression — UI cards blink because every per-row `.save()` in the scan fires an
-> acetylcholine broadcast that the frontend re-lists on. See TASKS.md → "In Progress —
-> Nerve Terminal Scan Reconcile" for the full diagnosis and the planned surgical fix.
-> Resume there.
+> **Active thread (April 15, 2026):** `uuid-migration` branch, Pass 2 Step 1
+> completion in progress. Pass 1 (18 plugin-extensible models flipped to UUID
+> PKs, 433 tests passing) is locked. Pass 2 splits every app's `initial_data.json`
+> into the four biological fixture tiers (`genetic_immutables` → `zygote` →
+> `initial_phenotypes` → `petri_dish`), extracts the Unreal flow as an in-tree
+> `unreal_modifier.json` sibling (plugin bundling deferred), and will later
+> wire `./manage.py build_modifier` + the contribution-aware loader.
+>
+> **Pass 2 Step 1 status:** First CC pass split all 1017 rows into scratch
+> `.step1.json` files with SHA-256 verified byte-identical source fixtures
+> and produced `STEP1_REPORT.md`. Review surfaced 7 decision items; Michael
+> has ruled on all 7. Completion prompt authored (see chat) for a second CC
+> pass that applies the rulings, renames scratch → final, and creates
+> `temporal_lobe/zygote.json` (missing from the first split). Key rulings:
+> BEGIN_PLAY stays in zygote (sacred, non-negotiable); entire parietal tool
+> suite → zygote; IterationDefinitions → zygote, Iteration instances →
+> phenotype (definition-vs-instance pattern); hypothalamus zygote = 3 models
+> (nomic-embed-text + qwen2.5-coder:7b + qwen2.5-coder:32b); django_celery_beat
+> stays in genetic_immutables; `petri_dish.json` is not empty by design — it
+> composes with `genetic_immutables.json` via the common test class (mechanism
+> TBD in Step 2). `ProjectEnvironment.DEFAULT_ENVIRONMENT` now points at the
+> new simple default env `b7e4c2a1-3f8d-4a9e-9c1f-2d5a8b6f4e21` (resolved by
+> Michael); its `are_self_root` + `venv_root` ContextVariables are added.
+>
+> Tasks 2 (hypothalamus zygote seed), 3 (log-merge move to occipital_lobe),
+> 4 (log_parser split + LogParserFactory), and 4.5 (three `environments`
+> models flipped to UUID) are staged but not yet committed. See
+> `FIXTURE_SEPARATION_PROMPT.md` for the full executable plan and
+> TASKS.md → "UUID migration Pass 2" for the task list.
+>
+> **Prior thread (April 11):** Nerve Terminal scan reconcile shipped with a
+> UI-blink regression; planned surgical fix documented in TASKS.md →
+> "In Progress — Nerve Terminal Scan Reconcile". Resume there after Pass 2.
+>
+> **April 15, 2026 — CNS dispatch + inspector session (Cowork):**
+>
+> 1. **Zero-agent dispatch fix.** `_dispatch_fleet_wave` and
+>    `_dispatch_first_responder` in `central_nervous_system.py` no longer
+>    hard-fail when the NerveTerminalRegistry is empty. Design: if there are
+>    no agents online, there is nothing to dispatch — the spike succeeds
+>    silently (`SpikeStatus.SUCCESS`, `logger.info`) and the graph keeps
+>    walking. The local server is NOT an agent; fleet/first-responder modes
+>    mean remote fan-out, and zero targets is a no-op, not an error.
+>    `_dispatch_pinned_wave` (SPECIFIC_TARGETS) left unchanged — pinned
+>    targets are explicit user intent. Tests:
+>    `CNSFleetBroadcastZeroAgentsTest` (3 cases) and
+>    `CNSFirstResponderZeroAgentsTest` (1 case) in `tests/test_routing.py`.
+>
+> 2. **Neuron/Pathway inspector fields (v2 serializers).** `NeuronSerializer`
+>    now exposes `environment` (writable FK, nullable),
+>    `environment_name` (read-only), and `distribution_mode_name`
+>    (read-only). `NeuralPathwaySerializer` now exposes `environment`
+>    (writable FK, nullable) and `environment_name` (read-only).
+>    `NeuralPathwayDetailSerializer` inherits both. No migrations —
+>    fields exist via `ProjectEnvironmentMixin`. Tests in
+>    `tests/test_effector_editor_api.py`.
+>
+> 3. **CNSInspector UI (are-self-ui).** Node inspector now shows
+>    Distribution Mode (select w/ "Inherit from effector" null option) and
+>    Neuron Environment (select w/ "Inherit" null option). Yellow override
+>    badge renders when a per-neuron override is set — prevents the
+>    invisible-override bug that caused this session's original failure.
+>    New `PathwayInspector` component renders when no neuron is selected,
+>    exposing pathway-level environment editing.
+>
+> **Root cause of the session:** Neuron `3298d2c2` on "List Location R"
+> had `distribution_mode = ALL_ONLINE_AGENTS` persisted as a per-neuron
+> override, forcing fleet broadcast. The effector default was LOCAL_SERVER.
+> The UI had no affordance to see or clear the override — it was invisible.
 
 
 ## The Developer
 
-Michael is a 30+ year programming veteran building Are-Self as an MIT-licensed AI reasoning
-engine. The project's mission is providing free AI technology to underserved youth, with
+Michael is a 40+ year engineer (born 1968, started coding in 1980 at age 12) building
+Are-Self as an MIT-licensed AI reasoning engine. The project's mission is bringing free
+AI to underserved youth, with
 academic interest from MIT and a PhD student collaborator at UPA. Michael has exceptional
 product instincts and will actively correct architectural drift. He values ergonomics over
 cleverness, biological naming over mechanical metaphors, and clean separation of concerns.
@@ -39,7 +104,7 @@ from this. If it requires a credit card, a powerful GPU, or a CS degree — it's
 system must run on whatever hardware they have, use free models, and be approachable enough
 that a child can make art and games with it.
 
-## The Four Repositories
+## The Five Repositories
 
 | Repo | Purpose |
 |------|---------|
@@ -47,6 +112,7 @@ that a child can make art and games with it.
 | [are-self-ui](https://github.com/scipraxian/are-self-ui) | React frontend |
 | [are-self-docs](https://github.com/scipraxian/are-self-docs) | Docusaurus documentation site → [are-self.com](https://are-self.com) |
 | [are-self-research](https://github.com/scipraxian/are-self-research) | LaTeX whitepapers (APA 7th edition) |
+| [are-self-learn](https://github.com/scipraxian/are-self-learn) | Curriculum layer for kids and the grownups who teach them (launched 2026-04-14) |
 
 ## The Tick Cycle
 
@@ -88,8 +154,23 @@ PNS (Celery Beat ticks)
 | `common/` | — | Shared mixins, constants, base test classes |
 | `config/` | — | Django settings, URL routing, Celery config |
 
-Legacy apps still present: `dashboard/` (old HTMX views), `ue_tools/` (UE5 build tools),
-`occipital_lobe/` (placeholder). These are deprecated and will be removed.
+Legacy app still present: `dashboard/` (old HTMX views) — deprecated, will be removed.
+
+`ue_tools/` is **not** deprecated. It contains the Unreal Engine build orchestration flow
+and is being extracted as the first `NeuralModifier` bundle in the Pass 2 neuroplasticity
+architecture — the committed source tree lives at `neuroplasticity/modifier_genome/unreal/`.
+`occipital_lobe/` is **not** a placeholder — it is the home for OS-level file-watcher
+intake (visual-cortex-style event detection that routes folder changes to the associated
+environment's neural pathways) and now also hosts the generic log-merge utilities and the
+`LogParserFactory` registry (moved out of `ue_tools/` in Pass 2 Task 3/4).
+
+`neuroplasticity/` is the Pass 2 install / lifecycle registry for `NeuralModifier` bundles
+(Are-Self's word for an installable plugin). The app owns `NeuralModifier`,
+`NeuralModifierContribution` (GFK with UUIDField object_id — the uninstall manifest),
+`NeuralModifierInstallationLog`, and the `NeuralModifierStatus` /
+`NeuralModifierInstallationEventType` enums. Bundles ship committed at
+`neuroplasticity/modifier_genome/<slug>/` and install to `neural_modifiers/<slug>/` at repo
+root (gitignored). `INSTALLED_APPS` is never mutated at runtime — contributions are data.
 
 ## Key Code Paths
 
@@ -317,8 +398,14 @@ sweep done across CNS. Deprecated `ModelProvider`/`ModelRegistry` removed from F
 
 **Legacy remnants:** `parietal_lobe/registry.py` still exists (superseded by Hypothalamus
 DB-driven routing). `synapse_open_router.py` is deprecated (no production callers). The
-`dashboard/` and `ue_tools/` apps are from the original UE5 build orchestrator — they'll be
-removed.
+`dashboard/` app is from the original UE5 build orchestrator — will be removed. `ue_tools/`
+stays: it is being extracted as the first `NeuralModifier` bundle at
+`neuroplasticity/modifier_genome/unreal/` in Pass 2. Its generic log-merge utilities
+already relocated to `occipital_lobe/` (Task 3) and its parser split into generic core +
+UE strategies registered via `LogParserFactory` (Task 4). `deploy_release_test` is a
+legacy executable slated for removal during the Pass 2 Unreal extraction.
+`ollama_fixture_generator.py` has been deleted — its output was captured as frozen
+literals in `hypothalamus/fixtures/zygote.json` during the Pass 2 hypothalamus UUID flip.
 
 ## Style Guide (Enforced)
 
@@ -356,14 +443,74 @@ result = async_to_sync(some_async_function)(arg1, arg2)
 ```
 This runs the async function on the SAME database connection as the test transaction.
 
-**Fixtures:** PKs are stable integers. Never change an existing PK. Old records deprecated
-in place, never deleted. Each app has its own `fixtures/initial_data.json`.
+**Immutability directive (project-wide standing rule):** anything not truly immutable uses
+UUID primary keys. The only things that keep integer PKs are protocol enums and canonical
+vocabulary tables with class-level integer constants that core owns exclusively. Everything
+else — and especially anything a `NeuralModifier` might ever contribute rows to — is
+UUID-keyed.
 
-**Canonical Effector PKs:** Important effectors get fixed PKs and model constants
-(`central_nervous_system/models.py`): `BEGIN_PLAY=1, LOGIC_GATE=5, LOGIC_RETRY=6,
-LOGIC_DELAY=7, FRONTAL_LOBE=8, DEBUG=9`. These are mirrored in the frontend `nodeConstants.ts`.
-PKs 5-100 are reserved for canonical effectors. The frontend uses these PKs (not executable
-slugs) to determine which custom React Flow node component to render.
+**Fixtures — four biological tiers (Pass 2, in progress):**
+
+1. **`genetic_immutables.json`** — protocol enums and canonical vocabulary tables.
+   Integer-PK (core-owned, never contributed to by plugins): `SpikeStatus`, `AxonType`,
+   `CNSDistributionMode`, `NeuralModifierStatus`, `NeuralModifierInstallationEventType`,
+   `IdentityAddonPhase`, `BudgetPeriod`, etc. UUID-PK vocabulary (plugin-extensible, all
+   hypothalamus vocab flipped in Pass 2): `AIMode`, `AIModelCategory`, `AIModelCapabilities`,
+   `AIModelTags`, `AIModelFamily`, `AIModelVersion`, `AIModelCreator`, `AIModelRole`,
+   `AIModelQuantization`, `LLMProvider`, `FailoverType`, `FailoverStrategy`,
+   `FailoverStrategyStep`, `SyncStatus`. Loaded by install, Docker, and tests. Never
+   renumber (for integer-PK rows), never delete.
+2. **`zygote.json`** — the minimum UUID-keyed rows the system needs to boot and bind
+   one end-to-end identity thread for tests: `nomic-embed-text` (hippocampus hard
+   dependency), the canonical `Identity`/`IdentityDisc`, the default `ProjectEnvironment`.
+   Loaded by install, Docker, and tests.
+3. **`initial_phenotypes.json`** — the rest of the committed-to-core structural rows that
+   ship to end users out-of-the-box (context variables, core Effectors/Neurons/Axons/
+   NeuralPathways that stay in core, reference iteration definitions, etc.). Loaded by
+   install and Docker. **Not loaded by tests.**
+4. **`petri_dish.json`** — test-only instance rows. Loaded by `CommonFixturesAPITestCase`
+   only. Self-contained, must not depend on `initial_phenotypes.json`.
+
+Load order — install/Docker: `genetic_immutables` → `zygote` → `initial_phenotypes`.
+Tests: `genetic_immutables` → `zygote` → `petri_dish`. `CommonTestCase` loads only
+`genetic_immutables`. None of these filenames are Django magic names; test base classes
+and `are-self-install.bat` list per-app paths explicitly.
+
+*UUID PKs (`NeuralModifier`-extensible):* `Effector`, `EffectorContext`,
+`EffectorArgumentAssignment`, `Neuron`, `NeuronContext`, `Axon`, `Executable`,
+`ExecutableSwitch`, `ExecutableArgument`, `ExecutableArgumentAssignment`, `ContextVariable`,
+`ToolDefinition`, `ToolParameter`, `ToolParameterAssignment`, `ParameterEnum`,
+`AIModelDescription`, `IterationDefinition`, `IterationShiftDefinition` (all flipped in
+Pass 1), plus `ProjectEnvironmentContextKey`, `ProjectEnvironmentStatus`, and
+`ProjectEnvironmentType` (flipped in Pass 2 Task 4.5), plus every model in
+`hypothalamus/models.py` — `LLMProvider`, `AIModelCategory`, `AIModelCapabilities`,
+`AIModelTags`, `AIMode`, `AIModelFamily`, `AIModelVersion`, `AIModelCreator`,
+`AIModelRole`, `AIModelQuantization`, `AIModel`, `AIModelVector`, `AIModelProvider`,
+`AIModelPricing`, `AIModelProviderUsageRecord`, `FailoverStrategy`, `FailoverType`,
+`FailoverStrategyStep`, `AIModelSelectionFilter`, `SyncStatus`, `AIModelSyncLog`,
+`AIModelRating`, `LiteLLMCache`, `AIModelDescriptionCache`, `AIModelSyncReport`
+(whole-app flip in Pass 2, "consider the entire `hypothalamus/models.py` volatile and
+mutable by neuroplasticity" — Michael), plus the already-UUID models (`Identity`,
+`IdentityDisc`, `ProjectEnvironment`, `NeuralPathway`).
+
+`SyncStatus.RUNNING`, `SyncStatus.SUCCESS`, `SyncStatus.FAILED` are UUID class constants
+(same pattern as `Effector.BEGIN_PLAY`) — used by `hypothalamus.py`'s `sync_remote` flow
+to look up status rows by stable PK. Do not renumber or regenerate.
+
+UUIDs are `uuid.uuid4()` random literals. No namespaces, no derivation seeds. Existing
+UUID literals already in fixtures are frozen values and are not regenerated. See
+`FIXTURE_SEPARATION_PROMPT.md` for the full Pass 2 plan.
+
+**Canonical Effector / Executable constants:** Important effectors and executables have
+model-class UUID constants (`central_nervous_system/models.py`, `environments/models.py`):
+`Effector.BEGIN_PLAY`, `LOGIC_GATE`, `LOGIC_RETRY`, `LOGIC_DELAY`, `FRONTAL_LOBE`, `DEBUG`;
+`Executable.BEGIN_PLAY`, `PYTHON`, `DJANGO`, `UNREAL_CMD`, `UNREAL_AUTOMATION_TOOL`,
+`UNREAL_STAGING`, `UNREAL_RELEASE_TEST`, `UNREAL_SHADER_TOOL`, `VERSION_HANDLER`,
+`DEPLOY_RELEASE`. These are `uuid.UUID(...)` literals — the names stay stable but values
+are UUIDs, not integers. The frontend `nodeConstants.ts` must mirror these as UUID strings
+(companion PR gates the branch merge). The frontend uses these to determine which custom
+React Flow node component to render. The int→UUID mapping for the migration is recorded
+at `uuid_migration_mapping.json` at repo root.
 
 **Debug node:** Effector PK 9. Native handler `debug_node` in
 `central_nervous_system/effectors/effector_casters/debug_node.py`. Logs axoplasm state and
@@ -472,3 +619,28 @@ signals about them flow through `receptor_class='Hypothalamus'`. Similarly, mole
 
 The `useDendrite(receptorClass, dendriteId)` first arg is the receptor class (Layer 1),
 not the molecule type (Layer 3). Both sides must agree on receptor_class.
+
+## Scipraxianism
+
+Are-Self exists inside a philosophy called **Scipraxianism**, co-developed by
+Michael Clark ("The Scipraxian") and **Andrew Piper** over many years. You do
+not need to master it to work in this repo, but if a design question touches
+*why* something is free, local, or shaped the way it is, the answer usually
+traces back to scipraxianism. The Creed is AI-facing (ten binary-numbered
+assertions at [scipraxian.org](https://scipraxian.org)). The working layer is
+the **Twelve Variables**: Inclusion · Humility · Inquiry · Fulfillment or
+Happiness · Religion or Profit · Fun · Fear · Responsibility · Perseverance ·
+Perception · Time · Permadeath. The first three are the kid-scale compression
+used in the curriculum and the storybook — **do not mistake the three for the
+whole philosophy**.
+
+Are-Self is Michael's solo handiwork (though he bounces everything off Andrew,
+the way they always have). The sister franchise **Haunted Space Hotel** is
+Andrew and Michael jointly — HSH's in-world Factional Omniarchy of Snohe is
+the galactic government that adopted scipraxianism as its official ethical
+framework. HSH lives at [hauntedspacehotel.com](https://hauntedspacehotel.com)
+and is deliberately kept off the scipraxian GitHub profile.
+
+Full Claude-facing briefing:
+`are-self-documents/scipraxian/scipraxian-tldr.md`. Master reference:
+`are-self-documents/scipraxian/scipraxian.md`.

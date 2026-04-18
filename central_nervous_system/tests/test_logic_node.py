@@ -175,7 +175,7 @@ class RetryModeTest(LogicNodeTestBase):
         self.assertEqual(code, 500)
         self.assertIn('LIMIT REACHED', msg)
 
-    def test_blackboard_preserves_other_keys(self):
+    def test_axoplasm_preserves_other_keys(self):
         """Assert retry mode only touches loop_count, leaves other axoplasm keys."""
         self._set_context(logic_mode=MODE_RETRY, max_retries=3)
         spike = self._make_spike(axoplasm={'task_type': 'art', 'score': '95'})
@@ -219,7 +219,7 @@ class RetryModeTest(LogicNodeTestBase):
         spike.refresh_from_db()
         self.assertEqual(spike.axoplasm[BB_LOOP_COUNT], 1)
 
-    def test_limit_does_not_write_blackboard(self):
+    def test_limit_does_not_write_axoplasm(self):
         """Assert axoplasm is not written when limit is reached."""
         self._set_context(logic_mode=MODE_RETRY, max_retries=2)
         spike = self._make_spike(axoplasm={BB_LOOP_COUNT: 2})
@@ -527,7 +527,7 @@ class GateModeTest(LogicNodeTestBase):
         # str(bb_raw).strip() -> 'hello' == 'hello' -> PASS
         self.assertEqual(code, 200)
 
-    def test_gate_with_empty_blackboard(self):
+    def test_gate_with_empty_axoplasm(self):
         """Assert gate handles spike with empty axoplasm gracefully."""
         self._set_context(
             logic_mode=MODE_GATE, gate_key='key',

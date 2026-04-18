@@ -43,11 +43,6 @@ def _make_terminal(hostname, status_id, *, ip='192.168.1.10', last_seen=None):
 class ScanReconcileTests(CommonTestCase):
     """Verify _run_async_scan correctly reconciles registry state."""
 
-    fixtures = (
-        'initial_data.json',
-        'peripheral_nervous_system/fixtures/initial_data.json',
-    )
-
     def _patch_probes(self, identities):
         """Patch _probe_agent so gather() yields exactly `identities` once.
 
@@ -305,11 +300,6 @@ class NerveTerminalRegistryListTests(CommonTestCase):
     produces zero broadcasts, so the scan->broadcast->refetch->scan loop
     terminates on its own after one real state change.
     """
-
-    fixtures = (
-        'initial_data.json',
-        'peripheral_nervous_system/fixtures/initial_data.json',
-    )
 
     def test_list_triggers_scan_and_returns_reconciled_state(self):
         """A ghost terminal should be OFFLINE in the list response after

@@ -108,7 +108,7 @@ class Command(BaseCommand):
         ).all()
 
         if options['tool_ids']:
-            ids = [int(x.strip()) for x in options['tool_ids'].split(',')]
+            ids = [x.strip() for x in options['tool_ids'].split(',')]
             queryset = queryset.filter(id__in=ids)
 
         tools = list(queryset)

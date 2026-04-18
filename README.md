@@ -134,12 +134,14 @@ If you're not on Windows, the install script shows the exact sequence. The key s
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 docker compose up -d
-docker exec -it are_self_db psql -U postgres -d postgres -c "CREATE EXTENSION IF NOT EXISTS vector;"
 python manage.py migrate
 python manage.py loaddata initial_data.json
 ollama pull nomic-embed-text
 python manage.py runserver
 ```
+
+The `pgvector` extension is installed automatically by `common/migrations/0001_initial.py`
+via Django's `VectorExtension()` operation — no manual `CREATE EXTENSION` step required.
 
 In separate terminals, start the Celery worker and frontend:
 

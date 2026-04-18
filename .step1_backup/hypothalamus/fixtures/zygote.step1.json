@@ -1,0 +1,22 @@
+[
+  {
+    "model": "hypothalamus.aimodel",
+    "pk": "39168c4d-ed2a-54e5-98ce-1c992dff4ec8",
+    "fields": {
+      "name": "nomic-embed-text",
+      "description": null,
+      "creator": 12,
+      "parameter_size": 0.137,
+      "family": 10,
+      "version": null,
+      "context_length": 8192,
+      "enabled": true,
+      "deprecation_date": null,
+      "roles": [
+        5
+      ],
+      "quantizations": [],
+      "capabilities": []
+    }
+  }
+]

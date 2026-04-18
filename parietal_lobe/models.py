@@ -93,7 +93,7 @@ class ToolParameterAssignment(CreatedMixin, ModifiedMixin):
         return f'{self.tool.name} -> {self.parameter.name}{req}'
 
 
-class ParameterEnum(CreatedMixin, ModifiedMixin):
+class ParameterEnum(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     """Joined table for parameters that have strict pre-defined values."""
 
     parameter = models.ForeignKey(

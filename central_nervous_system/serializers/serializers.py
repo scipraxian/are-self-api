@@ -167,11 +167,11 @@ class ContextMatrixRowSerializer(serializers.Serializer):
 class GraphNodeLayoutSerializer(serializers.Serializer):
     """Explicit schema for a Node on the Canvas."""
 
-    id = serializers.IntegerField()
+    id = serializers.UUIDField()
     title = serializers.CharField()
     x = serializers.FloatField()
     y = serializers.FloatField()
-    effector_id = serializers.IntegerField(allow_null=True, required=False)
+    effector_id = serializers.UUIDField(allow_null=True, required=False)
     is_root = serializers.BooleanField()
     has_override = serializers.BooleanField()
     invoked_pathway_id = serializers.UUIDField(allow_null=True, required=False)
@@ -180,8 +180,8 @@ class GraphNodeLayoutSerializer(serializers.Serializer):
 class GraphWireLayoutSerializer(serializers.Serializer):
     """Explicit schema for a Wire on the Canvas."""
 
-    from_node_id = serializers.IntegerField()
-    to_node_id = serializers.IntegerField()
+    from_node_id = serializers.UUIDField()
+    to_node_id = serializers.UUIDField()
     status_id = serializers.CharField()
 
 

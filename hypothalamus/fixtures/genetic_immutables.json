@@ -1,0 +1,1275 @@
+[
+  {
+    "model": "hypothalamus.aimode",
+    "pk": "aaa2e9aa-a751-461f-bb54-b8a642991160",
+    "fields": {
+      "name": "image_generation",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimode",
+    "pk": "192c876a-b4a1-4774-912a-3c4aa18b0262",
+    "fields": {
+      "name": "image_edit",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimode",
+    "pk": "7ec914de-f71a-441d-9d04-7bfb3a802a40",
+    "fields": {
+      "name": "search",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimode",
+    "pk": "58800397-91a5-4398-b935-5f227256b1c1",
+    "fields": {
+      "name": "realtime",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimode",
+    "pk": "15b38302-3c91-419a-9808-11d1f68a1a39",
+    "fields": {
+      "name": "video_generation",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimode",
+    "pk": "c01e72d2-c6da-4afc-936d-eb7ad7747244",
+    "fields": {
+      "name": "moderation",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimode",
+    "pk": "19ae382b-7e1f-44cc-b8bf-50c59f9a2264",
+    "fields": {
+      "name": "vector_store",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimode",
+    "pk": "9983f92c-bb69-48b9-a279-1b15dc7e455f",
+    "fields": {
+      "name": "chat",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimode",
+    "pk": "189bc4ba-8a69-4e46-88b5-12456ea39bc6",
+    "fields": {
+      "name": "embedding",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimode",
+    "pk": "a99247d7-c312-4526-a4ac-6c632e18dcf9",
+    "fields": {
+      "name": "rerank",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimode",
+    "pk": "0b274a0b-cac6-4e5a-9e11-870453e6b5f8",
+    "fields": {
+      "name": "audio_transcription",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimode",
+    "pk": "89693d06-9230-482f-b6a7-1d90b6d6e7b3",
+    "fields": {
+      "name": "responses",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimode",
+    "pk": "454427e8-5172-405f-bed8-8feda8314c3d",
+    "fields": {
+      "name": "completion",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimode",
+    "pk": "69bfad36-6461-4956-8d1e-b2f1cdd19a44",
+    "fields": {
+      "name": "audio_speech",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimode",
+    "pk": "1aede3cb-fbdb-40ba-9788-514e691cbea8",
+    "fields": {
+      "name": "ocr",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "f541008c-17c0-4459-9264-da9d0b580714",
+    "fields": {
+      "name": "system_messages",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "198cbb89-3b66-46cd-a3f0-f86270be4b05",
+    "fields": {
+      "name": "image_input",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "7a448b91-9905-468a-b2a3-229a98eab180",
+    "fields": {
+      "name": "audio_input",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "756ee6ac-7b0c-49dd-b1b8-e5b6232a9b68",
+    "fields": {
+      "name": "assistant_prefill",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "b744acaf-4149-44c4-af58-cecb426b767c",
+    "fields": {
+      "name": "tool_choice",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "2950d075-4957-4e5e-a585-708ef7b9908a",
+    "fields": {
+      "name": "computer_use",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "8683fc1b-305b-44e6-af81-4b24acfa03d3",
+    "fields": {
+      "name": "native_streaming",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "f8cdf00a-f9e2-4d5d-850e-2bdd9ecca389",
+    "fields": {
+      "name": "parallel_function_calling",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "7d8b47a4-c5b3-4270-b4ce-ebab243bb6a3",
+    "fields": {
+      "name": "audio_output",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "a51a69a7-e1ea-43fc-a1e5-9bab6917991d",
+    "fields": {
+      "name": "none_reasoning_effort",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "6e6ddcf9-1528-4ede-bd61-fa1337e88c76",
+    "fields": {
+      "name": "service_tier",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "b69bd18f-80d5-42a2-87d3-60d4739d5c19",
+    "fields": {
+      "name": "function_calling",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "57201af0-c0c4-4171-9896-284f40a417fe",
+    "fields": {
+      "name": "minimal_reasoning_effort",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "aad428ea-4355-4aee-a0e7-a7b30309c218",
+    "fields": {
+      "name": "web_search",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "ffef8a78-bce4-4269-8641-8b74696fedae",
+    "fields": {
+      "name": "url_context",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "b99d805e-a498-4dc9-82f8-6048380e8eac",
+    "fields": {
+      "name": "code_execution",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "2e9fca6c-851a-4c7c-96cf-94b4033289dd",
+    "fields": {
+      "name": "file_search",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "b5d6d15e-8ea2-4571-82b6-1337365b688a",
+    "fields": {
+      "name": "multimodal",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "cc184bab-902c-42a0-8391-74fa76d85cb2",
+    "fields": {
+      "name": "xhigh_reasoning_effort",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "69de2826-71f2-4223-9283-c5c38a0e562e",
+    "fields": {
+      "name": "preset",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "6e6ca26f-62b4-4313-a282-a4c0cfd96975",
+    "fields": {
+      "name": "pdf_input",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "5d4d90b8-86cb-41e1-9e5a-466112dcd963",
+    "fields": {
+      "name": "prompt_caching",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "b9aea8f8-910c-4507-a906-010d490790b5",
+    "fields": {
+      "name": "response_schema",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "a72a951c-9857-488a-95fa-2dc48185e96f",
+    "fields": {
+      "name": "vision",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "01ede989-d783-4c5f-b0ee-0be65c5abb2f",
+    "fields": {
+      "name": "reasoning",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "01644a5f-5e10-4e16-80a5-ae5dd4095c99",
+    "fields": {
+      "name": "video_input",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcapabilities",
+    "pk": "2c08a5df-b33c-4a7d-ae84-576e72345519",
+    "fields": {
+      "name": "embedding_image_input",
+      "description": null
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "fd52a828-5a3e-405d-b1d8-5071ed523c23",
+    "fields": {
+      "name": "Meta",
+      "description": "Meta AI (formerly Facebook)"
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "a661958d-eb75-473e-8d5b-5c60e6fb8671",
+    "fields": {
+      "name": "Black Forest Labs",
+      "description": "Creators of the FLUX image generation models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "d98b3d2e-1feb-4680-b970-69ad12c09d71",
+    "fields": {
+      "name": "Bria AI",
+      "description": "Commercial visual generative AI platform."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "39983fd3-4b8b-4947-abb4-aad9c85016ce",
+    "fields": {
+      "name": "Nomic AI",
+      "description": "Creators of nomic-embed-text embedding models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "c48837be-90ca-48b1-8983-6d375cf87ac4",
+    "fields": {
+      "name": "Cohere",
+      "description": "Enterprise AI company. Creators of Command and Embed models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "cce0d084-9dfc-41fa-8446-a3a8acec32ad",
+    "fields": {
+      "name": "IBM",
+      "description": "IBM Research. Creators of the Granite model family."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "f670f9c5-61aa-43ba-acef-fdcc4a1f114e",
+    "fields": {
+      "name": "NousResearch",
+      "description": "Open-source AI research lab. Creators of Hermes models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "99403886-964b-451e-9141-cad7f466c1a0",
+    "fields": {
+      "name": "NVIDIA",
+      "description": "Creators of Nemotron models for enterprise AI."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "6bac30b1-7e9a-4716-bf00-47cddea90f37",
+    "fields": {
+      "name": "Zhipu AI",
+      "description": "Chinese AI lab. Creators of the GLM model family."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "bb04fc24-d028-456d-88b4-7db457ff7fc4",
+    "fields": {
+      "name": "BigCode",
+      "description": "Open-source project. Creators of StarCoder models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "5b536db6-9b76-40b4-9917-cc89c4a377b2",
+    "fields": {
+      "name": "Moonshot",
+      "description": "Chinese AI lab. Creators of Kimi models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "da15ff1f-020a-427c-be45-f28ab670ea38",
+    "fields": {
+      "name": "Alibaba",
+      "description": "Alibaba Cloud"
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "6a8a8014-926e-45e6-b192-3ddf3f00fc64",
+    "fields": {
+      "name": "BAAI",
+      "description": "Beijing Academy of AI. Creators of BGE embedding models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "b43d3100-6f58-41a2-9d4d-e3afaf18ba62",
+    "fields": {
+      "name": "Snowflake",
+      "description": "Creators of Arctic embedding models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "04234b59-dbb8-4238-97aa-a4915071c717",
+    "fields": {
+      "name": "MiniMax",
+      "description": "Chinese AI company. Creators of MiniMax language models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "4e8db9b9-beae-49fd-a4ce-54da98f53f9a",
+    "fields": {
+      "name": "Allen AI",
+      "description": "Allen Institute for AI. Creators of OLMo models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "014f1b99-73c7-4e38-9373-b7916cb0fe12",
+    "fields": {
+      "name": "LG AI Research",
+      "description": "Creators of EXAONE models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "e68dc1c7-d132-4305-a4ab-2734f7f43aea",
+    "fields": {
+      "name": "Databricks",
+      "description": "Creators of DBRX."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "c96e8a12-9716-4032-8c6c-b226f2cd6c28",
+    "fields": {
+      "name": "DeepCogito",
+      "description": "Creators of Cogito reasoning models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "726d2e3e-cab4-416b-a760-462378be3f6f",
+    "fields": {
+      "name": "Liquid AI",
+      "description": "Creators of LFM hybrid models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "48741bbc-9a5a-4752-8b6e-f913c2a2f4a0",
+    "fields": {
+      "name": "Perplexity",
+      "description": "AI search company. Creators of Sonar models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "69242882-2200-4537-b43f-b18342c2487f",
+    "fields": {
+      "name": "Essential AI",
+      "description": "Creators of RNJ models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "8e4c96a3-8a8f-4892-9a92-9c902f5ee06f",
+    "fields": {
+      "name": "Mistral AI",
+      "description": "Mistral AI"
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "db082656-7f3f-4e0f-924e-2faf61a8aae3",
+    "fields": {
+      "name": "Mixedbread AI",
+      "description": "Creators of mxbai embedding models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "19881650-5dfb-400b-aedb-c6dac0dbd82f",
+    "fields": {
+      "name": "Upstage",
+      "description": "Creators of Solar models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "5fee39f3-33e0-42af-81d6-efcff1bcf12f",
+    "fields": {
+      "name": "TII",
+      "description": "Technology Innovation Institute. Creators of Falcon models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "c477bc0f-d22d-4eed-a895-d5ec8e2c1ba5",
+    "fields": {
+      "name": "Eric Hartford",
+      "description": "Independent researcher. Creator of Dolphin fine-tunes."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "535c5295-6ce7-4b4b-9a87-6d84ecae0239",
+    "fields": {
+      "name": "StepFun",
+      "description": "Chinese AI company. Creators of Step models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "3c557a45-f788-4dbb-808c-bbbd76a8e201",
+    "fields": {
+      "name": "ByteDance",
+      "description": "Creators of Seed and Doubao models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "07c7d61e-f716-483b-8be5-09ca4b23c965",
+    "fields": {
+      "name": "OpenAI",
+      "description": "OpenAI"
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "9dc05dbc-4bce-4665-ab72-20862c44852b",
+    "fields": {
+      "name": "Google",
+      "description": "Google DeepMind"
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "bff14536-b27b-4746-8f03-c281217acd16",
+    "fields": {
+      "name": "Anthropic",
+      "description": "Anthropic"
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "16a6109e-2d48-4713-a452-5737c2a8902f",
+    "fields": {
+      "name": "DeepSeek",
+      "description": "DeepSeek AI"
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "5a8e1720-02e2-44b3-9774-5aae9e3ce33d",
+    "fields": {
+      "name": "Microsoft",
+      "description": "Microsoft Research"
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelcreator",
+    "pk": "449fa962-1934-4a3f-9179-df4609cf5197",
+    "fields": {
+      "name": "xAI",
+      "description": "xAI"
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "8bd7fd47-46d7-4553-9557-26a971eccc0f",
+    "fields": {
+      "name": "Llama",
+      "slug": "llama",
+      "description": "Meta's open-source large language model family. Ranges from 1B to 405B parameters. Known for strong instruction following, multilingual support, and tool use. The most widely deployed open model family in the world. Llama 3.2 introduced compact 1B/3B models; Llama 3.1 scaled to 405B; Llama 4 added MoE architecture with vision."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "21c8f259-0c29-49ea-9f4b-cf9828babda0",
+    "fields": {
+      "name": "Nomic Embed",
+      "slug": "nomic-embed",
+      "description": "Nomic AI's open embedding models. Produce 768-dimensional vectors with large token context windows. The default embedding engine for Are-Self's Hippocampus memory system."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "6fbe35f8-d1bb-4fdb-a087-985addc1a603",
+    "fields": {
+      "name": "GPT-OSS",
+      "slug": "gpt-oss",
+      "description": "OpenAI's open-weight models. Designed for powerful reasoning, agentic tasks, and versatile developer use cases. Available in 20B and 120B sizes with tool use and thinking support."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "7b3f520f-5988-4108-bfb6-0064bcdc13e5",
+    "fields": {
+      "name": "GLM",
+      "slug": "glm",
+      "description": "Zhipu AI's General Language Model family. Strong multilingual performance with thinking and tool support. GLM-4.7 Flash is the strongest in the 30B class, balancing performance and efficiency."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "1385954f-4402-49f5-a30d-9a7412d1cb68",
+    "fields": {
+      "name": "Command",
+      "slug": "command",
+      "description": "Cohere's enterprise language models. Optimized for conversational interaction, retrieval-augmented generation, and long context tasks. Strong tool use capabilities."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "bbdda411-63ef-411c-99dc-f6938e3e2f4c",
+    "fields": {
+      "name": "Granite",
+      "slug": "granite",
+      "description": "IBM's enterprise foundation models for code and language. Designed for tool-based use cases, RAG, and code intelligence. Available in dense and MoE architectures."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "5c984b16-b641-4dbe-89b2-e2eca77936ac",
+    "fields": {
+      "name": "CodeLlama",
+      "slug": "codellama",
+      "description": "Meta's code-specialized Llama models. Trained on code-heavy datasets for generation, completion, and code discussion. Available from 7B to 70B."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "7f4da3b7-0ebb-4f29-925b-00c30825e941",
+    "fields": {
+      "name": "Hermes",
+      "slug": "hermes",
+      "description": "NousResearch's instruction-tuned models. General purpose with strong tool use. Built on various base models (Llama, Mixtral) with high-quality training data."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "fd0f3f4e-3f6e-454e-99e5-6681705aebc1",
+    "fields": {
+      "name": "Dolphin",
+      "slug": "dolphin",
+      "description": "Eric Hartford's uncensored fine-tunes. General purpose local models enabling coding, math, agentic tasks, and function calling without alignment restrictions."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "603e1b04-600b-497f-9cc9-1d6e21cfb3a2",
+    "fields": {
+      "name": "StarCoder",
+      "slug": "starcoder",
+      "description": "BigCode's open code generation models. Trained transparently on permissive-licensed code. Available from 3B to 15B parameters."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "36f5077b-e653-4435-9c7c-0c0ed246274a",
+    "fields": {
+      "name": "LLaVA",
+      "slug": "llava",
+      "description": "Large Language and Vision Assistant. End-to-end trained multimodal models combining vision encoders with language models for general-purpose visual and language understanding."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "cfbd9eb9-a378-493a-a659-f8a475753ec9",
+    "fields": {
+      "name": "Qwen",
+      "slug": "qwen",
+      "description": "Alibaba's multilingual large language model family. Pretrained on up to 18 trillion tokens. Supports 128K context with strong performance across English, Chinese, and many other languages. Known for excellent coding, math, and reasoning capabilities."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "fd8928b4-0ff9-4189-b5df-80086b82d654",
+    "fields": {
+      "name": "Falcon",
+      "slug": "falcon",
+      "description": "Technology Innovation Institute's open language models. Designed for summarization, text generation, and conversational use. Available from 7B to 180B."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "997ecc75-6740-4132-9682-651b992a76f8",
+    "fields": {
+      "name": "Nemotron",
+      "slug": "nemotron",
+      "description": "NVIDIA's enterprise-grade language models. Customized for helpfulness in enterprise applications. Strong tool use and instruction following."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "fd092330-4d6c-485f-804b-f7f3e00dc183",
+    "fields": {
+      "name": "Codestral",
+      "slug": "codestral",
+      "description": "Mistral AI's first dedicated code generation model. 22B parameters optimized specifically for code tasks."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "c1780486-befa-4f92-9610-2d889774dfd2",
+    "fields": {
+      "name": "Devstral",
+      "slug": "devstral",
+      "description": "Mistral AI's model for software engineering agents. Excels at codebase exploration, multi-file editing, and powering coding agents."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "731fe51d-12c6-442c-855f-60e4d858e4a5",
+    "fields": {
+      "name": "Magistral",
+      "slug": "magistral",
+      "description": "Mistral AI's reasoning model. Small, efficient 24B model with thinking token support for complex reasoning tasks."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "c0abdf05-f236-4628-8e20-652bbbf540b8",
+    "fields": {
+      "name": "Ministral",
+      "slug": "ministral",
+      "description": "Mistral AI's edge deployment family. Designed for wide hardware compatibility including mobile and IoT devices. Vision and tool capable."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "b848ad9a-9b8f-4cc5-beb4-24af181dd460",
+    "fields": {
+      "name": "Yi",
+      "slug": "yi",
+      "description": "01.AI's bilingual language models. High-performing in English and Chinese."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "2d7ebb0e-d476-4a01-b293-2a595420c94f",
+    "fields": {
+      "name": "Vicuna",
+      "slug": "vicuna",
+      "description": "UC Berkeley's chat model based on Llama. One of the earliest high-quality open chat models, trained on user-shared conversations."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "e3207594-1b2b-410b-a0bb-63e82788bdf0",
+    "fields": {
+      "name": "Cogito",
+      "slug": "cogito",
+      "description": "DeepCogito's hybrid reasoning models. Outperform counterparts from Llama, DeepSeek, and Qwen at similar sizes across standard benchmarks."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "00006ac5-0a16-4a1e-b7c1-a94cfe980a7c",
+    "fields": {
+      "name": "QwQ",
+      "slug": "qwq",
+      "description": "Qwen's dedicated reasoning model. Uses extended thinking tokens for complex problem-solving with tool use support."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "c1394fb5-de58-4de5-8e07-65edac55d919",
+    "fields": {
+      "name": "Qwen Coder",
+      "slug": "qwen-coder",
+      "description": "Code-specialized Qwen models optimized for code generation, reasoning, fixing, and agentic coding workflows. Support function calling and long context for repository-scale understanding."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "43f8760c-631e-41d0-9e79-d04cbbeec293",
+    "fields": {
+      "name": "Solar",
+      "slug": "solar",
+      "description": "Upstage's compact language models. Designed for single-turn conversation and efficient deployment."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "3e6cf2ce-8dcd-4cf3-99a9-b548facc07d4",
+    "fields": {
+      "name": "BGE",
+      "slug": "bge",
+      "description": "BAAI's embedding models. Versatile multi-functionality, multi-linguality, and multi-granularity for retrieval tasks."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "cef3b002-1221-4149-9545-8af090abef08",
+    "fields": {
+      "name": "Snowflake Arctic",
+      "slug": "snowflake-arctic",
+      "description": "Snowflake's text embedding models. Optimized for enterprise retrieval performance across multiple sizes."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "4cc586ae-e6da-4bda-a46b-70aa1e653bbe",
+    "fields": {
+      "name": "mxbai",
+      "slug": "mxbai",
+      "description": "Mixedbread AI's embedding models. State-of-the-art large embeddings for semantic search and retrieval."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "e804cd06-ec73-4ed1-bb3a-c8025f644da3",
+    "fields": {
+      "name": "OLMo",
+      "slug": "olmo",
+      "description": "Allen Institute for AI's open language models. Designed to enable the science of language models with fully open data, code, and training recipes."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "5b3a245d-f821-49f1-9d2c-8098f9a3460f",
+    "fields": {
+      "name": "DBRX",
+      "slug": "dbrx",
+      "description": "Databricks' open general-purpose MoE model. 132B total parameters designed for enterprise use."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "2738ad7c-5214-4dab-9c9a-432db4e770de",
+    "fields": {
+      "name": "EXAONE",
+      "slug": "exaone",
+      "description": "LG AI Research's bilingual models. Strong in English and Korean with excellent reasoning and coding capabilities."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "9e9df19e-4374-4e3b-ab7b-3beebaee77d9",
+    "fields": {
+      "name": "Kimi",
+      "slug": "kimi",
+      "description": "Moonshot AI's multimodal and reasoning models. MoE architecture with strong coding agent performance."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "c8b51de1-2514-45ae-9d2d-662f2442838c",
+    "fields": {
+      "name": "MiniMax",
+      "slug": "minimax",
+      "description": "MiniMax's language models for coding, agentic workflows, and professional productivity."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "61744911-df4a-4848-972f-25db355bcb68",
+    "fields": {
+      "name": "LFM",
+      "slug": "lfm",
+      "description": "Liquid AI's hybrid models for edge deployment. Designed for efficient on-device inference."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "79f9186f-ee96-489c-94d1-147d61c6b4a7",
+    "fields": {
+      "name": "Gemma",
+      "slug": "gemma",
+      "description": "Google DeepMind's lightweight open models. Efficient and capable, designed to run well on consumer hardware including laptops and phones. Gemma 3 added vision capabilities and 128K context."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "25cb9437-64ef-4b5c-989e-001f4cbead6c",
+    "fields": {
+      "name": "SmolLM",
+      "slug": "smollm",
+      "description": "HuggingFace's compact models. Tiny models (135M-1.7B) for edge devices, trained on high-quality curated data."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "07e80777-bf61-4364-9890-6aa6e7926555",
+    "fields": {
+      "name": "Qwen VL",
+      "slug": "qwen-vl",
+      "description": "Qwen's vision-language models. Process images and video alongside text with strong visual understanding and reasoning capabilities."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "a5316e6b-0440-4bb3-b0a1-414c67f06e9a",
+    "fields": {
+      "name": "InternLM",
+      "slug": "internlm",
+      "description": "Shanghai AI Lab's open language models. Outstanding reasoning capability in compact sizes."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "07a405c9-97dc-42a0-a5a9-a4cac4e0ec4d",
+    "fields": {
+      "name": "CodeGemma",
+      "slug": "codegemma",
+      "description": "Google's code-specialized Gemma models. Code completion, generation, and mathematical reasoning."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "410afd77-2872-4b11-936c-2da29cf042f4",
+    "fields": {
+      "name": "OpenThinker",
+      "slug": "openthinker",
+      "description": "Open-source reasoning models built by distilling DeepSeek-R1's chain-of-thought capabilities into smaller models."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "eefc5f70-1e94-4524-b70e-6c1d4de30c2f",
+    "fields": {
+      "name": "Mistral",
+      "slug": "mistral",
+      "description": "Mistral AI's core model family. Strong multilingual performance with efficient architectures. Known for excellent instruction following and tool use at compact sizes."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "5e459953-a4ce-4d2c-8820-2a651c279a2d",
+    "fields": {
+      "name": "Mixtral",
+      "slug": "mixtral",
+      "description": "Mistral's Mixture-of-Experts models. Multiple expert networks activated selectively for high throughput and quality. Available in 8x7B and 8x22B configurations."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "030c4179-9567-4843-adac-53b27fb0660e",
+    "fields": {
+      "name": "Phi",
+      "slug": "phi",
+      "description": "Microsoft Research's small language models. Demonstrate that carefully curated training data can produce models that punch well above their weight class in reasoning, math, and coding."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "191871de-e852-4b53-b409-ad00c6e8b133",
+    "fields": {
+      "name": "DeepSeek",
+      "slug": "deepseek",
+      "description": "DeepSeek's open reasoning and coding models. The R1 series uses chain-of-thought thinking tokens and approaches frontier model performance on math, logic, and code. The V3 series uses MoE with 671B total parameters."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelfamily",
+    "pk": "2c1cfb2e-cdb4-4a1b-ae1b-f555de0107f7",
+    "fields": {
+      "name": "DeepSeek Coder",
+      "slug": "deepseek-coder",
+      "description": "DeepSeek's code-specialized models. Trained on 2 trillion code and natural language tokens. Strong code generation and understanding across many programming languages."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelquantization",
+    "pk": "77f4bd13-d5e8-44ec-a32c-decc136d0321",
+    "fields": {
+      "name": "fp16",
+      "description": "16-bit floating point (standard unquantized)."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelquantization",
+    "pk": "2e18a9fe-f7a4-4f04-9cc1-73d82576fa48",
+    "fields": {
+      "name": "fp8",
+      "description": "8-bit floating point."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelquantization",
+    "pk": "08d9338b-4732-4828-9d0c-bce2c9a4d26a",
+    "fields": {
+      "name": "awq",
+      "description": "Activation-aware Weight Quantization."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelquantization",
+    "pk": "338472e5-cb06-43c6-ade4-00c84a4ff32a",
+    "fields": {
+      "name": "gptq",
+      "description": "Accurate Post-Training Quantization."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelquantization",
+    "pk": "84eaba34-7d15-4e6e-bd7c-43ed42f897bf",
+    "fields": {
+      "name": "gguf",
+      "description": "Standard format for local CPU/GPU inference via llama.cpp."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelrole",
+    "pk": "46a83ec0-0c7f-4d91-a0f3-db05fb21a07c",
+    "fields": {
+      "name": "Instruct",
+      "description": "Instruction-tuned for dialogue and tasks."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelrole",
+    "pk": "da0cd250-438e-4cbf-89bf-741eabe00892",
+    "fields": {
+      "name": "Chat",
+      "description": "Optimized for conversational back-and-forth."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelrole",
+    "pk": "c30284fb-e78c-4ec8-8835-90004032ade0",
+    "fields": {
+      "name": "Coder",
+      "description": "Fine-tuned specifically on programming languages."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelrole",
+    "pk": "1c6cfa89-a76d-482a-873e-29414caef912",
+    "fields": {
+      "name": "Reasoning",
+      "description": "Uses chain-of-thought or thinking tokens before replying."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelrole",
+    "pk": "c1c7b15d-ec41-4a99-9811-db050b6bf4aa",
+    "fields": {
+      "name": "Embedding",
+      "description": "Converts text into mathematical vectors."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelrole",
+    "pk": "b02d9f14-ee03-4a15-9525-d3a7ccd7c3f0",
+    "fields": {
+      "name": "Multimodal",
+      "description": "Handles vision, audio, or video inputs alongside text."
+    }
+  },
+  {
+    "model": "hypothalamus.aimodelrole",
+    "pk": "2f24c5d5-a6a0-4641-9953-e80ff5931552",
+    "fields": {
+      "name": "Uncensored",
+      "description": "Alignment and safety guardrails removed."
+    }
+  },
+  {
+    "model": "hypothalamus.failoverstrategy",
+    "pk": "1cf05787-33d7-4052-8b98-29f77fb6658c",
+    "fields": {
+      "name": "Standard Cloud",
+      "description": "Standard API routing with semantic fallback."
+    }
+  },
+  {
+    "model": "hypothalamus.failoverstrategy",
+    "pk": "eec95334-0fae-4af7-90d5-75528955a084",
+    "fields": {
+      "name": "Local First",
+      "description": "Prioritize free local models before touching the cloud."
+    }
+  },
+  {
+    "model": "hypothalamus.failoverstrategy",
+    "pk": "89094016-922d-43be-98f3-bf96b5daa18e",
+    "fields": {
+      "name": "Strict Requirement",
+      "description": "Do not deviate from the requested model family."
+    }
+  },
+  {
+    "model": "hypothalamus.failoverstrategystep",
+    "pk": "2e17edf5-60ec-472f-9408-3d8d9289623f",
+    "fields": {
+      "strategy": "1cf05787-33d7-4052-8b98-29f77fb6658c",
+      "failover_type": "08b347fb-ab08-4735-8455-b4d57662bad1",
+      "order": 2
+    }
+  },
+  {
+    "model": "hypothalamus.failoverstrategystep",
+    "pk": "89f7080a-c3ba-49f9-8f0c-ffdd2cb75084",
+    "fields": {
+      "strategy": "1cf05787-33d7-4052-8b98-29f77fb6658c",
+      "failover_type": "d5592b7d-10db-4d6a-9b10-7b5be64854c0",
+      "order": 3
+    }
+  },
+  {
+    "model": "hypothalamus.failoverstrategystep",
+    "pk": "3fd473e0-d808-4c9f-a0f4-029b2f36aa68",
+    "fields": {
+      "strategy": "eec95334-0fae-4af7-90d5-75528955a084",
+      "failover_type": "8a3d2956-9f20-4a3a-9fac-088ef3ff583a",
+      "order": 1
+    }
+  },
+  {
+    "model": "hypothalamus.failoverstrategystep",
+    "pk": "60614efb-572e-45b1-ab3c-d4b938666317",
+    "fields": {
+      "strategy": "eec95334-0fae-4af7-90d5-75528955a084",
+      "failover_type": "08b347fb-ab08-4735-8455-b4d57662bad1",
+      "order": 2
+    }
+  },
+  {
+    "model": "hypothalamus.failoverstrategystep",
+    "pk": "3532e435-204e-4e7a-a106-5cb108775407",
+    "fields": {
+      "strategy": "eec95334-0fae-4af7-90d5-75528955a084",
+      "failover_type": "d5592b7d-10db-4d6a-9b10-7b5be64854c0",
+      "order": 3
+    }
+  },
+  {
+    "model": "hypothalamus.failoverstrategystep",
+    "pk": "13f5b3f3-3c44-43eb-90fe-117f0595a9ea",
+    "fields": {
+      "strategy": "89094016-922d-43be-98f3-bf96b5daa18e",
+      "failover_type": "c50e2d14-fab1-453d-9c91-e8c6e756610b",
+      "order": 1
+    }
+  },
+  {
+    "model": "hypothalamus.failoverstrategystep",
+    "pk": "046b2ceb-9005-4859-870c-32011e0bc32e",
+    "fields": {
+      "strategy": "89094016-922d-43be-98f3-bf96b5daa18e",
+      "failover_type": "d5592b7d-10db-4d6a-9b10-7b5be64854c0",
+      "order": 2
+    }
+  },
+  {
+    "model": "hypothalamus.failoverstrategystep",
+    "pk": "f1c9d0bd-25b6-4602-8251-ac4e908e3e8a",
+    "fields": {
+      "strategy": "1cf05787-33d7-4052-8b98-29f77fb6658c",
+      "failover_type": "c50e2d14-fab1-453d-9c91-e8c6e756610b",
+      "order": 1
+    }
+  },
+  {
+    "model": "hypothalamus.failovertype",
+    "pk": "8a3d2956-9f20-4a3a-9fac-088ef3ff583a",
+    "fields": {
+      "name": "Local Fallback",
+      "description": "Attempt to route to a verified local Ollama model."
+    }
+  },
+  {
+    "model": "hypothalamus.failovertype",
+    "pk": "c50e2d14-fab1-453d-9c91-e8c6e756610b",
+    "fields": {
+      "name": "Family Failover",
+      "description": "Attempt to route to a sibling model in the same family."
+    }
+  },
+  {
+    "model": "hypothalamus.failovertype",
+    "pk": "08b347fb-ab08-4735-8455-b4d57662bad1",
+    "fields": {
+      "name": "Semantic Vector Search",
+      "description": "Use Hypothalamus pgvector to find the closest conceptual match."
+    }
+  },
+  {
+    "model": "hypothalamus.failovertype",
+    "pk": "d5592b7d-10db-4d6a-9b10-7b5be64854c0",
+    "fields": {
+      "name": "Strict Fail",
+      "description": "Halt execution and return a routing error."
+    }
+  },
+  {
+    "model": "hypothalamus.llmprovider",
+    "pk": "2d1e9817-679c-4ff3-a39e-f80114646f56",
+    "fields": {
+      "created": "2026-03-23T17:34:10.978Z",
+      "modified": "2026-03-25T00:20:23.879Z",
+      "name": "Ollama",
+      "description": "Local model inference via Ollama. Free, private, runs on consumer hardware.",
+      "key": "ollama",
+      "base_url": "http://localhost:11434",
+      "chat_path": "/v1/chat/completions",
+      "requires_api_key": false,
+      "api_key_header": "Authorization",
+      "api_key_env_var": "HOME"
+    }
+  },
+  {
+    "model": "hypothalamus.syncstatus",
+    "pk": "d5f70087-3690-4c3d-b03a-35d04a9846c0",
+    "fields": {
+      "name": "Running"
+    }
+  },
+  {
+    "model": "hypothalamus.syncstatus",
+    "pk": "87a8b8f9-63e1-4f7b-933a-a7e51bb786e6",
+    "fields": {
+      "name": "Success"
+    }
+  },
+  {
+    "model": "hypothalamus.syncstatus",
+    "pk": "8c55e942-09ac-4e96-b086-a54838d099ef",
+    "fields": {
+      "name": "Failed"
+    }
+  }
+]

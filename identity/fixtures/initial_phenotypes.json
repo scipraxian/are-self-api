@@ -1,0 +1,204 @@
+[
+  {
+    "model": "identity.identity",
+    "pk": "59189dba-0253-4577-85b4-f20c166c4e85",
+    "fields": {
+      "created": "2026-03-27T19:08:48.311Z",
+      "modified": "2026-03-27T19:11:37.103Z",
+      "delta": "00:02:48.792118",
+      "name": "Steve",
+      "identity_type": 2,
+      "system_prompt_template": "",
+      "category": null,
+      "selection_filter": "84d97568-3863-4e0a-aa79-bfacdf581bd1",
+      "tags": [
+        2
+      ],
+      "addons": [
+        2,
+        3,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "enabled_tools": [
+        "36151a8b-3c82-4a61-8a7f-b1392b1fb81c",
+        "1fe2d9dd-0b59-4caf-aa24-3ff09f17a6d9",
+        "d26a121e-cade-4f83-80a8-44947c4115ab",
+        "2479e316-4277-4d4c-8ed9-44be01142fe4",
+        "5cb73221-3a7a-4e49-9342-bb3f7021c6f1",
+        "03811f75-517a-4de4-8420-8fda7481c6cf",
+        "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
+        "a5034848-16a9-4648-90b7-b13d3bc00792",
+        "8f80e108-0e43-4509-8c4c-d1259f393ad7",
+        "ec21f60f-93be-4ec9-8ac4-6253e2fed735",
+        "abacd3a1-bcf1-4236-8b5c-7a39d37de0eb",
+        "d3138f37-1df1-42e9-b0fb-75ca21aaeb73",
+        "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
+        "c4ef2e80-59b7-49cd-86cc-1e988db9976e",
+        "63db5e88-e3a3-4c1f-9df0-42eac3fbc522"
+      ]
+    }
+  },
+  {
+    "model": "identity.identity",
+    "pk": "8a1b03d5-cb30-4298-b6dd-a5973e6b7914",
+    "fields": {
+      "created": "2026-03-01T16:45:51.822Z",
+      "modified": "2026-03-27T19:11:20.859Z",
+      "delta": "26 02:25:29.037071",
+      "name": "Jessica",
+      "identity_type": 1,
+      "system_prompt_template": "",
+      "category": null,
+      "selection_filter": "84d97568-3863-4e0a-aa79-bfacdf581bd1",
+      "tags": [
+        1
+      ],
+      "addons": [
+        2,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "enabled_tools": [
+        "36151a8b-3c82-4a61-8a7f-b1392b1fb81c",
+        "1fe2d9dd-0b59-4caf-aa24-3ff09f17a6d9",
+        "d26a121e-cade-4f83-80a8-44947c4115ab",
+        "2479e316-4277-4d4c-8ed9-44be01142fe4",
+        "5cb73221-3a7a-4e49-9342-bb3f7021c6f1",
+        "03811f75-517a-4de4-8420-8fda7481c6cf",
+        "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
+        "a5034848-16a9-4648-90b7-b13d3bc00792",
+        "8f80e108-0e43-4509-8c4c-d1259f393ad7",
+        "ec21f60f-93be-4ec9-8ac4-6253e2fed735",
+        "abacd3a1-bcf1-4236-8b5c-7a39d37de0eb",
+        "d3138f37-1df1-42e9-b0fb-75ca21aaeb73",
+        "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
+        "c4ef2e80-59b7-49cd-86cc-1e988db9976e",
+        "63db5e88-e3a3-4c1f-9df0-42eac3fbc522"
+      ]
+    }
+  },
+  {
+    "model": "identity.identitydisc",
+    "pk": "0db0d16e-8c98-48a5-8ef4-38a86579a4b2",
+    "fields": {
+      "created": "2026-03-27T19:14:35.734Z",
+      "modified": "2026-03-27T20:41:51.331Z",
+      "delta": "01:27:15.596452",
+      "name": "Jessica [Program]",
+      "identity_type": 1,
+      "system_prompt_template": "",
+      "category": null,
+      "selection_filter": "84d97568-3863-4e0a-aa79-bfacdf581bd1",
+      "available": true,
+      "last_message_to_self": "",
+      "level": 1,
+      "xp": 0,
+      "successes": 0,
+      "failures": 0,
+      "last_turn": null,
+      "timeouts": 0,
+      "tags": [
+        1
+      ],
+      "addons": [
+        2,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "enabled_tools": [
+        "36151a8b-3c82-4a61-8a7f-b1392b1fb81c",
+        "1fe2d9dd-0b59-4caf-aa24-3ff09f17a6d9",
+        "d26a121e-cade-4f83-80a8-44947c4115ab",
+        "2479e316-4277-4d4c-8ed9-44be01142fe4",
+        "5cb73221-3a7a-4e49-9342-bb3f7021c6f1",
+        "03811f75-517a-4de4-8420-8fda7481c6cf",
+        "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
+        "a5034848-16a9-4648-90b7-b13d3bc00792",
+        "8f80e108-0e43-4509-8c4c-d1259f393ad7",
+        "ec21f60f-93be-4ec9-8ac4-6253e2fed735",
+        "abacd3a1-bcf1-4236-8b5c-7a39d37de0eb",
+        "d3138f37-1df1-42e9-b0fb-75ca21aaeb73",
+        "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
+        "c4ef2e80-59b7-49cd-86cc-1e988db9976e",
+        "63db5e88-e3a3-4c1f-9df0-42eac3fbc522"
+      ],
+      "memories": []
+    }
+  },
+  {
+    "model": "identity.identitydisc",
+    "pk": "108f68c7-88f3-43cd-a94e-33d1c866fccc",
+    "fields": {
+      "created": "2026-03-27T19:14:40.060Z",
+      "modified": "2026-03-28T16:08:52.791Z",
+      "delta": "20:54:12.730759",
+      "name": "Steve [Program]",
+      "identity_type": 2,
+      "system_prompt_template": "",
+      "category": null,
+      "selection_filter": "84d97568-3863-4e0a-aa79-bfacdf581bd1",
+      "available": true,
+      "last_message_to_self": "",
+      "level": 1,
+      "xp": 0,
+      "successes": 0,
+      "failures": 0,
+      "last_turn": null,
+      "timeouts": 0,
+      "tags": [
+        2
+      ],
+      "addons": [
+        2,
+        3,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "enabled_tools": [
+        "36151a8b-3c82-4a61-8a7f-b1392b1fb81c",
+        "1fe2d9dd-0b59-4caf-aa24-3ff09f17a6d9",
+        "d26a121e-cade-4f83-80a8-44947c4115ab",
+        "2479e316-4277-4d4c-8ed9-44be01142fe4",
+        "5cb73221-3a7a-4e49-9342-bb3f7021c6f1",
+        "03811f75-517a-4de4-8420-8fda7481c6cf",
+        "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
+        "a5034848-16a9-4648-90b7-b13d3bc00792",
+        "8f80e108-0e43-4509-8c4c-d1259f393ad7",
+        "ec21f60f-93be-4ec9-8ac4-6253e2fed735",
+        "abacd3a1-bcf1-4236-8b5c-7a39d37de0eb",
+        "d3138f37-1df1-42e9-b0fb-75ca21aaeb73",
+        "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
+        "c4ef2e80-59b7-49cd-86cc-1e988db9976e",
+        "63db5e88-e3a3-4c1f-9df0-42eac3fbc522"
+      ],
+      "memories": []
+    }
+  }
+]
