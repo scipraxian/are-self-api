@@ -6,7 +6,7 @@ from common.constants import ALL_FIELDS
 from frontal_lobe.models import (
     ReasoningSession,
     ReasoningTurn,
-    SessionConclusion,
+    ReasoningTurnDigest,
 )
 from hippocampus.models import Engram
 from hypothalamus.serializers import AIModelProviderUsageRecordSerializer
@@ -73,14 +73,6 @@ class EngramSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
-class SessionConclusionSerializer(serializers.ModelSerializer):
-    status_name = serializers.CharField(source='status.name', read_only=True)
-
-    class Meta:
-        model = SessionConclusion
-        fields = ALL_FIELDS
-
-
 class ReasoningSessionLiteSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     identity_disc_name = serializers.CharField(
@@ -116,18 +108,53 @@ class ReasoningSessionMinimalSerializer(serializers.ModelSerializer):
         ]
 
 
-class ReasoningSessionGraphSerializer(serializers.ModelSerializer):
-    status_name = serializers.CharField(source='status.name', read_only=True)
-    turns = ReasoningTurnSerializer(many=True, read_only=True)
-    engrams = EngramSerializer(many=True, read_only=True)
-    conclusion = SessionConclusionSerializer(read_only=True)
+class _IsoformatDateTimeField(serializers.DateTimeField):
+    """Serializes datetimes with raw ``isoformat()`` (no Z conversion).
 
-    current_level = serializers.IntegerField(read_only=True)
-    max_focus = serializers.IntegerField(read_only=True)
+    DRF's default DateTimeField swaps a trailing ``+00:00`` for ``Z``;
+    the digest vesicle does not. This subclass keeps the pull transport
+    byte-identical to what ``digest_to_vesicle()`` emits on the push
+    side, so a round-trip test can assert dict equality.
+    """
+
+    def to_representation(self, value):
+        if value is None:
+            return None
+        return value.isoformat()
+
+
+class DigestSerializer(serializers.ModelSerializer):
+    """Read-only shape for ReasoningTurnDigest pull responses.
+
+    Kept key-identical to ``digest_builder.digest_to_vesicle()`` so the
+    push transport (Acetylcholine vesicle) and the pull transport
+    (``graph_data?since_turn_number=N``) never drift. ``turn_id`` /
+    ``session_id`` go out as UUID strings matching the vesicle; ``created``
+    / ``modified`` use ``isoformat()`` via ``_IsoformatDateTimeField``.
+    """
+
+    turn_id = serializers.UUIDField(read_only=True)
+    session_id = serializers.UUIDField(read_only=True)
+    created = _IsoformatDateTimeField(read_only=True)
+    modified = _IsoformatDateTimeField(read_only=True)
 
     class Meta:
-        model = ReasoningSession
-        fields = ALL_FIELDS
+        model = ReasoningTurnDigest
+        fields = (
+            'turn_id',
+            'session_id',
+            'turn_number',
+            'status_name',
+            'model_name',
+            'tokens_in',
+            'tokens_out',
+            'excerpt',
+            'tool_calls_summary',
+            'engram_ids',
+            'created',
+            'modified',
+        )
+        read_only_fields = fields
 
 
 @dataclass
