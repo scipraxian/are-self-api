@@ -75,5 +75,12 @@
     "fields": {
       "name": "Hash Mismatch"
     }
+  },
+  {
+    "model": "neuroplasticity.neuralmodifierinstallationeventtype",
+    "pk": 7,
+    "fields": {
+      "name": "Upgrade"
+    }
   }
 ]

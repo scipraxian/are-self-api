@@ -214,19 +214,20 @@ class UninstallFullRollbackTest(ModifierLifecycleTestCase):
         )
         self.assertEqual(uninstall_events.count(), 1)
         payload = uninstall_events.first().event_data
-        self.assertEqual(payload['targets'], 3)
-        self.assertEqual(payload['deleted'], 3)
-        self.assertEqual(payload['orphans'], 0)
+        self.assertEqual(payload['contributions_total'], 3)
+        self.assertEqual(payload['contributions_resolved'], 3)
+        self.assertEqual(payload['orphaned_ids'], [])
 
 
 class UninstallHandlesOrphanedContributionTest(ModifierLifecycleTestCase):
     def test_uninstall_handles_orphaned_contribution(self):
-        """Assert out-of-band target deletion does not crash uninstall."""
+        """Assert out-of-band target deletion names the orphan in the event."""
         build_fake_bundle(self.genome_root, 'delta')
         loader.install_bundle('delta')
 
         # Out-of-band delete: drop one of the contribution targets directly.
         target = AIModelTags.objects.filter(name__startswith='delta-').first()
+        expected_orphan_id = str(target.pk)
         target.delete()
 
         modifier = loader.uninstall_bundle('delta')
@@ -237,9 +238,35 @@ class UninstallHandlesOrphanedContributionTest(ModifierLifecycleTestCase):
         uninstall_event = log.events.get(
             event_type_id=NeuralModifierInstallationEventType.UNINSTALL
         )
-        self.assertEqual(uninstall_event.event_data['targets'], 3)
-        self.assertEqual(uninstall_event.event_data['deleted'], 2)
-        self.assertEqual(uninstall_event.event_data['orphans'], 1)
+        self.assertEqual(uninstall_event.event_data['contributions_total'], 3)
+        self.assertEqual(uninstall_event.event_data['contributions_resolved'], 2)
+        self.assertEqual(
+            uninstall_event.event_data['orphaned_ids'], [expected_orphan_id]
+        )
+
+
+class UninstallCapturesAllOrphanedIdsTest(ModifierLifecycleTestCase):
+    def test_uninstall_captures_all_orphaned_ids(self):
+        """Assert every out-of-band-deleted target shows up in orphaned_ids."""
+        build_fake_bundle(self.genome_root, 'mu')
+        loader.install_bundle('mu')
+
+        # Out-of-band delete two of the three targets.
+        targets = list(AIModelTags.objects.filter(name__startswith='mu-'))
+        expected_orphans = {str(t.pk) for t in targets[:2]}
+        for t in targets[:2]:
+            t.delete()
+
+        modifier = loader.uninstall_bundle('mu')
+
+        log = modifier.current_installation()
+        uninstall_event = log.events.get(
+            event_type_id=NeuralModifierInstallationEventType.UNINSTALL
+        )
+        payload = uninstall_event.event_data
+        self.assertEqual(payload['contributions_total'], 3)
+        self.assertEqual(payload['contributions_resolved'], 1)
+        self.assertEqual(set(payload['orphaned_ids']), expected_orphans)
 
 
 class InstallRejectsHashDriftTest(ModifierLifecycleTestCase):
@@ -294,6 +321,79 @@ class InstallRejectsBadImportTest(ModifierLifecycleTestCase):
         self.assertIn('test-injected import failure', load_failed.first().event_data['traceback'])
 
 
+# TASK 11: Mode B/C/D BROKEN-transition coverage. Mode A is
+# InstallRejectsHashDriftTest above; Mode D rides the install path, the
+# other two ride boot.
+class BootFlipsBrokenOnMissingManifestTest(ModifierLifecycleTestCase):
+    def test_boot_flips_broken_on_missing_manifest(self):
+        """Assert deleted manifest at boot flips BROKEN with HASH_MISMATCH event."""
+        build_fake_bundle(self.genome_root, 'manifest_gone')
+        loader.install_bundle('manifest_gone')
+
+        (self.runtime_root / 'manifest_gone' / 'manifest.json').unlink()
+        sys.modules.pop('are_self_fake', None)
+
+        loader.boot_bundles()
+
+        modifier = NeuralModifier.objects.get(slug='manifest_gone')
+        self.assertEqual(modifier.status_id, NeuralModifierStatus.BROKEN)
+        log = modifier.current_installation()
+        events = log.events.filter(
+            event_type_id=NeuralModifierInstallationEventType.HASH_MISMATCH
+        )
+        self.assertEqual(events.count(), 1)
+        self.assertIn('missing', events.first().event_data['reason'])
+        self.assertNotIn('are_self_fake', sys.modules)
+
+
+class BootFlipsBrokenOnMissingCodeTest(ModifierLifecycleTestCase):
+    def test_boot_flips_broken_on_missing_code(self):
+        """Assert deleted code/ at boot flips BROKEN with LOAD_FAILED event."""
+        build_fake_bundle(self.genome_root, 'code_gone')
+        loader.install_bundle('code_gone')
+
+        sys.modules.pop('are_self_fake', None)
+        shutil.rmtree(self.runtime_root / 'code_gone' / 'code')
+
+        loader.boot_bundles()
+
+        modifier = NeuralModifier.objects.get(slug='code_gone')
+        self.assertEqual(modifier.status_id, NeuralModifierStatus.BROKEN)
+        log = modifier.current_installation()
+        events = log.events.filter(
+            event_type_id=NeuralModifierInstallationEventType.LOAD_FAILED
+        )
+        self.assertEqual(events.count(), 1)
+        self.assertIn('traceback', events.first().event_data)
+
+
+class InstallFlipsBrokenOnDeserializationFailureTest(ModifierLifecycleTestCase):
+    def test_install_flips_broken_on_deserialization_failure(self):
+        """Assert malformed modifier_data.json rolls back, flips BROKEN, logs LOAD_FAILED."""
+        bundle = build_fake_bundle(self.genome_root, 'bad_data')
+        # Corrupt the source bundle's modifier_data.json so the copy in
+        # runtime is also corrupt — guarantees serializers.deserialize
+        # raises during the install's atomic block.
+        (bundle / 'modifier_data.json').write_text('not json')
+
+        with self.assertRaises(Exception):
+            loader.install_bundle('bad_data')
+
+        modifier = NeuralModifier.objects.get(slug='bad_data')
+        self.assertEqual(modifier.status_id, NeuralModifierStatus.BROKEN)
+        # Atomic block rolled back; no contribution rows linger.
+        self.assertEqual(modifier.contributions.count(), 0)
+        # Runtime dir cleaned up by the except branch.
+        self.assertFalse((self.runtime_root / 'bad_data').exists())
+
+        log = modifier.current_installation()
+        load_failed = log.events.filter(
+            event_type_id=NeuralModifierInstallationEventType.LOAD_FAILED
+        )
+        self.assertEqual(load_failed.count(), 1)
+        self.assertIn('traceback', load_failed.first().event_data)
+
+
 class ReinstallCreatesNewLogTest(ModifierLifecycleTestCase):
     def test_reinstall_creates_new_log(self):
         """Assert reinstall reuses the NeuralModifier row and stacks logs."""
@@ -336,6 +436,184 @@ class ListModifiersReportsStatusTest(ModifierLifecycleTestCase):
         self.assertIn('iota', printed)
         self.assertIn('Installed', printed)
         self.assertIn('Enabled', printed)
+
+
+# TASK 15: semver, requires, upgrade-diff coverage.
+class InstallRejectsInvalidSemverTest(ModifierLifecycleTestCase):
+    def test_install_rejects_invalid_semver(self):
+        """Assert non-semver version rejected at manifest validation."""
+        bundle = build_fake_bundle(self.genome_root, 'bad_semver')
+        manifest_path = bundle / 'manifest.json'
+        manifest = json.loads(manifest_path.read_text())
+        manifest['version'] = 'not-semver'
+        manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
+
+        with self.assertRaisesRegex(ValueError, 'not valid semver'):
+            loader.install_bundle('bad_semver')
+
+
+class InstallRequiresSatisfiedTest(ModifierLifecycleTestCase):
+    def test_install_requires_satisfied(self):
+        """Assert install proceeds when declared requires are met."""
+        build_fake_bundle(self.genome_root, 'base_bundle')
+        loader.install_bundle('base_bundle')
+
+        dependent = build_fake_bundle(self.genome_root, 'dep_bundle')
+        manifest_path = dependent / 'manifest.json'
+        manifest = json.loads(manifest_path.read_text())
+        manifest['requires'] = [
+            {'slug': 'base_bundle', 'version_spec': '>=0.0.0'}
+        ]
+        manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
+
+        loader.install_bundle('dep_bundle')
+        self.assertEqual(
+            NeuralModifier.objects.get(slug='dep_bundle').status_id,
+            NeuralModifierStatus.INSTALLED,
+        )
+
+
+class InstallRequiresMissingTest(ModifierLifecycleTestCase):
+    def test_install_requires_missing(self):
+        """Assert install refuses when a required bundle is not installed."""
+        bundle = build_fake_bundle(self.genome_root, 'lonely')
+        manifest_path = bundle / 'manifest.json'
+        manifest = json.loads(manifest_path.read_text())
+        manifest['requires'] = [
+            {'slug': 'ghost_bundle', 'version_spec': '>=1.0.0'}
+        ]
+        manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
+
+        with self.assertRaisesRegex(ValueError, 'requires: not satisfied'):
+            loader.install_bundle('lonely')
+
+
+class InstallRequiresVersionMismatchTest(ModifierLifecycleTestCase):
+    def test_install_requires_version_mismatch(self):
+        """Assert install refuses when a required bundle is the wrong version."""
+        build_fake_bundle(self.genome_root, 'old_base')
+        loader.install_bundle('old_base')
+
+        dependent = build_fake_bundle(self.genome_root, 'needs_new')
+        manifest_path = dependent / 'manifest.json'
+        manifest = json.loads(manifest_path.read_text())
+        manifest['requires'] = [
+            {'slug': 'old_base', 'version_spec': '>=1.0.0'}
+        ]
+        manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
+
+        with self.assertRaisesRegex(ValueError, 'requires: not satisfied'):
+            loader.install_bundle('needs_new')
+
+
+class UpgradePreservesUnchangedContributionsTest(ModifierLifecycleTestCase):
+    def test_upgrade_preserves_unchanged(self):
+        """Assert upgrade preserves shared PKs, deletes dropped, creates new."""
+        shared_pk = str(uuid.uuid4())
+        dropped_pk = str(uuid.uuid4())
+        modifier_data_v1 = [
+            {
+                'model': 'hypothalamus.aimodeltags',
+                'pk': shared_pk,
+                'fields': {'name': 'shared', 'description': 'v1'},
+            },
+            {
+                'model': 'hypothalamus.aimodeltags',
+                'pk': dropped_pk,
+                'fields': {'name': 'dropped', 'description': 'v1'},
+            },
+        ]
+        bundle = build_fake_bundle(
+            self.genome_root, 'evolver', modifier_data=modifier_data_v1
+        )
+        loader.install_bundle('evolver')
+
+        shared_contribution_pk = NeuralModifierContribution.objects.get(
+            object_id=shared_pk
+        ).pk
+
+        # Rewrite the SOURCE bundle to v0.0.2:
+        #   - shared_pk: updated description
+        #   - dropped_pk: gone
+        #   - new_pk:     new row
+        new_pk = str(uuid.uuid4())
+        modifier_data_v2 = [
+            {
+                'model': 'hypothalamus.aimodeltags',
+                'pk': shared_pk,
+                'fields': {'name': 'shared', 'description': 'v2'},
+            },
+            {
+                'model': 'hypothalamus.aimodeltags',
+                'pk': new_pk,
+                'fields': {'name': 'brand_new', 'description': 'v2'},
+            },
+        ]
+        manifest_path = bundle / 'manifest.json'
+        manifest = json.loads(manifest_path.read_text())
+        manifest['version'] = '0.0.2'
+        manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
+        (bundle / 'modifier_data.json').write_text(
+            json.dumps(modifier_data_v2, indent=2) + '\n'
+        )
+
+        result = loader.upgrade_bundle('evolver')
+
+        self.assertEqual(result['previous_version'], '0.0.1')
+        self.assertEqual(result['new_version'], '0.0.2')
+        self.assertEqual(result['created'], 1)
+        self.assertEqual(result['updated'], 1)
+        self.assertEqual(result['deleted'], 1)
+
+        self.assertEqual(
+            NeuralModifierContribution.objects.get(
+                object_id=shared_pk
+            ).pk,
+            shared_contribution_pk,
+        )
+        self.assertEqual(
+            AIModelTags.objects.get(pk=shared_pk).description, 'v2'
+        )
+        self.assertFalse(
+            AIModelTags.objects.filter(pk=dropped_pk).exists()
+        )
+        self.assertTrue(AIModelTags.objects.filter(pk=new_pk).exists())
+        self.assertTrue(
+            NeuralModifierContribution.objects.filter(
+                object_id=new_pk
+            ).exists()
+        )
+
+        modifier = NeuralModifier.objects.get(slug='evolver')
+        self.assertEqual(modifier.version, '0.0.2')
+        log = modifier.current_installation()
+        upgrade_event = log.events.get(
+            event_type_id=NeuralModifierInstallationEventType.UPGRADE
+        )
+        payload = upgrade_event.event_data
+        self.assertEqual(payload['previous_version'], '0.0.1')
+        self.assertEqual(payload['new_version'], '0.0.2')
+        self.assertEqual(payload['created'], 1)
+        self.assertEqual(payload['updated'], 1)
+        self.assertEqual(payload['deleted'], 1)
+
+
+class UpgradeRefusesStaleVersionTest(ModifierLifecycleTestCase):
+    def test_upgrade_refuses_same_version(self):
+        """Assert upgrade refuses when on-disk version is not newer."""
+        build_fake_bundle(self.genome_root, 'samever')
+        loader.install_bundle('samever')
+
+        with self.assertRaisesRegex(ValueError, 'not newer'):
+            loader.upgrade_bundle('samever')
+
+    def test_upgrade_allows_same_version_with_flag(self):
+        """Assert --allow-same-version forces the diff to run anyway."""
+        build_fake_bundle(self.genome_root, 'samever2')
+        loader.install_bundle('samever2')
+
+        result = loader.upgrade_bundle('samever2', allow_same_version=True)
+        self.assertEqual(result['previous_version'], result['new_version'])
 
 
 class BootBundlesSkipsMissingTableTest(ModifierLifecycleTestCase):

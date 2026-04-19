@@ -36,3 +36,4 @@ html2text
 aiofiles
 watchfiles>=1.1.1
 tenacity
+packaging>=23.0                 # NeuralModifier semver + version_spec resolution

@@ -184,6 +184,7 @@ class NeuralModifierInstallationEventType(NameMixin):
     DISABLE = 4
     LOAD_FAILED = 5
     HASH_MISMATCH = 6
+    UPGRADE = 7
 
     class Meta:
         verbose_name = 'Neural Modifier Installation Event Type'

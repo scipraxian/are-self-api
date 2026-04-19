@@ -34,6 +34,9 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
 from django.db import OperationalError, ProgrammingError, transaction
+from django.db.models import Count
+from packaging.specifiers import SpecifierSet
+from packaging.version import InvalidVersion, Version
 
 from .models import (
     NeuralModifier,
@@ -85,6 +88,7 @@ def install_bundle(slug: str) -> NeuralModifier:
     manifest_path = source / 'manifest.json'
     manifest = json.loads(manifest_path.read_text())
     _validate_manifest(manifest)
+    _check_requires(manifest)
     manifest_hash = _compute_manifest_hash(manifest_path)
 
     modifier = _get_or_create_modifier(slug, manifest, manifest_hash)
@@ -166,15 +170,17 @@ def uninstall_bundle(slug: str) -> NeuralModifier:
     )
 
     contributions = list(modifier.contributions.order_by('-created'))
-    target_count = len(contributions)
-    deleted = 0
+    contributions_total = len(contributions)
+    contributions_resolved = 0
+    orphaned_ids: list[str] = []
     for contribution in contributions:
         target = contribution.content_object
         if target is not None:
             target.delete()
-            deleted += 1
+            contributions_resolved += 1
+        else:
+            orphaned_ids.append(str(contribution.object_id))
         contribution.delete()
-    orphans = target_count - deleted
 
     runtime = neural_modifiers_root() / slug
     _remove_code_from_path(runtime)
@@ -188,16 +194,16 @@ def uninstall_bundle(slug: str) -> NeuralModifier:
         log,
         NeuralModifierInstallationEventType.UNINSTALL,
         {
-            'targets': target_count,
-            'deleted': deleted,
-            'orphans': orphans,
+            'contributions_total': contributions_total,
+            'contributions_resolved': contributions_resolved,
+            'orphaned_ids': orphaned_ids,
         },
     )
     logger.info(
-        '[Neuroplasticity] Uninstalled %s (%d targets, %d orphans).',
+        '[Neuroplasticity] Uninstalled %s (%d resolved, %d orphaned).',
         slug,
-        deleted,
-        orphans,
+        contributions_resolved,
+        len(orphaned_ids),
     )
     return modifier
 
@@ -230,6 +236,151 @@ def disable_bundle(slug: str) -> NeuralModifier:
             {'previous_status': 'disabled-flip'},
         )
     return modifier
+
+
+def upgrade_bundle(
+    slug: str, *, allow_same_version: bool = False
+) -> dict:
+    """Diff new modifier_data.json against current contributions; apply the delta.
+
+    Returns a stats dict::
+
+        {previous_version, new_version, created, updated, deleted}
+
+    Raises:
+        NeuralModifier.DoesNotExist: no bundle with that slug.
+        FileNotFoundError: source bundle missing on disk.
+        ValueError: manifest invalid, requires unmet, or new version
+            <= old (unless allow_same_version).
+    """
+    modifier = NeuralModifier.objects.get(slug=slug)
+
+    source = modifier_genome_root() / slug
+    if not source.exists():
+        raise FileNotFoundError(
+            '[Neuroplasticity] No bundle source at {0}.'.format(source)
+        )
+
+    manifest_path = source / 'manifest.json'
+    manifest = json.loads(manifest_path.read_text())
+    _validate_manifest(manifest)
+    _check_requires(manifest)
+
+    previous_version = modifier.version
+    new_version = manifest['version']
+    if not allow_same_version:
+        if Version(new_version) <= Version(previous_version):
+            raise ValueError(
+                '[Neuroplasticity] Cannot upgrade {0}: on-disk {1} is not '
+                'newer than installed {2}. Pass --allow-same-version to '
+                'force.'.format(slug, new_version, previous_version)
+            )
+
+    new_manifest_hash = _compute_manifest_hash(manifest_path)
+    log = NeuralModifierInstallationLog.objects.create(
+        neural_modifier=modifier,
+        installation_manifest=manifest,
+    )
+
+    runtime = neural_modifiers_root() / slug
+    staging = runtime.with_suffix('.staging-upgrade')
+    if staging.exists():
+        shutil.rmtree(staging)
+    shutil.copytree(source, staging)
+
+    created = 0
+    updated = 0
+    deleted = 0
+    try:
+        new_payload = json.loads(
+            (staging / 'modifier_data.json').read_text()
+        )
+        old_contributions_by_id = {
+            str(c.object_id): c for c in modifier.contributions.all()
+        }
+        old_ids = set(old_contributions_by_id.keys())
+        new_ids = {obj['pk'] for obj in new_payload}
+        to_delete = old_ids - new_ids
+
+        with transaction.atomic():
+            for pk in to_delete:
+                contribution = old_contributions_by_id[pk]
+                target = contribution.content_object
+                if target is not None:
+                    target.delete()
+                contribution.delete()
+                deleted += 1
+
+            raw = json.dumps(new_payload)
+            for deserialized in serializers.deserialize('json', raw):
+                pk = str(deserialized.object.pk)
+                deserialized.save()
+                if pk in old_ids:
+                    updated += 1
+                else:
+                    ct = ContentType.objects.get_for_model(
+                        type(deserialized.object)
+                    )
+                    NeuralModifierContribution.objects.create(
+                        neural_modifier=modifier,
+                        content_type=ct,
+                        object_id=deserialized.object.pk,
+                    )
+                    created += 1
+
+            _remove_code_from_path(runtime)
+            if runtime.exists():
+                shutil.rmtree(runtime)
+            staging.rename(runtime)
+            _ensure_code_on_path(runtime)
+            _import_entry_modules(manifest['entry_modules'])
+
+            modifier.version = new_version
+            modifier.manifest_hash = new_manifest_hash
+            modifier.manifest_json = manifest
+            modifier.name = manifest.get('name', slug)
+            modifier.author = manifest.get('author', '')
+            modifier.license = manifest.get('license', '')
+            modifier.save()
+    except Exception:
+        if staging.exists():
+            shutil.rmtree(staging, ignore_errors=True)
+        _log_event(
+            log,
+            NeuralModifierInstallationEventType.LOAD_FAILED,
+            {'traceback': traceback.format_exc(), 'phase': 'upgrade'},
+        )
+        raise
+
+    _log_event(
+        log,
+        NeuralModifierInstallationEventType.UPGRADE,
+        {
+            'previous_version': previous_version,
+            'new_version': new_version,
+            'created': created,
+            'updated': updated,
+            'deleted': deleted,
+        },
+    )
+    logger.info(
+        '[Neuroplasticity] Upgraded %s %s -> %s '
+        '(created=%d updated=%d deleted=%d).',
+        slug,
+        previous_version,
+        new_version,
+        created,
+        updated,
+        deleted,
+    )
+
+    return {
+        'previous_version': previous_version,
+        'new_version': new_version,
+        'created': created,
+        'updated': updated,
+        'deleted': deleted,
+    }
 
 
 def iter_installed_bundles() -> Iterable[NeuralModifier]:
@@ -345,6 +496,89 @@ def _validate_manifest(manifest: dict) -> None:
         raise ValueError(
             '[Neuroplasticity] Manifest entry_modules must be a list of strings.'
         )
+    try:
+        Version(manifest['version'])
+    except InvalidVersion as exc:
+        raise ValueError(
+            '[Neuroplasticity] Manifest version {0!r} is not valid semver: '
+            '{1}'.format(manifest['version'], exc)
+        )
+    _validate_requires(manifest.get('requires', []))
+
+
+def _validate_requires(requires: list) -> None:
+    if not isinstance(requires, list):
+        raise ValueError(
+            '[Neuroplasticity] Manifest "requires" must be a list.'
+        )
+    for entry in requires:
+        if not isinstance(entry, dict):
+            raise ValueError(
+                '[Neuroplasticity] Each "requires" entry must be an object.'
+            )
+        if 'slug' not in entry or 'version_spec' not in entry:
+            raise ValueError(
+                '[Neuroplasticity] "requires" entry needs slug and '
+                'version_spec.'
+            )
+        try:
+            SpecifierSet(entry['version_spec'])
+        except Exception as exc:
+            raise ValueError(
+                '[Neuroplasticity] Invalid version_spec {0!r}: {1}'.format(
+                    entry['version_spec'], exc
+                )
+            )
+
+
+def _check_requires(manifest: dict) -> None:
+    """Raise ValueError if any declared requirement is unmet.
+
+    Requirements resolve against installed NeuralModifier rows — DISCOVERED
+    and BROKEN are treated as not-installed for this check.
+    """
+    requires = manifest.get('requires', [])
+    if not requires:
+        return
+    installed = {
+        m.slug: m
+        for m in NeuralModifier.objects.filter(
+            status_id__in=(
+                NeuralModifierStatus.INSTALLED,
+                NeuralModifierStatus.ENABLED,
+                NeuralModifierStatus.DISABLED,
+            )
+        )
+    }
+    missing = []
+    version_mismatches = []
+    for req in requires:
+        slug = req['slug']
+        spec = SpecifierSet(req['version_spec'])
+        other = installed.get(slug)
+        if other is None:
+            missing.append(slug)
+            continue
+        try:
+            other_version = Version(other.version)
+        except InvalidVersion:
+            version_mismatches.append(
+                '{0} installed with invalid version {1!r}'.format(
+                    slug, other.version
+                )
+            )
+            continue
+        if other_version not in spec:
+            version_mismatches.append(
+                '{0} installed at {1}, need {2}'.format(
+                    slug, other.version, spec
+                )
+            )
+    if missing or version_mismatches:
+        raise ValueError(
+            '[Neuroplasticity] requires: not satisfied. '
+            'missing={0} mismatches={1}'.format(missing, version_mismatches)
+        )
 
 
 def _compute_manifest_hash(manifest_path: Path) -> str:
@@ -423,3 +657,88 @@ def _flip_broken_with_event(
     logger.warning(
         '[Neuroplasticity] %s flipped BROKEN: %s', modifier.slug, event_data
     )
+
+
+def install_bundle_from_archive(uploaded_file) -> NeuralModifier:
+    """Accept a zipped bundle upload, extract to modifier_genome/<slug>/, install.
+
+    The archive must unzip to a single top-level directory whose name matches
+    the slug in its manifest.json. Any other shape is rejected.
+    """
+    import io
+    import tempfile
+    import zipfile
+
+    genome = modifier_genome_root()
+    genome.mkdir(parents=True, exist_ok=True)
+
+    with zipfile.ZipFile(io.BytesIO(uploaded_file.read())) as zf:
+        names = zf.namelist()
+        if not names:
+            raise ValueError('[Neuroplasticity] Archive is empty.')
+        top = {n.split('/')[0] for n in names if n.strip('/')}
+        if len(top) != 1:
+            raise ValueError(
+                '[Neuroplasticity] Archive must contain a single top-level '
+                'directory; got {0}'.format(top)
+            )
+        slug = top.pop()
+        target = genome / slug
+        if target.exists():
+            raise FileExistsError(
+                '[Neuroplasticity] Source bundle at {0} already exists; '
+                'remove it or use upgrade.'.format(target)
+            )
+        with tempfile.TemporaryDirectory() as td:
+            zf.extractall(td)
+            extracted = Path(td) / slug
+            manifest_path = extracted / 'manifest.json'
+            if not manifest_path.exists():
+                raise ValueError(
+                    '[Neuroplasticity] Archive missing manifest.json inside '
+                    '{0}/.'.format(slug)
+                )
+            manifest = json.loads(manifest_path.read_text())
+            if manifest.get('slug') != slug:
+                raise ValueError(
+                    '[Neuroplasticity] Archive top-dir {0!r} does not match '
+                    'manifest slug {1!r}.'.format(slug, manifest.get('slug'))
+                )
+            shutil.move(str(extracted), str(target))
+
+    return install_bundle(slug)
+
+
+def bundle_impact(slug: str) -> dict:
+    """Contribution-count breakdown for a bundle, used by the uninstall preview.
+
+    Returns::
+
+        {
+          'slug': str,
+          'contribution_count': int,
+          'breakdown': [{'content_type': 'app.model', 'count': N}, ...],
+        }
+    """
+    modifier = NeuralModifier.objects.get(slug=slug)
+    qs = (
+        modifier.contributions
+        .values('content_type__app_label', 'content_type__model')
+        .annotate(count=Count('id'))
+        .order_by('content_type__app_label', 'content_type__model')
+    )
+    breakdown = [
+        {
+            'content_type': '{0}.{1}'.format(
+                row['content_type__app_label'], row['content_type__model']
+            ),
+            'count': row['count'],
+        }
+        for row in qs
+    ]
+    total = modifier.contributions.count()
+    return {
+        'slug': slug,
+        'contribution_count': total,
+        'breakdown': breakdown,
+    }
