@@ -20,7 +20,11 @@ from frontal_lobe.digest_builder import (
     build_and_save_digest,
     digest_to_vesicle,
 )
-from frontal_lobe.models import ReasoningTurn, ReasoningTurnDigest
+from frontal_lobe.models import (
+    ReasoningTurn,
+    ReasoningTurnDigest,
+    SessionConclusion,
+)
 from hippocampus.models import Engram
 from synaptic_cleft.axon_hillok import fire_neurotransmitter
 from synaptic_cleft.neurotransmitters import Acetylcholine
@@ -106,6 +110,80 @@ def refresh_digest_on_engram_link_change(
             )
             continue
         broadcast_digest(digest)
+
+
+@receiver(post_save, sender=SessionConclusion)
+def broadcast_session_conclusion(sender, instance, **kwargs):
+    """Push the conclusion as an Acetylcholine vesicle on save.
+
+    SessionConclusion is only written from ``mcp_done``'s
+    ``update_or_create``; any save is a real conclusion event, so
+    there's no ``model_usage_record``-style emptiness gate to apply
+    here. Fixture loads still get skipped via the standard
+    ``raw`` guard, and the broadcast itself is wrapped so a failure
+    in the synaptic cleft never rolls back the conclusion write.
+    """
+    if kwargs.get('raw', False):
+        return
+    broadcast_conclusion(instance)
+
+
+def conclusion_to_vesicle(conclusion: SessionConclusion) -> dict:
+    """Serialize a SessionConclusion to the Acetylcholine vesicle dict.
+
+    Kept key-identical to ``SessionConclusionSerializer`` so the push
+    transport (vesicle) and the pull transport
+    (``/api/v2/reasoning_sessions/{id}/conclusion/``) stay byte-identical
+    — a symmetry test in ``test_conclusion.py`` enforces this.
+    """
+    status_name = ''
+    try:
+        status_name = conclusion.status.name or ''
+    except AttributeError:
+        pass
+    return {
+        'id': conclusion.id,
+        'session_id': str(conclusion.session_id),
+        'status_name': status_name,
+        'summary': conclusion.summary,
+        'reasoning_trace': conclusion.reasoning_trace,
+        'outcome_status': conclusion.outcome_status,
+        'recommended_action': conclusion.recommended_action,
+        'next_goal_suggestion': conclusion.next_goal_suggestion,
+        'system_persona_and_prompt_feedback': (
+            conclusion.system_persona_and_prompt_feedback
+        ),
+        'created': (
+            conclusion.created.isoformat() if conclusion.created else None
+        ),
+        'modified': (
+            conclusion.modified.isoformat() if conclusion.modified else None
+        ),
+    }
+
+
+def broadcast_conclusion(conclusion: SessionConclusion) -> None:
+    """Fire an Acetylcholine with the full conclusion as the vesicle.
+
+    receptor_class is the domain entity ('SessionConclusion'),
+    dendrite_id is the session UUID so per-session subscriptions work
+    without a shape change. Failures are logged with the
+    ``[FrontalLobe]`` tag and swallowed — the conclusion is already
+    saved; a dead broadcast should not bubble up.
+    """
+    try:
+        transmitter = Acetylcholine(
+            receptor_class='SessionConclusion',
+            dendrite_id=str(conclusion.session_id),
+            activity='saved',
+            vesicle=conclusion_to_vesicle(conclusion),
+        )
+        async_to_sync(fire_neurotransmitter)(transmitter)
+    except Exception:
+        logger.exception(
+            '[FrontalLobe] Conclusion neurotransmitter failed for session %s',
+            conclusion.session_id,
+        )
 
 
 def broadcast_digest(digest: ReasoningTurnDigest) -> None:

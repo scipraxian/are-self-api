@@ -6,7 +6,11 @@ from rest_framework.response import Response
 
 from central_nervous_system.models import SpikeStatus
 from central_nervous_system.tasks import fire_spike
-from frontal_lobe.models import ReasoningStatusID, ReasoningTurnDigest
+from frontal_lobe.models import (
+    ReasoningStatusID,
+    ReasoningTurnDigest,
+    SessionConclusion,
+)
 from frontal_lobe.serializers import (
     KEY_REPLY,
     ResumeSessionRequestSerializer,
@@ -83,6 +87,26 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
             session_id=pk, turn_number__gt=since
         ).order_by('turn_number')
         return Response(serializers.DigestSerializer(digests, many=True).data)
+
+    @action(detail=True, methods=['get'], url_path='conclusion')
+    def conclusion(self, request, pk=None):
+        """Return this session's SessionConclusion, or 404 if none.
+
+        Pull fallback symmetric to ``graph_data`` for the conclusion
+        node. The push path is the Acetylcholine broadcast in
+        ``frontal_lobe.signals.broadcast_conclusion``; this endpoint
+        exists so the UI can hydrate on cold start and reconnect
+        without waiting for the next save.
+        """
+        try:
+            conc = SessionConclusion.objects.select_related('status').get(
+                session_id=pk
+            )
+        except SessionConclusion.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            serializers.SessionConclusionSerializer(conc).data
+        )
 
     @action(detail=True, methods=['post'])
     def rerun(self, request, pk=None):

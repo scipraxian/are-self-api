@@ -7,6 +7,7 @@ from frontal_lobe.models import (
     ReasoningSession,
     ReasoningTurn,
     ReasoningTurnDigest,
+    SessionConclusion,
 )
 from hippocampus.models import Engram
 from hypothalamus.serializers import AIModelProviderUsageRecordSerializer
@@ -121,6 +122,39 @@ class _IsoformatDateTimeField(serializers.DateTimeField):
         if value is None:
             return None
         return value.isoformat()
+
+
+class SessionConclusionSerializer(serializers.ModelSerializer):
+    """Read-only shape for SessionConclusion pull responses.
+
+    Kept key-identical to ``conclusion_to_vesicle()`` in
+    ``frontal_lobe.signals`` so the push transport (Acetylcholine vesicle)
+    and the pull transport (``/api/v2/reasoning_sessions/{id}/conclusion/``)
+    never drift. ``created`` / ``modified`` use ``isoformat()`` via
+    ``_IsoformatDateTimeField`` to stay byte-identical to the vesicle.
+    """
+
+    session_id = serializers.UUIDField(read_only=True)
+    status_name = serializers.CharField(source='status.name', read_only=True)
+    created = _IsoformatDateTimeField(read_only=True)
+    modified = _IsoformatDateTimeField(read_only=True)
+
+    class Meta:
+        model = SessionConclusion
+        fields = (
+            'id',
+            'session_id',
+            'status_name',
+            'summary',
+            'reasoning_trace',
+            'outcome_status',
+            'recommended_action',
+            'next_goal_suggestion',
+            'system_persona_and_prompt_feedback',
+            'created',
+            'modified',
+        )
+        read_only_fields = fields
 
 
 class DigestSerializer(serializers.ModelSerializer):
