@@ -43,6 +43,40 @@ def _make_tag_payload(name: str) -> dict:
     }
 
 
+def build_fake_bundle_archive(
+    catalog_root: Path,
+    slug: str,
+    *,
+    modifier_data: Optional[list] = None,
+    entry_modules: Iterable[str] = ('are_self_fake_catalog',),
+) -> Path:
+    """Build a synthetic bundle in a tmp dir and zip it into the catalog.
+
+    Returns the path to the created ``<slug>.zip``. Used by the catalog
+    REST tests to seed the catalog dir with installable archives.
+    """
+    import zipfile
+
+    catalog_root.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as td:
+        scratch = Path(td) / 'scratch'
+        scratch.mkdir()
+        bundle_dir = build_fake_bundle(
+            scratch,
+            slug,
+            modifier_data=modifier_data,
+            entry_modules=entry_modules,
+        )
+        archive_path = catalog_root / '{0}.zip'.format(slug)
+        with zipfile.ZipFile(archive_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for path in sorted(bundle_dir.rglob('*')):
+                if path.is_dir():
+                    continue
+                arcname = Path(slug) / path.relative_to(bundle_dir)
+                zf.write(path, arcname.as_posix())
+    return archive_path
+
+
 def build_fake_bundle(
     genome_root: Path,
     slug: str,
@@ -119,12 +153,15 @@ class ModifierLifecycleTestCase(TestCase):
         self._tmp_root = Path(tempfile.mkdtemp(prefix='neuroplasticity-test-'))
         self.genome_root = self._tmp_root / 'modifier_genome'
         self.runtime_root = self._tmp_root / 'neural_modifiers'
+        self.catalog_root = self._tmp_root / 'neural_modifier_catalog'
         self.genome_root.mkdir()
+        self.catalog_root.mkdir()
         self._sys_path_snapshot = list(sys.path)
         self._sys_modules_snapshot = set(sys.modules.keys())
         self._settings_override = override_settings(
             MODIFIER_GENOME_ROOT=str(self.genome_root),
             NEURAL_MODIFIERS_ROOT=str(self.runtime_root),
+            NEURAL_MODIFIER_CATALOG_ROOT=str(self.catalog_root),
         )
         self._settings_override.enable()
 
@@ -217,6 +254,7 @@ class UninstallFullRollbackTest(ModifierLifecycleTestCase):
         self.assertEqual(payload['contributions_total'], 3)
         self.assertEqual(payload['contributions_resolved'], 3)
         self.assertEqual(payload['orphaned_ids'], [])
+        self.assertEqual(payload['contributions_unresolved'], [])
 
 
 class UninstallHandlesOrphanedContributionTest(ModifierLifecycleTestCase):
@@ -243,6 +281,7 @@ class UninstallHandlesOrphanedContributionTest(ModifierLifecycleTestCase):
         self.assertEqual(
             uninstall_event.event_data['orphaned_ids'], [expected_orphan_id]
         )
+        self.assertEqual(uninstall_event.event_data['contributions_unresolved'], [])
 
 
 class UninstallCapturesAllOrphanedIdsTest(ModifierLifecycleTestCase):
@@ -267,6 +306,97 @@ class UninstallCapturesAllOrphanedIdsTest(ModifierLifecycleTestCase):
         self.assertEqual(payload['contributions_total'], 3)
         self.assertEqual(payload['contributions_resolved'], 1)
         self.assertEqual(set(payload['orphaned_ids']), expected_orphans)
+        self.assertEqual(payload['contributions_unresolved'], [])
+
+
+class UninstallCleanInstallEmitsZeroOrphansTest(ModifierLifecycleTestCase):
+    def test_clean_install_uninstall_round_trip_emits_zero_orphans(self):
+        """Assert FK-cascade dependencies don't leak as false orphans.
+
+        Direct repro of the 53/260 bug: pre-fix, cascade-deleted siblings
+        surfaced as 'orphaned' even on a clean install/uninstall round
+        trip. Post-fix, only out-of-band deletions count as orphans.
+        """
+        # AIModel (parent) + two AIModelRating children (CASCADE on ai_model
+        # FK). All three are bundle contributions; reverse-iter visits the
+        # children first, but the snapshot logic must report 0 orphans
+        # regardless of which row's deletion incidentally cascades.
+        model_pk = str(uuid.uuid4())
+        rating_pk_1 = str(uuid.uuid4())
+        rating_pk_2 = str(uuid.uuid4())
+        # Deserialization bypasses auto_now / auto_now_add, so `created`
+        # and `modified` must be supplied explicitly for any model that
+        # inherits Created/Modified mixins.
+        ts = '2026-04-19T00:00:00Z'
+        modifier_data = [
+            {
+                'model': 'hypothalamus.aimodel',
+                'pk': model_pk,
+                'fields': {
+                    'name': 'cascade-test-model',
+                    'description': 'Parent of cascade chain.',
+                    'context_length': 1000,
+                    'enabled': True,
+                },
+            },
+            {
+                'model': 'hypothalamus.aimodelrating',
+                'pk': rating_pk_1,
+                'fields': {
+                    'ai_model': model_pk,
+                    'elo_score': 1200.0,
+                    'arena_battles': 1,
+                    'source_leaderboard': 'test',
+                    'is_current': True,
+                    'created': ts,
+                },
+            },
+            {
+                'model': 'hypothalamus.aimodelrating',
+                'pk': rating_pk_2,
+                'fields': {
+                    'ai_model': model_pk,
+                    'elo_score': 1300.0,
+                    'arena_battles': 2,
+                    'source_leaderboard': 'test',
+                    'is_current': False,
+                    'created': ts,
+                },
+            },
+        ]
+        build_fake_bundle(
+            self.genome_root, 'cascadia', modifier_data=modifier_data
+        )
+        loader.install_bundle('cascadia')
+        modifier = NeuralModifier.objects.get(slug='cascadia')
+        self.assertEqual(modifier.contributions.count(), 3)
+
+        # Force the parent contribution to sort FIRST under reverse-created
+        # order so the loop encounters AIModel before its AIModelRatings —
+        # AIModel.delete() then cascade-removes the ratings before the loop
+        # reaches them. Pre-fix this surfaced as 'orphans'; post-fix it
+        # must read as 'resolved'.
+        import datetime as _dt
+        parent_contribution = modifier.contributions.get(object_id=model_pk)
+        parent_contribution.created = parent_contribution.created + _dt.timedelta(
+            seconds=10
+        )
+        # `created` is auto_now_add, so save() does NOT bypass that. Use update().
+        NeuralModifierContribution.objects.filter(pk=parent_contribution.pk).update(
+            created=parent_contribution.created
+        )
+
+        modifier = loader.uninstall_bundle('cascadia')
+
+        log = modifier.current_installation()
+        uninstall_event = log.events.get(
+            event_type_id=NeuralModifierInstallationEventType.UNINSTALL
+        )
+        payload = uninstall_event.event_data
+        self.assertEqual(payload['contributions_total'], 3)
+        self.assertEqual(payload['orphaned_ids'], [])
+        self.assertEqual(payload['contributions_unresolved'], [])
+        self.assertEqual(payload['contributions_resolved'], 3)
 
 
 class InstallRejectsHashDriftTest(ModifierLifecycleTestCase):

@@ -148,6 +148,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Neuroplasticity — NeuralModifier bundle roots. Tests override these.
 MODIFIER_GENOME_ROOT = BASE_DIR / 'neuroplasticity' / 'modifier_genome'
 NEURAL_MODIFIERS_ROOT = BASE_DIR / 'neural_modifiers'
+NEURAL_MODIFIER_CATALOG_ROOT = BASE_DIR / 'neural_modifier_catalog'
+NEURAL_MODIFIER_CATALOG_ROOT.mkdir(parents=True, exist_ok=True)
 
 # Celery
 CELERY_BROKER_URL = 'redis://localhost:6379/0'

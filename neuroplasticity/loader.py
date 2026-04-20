@@ -69,8 +69,91 @@ def neural_modifiers_root() -> Path:
     return Path(settings.NEURAL_MODIFIERS_ROOT)
 
 
+def catalog_root() -> Path:
+    """On-disk catalog of installable NeuralModifier zip archives.
+
+    Each ``*.zip`` under this directory is one bundle the user can
+    install through the Modifier Garden. The directory is gitignored
+    and treated as derived state — `pack_modifier` writes into it,
+    `delete` action removes from it, install reads from it.
+    """
+    return Path(settings.NEURAL_MODIFIER_CATALOG_ROOT)
+
+
+def read_archive_manifest(archive_path: Path) -> dict:
+    """Read manifest.json from inside a bundle zip without extracting it.
+
+    The zip's single top-level directory is the slug; we read
+    ``<slug>/manifest.json`` from inside the archive. The manifest is
+    the authority on what slug to call this bundle.
+
+    Raises:
+        ValueError: zip is empty, has multiple top-level dirs, or has
+            no manifest.json at the slug path.
+        zipfile.BadZipFile: the file isn't a valid zip.
+    """
+    import zipfile
+
+    with zipfile.ZipFile(archive_path) as zf:
+        names = zf.namelist()
+        top = sorted({n.split('/', 1)[0] for n in names if n.strip('/')})
+        if not top:
+            raise ValueError(
+                '[Neuroplasticity] Archive {0} is empty.'.format(archive_path)
+            )
+        if len(top) != 1:
+            raise ValueError(
+                '[Neuroplasticity] Archive {0} must contain a single '
+                'top-level directory; got {1}.'.format(archive_path, top)
+            )
+        slug_dir = top[0]
+        manifest_name = '{0}/manifest.json'.format(slug_dir)
+        if manifest_name not in names:
+            raise ValueError(
+                '[Neuroplasticity] Archive {0} missing {1}.'.format(
+                    archive_path, manifest_name
+                )
+            )
+        return json.loads(zf.read(manifest_name).decode('utf-8'))
+
+
+def read_catalog_manifests() -> list[dict]:
+    """Walk the catalog dir; one entry per readable zip.
+
+    Returns a list of ``{'manifest': dict, 'archive_path': str,
+    'archive_name': str}``. A malformed zip or missing-manifest entry
+    is logged and skipped — one bad zip never blanks the whole catalog.
+    """
+    root = catalog_root()
+    if not root.exists():
+        return []
+    entries = []
+    for archive_path in sorted(root.glob('*.zip')):
+        try:
+            manifest = read_archive_manifest(archive_path)
+        except Exception as exc:
+            logger.warning(
+                '[Neuroplasticity] Skipping catalog entry %s: %s',
+                archive_path.name,
+                exc,
+            )
+            continue
+        entries.append(
+            {
+                'manifest': manifest,
+                'archive_path': str(archive_path),
+                'archive_name': archive_path.name,
+            }
+        )
+    return entries
+
+
 def install_bundle(slug: str) -> NeuralModifier:
-    """Copy a bundle to the runtime tree, import its code, load its data.
+    """Install from the committed source at ``modifier_genome/<slug>/``.
+
+    Thin wrapper around :func:`install_bundle_from_source` for the dev
+    flow (``./manage.py build_modifier``). The API / catalog install
+    path goes through :func:`install_bundle_from_archive` instead.
 
     Raises:
         FileNotFoundError: source `modifier_genome/<slug>/` is missing.
@@ -84,7 +167,16 @@ def install_bundle(slug: str) -> NeuralModifier:
         raise FileNotFoundError(
             '[Neuroplasticity] No bundle source at {0}.'.format(source)
         )
+    return install_bundle_from_source(source, slug)
 
+
+def install_bundle_from_source(source: Path, slug: str) -> NeuralModifier:
+    """Copy ``source`` to the runtime tree, import its code, load its data.
+
+    The source can be the committed ``modifier_genome/<slug>/`` (dev
+    flow) or a transient extraction tempdir from a catalog zip — both
+    look identical to this function.
+    """
     manifest_path = source / 'manifest.json'
     manifest = json.loads(manifest_path.read_text())
     _validate_manifest(manifest)
@@ -162,6 +254,16 @@ def uninstall_bundle(slug: str) -> NeuralModifier:
     Reverse order unwinds intra-bundle FK chains: children (later-created)
     get deleted before parents (earlier-created), so PROTECT constraints
     inside the bundle's own graph don't trip.
+
+    Event payload disambiguates three outcomes per contribution:
+
+    * ``contributions_resolved``: target existed at snapshot time and is
+      gone after the loop (deleted directly or via FK cascade — healthy).
+    * ``orphaned_ids``: target was already missing at snapshot time
+      (true orphan — out-of-band deletion before this uninstall).
+    * ``contributions_unresolved``: target existed at snapshot time and
+      somehow survived the loop. Should always be empty; a non-empty
+      list means a bug to investigate.
     """
     modifier = NeuralModifier.objects.get(slug=slug)
     log = NeuralModifierInstallationLog.objects.create(
@@ -171,16 +273,41 @@ def uninstall_bundle(slug: str) -> NeuralModifier:
 
     contributions = list(modifier.contributions.order_by('-created'))
     contributions_total = len(contributions)
-    contributions_resolved = 0
-    orphaned_ids: list[str] = []
+
+    # Snapshot which targets exist NOW (before any deletion). FK cascade
+    # during the loop will vanish dependent rows before the loop reaches
+    # them — those are 'resolved', not 'orphaned'. Only targets missing
+    # at snapshot time are real orphans.
+    pre_existing: list[tuple[int, str]] = []
+    pre_missing: list[str] = []
+    for contribution in contributions:
+        ct_id = contribution.content_type_id
+        obj_id = str(contribution.object_id)
+        model_cls = contribution.content_type.model_class()
+        if model_cls is not None and model_cls._default_manager.filter(
+            pk=contribution.object_id
+        ).exists():
+            pre_existing.append((ct_id, obj_id))
+        else:
+            pre_missing.append(obj_id)
+
     for contribution in contributions:
         target = contribution.content_object
         if target is not None:
             target.delete()
-            contributions_resolved += 1
-        else:
-            orphaned_ids.append(str(contribution.object_id))
         contribution.delete()
+
+    # Anything in pre_existing whose target row still survives is a bug.
+    contributions_unresolved: list[str] = []
+    for ct_id, obj_id in pre_existing:
+        ct = ContentType.objects.get_for_id(ct_id)
+        model_cls = ct.model_class()
+        if model_cls is None:
+            continue
+        if model_cls._default_manager.filter(pk=obj_id).exists():
+            contributions_unresolved.append(obj_id)
+
+    contributions_resolved = len(pre_existing) - len(contributions_unresolved)
 
     runtime = neural_modifiers_root() / slug
     _remove_code_from_path(runtime)
@@ -190,20 +317,31 @@ def uninstall_bundle(slug: str) -> NeuralModifier:
     modifier.status_id = NeuralModifierStatus.DISCOVERED
     modifier.save()
 
+    if contributions_unresolved:
+        logger.warning(
+            '[Neuroplasticity] Uninstall of %s left %d unresolved target(s): %s',
+            slug,
+            len(contributions_unresolved),
+            contributions_unresolved,
+        )
+
     _log_event(
         log,
         NeuralModifierInstallationEventType.UNINSTALL,
         {
             'contributions_total': contributions_total,
             'contributions_resolved': contributions_resolved,
-            'orphaned_ids': orphaned_ids,
+            'orphaned_ids': pre_missing,
+            'contributions_unresolved': contributions_unresolved,
         },
     )
     logger.info(
-        '[Neuroplasticity] Uninstalled %s (%d resolved, %d orphaned).',
+        '[Neuroplasticity] Uninstalled %s (%d resolved, %d orphaned, '
+        '%d unresolved).',
         slug,
         contributions_resolved,
-        len(orphaned_ids),
+        len(pre_missing),
+        len(contributions_unresolved),
     )
     return modifier
 
@@ -659,54 +797,59 @@ def _flip_broken_with_event(
     )
 
 
-def install_bundle_from_archive(uploaded_file) -> NeuralModifier:
-    """Accept a zipped bundle upload, extract to modifier_genome/<slug>/, install.
+def install_bundle_from_archive(archive_path: Path) -> NeuralModifier:
+    """Install a bundle from a zip already on disk in the catalog.
 
-    The archive must unzip to a single top-level directory whose name matches
-    the slug in its manifest.json. Any other shape is rejected.
+    Extracts the zip into a transient staging dir under
+    ``neural_modifiers/_staging/<slug>/``, runs the normal install
+    against the extraction, then nukes the staging dir on both success
+    and failure. The zip stays where it was — it is the catalog entry.
+
+    The zip must contain a single top-level directory; the manifest at
+    ``<top>/manifest.json`` is the authority on the slug.
+
+    Raises:
+        ValueError: zip has bad shape or missing/invalid manifest.
+        FileExistsError: a runtime dir for that slug already exists.
     """
-    import io
-    import tempfile
     import zipfile
 
-    genome = modifier_genome_root()
-    genome.mkdir(parents=True, exist_ok=True)
+    archive_path = Path(archive_path)
+    if not archive_path.exists():
+        raise FileNotFoundError(
+            '[Neuroplasticity] No catalog archive at {0}.'.format(archive_path)
+        )
 
-    with zipfile.ZipFile(io.BytesIO(uploaded_file.read())) as zf:
-        names = zf.namelist()
-        if not names:
-            raise ValueError('[Neuroplasticity] Archive is empty.')
-        top = {n.split('/')[0] for n in names if n.strip('/')}
-        if len(top) != 1:
-            raise ValueError(
-                '[Neuroplasticity] Archive must contain a single top-level '
-                'directory; got {0}'.format(top)
+    manifest = read_archive_manifest(archive_path)
+    slug = manifest.get('slug')
+    if not slug:
+        raise ValueError(
+            '[Neuroplasticity] Archive {0} manifest is missing a slug.'.format(
+                archive_path
             )
-        slug = top.pop()
-        target = genome / slug
-        if target.exists():
-            raise FileExistsError(
-                '[Neuroplasticity] Source bundle at {0} already exists; '
-                'remove it or use upgrade.'.format(target)
-            )
-        with tempfile.TemporaryDirectory() as td:
-            zf.extractall(td)
-            extracted = Path(td) / slug
-            manifest_path = extracted / 'manifest.json'
-            if not manifest_path.exists():
-                raise ValueError(
-                    '[Neuroplasticity] Archive missing manifest.json inside '
-                    '{0}/.'.format(slug)
-                )
-            manifest = json.loads(manifest_path.read_text())
-            if manifest.get('slug') != slug:
-                raise ValueError(
-                    '[Neuroplasticity] Archive top-dir {0!r} does not match '
-                    'manifest slug {1!r}.'.format(slug, manifest.get('slug'))
-                )
-            shutil.move(str(extracted), str(target))
+        )
 
-    return install_bundle(slug)
+    staging_parent = neural_modifiers_root() / '_staging'
+    staging_parent.mkdir(parents=True, exist_ok=True)
+    staging_dir = staging_parent / slug
+    if staging_dir.exists():
+        shutil.rmtree(staging_dir, ignore_errors=True)
+
+    try:
+        with zipfile.ZipFile(archive_path) as zf:
+            top = sorted({n.split('/', 1)[0] for n in zf.namelist() if n.strip('/')})
+            zf.extractall(staging_parent)
+            extracted = staging_parent / top[0]
+            if extracted != staging_dir:
+                # Top-dir name in the zip differs from the manifest slug —
+                # rename the extraction to the canonical slug-named dir.
+                if staging_dir.exists():
+                    shutil.rmtree(staging_dir, ignore_errors=True)
+                shutil.move(str(extracted), str(staging_dir))
+        return install_bundle_from_source(staging_dir, slug)
+    finally:
+        if staging_dir.exists():
+            shutil.rmtree(staging_dir, ignore_errors=True)
 
 
 def bundle_impact(slug: str) -> dict:

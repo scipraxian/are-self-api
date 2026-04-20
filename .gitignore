@@ -1,5 +1,6 @@
 # --- Neuroplasticity runtime ---
 /neural_modifiers/
+/neural_modifier_catalog/
 
 # --- Python & Venv ---
 __pycache__/
