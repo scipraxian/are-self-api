@@ -21,6 +21,7 @@ from frontal_lobe.digest_builder import (
     digest_to_vesicle,
 )
 from frontal_lobe.models import (
+    ReasoningStatusID,
     ReasoningTurn,
     ReasoningTurnDigest,
     SessionConclusion,
@@ -30,6 +31,16 @@ from synaptic_cleft.axon_hillok import fire_neurotransmitter
 from synaptic_cleft.neurotransmitters import Acetylcholine
 
 logger = logging.getLogger(__name__)
+
+# Status IDs that mean "the turn hasn't produced an LLM response yet".
+# We broadcast a ghost vesicle for these so the UI can render a
+# placeholder node before the real digest lands.
+TURN_IN_FLIGHT_STATUS_IDS = (
+    ReasoningStatusID.PENDING,
+    ReasoningStatusID.ACTIVE,
+    ReasoningStatusID.PAUSED,
+    ReasoningStatusID.ATTENTION_REQUIRED,
+)
 
 
 @receiver(post_save, sender=ReasoningTurn)
@@ -65,6 +76,63 @@ def write_reasoning_turn_digest(sender, instance, **kwargs):
         return
 
     broadcast_digest(digest)
+
+
+@receiver(post_save, sender=ReasoningTurn)
+def broadcast_turn_started(sender, instance, **kwargs):
+    """Push a ghost vesicle while a turn is still in flight.
+
+    Fires on every save of a ReasoningTurn, and emits an Acetylcholine
+    only when the turn has no ``model_usage_record`` yet AND its status
+    is in the in-flight set (PENDING/ACTIVE/PAUSED/ATTENTION_REQUIRED).
+    Once the turn completes, ``write_reasoning_turn_digest`` takes over
+    and the frontend prunes the ghost in favor of the real digest node
+    (both carry the same ``turn_id``).
+
+    receptor_class='ReasoningTurn' with dendrite_id=str(session_id) so
+    a per-session dendrite subscription can filter efficiently —
+    unrelated Dopamine/Cortisol signals on the same receptor class use
+    dendrite_id=turn.id and will be ignored by the client filter.
+
+    Failures are logged under ``[FrontalLobe]`` and swallowed; a dead
+    broadcast must never roll back a turn save.
+    """
+    if kwargs.get('raw', False):
+        return
+    if instance.model_usage_record_id is not None:
+        return
+    if instance.status_id not in TURN_IN_FLIGHT_STATUS_IDS:
+        return
+
+    status_name = ''
+    try:
+        status_name = instance.status.name or ''
+    except AttributeError:
+        pass
+
+    vesicle = {
+        'turn_id': str(instance.id),
+        'session_id': str(instance.session_id),
+        'turn_number': instance.turn_number,
+        'status_name': status_name,
+        'created': (
+            instance.created.isoformat() if instance.created else None
+        ),
+    }
+
+    try:
+        transmitter = Acetylcholine(
+            receptor_class='ReasoningTurn',
+            dendrite_id=str(instance.session_id),
+            activity='started',
+            vesicle=vesicle,
+        )
+        async_to_sync(fire_neurotransmitter)(transmitter)
+    except Exception:
+        logger.exception(
+            '[FrontalLobe] Turn-started neurotransmitter failed for turn %s',
+            instance.id,
+        )
 
 
 @receiver(m2m_changed, sender=Engram.source_turns.through)
