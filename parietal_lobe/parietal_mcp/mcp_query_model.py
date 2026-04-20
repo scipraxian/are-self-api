@@ -25,9 +25,12 @@ def _query_model_sync(
     if filters:
         # Post-UUID-migration alias: the PK field is always 'id', but the LLM
         # frequently guesses 'uuid' because the value IS a UUID. Silently
-        # rewrite rather than scolding it in tool descriptions.
-        if 'uuid' in filters and 'id' not in filters:
-            filters['id'] = filters.pop('uuid')
+        # rewrite rather than scolding it in tool descriptions. If the caller
+        # supplied both 'id' and 'uuid', explicit 'id' wins and 'uuid' is
+        # discarded — we never want a raw 'uuid' key reaching the ORM.
+        if 'uuid' in filters:
+            alias_value = filters.pop('uuid')
+            filters.setdefault('id', alias_value)
         try:
             qs = qs.filter(**filters)
         except Exception as e:

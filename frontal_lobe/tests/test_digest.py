@@ -102,8 +102,15 @@ class DigestSignalTest(CommonTestCase):
         super().setUp()
         _make_session_graph(self)
 
-    def test_turn_without_usage_record_skips_digest_and_broadcast(self):
-        """Assert turns with no usage record produce neither digest nor push."""
+    def test_turn_without_usage_record_skips_digest(self):
+        """Assert turns with no usage record produce no digest row or push.
+
+        An in-flight turn (PENDING/ACTIVE/PAUSED/ATTENTION_REQUIRED with
+        no ``model_usage_record``) still broadcasts the ghost
+        ``ReasoningTurn`` vesicle from ``broadcast_turn_started`` — see
+        ``test_turn_in_flight_broadcasts_ghost`` for that invariant.
+        This test scopes itself to the digest pipeline only.
+        """
         with patch(
             'frontal_lobe.signals.fire_neurotransmitter',
             new_callable=AsyncMock,
@@ -117,7 +124,47 @@ class DigestSignalTest(CommonTestCase):
         self.assertFalse(
             ReasoningTurnDigest.objects.filter(turn=turn).exists()
         )
-        mock_fire.assert_not_called()
+        digest_calls = [
+            call for call in mock_fire.call_args_list
+            if call.args[0].receptor_class == 'ReasoningTurnDigest'
+        ]
+        self.assertEqual(
+            digest_calls, [], 'no ReasoningTurnDigest broadcast expected'
+        )
+
+    def test_turn_in_flight_broadcasts_ghost(self):
+        """Assert an in-flight turn fires exactly one ReasoningTurn vesicle.
+
+        Ghost broadcast contract: ``receptor_class='ReasoningTurn'``,
+        ``dendrite_id=str(session_id)`` (so per-session subscriptions
+        filter efficiently), and a vesicle carrying the turn/session
+        ids, turn_number, status_name, and ISO ``created`` timestamp.
+        """
+        with patch(
+            'frontal_lobe.signals.fire_neurotransmitter',
+            new_callable=AsyncMock,
+        ) as mock_fire:
+            turn = ReasoningTurn.objects.create(
+                session=self.session,
+                turn_number=1,
+                status_id=ReasoningStatusID.ACTIVE,
+            )
+
+        ghost_calls = [
+            call for call in mock_fire.call_args_list
+            if call.args[0].receptor_class == 'ReasoningTurn'
+        ]
+        self.assertEqual(len(ghost_calls), 1)
+        transmitter = ghost_calls[0].args[0]
+        self.assertEqual(transmitter.dendrite_id, str(self.session.id))
+        self.assertEqual(transmitter.activity, 'started')
+        self.assertEqual(transmitter.vesicle['turn_id'], str(turn.id))
+        self.assertEqual(
+            transmitter.vesicle['session_id'], str(self.session.id)
+        )
+        self.assertEqual(transmitter.vesicle['turn_number'], 1)
+        self.assertEqual(transmitter.vesicle['status_name'], 'Active')
+        self.assertIsNotNone(transmitter.vesicle['created'])
 
     def test_turn_with_usage_record_writes_digest_and_broadcasts(self):
         """Assert a usage-record turn produces a digest and one Acetylcholine."""
