@@ -1,13 +1,16 @@
 # NeuralModifier Completion Plan
 
 > **Scope.** What it takes to declare the NeuralModifier feature area
-> feature-complete, starting from the April 18, 2026 state of the
-> `uuid-migration` branch (commits `bf2e11d` Task 5d scaffold + `15ceb37`
-> Task 6 lifecycle landed, 9 lifecycle tests passing). Supersedes
-> `FIXTURE_SEPARATION_PROMPT.md`, the various `CC_PROMPT_*.md` files,
-> `STEP1_REPORT.md`, `STEP1_COMPLETE_REPORT.md`, and
-> `UUID_MIGRATION_PROMPT.md` — all nuked April 18 because their work
-> landed. When this plan is done, this file gets nuked too.
+> feature-complete. Most of the backend and the frontend MVP have
+> shipped as of 2026-04-20 (see TASKS.md for the history of individual
+> landings); this file tracks the remaining forward work and the
+> deferred design directions (Surface 2 save-to-bundle; addons as a
+> fourth registration surface). Prior planning docs
+> (`FIXTURE_SEPARATION_PROMPT.md`, `CC_PROMPT_*.md`, `STEP1_REPORT.md`,
+> `STEP1_COMPLETE_REPORT.md`, `UUID_MIGRATION_PROMPT.md`,
+> `NEUROPLASTICITY_CONSOLIDATION_PROMPT.md`, `UNREAL_E2E_HANDOFF.md`)
+> all retired as their work landed. When this plan is done, this file
+> gets nuked too.
 
 ## Ground rules (carry forward from prior passes)
 
@@ -38,112 +41,70 @@
 
 ## Where we stand
 
-**Most recent landing — NeuralModifier layout consolidation + install/uninstall
-bug fixes (2026-04-20):** Three sibling root-level dirs collapsed into
-`neuroplasticity/genomes/` (committed zips), `neuroplasticity/grafts/`
-(runtime, gitignored), and `neuroplasticity/operating_room/` (transient,
-gitignored, empty between ops). Source tree at `modifier_genome/`
-deleted — the zip is the single source of truth. Settings renamed:
-`MODIFIER_GENOME_ROOT` retired, `NEURAL_MODIFIERS_ROOT` →
-`NEURAL_MODIFIER_GRAFTS_ROOT`, `NEURAL_MODIFIER_CATALOG_ROOT` →
-`NEURAL_MODIFIER_GENOMES_ROOT`, new `NEURAL_MODIFIER_OPERATING_ROOM_ROOT`.
-`build_modifier` / `pack_modifier` retired. Uninstall now DELETES the
-`NeuralModifier` row (AVAILABLE = zip exists + no DB row) — contributions,
-logs, events cascade. Staging leak (`_staging/`) fixed via
-`tempfile.mkdtemp(dir=operating_room_root())` + `try/finally`.
-FileExistsError pre-flight moved BEFORE DB writes so a collision no
-longer leaks a bogus row. Failed fresh install deletes the row it
-created — no BROKEN/DISCOVERED stubs survive. API uninstall returns
-`{slug, uninstalled: true}` and broadcasts slug-only Acetylcholine.
-Unreal bundle round-trip test rehomed to
-`neuroplasticity/tests/test_install_unreal_bundle.py`, exercising
-`install_bundle_from_archive` against `genomes/unreal.zip`.
+TASKS.md is the authoritative log of what has landed — this file is
+kept lean and forward-looking. As of 2026-04-20, everything below has
+shipped: Tasks 6 (lifecycle commands), 9 (update_version_metadata into
+bundle), 10 (UE log parsers into bundle), 11 (BROKEN-transition proof),
+12 (orphan-contribution UNINSTALL payload), 13 (Parietal tool-set
+gating on ENABLED), 14 (bundle-author docs), 15 (semver + requires +
+upgrade), 16 (Surface 1 catalog backend), 17 (Surface 1 frontend), and
+the 2026-04-20 layout consolidation (genomes / grafts / operating_room,
+uninstall = row delete, staging-leak fix). Frontend MVP set — FE-1
+(Modifier Garden list / install / uninstall), FE-2 (enable / disable
+toggles), FE-3 (row-level attribution) — has also shipped. See
+TASKS.md "Recently Done" entries for the shape of each.
 
-**Landed:**
+**Landed — durable pointers (full history in TASKS.md):**
 
-- `neuroplasticity/models.py` — `NeuralModifier`, `NeuralModifierStatus`,
-  `NeuralModifierContribution` (GFK + `UUIDField` object_id),
-  `NeuralModifierInstallationLog`, `NeuralModifierInstallationEvent`,
-  `NeuralModifierInstallationEventType`.
-- `neuroplasticity/loader.py` (422 lines) — contribution-aware loader:
-  walks `neural_modifiers/*/`, verifies `manifest_hash`, extends
-  `sys.path`, imports entry modules, records contributions via a
-  wrapped `Deserializer`.
-- Management commands: `build_modifier`, `enable_modifier`,
-  `disable_modifier`, `uninstall_modifier`, `list_modifiers`.
-- `neuroplasticity/apps.py` boot hook — on ready, calls the loader and
-  flips mismatched bundles to `BROKEN`.
-- `tests/test_modifier_lifecycle.py` — 9 tests, all green, covering
-  install / uninstall / BROKEN paths.
-- `neuroplasticity/modifier_genome/unreal/` — committed scaffold
-  (`manifest.json` stub, empty `modifier_data.json`, `code/` dir,
-  `README.md`).
-- **Bundle-time registration surfaces (April 18):**
-  `register_parietal_tool` / `unregister_parietal_tool` in
-  `parietal_lobe/parietal_mcp/gateway.py` — module-level
-  `_PARIETAL_TOOL_REGISTRY` is consulted first in
-  `ParietalMCP.execute()`; on miss, the pre-existing dynamic-import
-  path runs unchanged. `register_native_handler` /
-  `unregister_native_handler` in
-  `central_nervous_system/effectors/effector_casters/neuromuscular_junction.py`
-  — operates on the existing `NATIVE_HANDLERS` dict; collisions
-  against core or prior-bundle slugs raise `RuntimeError`; unregister
-  is idempotent. 12 new tests
-  (`parietal_lobe/parietal_mcp/tests/test_tool_registration.py`
-  7 cases + `central_nervous_system/effectors/effector_casters/tests/test_native_handler_registration.py`
-  5 cases) with `setUp`/`tearDown` snapshotting.
-- **Task 9 — `update_version_metadata` moved into the bundle:**
-  handler definition lives at
-  `neuroplasticity/modifier_genome/unreal/code/are_self_unreal/version_metadata_handler.py`
-  and is registered through `register_native_handler` from the bundle's
-  entry module. Core `neuromuscular_junction.py` no longer defines or
-  imports the handler. Unregister-then-register pattern inside
-  `handlers.py` keeps re-imports on every `boot_bundles()` pass idempotent.
-- **Task 10 — Unreal log parsers moved into the bundle:**
-  `UEBuildLogStrategy` and `UERunLogStrategy` live at
-  `neuroplasticity/modifier_genome/unreal/code/are_self_unreal/log_parsers.py`
-  and register through `LogParserFactory.register` at import time. Core
-  `occipital_lobe/log_parser.py` keeps the factory + the generic
-  base; Unreal-specific strategies no longer live in core.
-- **Task 13 — Parietal tool-set gating on NeuralModifier state (April 19):**
-  `_fetch_tools` in `parietal_lobe/parietal_lobe.py` now excludes any
-  `ToolDefinition` whose `NeuralModifierContribution` points at a
-  bundle not in `ENABLED` state, via an `Exists(...)` subquery. Core
-  tools (no contribution row) pass through untouched. Filter sits at
-  the query layer, so every new `ParietalLobe` construction (once per
-  `ReasoningSession`) picks up the current state — no cache layer to
-  invalidate, lifecycle commands stay uninvolved. 5 integration tests
-  in `parietal_lobe/tests/test_modifier_tool_gating.py` covering
-  ENABLED (included), INSTALLED / DISABLED / BROKEN (excluded), and
-  the ENABLED↔DISABLED round-trip that proves state flips land on the
-  next session. Also in this pass: `neuroplasticity/fixtures/reference_data.json`
-  → `genetic_immutables.json`, wired into `CommonTestCase.fixtures` so
-  it auto-loads for every suite (was off-convention, only neuroplasticity
-  app not following the four-tier layout).
-- **Task 14 — Bundle-author documentation (April 19):**
-  New `neuroplasticity/modifier_genome/README.md` covering directory
-  layout, manifest schema (required keys + SHA-256 hash behavior),
-  `modifier_data.json` contribution format (Django serialized rows,
-  `uuid.uuid4()` PK rule, ordering + no cross-bundle FK rules),
-  entry-module conventions for the three registration surfaces
-  (`register_native_handler`, `register_parietal_tool`,
-  `LogParserFactory.register`) with the unregister-then-register
-  idempotency pattern, the full `build_modifier` / `enable_modifier`
-  / `disable_modifier` / `uninstall_modifier` / `list_modifiers`
-  lifecycle from the author's perspective, a ToolDefinition-gating
-  callout pointing back at Task 13, an end-to-end authoring checklist,
-  and the Unreal bundle pointer as the reference implementation.
+- **Models + loader.** `neuroplasticity/models.py` +
+  `neuroplasticity/loader.py`. Public install API:
+  `install_bundle_from_archive(path)`. AVAILABLE = zip on disk AND no
+  DB row; uninstall DELETES the row with CASCADE.
+- **On-disk layout.** `neuroplasticity/genomes/<slug>.zip` (committed),
+  `neuroplasticity/grafts/<slug>/` (runtime, gitignored),
+  `neuroplasticity/operating_room/` (transient scratch, gitignored).
+- **Management commands.** `enable_modifier`, `disable_modifier`,
+  `uninstall_modifier`, `upgrade_modifier`, `list_modifiers`,
+  `pack_modifier`. (`build_modifier` retired.)
+- **Boot hook.** `neuroplasticity/apps.py` → `boot.py` → `loader.boot_bundles()`.
+  Hash drift / load failure flips BROKEN.
+- **Registration surfaces (all idempotent via
+  unregister-then-register):** `register_native_handler` /
+  `unregister_native_handler`
+  (`central_nervous_system/effectors/effector_casters/neuromuscular_junction.py`),
+  `register_parietal_tool` / `unregister_parietal_tool`
+  (`parietal_lobe/parietal_mcp/gateway.py`),
+  `LogParserFactory.register` (`occipital_lobe/log_parser.py`).
+- **Parietal tool-set gating.** `_fetch_tools` in
+  `parietal_lobe/parietal_lobe.py` excludes contributions whose bundle
+  is not ENABLED.
+- **Modifier Garden Surface 1.** Catalog endpoint + install / uninstall
+  / enable / disable / delete actions on `NeuralModifierViewSet`
+  (`neuroplasticity/api.py`). Multipart upload installs persist the
+  uploaded zip into the catalog.
+- **Versioning + dependencies.** Semver validation, `requires:` block,
+  upgrade algorithm preserving unchanged contributions by serialized
+  PK. `upgrade_modifier` command.
+- **Bundle-author reference.** Inside the Unreal bundle itself at
+  `neuroplasticity/genomes/unreal.zip` (extract to see the README +
+  layout).
+- **Unreal bundle round-trip test.**
+  `neuroplasticity/tests/test_install_unreal_bundle.py` — 6 scenarios
+  against `genomes/unreal.zip`.
 
 **Not landed (this plan):**
 
-The four work items below. Priority order is top-down — each item is
-useful on its own and each later item assumes the earlier ones are in.
+Task 8 is the only remaining backend work item scoped by this plan.
+Tasks 11, 12, and 15 all landed (see TASKS.md). Surface 1 (Tasks 16
+and 17) landed. The frontend MVP set (FE-1, FE-2, FE-3) landed with
+Surface 1.
 
-> **Next up: Task 8 verification.** The E2E protocol in
-> `UNREAL_E2E_HANDOFF.md` is the acceptance test. Everything else in
-> this plan is blocked on that passing — not because the code depends
-> on it, but because without a clean round-trip we don't know whether
-> the rest of the work is building on solid ground.
+Open bug tracked in TASKS.md, not re-scoped here:
+`POST /api/v2/neural-modifiers/<slug>/enable/` returns 404 against an
+installed bundle; `disable` on the same row works. Static analysis
+shows the enable and disable actions as structurally identical —
+almost certainly a one-line fix somewhere routing-adjacent. Does not
+block Task 8 (management-command lifecycle path is unaffected).
 
 ---
 
@@ -220,97 +181,12 @@ always be empty; non-empty means a bug to investigate).
 
 ### Task 16 — Surface 1 implementation (backend) — **LANDED 2026-04-20**
 
-See `TASKS.md` → "Recently Done — Modifier Garden Surface 1" for the
-shipped shape. Scope below is kept for reference.
-
-**Scope.**
-
-- New catalog endpoint: `GET /api/v2/neural-modifiers/catalog/` returns
-  one entry per zip under the catalog root. Each entry is the unzipped
-  `manifest.json` plus `{ "installed": bool }` (true iff a
-  `NeuralModifier` row exists for that slug). Reads manifests via
-  `zipfile.ZipFile(path).read('manifest.json')` — no extraction.
-- Rewrite `install_bundle_from_archive` to: unzip archive to tempdir
-  under `neural_modifiers/_staging/<slug>/`, run the existing
-  `install_bundle(slug)` codepath against the extraction, `shutil.rmtree`
-  the tempdir on both success and failure. The runtime tree assumption
-  (`neural_modifiers/<slug>/` persists) goes away — all state lives in
-  the DB and the catalog zip.
-- Modify `install_bundle` path resolution so it can accept the staging
-  tempdir as its source (currently hardcoded to `modifier_genome/<slug>/`).
-  Cleanest shape: split into `install_bundle_from_source(source_path)`
-  (the current function's body, parameterized) and keep
-  `install_bundle(slug)` as a wrapper that passes `modifier_genome/<slug>/`
-  — for dev-flow `./manage.py build_modifier` use only. The API / UI
-  path uses `install_bundle_from_archive → install_bundle_from_source`.
-- New `delete` action on the viewset: removes the zip from the catalog
-  dir. Refuses if a live DB row exists (must uninstall first). Returns
-  400 with a clear message in that case.
-- Uninstall-event orphan fix: snapshot object_ids before the delete
-  loop; split event_data into `contributions_resolved`,
-  `orphaned_ids`, `contributions_unresolved`. Update
-  `UninstallCapturesAllOrphanedIdsTest` and add
-  `UninstallCleanInstallEmitsZeroOrphansTest` (repro of the 53/260 bug:
-  install → uninstall immediately → assert `orphaned_ids == []`).
-- Rename the misleading `build_modifier` command to something honest
-  (candidate: `install_modifier_from_source`) — or leave it and add a
-  one-line docstring clarifying it's the dev-flow install-from-source
-  command, distinct from the API install-from-zip path. Michael's call.
-  Not blocking.
-- Migrate Unreal into the new flow: script that reads
-  `modifier_genome/unreal/` and produces `neural_modifier_catalog/unreal.zip`.
-  Add to `are-self-install.bat` **only** as a dev-setup convenience —
-  the catalog zip is not a committed artifact; it's derived from the
-  genome dir.
+Shipped. See `TASKS.md` → "Recently Done — Modifier Garden Surface 1".
 
 ### Task 17 — Surface 1 implementation (frontend) — **LANDED 2026-04-20**
 
-Shipped in `are-self-ui`. See that repo's `TASKS.md` + the
-`ModifierGardenPage.tsx` rewrite. Scope below is kept for reference.
-
-**Scope.**
-
-- `ModifierGardenPage.tsx` list source changes: instead of only
-  `GET /api/v2/neural-modifiers/`, merge `/api/v2/neural-modifiers/`
-  (installed rows) with `/api/v2/neural-modifiers/catalog/` (zip
-  entries). Catalog entries whose slug has a matching installed row
-  use the installed row's status + contribution count; catalog entries
-  with no installed row render as `AVAILABLE`.
-- `renderActionButton` redesign: AVAILABLE rows show an **Install**
-  button (primary affordance). INSTALLED rows show an **Enable**
-  button + **Uninstall** (secondary). ENABLED rows show **Disable** +
-  **Uninstall**. BROKEN rows show **Uninstall** + an "inspect" link.
-  Gone entirely: the disabled-Enable-with-tooltip dead-end.
-- "Delete modifier" action on AVAILABLE rows (maybe behind an overflow
-  menu — it removes the zip file and the row disappears from the
-  catalog). Confirmation dialog: "This removes the Unreal bundle from
-  your computer. You'll need to re-obtain it to reinstall."
-- The install button on AVAILABLE rows calls a new endpoint
-  `POST /api/v2/neural-modifiers/catalog/<slug>/install/` that runs
-  the unzip→install→nuke flow on the server's existing zip. (The file-
-  upload install flow from the April-19 REST-surface pass stays —
-  that's for bundles the user is bringing to the machine. The catalog-
-  install flow is for bundles already on the machine.)
-- Kill the `STATUS_DISCOVERED` branch from `renderActionButton`.
-  "Discovered" is not a surfaced state anymore.
-
-### Acceptance criteria (both tasks together)
-
-- Fresh checkout: `are-self-install.bat` runs, catalog dir has
-  `unreal.zip`, garden shows one AVAILABLE row labeled "Unreal Engine."
-- Click Install on that row → spinner → row flips to INSTALLED with
-  300+ contributions. Zip still on disk; extraction tempdir gone.
-- Click Enable → row flips to ENABLED. Start a reasoning session, the
-  UE parietal tool appears in the picker (Task 13).
-- Click Disable → row flips back to INSTALLED. Tool drops from the
-  next session's picker.
-- Click Uninstall → row flips back to AVAILABLE (DB row + contributions
-  gone; zip still on disk). UNINSTALL event payload shows
-  `orphaned_ids: []` and `contributions_unresolved: []`.
-- Click Install again (re-install round-trip) → clean, no errors, same
-  contribution count. (Proves the uninstall was complete.)
-- Click Delete → zip removed; row disappears from the catalog entirely.
-- A 10-year-old can drive every transition with no terminal open.
+Shipped in `are-self-ui`. See that repo's `TASKS.md` and the
+`ModifierGardenPage.tsx` rewrite.
 
 ---
 
@@ -370,13 +246,13 @@ minimal synthetic bundle AND Michael still can't hand-fix Unreal.
 
 ## April 20 design direction — addons as a fourth registration surface
 
-> **Status: deferred until Tasks 8 / 11 / 12 / 15 are landed and
-> Surface 1 dogfoods cleanly on Unreal. Not in scope for this plan.
-> Durable home is the `TASKS.md` Backlog entry "Addons as a fourth
-> NeuralModifier registration surface." Captured here because the
-> design is structurally parallel to the NeuralModifier bundle
-> contract — when this plan file gets deleted, lift this section into
-> whatever supersedes it.**
+> **Status: deferred until Task 8 dogfoods cleanly on Unreal via the
+> browser (the enable-button 404 is the current blocker). Not in scope
+> for this plan. Durable home is the `TASKS.md` Backlog entry "Addons
+> as a fourth NeuralModifier registration surface." Captured here
+> because the design is structurally parallel to the NeuralModifier
+> bundle contract — when this plan file gets deleted, lift this
+> section into whatever supersedes it.**
 
 **Context.** Dogfooding the Focus addon against an identity disc that
 doesn't have it installed (Thalamus, in the April 20 Cowork discussion)
@@ -480,245 +356,82 @@ fizzle + ledger at `parietal_lobe.py:231-287` lands independently and
 gets deleted when this task lands. Captured in `TASKS.md` Backlog under
 the same title.
 
-**Not scope. No tickets.** This section exists to be revisited after
-Tasks 8 / 11 / 12 / 15 are all green and Surface 1 dogfoods cleanly on
-Unreal. Revisit trigger: the "Not landed" items in this plan are all
-empty AND the `TASKS.md` Backlog entry is next up by priority. At that
-moment, promote this section into a real task scoped against the
-then-current state of the addon and NM code.
+**Not scope. No tickets.** Revisit trigger: Task 8 is green on Unreal
+(browser path), enable-button 404 fixed, and the `TASKS.md` Backlog
+entry is next up by priority. At that moment, promote this section
+into a real task scoped against the then-current state of the addon
+and NM code.
 
 ---
 
-## Task 8 — Unreal bundle end-to-end verification
+## Task 8 — Unreal bundle live-browser round-trip verification
 
-**Status (April 19).** The code-side of the Unreal extraction has
-landed: entry-module package at
-`neuroplasticity/modifier_genome/unreal/code/are_self_unreal/`, native
-handler and MCP tool registered from it, log parser strategies
-registered from it, `modifier_data.json` populated with
-ContextVariables and related rows. What has **not** been verified is
-the full install → enable → exercise → disable → re-enable →
-uninstall round-trip, and in particular whether every UE-specific row
-has been moved out of core fixtures into `modifier_data.json`. Without
-that verification, we don't know clean isolation actually holds.
+**Status (April 20).** Automated round-trip coverage landed:
+`neuroplasticity/tests/test_install_unreal_bundle.py` exercises
+`install_bundle_from_archive` against `genomes/unreal.zip` with six
+scenarios covering install, uninstall, reinstall idempotency,
+operating_room cleanup, and soft-lookup on M2M edges. Parietal tool
+gating on ENABLED (Task 13) has its own 5 integration tests. What
+remains un-exercised is a real browser session driving the state
+machine end-to-end — the sort of test a non-developer would run.
 
-**Why this is #1.** Until the round-trip passes, every later task
-risks building on a broken assumption about what clean install means.
-Task 8 is the foundation acceptance test for the whole feature.
+**Scope.** Live round-trip from the Modifier Garden UI against the
+committed `genomes/unreal.zip`:
 
-**Scope.** Follow the nine-step protocol in `UNREAL_E2E_HANDOFF.md`.
-Any UE-named row discovered in core fixtures during Step 1 gets moved
-into `modifier_data.json` (UUID literal preserved, removed from its
-core fixture) until Step 1's leakage check returns zero.
+1. Fresh install → garden lists the Unreal row as AVAILABLE.
+2. Click Install → row flips to INSTALLED with 300+ contributions;
+   operating_room is empty on disk.
+3. Click Enable → row flips to ENABLED.
+4. Start a reasoning session → `mcp_run_unreal_diagnostic_parser`
+   appears in the tool manifest; the `update_version_metadata`
+   handler fires; a UE log parses through the bundle's
+   `LogParserFactory` strategy.
+5. Click Disable → next session's tool picker drops the Unreal tool.
+6. Click Enable again → tool comes back.
+7. Click Uninstall → row flips back to AVAILABLE; contributions,
+   installation logs, and events are gone; zip still on disk.
+8. Reinstall round-trip → clean, no errors, contribution count
+   matches the first install.
 
-**Acceptance criteria.**
+**Acceptance criteria.** A 10-year-old can drive every transition
+with no terminal open. The full test suite passes both with Unreal
+installed and with it uninstalled.
 
-- Step 1 baseline: core-only fixture load + full test run returns
-  zero UE-named rows and a known-good pass count.
-- Steps 2–5: `build_modifier unreal` → `enable_modifier unreal` →
-  full test suite → all green.
-- Step 6: a live reasoning session observes
-  `mcp_run_unreal_diagnostic_parser` in its tool manifest, the
-  `update_version_metadata` handler firing, and a UE log parsing
-  through the bundle's `LogParserFactory` strategy.
-- Steps 7–8: disable drops the Parietal tool from the next session;
-  enable brings it back.
-- Step 9: `uninstall_modifier unreal` returns the DB to Step 1's
-  state byte-for-byte; the full test suite result matches Step 1's
-  baseline exactly.
-
----
-
-## Task 11 — Hash-mismatch `BROKEN` transition proof
-
-**Why.** `apps.py` already flips a row to `BROKEN` on manifest-hash
-mismatch. There is no test that proves it actually fires end-to-end.
-This is a "load-bearing assumption goes unverified" risk: if the
-transition silently stops working, we'll notice only when a tampered
-bundle gets silently trusted.
-
-**Scope.**
-
-- New test in `tests/test_modifier_lifecycle.py` (or a sibling file):
-  install a bundle → overwrite its on-disk `manifest.json` with any
-  modification → re-run boot (or call the verification codepath
-  directly) → assert the `NeuralModifier` row's status is `BROKEN` and
-  a `HASH_MISMATCH` event row was written with the old + new hashes.
-- Same pattern for: manifest deleted entirely, `code/` dir deleted,
-  `modifier_data.json` hash drift.
-
-**Acceptance criteria.** Three red-flag conditions all produce
-`BROKEN` with a diagnostic event row, and the bundle does **not**
-contribute live handlers in the broken state.
-
----
-
-## Task 12 — Orphaned-contribution uninstall path
-
-**Why.** `NeuralModifier.iter_contributed_objects()` silently skips
-contributions whose target was deleted out from under. The docstring
-says "detect them by comparing the yielded count against
-`self.contributions.count()`." Nobody does that comparison today.
-
-**Scope.**
-
-- Uninstall flow logs a `UNINSTALL` event whose `event_data` includes
-  `{"contributions_total": N, "contributions_resolved": M,
-  "orphaned_ids": [...]}` whenever M < N.
-- Orphan contributions are still deleted (the contribution rows
-  themselves, not their vanished targets), so the bundle cleans up
-  after itself even in degraded states.
-- Test: create a bundle, install it, manually delete one of its
-  contribution targets from the DB, uninstall → assert event data
-  records the orphan count and the contribution rows are gone.
-
-**Acceptance criteria.** Uninstall never silently swallows orphans;
-they're always named in the event log.
-
----
-
-## Task 15 — Upgrade / version / dependency model
-
-**Why.** Reinstall today creates a new `NeuralModifierInstallationLog`
-row but the semantics of "upgrade" (preserving contributions whose UUIDs
-survived across versions, deleting ones that didn't) are undefined.
-There's no way for one bundle to declare it requires another. This is
-the last piece before third-party bundles can be real.
-
-**Scope.** Design, then implement:
-
-- Manifest `version` semver + `requires: [{"slug": "...", "min": "..."}]`.
-- Upgrade algorithm: diff old `modifier_data.json` UUIDs against new;
-  contributions whose UUIDs persist are rebound, contributions removed
-  in the new version are deleted (same path as uninstall for those
-  rows), contributions added are inserted. Install log row records the
-  upgrade pair.
-- Dependency resolution on install: required bundles must be ENABLED
-  (or co-installed), else install fails to `BROKEN` with a clear
-  event.
-
-**Acceptance criteria.**
-
-- v1 → v2 upgrade of a test bundle preserves unchanged contributions
-  and only removes/adds the deltas.
-- Bundle A with `requires: [B]` refuses to install while B is absent.
-- Same bundle installs cleanly once B is ENABLED.
-- Comprehensive test coverage in `tests/test_modifier_versioning.py`.
-
----
+**Blocker.** Enable-button 404 open bug (see above) — step 3 above
+fails via the UI until that's fixed. The management-command path
+(`./manage.py enable_modifier unreal`) works, so Task 8 can be driven
+end-to-end via the shell today if needed; but the user-facing
+acceptance criterion is the browser path.
 
 ---
 
 ## Frontend track (`are-self-ui`)
 
-This is the separate, parallel track. The backend work above makes
-bundles real; the FE work below makes them usable by a human sitting
-in front of Are-Self. None of these depend on the others strictly —
-they can be implemented in any order once the matching BE surface
-exists — but the MVP set (FE-1 through FE-3) is what lets us stop
-hand-running `./manage.py` commands and declare the feature human-
-reachable.
+MVP set (FE-1, FE-2, FE-3) **landed** as part of the Modifier Garden
+Surface 1 work (2026-04-20). See `are-self-ui/TASKS.md` and the
+`ModifierGardenPage.tsx` shipped shape for the current state. The
+entries below are kept as reference for the remaining FE items
+(FE-4 through FE-8).
 
 Assumption: the UI consumes the same Django backend this repo defines,
 over the existing REST / GraphQL layer (whichever `are-self-ui` is on
 today). Where a new endpoint is needed, it's noted. Each item names
 the BE task that must land first.
 
-### FE-1 — Modifier Garden: list, install, uninstall (MVP)
+### FE-1 — Modifier Garden: list, install, uninstall (MVP) — **LANDED 2026-04-20**
 
-**Depends on.** Tasks 6 (lifecycle commands, landed), 8 (Unreal dogfood,
-in flight).
+Shipped in `are-self-ui/src/pages/ModifierGardenPage.tsx` as part of
+Surface 1. Full list/install/uninstall/impact flow with Acetylcholine
+refetch.
 
-**Why.** Today installing/uninstalling bundles requires a dev's
-terminal and `./manage.py modifier install <slug>`. For Are-Self to
-ship to non-developers, a screen has to do this.
+### FE-2 — Enable / disable toggles — **LANDED 2026-04-20**
 
-**Scope.**
+Shipped. Note the open enable-button 404 bug (backend routing issue)
+is the one outstanding item on the toggle path.
 
-- A new "Modifier Garden" view. Table of all `NeuralModifier` rows with
-  `slug`, `name`, `version`, `author`, `status` (INSTALLED / ENABLED /
-  DISABLED / BROKEN), install date, last event. Status rendered with
-  color pills matching the backend enum.
-- "Install bundle" button → file picker accepting the sealed bundle
-  archive format (whatever `build_modifier` emits; confirm extension
-  at FE-implementation time). POST to a new endpoint that wraps the
-  `install_bundle` loader entry point; streams progress + errors back.
-- "Uninstall" button per row → confirmation dialog showing the
-  contribution count ("this will remove 312 rows across 14 models")
-  sourced from a new `/api/modifiers/<slug>/impact/` endpoint. Click
-  through runs `uninstall_bundle` server-side and refreshes the list.
-- BROKEN status renders with an "inspect" affordance: click opens the
-  latest `NeuralModifierInstallationLog` / events for that bundle and
-  shows the exception text from the failed import or hash-check.
+### FE-3 — Row-level bundle attribution in the admin-style views — **LANDED 2026-04-20**
 
-**Acceptance.**
-
-- Human installs the Unreal bundle from the browser end to end, sees
-  status flip to ENABLED, sees 300+ rows attributed to the bundle.
-- Uninstall from the browser removes everything cleanly; status flips
-  to (nothing — the NeuralModifier row is gone) or DISABLED/archived,
-  whichever the backend settles on.
-- Reinstall after uninstall round-trips clean.
-- A bundle with a deliberately corrupted manifest surfaces BROKEN with
-  the right error text in the inspector.
-
-### FE-2 — Enable / disable toggles
-
-**Depends on.** Task 13 (parietal tool-set gating on ENABLED).
-
-**Why.** "Keep the data, stop using the tools" is a legitimate user
-workflow — trying Unreal on/off mid-project without losing the hand-
-tuned Effector rows.
-
-**Scope.**
-
-- Toggle control per row in the Modifier Garden: ENABLED ↔ DISABLED.
-- Tooltip copy explains: "Disabling keeps this bundle's configuration
-  but hides its tools from reasoning sessions. No data is removed."
-- Toggle calls `enable_modifier` / `disable_modifier` equivalents via
-  the existing REST / GraphQL surface.
-- If a reasoning session is in flight, the toggle does not affect it —
-  next session picks up the change. Surface this in the confirmation
-  if we want to be explicit; not required.
-
-**Acceptance.**
-
-- Flip Unreal to DISABLED, start a new reasoning session, verify the
-  Unreal parietal tools are absent from the tool picker. Flip back to
-  ENABLED, verify they come back.
-
-### FE-3 — Row-level bundle attribution in the admin-style views
-
-**Depends on.** Task 8 landed (bundle with real contributions to
-attribute).
-
-**Why.** Once a bundle owns dozens of Effector / Neuron / NeuralPathway
-/ Executable rows, editing one by hand without realizing it came from a
-bundle is a foot-gun — the edit gets clobbered on reinstall / upgrade.
-Users need to see provenance.
-
-**Scope.**
-
-- In every existing editor screen that renders a model with a
-  `NeuralModifierContribution` pointing at it (Effectors, Neurons,
-  NeuralPathways, Executables, Switches, ContextVariables,
-  ProjectEnvironments, ToolDefinitions, ToolParameterAssignments, the
-  full BE contribution list), show a read-only "Contributed by: `unreal
-  bundle`" chip near the row title.
-- Clicking the chip links to the bundle's row in FE-1.
-- Editing a bundle-contributed row shows a banner warning: "Changes
-  here will be reverted when this bundle is reinstalled or upgraded.
-  For persistent changes, modify the bundle source and rebuild."
-- This needs one new endpoint or a GraphQL field:
-  `GET /api/rows/<content_type>/<uuid>/contribution/` returning the
-  contributing bundle slug + id, null if core-owned.
-
-**Acceptance.**
-
-- Every row that shows up post-install has the chip. Every core row
-  has no chip. Test fixture: install Unreal, pick a bundle-owned
-  Effector and a core Effector, screenshot both — expected contrast is
-  obvious.
+Shipped alongside Surface 1.
 
 ### FE-4 — Parietal tool picker respects soft-lookup
 
@@ -875,19 +588,27 @@ Do not build this speculatively.
 
 ### Minimum shippable FE set
 
-If we had to ship the moment Tasks 8–15 are green, the minimum set
-is **FE-1, FE-2, FE-3, FE-4**. That covers install/uninstall,
-enable/disable, row provenance, and tool-picker soft-lookup.
-Everything else is a quality-of-life improvement and can follow.
+MVP set was **FE-1, FE-2, FE-3, FE-4**. FE-1/2/3 shipped 2026-04-20.
+FE-4 (tool-picker soft-lookup) is the last MVP piece. Everything else
+(FE-5 through FE-8) is a quality-of-life improvement and can follow.
 
 ---
 
 ## When this file gets deleted
 
-When Tasks 8–15 are landed and green, the "Not landed" section above
-is empty, and the modifier-garden install UI in `are-self-ui` exists
-and works against a real bundle (at least the MVP set FE-1 through
-FE-4): delete this file and update `CLAUDE.md`'s "Active thread"
-banner to note the feature area is done. Archive the plan's contents
-into `TASKS.md` as a historical marker before deletion if that feels
-right — Michael's call.
+Remaining gates before this plan retires:
+
+1. Enable-button 404 fixed (one-line routing bug; see top of file).
+2. Task 8 live-browser round-trip passes on a fresh checkout, driven
+   by a non-developer.
+3. FE-4 (tool picker soft-lookup) lands — the last piece of the
+   Modifier Garden user story that's not already shipped.
+
+FE-5 through FE-8 are quality-of-life improvements and do not block
+retirement. Surface 2 (save-to-bundle) and the addons-as-fourth-surface
+direction have independent lives as deferred design items.
+
+When the three gates are green, delete this file and update
+`CLAUDE.md`'s "Active thread" banner to note the feature area is done.
+Archive the Surface 2 and addons sections into `TASKS.md` before
+deletion — both are referenced from there already.

@@ -648,6 +648,48 @@ Effector / Executable constants section all cite the new rule. No UI-side
 change; `nodeConstants.ts` mirrors the class constants by UUID string and
 doesn't care which fixture file the row lives in.
 
+## Top Priority — Flip `IdentityAddon` to UUID PK (NeuralModifier-extensible)
+
+Standing project-wide immutability directive (CLAUDE.md): anything a
+`NeuralModifier` might contribute rows to uses UUID primary keys. Only integer
+PKs remaining are protocol enums and canonical vocabulary tables with class-level
+integer constants owned exclusively by core. `IdentityAddon` fails that test —
+it is 100% a table a graft would want to add rows to (a bundle could ship a new
+phase-2 CONTEXT or phase-4 TERMINAL addon, register its `function_slug`, and
+contribute a row). Today it's still an auto-increment integer PK.
+
+- [ ] **Flip `identity.IdentityAddon.id` to `UUIDField(primary_key=True,
+  default=uuid.uuid4, editable=False)`**. Update the model; write the migration
+  (rename/drop old PK column, add UUID column, backfill via `RunPython` for any
+  existing rows, repoint every `ForeignKey`/`ManyToManyField` that references
+  it, drop old column). `IdentityAddonPhase` stays integer-PK — it's a fixed
+  4-row vocabulary (IDENTIFY / CONTEXT / HISTORY / TERMINAL), core-owned, not a
+  graft surface.
+- [ ] **Rewrite `identity/fixtures/initial_data.json`** (and wherever else the
+  14 current addon rows live — `zygote.json` for Thalamus, identity disc M2M
+  arrays in `initial_data.json`) to use UUID strings instead of the integers
+  `[5, 7, 8, 9, 10, 11, 12]` etc. Pick fresh `uuid.uuid4()` literals — per the
+  Standing ruling these are random, no UUIDv5 or deterministic seeding.
+- [ ] **Audit callsites** that hardcode integer PKs:
+  `session.identity_disc.addons.filter(function_slug='focus_addon').exists()`
+  (TASKS.md:1104) is filter-by-slug and safe. Anything that filters `pk__in=[...]`
+  or references an addon by numeric PK needs to flip to UUIDs or — preferably —
+  filter by `function_slug`, which is the stable biological identifier anyway.
+- [ ] **Consider adding class constants** for the core addons the way
+  `Effector.BEGIN_PLAY` etc. work, so code references them by name. Candidates:
+  `IdentityAddon.NORMAL_CHAT`, `RIVER_OF_SIX`, `PROMPT`, `YOUR_MOVE`,
+  `HIPPOCAMPUS`. If adopted, those rows move to `genetic_immutables` per the
+  class-constant rule.
+- [ ] **Fixture tier review after the flip.** Addons that ship with core go
+  to `initial_phenotypes` (or `genetic_immutables` if class-constant-referenced).
+  NeuralModifier-contributed addons live inside the bundle's fixture and come
+  in via the install path.
+
+**Why now:** blocking the Thalamus "just normal_chat, nothing else" trim below.
+Editing the integer-keyed M2M array today works, but any addon-related fixture
+work we do pre-flip just has to get redone post-flip. Worth landing the UUID
+migration first and then trimming the Thalamus on top of the new shape.
+
 ## Top Priority — Remove Legacy `central_nervous_system/` URL Prefix
 
 - [ ] **The `/central_nervous_system/` URL prefix must GO.** It's a legacy holdover living in the
@@ -890,6 +932,17 @@ remains invisible there. The v1→v2 migration is tracked separately under
 "Purge residual `/api/v1/` consumers" below.
 
 ## Known Bugs
+
+- [ ] **Modifier Garden Enable button returns 404.** `POST /api/v2/neural-modifiers/<slug>/enable/`
+  returns 404 against an installed bundle; `POST /api/v2/neural-modifiers/<slug>/disable/` on the
+  same row works. Static analysis of `neuroplasticity/api.py` shows the `enable` and `disable`
+  actions as structurally identical (same decorator, same shape, same `loader.enable_bundle` /
+  `loader.disable_bundle` call). Test suite's `test_enable_disable_actions` passes, which says
+  the automated path returns 200 — so the 404 is almost certainly routing / URL-conf at runtime,
+  not code logic. Michael's read: "likely a 1 line fix." Management-command path
+  (`./manage.py enable_modifier <slug>`) is unaffected, so this does not block Task 8 being
+  driven end-to-end via shell. Blocks FE-2 acceptance through the browser and the Task 8
+  live-browser round-trip.
 
 - [ ] **Infinite loop on retry LIMIT REACHED — ROLLED BACK, NEEDS MORE TARGETED FIX.**
   Attempted fix on April 10, 2026 gated `TYPE_FLOW` on all logic effectors
