@@ -725,7 +725,7 @@
     "pk": "26e51560-7865-4af9-90f9-dbdfdf752472",
     "fields": {
       "created": "2026-02-18T12:00:00Z",
-      "description": "Django Model Name.",
+      "description": "Django model class name, e.g. 'Spike', 'SpikeTrain', 'ReasoningTurn', 'ReasoningSession', 'Engram', 'IdentityDisc'.",
       "modified": "2026-02-18T12:00:00Z",
       "name": "model_name",
       "type": 1
@@ -736,7 +736,7 @@
     "pk": "2912462e-dfd8-4d7f-99fb-9413cdc28673",
     "fields": {
       "created": "2026-02-18T12:00:00Z",
-      "description": "Q Object String.",
+      "description": "Optional Django Q-expression string, evaluated with only Q in scope. Example: \"Q(status_id='<uuid>') | Q(axoplasm__var='alpha')\".",
       "modified": "2026-02-18T12:00:00Z",
       "name": "q_string",
       "type": 1
@@ -1011,7 +1011,7 @@
     "pk": "826de4d1-d7a5-4cf1-a3e0-601addc0dd3b",
     "fields": {
       "created": "2026-02-18T12:00:00Z",
-      "description": "Filter Dict.",
+      "description": "Django ORM filter dict. Keys are field names, values are scalars or lists. Example: {'id': '<uuid>'} or {'status_id': '<uuid>', 'spike_train_id': '<uuid>'}.",
       "modified": "2026-02-18T12:00:00Z",
       "name": "filters",
       "type": 6
