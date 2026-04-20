@@ -53,16 +53,16 @@ def _broadcast(modifier, action_name: str, slug: str = None) -> None:
 
 
 def _save_upload_to_catalog(uploaded_file) -> Path:
-    """Persist a multipart-upload archive into the on-disk catalog.
+    """Persist a multipart-upload archive into the on-disk genomes dir.
 
     Reads the manifest out of the archive bytes to determine the slug,
-    then writes ``catalog/<slug>.zip``. Refuses if a zip with that
+    then writes ``genomes/<slug>.zip``. Refuses if a zip with that
     name already exists.
     """
     import io
     import zipfile
 
-    catalog = loader.catalog_root()
+    catalog = loader.genomes_root()
     catalog.mkdir(parents=True, exist_ok=True)
 
     data = uploaded_file.read()
@@ -116,10 +116,9 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
     def install(self, request):
         """Install a bundle from an uploaded archive OR from an existing slug.
 
-        - `archive` upload: saves the zip into the on-disk catalog under
-          ``<slug>.zip`` and runs the catalog-install flow against it.
-        - `slug`: dev-flow install from ``modifier_genome/<slug>/``
-          (called by ``./manage.py build_modifier`` users; not the UI).
+        - `archive` upload: saves the zip into the on-disk genomes dir
+          under ``<slug>.zip`` and runs the archive-install flow.
+        - `slug`: installs the already-committed ``genomes/<slug>.zip``.
         """
         archive = request.FILES.get('archive')
         slug = request.data.get('slug')
@@ -128,7 +127,8 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
                 archive_path = _save_upload_to_catalog(archive)
                 modifier = loader.install_bundle_from_archive(archive_path)
             elif slug:
-                modifier = loader.install_bundle(slug)
+                archive_path = loader.genomes_root() / '{0}.zip'.format(slug)
+                modifier = loader.install_bundle_from_archive(archive_path)
             else:
                 return Response(
                     {'detail': 'Provide either archive upload or slug.'},
@@ -153,11 +153,17 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=['post'], url_path='uninstall')
     def uninstall(self, request, slug=None):
         try:
-            modifier = loader.uninstall_bundle(slug)
+            deleted_slug = loader.uninstall_bundle(slug)
         except NeuralModifier.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        _broadcast(modifier, 'uninstall')
-        return Response(NeuralModifierDetailSerializer(modifier).data)
+        # Under the AVAILABLE = no-DB-row ruling, uninstall deletes the
+        # row — so there is no modifier object to serialize back to the
+        # UI. Broadcast with slug-only and return a minimal payload.
+        _broadcast(None, 'uninstall', slug=deleted_slug)
+        return Response(
+            {'slug': deleted_slug, 'uninstalled': True},
+            status=status.HTTP_200_OK,
+        )
 
     @action(detail=True, methods=['post'], url_path='enable')
     def enable(self, request, slug=None):
@@ -187,7 +193,7 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='catalog')
     def catalog(self, request):
-        """One row per zip under the catalog root.
+        """One row per zip under the genomes root.
 
         Each entry is the unzipped manifest fields the UI needs to render
         an AVAILABLE row, plus an `installed` flag computed from a single
@@ -224,8 +230,8 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
         url_path=r'catalog/(?P<catalog_slug>[^/.]+)/install',
     )
     def catalog_install(self, request, catalog_slug=None):
-        """Install the catalog zip whose manifest slug matches ``catalog_slug``."""
-        archive_path = loader.catalog_root() / '{0}.zip'.format(catalog_slug)
+        """Install the genome zip whose manifest slug matches ``catalog_slug``."""
+        archive_path = loader.genomes_root() / '{0}.zip'.format(catalog_slug)
         if not archive_path.exists():
             return Response(
                 {'detail': 'No catalog archive for slug {0!r}.'.format(catalog_slug)},
@@ -262,12 +268,12 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
         url_path=r'catalog/(?P<catalog_slug>[^/.]+)/delete',
     )
     def catalog_delete(self, request, catalog_slug=None):
-        """Remove a catalog zip from disk. Refuses if a DB row exists.
+        """Remove a genome zip from disk. Refuses if a DB row exists.
 
         The garden page must call uninstall first; this only nukes the
         archive itself, returning the bundle to "gone" state.
         """
-        archive_path = loader.catalog_root() / '{0}.zip'.format(catalog_slug)
+        archive_path = loader.genomes_root() / '{0}.zip'.format(catalog_slug)
         if NeuralModifier.objects.filter(slug=catalog_slug).exists():
             return Response(
                 {'detail': 'Uninstall first, then delete.'},

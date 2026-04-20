@@ -2,17 +2,14 @@
 
 Owns the `LogEntry` / `LogSession` / `LogStats` data model, the
 `LogParserStrategy` ABC with the shared streaming-tokenizer skeleton, and
-the registry-based `LogParserFactory`. Format-specific strategies register
-themselves with the factory at module import time via
-`LogParserFactory.register()`.
+the registry-based `LogParserFactory`. Format-specific strategies live in
+NeuralModifier bundles and register themselves with
+`LogParserFactory.register()` when their bundle boots (see
+`boot_bundles()` in `neuroplasticity/loader.py`).
 
-This module intentionally knows nothing about Unreal Engine. The Unreal
-Engine strategies live in the `unreal` NeuralModifier bundle at
-`neuroplasticity/modifier_genome/unreal/code/are_self_unreal/log_parsers.py`
-and register themselves with `LogParserFactory` when the bundle boots
-(`boot_bundles()` in `neuroplasticity/loader.py`). Consumers that need UE
-parsing at test time — before the bundle runtime is on `sys.path` —
-should import the source tree directly.
+This module knows nothing about any specific log format. Bundle-specific
+test setup — including any `sys.path` work needed to import a bundle's
+strategies before it is installed — belongs in that bundle, not here.
 """
 
 from abc import ABC, abstractmethod

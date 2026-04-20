@@ -87,7 +87,11 @@ class CommonFixturesAPITestCase(CommonTestCase):
         'parietal_lobe/fixtures/petri_dish.json',
         'temporal_lobe/fixtures/petri_dish.json',
         # FORBIDDEN: NEVER ADD THIS AGAIN FORBIDDEN
-        # 'neuroplasticity/modifier_genome/unreal/modifier_data.json',
+        # (unreal bundle `modifier_data.json` — ships inside
+        #  `neuroplasticity/genomes/unreal.zip`, not as a standalone
+        #  fixture. Loading it here would force-load the bundle's rows
+        #  before install has a chance to record contributions, breaking
+        #  every test that installs the bundle mid-run.)
         # FORBIDDEN: NEVER ADD THIS AGAIN FORBIDDEN
         # 'peripheral_nervous_system/fixtures/test_agents.json',
     ]

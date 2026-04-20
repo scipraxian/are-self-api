@@ -1,15 +1,18 @@
 """Tests for the N-way spike log merge."""
 
+import importlib
 import unittest
 from datetime import datetime
 
 # The Unreal log-parser strategies live in the `unreal` NeuralModifier
-# bundle. Tests don't boot the bundle runtime, so import the source tree
-# directly to fire the LogParserFactory.register(...) calls this test
-# depends on.
-from neuroplasticity.modifier_genome.unreal.code.are_self_unreal import (  # noqa: F401
-    log_parsers,
-)
+# bundle. Tests don't boot the bundle runtime, so extract the committed
+# zip and import `are_self_unreal.log_parsers` from its code tree to
+# fire the LogParserFactory.register(...) calls this test depends on.
+from neuroplasticity.test_helpers import ensure_unreal_bundle_code_on_path
+
+ensure_unreal_bundle_code_on_path()
+importlib.import_module('are_self_unreal.log_parsers')
+
 from occipital_lobe.log_parser import LogEntry
 from occipital_lobe.merge_logs_nway import (
     TOLERANCE_SECONDS,

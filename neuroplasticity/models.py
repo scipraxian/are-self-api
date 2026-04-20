@@ -1,8 +1,12 @@
 """Neuroplasticity: the NeuralModifier install / lifecycle registry.
 
 A NeuralModifier is Are-Self's word for an installed extension bundle.
-Bundles live on disk at `neural_modifiers/{slug}/` (manifest.json,
-modifier_data.json, code/, README.md) and are immutable post-install.
+Bundles live on disk as committed ``neuroplasticity/genomes/<slug>.zip``
+archives (manifest.json, modifier_data.json, code/, README.md inside
+the zip). At install time, the zip is extracted into
+``neuroplasticity/grafts/<slug>/`` (the runtime tree) and its
+``modifier_data.json`` is loaded into the DB.
+
 This app is the source of truth for *which* modifiers are installed,
 *what* each one contributed to the database, and the audit trail of
 install / enable / disable events.
@@ -23,21 +27,31 @@ class NeuralModifierStatus(NameMixin):
 
     State machine::
 
-        DISCOVERED -> INSTALLED -> ENABLED <-> DISABLED
-                          |           |           |
-                          +-----------+-----------+--> BROKEN
+        AVAILABLE -> INSTALLED -> ENABLED <-> DISABLED
+        (zip on                     |            |
+         disk,                      +------------+---> BROKEN
+         no row)                                       ^
+             ^                                         | boot-time
+             |                                         | drift or
+             +-------- uninstall (deletes row) --------+ load failure
 
-    DISCOVERED: `neural_modifiers/{slug}/` exists and manifest parsed, but
-        modifier_data.json has not been loaded and code is not on sys.path.
-    INSTALLED:  manifest validated, modifier_data.json loaded, contributions
-        recorded, code available for import. Not yet wired into MCP.
+    AVAILABLE:  ``genomes/<slug>.zip`` exists and no DB row exists. Not
+        a row state — the absence of a row IS the state.
+    INSTALLED:  manifest validated, modifier_data.json loaded,
+        contributions recorded, code on sys.path. Not yet wired into MCP.
     ENABLED:    INSTALLED plus actively contributing to the MCP tool-set
         builder and live tool resolution.
     DISABLED:   INSTALLED but skipped by the MCP builder. Code still on
         sys.path, contributions still in DB. Reversible via ENABLE.
-    BROKEN:     Terminal error state. Manifest hash mismatch, missing
-        dependency, load failure, or crash mid-install / mid-uninstall.
-        Requires manual intervention.
+    BROKEN:     Error state surfaced by the boot re-check or an upgrade
+        failure. Manifest hash mismatch against the runtime tree, or
+        entry-module import failure. Requires manual intervention.
+        (A failed fresh install deletes the row entirely; it does not
+        leave a BROKEN row behind.)
+
+    DISCOVERED is retired. The enum value (1) is preserved for
+    backwards compatibility with historical log events but is never
+    assigned to a new row.
     """
 
     DISCOVERED = 1
@@ -54,16 +68,18 @@ class NeuralModifierStatus(NameMixin):
 class NeuralModifier(DefaultFieldsMixin):
     """An installed NeuralModifier bundle registered with the running system.
 
-    One row per bundle in `neural_modifiers/`. The `slug` is the stable
-    identifier matching the on-disk directory name; `name` (from
+    One row per bundle currently in ``grafts/``. The `slug` is the
+    stable identifier matching the on-disk directory name; `name` (from
     NameMixin) is the human-readable display name mirrored from the
     manifest at install time. `manifest_json` caches the full manifest
     so routine reads never touch disk; `manifest_hash` is the sha256 of
     manifest.json captured at install, checked on boot to detect
     tampering or version drift.
 
-    NeuralModifier rows are never deleted on uninstall — status flips to
-    DISCOVERED (or BROKEN) and the installation log history is retained.
+    Uninstall DELETES the row (AVAILABLE = zip exists + no row).
+    Contribution rows, installation logs, and log events all cascade
+    away. The committed ``genomes/<slug>.zip`` stays put — it is the
+    bundle, not a derivative.
     """
 
     status = models.ForeignKey(

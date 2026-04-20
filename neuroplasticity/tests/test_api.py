@@ -20,8 +20,8 @@ from neuroplasticity.tests.test_modifier_lifecycle import (
 class ModifierApiSmokeTest(ModifierLifecycleTestCase, APITestCase):
     def test_list_includes_installed_bundle(self):
         """Assert list endpoint returns the installed bundle."""
-        build_fake_bundle(self.genome_root, 'ui_alpha')
-        loader.install_bundle('ui_alpha')
+        build_fake_bundle(self.scratch_root, 'ui_alpha')
+        self.install_fake('ui_alpha')
 
         res = self.client.get('/api/v2/neural-modifiers/')
 
@@ -31,8 +31,8 @@ class ModifierApiSmokeTest(ModifierLifecycleTestCase, APITestCase):
 
     def test_retrieve_includes_installation_logs(self):
         """Assert detail endpoint returns the installation logs array."""
-        build_fake_bundle(self.genome_root, 'ui_retrieve')
-        loader.install_bundle('ui_retrieve')
+        build_fake_bundle(self.scratch_root, 'ui_retrieve')
+        self.install_fake('ui_retrieve')
 
         res = self.client.get('/api/v2/neural-modifiers/ui_retrieve/')
 
@@ -44,8 +44,8 @@ class ModifierApiSmokeTest(ModifierLifecycleTestCase, APITestCase):
 
     def test_impact_endpoint(self):
         """Assert impact endpoint returns contribution breakdown."""
-        build_fake_bundle(self.genome_root, 'ui_beta')
-        loader.install_bundle('ui_beta')
+        build_fake_bundle(self.scratch_root, 'ui_beta')
+        self.install_fake('ui_beta')
 
         res = self.client.get('/api/v2/neural-modifiers/ui_beta/impact/')
 
@@ -62,8 +62,8 @@ class ModifierApiSmokeTest(ModifierLifecycleTestCase, APITestCase):
 
     def test_enable_disable_actions(self):
         """Assert enable/disable endpoints flip status."""
-        build_fake_bundle(self.genome_root, 'ui_gamma')
-        loader.install_bundle('ui_gamma')
+        build_fake_bundle(self.scratch_root, 'ui_gamma')
+        self.install_fake('ui_gamma')
 
         res = self.client.post('/api/v2/neural-modifiers/ui_gamma/enable/')
         self.assertEqual(res.status_code, 200)
@@ -74,14 +74,19 @@ class ModifierApiSmokeTest(ModifierLifecycleTestCase, APITestCase):
         self.assertEqual(res.json()['status_name'], 'Disabled')
 
     def test_uninstall_action(self):
-        """Assert uninstall flips status back to Discovered."""
-        build_fake_bundle(self.genome_root, 'ui_delta')
-        loader.install_bundle('ui_delta')
+        """Assert uninstall deletes the row and returns a minimal payload."""
+        build_fake_bundle(self.scratch_root, 'ui_delta')
+        self.install_fake('ui_delta')
 
         res = self.client.post('/api/v2/neural-modifiers/ui_delta/uninstall/')
 
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.json()['status_name'], 'Discovered')
+        self.assertEqual(
+            res.json(), {'slug': 'ui_delta', 'uninstalled': True}
+        )
+        self.assertFalse(
+            NeuralModifier.objects.filter(slug='ui_delta').exists()
+        )
 
     def test_install_endpoint_rejects_missing_payload(self):
         """Assert install endpoint 400s when neither archive nor slug given."""
@@ -107,12 +112,11 @@ class CatalogListReturnsInstalledFlagTest(
 ):
     def test_catalog_list_marks_installed(self):
         """Assert catalog rows tag installed=true iff a DB row exists."""
-        # Two zips in catalog: one we install, one we leave AVAILABLE.
-        build_fake_bundle_archive(self.catalog_root, 'cat_installed')
-        build_fake_bundle_archive(self.catalog_root, 'cat_available')
-        # Install one of them by going through the catalog flow.
+        # Two zips in the genomes dir: install one, leave the other AVAILABLE.
+        build_fake_bundle_archive(self.genomes_root, 'cat_installed')
+        build_fake_bundle_archive(self.genomes_root, 'cat_available')
         loader.install_bundle_from_archive(
-            self.catalog_root / 'cat_installed.zip'
+            self.genomes_root / 'cat_installed.zip'
         )
 
         res = self.client.get('/api/v2/neural-modifiers/catalog/')
@@ -129,9 +133,9 @@ class CatalogListReturnsInstalledFlagTest(
 
 
 class CatalogInstallCreatesRowTest(ModifierLifecycleTestCase, APITestCase):
-    def test_catalog_install_creates_row_and_clears_staging(self):
-        """Assert install creates a DB row and the staging tempdir is gone."""
-        build_fake_bundle_archive(self.catalog_root, 'cat_install')
+    def test_catalog_install_creates_row_and_clears_operating_room(self):
+        """Assert install creates a DB row and the operating_room is empty."""
+        build_fake_bundle_archive(self.genomes_root, 'cat_install')
 
         res = self.client.post(
             '/api/v2/neural-modifiers/catalog/cat_install/install/'
@@ -140,11 +144,10 @@ class CatalogInstallCreatesRowTest(ModifierLifecycleTestCase, APITestCase):
         self.assertEqual(res.status_code, 200)
         modifier = NeuralModifier.objects.get(slug='cat_install')
         self.assertEqual(modifier.contributions.count(), 3)
-        # Staging tempdir cleaned up.
-        staging = self.runtime_root / '_staging' / 'cat_install'
-        self.assertFalse(staging.exists())
-        # Catalog zip stays put.
-        self.assertTrue((self.catalog_root / 'cat_install.zip').exists())
+        # Scratch dir cleaned up — the operating room is empty.
+        self.assertEqual(list(self.operating_room_root.iterdir()), [])
+        # Genome zip stays put.
+        self.assertTrue((self.genomes_root / 'cat_install.zip').exists())
 
 
 class CatalogInstallConflictsWhenAlreadyInstalledTest(
@@ -152,8 +155,8 @@ class CatalogInstallConflictsWhenAlreadyInstalledTest(
 ):
     def test_catalog_install_conflicts_when_already_installed(self):
         """Assert second install attempt against an installed slug is rejected."""
-        build_fake_bundle_archive(self.catalog_root, 'cat_dupe')
-        loader.install_bundle_from_archive(self.catalog_root / 'cat_dupe.zip')
+        build_fake_bundle_archive(self.genomes_root, 'cat_dupe')
+        loader.install_bundle_from_archive(self.genomes_root / 'cat_dupe.zip')
 
         res = self.client.post(
             '/api/v2/neural-modifiers/catalog/cat_dupe/install/'
@@ -177,8 +180,8 @@ class CatalogInstallReturns404WhenZipMissingTest(
 
 class CatalogDeleteRemovesZipTest(ModifierLifecycleTestCase, APITestCase):
     def test_catalog_delete_removes_zip(self):
-        """Assert delete unlinks the catalog zip when no DB row exists."""
-        archive = build_fake_bundle_archive(self.catalog_root, 'cat_to_delete')
+        """Assert delete unlinks the genome zip when no DB row exists."""
+        archive = build_fake_bundle_archive(self.genomes_root, 'cat_to_delete')
         self.assertTrue(archive.exists())
 
         res = self.client.post(
@@ -194,7 +197,7 @@ class CatalogDeleteRefusesWhenInstalledTest(
 ):
     def test_catalog_delete_refuses_when_installed(self):
         """Assert delete 400s with a clear message when a DB row exists."""
-        archive = build_fake_bundle_archive(self.catalog_root, 'cat_locked')
+        archive = build_fake_bundle_archive(self.genomes_root, 'cat_locked')
         loader.install_bundle_from_archive(archive)
 
         res = self.client.post(

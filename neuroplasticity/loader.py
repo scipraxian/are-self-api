@@ -4,18 +4,31 @@ Pure-Python library called by the management commands and the AppConfig
 boot hook. Manages the install / uninstall / enable / disable lifecycle
 plus the boot-time hash-check + side-effect re-import pass.
 
-Key invariants:
+Layout invariants:
 
+    * ``neuroplasticity/genomes/<slug>.zip`` is the single source of
+      truth. A bundle exists iff its zip does. The zip is committed.
+    * ``neuroplasticity/grafts/<slug>/`` is the runtime install tree.
+      Gitignored, derived state; install copies into it, uninstall
+      removes it.
+    * ``neuroplasticity/operating_room/`` is the scratch space for
+      transient install / upgrade extractions. Gitignored. Every
+      operation extracts into a fresh ``tempfile.mkdtemp`` under this
+      root and removes it in a ``finally`` block.
+
+State invariants:
+
+    * AVAILABLE = zip on disk, no DB row. Uninstall deletes the
+      ``NeuralModifier`` row entirely. CASCADE handles contributions,
+      logs, and events.
     * INSTALLED_APPS is never mutated. Bundles contribute data, not apps.
-    * Every DB object created by `install_bundle` gets one
-      NeuralModifierContribution row pointing at it via GenericForeignKey,
-      so uninstall can walk the manifest in install order and delete
-      cleanly.
-    * The runtime tree at NEURAL_MODIFIERS_ROOT/<slug>/ is treated as
-      derived state, never edited by hand. install copies into it,
-      uninstall removes it.
-    * Hash drift between the on-disk manifest and NeuralModifier.manifest_hash
-      flips status to BROKEN and the bundle's entry modules are NOT imported.
+    * Every DB object created by install gets one
+      ``NeuralModifierContribution`` row pointing at it via GFK, so
+      uninstall can walk the manifest in reverse-install order and
+      delete cleanly.
+    * Hash drift between the on-disk manifest and
+      ``NeuralModifier.manifest_hash`` flips status to BROKEN and the
+      bundle's entry modules are NOT imported.
 """
 
 from __future__ import annotations
@@ -26,9 +39,10 @@ import json
 import logging
 import shutil
 import sys
+import tempfile
 import traceback
 from pathlib import Path
-from typing import Iterable, Tuple
+from typing import Iterable, Optional
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -59,25 +73,29 @@ REQUIRED_MANIFEST_KEYS = (
 )
 
 
-def modifier_genome_root() -> Path:
-    """Source-of-truth directory for committed NeuralModifier bundles."""
-    return Path(settings.MODIFIER_GENOME_ROOT)
-
-
-def neural_modifiers_root() -> Path:
+def grafts_root() -> Path:
     """Runtime install directory (gitignored). Created on first install."""
-    return Path(settings.NEURAL_MODIFIERS_ROOT)
+    return Path(settings.NEURAL_MODIFIER_GRAFTS_ROOT)
 
 
-def catalog_root() -> Path:
-    """On-disk catalog of installable NeuralModifier zip archives.
+def genomes_root() -> Path:
+    """On-disk collection of installable NeuralModifier zip archives.
 
     Each ``*.zip`` under this directory is one bundle the user can
-    install through the Modifier Garden. The directory is gitignored
-    and treated as derived state — `pack_modifier` writes into it,
-    `delete` action removes from it, install reads from it.
+    install through the Modifier Garden. The directory is committed to
+    the repo — the zip IS the source of truth for its bundle.
     """
-    return Path(settings.NEURAL_MODIFIER_CATALOG_ROOT)
+    return Path(settings.NEURAL_MODIFIER_GENOMES_ROOT)
+
+
+def operating_room_root() -> Path:
+    """Transient scratch root for install / upgrade extractions.
+
+    Each operation creates a fresh ``tempfile.mkdtemp`` under this dir
+    and removes it in a ``finally`` block. The root itself persists so
+    concurrent operations do not race on ``mkdir``.
+    """
+    return Path(settings.NEURAL_MODIFIER_OPERATING_ROOM_ROOT)
 
 
 def read_archive_manifest(archive_path: Path) -> dict:
@@ -118,13 +136,13 @@ def read_archive_manifest(archive_path: Path) -> dict:
 
 
 def read_catalog_manifests() -> list[dict]:
-    """Walk the catalog dir; one entry per readable zip.
+    """Walk the genomes dir; one entry per readable zip.
 
     Returns a list of ``{'manifest': dict, 'archive_path': str,
     'archive_name': str}``. A malformed zip or missing-manifest entry
     is logged and skipped — one bad zip never blanks the whole catalog.
     """
-    root = catalog_root()
+    root = genomes_root()
     if not root.exists():
         return []
     entries = []
@@ -148,34 +166,22 @@ def read_catalog_manifests() -> list[dict]:
     return entries
 
 
-def install_bundle(slug: str) -> NeuralModifier:
-    """Install from the committed source at ``modifier_genome/<slug>/``.
-
-    Thin wrapper around :func:`install_bundle_from_source` for the dev
-    flow (``./manage.py build_modifier``). The API / catalog install
-    path goes through :func:`install_bundle_from_archive` instead.
-
-    Raises:
-        FileNotFoundError: source `modifier_genome/<slug>/` is missing.
-        FileExistsError: runtime `neural_modifiers/<slug>/` already exists.
-        ValueError: manifest fails validation.
-        Exception: re-raised after BROKEN flip if the entry module fails
-            to import or modifier_data.json fails to deserialize.
-    """
-    source = modifier_genome_root() / slug
-    if not source.exists():
-        raise FileNotFoundError(
-            '[Neuroplasticity] No bundle source at {0}.'.format(source)
-        )
-    return install_bundle_from_source(source, slug)
-
-
 def install_bundle_from_source(source: Path, slug: str) -> NeuralModifier:
     """Copy ``source`` to the runtime tree, import its code, load its data.
 
-    The source can be the committed ``modifier_genome/<slug>/`` (dev
-    flow) or a transient extraction tempdir from a catalog zip — both
-    look identical to this function.
+    The source is a directory containing ``manifest.json``,
+    ``modifier_data.json``, and ``code/``. In production callers always
+    reach this function via :func:`install_bundle_from_archive` which
+    extracts a zip into ``operating_room/`` and passes the extraction
+    path here. Tests call this directly on a directory they've built.
+
+    Raises:
+        FileExistsError: runtime `grafts/<slug>/` already exists. Raised
+            BEFORE any DB state is created so a failed install never
+            leaves a half-baked row behind.
+        ValueError: manifest fails validation.
+        Exception: re-raised after BROKEN flip if the entry module fails
+            to import or modifier_data.json fails to deserialize.
     """
     manifest_path = source / 'manifest.json'
     manifest = json.loads(manifest_path.read_text())
@@ -183,18 +189,23 @@ def install_bundle_from_source(source: Path, slug: str) -> NeuralModifier:
     _check_requires(manifest)
     manifest_hash = _compute_manifest_hash(manifest_path)
 
-    modifier = _get_or_create_modifier(slug, manifest, manifest_hash)
-    log = NeuralModifierInstallationLog.objects.create(
-        neural_modifier=modifier,
-        installation_manifest=manifest,
-    )
-
-    runtime = neural_modifiers_root() / slug
+    runtime = grafts_root() / slug
     if runtime.exists():
         raise FileExistsError(
             '[Neuroplasticity] Runtime dir exists at {0}; '
             'uninstall first.'.format(runtime)
         )
+
+    # A prior install may have left a row behind if this one is a retry
+    # against the same slug. Otherwise we create fresh. The row is
+    # created UP FRONT so there is something to hang the installation
+    # log off, but on ANY failure below it is deleted — see except branch.
+    pre_existing_row = NeuralModifier.objects.filter(slug=slug).exists()
+    modifier = _get_or_create_modifier(slug, manifest, manifest_hash)
+    log = NeuralModifierInstallationLog.objects.create(
+        neural_modifier=modifier,
+        installation_manifest=manifest,
+    )
 
     contribution_count = 0
     try:
@@ -218,16 +229,16 @@ def install_bundle_from_source(source: Path, slug: str) -> NeuralModifier:
         _remove_code_from_path(runtime)
         if runtime.exists():
             shutil.rmtree(runtime, ignore_errors=True)
-        _log_event(
-            log,
-            NeuralModifierInstallationEventType.LOAD_FAILED,
-            {'traceback': traceback.format_exc()},
-        )
-        modifier.status_id = NeuralModifierStatus.BROKEN
-        modifier.save()
         logger.error(
-            '[Neuroplasticity] Install failed for %s; flipped BROKEN.', slug
+            '[Neuroplasticity] Install failed for %s; rolling back.', slug
         )
+        # AVAILABLE = no DB row. A fresh failed install deletes the row
+        # it created so the bundle returns to AVAILABLE. If a pre-existing
+        # row (from a prior successful install) is now being re-installed
+        # and THIS attempt failed, keep the row at its prior state — we
+        # do not want to delete live contributions out from under the user.
+        if not pre_existing_row:
+            modifier.delete()
         raise
 
     _log_event(
@@ -247,13 +258,17 @@ def install_bundle_from_source(source: Path, slug: str) -> NeuralModifier:
     return modifier
 
 
-def uninstall_bundle(slug: str) -> NeuralModifier:
-    """Walk contributions in reverse-install order, delete targets, prune disk.
+def uninstall_bundle(slug: str) -> Optional[str]:
+    """Walk contributions in reverse-install order, delete targets, delete row.
 
-    The NeuralModifier row itself is preserved; status flips to DISCOVERED.
-    Reverse order unwinds intra-bundle FK chains: children (later-created)
-    get deleted before parents (earlier-created), so PROTECT constraints
-    inside the bundle's own graph don't trip.
+    AVAILABLE = no DB row (see module docstring), so uninstall DELETES
+    the ``NeuralModifier`` row. Contribution rows, installation logs,
+    and their events all cascade away via FK CASCADE. The committed zip
+    in ``genomes/`` stays put — it is the bundle, not a derivative.
+
+    Reverse-created order unwinds intra-bundle FK chains: children
+    (later-created) get deleted before parents (earlier-created), so
+    PROTECT constraints inside the bundle's own graph don't trip.
 
     Event payload disambiguates three outcomes per contribution:
 
@@ -264,6 +279,9 @@ def uninstall_bundle(slug: str) -> NeuralModifier:
     * ``contributions_unresolved``: target existed at snapshot time and
       somehow survived the loop. Should always be empty; a non-empty
       list means a bug to investigate.
+
+    Returns the slug of the deleted bundle. Raises
+    ``NeuralModifier.DoesNotExist`` if no row exists.
     """
     modifier = NeuralModifier.objects.get(slug=slug)
     log = NeuralModifierInstallationLog.objects.create(
@@ -309,13 +327,10 @@ def uninstall_bundle(slug: str) -> NeuralModifier:
 
     contributions_resolved = len(pre_existing) - len(contributions_unresolved)
 
-    runtime = neural_modifiers_root() / slug
+    runtime = grafts_root() / slug
     _remove_code_from_path(runtime)
     if runtime.exists():
         shutil.rmtree(runtime, ignore_errors=True)
-
-    modifier.status_id = NeuralModifierStatus.DISCOVERED
-    modifier.save()
 
     if contributions_unresolved:
         logger.warning(
@@ -325,6 +340,8 @@ def uninstall_bundle(slug: str) -> NeuralModifier:
             contributions_unresolved,
         )
 
+    # Emit the UNINSTALL event BEFORE deleting the modifier so the event
+    # (hung off `log`, which CASCADEs from modifier) has somewhere to live.
     _log_event(
         log,
         NeuralModifierInstallationEventType.UNINSTALL,
@@ -343,7 +360,11 @@ def uninstall_bundle(slug: str) -> NeuralModifier:
         len(pre_missing),
         len(contributions_unresolved),
     )
-    return modifier
+
+    # Now delete the row. CASCADE removes contributions, logs, and events
+    # the caller no longer needs — AVAILABLE means no DB footprint.
+    modifier.delete()
+    return slug
 
 
 def enable_bundle(slug: str) -> NeuralModifier:
@@ -376,8 +397,8 @@ def disable_bundle(slug: str) -> NeuralModifier:
     return modifier
 
 
-def upgrade_bundle(
-    slug: str, *, allow_same_version: bool = False
+def upgrade_bundle_from_source(
+    source: Path, slug: str, *, allow_same_version: bool = False
 ) -> dict:
     """Diff new modifier_data.json against current contributions; apply the delta.
 
@@ -393,7 +414,6 @@ def upgrade_bundle(
     """
     modifier = NeuralModifier.objects.get(slug=slug)
 
-    source = modifier_genome_root() / slug
     if not source.exists():
         raise FileNotFoundError(
             '[Neuroplasticity] No bundle source at {0}.'.format(source)
@@ -420,7 +440,7 @@ def upgrade_bundle(
         installation_manifest=manifest,
     )
 
-    runtime = neural_modifiers_root() / slug
+    runtime = grafts_root() / slug
     staging = runtime.with_suffix('.staging-upgrade')
     if staging.exists():
         shutil.rmtree(staging)
@@ -521,6 +541,32 @@ def upgrade_bundle(
     }
 
 
+def upgrade_bundle(
+    slug: str, *, allow_same_version: bool = False
+) -> dict:
+    """Upgrade from the committed zip at ``genomes/<slug>.zip``.
+
+    Extracts into a fresh tempdir under ``operating_room/``, runs the
+    diff/apply pass, and removes the tempdir on every exit path.
+    """
+    archive_path = genomes_root() / '{0}.zip'.format(slug)
+    if not archive_path.exists():
+        raise FileNotFoundError(
+            '[Neuroplasticity] No genome archive at {0}.'.format(archive_path)
+        )
+
+    operating_room_root().mkdir(parents=True, exist_ok=True)
+    extraction = Path(tempfile.mkdtemp(dir=str(operating_room_root())))
+    try:
+        source = _extract_archive_into(archive_path, extraction, slug)
+        return upgrade_bundle_from_source(
+            source, slug, allow_same_version=allow_same_version
+        )
+    finally:
+        if extraction.exists():
+            shutil.rmtree(extraction, ignore_errors=True)
+
+
 def iter_installed_bundles() -> Iterable[NeuralModifier]:
     """Yield every NeuralModifier whose status is INSTALLED or ENABLED."""
     return NeuralModifier.objects.filter(
@@ -534,16 +580,17 @@ def iter_installed_bundles() -> Iterable[NeuralModifier]:
 def boot_bundles() -> None:
     """AppConfig.ready() hook. Re-imports entry modules; flips BROKEN on drift.
 
-    Walks every directory under NEURAL_MODIFIERS_ROOT/. For each bundle whose
-    NeuralModifier row exists and is INSTALLED/ENABLED, verifies manifest_hash
-    matches disk, then puts code/ on sys.path and imports entry_modules.
+    Walks every directory under the grafts root. For each bundle whose
+    NeuralModifier row exists and is INSTALLED/ENABLED, verifies
+    manifest_hash matches disk, then puts code/ on sys.path and imports
+    entry_modules.
 
     Does NOT re-load modifier_data.json. Data load only happens at install.
 
     Silently returns if the neuralmodifier table doesn't exist yet (pre-migrate
     state, e.g. inside `manage.py migrate` or test-DB setup).
     """
-    runtime = neural_modifiers_root()
+    runtime = grafts_root()
     if not runtime.exists():
         return
 
@@ -603,7 +650,13 @@ def _boot_one(bundle_dir: Path, modifier: NeuralModifier) -> None:
 def _get_or_create_modifier(
     slug: str, manifest: dict, manifest_hash: str
 ) -> NeuralModifier:
-    """Reuse an existing row by slug, otherwise create one in DISCOVERED."""
+    """Reuse an existing row by slug, otherwise create one.
+
+    The new row is created with INSTALLED status — under the
+    "AVAILABLE = no DB row" ruling there is no DISCOVERED-in-flight
+    state. If the install then fails downstream, the except branch
+    flips the row to BROKEN (for diagnostic inspection).
+    """
     modifier = NeuralModifier.objects.filter(slug=slug).first()
     if modifier is not None:
         return modifier
@@ -615,7 +668,7 @@ def _get_or_create_modifier(
         license=manifest.get('license', ''),
         manifest_hash=manifest_hash,
         manifest_json=manifest,
-        status_id=NeuralModifierStatus.DISCOVERED,
+        status_id=NeuralModifierStatus.INSTALLED,
     )
 
 
@@ -672,8 +725,8 @@ def _validate_requires(requires: list) -> None:
 def _check_requires(manifest: dict) -> None:
     """Raise ValueError if any declared requirement is unmet.
 
-    Requirements resolve against installed NeuralModifier rows — DISCOVERED
-    and BROKEN are treated as not-installed for this check.
+    Requirements resolve against installed NeuralModifier rows — BROKEN
+    is treated as not-installed for this check.
     """
     requires = manifest.get('requires', [])
     if not requires:
@@ -797,13 +850,39 @@ def _flip_broken_with_event(
     )
 
 
-def install_bundle_from_archive(archive_path: Path) -> NeuralModifier:
-    """Install a bundle from a zip already on disk in the catalog.
+def _extract_archive_into(
+    archive_path: Path, extraction_dir: Path, slug: str
+) -> Path:
+    """Extract ``archive_path`` into ``extraction_dir`` and return the slug dir.
 
-    Extracts the zip into a transient staging dir under
-    ``neural_modifiers/_staging/<slug>/``, runs the normal install
-    against the extraction, then nukes the staging dir on both success
-    and failure. The zip stays where it was — it is the catalog entry.
+    The archive's single top-level directory is renamed to the canonical
+    ``<slug>`` if it doesn't already match, so downstream code can trust
+    the path shape.
+    """
+    import zipfile
+
+    with zipfile.ZipFile(archive_path) as zf:
+        top = sorted(
+            {n.split('/', 1)[0] for n in zf.namelist() if n.strip('/')}
+        )
+        zf.extractall(extraction_dir)
+
+    extracted = extraction_dir / top[0]
+    slug_dir = extraction_dir / slug
+    if extracted != slug_dir:
+        if slug_dir.exists():
+            shutil.rmtree(slug_dir, ignore_errors=True)
+        shutil.move(str(extracted), str(slug_dir))
+    return slug_dir
+
+
+def install_bundle_from_archive(archive_path: Path) -> NeuralModifier:
+    """Install a bundle from a zip on disk.
+
+    Extracts the zip into a fresh ``tempfile.mkdtemp`` under
+    ``operating_room/``, runs the normal install against the extraction,
+    then nukes the tempdir in a ``finally`` block — success or failure.
+    The zip stays where it was; it IS the bundle.
 
     The zip must contain a single top-level directory; the manifest at
     ``<top>/manifest.json`` is the authority on the slug.
@@ -812,12 +891,10 @@ def install_bundle_from_archive(archive_path: Path) -> NeuralModifier:
         ValueError: zip has bad shape or missing/invalid manifest.
         FileExistsError: a runtime dir for that slug already exists.
     """
-    import zipfile
-
     archive_path = Path(archive_path)
     if not archive_path.exists():
         raise FileNotFoundError(
-            '[Neuroplasticity] No catalog archive at {0}.'.format(archive_path)
+            '[Neuroplasticity] No genome archive at {0}.'.format(archive_path)
         )
 
     manifest = read_archive_manifest(archive_path)
@@ -829,27 +906,14 @@ def install_bundle_from_archive(archive_path: Path) -> NeuralModifier:
             )
         )
 
-    staging_parent = neural_modifiers_root() / '_staging'
-    staging_parent.mkdir(parents=True, exist_ok=True)
-    staging_dir = staging_parent / slug
-    if staging_dir.exists():
-        shutil.rmtree(staging_dir, ignore_errors=True)
-
+    operating_room_root().mkdir(parents=True, exist_ok=True)
+    extraction = Path(tempfile.mkdtemp(dir=str(operating_room_root())))
     try:
-        with zipfile.ZipFile(archive_path) as zf:
-            top = sorted({n.split('/', 1)[0] for n in zf.namelist() if n.strip('/')})
-            zf.extractall(staging_parent)
-            extracted = staging_parent / top[0]
-            if extracted != staging_dir:
-                # Top-dir name in the zip differs from the manifest slug —
-                # rename the extraction to the canonical slug-named dir.
-                if staging_dir.exists():
-                    shutil.rmtree(staging_dir, ignore_errors=True)
-                shutil.move(str(extracted), str(staging_dir))
-        return install_bundle_from_source(staging_dir, slug)
+        source = _extract_archive_into(archive_path, extraction, slug)
+        return install_bundle_from_source(source, slug)
     finally:
-        if staging_dir.exists():
-            shutil.rmtree(staging_dir, ignore_errors=True)
+        if extraction.exists():
+            shutil.rmtree(extraction, ignore_errors=True)
 
 
 def bundle_impact(slug: str) -> dict:

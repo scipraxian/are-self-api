@@ -1,6 +1,7 @@
 # --- Neuroplasticity runtime ---
-/neural_modifiers/
-/neural_modifier_catalog/
+# genomes/ is committed — *.zip archives are the source of truth.
+/neuroplasticity/grafts/
+/neuroplasticity/operating_room/
 
 # --- Python & Venv ---
 __pycache__/

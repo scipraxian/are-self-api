@@ -1,16 +1,16 @@
 """Install round-trip tests for the real Unreal NeuralModifier bundle.
 
 Exercises the loader end-to-end against the committed
-`neuroplasticity/modifier_genome/unreal/` source tree: copies it into a
-tmp genome root, installs, asserts all contributions + registrations
-land, uninstalls, asserts everything rolls back, then reinstalls to
-prove idempotency.
+`neuroplasticity/genomes/unreal.zip` archive: copies it into a tmp
+genomes root, installs via `install_bundle_from_archive`, asserts all
+contributions + registrations land, uninstalls, asserts everything
+rolls back, then reinstalls to prove idempotency.
 
-Uses a custom fixture list rather than CommonFixturesAPITestCase because
-CommonFixturesAPITestCase pre-loads `modifier_data.json` as a fixture
-(so the every-test baseline matches a live install). That would collide
-with PK insertion when this test installs the bundle fresh via the
-loader.
+Uses a custom fixture list rather than CommonFixturesAPITestCase
+because CommonFixturesAPITestCase pre-loads `modifier_data.json` as a
+fixture (so the every-test baseline matches a live install). That would
+collide with PK insertion when this test installs the bundle fresh via
+the loader.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ import tempfile
 from pathlib import Path
 
 from django.conf import settings
-from django.test import TestCase, override_settings
+from django.test import override_settings
 
 from central_nervous_system.effectors.effector_casters.neuromuscular_junction import (
     NATIVE_HANDLERS,
@@ -73,25 +73,30 @@ class UnrealBundleInstallTestCase(CommonTestCase):
         self._tmp_root = Path(
             tempfile.mkdtemp(prefix='unreal-dogfood-test-')
         )
-        self.genome_root = self._tmp_root / 'modifier_genome'
-        self.runtime_root = self._tmp_root / 'neural_modifiers'
-        self.genome_root.mkdir()
+        self.genomes_root = self._tmp_root / 'genomes'
+        self.grafts_root = self._tmp_root / 'grafts'
+        self.operating_room_root = self._tmp_root / 'operating_room'
+        self.genomes_root.mkdir()
+        self.grafts_root.mkdir()
+        self.operating_room_root.mkdir()
 
-        real_bundle = (
+        real_archive = (
             Path(settings.BASE_DIR)
             / 'neuroplasticity'
-            / 'modifier_genome'
-            / UNREAL_BUNDLE_SLUG
+            / 'genomes'
+            / '{0}.zip'.format(UNREAL_BUNDLE_SLUG)
         )
-        shutil.copytree(
-            real_bundle, self.genome_root / UNREAL_BUNDLE_SLUG
+        self.archive_path = (
+            self.genomes_root / '{0}.zip'.format(UNREAL_BUNDLE_SLUG)
         )
+        shutil.copy(real_archive, self.archive_path)
 
         self._sys_path_snapshot = list(sys.path)
         self._sys_modules_snapshot = set(sys.modules.keys())
         self._settings_override = override_settings(
-            MODIFIER_GENOME_ROOT=str(self.genome_root),
-            NEURAL_MODIFIERS_ROOT=str(self.runtime_root),
+            NEURAL_MODIFIER_GENOMES_ROOT=str(self.genomes_root),
+            NEURAL_MODIFIER_GRAFTS_ROOT=str(self.grafts_root),
+            NEURAL_MODIFIER_OPERATING_ROOM_ROOT=str(self.operating_room_root),
         )
         self._settings_override.enable()
 
@@ -118,7 +123,7 @@ class UnrealBundleInstallTestCase(CommonTestCase):
 class UnrealBundleInstallRoundTripTest(UnrealBundleInstallTestCase):
     def test_install_registers_everything(self):
         """Assert install creates rows, native handler, parietal tool, parsers."""
-        modifier = loader.install_bundle(UNREAL_BUNDLE_SLUG)
+        modifier = loader.install_bundle_from_archive(self.archive_path)
 
         self.assertEqual(
             modifier.status_id, NeuralModifierStatus.INSTALLED
@@ -150,19 +155,16 @@ class UnrealBundleInstallRoundTripTest(UnrealBundleInstallTestCase):
         )
 
     def test_uninstall_rolls_everything_back(self):
-        """Assert uninstall drops bundle rows and bundle registrations."""
-        loader.install_bundle(UNREAL_BUNDLE_SLUG)
+        """Assert uninstall drops bundle rows, row, and bundle registrations."""
+        loader.install_bundle_from_archive(self.archive_path)
         loader.uninstall_bundle(UNREAL_BUNDLE_SLUG)
 
-        modifier = NeuralModifier.objects.get(slug=UNREAL_BUNDLE_SLUG)
-        self.assertEqual(
-            modifier.status_id, NeuralModifierStatus.DISCOVERED
+        # AVAILABLE = zip exists, no row. Uninstall DELETES the row.
+        self.assertFalse(
+            NeuralModifier.objects.filter(slug=UNREAL_BUNDLE_SLUG).exists()
         )
         self.assertEqual(
-            NeuralModifierContribution.objects.filter(
-                neural_modifier=modifier
-            ).count(),
-            0,
+            NeuralModifierContribution.objects.count(), 0
         )
         self.assertFalse(
             ToolDefinition.objects.filter(pk=UE_TOOL_DEF_PK).exists()
@@ -185,16 +187,21 @@ class UnrealBundleInstallRoundTripTest(UnrealBundleInstallTestCase):
             run_strategy.__class__.__name__, 'UERunLogStrategy'
         )
 
+    def test_operating_room_is_empty_after_install(self):
+        """Assert the scratch dir is empty once install returns."""
+        loader.install_bundle_from_archive(self.archive_path)
+        self.assertEqual(list(self.operating_room_root.iterdir()), [])
+
 
 class UnrealBundleReinstallIdempotentTest(UnrealBundleInstallTestCase):
     def test_reinstall_cycle_is_clean(self):
         """Assert install → uninstall → reinstall converges to the same state."""
-        loader.install_bundle(UNREAL_BUNDLE_SLUG)
+        loader.install_bundle_from_archive(self.archive_path)
         first_count = NeuralModifierContribution.objects.count()
         loader.uninstall_bundle(UNREAL_BUNDLE_SLUG)
         self.assertEqual(NeuralModifierContribution.objects.count(), 0)
 
-        loader.install_bundle(UNREAL_BUNDLE_SLUG)
+        loader.install_bundle_from_archive(self.archive_path)
         second_count = NeuralModifierContribution.objects.count()
         self.assertEqual(first_count, second_count)
 
@@ -203,6 +210,7 @@ class UnrealBundleReinstallIdempotentTest(UnrealBundleInstallTestCase):
         self.assertTrue(
             ToolDefinition.objects.filter(pk=UE_TOOL_DEF_PK).exists()
         )
+        self.assertEqual(list(self.operating_room_root.iterdir()), [])
 
 
 class ThalamusEnabledToolsSoftLookupTest(UnrealBundleInstallTestCase):
@@ -218,7 +226,7 @@ class ThalamusEnabledToolsSoftLookupTest(UnrealBundleInstallTestCase):
 
     def setUp(self):
         super().setUp()
-        loader.install_bundle(UNREAL_BUNDLE_SLUG)
+        loader.install_bundle_from_archive(self.archive_path)
         self.thalamus = Identity.objects.create(
             pk=THALAMUS_IDENTITY_PK,
             name='Thalamus (test)',
@@ -260,36 +268,7 @@ class ThalamusEnabledToolsSoftLookupTest(UnrealBundleInstallTestCase):
         self.assertFalse(
             ToolDefinition.objects.filter(pk=UE_TOOL_DEF_PK).exists()
         )
-        loader.install_bundle(UNREAL_BUNDLE_SLUG)
+        loader.install_bundle_from_archive(self.archive_path)
         self.assertTrue(
             ToolDefinition.objects.filter(pk=UE_TOOL_DEF_PK).exists()
-        )
-
-
-class BundleLogParsersResolveFromSourceTreeTest(TestCase):
-    """Confirms the moved UE parsers work when imported directly.
-
-    Unlike the install-based tests this does NOT go through the loader
-    or modify settings — it imports the source tree and exercises the
-    factory. If this test ever regresses, `test_merge_logs_nway.py`
-    will regress with it.
-    """
-
-    def test_source_tree_import_registers_strategies(self):
-        """Assert direct source-tree import wires up both UE strategies."""
-        from neuroplasticity.modifier_genome.unreal.code.are_self_unreal import (  # noqa: F401
-            log_parsers,
-        )
-
-        run_strategy = LogParserFactory.create(
-            BaseLogConstants.TYPE_RUN, 'src'
-        )
-        build_strategy = LogParserFactory.create(
-            BaseLogConstants.TYPE_BUILD, 'src'
-        )
-        self.assertEqual(
-            run_strategy.__class__.__name__, 'UERunLogStrategy'
-        )
-        self.assertEqual(
-            build_strategy.__class__.__name__, 'UEBuildLogStrategy'
         )
