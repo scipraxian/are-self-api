@@ -6,6 +6,7 @@ from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 from pgvector.django import VectorField
 
+from common.constants import STANDARD_CHARFIELD_LENGTH
 from common.models import (
     CreatedAndModifiedWithDelta,
     DescriptionMixin,
@@ -26,13 +27,16 @@ class IdentityAddonPhase(NameMixin):
     TERMINAL = 4  # YOUR MOVE
 
 
-class IdentityAddon(NameMixin, DescriptionMixin):
+class IdentityAddon(UUIDIdMixin, NameMixin, DescriptionMixin):
     """These are the different addons that can be applied to a persona."""
 
     phase = models.ForeignKey(
         IdentityAddonPhase, on_delete=models.SET_NULL, blank=True, null=True
     )
     function_slug = models.CharField(max_length=255, blank=True, null=True)
+    addon_class_name = models.CharField(
+        max_length=STANDARD_CHARFIELD_LENGTH, blank=True, null=True
+    )
 
 
 class IdentityTag(NameMixin):
