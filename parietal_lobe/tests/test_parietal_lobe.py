@@ -71,17 +71,17 @@ class ParietalLobeTest(CommonFixturesAPITestCase):
             system_prompt_template='Test prompt',
         )
         # Attach the Focus Game addon so the parietal lobe gates ON the
-        # fizzle + focus/XP ledger. Tests that want the opt-out behavior
-        # should remove this attachment (see
+        # fizzle + focus/XP ledger via the Focus handler. Tests that want the
+        # opt-out behavior should remove this attachment (see
         # test_handle_tool_execution_no_focus_addon_no_fizzle below).
-        # NOTE: fixtures ship an IdentityAddon pk=2 named 'The Focus Game'
-        # with function_slug=None, so we can't reuse it — we need a row
-        # whose slug matches FOCUS_ADDON_SLUG. Creating a fresh row here
-        # keeps the test isolated from the fixture-backfill decision
-        # (tracked in NEURAL_MODIFIER_COMPLETION_PLAN.md Task 18).
+        # Under the handler-pattern cutover, dispatch resolves by
+        # addon_class_name — function_slug is retained for the legacy
+        # ADDON_REGISTRY fallback in frontal_lobe but is not what gates
+        # tool pre/post. 'Focus' maps to identity.addons.handlers.focus.Focus.
         self.focus_addon_row = IdentityAddon.objects.create(
             name='Focus Addon (test)',
             function_slug=FOCUS_ADDON_SLUG,
+            addon_class_name='Focus',
         )
         self.identity_disc.addons.add(self.focus_addon_row)
         self.session.identity_disc = self.identity_disc
@@ -313,8 +313,11 @@ class ParietalLobeTest(CommonFixturesAPITestCase):
         simulates an opt-out disc; the tool must execute normally and the
         session's current_focus/total_xp must not move.
         """
-        # Remove the focus_addon attachment set up in setUp(), and rebuild
-        # the ParietalLobe so its cached _focus_enabled flag is fresh.
+        # Remove the focus_addon attachment set up in setUp(). Handler
+        # dispatch reads the disc's addons directly at each tool call, so
+        # rebuilding ParietalLobe isn't strictly necessary — but keeping the
+        # rebuild leaves this test robust against future re-introduction of
+        # per-session caching in ParietalLobe.
         await sync_to_async(self.identity_disc.addons.remove)(
             self.focus_addon_row
         )

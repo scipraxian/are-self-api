@@ -25,6 +25,7 @@ from frontal_lobe.synapse_client import (
 )
 from hypothalamus.hypothalamus import Hypothalamus
 from hypothalamus.models import AIModelProviderUsageRecord
+from identity.addons._handler_registry import dispatch_phase, handler_for
 from identity.addons.addon_registry import ADDON_REGISTRY
 from parietal_lobe.parietal_lobe import ParietalLobe
 from temporal_lobe.models import IterationShiftParticipant
@@ -218,25 +219,40 @@ class FrontalLobe:
         )
 
         for addon_model in active_addons:
-            if not addon_model.function_slug:
-                if addon_model.description:
+            # Preferred path: handler dispatch by addon_class_name + phase FK.
+            if handler_for(addon_model) is not None:
+                logger.debug(
+                    f'Dispatching handler: {addon_model.addon_class_name}'
+                )
+                addon_messages = await sync_to_async(dispatch_phase)(
+                    addon_model, turn_record
+                )
+                if addon_messages:
+                    all_messages.extend(addon_messages)
+                continue
+
+            # Legacy path: function_slug → ADDON_REGISTRY (kept for any row
+            # that hasn't been migrated to addon_class_name yet).
+            if addon_model.function_slug:
+                addon_func = ADDON_REGISTRY.get(addon_model.function_slug)
+                if addon_func:
                     logger.debug(
-                        f'Injecting native text addon: {addon_model.name}'
+                        f'Executing legacy addon: {addon_model.function_slug}'
                     )
-                    all_messages.append(
-                        {'role': 'system', 'content': addon_model.description}
+                    addon_messages = await sync_to_async(addon_func)(turn_record)
+                    if addon_messages:
+                        all_messages.extend(addon_messages)
+                else:
+                    logger.warning(
+                        f'Addon {addon_model.function_slug} not found in registry.'
                     )
                 continue
 
-            addon_func = ADDON_REGISTRY.get(addon_model.function_slug)
-            if addon_func:
-                logger.debug(f'Executing addon: {addon_model.function_slug}')
-                addon_messages = await sync_to_async(addon_func)(turn_record)
-                if addon_messages:
-                    all_messages.extend(addon_messages)
-            else:
-                logger.warning(
-                    f'Addon {addon_model.function_slug} not found in registry.'
+            # Native text addon: no code path, just inject the description.
+            if addon_model.description:
+                logger.debug(f'Injecting native text addon: {addon_model.name}')
+                all_messages.append(
+                    {'role': 'system', 'content': addon_model.description}
                 )
 
         if self.session.swarm_message_queue:
