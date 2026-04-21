@@ -1,9 +1,10 @@
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from hypothalamus.hypothalamus import Hypothalamus
 
+from identity.forge import forge_identity_disc
 from identity.models import (
     BudgetPeriod,
     Identity,
@@ -36,6 +37,15 @@ class IdentityViewSet(viewsets.ModelViewSet):
         .order_by('name')
     )
     serializer_class = IdentitySerializer
+
+    @action(detail=True, methods=['post'], url_path='forge')
+    def forge(self, request, pk=None):
+        """Stamp a new Level 1 IdentityDisc from this base Identity."""
+        base_identity = self.get_object()
+        custom_name = request.data.get('name') if request.data else None
+        new_disc = forge_identity_disc(base_identity, custom_name=custom_name)
+        serializer = IdentityDiscSerializer(new_disc, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class IdentityDiscViewSet(viewsets.ModelViewSet):
