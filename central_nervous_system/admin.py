@@ -163,7 +163,7 @@ class SpikeAdmin(admin.ModelAdmin):
     )
 
     def effector_name(self, obj):
-        return obj.effector.name
+        return obj.effector.name if obj.effector else '-'
 
     def resolved_command_preview(self, obj):
         try:
