@@ -14,10 +14,9 @@ from frontal_lobe.models import (
 )
 from frontal_lobe.synapse_client import SynapseClient, SynapseResponse
 from hypothalamus.serializers import ModelSelection
-from identity.addons.focus_addon import (
-    apply_delta,
-    check_fizzle,
-    is_focus_addon_installed,
+from identity.addons._handler_registry import (
+    dispatch_tool_post,
+    dispatch_tool_pre,
 )
 from neuroplasticity.models import (
     NeuralModifierContribution,
@@ -79,30 +78,12 @@ class ParietalLobe:
         self.session = session
         self.log_callback = log_callback
         self._last_used_model_selection: Optional[ModelSelection] = None
-        # Cached opt-in flag for the Focus Game. Resolved lazily on first tool
-        # execution so __init__ stays synchronous; None = not-yet-resolved.
-        # See identity/addons/focus_addon.py for the rules and Task 18 in
-        # NEURAL_MODIFIER_COMPLETION_PLAN.md for the planned lifecycle-hook
-        # generalization that will retire this hand-rolled gate.
-        self._focus_enabled: Optional[bool] = None
 
         self.enabled_tools = (
             self.session.identity_disc.enabled_tools
             if self.session.identity_disc
             else None
         )
-
-    async def _is_focus_enabled(self) -> bool:
-        """Return True iff the Focus Game addon is attached to the session disc.
-
-        Cached per-ParietalLobe instance — a disc's addon set doesn't change
-        mid-session, so one DB hit per instance is enough.
-        """
-        if self._focus_enabled is None:
-            self._focus_enabled = await sync_to_async(
-                is_focus_addon_installed
-            )(self.session.identity_disc)
-        return self._focus_enabled
 
     async def _log_live(self, message: str) -> None:
         if self.log_callback:
@@ -252,33 +233,32 @@ class ParietalLobe:
             }
 
         mechanics = tool_def.use_type if tool_def else None
-        focus_mod = mechanics.focus_modifier if mechanics else 0
-        xp_gain = mechanics.xp_reward if mechanics else 0
+        disc = self.session.identity_disc
 
-        focus_enabled = await self._is_focus_enabled()
+        # --- TOOL PRE (handler first-veto) ---
+        # Each IdentityAddonHandler attached to the disc gets a pre-veto.
+        # Focus fizzles on insufficient focus; other handlers can add their
+        # own gates (rate-limit, quota, etc.). A disc with no handlers sees
+        # no veto — same as the old function-based "addon not installed".
+        fizzle_msg = await sync_to_async(dispatch_tool_pre)(
+            disc, self.session, mechanics
+        )
+        if fizzle_msg is not None:
+            await self._log_live(f'Result: {fizzle_msg}')
 
-        # --- FOCUS FIZZLE ---
-        # Only enforced when the Focus Game addon is attached to the session's
-        # IdentityDisc. Discs that opted out see no fizzle and no ledger update
-        # (below) — the addon is the single source of truth for the economy.
-        if focus_enabled:
-            fizzle_msg = check_fizzle(self.session, focus_mod)
-            if fizzle_msg is not None:
-                await self._log_live(f'Result: {fizzle_msg}')
-
-                db_tool_call = await sync_to_async(ToolCall.objects.create)(
-                    turn=turn_record,
-                    tool=tool_def,
-                    arguments=json.dumps(args),
-                    status_id=ReasoningStatusID.ERROR,
-                    result_payload=fizzle_msg,
-                    traceback='Insufficient Focus.',
-                )
-                return {
-                    'role': 'tool',
-                    'name': tool_name,
-                    'content': fizzle_msg,
-                }
+            db_tool_call = await sync_to_async(ToolCall.objects.create)(
+                turn=turn_record,
+                tool=tool_def,
+                arguments=json.dumps(args),
+                status_id=ReasoningStatusID.ERROR,
+                result_payload=fizzle_msg,
+                traceback='Tool pre-check vetoed.',
+            )
+            return {
+                'role': 'tool',
+                'name': tool_name,
+                'content': fizzle_msg,
+            }
 
         # --- NORMAL EXECUTION ---
         db_tool_call = await sync_to_async(ToolCall.objects.create)(
@@ -289,27 +269,20 @@ class ParietalLobe:
         )
 
         try:
-            tool_result = await ParietalMCP.execute(tool_name, args)
-
-            if hasattr(tool_result, 'focus_yield'):
-                focus_mod = getattr(tool_result, 'focus_yield')
-            if hasattr(tool_result, 'xp_yield'):
-                xp_gain = getattr(tool_result, 'xp_yield')
-
-            tool_result = str(tool_result)
+            tool_result_obj = await ParietalMCP.execute(tool_name, args)
+            tool_result = str(tool_result_obj)
 
             db_tool_call.result_payload = tool_result[:20000]
             db_tool_call.status_id = ReasoningStatusID.COMPLETED
             await sync_to_async(db_tool_call.save)()
 
-            # Focus / XP ledger only moves when the addon is attached. A disc
-            # without focus_addon is playing a non-economy game: tool_result's
-            # focus_yield / xp_yield metadata is still observed by the addon
-            # (it's addon-owned state), so nothing meaningful is lost here.
-            if focus_enabled:
-                await sync_to_async(apply_delta)(
-                    self.session, focus_mod, xp_gain
-                )
+            # --- TOOL POST (handler collect-all) ---
+            # Focus owns the focus/XP ledger; any handler observing the raw
+            # result (focus_yield / xp_yield / other metadata) gets its shot.
+            # Passes the pre-stringification object so handlers can read attrs.
+            await sync_to_async(dispatch_tool_post)(
+                disc, self.session, mechanics, tool_result_obj
+            )
 
         except Exception as e:
             tool_result = f'Tool Execution Error: {str(e)}'

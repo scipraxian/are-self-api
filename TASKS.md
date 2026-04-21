@@ -648,46 +648,47 @@ Effector / Executable constants section all cite the new rule. No UI-side
 change; `nodeConstants.ts` mirrors the class constants by UUID string and
 doesn't care which fixture file the row lives in.
 
-## Landed — `IdentityAddon` UUID flip + handler-class cutover (April 2026)
+## Top Priority — Flip `IdentityAddon` to UUID PK (NeuralModifier-extensible)
 
-- [x] **UUID PK on `IdentityAddon`.** Michael flipped the model + wrote the
-  migration. Fixture rows and disc M2M arrays use UUID string literals (fresh
-  `uuid.uuid4()`; no deterministic seeding per the Standing ruling).
-- [x] **Handler-class contract.** `IdentityAddonHandler` base class at
-  `identity/addons/_handler.py` with six lifecycle hooks: `on_identify`,
-  `on_context`, `on_history`, `on_terminal`, `on_tool_pre`, `on_tool_post`.
-  Ten handlers ported to `identity/addons/handlers/*.py` — class name
-  (`Agile`, `Deadline`, `Focus`, `Hippocampus_`, `IdentityInfo`, `NormalChat`,
-  `Prompt`, `RiverOfSix`, `Telemetry`, `YourMove`) matches the new
-  `IdentityAddon.addon_class_name` field.
-- [x] **Central dispatcher.** `identity/addons/_handler_registry.py` owns
-  `HANDLER_REGISTRY` (singleton instances at import), `dispatch_phase`
-  (phase FK → lifecycle method), `dispatch_tool_pre` (first-veto),
-  `dispatch_tool_post` (collect-all). Five native-text addons (Focus Game
-  rules ×2, Worker, PM, Are-Self persona) intentionally have no class and
-  flow through the description fallback.
-- [x] **Frontal lobe three-branch dispatch.** `frontal_lobe.py`
-  `_build_turn_payload` tries handler path first, then legacy
-  `ADDON_REGISTRY[function_slug]`, then native `description`. Legacy
-  `identity/addons/*_addon.py` + `addon_registry.py` stay on disk as a
-  safety net until every row carries `addon_class_name`.
-- [x] **Parietal tool gate cutover.** Replaced the inline Focus fizzle +
-  focus/XP ledger in `parietal_lobe.py` with `dispatch_tool_pre` /
-  `dispatch_tool_post`. The `Focus` handler owns the Focus Game
-  end-to-end; if the disc has no `Focus` attached, the game is off (no
-  silent fizzles or ledger mutations on non-opted-in discs). This closes
-  the "silently fizzled playing a game it couldn't see" leak.
-- [x] **Tests.** `identity/tests/test_addon_handlers.py` — inheritance /
-  instantiable checks plus substantive `TestFocusToolPre` /
-  `TestFocusToolPost` / `TestFocusOnContext` unit tests (no DB). The
-  `parietal_lobe` fizzle tests were updated to set `addon_class_name='Focus'`
-  on the setUp addon row so they route through the new dispatch.
+Standing project-wide immutability directive (CLAUDE.md): anything a
+`NeuralModifier` might contribute rows to uses UUID primary keys. Only integer
+PKs remaining are protocol enums and canonical vocabulary tables with class-level
+integer constants owned exclusively by core. `IdentityAddon` fails that test —
+it is 100% a table a graft would want to add rows to (a bundle could ship a new
+phase-2 CONTEXT or phase-4 TERMINAL addon, register its `function_slug`, and
+contribute a row). Today it's still an auto-increment integer PK.
 
-**Still on the table (moved to the NM surface task in Backlog):** the
-`register_handler` / `unregister_handler` registration surface for bundles,
-extracting Focus into its own bundle as dogfood, and eventually removing
-the branch-2 legacy path and `*_addon.py` files once every in-tree row is
-migrated and no grafts rely on `function_slug`.
+- [ ] **Flip `identity.IdentityAddon.id` to `UUIDField(primary_key=True,
+  default=uuid.uuid4, editable=False)`**. Update the model; write the migration
+  (rename/drop old PK column, add UUID column, backfill via `RunPython` for any
+  existing rows, repoint every `ForeignKey`/`ManyToManyField` that references
+  it, drop old column). `IdentityAddonPhase` stays integer-PK — it's a fixed
+  4-row vocabulary (IDENTIFY / CONTEXT / HISTORY / TERMINAL), core-owned, not a
+  graft surface.
+- [ ] **Rewrite `identity/fixtures/initial_data.json`** (and wherever else the
+  14 current addon rows live — `zygote.json` for Thalamus, identity disc M2M
+  arrays in `initial_data.json`) to use UUID strings instead of the integers
+  `[5, 7, 8, 9, 10, 11, 12]` etc. Pick fresh `uuid.uuid4()` literals — per the
+  Standing ruling these are random, no UUIDv5 or deterministic seeding.
+- [ ] **Audit callsites** that hardcode integer PKs:
+  `session.identity_disc.addons.filter(function_slug='focus_addon').exists()`
+  (TASKS.md:1104) is filter-by-slug and safe. Anything that filters `pk__in=[...]`
+  or references an addon by numeric PK needs to flip to UUIDs or — preferably —
+  filter by `function_slug`, which is the stable biological identifier anyway.
+- [ ] **Consider adding class constants** for the core addons the way
+  `Effector.BEGIN_PLAY` etc. work, so code references them by name. Candidates:
+  `IdentityAddon.NORMAL_CHAT`, `RIVER_OF_SIX`, `PROMPT`, `YOUR_MOVE`,
+  `HIPPOCAMPUS`. If adopted, those rows move to `genetic_immutables` per the
+  class-constant rule.
+- [ ] **Fixture tier review after the flip.** Addons that ship with core go
+  to `initial_phenotypes` (or `genetic_immutables` if class-constant-referenced).
+  NeuralModifier-contributed addons live inside the bundle's fixture and come
+  in via the install path.
+
+**Why now:** blocking the Thalamus "just normal_chat, nothing else" trim below.
+Editing the integer-keyed M2M array today works, but any addon-related fixture
+work we do pre-flip just has to get redone post-flip. Worth landing the UUID
+migration first and then trimming the Thalamus on top of the new shape.
 
 ## Top Priority — Remove Legacy `central_nervous_system/` URL Prefix
 
@@ -976,10 +977,6 @@ remains invisible there. The v1→v2 migration is tracked separately under
   Docker release. Keep readable versions in version control.
 - [ ] **Expose tool calls in Thalamus chat history.** Check the Vercel AI SDK `parts` schema — tool calls
   should be `tool-call` and `tool-result` parts.
-<<<<<<< Updated upstream
-- [ ] **Prompt_addon state awareness.** The prompt_addon should check session ToolCall history and adapt
-  the injected objective accordingly. Without this, small models get stuck in loops re-attempting completed
-=======
 - [ ] **Clear Thalamus chat history from the chat window.** Give the user a way to wipe the visible
   conversation and start fresh. Current state: the Thalamus UI hydrates from
   `GET /thalamus/messages` which walks the most-recent `SpikeTrain` on `NeuralPathway.THALAMUS`
@@ -1010,11 +1007,8 @@ remains invisible there. The v1→v2 migration is tracked separately under
   **Test:** post an interact, post a clear, post another interact, GET messages — assert
   only the second round-trip shows. Also assert the old ReasoningSession row is still in
   the DB with status `CONCLUDED` (we're hiding, not destroying).
-- [ ] **`Prompt` handler state awareness.** The `Prompt` handler
-  (`identity/addons/handlers/prompt.py`, `on_terminal`) should check
-  session ToolCall history and adapt the injected objective accordingly.
-  Without this, small models get stuck in loops re-attempting completed
->>>>>>> Stashed changes
+- [ ] **Prompt_addon state awareness.** The prompt_addon should check session ToolCall history and adapt
+  the injected objective accordingly. Without this, small models get stuck in loops re-attempting completed
   steps.
 - [ ] **MCP Server.** Have Are-Self be an MCP server, allowing other MCP clients to connect and execute
   commands like Execute Neural Pathway.
@@ -1158,50 +1152,40 @@ remains invisible there. The v1→v2 migration is tracked separately under
   models required — uses existing effector/pathway machinery end-to-end. Generalizable beyond
   tests: "watch a folder, fire a pathway" is useful for research dirs, download folders,
   screenshot folders, etc. Occipital lobe as the general OS-event intake region.
-- [ ] **Addons as a fourth NeuralModifier registration surface.** The
-  class-based handler contract is in (`IdentityAddonHandler` +
-  `HANDLER_REGISTRY` at module import), and `IdentityAddon` is UUID-keyed.
-  What remains is the bundle-contribution path — making addons behave the
-  same way tools / native handlers / log parsers do when a `NeuralModifier`
-  installs.
+- [ ] **Addons as a fourth NeuralModifier registration surface.** Promote the single-hook addon
+  contract (callable → `List[Dict]`) into a class with optional lifecycle methods:
+  `on_build_payload` (current behavior), `on_pre_tool_call` (veto / fizzle),
+  `on_post_tool_call` (state deltas — where the focus/XP ledger goes), `on_turn_end`. Add
+  `register_addon` / `unregister_addon` alongside `register_parietal_tool`,
+  `register_native_handler`, and `LogParserFactory.register` so bundles can contribute addons
+  the same way they contribute tools / handlers / parsers. Flip `IdentityAddon` to UUID-PK
+  (same Pass 2 vocabulary-flip pattern as the Hypothalamus vocab). Extract the Focus Game
+  into its own bundle as dogfood — mirrors Unreal's role for the other three surfaces.
+  `session.current_focus` / `max_focus` / `total_xp` become addon-scoped state rather than
+  `ReasoningSession` columns (final storage shape is an open question — see NM plan).
 
-  **Remaining work:**
-  - Add `register_handler(cls)` / `unregister_handler(name)` module-level
-    surface in `identity/addons/_handler_registry.py`, mirroring
-    `parietal_lobe/parietal_mcp/gateway.py`'s `register_parietal_tool` and
-    `neuromuscular_junction.py`'s `register_native_handler`. Collisions
-    raise `RuntimeError`; unregister is idempotent. `HANDLER_REGISTRY` stays
-    the single dict — the core handlers just pre-register themselves at
-    import time (current behavior) and bundle `ready()` hooks register their
-    own.
-  - Bundle-fixture contribution of `IdentityAddon` rows with
-    `addon_class_name` pointing at a handler class shipped in the bundle's
-    `code/`. `NeuralModifierContribution` tracking via GFK + UUID object_id
-    (same pattern as ToolDefinition). Enable/disable status gates whether
-    the row's rows are served to disc queries (parallel the existing
-    `NeuralModifierContribution` check in `_fetch_tools`).
-  - Extract the Focus Game into its own bundle as dogfood (mirrors Unreal's
-    role for the other three surfaces). Open question: does
-    `session.current_focus` / `max_focus` / `total_xp` stay as columns on
-    `ReasoningSession`, or move to handler-scoped state (e.g., a
-    `FocusLedger` side-car FK'd to the session)? Storage shape open — see
-    NM plan.
-  - Retire branch 2 (`ADDON_REGISTRY[function_slug]`) in
-    `_build_turn_payload` once every in-tree row carries `addon_class_name`
-    and no graft depends on the slug path. Delete
-    `identity/addons/*_addon.py` + `addon_registry.py` with it. Branch 3
-    (native `description` fallback) stays — that's the happy path for
-    description-only addons that don't need a handler.
+  **Forcing function.** The Focus fizzle at `parietal_lobe/parietal_lobe.py:231-256` runs on
+  every tool call regardless of whether the disc has `focus_addon` installed — the addon
+  membership check at `identity/addons/focus_addon.py` only decides whether the LLM gets the
+  focus prompt injected, not whether the enforcement runs. Thalamus was silently fizzled
+  playing a game it couldn't see. The focus/XP ledger at lines 280-287 has the same leak in
+  the opposite direction: silent state mutation on every successful tool call for discs that
+  never opted in. Long-term fix is this task; short-term stop-gap below.
 
-  **Blocked on.** NeuralModifier plan reaching end-state (Tasks 8 / 11 / 12
-  / 15 all landed, Surface 1 green on Unreal dogfood). The bundle
-  contribution contract has to hold up under a real round-trip before we
-  generalize addons onto it, else we redo both sides if Unreal surfaces a
-  reshape. See `NEURAL_MODIFIER_COMPLETION_PLAN.md` → "April 20 design
-  direction — addons as a fourth registration surface" for the parallel
-  capture and the open questions around addon state storage, hook
-  composition semantics, and whether core-shipped addons stay
-  core-registered or move to a notional core bundle.
+  **Stop-gap (land independently, deleted when this task lands).** Gate both the fizzle and
+  the focus/XP ledger on `session.identity_disc.addons.filter(function_slug='focus_addon').exists()`,
+  cached once at `ParietalLobe.__init__` (`sync_to_async`-wrapped — `handle_tool_execution` is
+  async) to avoid a DB round-trip per tool call. The existing "Focus Game" `IdentityAddon`
+  row (pk=2) has `function_slug=None`, so backfill the slug or add a correctly-slugged row
+  as part of the stop-gap or the gate resolves False for every disc and the fix is inert.
+
+  **Blocked on.** NeuralModifier plan reaching end-state (Tasks 8 / 11 / 12 / 15 all landed,
+  Surface 1 green on Unreal dogfood). The bundle contribution contract has to hold up under a
+  real round-trip before we generalize addons onto it, else we redo both sides if Unreal
+  surfaces a reshape. See `NEURAL_MODIFIER_COMPLETION_PLAN.md` → "April 20 design direction —
+  addons as a fourth registration surface" for the parallel capture and the open questions
+  around addon state storage, hook composition semantics, and whether core-shipped addons
+  stay core-registered or move to a notional core bundle.
 - [ ] **Nerve Terminal video stream.** Add a third stream alongside STDOUT and log-file tailing: live video
   of the application the terminal is running. Brings the Nerve Terminal to 3 streams total (stdout, log
   file, video). Capture the target app's window/screen on the agent side, encode, and pipe back over the
