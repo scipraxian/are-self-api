@@ -8,7 +8,7 @@ from central_nervous_system.models import Spike, SpikeTrain
 from central_nervous_system.signals import spawn_failed, spawn_success
 from frontal_lobe.models import ReasoningSession, ReasoningTurn
 from hypothalamus.models import AIModelProviderUsageRecord
-from identity.models import IdentityDisc
+from identity.models import Identity, IdentityDisc
 from parietal_lobe.models import ToolCall
 from peripheral_nervous_system.models import NerveTerminalRegistry
 from prefrontal_cortex.models import PFCEpic, PFCStory, PFCTask
@@ -94,6 +94,7 @@ def broadcast_tool_call(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=AIModelProviderUsageRecord)
+@receiver(post_save, sender=Identity)
 @receiver(post_save, sender=IdentityDisc)
 @receiver(post_save, sender=Iteration)
 @receiver(post_save, sender=IterationShift)
