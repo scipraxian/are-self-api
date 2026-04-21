@@ -1,7 +1,6 @@
-import functools
 import logging
 from decimal import Decimal
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
 from asgiref.sync import sync_to_async
@@ -13,12 +12,13 @@ from central_nervous_system.utils import resolve_environment_context
 from common.constants import CONTENT, HUMAN_TAG, ROLE, USER
 from environments.variable_renderer import VariableRenderer
 from frontal_lobe.constants import FrontalLobeConstants
-from frontal_lobe.context_compressor import ContextCompressor, estimate_message_list_tokens
+from frontal_lobe.digest_builder import build_and_save_digest
 from frontal_lobe.models import (
     ReasoningSession,
     ReasoningStatusID,
     ReasoningTurn,
 )
+from frontal_lobe.signals import broadcast_digest
 from frontal_lobe.synapse_client import (
     SynapseClient,
     recover_tool_calls_from_content,
@@ -33,18 +33,6 @@ logger = logging.getLogger(__name__)
 
 STATUS_ID = 'status_id'
 MODEL_USAGE_RECORD = 'model_usage_record'
-INTERRUPT_SNAPSHOT = 'interrupt_snapshot'
-
-
-def spike_is_stopping(spike_id: Optional[UUID]) -> bool:
-    """Sync poll of Spike status for Layer 2 interrupt (no async ORM)."""
-    if spike_id is None:
-        return False
-    try:
-        s = Spike.objects.only('status_id').get(pk=spike_id)
-        return s.status_id == SpikeStatus.STOPPING
-    except Spike.DoesNotExist:
-        return False
 
 
 def _fetch_disc_sync(session_id):
@@ -96,8 +84,6 @@ class FrontalLobe:
         self._cached_environment_id = None
         self._cached_shift_id = None
         self._cached_iteration_id = None
-        self._stream_callback = None
-        self._interrupt_check = None
 
     # --- IO & Logging ---
 
@@ -225,10 +211,9 @@ class FrontalLobe:
         """
         all_messages: list[dict] = []
 
-        # phase__id then pk so fixture IdentityAddon PKs define order within a phase.
         active_addons = await sync_to_async(list)(
             self.session.identity_disc.addons.select_related('phase').order_by(
-                'phase__id', 'pk'
+                'phase__id'
             )
         )
 
@@ -279,62 +264,6 @@ class FrontalLobe:
 
         return llm_payload
 
-    def _compress_context_messages(
-        self, pending_ledger: AIModelProviderUsageRecord
-    ) -> None:
-        """Mutate ledger request_payload when estimated tokens exceed ~80% context."""
-        msgs = list(pending_ledger.request_payload or [])
-        model = pending_ledger.ai_model
-        if not model or not self.session:
-            return
-        threshold = int(model.context_length * 0.80)
-        if estimate_message_list_tokens(msgs) < threshold:
-            return
-        compressor = ContextCompressor(
-            self.session,
-            pending_ledger.ai_model_provider.provider_unique_model_id,
-        )
-        pending_ledger.request_payload = compressor.compress(
-            msgs, threshold, summarize_fn=None
-        )
-
-    async def _interrupt_session_snapshot(
-        self,
-        turn_record: ReasoningTurn,
-        pending_ledger: AIModelProviderUsageRecord,
-        partial_content: str,
-    ) -> None:
-        """Set INTERRUPTED status and persist partial assistant output."""
-        turns_done = await sync_to_async(self.session.turns.count)()
-        self.session.interrupt_snapshot = {
-            'interrupted': True,
-            'partial_content': partial_content,
-            'turns_completed': turns_done,
-        }
-        self.session.status_id = ReasoningStatusID.INTERRUPTED
-        await sync_to_async(self.session.save)(
-            update_fields=[STATUS_ID, INTERRUPT_SNAPSHOT]
-        )
-        await sync_to_async(pending_ledger.save)()
-        turn_record.status_id = ReasoningStatusID.COMPLETED
-        turn_record.model_usage_record = pending_ledger
-        await sync_to_async(turn_record.save)(
-            update_fields=[STATUS_ID, MODEL_USAGE_RECORD]
-        )
-
-    async def _interrupt_session_before_turn(self, turn_record: ReasoningTurn) -> None:
-        """User interrupted before any LLM call for this turn."""
-        turns_done = await sync_to_async(self.session.turns.count)()
-        self.session.interrupt_snapshot = {
-            'interrupted': True,
-            'partial_content': '',
-            'turns_completed': turns_done,
-        }
-        self.session.status_id = ReasoningStatusID.INTERRUPTED
-        await sync_to_async(self.session.save)(
-            update_fields=[STATUS_ID, INTERRUPT_SNAPSHOT]
-        )
-
     async def _execute_turn(
         self,
         ollama_tools: list,
@@ -353,10 +282,6 @@ class FrontalLobe:
             turn_record = await self._record_turn_start(
                 current_count, previous_turn
             )
-
-        if spike_is_stopping(self.spike_id):
-            await self._interrupt_session_before_turn(turn_record)
-            return False, turn_record
 
         messages = await self._build_turn_payload(turn_record)
         tools = ollama_tools if ollama_tools else {}
@@ -397,44 +322,16 @@ class FrontalLobe:
                 )
                 return False, turn_record
 
-            await sync_to_async(self._compress_context_messages)(pending_ledger)
-
             # ⚡ 3. PASS THE LEDGER TO THE SYNAPSE
             synapse = await sync_to_async(SynapseClient)(pending_ledger)
 
             # TODO: Save the ledger here. maybe new status?
 
-            interrupt_check = self._interrupt_check
-            if interrupt_check is None:
-                interrupt_check = functools.partial(
-                    spike_is_stopping, self.spike_id
-                )
-
             try:
-                if self._stream_callback is not None:
-                    success, tool_calls_data = await synapse.chat_stream(
-                        stream_callback=self._stream_callback,
-                        interrupt_check=interrupt_check,
-                    )
-                else:
-                    success, tool_calls_data = await sync_to_async(synapse.chat)()
+                # chat() mutates the ledger, returns normalized tool calls
+                success, tool_calls_data = await sync_to_async(synapse.chat)()
                 if success:
                     break  # Success! escape loop!
-
-            except InterruptedError:
-                pending_ledger.query_time = timezone.now() - start_time
-                partial = ''
-                rp = pending_ledger.response_payload or {}
-                if isinstance(rp, dict):
-                    partial = (
-                        rp.get('choices', [{}])[0]
-                        .get('message', {})
-                        .get('content', '')
-                    )
-                await self._interrupt_session_snapshot(
-                    turn_record, pending_ledger, partial
-                )
-                return False, turn_record
 
             except (RateLimitError, APIConnectionError, NotFoundError) as e:
                 provider_id = (
@@ -489,17 +386,14 @@ class FrontalLobe:
             tool_calls_data = recover_tool_calls_from_content(content)
 
         if tool_calls_data and self.parietal_lobe:
-            if spike_is_stopping(self.spike_id):
-                await self._interrupt_session_snapshot(
-                    turn_record, pending_ledger, content
-                )
-                return False, turn_record
             await self._log_live(
                 f'[ParietalLobe] Processing {len(tool_calls_data)} tool calls...'
             )
             await self.parietal_lobe.process_tool_calls(
                 turn_record=turn_record, tool_calls_data=tool_calls_data
             )
+            digest = await sync_to_async(build_and_save_digest)(turn_record)
+            await sync_to_async(broadcast_digest)(digest)
             await sync_to_async(self.session.refresh_from_db)(
                 fields=[STATUS_ID]
             )
@@ -510,23 +404,9 @@ class FrontalLobe:
         await sync_to_async(self.session.save)(update_fields=[STATUS_ID])
         return False, turn_record
 
-    async def run(
-        self,
-        stream_callback: Optional[Any] = None,
-        interrupt_check: Optional[Callable[[], bool]] = None,
-        stream_to_channels: bool = False,
-    ) -> Tuple[int, str]:
-        """Main asynchronous execution orchestrator.
-
-        If ``stream_to_channels`` is True and ``stream_callback`` is omitted,
-        token deltas are sent to the Django Channels group for this
-        ``ReasoningSession`` (Layer 2 §3.2). Clients must connect to the gateway
-        WebSocket with ``?session_id=<uuid>`` and join that group.
-        """
+    async def run(self) -> Tuple[int, str]:
+        """Main asynchronous execution orchestrator."""
         logger.debug(f'[FrontalLobe] Waking up for Spike {self.spike_id}')
-
-        self._stream_callback = stream_callback
-        self._interrupt_check = interrupt_check
 
         self.spike.application_log = ''
         await sync_to_async(self.spike.save)(update_fields=['application_log'])
@@ -546,11 +426,6 @@ class FrontalLobe:
                 )
             )
             await self._initialize_session(raw_context, rendered_objective, max_turns)
-
-            if stream_to_channels and self._stream_callback is None:
-                from frontal_lobe.channels_streaming import TokenChannelSender
-
-                self._stream_callback = TokenChannelSender(self.session.id)
 
             # 3. Resolve IdentityDisc and prep Parietal Lobe
             identity_disc = await sync_to_async(_fetch_disc_sync)(
@@ -592,19 +467,6 @@ class FrontalLobe:
                 )
                 if self.spike.status_id == SpikeStatus.STOPPING:
                     await self._log_live('\n[WARNING] Stop Signal. Halting.')
-                    if self.session:
-                        turns_done = await sync_to_async(
-                            self.session.turns.count
-                        )()
-                        self.session.status_id = ReasoningStatusID.INTERRUPTED
-                        self.session.interrupt_snapshot = {
-                            'interrupted': True,
-                            'partial_content': '',
-                            'turns_completed': turns_done,
-                        }
-                        await sync_to_async(self.session.save)(
-                            update_fields=[STATUS_ID, INTERRUPT_SNAPSHOT]
-                        )
                     break
 
                 # The clean, 2-argument call
@@ -651,22 +513,13 @@ class FrontalLobe:
         return 200, '\n'.join(self.log_output)
 
 
-async def run_frontal_lobe(
-    spike_id: UUID,
-    stream_to_channels: bool = False,
-    stream_callback: Optional[Any] = None,
-    interrupt_check: Optional[Callable[[], bool]] = None,
-) -> Tuple[int, str]:
+async def run_frontal_lobe(spike_id: UUID) -> Tuple[int, str]:
     try:
         spike = await sync_to_async(
             lambda: Spike.objects.select_related('spike_train').get(id=spike_id)
         )()
         lobe = FrontalLobe(spike)
-        return await lobe.run(
-            stream_callback=stream_callback,
-            interrupt_check=interrupt_check,
-            stream_to_channels=stream_to_channels,
-        )
+        return await lobe.run()
     except Exception as e:
         logger.exception(f'[FrontalLobe] Fatal crash on init: {e}')
         return 500, f'Fatal Error: {str(e)}'

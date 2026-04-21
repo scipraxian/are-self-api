@@ -14,6 +14,7 @@ from frontal_lobe.api_urls import V2_REASONING_ROUTER
 from hippocampus.api_urls import V2_HIPPOCAMPUS_ROUTER
 from hypothalamus.api_urls import V2_HYPOTHALAMUS_ROUTER
 from identity.api_urls import V2_IDENTITY_ROUTER
+from neuroplasticity.api_urls import V2_NEUROPLASTICITY_ROUTER
 from parietal_lobe.api_urls import V2_PARIETAL_LOBE
 from peripheral_nervous_system.api_urls import V2_PNS_ROUTER
 from prefrontal_cortex.urls import V2_PREFRONTAL_CORTEX_ROUTER
@@ -39,6 +40,7 @@ V2_ROUTER.registry.extend(V2_PARIETAL_LOBE.registry)
 V2_ROUTER.registry.extend(V2_PNS_ROUTER.registry)
 V2_ROUTER.registry.extend(V2_THALAMUS.registry)
 V2_ROUTER.registry.extend(V2_HYPOTHALAMUS_ROUTER.registry)
+V2_ROUTER.registry.extend(V2_NEUROPLASTICITY_ROUTER.registry)
 V2_ROUTER.registry.extend(ENVIRONMENTS_ROUTER.registry)
 
 urlpatterns = [

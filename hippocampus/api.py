@@ -30,4 +30,7 @@ class EngramViewSet(ModelViewSet):
             queryset = queryset.filter(
                 identity_discs=identity_discs
             ).distinct()
+        sessions = self.request.query_params.get('sessions')
+        if sessions:
+            queryset = queryset.filter(sessions=sessions).distinct()
         return queryset

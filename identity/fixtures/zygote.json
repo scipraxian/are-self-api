@@ -15,13 +15,7 @@
         3
       ],
       "addons": [
-        5,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12
+        8
       ],
       "enabled_tools": [
         "36151a8b-3c82-4a61-8a7f-b1392b1fb81c",
@@ -35,7 +29,6 @@
         "8f80e108-0e43-4509-8c4c-d1259f393ad7",
         "ec21f60f-93be-4ec9-8ac4-6253e2fed735",
         "abacd3a1-bcf1-4236-8b5c-7a39d37de0eb",
-        "4967bb81-ceaf-40f2-95b9-38dd07983172",
         "d3138f37-1df1-42e9-b0fb-75ca21aaeb73",
         "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
         "c4ef2e80-59b7-49cd-86cc-1e988db9976e",
@@ -68,7 +61,9 @@
       "tags": [
         3
       ],
-      "addons": [],
+      "addons": [
+        8
+      ],
       "enabled_tools": [
         "92efa6a9-9392-4124-b10b-5c7a0ea61e08",
         "5cb73221-3a7a-4e49-9342-bb3f7021c6f1",

@@ -1,4 +1,4 @@
-from django.db.models import Count, Prefetch
+from django.db.models import Count
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
@@ -6,7 +6,11 @@ from rest_framework.response import Response
 
 from central_nervous_system.models import SpikeStatus
 from central_nervous_system.tasks import fire_spike
-from frontal_lobe.models import ReasoningStatusID
+from frontal_lobe.models import (
+    ReasoningStatusID,
+    ReasoningTurnDigest,
+    SessionConclusion,
+)
 from frontal_lobe.serializers import (
     KEY_REPLY,
     ResumeSessionRequestSerializer,
@@ -59,23 +63,50 @@ class ReasoningSessionViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='graph_data')
     def graph_data(self, request, pk=None):
-        session = (
-            self.get_queryset()
-            .select_related('status', 'conclusion', 'conclusion__status')
-            .prefetch_related(
-                Prefetch(
-                    'turns',
-                    queryset=ReasoningTurn.objects.select_related(
-                        'status'
-                    ).order_by('turn_number'),
-                ),
-                'turns__tool_calls__tool',
-                'engrams__source_turns',
+        """Return ReasoningTurnDigest rows with turn_number > since.
+
+        Pull fallback for the push-first digest transport. Called once
+        on mount (``since_turn_number=0``) and once on WebSocket
+        reconnect (``since_turn_number=<last seen>``); NOT polled. The
+        response is a flat list of digests — same keys as the
+        Acetylcholine vesicle — ordered by ``turn_number``.
+
+        Omitting the query param defaults to ``-1``, which returns the
+        full session (all real turns have ``turn_number >= 1``).
+        """
+        raw_since = request.query_params.get('since_turn_number', '-1')
+        try:
+            since = int(raw_since)
+        except (TypeError, ValueError):
+            return Response(
+                {'error': 'since_turn_number must be an integer.'},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-            .get(pk=pk)
+
+        digests = ReasoningTurnDigest.objects.filter(
+            session_id=pk, turn_number__gt=since
+        ).order_by('turn_number')
+        return Response(serializers.DigestSerializer(digests, many=True).data)
+
+    @action(detail=True, methods=['get'], url_path='conclusion')
+    def conclusion(self, request, pk=None):
+        """Return this session's SessionConclusion, or 404 if none.
+
+        Pull fallback symmetric to ``graph_data`` for the conclusion
+        node. The push path is the Acetylcholine broadcast in
+        ``frontal_lobe.signals.broadcast_conclusion``; this endpoint
+        exists so the UI can hydrate on cold start and reconnect
+        without waiting for the next save.
+        """
+        try:
+            conc = SessionConclusion.objects.select_related('status').get(
+                session_id=pk
+            )
+        except SessionConclusion.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            serializers.SessionConclusionSerializer(conc).data
         )
-        serializer = serializers.ReasoningSessionGraphSerializer(session)
-        return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
     def rerun(self, request, pk=None):

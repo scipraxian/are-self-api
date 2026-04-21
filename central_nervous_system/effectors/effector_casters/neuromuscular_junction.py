@@ -5,7 +5,7 @@ import sys
 import time
 import traceback
 import uuid
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 from asgiref.sync import sync_to_async
 from channels.layers import get_channel_layer
@@ -16,9 +16,6 @@ from central_nervous_system.effectors.effector_casters.begin_play_node import (
 )
 from central_nervous_system.effectors.effector_casters.debug_node import (
     debug_node,
-)
-from central_nervous_system.effectors.effector_casters.effector_handlers.version_metadata_handler import (
-    update_version_metadata,
 )
 from central_nervous_system.effectors.effector_casters.pathway_logic_node import (
     pathway_logic_node,
@@ -66,12 +63,38 @@ AXOPLASM_SET_STRIPPER = re.compile(
 NATIVE_HANDLERS = dict(
     begin_play=begin_play,
     debug_node=debug_node,
-    update_version_metadata=update_version_metadata,  # TODO: move to management
     scan_and_register=scan_and_register,  # TODO: move to management
     pathway_logic_neuron=pathway_logic_node,
     run_frontal_lobe=run_frontal_lobe,
     run_temporal_lobe=run_temporal_lobe,
 )
+
+
+def register_native_handler(slug: str, handler: Callable) -> None:
+    """Register a bundle-contributed native handler by effector slug.
+
+    Args:
+        slug: The effector slug the NMJ looks up via
+            NATIVE_HANDLERS.get(slug). Free-form; no 'mcp_' prefix
+            rule.
+        handler: The callable NMJ will invoke for that slug.
+
+    Raises:
+        RuntimeError: if `slug` is already in `NATIVE_HANDLERS` (by
+            core declaration or prior bundle registration).
+    """
+    if slug in NATIVE_HANDLERS:
+        raise RuntimeError(
+            f"Native handler slug '{slug}' is already registered."
+        )
+    NATIVE_HANDLERS[slug] = handler
+    logger.debug('[NMJ] Registered bundle native handler %s.', slug)
+
+
+def unregister_native_handler(slug: str) -> None:
+    """Remove a registered handler. No-op if absent."""
+    if NATIVE_HANDLERS.pop(slug, None) is not None:
+        logger.debug('[NMJ] Unregistered bundle native handler %s.', slug)
 
 
 def evaluate_return_code(executable_name: str, return_code: int) -> bool:

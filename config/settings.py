@@ -146,8 +146,17 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Neuroplasticity — NeuralModifier bundle roots. Tests override these.
-MODIFIER_GENOME_ROOT = BASE_DIR / 'neuroplasticity' / 'modifier_genome'
-NEURAL_MODIFIERS_ROOT = BASE_DIR / 'neural_modifiers'
+# GENOMES_ROOT: committed `<slug>.zip` archives — the single source of truth.
+# GRAFTS_ROOT:  runtime install trees (gitignored).
+# OPERATING_ROOM_ROOT: transient scratch for install/upgrade extractions.
+NEURAL_MODIFIER_GENOMES_ROOT = BASE_DIR / 'neuroplasticity' / 'genomes'
+NEURAL_MODIFIER_GRAFTS_ROOT = BASE_DIR / 'neuroplasticity' / 'grafts'
+NEURAL_MODIFIER_OPERATING_ROOM_ROOT = (
+    BASE_DIR / 'neuroplasticity' / 'operating_room'
+)
+NEURAL_MODIFIER_GENOMES_ROOT.mkdir(parents=True, exist_ok=True)
+NEURAL_MODIFIER_GRAFTS_ROOT.mkdir(parents=True, exist_ok=True)
+NEURAL_MODIFIER_OPERATING_ROOM_ROOT.mkdir(parents=True, exist_ok=True)
 
 # Celery
 # Override with CELERY_BROKER_URL env var if Redis is elsewhere (e.g. Docker, WSL).

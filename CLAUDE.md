@@ -3,76 +3,62 @@
 The single source of truth for any AI agent working on the are-self-api codebase.
 Read completely before making any changes.
 
-> **Active thread (April 15, 2026):** `uuid-migration` branch, Pass 2 Step 1
-> completion in progress. Pass 1 (18 plugin-extensible models flipped to UUID
-> PKs, 433 tests passing) is locked. Pass 2 splits every app's `initial_data.json`
-> into the four biological fixture tiers (`genetic_immutables` → `zygote` →
-> `initial_phenotypes` → `petri_dish`), extracts the Unreal flow as an in-tree
-> `unreal_modifier.json` sibling (plugin bundling deferred), and will later
-> wire `./manage.py build_modifier` + the contribution-aware loader.
->
-> **Pass 2 Step 1 status:** First CC pass split all 1017 rows into scratch
-> `.step1.json` files with SHA-256 verified byte-identical source fixtures
-> and produced `STEP1_REPORT.md`. Review surfaced 7 decision items; Michael
-> has ruled on all 7. Completion prompt authored (see chat) for a second CC
-> pass that applies the rulings, renames scratch → final, and creates
-> `temporal_lobe/zygote.json` (missing from the first split). Key rulings:
-> BEGIN_PLAY stays in zygote (sacred, non-negotiable); entire parietal tool
-> suite → zygote; IterationDefinitions → zygote, Iteration instances →
-> phenotype (definition-vs-instance pattern); hypothalamus zygote = 3 models
-> (nomic-embed-text + qwen2.5-coder:7b + qwen2.5-coder:32b); django_celery_beat
-> stays in genetic_immutables; `petri_dish.json` is not empty by design — it
-> composes with `genetic_immutables.json` via the common test class (mechanism
-> TBD in Step 2). `ProjectEnvironment.DEFAULT_ENVIRONMENT` now points at the
-> new simple default env `b7e4c2a1-3f8d-4a9e-9c1f-2d5a8b6f4e21` (resolved by
-> Michael); its `are_self_root` + `venv_root` ContextVariables are added.
->
-> Tasks 2 (hypothalamus zygote seed), 3 (log-merge move to occipital_lobe),
-> 4 (log_parser split + LogParserFactory), and 4.5 (three `environments`
-> models flipped to UUID) are staged but not yet committed. See
-> `FIXTURE_SEPARATION_PROMPT.md` for the full executable plan and
-> TASKS.md → "UUID migration Pass 2" for the task list.
->
-> **Prior thread (April 11):** Nerve Terminal scan reconcile shipped with a
-> UI-blink regression; planned surgical fix documented in TASKS.md →
-> "In Progress — Nerve Terminal Scan Reconcile". Resume there after Pass 2.
->
-> **April 15, 2026 — CNS dispatch + inspector session (Cowork):**
->
-> 1. **Zero-agent dispatch fix.** `_dispatch_fleet_wave` and
->    `_dispatch_first_responder` in `central_nervous_system.py` no longer
->    hard-fail when the NerveTerminalRegistry is empty. Design: if there are
->    no agents online, there is nothing to dispatch — the spike succeeds
->    silently (`SpikeStatus.SUCCESS`, `logger.info`) and the graph keeps
->    walking. The local server is NOT an agent; fleet/first-responder modes
->    mean remote fan-out, and zero targets is a no-op, not an error.
->    `_dispatch_pinned_wave` (SPECIFIC_TARGETS) left unchanged — pinned
->    targets are explicit user intent. Tests:
->    `CNSFleetBroadcastZeroAgentsTest` (3 cases) and
->    `CNSFirstResponderZeroAgentsTest` (1 case) in `tests/test_routing.py`.
->
-> 2. **Neuron/Pathway inspector fields (v2 serializers).** `NeuronSerializer`
->    now exposes `environment` (writable FK, nullable),
->    `environment_name` (read-only), and `distribution_mode_name`
->    (read-only). `NeuralPathwaySerializer` now exposes `environment`
->    (writable FK, nullable) and `environment_name` (read-only).
->    `NeuralPathwayDetailSerializer` inherits both. No migrations —
->    fields exist via `ProjectEnvironmentMixin`. Tests in
->    `tests/test_effector_editor_api.py`.
->
-> 3. **CNSInspector UI (are-self-ui).** Node inspector now shows
->    Distribution Mode (select w/ "Inherit from effector" null option) and
->    Neuron Environment (select w/ "Inherit" null option). Yellow override
->    badge renders when a per-neuron override is set — prevents the
->    invisible-override bug that caused this session's original failure.
->    New `PathwayInspector` component renders when no neuron is selected,
->    exposing pathway-level environment editing.
->
-> **Root cause of the session:** Neuron `3298d2c2` on "List Location R"
-> had `distribution_mode = ALL_ONLINE_AGENTS` persisted as a per-neuron
-> override, forcing fleet broadcast. The effector default was LOCAL_SERVER.
-> The UI had no affordance to see or clear the override — it was invisible.
+> **Active work lives elsewhere.** See `TASKS.md` for in-progress items,
+> `NEURAL_MODIFIER_COMPLETION_PLAN.md` for the NeuralModifier roadmap, and
+> `git log` for what landed recently. Do NOT replay session diaries in this
+> file — when work lands, lift the durable rule into the appropriate section
+> below, then delete the notes. This file is the *standing reference*, not the
+> changelog.
 
+## Standing rulings (project-wide)
+
+Michael-rulings that outlive any one task. Do not re-litigate or forget these:
+
+- `initial_data.json` and fixture files are **Michael-only-delete** — never
+  propose removing them.
+- NeuralModifier bundles install via the modifier-garden UI, not `install.bat`.
+- NeuralModifier layout is locked: **`neuroplasticity/genomes/<slug>.zip`**
+  (committed source of truth), **`neuroplasticity/grafts/<slug>/`** (gitignored
+  runtime install tree), **`neuroplasticity/operating_room/`** (gitignored
+  transient scratch — empty between operations). No sibling root-level dirs;
+  no unzipped source tree under `modifier_genome/`.
+- Uninstall DELETES the `NeuralModifier` row (AVAILABLE = zip exists + no DB
+  row). Contributions, logs, and events all CASCADE away. A failed fresh
+  install also deletes the row it created — never leaves a BROKEN or
+  DISCOVERED stub behind. BROKEN is reserved for boot-time drift on a
+  previously-working install.
+- UUIDs are `uuid.uuid4()` random literals — no UUIDv5, namespaces, or
+  deterministic seeding. Existing UUID literals in fixtures are frozen; do not
+  regenerate.
+- No polling. Real-time sync goes through Acetylcholine push; a REST pull
+  fallback (e.g. `graph_data?since_turn_number=N`) is a safety net, never the
+  primary path. No `setInterval`, no Celery-beat refresh loops on the UI.
+- `receptor_class` must be a domain entity or brain region name (e.g.
+  `'ReasoningTurnDigest'`, `'Hypothalamus'`, `'PFCEpic'`), NEVER an internal
+  ORM model name (`'AIModel'`, `'LLMProvider'`) or a molecule type
+  (`'Acetylcholine'`, `'Dopamine'`). Full convention in Common Pitfalls.
+- Digests and side-cars are discardable — nuke-and-rebuild, never backfill.
+  The authoritative entity is the turn; the digest can be rebuilt from it.
+- Do not bypass `_update_status` in `neuromuscular_junction.py` — it is the
+  single source of truth for spike status (sets `self.status` AND saves).
+- Never delete `AIModel` or `AIModelProvider` records — disable them
+  (`enabled=False`, `is_enabled=False`).
+- Fixture tiers — general rule: **rows referenced by model class constants
+  live in `genetic_immutables` regardless of which table they live in.**
+  Their UUIDs are sacred, non-negotiable, and must always resolve — including
+  under the minimal `CommonTestCase` fixture load. That covers
+  `Effector.BEGIN_PLAY` / `LOGIC_GATE` / `LOGIC_RETRY` / `LOGIC_DELAY` /
+  `FRONTAL_LOBE` / `DEBUG`, `Executable.BEGIN_PLAY` / `PYTHON` / `DJANGO`,
+  and `SyncStatus.RUNNING` / `SUCCESS` / `FAILED`. NeuralModifier-contributed
+  rows in those same tables go to `initial_phenotypes` or bundle fixtures
+  instead — the rule is about the *row*, not the table.
+- Other fixture-tier rulings: definition rows (e.g. `IterationDefinition`) →
+  `zygote`, instance rows (e.g. `Iteration`) → `initial_phenotypes`; entire
+  parietal tool suite → `zygote`; hypothalamus zygote = 3 models
+  (`nomic-embed-text`, `qwen2.5-coder:7b`, `qwen2.5-coder:32b`);
+  `django_celery_beat` stays in `genetic_immutables`; `petri_dish.json` is
+  intentionally non-empty and composes with `genetic_immutables.json` via
+  the common test class.
 
 ## The Developer
 
@@ -158,19 +144,49 @@ Legacy app still present: `dashboard/` (old HTMX views) — deprecated, will be 
 
 `ue_tools/` is **not** deprecated. It contains the Unreal Engine build orchestration flow
 and is being extracted as the first `NeuralModifier` bundle in the Pass 2 neuroplasticity
-architecture — the committed source tree lives at `neuroplasticity/modifier_genome/unreal/`.
+architecture — the committed bundle archive lives at `neuroplasticity/genomes/unreal.zip`.
 `occipital_lobe/` is **not** a placeholder — it is the home for OS-level file-watcher
 intake (visual-cortex-style event detection that routes folder changes to the associated
 environment's neural pathways) and now also hosts the generic log-merge utilities and the
 `LogParserFactory` registry (moved out of `ue_tools/` in Pass 2 Task 3/4).
 
 `neuroplasticity/` is the Pass 2 install / lifecycle registry for `NeuralModifier` bundles
-(Are-Self's word for an installable plugin). The app owns `NeuralModifier`,
+(Are-Self's word for an installable extension bundle). The app owns `NeuralModifier`,
 `NeuralModifierContribution` (GFK with UUIDField object_id — the uninstall manifest),
 `NeuralModifierInstallationLog`, and the `NeuralModifierStatus` /
-`NeuralModifierInstallationEventType` enums. Bundles ship committed at
-`neuroplasticity/modifier_genome/<slug>/` and install to `neural_modifiers/<slug>/` at repo
-root (gitignored). `INSTALLED_APPS` is never mutated at runtime — contributions are data.
+`NeuralModifierInstallationEventType` enums. `INSTALLED_APPS` is never mutated at runtime —
+contributions are data.
+
+**Three directories, three roles** (all under `neuroplasticity/`; the latter two are
+gitignored):
+
+- `neuroplasticity/genomes/<slug>.zip` — **committed** user-facing archives. The zip IS the
+  bundle; there is no unzipped source tree anywhere. Each zip holds `manifest.json`,
+  `modifier_data.json`, and `code/` at its top level. The Modifier Garden UI drives install
+  / delete against these zips. A fresh clone ships `genomes/unreal.zip` → one AVAILABLE row.
+- `neuroplasticity/grafts/<slug>/` — runtime install tree that persists the bundle's live
+  code on `sys.path` after install. `install_bundle_from_archive` is the single install
+  entry; it extracts into `operating_room/` then copies into `grafts/<slug>/`.
+- `neuroplasticity/operating_room/` — transient scratch root for install / upgrade
+  extractions. Every op creates a fresh `tempfile.mkdtemp` under this dir and nukes it in a
+  `try/finally` — after any operation (success OR failure), `operating_room/` is empty.
+
+**State machine:** AVAILABLE (zip in `genomes/`, **no DB row**) → Install → INSTALLED →
+Enable → ENABLED → Disable → INSTALLED → Uninstall → AVAILABLE → (delete the zip to remove
+the bundle entirely). Uninstall **deletes** the `NeuralModifier` row — contributions, logs,
+and events all CASCADE away. BROKEN surfaces only from boot-time hash drift or load failure
+on a previously-installed bundle; a failed fresh install deletes its row instead of
+flipping BROKEN. `DISCOVERED` is retired as a surfaced status (enum value stays in fixtures
+for backwards compat of historical log events; never assigned to new rows).
+
+Bundle-time registration surfaces are in place: `register_parietal_tool` /
+`unregister_parietal_tool` in `parietal_lobe/parietal_mcp/gateway.py` (module-level
+`_PARIETAL_TOOL_REGISTRY` checked first in `ParietalMCP.execute()`, falls through to the
+importlib path on miss); `register_native_handler` / `unregister_native_handler` in
+`central_nervous_system/effectors/effector_casters/neuromuscular_junction.py` (backed by
+the single `NATIVE_HANDLERS` dict, collisions raise `RuntimeError`, unregister is idempotent).
+`LogParserFactory.register()` at `occipital_lobe/log_parser.py` is the equivalent surface
+for parsers.
 
 ## Key Code Paths
 
@@ -193,6 +209,11 @@ Norepinephrine (monitoring).
 
 **Temporal tick:** `temporal_lobe/temporal_lobe.py` → `trigger_temporal_metronomes()` →
 `fetch_canonical_temporal_pathway()` → CNS builds SpikeTrain.
+
+**Digest side-car:** `frontal_lobe/digest_builder.py` builds `ReasoningTurnDigest` rows
+idempotently; `frontal_lobe/signals.py` fires a `post_save(ReasoningTurn)` handler that
+skips raw fixture loads and skips when `model_usage_record_id is None`, then broadcasts
+Acetylcholine with `receptor_class='ReasoningTurnDigest'` and the full digest as vesicle.
 
 ## API Endpoints
 
@@ -347,65 +368,33 @@ Invoke-RestMethod -Uri https://local.are-self.com/mcp `
   -Method Post -ContentType application/json -Body $body
 ```
 
-## Current State (April 7, 2026 — Release Day)
+## Current State
 
-**MIT open-source release: TODAY.** All four repos going public. DNS via Cloudflare pointing
-are-self.com to GitHub Pages. All READMEs updated. Social media accounts created (scipraxian
-handle across Twitter/X, TikTok, Truth Social, Facebook, Discord, YouTube, Reddit).
+Released as MIT open source on April 7, 2026. All four public repos live under
+[scipraxian](https://github.com/scipraxian); the site is at are-self.com; social
+accounts live under the `scipraxian` handle across the usual platforms. The full
+tick cycle runs end-to-end (Identity → IdentityDisc → iteration → task pickup →
+autonomous reasoning → tool calls → memory formation → narrative dumps). MCP
+server at `/mcp` with 14 tools across 6 brain regions (Phase 1 request/response).
+NGINX reverse proxy with HTTP/HTTPS autodetect and a real ZeroSSL cert for
+`local.are-self.com`.
 
-**Gemma4 rollback:** Gemma4 changed output format on release day, breaking the Frontal Lobe
-reasoning loop. Empirical testing confirmed Qwen outperforms Gemma4 on Are-Self. Rolled back
-to Qwen. Parser being developed for Gemma4 support post-release.
+For current-state specifics, in-flight work, and priorities: see `TASKS.md`.
 
-**OpenRouter sync restored:** `sync_remote` feature brought back (untested). Ships with release.
-Needs documentation in are-self-docs.
-
-**What works:** The full tick cycle runs end-to-end. Identities create, forge into discs,
-get slotted into iterations, pick up tasks, reason autonomously, call tools, form memories.
-The Hypothalamus semantic parser (83 tests, 98.4% accuracy) enriches models automatically.
-Real-time events flow through the Synaptic Cleft. All brain regions have working API endpoints.
-Logic node (3 modes: retry/gate/wait) with 68 tests. TTS via Piper. Efficiency bonus active.
-SystemControlViewSet for shutdown/restart. Effector Editor API with full CRUD. Debug node
-(PK 9). Narrative dump + summary dump endpoints. `<<h>>` human message tagging prevents
-prompt_addon duplication. MCP server at /mcp with 14 tools across 6 brain regions (Phase 1 — request/response only).
-NGINX reverse proxy with HTTP/HTTPS autodetect, real ZeroSSL cert for `local.are-self.com`,
-routing split across Daphne / Vite / Docusaurus, and a custom glassmorphism landing page
-at `/` with probe-based local-vs-external docs link. MCP server verified end-to-end from
-Claude Code against `https://local.are-self.com/mcp` (all 14 tools callable).
-
-**Ship-blocking security:** Django CVE-2025-64459 (CVSS 9.1), Redis CVE-2025-49844 (CVSS 10.0),
-LiteLLM supply chain incident (March 2026), Ollama CVEs including CVE-2024-37032 "Probllama".
-Full audit in DEPENDENCY_AUDIT.md. Version pins needed before release.
-
-**Top priority:** Documentation (release day), PNS expansion (multiple Ollama endpoints, live agent
-monitoring), and security version pins. Image/audio generation via CNS effectors is deferred to
-post-release — TTS via Piper is the PoC for binary creation.
-
-**What's in progress:** See TASKS.md for full task list. Key items: documentation infrastructure,
-security remediation, PNS expansion, error handler effector, engram function consolidation,
-API URL standardization (underscores → hyphens), prompt_addon state awareness.
-
-**Critical architecture note — `_update_status`:** This method in `neuromuscular_junction.py` is
-the single source of truth for spike status. It sets BOTH `self.status` on the instance AND saves
-to DB. Internal effectors return (200, msg) for SUCCESS and (500, msg) for FAILURE. External
-effectors use Unix exit codes (0 = success). These are evaluated in SEPARATE code paths
-(`_execute_local_python` vs `_execute_unified_pipeline`) but both flow through `_update_status`
-to set final status. **Do not bypass `_update_status`. Any changes must preserve `self.status`
-assignment.**
-
-**Completed renames:** Talos → Are-Self naming sweep done. HTMX removed. Spell/Cast naming
-sweep done across CNS. Deprecated `ModelProvider`/`ModelRegistry` removed from Frontal Lobe.
-
-**Legacy remnants:** `parietal_lobe/registry.py` still exists (superseded by Hypothalamus
-DB-driven routing). `synapse_open_router.py` is deprecated (no production callers). The
-`dashboard/` app is from the original UE5 build orchestrator — will be removed. `ue_tools/`
-stays: it is being extracted as the first `NeuralModifier` bundle at
-`neuroplasticity/modifier_genome/unreal/` in Pass 2. Its generic log-merge utilities
-already relocated to `occipital_lobe/` (Task 3) and its parser split into generic core +
-UE strategies registered via `LogParserFactory` (Task 4). `deploy_release_test` is a
-legacy executable slated for removal during the Pass 2 Unreal extraction.
-`ollama_fixture_generator.py` has been deleted — its output was captured as frozen
-literals in `hypothalamus/fixtures/zygote.json` during the Pass 2 hypothalamus UUID flip.
+**Legacy / deprecation state:**
+- `dashboard/` (original UE5 build orchestrator, HTMX views) is deprecated and
+  will be removed.
+- `parietal_lobe/registry.py` is superseded by Hypothalamus DB-driven routing.
+- `synapse_open_router.py` is deprecated (no production callers).
+- `ue_tools/` stays, being extracted as the first `NeuralModifier` bundle at
+  `neuroplasticity/genomes/unreal.zip`. Its generic log-merge utilities
+  already moved to `occipital_lobe/`; its parser split into generic core + UE
+  strategies registered via `LogParserFactory`. `deploy_release_test` is slated
+  for removal during that extraction.
+- `ollama_fixture_generator.py` has been deleted — its output is captured as
+  frozen literals in `hypothalamus/fixtures/zygote.json`.
+- Talos → Are-Self rename complete (only migration history retains the old name).
+  Spell/Cast naming sweep complete across CNS. HTMX removed.
 
 ## Style Guide (Enforced)
 
@@ -451,15 +440,27 @@ UUID-keyed.
 
 **Fixtures — four biological tiers (Pass 2, in progress):**
 
-1. **`genetic_immutables.json`** — protocol enums and canonical vocabulary tables.
-   Integer-PK (core-owned, never contributed to by plugins): `SpikeStatus`, `AxonType`,
-   `CNSDistributionMode`, `NeuralModifierStatus`, `NeuralModifierInstallationEventType`,
-   `IdentityAddonPhase`, `BudgetPeriod`, etc. UUID-PK vocabulary (plugin-extensible, all
-   hypothalamus vocab flipped in Pass 2): `AIMode`, `AIModelCategory`, `AIModelCapabilities`,
-   `AIModelTags`, `AIModelFamily`, `AIModelVersion`, `AIModelCreator`, `AIModelRole`,
+1. **`genetic_immutables.json`** — protocol enums, canonical vocabulary tables,
+   and **any row referenced by a model class constant** (regardless of which
+   table it lives in — the rule is about the *row*, not the table).
+   Integer-PK (core-owned, never contributed to by NeuralModifiers):
+   `SpikeStatus`, `AxonType`, `CNSDistributionMode`, `NeuralModifierStatus`,
+   `NeuralModifierInstallationEventType`, `IdentityAddonPhase`, `BudgetPeriod`,
+   etc.
+   UUID-PK vocabulary (NeuralModifier-extensible, all hypothalamus vocab flipped
+   in Pass 2): `AIMode`, `AIModelCategory`, `AIModelCapabilities`, `AIModelTags`,
+   `AIModelFamily`, `AIModelVersion`, `AIModelCreator`, `AIModelRole`,
    `AIModelQuantization`, `LLMProvider`, `FailoverType`, `FailoverStrategy`,
-   `FailoverStrategyStep`, `SyncStatus`. Loaded by install, Docker, and tests. Never
-   renumber (for integer-PK rows), never delete.
+   `FailoverStrategyStep`, `SyncStatus`.
+   Class-constant rows from otherwise-NeuralModifier-extensible tables (the
+   reason this rule exists: code referencing `Effector.BEGIN_PLAY` must
+   resolve it even under the minimal `CommonTestCase` fixture load):
+   `Effector.BEGIN_PLAY`, `LOGIC_GATE`, `LOGIC_RETRY`, `LOGIC_DELAY`,
+   `FRONTAL_LOBE`, `DEBUG`; `Executable.BEGIN_PLAY`, `PYTHON`, `DJANGO`;
+   `SyncStatus.RUNNING`, `SUCCESS`, `FAILED`. NeuralModifier-contributed rows
+   in those same tables go to `initial_phenotypes` or bundle fixtures.
+   Loaded by install, Docker, and tests. Never renumber (for integer-PK rows),
+   never delete.
 2. **`zygote.json`** — the minimum UUID-keyed rows the system needs to boot and bind
    one end-to-end identity thread for tests: `nomic-embed-text` (hippocampus hard
    dependency), the canonical `Identity`/`IdentityDisc`, the default `ProjectEnvironment`.
@@ -497,22 +498,21 @@ mutable by neuroplasticity" — Michael), plus the already-UUID models (`Identit
 (same pattern as `Effector.BEGIN_PLAY`) — used by `hypothalamus.py`'s `sync_remote` flow
 to look up status rows by stable PK. Do not renumber or regenerate.
 
-UUIDs are `uuid.uuid4()` random literals. No namespaces, no derivation seeds. Existing
-UUID literals already in fixtures are frozen values and are not regenerated. See
-`FIXTURE_SEPARATION_PROMPT.md` for the full Pass 2 plan.
-
 **Canonical Effector / Executable constants:** Important effectors and executables have
 model-class UUID constants (`central_nervous_system/models.py`, `environments/models.py`):
 `Effector.BEGIN_PLAY`, `LOGIC_GATE`, `LOGIC_RETRY`, `LOGIC_DELAY`, `FRONTAL_LOBE`, `DEBUG`;
-`Executable.BEGIN_PLAY`, `PYTHON`, `DJANGO`, `UNREAL_CMD`, `UNREAL_AUTOMATION_TOOL`,
-`UNREAL_STAGING`, `UNREAL_RELEASE_TEST`, `UNREAL_SHADER_TOOL`, `VERSION_HANDLER`,
-`DEPLOY_RELEASE`. These are `uuid.UUID(...)` literals — the names stay stable but values
-are UUIDs, not integers. The frontend `nodeConstants.ts` must mirror these as UUID strings
+`Executable.BEGIN_PLAY`, `PYTHON`, `DJANGO`. These are `uuid.UUID(...)` literals — the
+names stay stable but values are UUIDs, not integers. **The rows themselves live in
+`genetic_immutables` fixtures** (class-constant rule — see Fixture tiers above) so that
+code referencing them by constant always resolves, including under the minimal
+`CommonTestCase` load. The frontend `nodeConstants.ts` must mirror these as UUID strings
 (companion PR gates the branch merge). The frontend uses these to determine which custom
-React Flow node component to render. The int→UUID mapping for the migration is recorded
-at `uuid_migration_mapping.json` at repo root.
+React Flow node component to render. (The legacy `Executable.UNREAL_CMD` /
+`UNREAL_AUTOMATION_TOOL` / `UNREAL_STAGING` / `UNREAL_RELEASE_TEST` / `UNREAL_SHADER_TOOL` /
+`VERSION_HANDLER` / `DEPLOY_RELEASE` class constants were removed — had no live Python
+callers.)
 
-**Debug node:** Effector PK 9. Native handler `debug_node` in
+**Debug node:** Effector UUID constant `DEBUG`. Native handler `debug_node` in
 `central_nervous_system/effectors/effector_casters/debug_node.py`. Logs axoplasm state and
 neuron context at INFO level. Useful for diagnosing axoplasm data flow between spikes.
 Configurable via NeuronContext key `debug_label` (defaults to "DEBUG").
@@ -604,8 +604,9 @@ group (`synapse_{receptor_class}`) and MUST be a domain entity or brain region �
 internal model. Two valid patterns:
 
 1. **Thalamus auto-signals** (`thalamus/signals.py`): Use `sender.__name__` for `post_save`
-   signals. These are domain entities: `PFCEpic`, `IdentityDisc`, `ReasoningTurn`, `SpikeTrain`,
-   `Engram`, `Iteration`. The frontend subscribes via `useDendrite('PFCEpic', null)`.
+   signals. These are domain entities: `PFCEpic`, `IdentityDisc`, `ReasoningTurn`,
+   `ReasoningTurnDigest`, `SpikeTrain`, `Engram`, `Iteration`. The frontend subscribes via
+   `useDendrite('PFCEpic', null)`.
 
 2. **Manual brain-region signals** (e.g., `hypothalamus/api.py`): Use the brain region name
    itself: `receptor_class='Hypothalamus'`. The frontend subscribes via
@@ -620,27 +621,19 @@ signals about them flow through `receptor_class='Hypothalamus'`. Similarly, mole
 The `useDendrite(receptorClass, dendriteId)` first arg is the receptor class (Layer 1),
 not the molecule type (Layer 3). Both sides must agree on receptor_class.
 
+**Zero-agent dispatch:** `_dispatch_fleet_wave` and `_dispatch_first_responder` in
+`central_nervous_system.py` succeed silently (`SpikeStatus.SUCCESS`, `logger.info`) when
+the NerveTerminalRegistry is empty — the local server is not an agent, and zero targets
+is a no-op, not an error. `_dispatch_pinned_wave` (SPECIFIC_TARGETS) is the exception:
+pinned targets are explicit user intent and failure there is a real failure.
+
 ## Scipraxianism
 
-Are-Self exists inside a philosophy called **Scipraxianism**, co-developed by
-Michael Clark ("The Scipraxian") and **Andrew Piper** over many years. You do
-not need to master it to work in this repo, but if a design question touches
-*why* something is free, local, or shaped the way it is, the answer usually
-traces back to scipraxianism. The Creed is AI-facing (ten binary-numbered
-assertions at [scipraxian.org](https://scipraxian.org)). The working layer is
-the **Twelve Variables**: Inclusion · Humility · Inquiry · Fulfillment or
-Happiness · Religion or Profit · Fun · Fear · Responsibility · Perseverance ·
-Perception · Time · Permadeath. The first three are the kid-scale compression
-used in the curriculum and the storybook — **do not mistake the three for the
-whole philosophy**.
-
-Are-Self is Michael's solo handiwork (though he bounces everything off Andrew,
-the way they always have). The sister franchise **Haunted Space Hotel** is
-Andrew and Michael jointly — HSH's in-world Factional Omniarchy of Snohe is
-the galactic government that adopted scipraxianism as its official ethical
-framework. HSH lives at [hauntedspacehotel.com](https://hauntedspacehotel.com)
-and is deliberately kept off the scipraxian GitHub profile.
-
-Full Claude-facing briefing:
-`are-self-documents/scipraxian/scipraxian-tldr.md`. Master reference:
-`are-self-documents/scipraxian/scipraxian.md`.
+The philosophy this project lives inside. When a design question touches *why*
+something is free, local, or shaped the way it is, the answer usually traces back
+here. **Twelve Variables, not three** — the three-variable version is the
+kid-scale compression used in the curriculum only. Are-Self is Michael's solo
+handiwork; the sister franchise Haunted Space Hotel
+([hauntedspacehotel.com](https://hauntedspacehotel.com)) is a joint effort with
+Andrew Piper and is deliberately kept off the scipraxian GitHub profile. Full
+Claude-facing briefing: `are-self-documents/scipraxian/scipraxian-tldr.md`.

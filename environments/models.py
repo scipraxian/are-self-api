@@ -45,25 +45,6 @@ class Executable(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     DJANGO = uuid.UUID(
         '11915177-a32b-4883-8c9f-e137c528c20d'
     )  # venv/Scripts/python.exe manage.py
-    UNREAL_CMD = uuid.UUID(
-        '3ee78993-faa3-401b-8187-c771e11c4564'
-    )  # C:\\Program Files\\Epic Games\\UE_5.6/Engine/Binaries/Win64/UnrealEditor-Cmd.exe
-    UNREAL_AUTOMATION_TOOL = uuid.UUID(
-        '3ced43ee-5504-493a-a4b7-15040bb17100'
-    )  # C:\\Program Files\\Epic Games\\UE_5.6/Engine/Build/BatchFiles/RunUAT.bat
-    UNREAL_STAGING = uuid.UUID(
-        'efb5d7dc-9922-43ec-b108-5af5f029b71d'
-    )  # C:\steambuild\Windows\HSHVacancy.exe
-    UNREAL_RELEASE_TEST = uuid.UUID(
-        '6e487387-9608-4481-8f5c-9b0741585633'
-    )  # C:\steambuild\ReleaseTest\HSHVacancy.exe
-    UNREAL_SHADER_TOOL = uuid.UUID(
-        '0fb093f4-8c4a-4f40-ad1b-234e4f516f4f'
-    )  # C:\\Program Files\\Epic Games\\UE_5.6/Engine/Binaries/Win64/ShaderPipelineCacheTools.exe
-    VERSION_HANDLER = uuid.UUID('1d037234-c8c2-4d51-bc65-41597c0becd2')
-    DEPLOY_RELEASE = uuid.UUID(
-        '5fbd152c-23bf-4951-840f-491f4fff918a'
-    )  # depreciated.
 
     internal = models.BooleanField(
         default=False, help_text='Internal Python Function'
