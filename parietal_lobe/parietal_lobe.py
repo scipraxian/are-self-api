@@ -4,8 +4,7 @@ import logging
 from typing import Any, Callable, Dict, List, Optional
 
 from asgiref.sync import sync_to_async
-from django.contrib.contenttypes.models import ContentType
-from django.db.models import Exists, OuterRef
+from django.db.models import Q
 
 from frontal_lobe.models import (
     ReasoningSession,
@@ -18,10 +17,7 @@ from identity.addons._handler_registry import (
     dispatch_tool_post,
     dispatch_tool_pre,
 )
-from neuroplasticity.models import (
-    NeuralModifierContribution,
-    NeuralModifierStatus,
-)
+from neuroplasticity.models import NeuralModifierStatus
 from parietal_lobe.models import ToolCall, ToolDefinition
 from parietal_lobe.parietal_mcp.gateway import ParietalMCP
 
@@ -121,22 +117,12 @@ class ParietalLobe:
     def _fetch_tools(self, identity_disc):
         """Return the ToolDefinitions the session's IdentityDisc enables.
 
-        Tools contributed by a NeuralModifier are excluded unless that
-        modifier is in the ENABLED state. Core tools (no
-        NeuralModifierContribution row pointing at them) are unaffected.
-        This is the gating codepath that makes bundle enable / disable
-        take effect on the next reasoning session — the per-session tool
-        manifest the LLM sees.
+        Tools owned by a NeuralModifier (``genome`` FK non-null) are
+        excluded unless their owning modifier is ENABLED. Core tools
+        (``genome IS NULL``) are always included. This is the gating
+        codepath that makes bundle enable / disable take effect on the
+        next reasoning session.
         """
-        tool_ct = ContentType.objects.get_for_model(ToolDefinition)
-        non_enabled_contribution = (
-            NeuralModifierContribution.objects.filter(
-                content_type=tool_ct,
-                object_id=OuterRef('pk'),
-            ).exclude(
-                neural_modifier__status_id=NeuralModifierStatus.ENABLED
-            )
-        )
         return list(
             identity_disc.enabled_tools.prefetch_related(
                 'assignments__parameter__type',
@@ -144,7 +130,10 @@ class ParietalLobe:
             )
             .select_related('use_type')
             .filter(is_async=True)
-            .exclude(Exists(non_enabled_contribution))
+            .filter(
+                Q(genome__isnull=True)
+                | Q(genome__status_id=NeuralModifierStatus.ENABLED)
+            )
         )
 
     async def build_tool_schemas(self) -> List[Dict[str, Any]]:

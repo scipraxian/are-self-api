@@ -9,6 +9,7 @@ from common.models import (
     UUIDIdMixin,
 )
 from frontal_lobe.models import ReasoningStatusMixin, ReasoningTurn
+from neuroplasticity.genome_mixin import GenomeOwnedMixin
 
 
 class ToolParameterType(DefaultFieldsMixin, DescriptionMixin):
@@ -32,7 +33,9 @@ class ToolUseType(DefaultFieldsMixin, DescriptionMixin):
         )
 
 
-class ToolDefinition(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
+class ToolDefinition(
+    UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin, GenomeOwnedMixin
+):
     """
     The Registry for AI Tools.
     Defines the function signature available to the LLM.
@@ -44,7 +47,9 @@ class ToolDefinition(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     )
 
 
-class ToolParameter(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
+class ToolParameter(
+    UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin, GenomeOwnedMixin
+):
     """
     A strictly typed argument for a ToolDefinition.
     """
@@ -116,7 +121,7 @@ class ToolCall(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
     turn = models.ForeignKey(
         ReasoningTurn, on_delete=models.CASCADE, related_name='tool_calls'
     )
-    tool = models.ForeignKey(ToolDefinition, on_delete=models.PROTECT)
+    tool = models.ForeignKey(ToolDefinition, on_delete=models.CASCADE)
     arguments = models.TextField(help_text='JSON payload of arguments.')
     result_payload = models.TextField(blank=True, default='')
     traceback = models.TextField(

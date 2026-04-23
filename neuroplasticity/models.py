@@ -5,17 +5,17 @@ Bundles live on disk as committed ``neuroplasticity/genomes/<slug>.zip``
 archives (manifest.json, modifier_data.json, code/, README.md inside
 the zip). At install time, the zip is extracted into
 ``neuroplasticity/grafts/<slug>/`` (the runtime tree) and its
-``modifier_data.json`` is loaded into the DB.
+``modifier_data.json`` is loaded into the DB — each row stamped with a
+``genome`` FK back to the installing ``NeuralModifier`` row.
 
-This app is the source of truth for *which* modifiers are installed,
-*what* each one contributed to the database, and the audit trail of
-install / enable / disable events.
+This app is the source of truth for *which* modifiers are installed
+and the audit trail of install / enable / disable events. Ownership of
+individual rows lives on the rows themselves (``genome`` FK from
+``GenomeOwnedMixin``), not in a side-car table.
 """
 
-from typing import Generator, Optional
+from typing import Optional
 
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from common.constants import STANDARD_CHARFIELD_LENGTH
@@ -77,9 +77,10 @@ class NeuralModifier(DefaultFieldsMixin):
     tampering or version drift.
 
     Uninstall DELETES the row (AVAILABLE = zip exists + no row).
-    Contribution rows, installation logs, and log events all cascade
-    away. The committed ``genomes/<slug>.zip`` stays put — it is the
-    bundle, not a derivative.
+    Every bundle-owned row (``genome`` FK to this ``NeuralModifier``)
+    CASCADEs away, as do installation logs and their events. The
+    committed ``genomes/<slug>.zip`` stays put — it is the bundle, not
+    a derivative.
     """
 
     status = models.ForeignKey(
@@ -105,63 +106,6 @@ class NeuralModifier(DefaultFieldsMixin):
         never reach past it to an older log.
         """
         return self.installation_logs.order_by('-created').first()
-
-    def iter_contributed_objects(self) -> Generator[models.Model, None, None]:
-        """Yield each live DB object this modifier created, in install order.
-
-        Used during uninstall to walk contribution targets before deletion.
-        Orphaned contributions (target already deleted out from under us)
-        are skipped silently; detect them by comparing the yielded count
-        against `self.contributions.count()`.
-        """
-        contributions = self.contributions.order_by('created')
-        for contribution in contributions:
-            target = contribution.content_object
-            if target is not None:
-                yield target
-
-
-class NeuralModifierContribution(CreatedMixin):
-    """One row per DB object a NeuralModifier created on install.
-
-    This is the uninstall manifest in table form. When a modifier's
-    modifier_data.json loads and creates an Effector, NeuralPathway,
-    ContextVariable, etc., a Contribution row is written pointing at it
-    via GenericForeignKey. Uninstall iterates these rows, deletes each
-    target, then deletes the contribution rows themselves.
-
-    The `object_id` column is a UUIDField because every
-    NeuralModifier-extensible model in Are-Self was migrated to UUID
-    primary keys in the Pass 1 `uuid-migration` branch — that migration
-    is the prerequisite for this table existing at all. Protocol enums
-    (SpikeStatus, AxonType, etc.) stayed integer-keyed and are never
-    contribution targets.
-    """
-
-    neural_modifier = models.ForeignKey(
-        NeuralModifier,
-        on_delete=models.CASCADE,
-        related_name='contributions',
-    )
-    content_type = models.ForeignKey(
-        ContentType, on_delete=models.CASCADE
-    )
-    object_id = models.UUIDField()
-    content_object = GenericForeignKey('content_type', 'object_id')
-
-    class Meta:
-        verbose_name = 'Neural Modifier Contribution'
-        verbose_name_plural = 'Neural Modifier Contributions'
-        indexes = [
-            models.Index(fields=['content_type', 'object_id']),
-        ]
-
-    def __str__(self):
-        return '{modifier} -> {ct} {pk}'.format(
-            modifier=self.neural_modifier.name,
-            ct=self.content_type,
-            pk=self.object_id,
-        )
 
 
 class NeuralModifierInstallationLog(CreatedMixin):

@@ -1,9 +1,11 @@
 """./manage.py upgrade_modifier <slug> — upgrade a NeuralModifier in place.
 
 Compares the on-disk bundle version to the DB version. If newer, diffs
-modifier_data.json entries by PK and applies create / update / delete
-selectively. Contribution rows for unchanged PKs are preserved so that
-external FKs into bundle-owned rows survive across versions.
+modifier_data.json PKs against the currently-owned rows (PKs with
+``genome=<this modifier>`` across the twelve GenomeOwnedMixin models)
+and applies create / update / delete selectively — unchanged owned
+rows keep their PKs so external FKs into bundle-owned rows survive
+across versions.
 """
 
 from django.core.management.base import BaseCommand, CommandError

@@ -5,17 +5,21 @@ lifecycle operations. Each action emits an event via the loader, so the
 event timeline stays the source of truth. After a successful lifecycle
 call, the viewset fires an Acetylcholine so the frontend's NeuralModifier
 dendrites refetch.
+
+API is 100% standalone — endpoints return raw JSON state. A dumb UI
+consumes what we emit; this module does not know the UI exists.
 """
 
 from pathlib import Path
 
 from asgiref.sync import async_to_sync
 from rest_framework import status, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 
-from neuroplasticity import loader
+from neuroplasticity import graph_walker, loader
+from neuroplasticity.fixture_scan import get_fixture_pk_index
 from synaptic_cleft.axon_hillok import fire_neurotransmitter
 from synaptic_cleft.neurotransmitters import Acetylcholine
 
@@ -27,12 +31,7 @@ from .serializers import (
 
 
 def _broadcast(modifier, action_name: str, slug: str = None) -> None:
-    """Fire an Acetylcholine so the garden view refetches.
-
-    `modifier` may be None for catalog-only events (delete/catalog_changed)
-    where no DB row exists; pass `slug` so the vesicle still names the
-    affected bundle.
-    """
+    """Fire an Acetylcholine so the garden view refetches."""
     if modifier is not None:
         dendrite_id = str(modifier.pk)
         bundle_slug = modifier.slug
@@ -53,12 +52,7 @@ def _broadcast(modifier, action_name: str, slug: str = None) -> None:
 
 
 def _save_upload_to_catalog(uploaded_file) -> Path:
-    """Persist a multipart-upload archive into the on-disk genomes dir.
-
-    Reads the manifest out of the archive bytes to determine the slug,
-    then writes ``genomes/<slug>.zip``. Refuses if a zip with that
-    name already exists.
-    """
+    """Persist a multipart-upload archive into the on-disk genomes dir."""
     import io
     import zipfile
 
@@ -114,12 +108,7 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['post'], url_path='install')
     def install(self, request):
-        """Install a bundle from an uploaded archive OR from an existing slug.
-
-        - `archive` upload: saves the zip into the on-disk genomes dir
-          under ``<slug>.zip`` and runs the archive-install flow.
-        - `slug`: installs the already-committed ``genomes/<slug>.zip``.
-        """
+        """Install a bundle from an uploaded archive OR from an existing slug."""
         archive = request.FILES.get('archive')
         slug = request.data.get('slug')
         try:
@@ -156,9 +145,6 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
             deleted_slug = loader.uninstall_bundle(slug)
         except NeuralModifier.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        # Under the AVAILABLE = no-DB-row ruling, uninstall deletes the
-        # row — so there is no modifier object to serialize back to the
-        # UI. Broadcast with slug-only and return a minimal payload.
         _broadcast(None, 'uninstall', slug=deleted_slug)
         return Response(
             {'slug': deleted_slug, 'uninstalled': True},
@@ -185,20 +171,47 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='impact')
     def impact(self, request, slug=None):
-        """Contribution-count breakdown by ContentType for uninstall preview."""
+        """Owned-row breakdown by model for the uninstall preview."""
         try:
-            return Response(loader.bundle_impact(slug))
+            return Response(loader.bundle_row_breakdown(slug))
+        except NeuralModifier.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['post'], url_path='save')
+    def save_to_genome(self, request, slug=None):
+        """Serialize owned rows + graft code back into ``genomes/<slug>.zip``.
+
+        Atomically replaces the on-disk archive. Returns bytes written,
+        row count, and the absolute zip path. Fires Acetylcholine so
+        subscribers re-sync.
+        """
+        try:
+            result = loader.save_bundle_to_archive(slug)
+        except NeuralModifier.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except Exception as exc:
+            return Response(
+                {'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST
+            )
+        modifier = NeuralModifier.objects.get(slug=slug)
+        _broadcast(modifier, 'save')
+        return Response(result)
+
+    @action(detail=True, methods=['get'], url_path='graph')
+    def graph(self, request, slug=None):
+        """Forward-FK graph of bundle-owned rows + reachable neighbours.
+
+        Each reachable row is tagged with one of: ``owned`` / ``shared-with
+        <slug>`` / ``orphan`` / ``core``. Walker is API-only.
+        """
+        try:
+            return Response(graph_walker.build_bundle_graph(slug))
         except NeuralModifier.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=False, methods=['get'], url_path='catalog')
     def catalog(self, request):
-        """One row per zip under the genomes root.
-
-        Each entry is the unzipped manifest fields the UI needs to render
-        an AVAILABLE row, plus an `installed` flag computed from a single
-        bulk query against NeuralModifier.
-        """
+        """One row per zip under the genomes root."""
         entries = loader.read_catalog_manifests()
         slugs = [e['manifest'].get('slug') for e in entries]
         installed_slugs = set(
@@ -268,11 +281,7 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
         url_path=r'catalog/(?P<catalog_slug>[^/.]+)/delete',
     )
     def catalog_delete(self, request, catalog_slug=None):
-        """Remove a genome zip from disk. Refuses if a DB row exists.
-
-        The garden page must call uninstall first; this only nukes the
-        archive itself, returning the bundle to "gone" state.
-        """
+        """Remove a genome zip from disk. Refuses if a DB row exists."""
         archive_path = loader.genomes_root() / '{0}.zip'.format(catalog_slug)
         if NeuralModifier.objects.filter(slug=catalog_slug).exists():
             return Response(
@@ -290,3 +299,21 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
             {'slug': catalog_slug, 'deleted': True},
             status=status.HTTP_200_OK,
         )
+
+
+@api_view(['GET'])
+def fixture_scan_view(request):
+    """Return the in-memory fixture-scan index.
+
+    Shape::
+
+        {"app_label.model": ["pk1", "pk2", ...], ...}
+
+    The Modifier Garden uses this index to tell orphans from legitimate
+    core rows when rendering the bundle builder.
+    """
+    index = get_fixture_pk_index()
+    payload = {
+        model_key: sorted(pk_set) for model_key, pk_set in index.items()
+    }
+    return Response(payload)

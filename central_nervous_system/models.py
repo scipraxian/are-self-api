@@ -23,6 +23,7 @@ from environments.models import (
     ProjectEnvironmentMixin,
 )
 from environments.variable_renderer import VariableRenderer
+from neuroplasticity.genome_mixin import GenomeOwnedMixin
 
 from .constants import (
     ABORTED_LABEL,
@@ -153,7 +154,11 @@ class CNSDistributionMode(NameMixin, DescriptionMixin):
 
 
 class Effector(
-    UUIDIdMixin, DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin
+    UUIDIdMixin,
+    DefaultFieldsMixin,
+    TagsAndFavoriteMixin,
+    DescriptionMixin,
+    GenomeOwnedMixin,
 ):
     """
     A configured action (Tool + specific Switches).
@@ -168,7 +173,7 @@ class Effector(
 
     executable = models.ForeignKey(
         Executable,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         default=UUID('974ed732-6f2d-47f4-9482-18d17c73086e'),
     )
     switches = models.ManyToManyField(ExecutableSwitch, blank=True)
@@ -201,16 +206,12 @@ class Effector(
             context.update(extra_context)
 
         # 2. Render Executable
-        executable_path = self.executable.get_rendered_executable(
-            environment
-        )
+        executable_path = self.executable.get_rendered_executable(environment)
         command_list = [executable_path]
 
         # 3. Gather and Render Arguments & Switches
         # We need to render them using the FULL context
-        executable_args = (
-            self.executable.executableargumentassignment_set.all()
-        )
+        executable_args = self.executable.executableargumentassignment_set.all()
         spell_args = self.effectorargumentassignment_set.all()
 
         # Combine arguments, preserving order is tricky because they are separate querysets
@@ -269,9 +270,7 @@ class EffectorTarget(models.Model):
 class EffectorArgumentAssignment(UUIDIdMixin):
     effector = models.ForeignKey(Effector, on_delete=models.CASCADE)
     order = models.IntegerField(default=10)
-    argument = models.ForeignKey(
-        ExecutableArgument, on_delete=models.CASCADE
-    )
+    argument = models.ForeignKey(ExecutableArgument, on_delete=models.CASCADE)
 
     class Meta(object):
         ordering = ['order']
@@ -286,6 +285,7 @@ class NeuralPathway(
     DescriptionMixin,
     TagsAndFavoriteMixin,
     ProjectEnvironmentMixin,
+    GenomeOwnedMixin,
 ):
     """
     The Container. Now supports a visual JSON layout, Tags, and Favorites.

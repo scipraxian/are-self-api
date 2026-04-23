@@ -1,14 +1,18 @@
 """API smoke tests for the Modifier Garden endpoints.
 
-These are narrow — lifecycle is covered by test_modifier_lifecycle; here
-we just confirm the REST surface routes through to it.
+Narrow checks that the REST surface routes through to the loader.
+Lifecycle is covered by ``test_modifier_lifecycle``. Save /
+fixture-scan / graph live here.
 """
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from rest_framework.test import APITestCase
 
-from neuroplasticity import loader
+from identity.models import IdentityAddon
+from neuroplasticity import fixture_scan, loader
 from neuroplasticity.models import NeuralModifier
 from neuroplasticity.tests.test_modifier_lifecycle import (
     ModifierLifecycleTestCase,
@@ -43,7 +47,7 @@ class ModifierApiSmokeTest(ModifierLifecycleTestCase, APITestCase):
         self.assertGreaterEqual(len(payload['installation_logs']), 1)
 
     def test_impact_endpoint(self):
-        """Assert impact endpoint returns contribution breakdown."""
+        """Assert impact endpoint returns owned-row breakdown."""
         build_fake_bundle(self.scratch_root, 'ui_beta')
         self.install_fake('ui_beta')
 
@@ -52,10 +56,10 @@ class ModifierApiSmokeTest(ModifierLifecycleTestCase, APITestCase):
         self.assertEqual(res.status_code, 200)
         payload = res.json()
         self.assertEqual(payload['slug'], 'ui_beta')
-        self.assertEqual(payload['contribution_count'], 3)
+        self.assertEqual(payload['row_count'], 3)
         self.assertTrue(
             any(
-                row['content_type'] == 'hypothalamus.aimodeltags'
+                row['content_type'] == 'identity.identityaddon'
                 for row in payload['breakdown']
             )
         )
@@ -95,6 +99,76 @@ class ModifierApiSmokeTest(ModifierLifecycleTestCase, APITestCase):
         self.assertEqual(res.status_code, 400)
         self.assertIn('archive', res.json()['detail'].lower())
 
+    def test_save_endpoint_writes_zip_and_reports_stats(self):
+        """Assert save endpoint rebuilds ``<slug>.zip`` and returns stats."""
+        build_fake_bundle(self.scratch_root, 'ui_saver')
+        self.install_fake('ui_saver')
+
+        res = self.client.post('/api/v2/neural-modifiers/ui_saver/save/')
+
+        self.assertEqual(res.status_code, 200)
+        payload = res.json()
+        self.assertEqual(payload['slug'], 'ui_saver')
+        self.assertEqual(payload['row_count'], 3)
+        self.assertTrue(Path(payload['zip_path']).exists())
+        self.assertGreater(payload['bytes_written'], 0)
+
+    def test_graph_endpoint_returns_owned_nodes(self):
+        """Assert graph endpoint emits a node per owned row."""
+        build_fake_bundle(self.scratch_root, 'ui_graph')
+        modifier = self.install_fake('ui_graph')
+
+        res = self.client.get('/api/v2/neural-modifiers/ui_graph/graph/')
+
+        self.assertEqual(res.status_code, 200)
+        payload = res.json()
+        self.assertEqual(payload['slug'], 'ui_graph')
+        owned = [n for n in payload['nodes'] if n['state'] == 'owned']
+        self.assertEqual(len(owned), 3)
+        for node in owned:
+            self.assertEqual(node['model'], 'identityaddon')
+            self.assertEqual(node['owner_slug'], 'ui_graph')
+            # PKs line up with the DB state.
+            self.assertTrue(
+                IdentityAddon.objects.filter(
+                    pk=node['pk'], genome=modifier
+                ).exists()
+            )
+
+    def test_graph_endpoint_404_for_unknown_slug(self):
+        """Assert graph endpoint 404s when no bundle with that slug exists."""
+        res = self.client.get('/api/v2/neural-modifiers/ghost/graph/')
+
+        self.assertEqual(res.status_code, 404)
+
+
+class FixtureScanEndpointTest(ModifierLifecycleTestCase, APITestCase):
+    """Fixture-scan endpoint returns a deterministic app_label.model→pks map.
+
+    The in-memory cache is shared across tests, so clear it in setUp
+    and setTest so the scan reruns against the real on-disk fixtures.
+    """
+
+    def setUp(self):
+        super().setUp()
+        fixture_scan.clear_fixture_pk_index()
+
+    def test_endpoint_returns_scanned_index(self):
+        """Assert the endpoint returns a JSON object of lists."""
+        res = self.client.get('/api/v2/genome/fixture-scan/')
+
+        self.assertEqual(res.status_code, 200)
+        payload = res.json()
+        self.assertIsInstance(payload, dict)
+        # Every value must be a list of strings; we can't assert a
+        # specific key because the content depends on whatever was
+        # checked into initial_data.json at scan time.
+        for key, pks in payload.items():
+            self.assertIsInstance(key, str)
+            self.assertIsInstance(pks, list)
+            for pk in pks:
+                self.assertIsInstance(pk, str)
+
 
 class CatalogListReturnsEmptyWhenNoZipsTest(
     ModifierLifecycleTestCase, APITestCase
@@ -112,7 +186,6 @@ class CatalogListReturnsInstalledFlagTest(
 ):
     def test_catalog_list_marks_installed(self):
         """Assert catalog rows tag installed=true iff a DB row exists."""
-        # Two zips in the genomes dir: install one, leave the other AVAILABLE.
         build_fake_bundle_archive(self.genomes_root, 'cat_installed')
         build_fake_bundle_archive(self.genomes_root, 'cat_available')
         loader.install_bundle_from_archive(
@@ -127,7 +200,6 @@ class CatalogListReturnsInstalledFlagTest(
         self.assertIn('cat_available', rows)
         self.assertTrue(rows['cat_installed']['installed'])
         self.assertFalse(rows['cat_available']['installed'])
-        # Manifest fields surface through.
         self.assertEqual(rows['cat_available']['name'], 'Fake cat_available')
         self.assertEqual(rows['cat_available']['archive_name'], 'cat_available.zip')
 
@@ -143,10 +215,10 @@ class CatalogInstallCreatesRowTest(ModifierLifecycleTestCase, APITestCase):
 
         self.assertEqual(res.status_code, 200)
         modifier = NeuralModifier.objects.get(slug='cat_install')
-        self.assertEqual(modifier.contributions.count(), 3)
-        # Scratch dir cleaned up — the operating room is empty.
+        self.assertEqual(
+            IdentityAddon.objects.filter(genome=modifier).count(), 3
+        )
         self.assertEqual(list(self.operating_room_root.iterdir()), [])
-        # Genome zip stays put.
         self.assertTrue((self.genomes_root / 'cat_install.zip').exists())
 
 

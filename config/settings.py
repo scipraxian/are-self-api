@@ -32,9 +32,9 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'common',  #  Contains VectorExtension so must go first.
     'daphne',
     'channels',
-    'common',
     'peripheral_nervous_system',
     'celery',
     'central_nervous_system',

@@ -697,6 +697,20 @@ the NerveTerminalRegistry is empty — the local server is not an agent, and zer
 is a no-op, not an error. `_dispatch_pinned_wave` (SPECIFIC_TARGETS) is the exception:
 pinned targets are explicit user intent and failure there is a real failure.
 
+**Postgres runs in Docker, not on localhost.** The container is named `are_self_db`.
+Do NOT invoke `psql -U postgres ...` directly — it will not reach the server. To drop
+the test database (e.g. after migration-order changes), use:
+
+```
+docker exec are_self_db psql -U postgres -c 'DROP DATABASE IF EXISTS test_postgres;'
+```
+
+**pgvector extension install lives in each vector-using app.** `VectorExtension()` is
+the first operation in `0001_initial` of `hypothalamus`, `hippocampus`, `identity`, and
+`prefrontal_cortex` (idempotent — uses `CREATE EXTENSION IF NOT EXISTS`). `common/0001_initial`
+still installs it too but is a legacy safety net — INSTALLED_APPS order does NOT govern
+migration execution order, so the canonical fix is per-app self-installation.
+
 ## Scipraxianism
 
 The philosophy this project lives inside. When a design question touches *why*

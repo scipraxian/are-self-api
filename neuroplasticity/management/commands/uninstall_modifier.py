@@ -1,10 +1,10 @@
 """./manage.py uninstall_modifier <slug> — roll back a NeuralModifier bundle.
 
-Walks the bundle's contributions in reverse-install order, deletes each
-target, removes the runtime tree at ``grafts/<slug>/``, and DELETES the
-``NeuralModifier`` row (contributions, logs, events cascade away). The
-committed ``genomes/<slug>.zip`` stays put — the bundle returns to the
-AVAILABLE state.
+Deletes the ``NeuralModifier`` row; CASCADE removes every row whose
+``genome`` FK pointed at it, plus installation logs and events. Also
+removes the runtime tree at ``grafts/<slug>/``. The committed
+``genomes/<slug>.zip`` stays put — the bundle returns to the AVAILABLE
+state.
 """
 
 from django.core.management.base import BaseCommand, CommandError
@@ -14,7 +14,7 @@ from neuroplasticity.models import NeuralModifier
 
 
 class Command(BaseCommand):
-    help = 'Uninstall a NeuralModifier bundle and roll back its contributions.'
+    help = 'Uninstall a NeuralModifier bundle; CASCADE removes its rows.'
 
     def add_arguments(self, parser):
         parser.add_argument('slug')

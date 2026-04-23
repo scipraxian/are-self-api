@@ -8,11 +8,12 @@ from common.models import (
     NameMixin,
     UUIDIdMixin,
 )
+from neuroplasticity.genome_mixin import GenomeOwnedMixin
 
 from .variable_renderer import VariableRenderer
 
 
-class ExecutableSwitch(UUIDIdMixin, DefaultFieldsMixin):
+class ExecutableSwitch(UUIDIdMixin, DefaultFieldsMixin, GenomeOwnedMixin):
     """An option or flag for an executable."""
 
     flag = models.CharField(
@@ -24,7 +25,7 @@ class ExecutableSwitch(UUIDIdMixin, DefaultFieldsMixin):
     )
 
 
-class ExecutableArgument(UUIDIdMixin, DefaultFieldsMixin):
+class ExecutableArgument(UUIDIdMixin, DefaultFieldsMixin, GenomeOwnedMixin):
     """An argument to be passed to the executable."""
 
     argument = models.CharField(
@@ -35,7 +36,9 @@ class ExecutableArgument(UUIDIdMixin, DefaultFieldsMixin):
         return f'{self.name} - {self.argument}'
 
 
-class Executable(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
+class Executable(
+    UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin, GenomeOwnedMixin
+):
     """Reference to an executable usable by Are-Self."""
 
     BEGIN_PLAY = uuid.UUID('974ed732-6f2d-47f4-9482-18d17c73086e')
@@ -116,7 +119,9 @@ class ProjectEnvironmentType(UUIDIdMixin, NameMixin):
     pass
 
 
-class ProjectEnvironment(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
+class ProjectEnvironment(
+    UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin, GenomeOwnedMixin
+):
     """Defines the context for a specific Application/Project."""
 
     DEFAULT_ENVIRONMENT = uuid.UUID('b7e4c2a1-3f8d-4a9e-9c1f-2d5a8b6f4e21')
@@ -132,7 +137,7 @@ class ProjectEnvironment(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     )
     default_iteration_definition = models.ForeignKey(
         'temporal_lobe.IterationDefinition',
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
     )
@@ -167,7 +172,7 @@ class ContextVariable(UUIDIdMixin):
 
 class ProjectEnvironmentMixin(models.Model):
     environment = models.ForeignKey(
-        ProjectEnvironment, on_delete=models.PROTECT, blank=True, null=True
+        ProjectEnvironment, on_delete=models.SET_NULL, blank=True, null=True
     )
 
     class Meta:

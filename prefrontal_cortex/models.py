@@ -79,7 +79,7 @@ class PFCTicketMixin(models.Model):
 class PFCAssignmentMixin(models.Model):
     owning_disc = models.ForeignKey(
         'identity.IdentityDisc',
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         blank=True,
         null=True,
         related_name='%(app_label)s_%(class)s_owned',
