@@ -11,7 +11,8 @@
       "executable": "f7eb79eb-6754-4c5b-a5b2-bf504f451bda",
       "distribution_mode": 1,
       "tags": [],
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -26,7 +27,8 @@
       "executable": "558806d7-d009-4e89-8e4e-86979dcd0594",
       "distribution_mode": 1,
       "tags": [],
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -41,7 +43,8 @@
       "executable": "ef611428-bac0-4ce9-a872-70864e91b600",
       "distribution_mode": 1,
       "tags": [],
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -56,7 +59,8 @@
       "executable": "f7eb79eb-6754-4c5b-a5b2-bf504f451bda",
       "distribution_mode": 1,
       "tags": [],
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -71,7 +75,8 @@
       "executable": "558806d7-d009-4e89-8e4e-86979dcd0594",
       "distribution_mode": 1,
       "tags": [],
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -86,7 +91,8 @@
       "executable": "24e213d0-92c1-4b77-8a35-f6998075efc0",
       "distribution_mode": 1,
       "tags": [],
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -101,7 +107,8 @@
       "executable": "f7eb79eb-6754-4c5b-a5b2-bf504f451bda",
       "distribution_mode": 1,
       "tags": [],
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -116,7 +123,8 @@
       "executable": "c8cb58b0-341b-43d3-bfcf-8d31dca28375",
       "distribution_mode": 1,
       "tags": [],
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -131,7 +139,8 @@
       "executable": "c8cb58b0-341b-43d3-bfcf-8d31dca28375",
       "distribution_mode": 4,
       "tags": [],
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -146,7 +155,8 @@
       "executable": "6c43e8c9-3bbd-4fdc-88a7-23f5ca6b0108",
       "distribution_mode": 1,
       "tags": [],
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -161,7 +171,8 @@
       "executable": "974ed732-6f2d-47f4-9482-18d17c73086e",
       "distribution_mode": 1,
       "tags": [],
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -176,7 +187,8 @@
       "executable": "6fb7f8af-60b6-4f04-aa07-d4d36c680e38",
       "distribution_mode": 1,
       "tags": [],
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -186,7 +198,8 @@
       "created": "2026-01-31T15:23:49.006Z",
       "modified": "2026-01-31T16:12:08.563Z",
       "name": "Are-Self Root",
-      "argument": "{{are_self_root}}"
+      "argument": "{{are_self_root}}",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -256,7 +269,8 @@
       "ui_json": "{}",
       "tags": [
         1
-      ]
+      ],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -270,7 +284,8 @@
       "environment": null,
       "is_favorite": true,
       "ui_json": "{}",
-      "tags": []
+      "tags": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -284,7 +299,8 @@
       "environment": null,
       "is_favorite": false,
       "ui_json": "{}",
-      "tags": []
+      "tags": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -298,7 +314,8 @@
       "environment": null,
       "is_favorite": false,
       "ui_json": "{}",
-      "tags": []
+      "tags": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -312,7 +329,8 @@
       "environment": null,
       "is_favorite": false,
       "ui_json": "{}",
-      "tags": []
+      "tags": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -627,7 +645,8 @@
       "created": "2026-02-10T18:44:45.466Z",
       "modified": "2026-02-10T18:44:45.467Z",
       "name": "List Folder",
-      "argument": "ls"
+      "argument": "ls",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -637,7 +656,8 @@
       "created": "2026-01-31T16:08:51.014Z",
       "modified": "2026-02-28T23:04:09.791Z",
       "name": "dumpscripts",
-      "argument": "{{are_self_root}}\\central_nervous_system\\effectors\\dumpscripts.py"
+      "argument": "{{are_self_root}}\\central_nervous_system\\effectors\\dumpscripts.py",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -647,7 +667,8 @@
       "created": "2026-02-12T22:07:06.628Z",
       "modified": "2026-02-12T22:07:06.628Z",
       "name": "Project Root",
-      "argument": "{{project_root}}"
+      "argument": "{{project_root}}",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -657,7 +678,8 @@
       "created": "2026-01-27T17:23:00.022Z",
       "modified": "2026-01-27T17:23:00.022Z",
       "name": "Get UUID",
-      "argument": "Get-CimInstance Win32_ComputerSystemProduct | Select-Object -ExpandProperty UUID"
+      "argument": "Get-CimInstance Win32_ComputerSystemProduct | Select-Object -ExpandProperty UUID",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -667,7 +689,8 @@
       "created": "2026-01-31T16:10:31.725Z",
       "modified": "2026-01-31T16:10:31.725Z",
       "name": "Python  Unbuffered",
-      "argument": "-u"
+      "argument": "-u",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   }
 ]

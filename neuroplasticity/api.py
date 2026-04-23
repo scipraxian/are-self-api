@@ -14,12 +14,11 @@ from pathlib import Path
 
 from asgiref.sync import async_to_sync
 from rest_framework import status, viewsets
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 
 from neuroplasticity import graph_walker, loader
-from neuroplasticity.fixture_scan import get_fixture_pk_index
 from synaptic_cleft.axon_hillok import fire_neurotransmitter
 from synaptic_cleft.neurotransmitters import Acetylcholine
 
@@ -171,9 +170,30 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='impact')
     def impact(self, request, slug=None):
-        """Owned-row breakdown by model for the uninstall preview."""
+        """Legacy alias for ``uninstall-preview``.
+
+        Kept wired so older clients stay functional; new callers should
+        hit ``/uninstall-preview/`` directly. Payload shape matches
+        :func:`loader.bundle_uninstall_preview` (direct / cascade /
+        set_null / protected tree).
+        """
         try:
-            return Response(loader.bundle_row_breakdown(slug))
+            return Response(loader.bundle_uninstall_preview(slug))
+        except NeuralModifier.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['get'], url_path='uninstall-preview')
+    def uninstall_preview(self, request, slug=None):
+        """Cascade tree Django-admin-style for the uninstall dialog.
+
+        Returns the full reach of ``modifier.delete()``: rows the
+        bundle directly owns, rows Django's Collector walks via
+        CASCADE, rows whose FK gets nulled (SET_NULL), and any rows
+        that would PROTECT-block the delete. The UI renders the whole
+        tree so Michael can SEE everything that disappears.
+        """
+        try:
+            return Response(loader.bundle_uninstall_preview(slug))
         except NeuralModifier.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -299,21 +319,3 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
             {'slug': catalog_slug, 'deleted': True},
             status=status.HTTP_200_OK,
         )
-
-
-@api_view(['GET'])
-def fixture_scan_view(request):
-    """Return the in-memory fixture-scan index.
-
-    Shape::
-
-        {"app_label.model": ["pk1", "pk2", ...], ...}
-
-    The Modifier Garden uses this index to tell orphans from legitimate
-    core rows when rendering the bundle builder.
-    """
-    index = get_fixture_pk_index()
-    payload = {
-        model_key: sorted(pk_set) for model_key, pk_set in index.items()
-    }
-    return Response(payload)

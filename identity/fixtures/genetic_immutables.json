@@ -34,7 +34,8 @@
       "name": "The Focus Game (original)",
       "phase": null,
       "function_slug": null,
-      "addon_class_name": null
+      "addon_class_name": null,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -45,7 +46,8 @@
       "name": "Hippocampus Addon",
       "phase": 2,
       "function_slug": "hippocampus_addon",
-      "addon_class_name": "Hippocampus_"
+      "addon_class_name": "Hippocampus_",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -56,7 +58,8 @@
       "name": "Identity Info Addon",
       "phase": 1,
       "function_slug": "identity_info_addon",
-      "addon_class_name": "IdentityInfo"
+      "addon_class_name": "IdentityInfo",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -67,7 +70,8 @@
       "name": "Your Move Addon",
       "phase": 4,
       "function_slug": "your_move_addon",
-      "addon_class_name": "YourMove"
+      "addon_class_name": "YourMove",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -78,7 +82,8 @@
       "name": "river_of_six_addon",
       "phase": 3,
       "function_slug": "river_of_six_addon",
-      "addon_class_name": "RiverOfSix"
+      "addon_class_name": "RiverOfSix",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -89,7 +94,8 @@
       "name": "Prompt",
       "phase": 4,
       "function_slug": "prompt_addon",
-      "addon_class_name": "Prompt"
+      "addon_class_name": "Prompt",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -100,7 +106,8 @@
       "name": "The Focus Game",
       "phase": 2,
       "function_slug": null,
-      "addon_class_name": null
+      "addon_class_name": null,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -111,7 +118,8 @@
       "name": "Worker",
       "phase": 2,
       "function_slug": null,
-      "addon_class_name": null
+      "addon_class_name": null,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -122,7 +130,8 @@
       "name": "PM",
       "phase": 2,
       "function_slug": null,
-      "addon_class_name": null
+      "addon_class_name": null,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -133,7 +142,8 @@
       "name": "Are-Self",
       "phase": 1,
       "function_slug": null,
-      "addon_class_name": null
+      "addon_class_name": null,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -144,7 +154,8 @@
       "name": "Agile Addon",
       "phase": 2,
       "function_slug": "agile_addon",
-      "addon_class_name": "Agile"
+      "addon_class_name": "Agile",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -155,7 +166,8 @@
       "name": "Deadline Addon",
       "phase": 2,
       "function_slug": "deadline_addon",
-      "addon_class_name": "Deadline"
+      "addon_class_name": "Deadline",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -166,7 +178,8 @@
       "name": "Normal Chat Addon",
       "phase": 3,
       "function_slug": "normal_chat_addon",
-      "addon_class_name": "NormalChat"
+      "addon_class_name": "NormalChat",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -177,7 +190,8 @@
       "name": "Telemetry Addon",
       "phase": 2,
       "function_slug": "telemetry_addon",
-      "addon_class_name": "Telemetry"
+      "addon_class_name": "Telemetry",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {

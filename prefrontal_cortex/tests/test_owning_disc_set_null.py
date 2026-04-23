@@ -1,9 +1,8 @@
-"""FK-softening test: PFCAssignmentMixin.owning_disc -> SET_NULL.
+"""FK-softening test: PFCAssignmentMixin.owning_disc -> CASCADE.
 
-PFC tasks, stories, and epics survive when their owning IdentityDisc
-is removed — the work is more useful reassignable than cascade-deleted
-along with a departing disc (common case: bundle uninstall takes the
-owning disc with it).
+Bundle uninstall is a clean removal: PFC tasks, stories, and epics
+assigned to an IdentityDisc owned by a bundle cascade away with the
+bundle. No dangling-null reassignment cleanup required.
 """
 
 from common.tests.common_test_case import CommonFixturesAPITestCase
@@ -13,13 +12,13 @@ from neuroplasticity.models import NeuralModifier, NeuralModifierStatus
 from prefrontal_cortex.models import PFCEpic, PFCStory, PFCTask
 
 
-class PFCTaskSurvivesOwningDiscRemovalTest(CommonFixturesAPITestCase):
+class PFCRowsCascadeOnOwningDiscRemovalTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         super().setUp()
         self.modifier = NeuralModifier.objects.create(
             name='FK Test Bundle',
-            slug='fk-test-owning-disc-setnull',
+            slug='fk-test-owning-disc-cascade',
             version='1.0.0',
             author='tests',
             license='MIT',
@@ -53,18 +52,27 @@ class PFCTaskSurvivesOwningDiscRemovalTest(CommonFixturesAPITestCase):
             owning_disc=self.bundle_disc,
         )
 
-    def test_uninstall_nulls_owning_disc_on_pfc_rows(self):
-        """Assert PFC rows survive with owning_disc=None after uninstall."""
+    def test_uninstall_cascades_pfc_rows_with_owning_disc(self):
+        """Assert PFC epic/story/task rows cascade when their owning disc goes."""
         self.assertEqual(self.task.owning_disc_id, self.bundle_disc.pk)
+        task_pk = self.task.pk
+        story_pk = self.story.pk
+        epic_pk = self.epic.pk
 
         loader.uninstall_bundle(self.modifier.slug)
 
         self.assertFalse(
             IdentityDisc.objects.filter(pk=self.bundle_disc.pk).exists()
         )
-        self.task.refresh_from_db()
-        self.story.refresh_from_db()
-        self.epic.refresh_from_db()
-        self.assertIsNone(self.task.owning_disc_id)
-        self.assertIsNone(self.story.owning_disc_id)
-        self.assertIsNone(self.epic.owning_disc_id)
+        self.assertFalse(
+            PFCTask.objects.filter(pk=task_pk).exists(),
+            'PFCTask should cascade with its bundle-owned disc.',
+        )
+        self.assertFalse(
+            PFCStory.objects.filter(pk=story_pk).exists(),
+            'PFCStory should cascade with its bundle-owned disc.',
+        )
+        self.assertFalse(
+            PFCEpic.objects.filter(pk=epic_pk).exists(),
+            'PFCEpic should cascade with its bundle-owned disc.',
+        )

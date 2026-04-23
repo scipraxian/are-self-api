@@ -1,12 +1,11 @@
-"""Tests for the FK-graph walker."""
+"""Tests for the FK-graph walker under the three-state Canonical Genome model."""
 
 from __future__ import annotations
 
-import uuid
-
 from common.tests.common_test_case import CommonTestCase
 from central_nervous_system.models import Effector, NeuralPathway
-from neuroplasticity import graph_walker, fixture_scan
+from neuroplasticity import graph_walker
+from neuroplasticity.graph_walker import _classify
 from neuroplasticity.models import NeuralModifier, NeuralModifierStatus
 
 
@@ -24,15 +23,15 @@ def _make_modifier(slug: str) -> NeuralModifier:
 
 
 class GraphWalkerClassificationTest(CommonTestCase):
-    """Owned / shared / orphan / core states classify correctly."""
+    """canonical / owned / shared-with / user states classify correctly."""
 
     def setUp(self):
         super().setUp()
-        fixture_scan.clear_fixture_pk_index()
         self.alpha = _make_modifier('alpha')
         self.beta = _make_modifier('beta')
 
     def test_owned_rows_are_tagged_owned(self):
+        """Assert a row genome-stamped with this bundle classifies as owned."""
         owned = Effector.objects.create(
             name='alpha-owned', genome=self.alpha
         )
@@ -43,81 +42,42 @@ class GraphWalkerClassificationTest(CommonTestCase):
         self.assertEqual(node['state'], 'owned')
         self.assertEqual(node['owner_slug'], 'alpha')
 
-    def test_shared_rows_are_tagged_with_other_slug(self):
-        owned = Effector.objects.create(
-            name='alpha-owner', genome=self.alpha
-        )
-        # Pathway owned by BETA, but referenced by alpha's effector only
-        # if reachable — we'll hook it up via an Effector FK. There is
-        # no direct FK Effector → NeuralPathway in the current schema,
-        # so we fabricate reachability by creating a spike/neuron chain.
-        # Simplest: create both rows and assert the classifier via the
-        # classifier helper when we pass them in directly.
+    def test_shared_rows_unreachable_from_other_bundle(self):
+        """Assert rows owned by a different bundle are NOT walked from alpha."""
+        Effector.objects.create(name='alpha-owner', genome=self.alpha)
         pathway = NeuralPathway.objects.create(
             name='beta-owner', genome=self.beta
         )
 
         graph = graph_walker.build_bundle_graph('alpha')
 
-        nodes_by_pk = {n['pk']: n for n in graph['nodes']}
-        alpha_node = nodes_by_pk[str(owned.pk)]
-        self.assertEqual(alpha_node['state'], 'owned')
-        # Beta's pathway is unreachable from alpha via the forward-FK
-        # graph, so it should NOT appear in alpha's graph output. This
-        # pins down the "only descend via the 12 models" invariant.
-        self.assertNotIn(str(pathway.pk), nodes_by_pk)
+        pks = {n['pk'] for n in graph['nodes']}
+        self.assertNotIn(str(pathway.pk), pks)
 
-    def test_orphan_and_core_classification_via_fixture_index(self):
-        """An untagged row is orphan unless its pk is in the fixture index."""
-        owned = Effector.objects.create(
-            name='alpha-owner', genome=self.alpha
+    def test_classify_canonical(self):
+        """Assert a canonical-stamped row classifies as 'canonical'."""
+        canonical_eff = Effector.objects.create(name='canon-row')
+        canonical_eff.genome_id = NeuralModifier.CANONICAL
+        canonical_eff.save()
+
+        state, owner = _classify(canonical_eff, 'alpha')
+        self.assertEqual(state, 'canonical')
+        self.assertEqual(owner, NeuralModifier.CANONICAL_SLUG)
+
+    def test_classify_user_for_null_genome(self):
+        """Assert a NULL-genome row classifies as 'user' (not orphan/core)."""
+        untagged = Effector.objects.create(name='user-row')
+
+        state, owner = _classify(untagged, 'alpha')
+        self.assertEqual(state, 'user')
+        self.assertIsNone(owner)
+
+    def test_classify_shared_with_other_bundle(self):
+        """Assert a row owned by another bundle classifies as 'shared-with'."""
+        beta_owned = Effector.objects.create(
+            name='beta-owner', genome=self.beta
         )
-        # Create an untagged Effector and check it surfaces as orphan
-        # when the fixture index does NOT list its PK.
-        untagged = Effector.objects.create(name='loose-one')
 
-        # Bind it into alpha's graph via an FK hop. Effector has an
-        # `executable` FK to Executable (GenomeOwnedMixin), but not to
-        # another Effector. We'll verify classification logic directly.
-        from neuroplasticity.graph_walker import _classify
-        index: dict = {}
-        state, owner = _classify(untagged, 'alpha', index)
-        self.assertEqual(state, 'orphan')
-        self.assertIsNone(owner)
-
-        index_with_pk = {
-            'central_nervous_system.effector': {str(untagged.pk)}
-        }
-        state, owner = _classify(untagged, 'alpha', index_with_pk)
-        self.assertEqual(state, 'core')
-        self.assertIsNone(owner)
-
-        # Sanity: owned row still classifies correctly.
-        state, owner = _classify(owned, 'alpha', index)
-        self.assertEqual(state, 'owned')
-        self.assertEqual(owner, 'alpha')
-
-
-class FixtureScanBuilderTest(CommonTestCase):
-    """Fixture-scan index aggregates PKs from initial_data.json files."""
-
-    def setUp(self):
-        super().setUp()
-        fixture_scan.clear_fixture_pk_index()
-
-    def test_index_contains_at_least_one_cns_tag(self):
-        """Assert a known fixture model shows up in the scanned index.
-
-        ``central_nervous_system/fixtures/initial_data.json`` has CNS
-        tag rows on disk in the repo. The index must include it.
-        """
-        index = fixture_scan.refresh_fixture_pk_index()
-        self.assertIn('central_nervous_system.cnstag', index)
-        self.assertGreater(len(index['central_nervous_system.cnstag']), 0)
-
-    def test_synthetic_orphan_pk_not_in_index(self):
-        """Assert a random UUID that was never fixtured is absent from the index."""
-        index = fixture_scan.refresh_fixture_pk_index()
-        random_pk = str(uuid.uuid4())
-        for pks in index.values():
-            self.assertNotIn(random_pk, pks)
+        state, owner = _classify(beta_owned, 'alpha')
+        self.assertEqual(state, 'shared-with beta')
+        self.assertEqual(owner, 'beta')

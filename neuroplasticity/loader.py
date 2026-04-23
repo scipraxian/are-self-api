@@ -46,8 +46,9 @@ from typing import Iterable, Iterator, Optional
 from django.apps import apps
 from django.conf import settings
 from django.core import serializers
-from django.db import OperationalError, ProgrammingError, transaction
+from django.db import OperationalError, ProgrammingError, router, transaction
 from django.db.models import PROTECT, RESTRICT
+from django.db.models.deletion import Collector
 from packaging.specifiers import SpecifierSet
 from packaging.version import InvalidVersion, Version
 
@@ -415,6 +416,7 @@ def upgrade_bundle_from_source(
                 target = deserialized.object
                 pk = str(target.pk)
                 if isinstance(target, GenomeOwnedMixin):
+                    _guard_install_collision(target, modifier)
                     target.genome_id = modifier.pk
                 deserialized.save()
                 if pk in new_pks_only:
@@ -817,16 +819,79 @@ def _load_modifier_data(
     Rows in other models (pure link tables, etc.) load as-is. The
     returned count is the total number of saved rows, regardless of
     ownership flag.
+
+    Collision guard: for each GenomeOwnedMixin row, if the target PK
+    already exists and is owned by canonical, another bundle, or a
+    user (NULL), the install is refused with a clear error. Same-slug
+    reinstalls are allowed through because the existing row's genome
+    already points at this modifier. This stops the old
+    silent-overwrite-and-stamp path that destroyed unrelated work
+    when a bundle's PK happened to collide.
     """
     payload = data_path.read_text()
     count = 0
     for deserialized in serializers.deserialize('json', payload):
         target = deserialized.object
         if isinstance(target, GenomeOwnedMixin):
+            _guard_install_collision(target, modifier)
             target.genome_id = modifier.pk
         deserialized.save()
         count += 1
     return count
+
+
+def _guard_install_collision(
+    target: 'GenomeOwnedMixin', modifier: NeuralModifier
+) -> None:
+    """Raise if ``target.pk`` is already owned by anyone but this bundle.
+
+    Called per-row inside the install / upgrade deserialize loop.
+    The existing row's ``genome_id`` decides the verdict:
+
+    * matches the installing modifier — OK (same-slug reinstall /
+      upgrade's own-row update).
+    * equals ``NeuralModifier.CANONICAL`` — refuse. Bundles must not
+      overwrite core-shipped rows.
+    * points at any other ``NeuralModifier`` — refuse. Bundles must
+      not overwrite rows another bundle already owns.
+    * is ``NULL`` — refuse. Bundles must not overwrite rows a user
+      created locally.
+    """
+    model = type(target)
+    existing_genome_id = (
+        model.objects.filter(pk=target.pk)
+        .values_list('genome_id', flat=True)
+        .first()
+    )
+    if existing_genome_id is None:
+        # No existing row — fresh insert. The `.first()` returns None
+        # both when the row is absent and when genome_id is NULL, so
+        # disambiguate with an exists check.
+        if not model.objects.filter(pk=target.pk).exists():
+            return
+        owner_label = 'user'
+    elif existing_genome_id == modifier.pk:
+        return
+    elif existing_genome_id == NeuralModifier.CANONICAL:
+        owner_label = repr(NeuralModifier.CANONICAL_SLUG)
+    else:
+        existing_slug = (
+            NeuralModifier.objects.filter(pk=existing_genome_id)
+            .values_list('slug', flat=True)
+            .first()
+        )
+        owner_label = repr(existing_slug) if existing_slug else 'unknown-bundle'
+
+    raise RuntimeError(
+        '[Neuroplasticity] Refusing to overwrite {0}.{1} PK {2} owned '
+        'by {3} while installing {4!r}.'.format(
+            model._meta.app_label,
+            model._meta.model_name,
+            target.pk,
+            owner_label,
+            modifier.slug,
+        )
+    )
 
 
 def _log_event(
@@ -909,36 +974,132 @@ def install_bundle_from_archive(archive_path: Path) -> NeuralModifier:
             shutil.rmtree(extraction, ignore_errors=True)
 
 
-def bundle_row_breakdown(slug: str) -> dict:
-    """Row-count breakdown for a bundle, used by the uninstall preview.
+def bundle_uninstall_preview(slug: str) -> dict:
+    """Full cascade tree for an uninstall, built via ``Collector.collect()``.
 
-    Returns::
+    Gathers every row the bundle directly owns (``genome=modifier`` across
+    the GenomeOwnedMixin consumers), feeds them into a
+    ``django.db.models.deletion.Collector`` — the same collector Django
+    admin uses for its delete-confirmation page — and returns the walked
+    tree as::
 
         {
           'slug': str,
           'row_count': int,
-          'breakdown': [{'content_type': 'app.model', 'count': N}, ...],
+          'direct':    [{...}, ...],  # rows the bundle owns
+          'cascade':   [{...}, ...],  # rows CASCADE removes with them
+          'set_null':  [{...}, ...],  # rows whose FK gets nulled
+          'protected': [{...}, ...],  # rows that would PROTECT-block
         }
+
+    Each entry is ``{app_label, model, pk, name_or_repr, reason}``.
+    The UI renders the full tree in the confirmation dialog — Michael's
+    explicit ask: show, like Django admin does.
     """
     modifier = NeuralModifier.objects.get(slug=slug)
-    breakdown = []
-    total = 0
+
+    direct_keys: set = set()
+    per_model: dict = {}
     for model in iter_genome_owned_models():
-        count = model.objects.filter(genome=modifier).count()
-        if count == 0:
+        bucket = list(model.objects.filter(genome=modifier))
+        if not bucket:
             continue
-        breakdown.append(
-            {
-                'content_type': '{0}.{1}'.format(
-                    model._meta.app_label, model._meta.model_name
-                ),
-                'count': count,
-            }
+        per_model[model] = bucket
+        for obj in bucket:
+            direct_keys.add((type(obj), obj.pk))
+
+    collector = Collector(using=router.db_for_write(NeuralModifier))
+    protected_entries: list = []
+    try:
+        # Collector.collect assumes a homogeneous list — it keys off
+        # the first instance's model. Call it per-model so every bucket
+        # contributes its own forward walk to the same collector state.
+        for bucket in per_model.values():
+            collector.collect(bucket)
+    except ProgrammingError:
+        raise
+    except Exception as exc:
+        # Collector raises django.db.models.deletion.ProtectedError (and
+        # RestrictedError) when a PROTECT/RESTRICT edge blocks the
+        # delete. Harvest the blocking rows and surface them rather
+        # than re-raise — the caller renders a full dialog, not a 500.
+        blockers = getattr(exc, 'protected_objects', None) or getattr(
+            exc, 'restricted_objects', None
         )
-        total += count
-    breakdown.sort(key=lambda row: row['content_type'])
+        if blockers is None:
+            raise
+        for obj in blockers:
+            protected_entries.append(
+                _row_entry(obj, reason='protected')
+            )
+
+    direct_entries: list = []
+    cascade_entries: list = []
+    for model, instances in collector.data.items():
+        for obj in instances:
+            entry = _row_entry(
+                obj,
+                reason=(
+                    'direct'
+                    if (model, obj.pk) in direct_keys
+                    else 'cascade'
+                ),
+            )
+            if (model, obj.pk) in direct_keys:
+                direct_entries.append(entry)
+            else:
+                cascade_entries.append(entry)
+
+    # fast_deletes hold QuerySets Collector intends to bulk-delete
+    # without fetching instances — these are still real cascades that
+    # need to show in the preview.
+    for qs in collector.fast_deletes:
+        for obj in qs:
+            cascade_entries.append(_row_entry(obj, reason='cascade'))
+
+    set_null_entries: list = []
+    # Collector.field_updates shape is
+    # ``{(field, value): [iterable_of_instances, ...]}``. Each list entry
+    # is itself a QuerySet or instance list, so iterate twice.
+    for (field, _value), buckets in collector.field_updates.items():
+        for bucket in buckets:
+            for obj in bucket:
+                set_null_entries.append(
+                    _row_entry(
+                        obj,
+                        reason='set_null:{0}'.format(field.name),
+                    )
+                )
+
+    for bucket in (
+        direct_entries,
+        cascade_entries,
+        set_null_entries,
+        protected_entries,
+    ):
+        bucket.sort(key=lambda row: (row['model'], str(row['pk'])))
+
     return {
         'slug': slug,
-        'row_count': total,
-        'breakdown': breakdown,
+        'row_count': len(direct_entries),
+        'direct': direct_entries,
+        'cascade': cascade_entries,
+        'set_null': set_null_entries,
+        'protected': protected_entries,
+    }
+
+
+def _row_entry(obj, *, reason: str) -> dict:
+    """Serialize one row for the uninstall-preview payload."""
+    model = type(obj)
+    name = getattr(obj, 'name', None)
+    label = str(name) if name else repr(obj)
+    return {
+        'app_label': model._meta.app_label,
+        'model': '{0}.{1}'.format(
+            model._meta.app_label, model._meta.model_name
+        ),
+        'pk': str(obj.pk),
+        'name_or_repr': label,
+        'reason': reason,
     }

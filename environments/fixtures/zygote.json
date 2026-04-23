@@ -29,7 +29,8 @@
       "working_path": "",
       "executable": "debug_node",
       "log": "",
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -44,7 +45,8 @@
       "working_path": "",
       "executable": "pathway_logic_neuron",
       "log": "",
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -54,7 +56,8 @@
       "created": "2026-01-21T22:00:46.742Z",
       "modified": "2026-01-21T22:00:46.742Z",
       "name": "Project",
-      "argument": "{{project_root}}\\{{uproject}}"
+      "argument": "{{project_root}}\\{{uproject}}",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -69,7 +72,8 @@
       "status": "e1bb67a5-1b86-5636-9464-be50af5c7863",
       "available": true,
       "selected": true,
-      "default_iteration_definition": null
+      "default_iteration_definition": null,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -98,7 +102,8 @@
       "working_path": "{{venv_root}}",
       "executable": "{{venv_root}}/Scripts/python.exe",
       "log": "",
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -122,7 +127,8 @@
       "working_path": "",
       "executable": "run_temporal_lobe",
       "log": "",
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   }
 ]

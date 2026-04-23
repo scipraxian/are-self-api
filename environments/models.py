@@ -137,7 +137,7 @@ class ProjectEnvironment(
     )
     default_iteration_definition = models.ForeignKey(
         'temporal_lobe.IterationDefinition',
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
     )
@@ -172,7 +172,7 @@ class ContextVariable(UUIDIdMixin):
 
 class ProjectEnvironmentMixin(models.Model):
     environment = models.ForeignKey(
-        ProjectEnvironment, on_delete=models.SET_NULL, blank=True, null=True
+        ProjectEnvironment, on_delete=models.CASCADE, blank=True, null=True
     )
 
     class Meta:

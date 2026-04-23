@@ -2,21 +2,21 @@
 
 Starting from every row a bundle owns (``genome__slug=<slug>``),
 walks forward FKs and M2M relations whose target model also carries
-``GenomeOwnedMixin`` (the twelve bundle-eligible models, as registered
-with :func:`loader.iter_genome_owned_models`). Anything outside that
-set is a boundary — we record the reachable row but do not recurse
-past it.
+``GenomeOwnedMixin`` (the bundle-eligible models, as registered with
+:func:`loader.iter_genome_owned_models`). Anything outside that set
+is a boundary — we record the reachable row but do not recurse past
+it.
 
-Four diagnostic states are emitted per reachable row:
+Four diagnostic states are emitted per reachable row, keyed off the
+three-state Canonical Genome model:
 
-* ``owned`` — ``genome.slug == <slug>``. Part of this bundle.
-* ``shared-with <other_slug>`` — ``genome`` non-null and not this
-  bundle. A different bundle already owns it.
-* ``orphan`` — ``genome`` is null AND the PK is not in any fixture
-  indexed by :mod:`neuroplasticity.fixture_scan`. User forgot to tag
-  it; it would be silently lost on Save-to-Genome.
-* ``core`` — ``genome`` is null AND the PK IS indexed — legitimately
-  shipped in a committed fixture.
+* ``canonical`` — ``genome_id == NeuralModifier.CANONICAL``. Ships in
+  a committed core fixture; never deleted by any bundle operation.
+* ``owned`` — ``genome.slug == <target_slug>``. Part of this bundle.
+* ``shared-with <other_slug>`` — ``genome`` non-null and points at
+  another bundle.
+* ``user`` — ``genome`` is NULL. Created by the user at runtime;
+  bundles must not touch it.
 
 Output shape is API-only. If you're tempted to embed HTML, stop —
 the UI renders.
@@ -24,10 +24,9 @@ the UI renders.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, List, Set, Tuple
+from typing import Any, Iterable, List, Tuple
 
 from neuroplasticity import loader
-from neuroplasticity.fixture_scan import get_fixture_pk_index
 from neuroplasticity.genome_mixin import GenomeOwnedMixin
 from neuroplasticity.models import NeuralModifier
 
@@ -60,7 +59,7 @@ def _forward_fk_fields(model: type) -> Iterable:
         if not issubclass(related, GenomeOwnedMixin):
             continue
         # Exclude the genome FK itself — it points at NeuralModifier,
-        # not at one of the 12 bundle-eligible models.
+        # not at one of the bundle-eligible models.
         if field.name == 'genome':
             continue
         yield field
@@ -81,25 +80,31 @@ def _forward_m2m_fields(model: type) -> Iterable:
         yield field
 
 
-def _classify(instance, target_slug: str, fixture_index: Dict[str, Set[str]]):
-    """Return (state, owner_slug) for one row."""
+def _classify(instance, target_slug: str):
+    """Return (state, owner_slug) for one row under the three-state model."""
+    genome_id = getattr(instance, 'genome_id', None)
+    if genome_id is None:
+        return ('user', None)
+    if genome_id == NeuralModifier.CANONICAL:
+        return ('canonical', NeuralModifier.CANONICAL_SLUG)
+    # genome_id is non-null and not canonical — dereference the slug.
+    # The FK object may already be prefetched; fall back to a cheap
+    # values_list lookup otherwise.
     genome = getattr(instance, 'genome', None)
-    if genome is None:
-        model_key = '{0}.{1}'.format(
-            type(instance)._meta.app_label,
-            type(instance)._meta.model_name,
+    owner_slug = getattr(genome, 'slug', None)
+    if owner_slug is None:
+        owner_slug = (
+            NeuralModifier.objects.filter(pk=genome_id)
+            .values_list('slug', flat=True)
+            .first()
         )
-        if str(instance.pk) in fixture_index.get(model_key, set()):
-            return ('core', None)
-        return ('orphan', None)
-    owner_slug = genome.slug
     if owner_slug == target_slug:
         return ('owned', owner_slug)
     return ('shared-with {0}'.format(owner_slug), owner_slug)
 
 
 def build_bundle_graph(slug: str) -> dict:
-    """Return the ✓/X/?/ⓘ state tree for the Modifier Garden builder.
+    """Return the state tree for the Modifier Garden builder.
 
     Shape::
 
@@ -111,8 +116,8 @@ def build_bundle_graph(slug: str) -> dict:
               'model': str,
               'pk': str,
               'name_or_repr': str,
-              'state': str,            # 'owned' | 'shared-with X'
-                                       # | 'orphan' | 'core'
+              'state': str,            # 'canonical' | 'owned'
+                                       # | 'shared-with X' | 'user'
               'owner_slug': str | None,
             },
             ...
@@ -129,9 +134,8 @@ def build_bundle_graph(slug: str) -> dict:
         }
     """
     modifier = NeuralModifier.objects.get(slug=slug)
-    fixture_index = get_fixture_pk_index()
 
-    visited: Dict[Tuple[str, str, str], Any] = {}
+    visited: dict = {}
     edges: List[dict] = []
     queue: List[Any] = []
 
@@ -199,7 +203,7 @@ def build_bundle_graph(slug: str) -> dict:
 
     nodes: List[dict] = []
     for (app_label, model_name, pk), instance in visited.items():
-        state, owner_slug = _classify(instance, slug, fixture_index)
+        state, owner_slug = _classify(instance, slug)
         nodes.append(
             {
                 'app_label': app_label,

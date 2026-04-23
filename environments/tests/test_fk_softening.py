@@ -1,15 +1,16 @@
 """FK-softening tests for environments -> owned-row edges.
 
-Covers two softened PROTECT edges at once:
+Covers two softened PROTECT edges at once, both now CASCADE:
 
-1. ``ProjectEnvironmentMixin.environment`` -> SET_NULL. Consumers
-   (Neuron, SpikeTrain, NeuralPathway) survive when a bundle-owned
-   environment goes away, falling back to default resolution.
+1. ``ProjectEnvironmentMixin.environment`` -> CASCADE. Consumers
+   (Neuron, SpikeTrain, NeuralPathway) that reference a bundle-owned
+   environment are removed with the bundle on uninstall.
 
-2. ``ProjectEnvironment.default_iteration_definition`` -> SET_NULL.
+2. ``ProjectEnvironment.default_iteration_definition`` -> CASCADE.
    Cross-bundle case: Bundle A's env pointing at Bundle B's iteration
-   definition. Uninstalling B leaves A's env intact with the default
-   iteration definition nulled.
+   definition. Uninstalling B cascades A's env out too (acceptable in
+   practice: the canonical env ships in genetic_immutables and is
+   never cross-referenced at a bundle's default iteration definition).
 """
 
 from central_nervous_system.models import (
@@ -52,11 +53,11 @@ def _make_project_env(name: str, modifier: NeuralModifier) -> ProjectEnvironment
     )
 
 
-class NeuronEnvironmentSetNullOnBundleRemovalTest(CommonFixturesAPITestCase):
+class NeuronEnvironmentCascadeOnBundleRemovalTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         super().setUp()
-        self.modifier = _make_modifier('fk-test-env-setnull')
+        self.modifier = _make_modifier('fk-test-env-cascade')
         self.bundle_env = _make_project_env(
             'FK Test Bundle Env', self.modifier
         )
@@ -64,17 +65,17 @@ class NeuronEnvironmentSetNullOnBundleRemovalTest(CommonFixturesAPITestCase):
             name='FK Test Effector',
             executable=Executable.objects.first(),
         )
-        pathway = NeuralPathway.objects.create(
+        self.pathway = NeuralPathway.objects.create(
             name='FK Test Pathway', environment=self.bundle_env
         )
         self.neuron = Neuron.objects.create(
-            pathway=pathway,
+            pathway=self.pathway,
             effector=effector,
             environment=self.bundle_env,
         )
 
-    def test_uninstall_nulls_environment_on_consumers(self):
-        """Assert Neuron survives with environment=None after bundle uninstall."""
+    def test_uninstall_cascades_consumers(self):
+        """Assert Neuron and Pathway are gone after bundle uninstall."""
         self.assertEqual(self.neuron.environment_id, self.bundle_env.pk)
 
         loader.uninstall_bundle(self.modifier.slug)
@@ -82,11 +83,15 @@ class NeuronEnvironmentSetNullOnBundleRemovalTest(CommonFixturesAPITestCase):
         self.assertFalse(
             ProjectEnvironment.objects.filter(pk=self.bundle_env.pk).exists()
         )
-        self.neuron.refresh_from_db()
-        self.assertIsNone(self.neuron.environment_id)
+        self.assertFalse(
+            Neuron.objects.filter(pk=self.neuron.pk).exists()
+        )
+        self.assertFalse(
+            NeuralPathway.objects.filter(pk=self.pathway.pk).exists()
+        )
 
 
-class CrossBundleDefaultIterationDefinitionSetNullTest(
+class CrossBundleDefaultIterationDefinitionCascadeTest(
     CommonFixturesAPITestCase
 ):
     """Bundle A's env points at Bundle B's IterationDefinition; B goes first."""
@@ -105,8 +110,8 @@ class CrossBundleDefaultIterationDefinitionSetNullTest(
             update_fields=['default_iteration_definition']
         )
 
-    def test_uninstall_b_nulls_default_iteration_definition_on_a(self):
-        """Assert A's env survives with the cross-bundle pointer nulled."""
+    def test_uninstall_b_cascades_a_env(self):
+        """Assert A's env cascades away when B's IterationDefinition goes."""
         self.assertEqual(
             self.env_a.default_iteration_definition_id, self.iter_def_b.pk
         )
@@ -116,12 +121,11 @@ class CrossBundleDefaultIterationDefinitionSetNullTest(
         self.assertFalse(
             IterationDefinition.objects.filter(pk=self.iter_def_b.pk).exists()
         )
-        self.env_a.refresh_from_db()
-        self.assertIsNone(self.env_a.default_iteration_definition_id)
-        # A itself survived.
-        self.assertTrue(
+        # A's env cascaded out with B's IterationDefinition.
+        self.assertFalse(
             ProjectEnvironment.objects.filter(pk=self.env_a.pk).exists()
         )
+        # Modifier A itself is untouched; only its env row fell.
         self.assertTrue(
             NeuralModifier.objects.filter(pk=self.modifier_a.pk).exists()
         )

@@ -15,11 +15,12 @@ individual rows lives on the rows themselves (``genome`` FK from
 """
 
 from typing import Optional
+from uuid import UUID
 
 from django.db import models
 
 from common.constants import STANDARD_CHARFIELD_LENGTH
-from common.models import CreatedMixin, DefaultFieldsMixin, NameMixin
+from common.models import CreatedMixin, DefaultFieldsMixin, NameMixin, UUIDIdMixin
 
 
 class NeuralModifierStatus(NameMixin):
@@ -65,7 +66,7 @@ class NeuralModifierStatus(NameMixin):
         verbose_name_plural = 'Neural Modifier Statuses'
 
 
-class NeuralModifier(DefaultFieldsMixin):
+class NeuralModifier(UUIDIdMixin, DefaultFieldsMixin):
     """An installed NeuralModifier bundle registered with the running system.
 
     One row per bundle currently in ``grafts/``. The `slug` is the
@@ -81,7 +82,23 @@ class NeuralModifier(DefaultFieldsMixin):
     CASCADEs away, as do installation logs and their events. The
     committed ``genomes/<slug>.zip`` stays put — it is the bundle, not
     a derivative.
+
+    The ``CANONICAL`` class constant is the frozen UUID of the single
+    ``canonical`` NeuralModifier row — it OWNS every row that ships in
+    the core fixtures (``genetic_immutables`` / ``zygote`` /
+    ``initial_phenotypes``). Install collisions against a
+    canonical-owned PK are refused; uninstall of canonical is never
+    attempted. The three-state model replaces the old ambiguous
+    two-state (genome=NULL overloaded as both "core fixture row" and
+    "user-created"):
+
+        genome=canonical  — core-shipped, untouchable by bundle ops.
+        genome=<bundle>   — contributed by that bundle, CASCADE on uninstall.
+        genome=NULL       — user-created after boot, untouched by bundles.
     """
+
+    CANONICAL = UUID('8192d7fd-2d20-4109-9c7c-45121e89f1dd')
+    CANONICAL_SLUG = 'canonical'
 
     status = models.ForeignKey(
         NeuralModifierStatus, on_delete=models.CASCADE

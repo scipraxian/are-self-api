@@ -1,8 +1,8 @@
 """API smoke tests for the Modifier Garden endpoints.
 
 Narrow checks that the REST surface routes through to the loader.
-Lifecycle is covered by ``test_modifier_lifecycle``. Save /
-fixture-scan / graph live here.
+Lifecycle is covered by ``test_modifier_lifecycle``. Save, graph, and
+uninstall-preview live here.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from pathlib import Path
 from rest_framework.test import APITestCase
 
 from identity.models import IdentityAddon
-from neuroplasticity import fixture_scan, loader
+from neuroplasticity import loader
 from neuroplasticity.models import NeuralModifier
 from neuroplasticity.tests.test_modifier_lifecycle import (
     ModifierLifecycleTestCase,
@@ -47,7 +47,7 @@ class ModifierApiSmokeTest(ModifierLifecycleTestCase, APITestCase):
         self.assertGreaterEqual(len(payload['installation_logs']), 1)
 
     def test_impact_endpoint(self):
-        """Assert impact endpoint returns owned-row breakdown."""
+        """Assert impact endpoint returns the Collector preview tree."""
         build_fake_bundle(self.scratch_root, 'ui_beta')
         self.install_fake('ui_beta')
 
@@ -57,12 +57,35 @@ class ModifierApiSmokeTest(ModifierLifecycleTestCase, APITestCase):
         payload = res.json()
         self.assertEqual(payload['slug'], 'ui_beta')
         self.assertEqual(payload['row_count'], 3)
-        self.assertTrue(
-            any(
-                row['content_type'] == 'identity.identityaddon'
-                for row in payload['breakdown']
-            )
+        self.assertEqual(len(payload['direct']), 3)
+        self.assertEqual(
+            {row['model'] for row in payload['direct']},
+            {'identity.identityaddon'},
         )
+        self.assertEqual(payload['protected'], [])
+
+    def test_uninstall_preview_endpoint(self):
+        """Assert /uninstall-preview/ returns the Collector tree payload."""
+        build_fake_bundle(self.scratch_root, 'ui_preview')
+        self.install_fake('ui_preview')
+
+        res = self.client.get(
+            '/api/v2/neural-modifiers/ui_preview/uninstall-preview/'
+        )
+
+        self.assertEqual(res.status_code, 200)
+        payload = res.json()
+        self.assertEqual(payload['slug'], 'ui_preview')
+        self.assertEqual(len(payload['direct']), 3)
+        self.assertIn('cascade', payload)
+        self.assertIn('set_null', payload)
+        self.assertIn('protected', payload)
+        for entry in payload['direct']:
+            self.assertEqual(entry['reason'], 'direct')
+            self.assertIn('app_label', entry)
+            self.assertIn('model', entry)
+            self.assertIn('pk', entry)
+            self.assertIn('name_or_repr', entry)
 
     def test_enable_disable_actions(self):
         """Assert enable/disable endpoints flip status."""
@@ -140,34 +163,6 @@ class ModifierApiSmokeTest(ModifierLifecycleTestCase, APITestCase):
         res = self.client.get('/api/v2/neural-modifiers/ghost/graph/')
 
         self.assertEqual(res.status_code, 404)
-
-
-class FixtureScanEndpointTest(ModifierLifecycleTestCase, APITestCase):
-    """Fixture-scan endpoint returns a deterministic app_label.model→pks map.
-
-    The in-memory cache is shared across tests, so clear it in setUp
-    and setTest so the scan reruns against the real on-disk fixtures.
-    """
-
-    def setUp(self):
-        super().setUp()
-        fixture_scan.clear_fixture_pk_index()
-
-    def test_endpoint_returns_scanned_index(self):
-        """Assert the endpoint returns a JSON object of lists."""
-        res = self.client.get('/api/v2/genome/fixture-scan/')
-
-        self.assertEqual(res.status_code, 200)
-        payload = res.json()
-        self.assertIsInstance(payload, dict)
-        # Every value must be a list of strings; we can't assert a
-        # specific key because the content depends on whatever was
-        # checked into initial_data.json at scan time.
-        for key, pks in payload.items():
-            self.assertIsInstance(key, str)
-            self.assertIsInstance(pks, list)
-            for pk in pks:
-                self.assertIsInstance(pk, str)
 
 
 class CatalogListReturnsEmptyWhenNoZipsTest(
