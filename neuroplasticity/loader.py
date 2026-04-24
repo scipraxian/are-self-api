@@ -218,6 +218,11 @@ def install_bundle_from_source(source: Path, slug: str) -> NeuralModifier:
 
     pre_existing_row = NeuralModifier.objects.filter(slug=slug).exists()
     modifier = _get_or_create_modifier(slug, manifest, manifest_hash)
+    if modifier.pk == NeuralModifier.CANONICAL:
+        raise ValueError(
+            '[Neuroplasticity] Refusing to install/upgrade onto the '
+            'canonical modifier.'
+        )
     log = NeuralModifierInstallationLog.objects.create(
         neural_modifier=modifier,
         installation_manifest=manifest,
@@ -347,6 +352,11 @@ def upgrade_bundle_from_source(
             <= old (unless allow_same_version).
     """
     modifier = NeuralModifier.objects.get(slug=slug)
+    if modifier.pk == NeuralModifier.CANONICAL:
+        raise ValueError(
+            '[Neuroplasticity] Refusing to install/upgrade onto the '
+            'canonical modifier.'
+        )
 
     if not source.exists():
         raise FileNotFoundError(

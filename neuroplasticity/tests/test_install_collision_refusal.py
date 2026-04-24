@@ -13,7 +13,11 @@ import json
 
 from identity.models import IdentityAddon
 from neuroplasticity import loader
-from neuroplasticity.models import NeuralModifier, NeuralModifierStatus
+from neuroplasticity.models import (
+    NeuralModifier,
+    NeuralModifierInstallationLog,
+    NeuralModifierStatus,
+)
 from neuroplasticity.tests.test_modifier_lifecycle import (
     ModifierLifecycleTestCase,
     build_fake_bundle,
@@ -130,6 +134,47 @@ class InstallRefusesOverwriteOfUserRowTest(ModifierLifecycleTestCase):
         survivor = IdentityAddon.objects.get(pk=user_row.pk)
         self.assertEqual(survivor.name, 'user-created')
         self.assertIsNone(survivor.genome_id)
+
+
+class InstallRefusesCanonicalSlugTest(ModifierLifecycleTestCase):
+    def test_install_refused_when_manifest_claims_canonical_slug(self):
+        """Assert install refuses a bundle whose manifest.slug is 'canonical'.
+
+        A hostile zip naming itself ``canonical`` would otherwise slip
+        past ``_get_or_create_modifier`` (which reuses the existing
+        canonical row on slug match) and start stamping bundle rows onto
+        it. The UUID guard matches against
+        ``NeuralModifier.CANONICAL`` — the frozen anchor — and raises
+        before any installation log or graft work lands on disk.
+        """
+        canonical_manifest_before = NeuralModifier.objects.get(
+            pk=NeuralModifier.CANONICAL
+        ).manifest_json
+        logs_before = NeuralModifierInstallationLog.objects.filter(
+            neural_modifier_id=NeuralModifier.CANONICAL
+        ).count()
+
+        build_fake_bundle(self.scratch_root, 'canonical')
+
+        with self.assertRaisesRegex(ValueError, 'canonical'):
+            self.install_fake('canonical')
+
+        # Canonical row still exists, untouched.
+        canonical_after = NeuralModifier.objects.get(
+            pk=NeuralModifier.CANONICAL
+        )
+        self.assertEqual(
+            canonical_after.manifest_json, canonical_manifest_before
+        )
+        # No installation log was attached to canonical.
+        self.assertEqual(
+            NeuralModifierInstallationLog.objects.filter(
+                neural_modifier_id=NeuralModifier.CANONICAL
+            ).count(),
+            logs_before,
+        )
+        # No graft dir was created.
+        self.assertFalse((self.grafts_root / 'canonical').exists())
 
 
 class ReinstallSameBundleIsAllowedTest(ModifierLifecycleTestCase):

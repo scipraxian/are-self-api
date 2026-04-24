@@ -13,6 +13,7 @@ consumes what we emit; this module does not know the UI exists.
 from pathlib import Path
 
 from asgiref.sync import async_to_sync
+from django.http import Http404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -96,14 +97,49 @@ def _save_upload_to_catalog(uploaded_file) -> Path:
 class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
     """Read-only viewset; mutations flow through action endpoints."""
 
-    queryset = NeuralModifier.objects.all().order_by('slug')
     lookup_field = 'slug'
     parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_queryset(self):
+        # Canonical is a system-tier row — it owns every core fixture row
+        # but cannot be installed, uninstalled, enabled, disabled, saved,
+        # or graphed. Excluding it here makes every routed action
+        # (list, retrieve, and every @action routed through _visible_or_404)
+        # invisible.
+        return NeuralModifier.objects.exclude(
+            pk=NeuralModifier.CANONICAL
+        ).order_by('slug')
+
+    def _visible_or_404(self):
+        """Return a 404 Response when the slug is canonical or missing.
+
+        Detail actions call this at the top so the queryset exclusion is
+        the single source of truth for which slugs are addressable.
+        Returns ``None`` when the object is visible; the action then
+        proceeds with the original slug kwarg.
+        """
+        try:
+            self.get_object()
+        except Http404:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return None
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return NeuralModifierDetailSerializer
         return NeuralModifierSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        # Mirror the @action handler pattern — convert Http404 to an
+        # explicit DRF Response(404) so an unhandled Http404 can't
+        # escape to Django's default 404 handler (which returns a
+        # TemplateResponse without ``accepted_renderer`` set).
+        try:
+            instance = self.get_object()
+        except Http404:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['post'], url_path='install')
     def install(self, request):
@@ -140,6 +176,9 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='uninstall')
     def uninstall(self, request, slug=None):
+        missing = self._visible_or_404()
+        if missing is not None:
+            return missing
         try:
             deleted_slug = loader.uninstall_bundle(slug)
         except NeuralModifier.DoesNotExist:
@@ -152,6 +191,9 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='enable')
     def enable(self, request, slug=None):
+        missing = self._visible_or_404()
+        if missing is not None:
+            return missing
         try:
             modifier = loader.enable_bundle(slug)
         except NeuralModifier.DoesNotExist:
@@ -161,6 +203,9 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='disable')
     def disable(self, request, slug=None):
+        missing = self._visible_or_404()
+        if missing is not None:
+            return missing
         try:
             modifier = loader.disable_bundle(slug)
         except NeuralModifier.DoesNotExist:
@@ -177,6 +222,9 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
         :func:`loader.bundle_uninstall_preview` (direct / cascade /
         set_null / protected tree).
         """
+        missing = self._visible_or_404()
+        if missing is not None:
+            return missing
         try:
             return Response(loader.bundle_uninstall_preview(slug))
         except NeuralModifier.DoesNotExist:
@@ -192,6 +240,9 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
         that would PROTECT-block the delete. The UI renders the whole
         tree so Michael can SEE everything that disappears.
         """
+        missing = self._visible_or_404()
+        if missing is not None:
+            return missing
         try:
             return Response(loader.bundle_uninstall_preview(slug))
         except NeuralModifier.DoesNotExist:
@@ -205,6 +256,9 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
         row count, and the absolute zip path. Fires Acetylcholine so
         subscribers re-sync.
         """
+        missing = self._visible_or_404()
+        if missing is not None:
+            return missing
         try:
             result = loader.save_bundle_to_archive(slug)
         except NeuralModifier.DoesNotExist:
@@ -224,6 +278,9 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
         Each reachable row is tagged with one of: ``owned`` / ``shared-with
         <slug>`` / ``orphan`` / ``core``. Walker is API-only.
         """
+        missing = self._visible_or_404()
+        if missing is not None:
+            return missing
         try:
             return Response(graph_walker.build_bundle_graph(slug))
         except NeuralModifier.DoesNotExist:
