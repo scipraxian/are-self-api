@@ -575,6 +575,7 @@ class CliClientPayloadShapeTests(SimpleTestCase):
                 self.assertEqual(sent['type'], WS_MSG_CREATE_SESSION)
                 self.assertEqual(sent['channel_id'], 'cli-test')
                 self.assertIn('request_id', sent)
+                self.assertNotIn('identity_disc_id', sent)
 
                 ws.push({
                     'type': WS_MSG_CREATE_SESSION_ACK,
@@ -587,5 +588,58 @@ class CliClientPayloadShapeTests(SimpleTestCase):
                 await client.stop()
 
             self.assertEqual(ack['session_id'], 'new-session')
+
+        asyncio.run(_run())
+
+    def test_send_create_session_payload_includes_identity_disc_id(self):
+        """Assert create_session frame carries identity_disc_id when provided."""
+
+        async def _run() -> None:
+            client, ws = await _start_client_with_fake_ws()
+            try:
+                task = asyncio.create_task(client.send_create_session(
+                    identity_disc_id='disc-uuid-42',
+                ))
+                await asyncio.sleep(0)
+                sent = ws.last_sent_json
+                self.assertEqual(sent['type'], WS_MSG_CREATE_SESSION)
+                self.assertEqual(sent.get('identity_disc_id'), 'disc-uuid-42')
+
+                ws.push({
+                    'type': WS_MSG_CREATE_SESSION_ACK,
+                    'request_id': sent['request_id'],
+                    'session_id': 'new-session',
+                    'channel_id': 'cli-test',
+                })
+                await asyncio.wait_for(task, timeout=1.0)
+            finally:
+                await client.stop()
+
+        asyncio.run(_run())
+
+    def test_send_create_session_uses_constructor_identity_disc_id(self):
+        """Assert constructor identity_disc_id is forwarded to create_session."""
+
+        async def _run() -> None:
+            client, ws = await _start_client_with_fake_ws(
+                identity_disc_id='disc-uuid-default',
+            )
+            try:
+                task = asyncio.create_task(client.send_create_session())
+                await asyncio.sleep(0)
+                sent = ws.last_sent_json
+                self.assertEqual(
+                    sent.get('identity_disc_id'), 'disc-uuid-default',
+                )
+
+                ws.push({
+                    'type': WS_MSG_CREATE_SESSION_ACK,
+                    'request_id': sent['request_id'],
+                    'session_id': 'new-session',
+                    'channel_id': 'cli-test',
+                })
+                await asyncio.wait_for(task, timeout=1.0)
+            finally:
+                await client.stop()
 
         asyncio.run(_run())

@@ -743,6 +743,48 @@ class GatewaySessionManagementWebSocketTests(TransactionTestCase):
 
         asyncio.run(_run())
 
+    @patch('thalamus.signals.async_to_sync', _noop_async_to_sync)
+    @patch('talos_gateway.signals.async_to_sync', _noop_async_to_sync)
+    @patch('asgiref.sync.async_to_sync', _noop_async_to_sync)
+    def test_create_session_pins_supplied_identity_disc(self, *_mocks):
+        """Assert create_session honors a supplied identity_disc_id and echoes its name."""
+        from asgiref.sync import sync_to_async
+
+        from frontal_lobe.models import ReasoningSession
+
+        alt_disc_pk = '0db0d16e-8c98-48a5-8ef4-38a86579a4b2'
+
+        async def _run() -> None:
+            communicator = WebsocketCommunicator(
+                _gateway_application(),
+                '/ws/gateway/stream/',
+            )
+            connected, _ = await communicator.connect()
+            self.assertTrue(connected)
+
+            await communicator.send_to(
+                text_data=json.dumps({
+                    'type': WS_MSG_CREATE_SESSION,
+                    'channel_id': 'chan-ws-disc',
+                    'identity_disc_id': alt_disc_pk,
+                })
+            )
+            raw = await communicator.receive_from()
+            data = json.loads(raw)
+            self.assertEqual(data['type'], WS_MSG_CREATE_SESSION_ACK)
+            self.assertIn('identity_disc_name', data)
+            self.assertTrue(data['identity_disc_name'])
+
+            session_id = data['session_id']
+            await communicator.disconnect()
+
+            rs = await sync_to_async(ReasoningSession.objects.get)(
+                pk=session_id,
+            )
+            self.assertEqual(str(rs.identity_disc_id), alt_disc_pk)
+
+        asyncio.run(_run())
+
 
 # ------------------------------------------------------------------
 # Epic 2 revision — request_id echo contract

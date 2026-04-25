@@ -11,6 +11,7 @@ from django.core.management.base import BaseCommand
 from talos_gateway.cli.client import CliClient, DisplayCallbacks
 from talos_gateway.cli.display import (
     format_error,
+    format_identity_disc_list,
     format_response_complete,
     format_session_info,
     format_session_list,
@@ -49,10 +50,11 @@ async def run_cli_main_async(
     port: int,
     channel: str,
     session: Optional[str],
+    identity_disc_id: Optional[str] = None,
 ) -> None:
     """Connect to the gateway WebSocket and run the interactive REPL."""
     ws_url = 'ws://%s:%s/ws/gateway/stream/' % (host, port)
-    client = CliClient(ws_url, channel)
+    client = CliClient(ws_url, channel, identity_disc_id=identity_disc_id)
     callbacks = DisplayCallbacks(
         on_token=_cli_listen_on_token,
         on_complete=_cli_listen_on_complete,
@@ -69,13 +71,20 @@ async def run_cli_main_async(
                 format_session_info(session_id, 'joined', '') + '\n'
             )
         else:
-            result = await client.send_create_session()
+            result = await client.send_create_session(
+                identity_disc_id=identity_disc_id,
+            )
             session_id = result.get('session_id', '')
             sys.stdout.write(
                 format_session_info(
                     session_id, 'new', result.get('channel_id', channel)
                 ) + '\n'
             )
+            identity_disc_name = result.get('identity_disc_name', '')
+            if identity_disc_name:
+                sys.stdout.write(
+                    '[identity] %s\n' % identity_disc_name
+                )
 
         sys.stdout.write(print_welcome() + '\n')
         sys.stdout.flush()
@@ -95,13 +104,20 @@ async def run_cli_main_async(
             if cmd == 'quit':
                 break
             elif cmd == 'new':
-                r = await client.send_create_session()
+                r = await client.send_create_session(
+                    identity_disc_id=identity_disc_id,
+                )
                 session_id = r.get('session_id', '')
                 sys.stdout.write(
                     format_session_info(
                         session_id, 'new', r.get('channel_id', '')
                     ) + '\n'
                 )
+                identity_disc_name = r.get('identity_disc_name', '')
+                if identity_disc_name:
+                    sys.stdout.write(
+                        '[identity] %s\n' % identity_disc_name
+                    )
             elif cmd == 'sessions':
                 sessions = await client.send_list_sessions()
                 sys.stdout.write(format_session_list(sessions) + '\n')
@@ -172,8 +188,26 @@ class Command(BaseCommand):
             default=None,
             help='UUID of an existing session to resume',
         )
+        parser.add_argument(
+            '--identity-disc',
+            type=str,
+            default=None,
+            help='UUID of the identity disc to use for this session',
+        )
+        parser.add_argument(
+            '--list-identity-discs',
+            action='store_true',
+            help=(
+                'List available IdentityDiscs and exit without connecting '
+                'to the gateway.'
+            ),
+        )
 
     def handle(self, *args, **options):
+        if options.get('list_identity_discs'):
+            self._print_available_identity_discs()
+            return
+
         try:
             asyncio.run(
                 run_cli_main_async(
@@ -181,7 +215,29 @@ class Command(BaseCommand):
                     port=options['port'],
                     channel=options['channel'],
                     session=options.get('session'),
+                    identity_disc_id=options.get('identity_disc'),
                 )
             )
         except KeyboardInterrupt:
             self.stdout.write('\nGoodbye.\n')
+
+    def _print_available_identity_discs(self) -> None:
+        """Print available IdentityDiscs and return without connecting."""
+        from identity.models import IdentityDisc
+
+        rows: list[dict] = []
+        qs = (
+            IdentityDisc.objects.filter(available=True)
+            .select_related('identity_type')
+            .order_by('name')
+        )
+        for disc in qs:
+            type_name = (
+                disc.identity_type.name if disc.identity_type else ''
+            )
+            rows.append({
+                'name': disc.name or '',
+                'id': str(disc.pk),
+                'identity_type': type_name,
+            })
+        self.stdout.write(format_identity_disc_list(rows))

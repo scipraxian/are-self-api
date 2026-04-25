@@ -67,6 +67,28 @@ def format_error(code: str, message: str) -> str:
     return '[ERROR %s] %s' % (code, message)
 
 
+def format_identity_disc_list(discs: list[dict]) -> str:
+    """Format a list of available IdentityDiscs as a readable table.
+
+    Each ``dict`` is expected to expose ``name``, ``id`` and
+    ``identity_type`` keys; missing values render as empty strings.
+    """
+    if not discs:
+        return 'No available IdentityDiscs.'
+
+    lines = ['  %-24s  %-36s  %s' % ('NAME', 'ID', 'TYPE')]
+    lines.append('  ' + '-' * 70)
+    for d in discs:
+        lines.append(
+            '  %-24s  %-36s  %s' % (
+                d.get('name', ''),
+                d.get('id', ''),
+                d.get('identity_type', ''),
+            )
+        )
+    return '\n'.join(lines)
+
+
 def print_welcome() -> str:
     """Return a welcome banner with available commands."""
     return (

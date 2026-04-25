@@ -33,6 +33,12 @@ class SessionManager(object):
             )
         return disc
 
+    def _resolve_identity_by_id(self, identity_disc_id: str) -> IdentityDisc:
+        """Fetch a specific available IdentityDisc by UUID, or raise."""
+        return IdentityDisc.objects.get(
+            pk=identity_disc_id, available=True
+        )
+
     def _resolve_identity_for_envelope(
         self, envelope: PlatformEnvelope,
     ) -> IdentityDisc:
@@ -135,10 +141,23 @@ class SessionManager(object):
         return results
 
     def create_session(
-        self, platform: str, channel_id: str
+        self,
+        platform: str,
+        channel_id: str,
+        identity_disc_id: Optional[str] = None,
     ) -> Tuple[GatewaySession, ReasoningSession]:
-        """Create a new gateway + reasoning session pair without an envelope."""
-        identity_disc = self._resolve_identity_disc()
+        """Create a new gateway + reasoning session pair without an envelope.
+
+        When ``identity_disc_id`` is supplied and resolves to an available
+        :class:`IdentityDisc`, the new ``ReasoningSession`` is pinned to that
+        disc; otherwise the configured default fallback is used. Identity is
+        applied at creation because live sessions intentionally ignore later
+        identity changes (see :meth:`resolve_session`).
+        """
+        if identity_disc_id:
+            identity_disc = self._resolve_identity_by_id(identity_disc_id)
+        else:
+            identity_disc = self._resolve_identity_disc()
         rs = ReasoningSession.objects.create(
             identity_disc=identity_disc,
             status_id=ReasoningStatusID.PENDING,

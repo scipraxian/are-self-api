@@ -205,3 +205,29 @@ class SessionManagerTests(CommonFixturesAPITestCase):
         self.assertEqual(gs.channel_id, 'chan-create-1')
         self.assertEqual(gs.reasoning_session_id, rs.pk)
         self.assertEqual(str(rs.identity_disc_id), THALAMUS_DISC_PK)
+
+    def test_create_session_pins_identity_disc_when_id_provided(self):
+        """Assert create_session honors a supplied identity_disc_id."""
+        sm = SessionManager()
+        _gs, rs = sm.create_session(
+            'cli', 'chan-create-id', identity_disc_id=ALT_DISC_PK,
+        )
+        self.assertEqual(str(rs.identity_disc_id), ALT_DISC_PK)
+
+    def test_create_session_falls_back_to_default_when_id_missing(self):
+        """Assert create_session uses the default disc when id is omitted."""
+        sm = SessionManager()
+        _gs, rs = sm.create_session('cli', 'chan-create-default')
+        self.assertEqual(str(rs.identity_disc_id), THALAMUS_DISC_PK)
+
+    def test_create_session_invalid_identity_disc_id_raises(self):
+        """Assert create_session raises when identity_disc_id is unknown."""
+        sm = SessionManager()
+        from identity.models import IdentityDisc
+
+        with self.assertRaises(IdentityDisc.DoesNotExist):
+            sm.create_session(
+                'cli',
+                'chan-create-bad-id',
+                identity_disc_id='00000000-0000-0000-0000-000000000000',
+            )

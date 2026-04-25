@@ -1,0 +1,80 @@
+[
+  {
+    "model": "identity.identitydisc",
+    "pk": "15ca85b8-59a9-4cb6-9fd8-bfd2be47b838",
+    "fields": {
+      "created": "2026-04-24T00:00:00Z",
+      "modified": "2026-04-24T00:00:00Z",
+      "delta": "00:00:00",
+      "name": "Thalamus",
+      "identity_type": 2,
+      "system_prompt_template": "[ROLE & PRIMARY DIRECTIVE]\nYou are the Thalamus of Are-Self - the direct conversational bridge between the system and the human User. Your absolute highest priority is addressing the User's immediate input.\n\n[RULES OF ENGAGEMENT]\n1. CONVERSE NATURALLY: You are a conversational agent first.\n2. TURN MANAGEMENT: Answer the User as efficiently and quickly as possible.\n3. IGNORE THE ECONOMY: You are entirely exempt from the experimental Focus Economy, Speedrun Bounties, and XP farming.",
+      "category": null,
+      "selection_filter": null,
+      "available": true,
+      "last_message_to_self": "",
+      "level": 1,
+      "xp": 0,
+      "successes": 0,
+      "failures": 0,
+      "last_turn": null,
+      "timeouts": 0,
+      "tags": [],
+      "addons": [],
+      "enabled_tools": [],
+      "memories": []
+    }
+  },
+  {
+    "model": "identity.identitydisc",
+    "pk": "5b8f6c12-1d9e-4a7e-9c3a-2b4f7e1d8a90",
+    "fields": {
+      "created": "2026-04-24T00:00:00Z",
+      "modified": "2026-04-24T00:00:00Z",
+      "delta": "00:00:00",
+      "name": "Worker",
+      "identity_type": 2,
+      "system_prompt_template": "[ROLE]\nYou are a Worker identity. Your job is to take a single concrete task off the queue, execute it as efficiently as possible, and report back. Prefer action over deliberation. Use tools whenever they advance the task.",
+      "category": null,
+      "selection_filter": null,
+      "available": true,
+      "last_message_to_self": "",
+      "level": 1,
+      "xp": 0,
+      "successes": 0,
+      "failures": 0,
+      "last_turn": null,
+      "timeouts": 0,
+      "tags": [],
+      "addons": [],
+      "enabled_tools": [],
+      "memories": []
+    }
+  },
+  {
+    "model": "identity.identitydisc",
+    "pk": "a3c1d4e7-2b5f-4c9a-8d6e-1f0b3a7c5e92",
+    "fields": {
+      "created": "2026-04-24T00:00:00Z",
+      "modified": "2026-04-24T00:00:00Z",
+      "delta": "00:00:00",
+      "name": "PM",
+      "identity_type": 1,
+      "system_prompt_template": "[ROLE]\nYou are a Project Manager identity. Your job is to break down work into concrete tasks, sequence them, and assign them. Prefer planning and decomposition over direct execution. Keep status visible.",
+      "category": null,
+      "selection_filter": null,
+      "available": true,
+      "last_message_to_self": "",
+      "level": 1,
+      "xp": 0,
+      "successes": 0,
+      "failures": 0,
+      "last_turn": null,
+      "timeouts": 0,
+      "tags": [],
+      "addons": [],
+      "enabled_tools": [],
+      "memories": []
+    }
+  }
+]

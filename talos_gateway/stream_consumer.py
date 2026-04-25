@@ -73,6 +73,15 @@ def _error_payload(
     return payload
 
 
+def _disc_name_for_session(reasoning_session: Any) -> str:
+    """Return the IdentityDisc name on a ReasoningSession, or empty string."""
+    disc = getattr(reasoning_session, 'identity_disc', None)
+    if disc is None:
+        return ''
+    name = getattr(disc, 'name', '') or ''
+    return str(name)
+
+
 def _extract_request_id(data: dict[str, Any]) -> Optional[str]:
     """Return a string ``request_id`` from an inbound frame, else ``None``."""
     raw = data.get('request_id')
@@ -421,12 +430,23 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
     ) -> None:
         """Create a new session and auto-join its channel group.
 
+        Honors an inbound ``identity_disc_id`` so the CLI can pick which
+        IdentityDisc the new ReasoningSession is pinned to. Identity must be
+        applied here, not on the first ``send_message`` — live sessions
+        intentionally ignore later identity changes.
+
         ORM called synchronously — see ``_handle_list_sessions`` docstring.
         """
         channel_id = data.get('channel_id', 'cli-%s' % id(self))
+        raw_identity_disc_id = data.get('identity_disc_id')
+        identity_disc_id: Optional[str] = None
+        if isinstance(raw_identity_disc_id, str) and raw_identity_disc_id:
+            identity_disc_id = raw_identity_disc_id
         try:
             sm = SessionManager()
-            gs, rs = await sync_to_async(sm.create_session)(CLI_PLATFORM, channel_id)
+            gs, rs = await sync_to_async(sm.create_session)(
+                CLI_PLATFORM, channel_id, identity_disc_id,
+            )
         except Exception as exc:
             logger.exception(
                 '[GatewayTokenStreamConsumer] create_session failed: %s.', exc
@@ -460,6 +480,9 @@ class GatewayTokenStreamConsumer(AsyncWebsocketConsumer):
             'session_id': str(rs.pk),
             'channel_id': gs.channel_id,
         }
+        identity_disc_name = await sync_to_async(_disc_name_for_session)(rs)
+        if identity_disc_name:
+            ack['identity_disc_name'] = identity_disc_name
         if request_id:
             ack['request_id'] = request_id
         await self.send(text_data=json.dumps(ack))

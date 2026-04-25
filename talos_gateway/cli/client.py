@@ -133,12 +133,23 @@ class CliClient(object):
         ack = await self._request({'type': WS_MSG_LIST_SESSIONS})
         return ack.get('sessions', [])
 
-    async def send_create_session(self) -> dict:
-        """Create a session and return the matching ``create_session_ack``."""
-        return await self._request({
+    async def send_create_session(
+        self, identity_disc_id: Optional[str] = None,
+    ) -> dict:
+        """Create a session and return the matching ``create_session_ack``.
+
+        ``identity_disc_id`` overrides the per-client default set in
+        ``__init__`` for this single create_session call. When neither value
+        is provided, the gateway falls back to its configured default disc.
+        """
+        payload: dict[str, Any] = {
             'type': WS_MSG_CREATE_SESSION,
             'channel_id': self.channel_id,
-        })
+        }
+        chosen = identity_disc_id or self.identity_disc_id
+        if chosen:
+            payload['identity_disc_id'] = chosen
+        return await self._request(payload)
 
     async def _request(self, payload: dict[str, Any]) -> dict:
         """Send a request frame with a fresh ``request_id`` and await the ack."""
