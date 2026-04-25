@@ -977,6 +977,36 @@ remains invisible there. The v1→v2 migration is tracked separately under
   Docker release. Keep readable versions in version control.
 - [ ] **Expose tool calls in Thalamus chat history.** Check the Vercel AI SDK `parts` schema — tool calls
   should be `tool-call` and `tool-result` parts.
+- [ ] **Clear Thalamus chat history from the chat window.** Give the user a way to wipe the visible
+  conversation and start fresh. Current state: the Thalamus UI hydrates from
+  `GET /thalamus/messages` which walks the most-recent `SpikeTrain` on `NeuralPathway.THALAMUS`
+  → most-recent `ReasoningSession` on that train → `get_chat_history(session)`. There is no
+  clear / reset action exposed today — the only way to empty the window is a full DB wipe.
+
+  **Backend task:** add `POST /thalamus/clear/` on `ThalamusViewSet` (new `@action(detail=False,
+  methods=['post'])`). Cleanest semantics: conclude the active `ReasoningSession` on the
+  standing train (status → `CONCLUDED`) so the next `interact` call falls through to the
+  genesis branch and spawns a fresh Spike + Session. That preserves history in the DB
+  (engrams, tool calls, PFC cross-refs all survive) while making the chat window read empty
+  — `messages` walks the *latest* session and a brand-new one has no turns yet. Alternative
+  considered and rejected: creating a new `SpikeTrain` so the old one falls off the
+  `order_by('-created').first()` lookup — same user-visible outcome, but leaves an orphan
+  RUNNING train around and muddies the standing-train invariant. Concluding the session is
+  cheaper and keeps the standing train singular.
+
+  **Edge cases:** if no standing train exists, return 200 no-op (nothing to clear).
+  If the active session is `ACTIVE` mid-turn, still conclude it — the Frontal Lobe loop checks
+  `session.status_id` each turn and will exit cleanly. Fire an Acetylcholine on
+  `receptor_class='Thalamus'` with `activity='cleared'` so the UI can drop its local cache
+  without a round-trip to `messages`.
+
+  **Companion UI task** (are-self-ui TASKS.md, add there separately): a "Clear chat" /
+  trash-can affordance in the Thalamus chat header that POSTs `/thalamus/clear/` and then
+  empties the assistant-ui thread state.
+
+  **Test:** post an interact, post a clear, post another interact, GET messages — assert
+  only the second round-trip shows. Also assert the old ReasoningSession row is still in
+  the DB with status `CONCLUDED` (we're hiding, not destroying).
 - [ ] **Prompt_addon state awareness.** The prompt_addon should check session ToolCall history and adapt
   the injected objective accordingly. Without this, small models get stuck in loops re-attempting completed
   steps.

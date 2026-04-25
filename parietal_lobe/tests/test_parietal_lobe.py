@@ -5,7 +5,13 @@ import pytest
 from asgiref.sync import sync_to_async
 
 from common.tests.common_test_case import CommonFixturesAPITestCase
-from identity.models import Identity, IdentityDisc, IdentityType
+from identity.addons.focus_addon import FOCUS_ADDON_SLUG
+from identity.models import (
+    Identity,
+    IdentityAddon,
+    IdentityDisc,
+    IdentityType,
+)
 from frontal_lobe.models import (
     ReasoningSession,
     ReasoningStatusID,
@@ -64,6 +70,20 @@ class ParietalLobeTest(CommonFixturesAPITestCase):
             identity_type=worker_type,
             system_prompt_template='Test prompt',
         )
+        # Attach the Focus Game addon so the parietal lobe gates ON the
+        # fizzle + focus/XP ledger via the Focus handler. Tests that want the
+        # opt-out behavior should remove this attachment (see
+        # test_handle_tool_execution_no_focus_addon_no_fizzle below).
+        # Under the handler-pattern cutover, dispatch resolves by
+        # addon_class_name — function_slug is retained for the legacy
+        # ADDON_REGISTRY fallback in frontal_lobe but is not what gates
+        # tool pre/post. 'Focus' maps to identity.addons.handlers.focus.Focus.
+        self.focus_addon_row = IdentityAddon.objects.create(
+            name='Focus Addon (test)',
+            function_slug=FOCUS_ADDON_SLUG,
+            addon_class_name='Focus',
+        )
+        self.identity_disc.addons.add(self.focus_addon_row)
         self.session.identity_disc = self.identity_disc
         self.session.save(update_fields=['identity_disc'])
 
@@ -278,3 +298,70 @@ class ParietalLobeTest(CommonFixturesAPITestCase):
         args, kwargs = mock_execute.call_args
         self.assertEqual(args[0], 'mcp_pass')
         self.assertEqual(args[1]['session_id'], str(self.session.id))
+
+    @pytest.mark.asyncio
+    @patch('parietal_lobe.parietal_lobe.ParietalMCP.execute')
+    async def test_handle_tool_execution_no_focus_addon_no_fizzle(
+        self, mock_execute
+    ):
+        """Discs without the Focus Game addon must not fizzle or mutate focus.
+
+        Regression guard: before the addon gate landed, parietal_lobe enforced
+        the focus economy on every disc unconditionally, breaking opt-out
+        spiketrains with 'Insufficient Focus' fizzles the first time they
+        tried an expensive tool. Removing the focus_addon attachment here
+        simulates an opt-out disc; the tool must execute normally and the
+        session's current_focus/total_xp must not move.
+        """
+        # Remove the focus_addon attachment set up in setUp(). Handler
+        # dispatch reads the disc's addons directly at each tool call, so
+        # rebuilding ParietalLobe isn't strictly necessary — but keeping the
+        # rebuild leaves this test robust against future re-introduction of
+        # per-session caching in ParietalLobe.
+        await sync_to_async(self.identity_disc.addons.remove)(
+            self.focus_addon_row
+        )
+        self.parietal_lobe = ParietalLobe(self.session, lambda msg: None)
+
+        mock_execute.return_value = 'DUMMY_RESULT'
+
+        tool_def = await sync_to_async(ToolDefinition.objects.create)(
+            name='mcp_expensive_tool',
+            is_async=True,
+        )
+        mechanics = await sync_to_async(ToolUseType.objects.create)(
+            focus_modifier=-10,  # Would fizzle a disc that had the addon.
+            xp_reward=10,
+        )
+        tool_def.use_type = mechanics
+        await sync_to_async(tool_def.save)()
+
+        tool_call_data = {
+            'function': {
+                'name': 'mcp_expensive_tool',
+                'arguments': '{}',
+            }
+        }
+
+        result = await self.parietal_lobe.handle_tool_execution(
+            self.turn, tool_call_data
+        )
+
+        # Tool actually ran — no fizzle short-circuit.
+        mock_execute.assert_called_once()
+        self.assertEqual(result['content'], 'DUMMY_RESULT')
+        self.assertNotIn(
+            'SYSTEM OVERRIDE: Effector Fizzled!', result['content']
+        )
+
+        # Ledger did not move — the addon is the single source of truth for
+        # the economy, and it isn't attached.
+        await sync_to_async(self.session.refresh_from_db)()
+        self.assertEqual(self.session.current_focus, 5)
+        self.assertEqual(self.session.total_xp, 0)
+
+        # ToolCall row still records the execution as COMPLETED.
+        tool_call = await sync_to_async(
+            ToolCall.objects.filter(turn=self.turn).first
+        )()
+        self.assertEqual(tool_call.status_id, ReasoningStatusID.COMPLETED)

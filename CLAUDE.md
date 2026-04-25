@@ -525,39 +525,95 @@ Built-in generics (`list`, `dict`) not `typing.List`, `typing.Dict`.
 
 ## Addon System (Identity Addons)
 
-Pure synchronous functions registered in `identity/addons/addon_registry.py` (`ADDON_REGISTRY` dict).
-Each addon receives a `ReasoningTurn` and returns `List[Dict[str, Any]]` — messages to inject into
-the LLM payload.
+Class-based handlers registered in `identity/addons/_handler_registry.py`
+(`HANDLER_REGISTRY` dict, keyed by `IdentityAddon.addon_class_name`). Each
+handler inherits `IdentityAddonHandler` (in `identity/addons/_handler.py`)
+and implements one or more lifecycle hooks:
 
-### Phases (executed in order)
-| Phase | ID | Purpose |
-|-------|----|---------|
-| IDENTIFY | 1 | Identity/persona injection |
-| CONTEXT | 2 | Environmental context |
-| HISTORY | 3 | Conversation history reconstruction |
-| TERMINAL | 4 | Final payload items (prompt, your_move) |
+| Hook | Called by | Contract |
+|------|-----------|----------|
+| `on_identify(turn)` | phase dispatch (phase 1) | returns `List[Dict]` messages |
+| `on_context(turn)`  | phase dispatch (phase 2) | returns `List[Dict]` messages |
+| `on_history(turn)`  | phase dispatch (phase 3) | returns `List[Dict]` messages |
+| `on_terminal(turn)` | phase dispatch (phase 4) | returns `List[Dict]` messages |
+| `on_tool_pre(session, mechanics)`  | parietal_lobe before tool exec | returns `str` fizzle msg or `None` |
+| `on_tool_post(session, mechanics, result)` | parietal_lobe after tool exec | side-effect only (no return) |
 
-### Turn Assembly Order (`_build_turn_payload` in `frontal_lobe.py`)
-1. Phase 1→2→3→4 addons execute in order, each appending messages
-2. `swarm_message_queue` messages are tagged with `<<h>>` prefix and appended
-3. `compile_system_messages()` hoists all system messages to index 0
+Handlers are stateless singletons — one instance per class, constructed once
+at module import. If you need per-disc state, put it on the disc or session,
+not the handler.
+
+### Dispatch
+
+Phase dispatch (`dispatch_phase` in `_handler_registry.py`) looks up the
+handler by `IdentityAddon.addon_class_name`, then calls the lifecycle method
+whose name matches `IdentityAddon.phase_id`
+(`PHASE_METHOD = {1: 'on_identify', 2: 'on_context', 3: 'on_history', 4: 'on_terminal'}`).
+The frontal_lobe dispatch loop is phase-agnostic — it just iterates the
+disc's addon rows in phase order and calls `dispatch_phase` on each.
+
+Tool lifecycle dispatch (`dispatch_tool_pre`, `dispatch_tool_post` in the
+same file) iterates handlers attached to the disc. `on_tool_pre` is
+**first-veto** — any non-None return fizzles the tool. `on_tool_post` is
+**collect-all** — every handler sees every tool result.
+
+### Three-branch fallback in `_build_turn_payload`
+
+The frontal_lobe addon loop handles each `IdentityAddon` row by checking,
+in order:
+
+1. **Handler path (preferred):** `addon_class_name` populated and present in
+   `HANDLER_REGISTRY` → call `dispatch_phase(addon, turn)`.
+2. **Legacy function path (deprecated):** `function_slug` populated and
+   present in `ADDON_REGISTRY` → call the function, append its messages.
+3. **Native text path:** `description` populated → inject it as a single
+   `role: system` message.
+
+Once every row carries `addon_class_name`, branches 2 and 3 can be removed
+along with `identity/addons/*_addon.py` and `addon_registry.py`. Until then
+they stay on disk as a safety net for any row that wasn't migrated.
+
+### Turn Assembly Order
+1. Phase 1→2→3→4 addons execute in order, each appending messages.
+2. `swarm_message_queue` messages are tagged with `<<h>>` prefix and appended.
+3. `compile_system_messages()` hoists all system messages to index 0.
 
 ### The `<<h>>` Human Message Tagging System
-**Problem solved:** The prompt_addon (Phase 4 TERMINAL) injects the task prompt as a `role: user`
-message every turn. The river_of_six addon (Phase 3 HISTORY) replays previous turns' user messages
-from `request_payload`. Without differentiation, the same prompt appeared twice from turn 2 onward.
+**Problem solved:** the `Prompt` handler (Phase 4 TERMINAL) injects the task
+prompt as a `role: user` message every turn. `RiverOfSix` (Phase 3 HISTORY)
+replays previous turns' user messages from `request_payload`. Without
+differentiation, the same prompt appeared twice from turn 2 onward.
 
-**Solution:** Human messages from `swarm_message_queue` get `<<h>>\n` prepended to their content
-in `_build_turn_payload`. The river_of_six addon's `_extract_user_messages()` only replays user
-messages that start with `<<h>>`. Addon-injected user messages (prompt_addon, etc.) have no tag
-and are skipped — the addon re-injects them fresh each turn.
+**Solution:** human messages from `swarm_message_queue` get `<<h>>\n`
+prepended to their content in `_build_turn_payload`. The `RiverOfSix`
+handler's `_extract_user_messages()` only replays user messages that start
+with `<<h>>`. Addon-injected user messages (Prompt, etc.) have no tag and
+are skipped — the addon re-injects them fresh each turn.
 
-**Constants:** `HUMAN_TAG = '<<h>>'` is defined in `identity/addons/river_of_six_addon.py`.
-`ROLE = 'role'` and `CONTENT = 'content'` are defined in `frontal_lobe/frontal_lobe.py`.
-TODO: Move `HUMAN_TAG` to a shared constants file and import everywhere.
+**Constants:** `HUMAN_TAG = '<<h>>'` lives in `common/constants.py` and is
+imported everywhere it's needed. `ROLE = 'role'` and `CONTENT = 'content'`
+are defined in `frontal_lobe/frontal_lobe.py`.
+
+### Focus Game — single source of truth
+
+The `Focus` handler owns the Focus Game end-to-end:
+
+- `on_context` — injects the per-turn Focus Pool prompt block.
+- `on_tool_pre` — returns a fizzle message if `session.current_focus +
+  mechanics.focus_modifier < 0` (and the cost is negative; synthesis tools
+  always pass).
+- `on_tool_post` — applies the Focus/XP delta. `result.focus_yield` /
+  `result.xp_yield` attribute overrides on the raw tool_result object
+  supersede the `mechanics.focus_modifier` / `mechanics.xp_reward` defaults.
+  Clamps focus to `[0, max_focus]`; `total_xp` is unbounded.
+
+If the disc has no `Focus` addon attached, the game is off — no pool block,
+no fizzle, no ledger. The dispatcher simply doesn't invoke a handler that
+isn't on the disc.
 
 ### River of Six (Phase 3 HISTORY)
-`identity/addons/river_of_six_addon.py` — sliding window of 6 turns with age-based decay.
+`identity/addons/handlers/river_of_six.py` — sliding window of 6 turns with
+age-based decay.
 
 - **Reconstruction sources (atomic, non-duplicating):**
   - `response_payload` → assistant message
@@ -569,13 +625,27 @@ TODO: Move `HUMAN_TAG` to a shared constants file and import everywhere.
   - Age 3 (`EVICTION_WARNING_AGE`): eviction warning appended to tool results
   - Age 2 (`DECAY_WARNING_AGE`): decay warning appended to tool results
 
-### Key Addons Reference
-| PK | Name | Phase | Slug |
-|----|------|-------|------|
-| 8 | Normal Chat | 3 (HISTORY) | `normal_chat_addon` |
-| 13 | River of Six | 3 (HISTORY) | `river_of_six_addon` |
-| 14 | Prompt | 4 (TERMINAL) | `prompt_addon` |
-| 12 | Your Move | 4 (TERMINAL) | `your_move_addon` |
+### Handler Class Reference
+| Class | Phase | File |
+|-------|-------|------|
+| `Agile`         | 2 (CONTEXT)  | `identity/addons/handlers/agile.py` |
+| `Deadline`      | 2 (CONTEXT)  | `identity/addons/handlers/deadline.py` |
+| `Focus`         | 2 (CONTEXT) + tool pre/post | `identity/addons/handlers/focus.py` |
+| `Hippocampus_`  | 2 (CONTEXT)  | `identity/addons/handlers/hippocampus.py` |
+| `IdentityInfo`  | 1 (IDENTIFY) | `identity/addons/handlers/identity_info.py` |
+| `NormalChat`    | 3 (HISTORY)  | `identity/addons/handlers/normal_chat.py` |
+| `Prompt`        | 4 (TERMINAL) | `identity/addons/handlers/prompt.py` |
+| `RiverOfSix`    | 3 (HISTORY)  | `identity/addons/handlers/river_of_six.py` |
+| `Telemetry`     | 2 (CONTEXT)  | `identity/addons/handlers/telemetry.py` |
+| `YourMove`      | 4 (TERMINAL) | `identity/addons/handlers/your_move.py` |
+
+`Hippocampus_` has a trailing underscore to avoid colliding with the
+`hippocampus.hippocampus.Hippocampus` service class it calls into.
+`addon_class_name` on the fixture row matches the class name exactly.
+
+Five native-text addons (The Focus Game rules ×2, Worker, PM, Are-Self
+persona) intentionally have no class — they're pure description text and
+flow through the branch-3 fallback above.
 
 ### response_payload Format
 Provider-agnostic. Can be direct `{role, content, ...}` or OpenAI-style
