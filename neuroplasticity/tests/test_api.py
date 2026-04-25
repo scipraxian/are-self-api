@@ -8,6 +8,7 @@ uninstall-preview live here.
 from __future__ import annotations
 
 from pathlib import Path
+from unittest.mock import patch
 
 from rest_framework.test import APITestCase
 
@@ -100,7 +101,8 @@ class ModifierApiSmokeTest(ModifierLifecycleTestCase, APITestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.json()['status_name'], 'Disabled')
 
-    def test_uninstall_action(self):
+    @patch('neuroplasticity.api.trigger_system_restart')
+    def test_uninstall_action(self, mock_restart_system: patch.object):
         """Assert uninstall deletes the row and returns a minimal payload."""
         build_fake_bundle(self.scratch_root, 'ui_delta')
         self.install_fake('ui_delta')
@@ -108,9 +110,7 @@ class ModifierApiSmokeTest(ModifierLifecycleTestCase, APITestCase):
         res = self.client.post('/api/v2/neural-modifiers/ui_delta/uninstall/')
 
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(
-            res.json(), {'slug': 'ui_delta', 'uninstalled': True}
-        )
+        self.assertEqual(res.json(), {'slug': 'ui_delta', 'uninstalled': True})
         self.assertFalse(
             NeuralModifier.objects.filter(slug='ui_delta').exists()
         )
@@ -196,11 +196,16 @@ class CatalogListReturnsInstalledFlagTest(
         self.assertTrue(rows['cat_installed']['installed'])
         self.assertFalse(rows['cat_available']['installed'])
         self.assertEqual(rows['cat_available']['name'], 'Fake cat_available')
-        self.assertEqual(rows['cat_available']['archive_name'], 'cat_available.zip')
+        self.assertEqual(
+            rows['cat_available']['archive_name'], 'cat_available.zip'
+        )
 
 
 class CatalogInstallCreatesRowTest(ModifierLifecycleTestCase, APITestCase):
-    def test_catalog_install_creates_row_and_clears_operating_room(self):
+    @patch('neuroplasticity.api.trigger_system_restart')
+    def test_catalog_install_creates_row_and_clears_operating_room(
+        self, mock_restart_system: patch.object
+    ):
         """Assert install creates a DB row and the operating_room is empty."""
         build_fake_bundle_archive(self.genomes_root, 'cat_install')
 

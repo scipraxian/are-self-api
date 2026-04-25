@@ -214,6 +214,9 @@ class UnrealBundleReinstallIdempotentTest(UnrealBundleInstallTestCase):
             NeuralModifier.objects.filter(slug=UNREAL_BUNDLE_SLUG).exists()
         )
 
+        # Simulate the coordinated restart: boot_bundles' orphan sweep
+        # clears the deferred runtime dir before the archive reinstall.
+        loader.boot_bundles()
         second_modifier = loader.install_bundle_from_archive(self.archive_path)
         second_count = _total_owned_rows(second_modifier)
         self.assertEqual(first_count, second_count)
@@ -281,6 +284,9 @@ class ThalamusEnabledToolsSoftLookupTest(UnrealBundleInstallTestCase):
         self.assertFalse(
             ToolDefinition.objects.filter(pk=UE_TOOL_DEF_PK).exists()
         )
+        # Simulate the coordinated restart: boot_bundles' orphan sweep
+        # clears the deferred runtime dir before the archive reinstall.
+        loader.boot_bundles()
         loader.install_bundle_from_archive(self.archive_path)
         self.assertTrue(
             ToolDefinition.objects.filter(pk=UE_TOOL_DEF_PK).exists()
