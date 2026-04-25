@@ -1,13 +1,12 @@
 import pytest
 from django.contrib.auth.models import User
-from common.tests.common_test_case import CommonFixturesAPITestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from common.tests.common_test_case import CommonFixturesAPITestCase
 from environments.models import (
     ProjectEnvironment,
     ProjectEnvironmentStatus,
-    ProjectEnvironmentType,
 )
 
 
@@ -22,10 +21,6 @@ class EnvironmentAPITest(CommonFixturesAPITestCase):
 
         # 2. Setup Logic Data
         # Get types from fixture or create if missing
-        self.type_ue = ProjectEnvironmentType.objects.first()
-        if not self.type_ue:
-            self.type_ue = ProjectEnvironmentType.objects.create(name='UE5')
-
         self.status_ok = ProjectEnvironmentStatus.objects.first()
         if not self.status_ok:
             self.status_ok = ProjectEnvironmentStatus.objects.create(
@@ -33,7 +28,6 @@ class EnvironmentAPITest(CommonFixturesAPITestCase):
 
         self.env_dev = ProjectEnvironment.objects.create(
             name='Development_API',
-            type=self.type_ue,
             status=self.status_ok,
             available=True,
             selected=True,
@@ -41,7 +35,6 @@ class EnvironmentAPITest(CommonFixturesAPITestCase):
 
         self.env_stage = ProjectEnvironment.objects.create(
             name='Staging_API',
-            type=self.type_ue,
             status=self.status_ok,
             available=True,
             selected=False,

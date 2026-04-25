@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
-from common.constants import ALL_FIELDS
 from central_nervous_system.constants import ENVIRONMENT_KEY
+from common.constants import ALL_FIELDS
 
 from .models import (
     ContextVariable,
@@ -13,14 +13,7 @@ from .models import (
     ProjectEnvironment,
     ProjectEnvironmentContextKey,
     ProjectEnvironmentStatus,
-    ProjectEnvironmentType,
 )
-
-
-class ProjectEnvironmentTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProjectEnvironmentType
-        fields = ALL_FIELDS
 
 
 class ProjectEnvironmentStatusSerializer(serializers.ModelSerializer):
@@ -53,7 +46,6 @@ class ProjectEnvironmentSerializer(serializers.ModelSerializer):
     'contexts' is read-only nested for display.
     """
 
-    type_name = serializers.CharField(source='type.name', read_only=True)
     status_name = serializers.CharField(source='status.name', read_only=True)
     contexts = ContextVariableSerializer(many=True, read_only=True)
 

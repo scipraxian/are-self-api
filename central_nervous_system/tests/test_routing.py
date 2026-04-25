@@ -14,10 +14,9 @@ from central_nervous_system.models import (
 )
 from common.tests.common_test_case import CommonFixturesAPITestCase
 from environments.models import (
+    Executable,
     ProjectEnvironment,
     ProjectEnvironmentStatus,
-    ProjectEnvironmentType,
-    Executable,
 )
 
 
@@ -25,11 +24,9 @@ class CNSGraphRoutingTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         # Environment
-        env_type = ProjectEnvironmentType.objects.get_or_create(name='UE5')[0]
         env_status = ProjectEnvironmentStatus.objects.get_or_create(
             name='Ready')[0]
         self.env = ProjectEnvironment.objects.create(name='Test Env',
-                                                     type=env_type,
                                                      status=env_status)
         self.env.selected = True
         self.env.save()
@@ -233,11 +230,9 @@ class CNSFleetBroadcastZeroAgentsTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         super().setUp()
-        env_type = ProjectEnvironmentType.objects.get_or_create(name='UE5')[0]
         env_status = ProjectEnvironmentStatus.objects.get_or_create(
             name='Ready')[0]
         self.env = ProjectEnvironment.objects.create(name='Test Env',
-                                                     type=env_type,
                                                      status=env_status)
         self.env.selected = True
         self.env.save()
@@ -311,11 +306,9 @@ class CNSFirstResponderZeroAgentsTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         super().setUp()
-        env_type = ProjectEnvironmentType.objects.get_or_create(name='UE5')[0]
         env_status = ProjectEnvironmentStatus.objects.get_or_create(
             name='Ready')[0]
         self.env = ProjectEnvironment.objects.create(name='Test Env',
-                                                     type=env_type,
                                                      status=env_status)
         self.env.selected = True
         self.env.save()

@@ -23,7 +23,6 @@ from environments.models import (
     Executable,
     ProjectEnvironment,
     ProjectEnvironmentStatus,
-    ProjectEnvironmentType,
 )
 from neuroplasticity import loader
 from neuroplasticity.models import NeuralModifier, NeuralModifierStatus
@@ -43,24 +42,22 @@ def _make_modifier(slug: str) -> NeuralModifier:
     )
 
 
-def _make_project_env(name: str, modifier: NeuralModifier) -> ProjectEnvironment:
+def _make_project_env(
+    name: str, modifier: NeuralModifier
+) -> ProjectEnvironment:
     return ProjectEnvironment.objects.create(
         name=name,
         description='',
-        type=ProjectEnvironmentType.objects.first(),
         status=ProjectEnvironmentStatus.objects.first(),
         genome=modifier,
     )
 
 
 class NeuronEnvironmentCascadeOnBundleRemovalTest(CommonFixturesAPITestCase):
-
     def setUp(self):
         super().setUp()
         self.modifier = _make_modifier('fk-test-env-cascade')
-        self.bundle_env = _make_project_env(
-            'FK Test Bundle Env', self.modifier
-        )
+        self.bundle_env = _make_project_env('FK Test Bundle Env', self.modifier)
         effector = Effector.objects.create(
             name='FK Test Effector',
             executable=Executable.objects.first(),
@@ -83,9 +80,7 @@ class NeuronEnvironmentCascadeOnBundleRemovalTest(CommonFixturesAPITestCase):
         self.assertFalse(
             ProjectEnvironment.objects.filter(pk=self.bundle_env.pk).exists()
         )
-        self.assertFalse(
-            Neuron.objects.filter(pk=self.neuron.pk).exists()
-        )
+        self.assertFalse(Neuron.objects.filter(pk=self.neuron.pk).exists())
         self.assertFalse(
             NeuralPathway.objects.filter(pk=self.pathway.pk).exists()
         )
@@ -106,9 +101,7 @@ class CrossBundleDefaultIterationDefinitionCascadeTest(
         )
         self.env_a = _make_project_env('FK Test A Env', self.modifier_a)
         self.env_a.default_iteration_definition = self.iter_def_b
-        self.env_a.save(
-            update_fields=['default_iteration_definition']
-        )
+        self.env_a.save(update_fields=['default_iteration_definition'])
 
     def test_uninstall_b_cascades_a_env(self):
         """Assert A's env cascades away when B's IterationDefinition goes."""

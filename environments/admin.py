@@ -10,7 +10,6 @@ from .models import (
     ProjectEnvironment,
     ProjectEnvironmentContextKey,
     ProjectEnvironmentStatus,
-    ProjectEnvironmentType,
 )
 
 
@@ -93,11 +92,6 @@ class ExecutableAdmin(admin.ModelAdmin):
     switch_count.short_description = '# Switches'
 
 
-@admin.register(ProjectEnvironmentType)
-class ProjectEnvironmentTypeAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-
-
 @admin.register(ProjectEnvironmentStatus)
 class ProjectEnvironmentStatusAdmin(admin.ModelAdmin):
     list_display = ('name',)
@@ -119,8 +113,8 @@ class EnvironmentContextInline(admin.TabularInline):
 
 @admin.register(ProjectEnvironment)
 class ProjectEnvironmentAdmin(admin.ModelAdmin):
-    list_display = ('name', 'type', 'status', 'variable_count')
-    list_filter = ('type', 'status')
+    list_display = ('name', 'status', 'variable_count')
+    list_filter = ('status',)
     inlines = [EnvironmentContextInline]
 
     def variable_count(self, obj):

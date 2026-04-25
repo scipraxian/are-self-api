@@ -113,12 +113,6 @@ class ProjectEnvironmentStatus(UUIDIdMixin, NameMixin):
     pass
 
 
-class ProjectEnvironmentType(UUIDIdMixin, NameMixin):
-    """Lookup for Environment Type (e.g. UE5, Unity, Custom)."""
-
-    pass
-
-
 class ProjectEnvironment(
     UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin, GenomeOwnedMixin
 ):
@@ -126,7 +120,6 @@ class ProjectEnvironment(
 
     DEFAULT_ENVIRONMENT = uuid.UUID('b7e4c2a1-3f8d-4a9e-9c1f-2d5a8b6f4e21')
 
-    type = models.ForeignKey(ProjectEnvironmentType, on_delete=models.PROTECT)
     status = models.ForeignKey(
         ProjectEnvironmentStatus, on_delete=models.PROTECT
     )

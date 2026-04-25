@@ -7,7 +7,6 @@ from environments.models import (
     ProjectEnvironment,
     ProjectEnvironmentContextKey,
     ProjectEnvironmentStatus,
-    ProjectEnvironmentType,
 )
 from environments.serializers import (
     ContextVariableSerializer,
@@ -19,14 +18,13 @@ from environments.serializers import (
 class EnvironmentSerializersTest(TestCase):
     def setUp(self):
         # Setup basic types
-        self.type_ue = ProjectEnvironmentType.objects.create(name='UE5')
         self.status_active = ProjectEnvironmentStatus.objects.create(
             name='Active'
         )
 
         # Setup Environment
         self.env = ProjectEnvironment.objects.create(
-            name='Test Env', type=self.type_ue, status=self.status_active
+            name='Test Env', status=self.status_active
         )
 
         # Setup Context Keys
@@ -62,9 +60,7 @@ class EnvironmentSerializersTest(TestCase):
 
     def test_executable_serialization(self):
         """Verify ExecutableSerializer handles nested details and updates."""
-        switch = ExecutableSwitch.objects.create(
-            name='Silent', flag='-silent'
-        )
+        switch = ExecutableSwitch.objects.create(name='Silent', flag='-silent')
         exe = Executable.objects.create(
             name='Editor', executable='UnrealEditor.exe', log='editor.log'
         )

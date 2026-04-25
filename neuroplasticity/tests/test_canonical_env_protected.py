@@ -16,7 +16,6 @@ from __future__ import annotations
 from environments.models import (
     ProjectEnvironment,
     ProjectEnvironmentStatus,
-    ProjectEnvironmentType,
 )
 from neuroplasticity import loader
 from neuroplasticity.models import NeuralModifier
@@ -36,18 +35,12 @@ class _CanonicalEnvSetupMixin:
     """
 
     def _ensure_canonical_env(self) -> ProjectEnvironment:
-        env_type = ProjectEnvironmentType.objects.create(
-            name='Test Type'
-        )
-        env_status = ProjectEnvironmentStatus.objects.create(
-            name='Test Status'
-        )
+        env_status = ProjectEnvironmentStatus.objects.create(name='Test Status')
         canonical = NeuralModifier.objects.get(pk=NeuralModifier.CANONICAL)
         env, _ = ProjectEnvironment.objects.update_or_create(
             pk=ProjectEnvironment.DEFAULT_ENVIRONMENT,
             defaults={
                 'name': 'Canonical Env',
-                'type': env_type,
                 'status': env_status,
                 'available': True,
                 'selected': False,
@@ -69,24 +62,23 @@ class CanonicalEnvIsProtectedTest(
         original_name = canonical_env.name
         self.assertEqual(canonical_env.genome_id, NeuralModifier.CANONICAL)
 
-        payload = [{
-            'model': 'environments.projectenvironment',
-            'pk': default_pk,
-            'fields': {
-                'created': '2026-04-23T00:00:00Z',
-                'modified': '2026-04-23T00:00:00Z',
-                'description': 'bundle trying to steal canonical env',
-                'name': 'stolen-env',
-                'type': str(canonical_env.type_id),
-                'status': str(canonical_env.status_id),
-                'available': True,
-                'selected': False,
-                'default_iteration_definition': None,
-            },
-        }]
-        build_fake_bundle(
-            self.scratch_root, 'envthief', modifier_data=payload
-        )
+        payload = [
+            {
+                'model': 'environments.projectenvironment',
+                'pk': default_pk,
+                'fields': {
+                    'created': '2026-04-23T00:00:00Z',
+                    'modified': '2026-04-23T00:00:00Z',
+                    'description': 'bundle trying to steal canonical env',
+                    'name': 'stolen-env',
+                    'status': str(canonical_env.status_id),
+                    'available': True,
+                    'selected': False,
+                    'default_iteration_definition': None,
+                },
+            }
+        ]
+        build_fake_bundle(self.scratch_root, 'envthief', modifier_data=payload)
 
         with self.assertRaisesRegex(RuntimeError, 'canonical'):
             self.install_fake('envthief')
@@ -109,24 +101,23 @@ class BundleContributedEnvCascadesOnUninstallTest(
         canonical_env = self._ensure_canonical_env()
         bundle_env_pk = '11111111-2222-3333-4444-555555555555'
 
-        payload = [{
-            'model': 'environments.projectenvironment',
-            'pk': bundle_env_pk,
-            'fields': {
-                'created': '2026-04-23T00:00:00Z',
-                'modified': '2026-04-23T00:00:00Z',
-                'description': 'bundle-contributed env',
-                'name': 'bundle-env',
-                'type': str(canonical_env.type_id),
-                'status': str(canonical_env.status_id),
-                'available': True,
-                'selected': False,
-                'default_iteration_definition': None,
-            },
-        }]
-        build_fake_bundle(
-            self.scratch_root, 'envbundle', modifier_data=payload
-        )
+        payload = [
+            {
+                'model': 'environments.projectenvironment',
+                'pk': bundle_env_pk,
+                'fields': {
+                    'created': '2026-04-23T00:00:00Z',
+                    'modified': '2026-04-23T00:00:00Z',
+                    'description': 'bundle-contributed env',
+                    'name': 'bundle-env',
+                    'status': str(canonical_env.status_id),
+                    'available': True,
+                    'selected': False,
+                    'default_iteration_definition': None,
+                },
+            }
+        ]
+        build_fake_bundle(self.scratch_root, 'envbundle', modifier_data=payload)
 
         self.install_fake('envbundle')
         self.assertTrue(

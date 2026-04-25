@@ -68,7 +68,6 @@
       "description": "Simple default environment (zygote)",
       "modified": "2026-04-15T00:00:00Z",
       "name": "Default Environment",
-      "type": "65a5bf17-4a6a-41a5-9972-b049b6acd113",
       "status": "e1bb67a5-1b86-5636-9464-be50af5c7863",
       "available": true,
       "selected": true,

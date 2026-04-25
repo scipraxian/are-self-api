@@ -27,15 +27,14 @@ from central_nervous_system.models import (
     Neuron,
     NeuronContext,
     Spike,
-    SpikeTrain,
     SpikeStatus,
+    SpikeTrain,
 )
 from common.tests.common_test_case import CommonFixturesAPITestCase
 from environments.models import (
     Executable,
     ProjectEnvironment,
     ProjectEnvironmentStatus,
-    ProjectEnvironmentType,
 )
 
 
@@ -44,16 +43,19 @@ class LogicNodeTestBase(CommonFixturesAPITestCase):
 
     def setUp(self):
         super().setUp()
-        env_type = ProjectEnvironmentType.objects.get_or_create(name='Test')[0]
-        env_status = ProjectEnvironmentStatus.objects.get_or_create(name='Ready')[0]
+        env_status = ProjectEnvironmentStatus.objects.get_or_create(
+            name='Ready'
+        )[0]
         self.env = ProjectEnvironment.objects.create(
-            name='Test Env', type=env_type, status=env_status, selected=True
+            name='Test Env', status=env_status, selected=True
         )
 
         self.exe = Executable.objects.create(
             name='LogicExe', executable='pathway_logic_neuron', internal=True
         )
-        self.effector = Effector.objects.create(name='LogicNode', executable=self.exe)
+        self.effector = Effector.objects.create(
+            name='LogicNode', executable=self.exe
+        )
         self.pathway = NeuralPathway.objects.create(name='Test Pathway')
         self.neuron = Neuron.objects.create(
             pathway=self.pathway,
@@ -295,7 +297,8 @@ class GateModeTest(LogicNodeTestBase):
     def test_exists_passes_when_key_present(self):
         """Assert gate passes when key exists in axoplasm."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='task_type',
+            logic_mode=MODE_GATE,
+            gate_key='task_type',
             gate_operator=OP_EXISTS,
         )
         spike = self._make_spike(axoplasm={'task_type': 'art'})
@@ -308,7 +311,8 @@ class GateModeTest(LogicNodeTestBase):
     def test_exists_fails_when_key_missing(self):
         """Assert gate fails when key is not in axoplasm."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='task_type',
+            logic_mode=MODE_GATE,
+            gate_key='task_type',
             gate_operator=OP_EXISTS,
         )
         spike = self._make_spike(axoplasm={})
@@ -321,7 +325,8 @@ class GateModeTest(LogicNodeTestBase):
     def test_exists_passes_when_value_is_empty_string(self):
         """Assert gate EXISTS passes even if value is empty string."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='task_type',
+            logic_mode=MODE_GATE,
+            gate_key='task_type',
             gate_operator=OP_EXISTS,
         )
         spike = self._make_spike(axoplasm={'task_type': ''})
@@ -334,7 +339,8 @@ class GateModeTest(LogicNodeTestBase):
     def test_exists_passes_when_value_is_zero(self):
         """Assert gate EXISTS passes when value is numeric 0."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='count',
+            logic_mode=MODE_GATE,
+            gate_key='count',
             gate_operator=OP_EXISTS,
         )
         spike = self._make_spike(axoplasm={'count': 0})
@@ -347,8 +353,10 @@ class GateModeTest(LogicNodeTestBase):
     def test_equals_passes_on_match(self):
         """Assert gate passes when axoplasm value equals expected."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='task_type',
-            gate_operator=OP_EQUALS, gate_value='art',
+            logic_mode=MODE_GATE,
+            gate_key='task_type',
+            gate_operator=OP_EQUALS,
+            gate_value='art',
         )
         spike = self._make_spike(axoplasm={'task_type': 'art'})
 
@@ -359,8 +367,10 @@ class GateModeTest(LogicNodeTestBase):
     def test_equals_fails_on_mismatch(self):
         """Assert gate fails when axoplasm value does not equal expected."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='task_type',
-            gate_operator=OP_EQUALS, gate_value='art',
+            logic_mode=MODE_GATE,
+            gate_key='task_type',
+            gate_operator=OP_EQUALS,
+            gate_value='art',
         )
         spike = self._make_spike(axoplasm={'task_type': 'code'})
 
@@ -371,8 +381,10 @@ class GateModeTest(LogicNodeTestBase):
     def test_not_equals_passes_on_mismatch(self):
         """Assert gate passes when axoplasm value differs from expected."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='task_type',
-            gate_operator=OP_NOT_EQUALS, gate_value='art',
+            logic_mode=MODE_GATE,
+            gate_key='task_type',
+            gate_operator=OP_NOT_EQUALS,
+            gate_value='art',
         )
         spike = self._make_spike(axoplasm={'task_type': 'code'})
 
@@ -383,8 +395,10 @@ class GateModeTest(LogicNodeTestBase):
     def test_not_equals_fails_on_match(self):
         """Assert gate NOT_EQUALS fails when values are equal."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='task_type',
-            gate_operator=OP_NOT_EQUALS, gate_value='art',
+            logic_mode=MODE_GATE,
+            gate_key='task_type',
+            gate_operator=OP_NOT_EQUALS,
+            gate_value='art',
         )
         spike = self._make_spike(axoplasm={'task_type': 'art'})
 
@@ -395,8 +409,10 @@ class GateModeTest(LogicNodeTestBase):
     def test_gt_passes_when_greater(self):
         """Assert gate passes on numeric greater-than comparison."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='score',
-            gate_operator=OP_GT, gate_value='50',
+            logic_mode=MODE_GATE,
+            gate_key='score',
+            gate_operator=OP_GT,
+            gate_value='50',
         )
         spike = self._make_spike(axoplasm={'score': '75'})
 
@@ -407,8 +423,10 @@ class GateModeTest(LogicNodeTestBase):
     def test_gt_fails_when_equal(self):
         """Assert gate fails when value equals threshold (not strictly >)."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='score',
-            gate_operator=OP_GT, gate_value='50',
+            logic_mode=MODE_GATE,
+            gate_key='score',
+            gate_operator=OP_GT,
+            gate_value='50',
         )
         spike = self._make_spike(axoplasm={'score': '50'})
 
@@ -419,8 +437,10 @@ class GateModeTest(LogicNodeTestBase):
     def test_gt_fails_when_less(self):
         """Assert gate GT fails when axoplasm value is less."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='score',
-            gate_operator=OP_GT, gate_value='50',
+            logic_mode=MODE_GATE,
+            gate_key='score',
+            gate_operator=OP_GT,
+            gate_value='50',
         )
         spike = self._make_spike(axoplasm={'score': '25'})
 
@@ -431,8 +451,10 @@ class GateModeTest(LogicNodeTestBase):
     def test_lt_passes_when_less(self):
         """Assert gate passes on numeric less-than comparison."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='score',
-            gate_operator=OP_LT, gate_value='50',
+            logic_mode=MODE_GATE,
+            gate_key='score',
+            gate_operator=OP_LT,
+            gate_value='50',
         )
         spike = self._make_spike(axoplasm={'score': '25'})
 
@@ -443,8 +465,10 @@ class GateModeTest(LogicNodeTestBase):
     def test_lt_fails_when_equal(self):
         """Assert gate LT fails when values are equal."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='score',
-            gate_operator=OP_LT, gate_value='50',
+            logic_mode=MODE_GATE,
+            gate_key='score',
+            gate_operator=OP_LT,
+            gate_value='50',
         )
         spike = self._make_spike(axoplasm={'score': '50'})
 
@@ -455,8 +479,10 @@ class GateModeTest(LogicNodeTestBase):
     def test_lt_fails_when_greater(self):
         """Assert gate LT fails when axoplasm value is greater."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='score',
-            gate_operator=OP_LT, gate_value='50',
+            logic_mode=MODE_GATE,
+            gate_key='score',
+            gate_operator=OP_LT,
+            gate_value='50',
         )
         spike = self._make_spike(axoplasm={'score': '75'})
 
@@ -477,8 +503,10 @@ class GateModeTest(LogicNodeTestBase):
     def test_unknown_operator_returns_failure(self):
         """Assert unknown gate operator returns 500."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='score',
-            gate_operator='contains', gate_value='foo',
+            logic_mode=MODE_GATE,
+            gate_key='score',
+            gate_operator='contains',
+            gate_value='foo',
         )
         spike = self._make_spike(axoplasm={'score': 'foobar'})
 
@@ -490,8 +518,10 @@ class GateModeTest(LogicNodeTestBase):
     def test_numeric_comparison_with_non_numeric_value(self):
         """Assert GT with non-numeric axoplasm value returns FAIL (0.0 > N)."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='score',
-            gate_operator=OP_GT, gate_value='50',
+            logic_mode=MODE_GATE,
+            gate_key='score',
+            gate_operator=OP_GT,
+            gate_value='50',
         )
         spike = self._make_spike(axoplasm={'score': 'not_a_number'})
 
@@ -503,8 +533,10 @@ class GateModeTest(LogicNodeTestBase):
     def test_gate_missing_key_with_non_exists_operator(self):
         """Assert non-EXISTS operator fails when key is missing entirely."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='missing_key',
-            gate_operator=OP_EQUALS, gate_value='something',
+            logic_mode=MODE_GATE,
+            gate_key='missing_key',
+            gate_operator=OP_EQUALS,
+            gate_value='something',
         )
         spike = self._make_spike(axoplasm={})
 
@@ -516,8 +548,10 @@ class GateModeTest(LogicNodeTestBase):
     def test_equals_with_whitespace_value(self):
         """Assert equals strips and compares correctly."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='name',
-            gate_operator=OP_EQUALS, gate_value='hello',
+            logic_mode=MODE_GATE,
+            gate_key='name',
+            gate_operator=OP_EQUALS,
+            gate_value='hello',
         )
         # Axoplasm has value with trailing whitespace
         spike = self._make_spike(axoplasm={'name': ' hello '})
@@ -530,7 +564,8 @@ class GateModeTest(LogicNodeTestBase):
     def test_gate_with_empty_axoplasm(self):
         """Assert gate handles spike with empty axoplasm gracefully."""
         self._set_context(
-            logic_mode=MODE_GATE, gate_key='key',
+            logic_mode=MODE_GATE,
+            gate_key='key',
             gate_operator=OP_EXISTS,
         )
         spike = self._make_spike(axoplasm={})
@@ -628,7 +663,9 @@ class UnknownModeTest(LogicNodeTestBase):
 
     def test_mode_with_whitespace_is_trimmed(self):
         """Assert whitespace around mode value is stripped."""
-        self._set_context(logic_mode='  gate  ', gate_key='k', gate_operator=OP_EXISTS)
+        self._set_context(
+            logic_mode='  gate  ', gate_key='k', gate_operator=OP_EXISTS
+        )
         spike = self._make_spike(axoplasm={'k': 'v'})
 
         code, msg = self._run(spike)

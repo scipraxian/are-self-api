@@ -11,7 +11,6 @@ from .models import (
     ProjectEnvironment,
     ProjectEnvironmentContextKey,
     ProjectEnvironmentStatus,
-    ProjectEnvironmentType,
 )
 from .serializers import (
     ContextVariableSerializer,
@@ -21,7 +20,6 @@ from .serializers import (
     ProjectEnvironmentContextKeySerializer,
     ProjectEnvironmentSerializer,
     ProjectEnvironmentStatusSerializer,
-    ProjectEnvironmentTypeSerializer,
 )
 
 
@@ -84,11 +82,6 @@ class ContextVariableViewSet(viewsets.ModelViewSet):
 class ContextKeyViewSet(viewsets.ModelViewSet):
     queryset = ProjectEnvironmentContextKey.objects.all().order_by('name')
     serializer_class = ProjectEnvironmentContextKeySerializer
-
-
-class EnvironmentTypeViewSet(viewsets.ModelViewSet):
-    queryset = ProjectEnvironmentType.objects.all()
-    serializer_class = ProjectEnvironmentTypeSerializer
 
 
 class EnvironmentStatusViewSet(viewsets.ModelViewSet):

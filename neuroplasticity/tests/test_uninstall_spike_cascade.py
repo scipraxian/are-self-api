@@ -26,7 +26,6 @@ from central_nervous_system.models import (
 from environments.models import (
     ProjectEnvironment,
     ProjectEnvironmentStatus,
-    ProjectEnvironmentType,
 )
 from neuroplasticity import loader
 from neuroplasticity.models import NeuralModifier
@@ -40,7 +39,6 @@ class _SpikeCascadeSetupMixin:
     """Programmatic setup for canonical env + minimal SpikeTrain status rows."""
 
     def _ensure_env_and_status(self):
-        env_type = ProjectEnvironmentType.objects.create(name='Test Type')
         env_status = ProjectEnvironmentStatus.objects.create(name='Test Status')
         canonical_modifier = NeuralModifier.objects.get(
             pk=NeuralModifier.CANONICAL
@@ -49,7 +47,6 @@ class _SpikeCascadeSetupMixin:
             pk=ProjectEnvironment.DEFAULT_ENVIRONMENT,
             defaults={
                 'name': 'Canonical Env',
-                'type': env_type,
                 'status': env_status,
                 'available': True,
                 'selected': False,
@@ -65,7 +62,7 @@ class _SpikeCascadeSetupMixin:
         SpikeStatus.objects.get_or_create(
             pk=SpikeStatus.CREATED, defaults={'name': 'Created'}
         )
-        return canonical_env, env_type, env_status
+        return canonical_env, env_status
 
 
 class BundleEnvUninstallCascadesSpikeTrainTest(
@@ -75,27 +72,26 @@ class BundleEnvUninstallCascadesSpikeTrainTest(
 
     def test_bundle_env_uninstall_cascades_spiketrain_and_spikes(self):
         """Assert bundle env uninstall cascades train and all its spikes away."""
-        canonical_env, env_type, env_status = self._ensure_env_and_status()
+        canonical_env, env_status = self._ensure_env_and_status()
         bundle_env_pk = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
 
-        payload = [{
-            'model': 'environments.projectenvironment',
-            'pk': bundle_env_pk,
-            'fields': {
-                'created': '2026-04-23T00:00:00Z',
-                'modified': '2026-04-23T00:00:00Z',
-                'description': 'bundle-contributed env',
-                'name': 'bundle-env',
-                'type': str(env_type.pk),
-                'status': str(env_status.pk),
-                'available': True,
-                'selected': False,
-                'default_iteration_definition': None,
-            },
-        }]
-        build_fake_bundle(
-            self.scratch_root, 'envspikes', modifier_data=payload
-        )
+        payload = [
+            {
+                'model': 'environments.projectenvironment',
+                'pk': bundle_env_pk,
+                'fields': {
+                    'created': '2026-04-23T00:00:00Z',
+                    'modified': '2026-04-23T00:00:00Z',
+                    'description': 'bundle-contributed env',
+                    'name': 'bundle-env',
+                    'status': str(env_status.pk),
+                    'available': True,
+                    'selected': False,
+                    'default_iteration_definition': None,
+                },
+            }
+        ]
+        build_fake_bundle(self.scratch_root, 'envspikes', modifier_data=payload)
         self.install_fake('envspikes')
 
         bundle_env = ProjectEnvironment.objects.get(pk=bundle_env_pk)
@@ -133,7 +129,7 @@ class CanonicalEnvSpikeTrainSurvivesUninstallTest(
 
     def test_canonical_env_spiketrain_unaffected_by_uninstall(self):
         """Assert canonical-env SpikeTrain and its Spikes survive uninstall."""
-        canonical_env, _, _ = self._ensure_env_and_status()
+        canonical_env, _ = self._ensure_env_and_status()
         train = SpikeTrain.objects.create(
             environment=canonical_env,
             status_id=SpikeTrainStatus.CREATED,

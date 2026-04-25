@@ -4,7 +4,6 @@ from .api import (
     ContextKeyViewSet,
     ContextVariableViewSet,
     EnvironmentStatusViewSet,
-    EnvironmentTypeViewSet,
     ExecutableArgumentAssignmentViewSet,
     ExecutableArgumentViewSet,
     ExecutableViewSet,
@@ -19,7 +18,8 @@ ENVIRONMENTS_ROUTER.register(r'environments', ProjectEnvironmentViewSet)
 ENVIRONMENTS_ROUTER.register(r'executables', ExecutableViewSet)
 ENVIRONMENTS_ROUTER.register(r'context-variables', ContextVariableViewSet)
 ENVIRONMENTS_ROUTER.register(r'context-keys', ContextKeyViewSet)
-ENVIRONMENTS_ROUTER.register(r'environment-types', EnvironmentTypeViewSet)
 ENVIRONMENTS_ROUTER.register(r'environment-statuses', EnvironmentStatusViewSet)
 ENVIRONMENTS_ROUTER.register(r'executable-arguments', ExecutableArgumentViewSet)
-ENVIRONMENTS_ROUTER.register(r'executable-argument-assignments', ExecutableArgumentAssignmentViewSet)
+ENVIRONMENTS_ROUTER.register(
+    r'executable-argument-assignments', ExecutableArgumentAssignmentViewSet
+)
