@@ -224,8 +224,9 @@ def create_empty_bundle(
     """
     if slug == NeuralModifier.CANONICAL_SLUG:
         raise ValueError(
-            '[Neuroplasticity] Cannot create a bundle named '
-            '{0!r}.'.format(NeuralModifier.CANONICAL_SLUG)
+            '[Neuroplasticity] Cannot create a bundle named {0!r}.'.format(
+                NeuralModifier.CANONICAL_SLUG
+            )
         )
     if NeuralModifier.objects.filter(slug=slug).exists():
         raise FileExistsError(
@@ -466,9 +467,7 @@ def upgrade_bundle_from_source(
     updated = 0
     deleted = 0
     try:
-        new_payload = json.loads(
-            (staging / 'modifier_data.json').read_text()
-        )
+        new_payload = json.loads((staging / 'modifier_data.json').read_text())
 
         # Collect (model, pk) pairs the bundle currently owns across
         # every GenomeOwnedMixin-bearing model.
@@ -561,9 +560,7 @@ def upgrade_bundle_from_source(
     }
 
 
-def upgrade_bundle(
-    slug: str, *, allow_same_version: bool = False
-) -> dict:
+def upgrade_bundle(slug: str, *, allow_same_version: bool = False) -> dict:
     """Upgrade from the committed zip at ``genomes/<slug>.zip``."""
     archive_path = genomes_root() / '{0}.zip'.format(slug)
     if not archive_path.exists():
@@ -685,9 +682,7 @@ def save_bundle_to_archive(slug: str) -> dict:
         Effector.objects.filter(genome=modifier).values_list('pk', flat=True)
     )
     owned_executable_ids = list(
-        Executable.objects.filter(genome=modifier).values_list(
-            'pk', flat=True
-        )
+        Executable.objects.filter(genome=modifier).values_list('pk', flat=True)
     )
     owned_environment_ids = list(
         ProjectEnvironment.objects.filter(genome=modifier).values_list(
@@ -708,19 +703,17 @@ def save_bundle_to_archive(slug: str) -> dict:
     transit_querysets: list = []
     if owned_pathway_ids:
         transit_querysets.append(
-            Neuron.objects.filter(
-                pathway_id__in=owned_pathway_ids
-            ).order_by('pk')
+            Neuron.objects.filter(pathway_id__in=owned_pathway_ids).order_by(
+                'pk'
+            )
         )
         transit_querysets.append(
-            Axon.objects.filter(
-                pathway_id__in=owned_pathway_ids
-            ).order_by('pk')
+            Axon.objects.filter(pathway_id__in=owned_pathway_ids).order_by('pk')
         )
         owned_neuron_ids = list(
-            Neuron.objects.filter(
-                pathway_id__in=owned_pathway_ids
-            ).values_list('pk', flat=True)
+            Neuron.objects.filter(pathway_id__in=owned_pathway_ids).values_list(
+                'pk', flat=True
+            )
         )
         if owned_neuron_ids:
             transit_querysets.append(
@@ -828,12 +821,8 @@ def save_bundle_to_archive(slug: str) -> dict:
     target = genomes_root() / '{0}.zip'.format(slug)
     backup_path: Optional[Path] = None
     try:
-        with zipfile.ZipFile(
-            staging_path, 'w', zipfile.ZIP_DEFLATED
-        ) as zf:
-            zf.writestr(
-                '{0}/manifest.json'.format(slug), manifest_text
-            )
+        with zipfile.ZipFile(staging_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr('{0}/manifest.json'.format(slug), manifest_text)
             zf.writestr(
                 '{0}/modifier_data.json'.format(slug),
                 json.dumps(rows, indent=2) + '\n',
@@ -842,9 +831,7 @@ def save_bundle_to_archive(slug: str) -> dict:
                 for path in sorted(code_dir.rglob('*')):
                     if path.is_dir():
                         continue
-                    arcname = (
-                        Path(slug) / 'code' / path.relative_to(code_dir)
-                    )
+                    arcname = Path(slug) / 'code' / path.relative_to(code_dir)
                     zf.write(path, arcname.as_posix())
 
         # Pre-flight: verify the staged zip is valid and contains the
@@ -889,9 +876,7 @@ def save_bundle_to_archive(slug: str) -> dict:
     }
 
 
-def _missing_entry_modules(
-    code_dir: Path, entry_modules: list
-) -> list:
+def _missing_entry_modules(code_dir: Path, entry_modules: list) -> list:
     """Return the subset of ``entry_modules`` not findable under
     ``code_dir`` as either ``<name>/__init__.py`` or ``<name>.py``.
 
@@ -938,8 +923,9 @@ def _verify_staged_archive(
     if missing:
         raise ValueError(
             '[Neuroplasticity] Staged archive is missing entry_modules '
-            '{0} under {1}/code/. Save aborted before catalog replace.'
-            .format(missing, slug)
+            '{0} under {1}/code/. Save aborted before catalog replace.'.format(
+                missing, slug
+            )
         )
 
 
@@ -974,10 +960,14 @@ def boot_bundles() -> None:
         if not bundle_dir.is_dir() or bundle_dir.name in by_slug:
             continue
         try:
-            shutil.rmtree(bundle_dir)
-            logger.info(
-                '[Neuroplasticity] Orphan sweep removed %s', bundle_dir
+            logger.warning(
+                '[Neuroplasticity] Orphan sweep about to remove %s; bootable=%s; stack:\n%s',
+                bundle_dir,
+                [m.slug for m in bootable],
+                ''.join(traceback.format_stack()),
             )
+            shutil.rmtree(bundle_dir)
+            logger.info('[Neuroplasticity] Orphan sweep removed %s', bundle_dir)
         except Exception:
             logger.exception(
                 '[Neuroplasticity] Orphan sweep failed for %s',
@@ -1161,9 +1151,7 @@ def _import_entry_modules(entry_modules: Iterable[str]) -> None:
         importlib.import_module(module_name)
 
 
-def _load_modifier_data(
-    modifier: NeuralModifier, data_path: Path
-) -> int:
+def _load_modifier_data(modifier: NeuralModifier, data_path: Path) -> int:
     """Deserialize modifier_data.json; stamp ``genome`` on owned rows.
 
     Every row whose model inherits ``GenomeOwnedMixin`` gets
@@ -1381,9 +1369,7 @@ def bundle_uninstall_preview(slug: str) -> dict:
         if blockers is None:
             raise
         for obj in blockers:
-            protected_entries.append(
-                _row_entry(obj, reason='protected')
-            )
+            protected_entries.append(_row_entry(obj, reason='protected'))
 
     direct_entries: list = []
     cascade_entries: list = []
@@ -1392,9 +1378,7 @@ def bundle_uninstall_preview(slug: str) -> dict:
             entry = _row_entry(
                 obj,
                 reason=(
-                    'direct'
-                    if (model, obj.pk) in direct_keys
-                    else 'cascade'
+                    'direct' if (model, obj.pk) in direct_keys else 'cascade'
                 ),
             )
             if (model, obj.pk) in direct_keys:
