@@ -290,13 +290,21 @@ def uninstall_bundle(slug: str) -> Optional[str]:
     this is consistent with "AVAILABLE means no DB footprint." Returns
     the deleted slug, or raises ``NeuralModifier.DoesNotExist`` if
     there is no row.
+
+    Disk cleanup is intentionally deferred. On Windows, the current
+    Daphne process has already imported the bundle's modules and holds
+    live file handles, so ``shutil.rmtree`` silently no-ops and the
+    runtime dir persists — which then blocks the next install with a
+    ``FileExistsError``. Instead, ``uninstall_bundle`` only drops the
+    code dir from ``sys.path`` (best effort; nothing else touches
+    disk) and the API-level ``trigger_system_restart`` respawns
+    Daphne. The orphan sweep in :func:`boot_bundles` does the real
+    rmtree in the fresh process where no file locks remain.
     """
     modifier = NeuralModifier.objects.get(slug=slug)
 
     runtime = grafts_root() / slug
     _remove_code_from_path(runtime)
-    if runtime.exists():
-        shutil.rmtree(runtime, ignore_errors=True)
 
     with transaction.atomic():
         for model in _owned_delete_order():
@@ -637,6 +645,24 @@ def boot_bundles() -> None:
         return
 
     by_slug = {m.slug: m for m in bootable}
+
+    # Orphan sweep: remove any runtime dir that no longer has a DB
+    # row. Uninstall defers disk cleanup to here so it runs in a
+    # fresh process with empty sys.modules — Windows file locks from
+    # the prior process are gone. Real rmtree, loud on failure.
+    for bundle_dir in sorted(runtime.iterdir()):
+        if not bundle_dir.is_dir() or bundle_dir.name in by_slug:
+            continue
+        try:
+            shutil.rmtree(bundle_dir)
+            logger.info(
+                '[Neuroplasticity] Orphan sweep removed %s', bundle_dir
+            )
+        except Exception:
+            logger.exception(
+                '[Neuroplasticity] Orphan sweep failed for %s',
+                bundle_dir,
+            )
 
     for bundle_dir in sorted(runtime.iterdir()):
         if not bundle_dir.is_dir():

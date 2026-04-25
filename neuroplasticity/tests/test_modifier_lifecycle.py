@@ -256,7 +256,13 @@ class EnableDisableRoundTripTest(ModifierLifecycleTestCase):
 
 class UninstallFullRollbackTest(ModifierLifecycleTestCase):
     def test_uninstall_full_rollback(self):
-        """Assert uninstall cascades owned rows, runtime dir, logs, events."""
+        """Assert uninstall cascades owned rows, logs, and events.
+
+        The runtime dir stays on disk — cleanup is deferred to
+        :func:`loader.boot_bundles` so the real rmtree runs in a fresh
+        process where the prior Daphne's file locks are gone. See
+        ``UninstallDefersDiskCleanupTest`` for the on-disk contract.
+        """
         build_fake_bundle(self.scratch_root, 'gamma')
         self.install_fake('gamma')
         self.assertEqual(
@@ -279,7 +285,6 @@ class UninstallFullRollbackTest(ModifierLifecycleTestCase):
             IdentityAddon.objects.filter(name__startswith='gamma-').count(),
             0,
         )
-        self.assertFalse((self.grafts_root / 'gamma').exists())
 
 
 class InstallRejectsHashDriftTest(ModifierLifecycleTestCase):
@@ -361,6 +366,12 @@ class ReinstallCreatesFreshRowTest(ModifierLifecycleTestCase):
         first_pk = first.pk
 
         loader.uninstall_bundle('eta')
+        # Simulate the coordinated restart: boot_bundles' orphan sweep
+        # removes the runtime dir left behind by uninstall. Without
+        # this, install_bundle_from_source would hit its FileExistsError
+        # guard and 409 — exactly the bug this machinery exists to
+        # prevent in production.
+        loader.boot_bundles()
         second = self.install_fake('eta')
 
         self.assertNotEqual(second.pk, first_pk)
@@ -612,6 +623,58 @@ class BootFlipsBrokenOnMissingCodeTest(ModifierLifecycleTestCase):
         self.assertIn('traceback', events.first().event_data)
 
 
+class UninstallDefersDiskCleanupTest(ModifierLifecycleTestCase):
+    def test_uninstall_leaves_runtime_dir_on_disk(self):
+        """Assert uninstall deletes the DB row but leaves the runtime dir.
+
+        Inline ``rmtree`` during uninstall silently no-oped on Windows
+        when the current Daphne process held live file handles on the
+        bundle's code, which left the dir on disk and produced a 409 on
+        the next install. Cleanup now defers to
+        :func:`loader.boot_bundles` in a fresh process.
+        """
+        build_fake_bundle(self.scratch_root, 'deferred')
+        self.install_fake('deferred')
+        runtime = self.grafts_root / 'deferred'
+        self.assertTrue(runtime.is_dir())
+
+        loader.uninstall_bundle('deferred')
+
+        self.assertFalse(
+            NeuralModifier.objects.filter(slug='deferred').exists()
+        )
+        self.assertTrue(
+            runtime.is_dir(),
+            'Runtime dir must persist — cleanup is deferred to boot.',
+        )
+
+
+class BootBundlesSweepsOrphanDirsTest(ModifierLifecycleTestCase):
+    def test_boot_bundles_removes_orphan_dir(self):
+        """Assert boot_bundles() deletes grafts dirs with no matching DB row."""
+        orphan = self.grafts_root / 'orphan'
+        orphan.mkdir()
+        (orphan / 'stub.txt').write_text('payload')
+
+        loader.boot_bundles()
+
+        self.assertFalse(orphan.exists())
+
+
+class BootBundlesPreservesInstalledDirsTest(ModifierLifecycleTestCase):
+    def test_boot_bundles_preserves_installed_bundle(self):
+        """Assert boot_bundles() keeps dirs whose slug has a DB row."""
+        build_fake_bundle(self.scratch_root, 'keeper')
+        modifier = self.install_fake('keeper')
+        status_before = modifier.status_id
+
+        loader.boot_bundles()
+
+        modifier.refresh_from_db()
+        self.assertTrue((self.grafts_root / 'keeper').is_dir())
+        self.assertEqual(modifier.status_id, status_before)
+
+
 class BootBundlesSkipsMissingTableTest(ModifierLifecycleTestCase):
     def test_boot_bundles_skips_missing_table(self):
         """Assert boot_bundles returns silently when DB is not ready."""
@@ -691,6 +754,9 @@ class SaveBundleRoundTripTest(ModifierLifecycleTestCase):
         self.assertFalse(
             NeuralModifier.objects.filter(slug='saver').exists()
         )
+        # Simulate the coordinated restart: boot_bundles' orphan sweep
+        # clears the deferred runtime dir before the archive reinstall.
+        loader.boot_bundles()
         archive = Path(result['zip_path'])
         loader.install_bundle_from_archive(archive)
 

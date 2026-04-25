@@ -20,6 +20,9 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 
 from neuroplasticity import graph_walker, loader
+from peripheral_nervous_system.autonomic_nervous_system import (
+    trigger_system_restart,
+)
 from synaptic_cleft.axon_hillok import fire_neurotransmitter
 from synaptic_cleft.neurotransmitters import Acetylcholine
 
@@ -172,6 +175,7 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
             )
 
         _broadcast(modifier, 'install')
+        trigger_system_restart()
         return Response(NeuralModifierDetailSerializer(modifier).data)
 
     @action(detail=True, methods=['post'], url_path='uninstall')
@@ -184,6 +188,7 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
         except NeuralModifier.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         _broadcast(None, 'uninstall', slug=deleted_slug)
+        trigger_system_restart()
         return Response(
             {'slug': deleted_slug, 'uninstalled': True},
             status=status.HTTP_200_OK,
@@ -350,6 +355,7 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
                 {'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST
             )
         _broadcast(modifier, 'install')
+        trigger_system_restart()
         return Response(NeuralModifierDetailSerializer(modifier).data)
 
     @action(
