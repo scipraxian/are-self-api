@@ -144,6 +144,44 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['post'], url_path='create')
+    def create_empty(self, request):
+        """Scaffold a brand-new empty bundle from manifest fields.
+
+        Body: ``{slug, name?, version?, author?, license?}``. Creates
+        the empty bundle on disk and in the DB; the user then stamps
+        rows into it via the BEGIN_PLAY genome hook and packs the
+        first archive via ``/save``.
+        """
+        slug = (request.data.get('slug') or '').strip()
+        if not slug:
+            return Response(
+                {'detail': 'slug is required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            modifier = loader.create_empty_bundle(
+                slug,
+                name=request.data.get('name', '') or '',
+                version=request.data.get('version', '0.1.0') or '0.1.0',
+                author=request.data.get('author', '') or '',
+                license=request.data.get('license', '') or '',
+            )
+        except FileExistsError as exc:
+            return Response(
+                {'detail': str(exc)}, status=status.HTTP_409_CONFLICT
+            )
+        except ValueError as exc:
+            return Response(
+                {'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        _broadcast(modifier, 'create')
+        return Response(
+            NeuralModifierDetailSerializer(modifier).data,
+            status=status.HTTP_201_CREATED,
+        )
+
     @action(detail=False, methods=['post'], url_path='install')
     def install(self, request):
         """Install a bundle from an uploaded archive OR from an existing slug."""
@@ -193,30 +231,6 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
             {'slug': deleted_slug, 'uninstalled': True},
             status=status.HTTP_200_OK,
         )
-
-    @action(detail=True, methods=['post'], url_path='enable')
-    def enable(self, request, slug=None):
-        missing = self._visible_or_404()
-        if missing is not None:
-            return missing
-        try:
-            modifier = loader.enable_bundle(slug)
-        except NeuralModifier.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        _broadcast(modifier, 'enable')
-        return Response(NeuralModifierSerializer(modifier).data)
-
-    @action(detail=True, methods=['post'], url_path='disable')
-    def disable(self, request, slug=None):
-        missing = self._visible_or_404()
-        if missing is not None:
-            return missing
-        try:
-            modifier = loader.disable_bundle(slug)
-        except NeuralModifier.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        _broadcast(modifier, 'disable')
-        return Response(NeuralModifierSerializer(modifier).data)
 
     @action(detail=True, methods=['get'], url_path='impact')
     def impact(self, request, slug=None):

@@ -1,14 +1,43 @@
-"""Forward-FK walker for the bundle-builder UI.
+"""Forward / reverse FK walker over the bundle ownership graph.
 
-Starting from every row a bundle owns (``genome__slug=<slug>``),
-walks forward FKs and M2M relations whose target model also carries
-``GenomeOwnedMixin`` (the bundle-eligible models, as registered with
-:func:`loader.iter_genome_owned_models`). Anything outside that set
-is a boundary — we record the reachable row but do not recurse past
-it.
+Two callers share the traversal logic in this module:
 
-Four diagnostic states are emitted per reachable row, keyed off the
-three-state Canonical Genome model:
+* ``build_bundle_graph(slug)`` — read-only diagnostic graph for the
+  Modifier Garden UI. Starts from every row a bundle owns
+  (``genome__slug=<slug>``) and walks forward FKs and forward M2M
+  relations to other ``GenomeOwnedMixin`` rows. Reverse-FK is not
+  needed in read mode because every owned row is already a starting
+  point — reverse-FK reach is redundant.
+
+* ``walk_genome_reach(starts, *, transit_reverse_fk_sources=())`` —
+  general-purpose visit walker used by the cascade (write-stamp) and
+  the save-time transit collection. Starts from a small seed set and
+  walks both forward FK / M2M and (under controlled rules) reverse FK
+  to find the seed's bundle reach.
+
+Reach traversal rules:
+
+    * Forward FK / M2M: traverse if the target model is "walkable" —
+      either ``GenomeOwnedMixin`` or in the transit allow-list
+      (Neuron, Axon, NeuronContext). Transit nodes are non-bundle
+      models that link bundle parents (NeuralPathway) to bundle
+      children (Effector). The walker steps THROUGH them but
+      ``cascade_pathway_genome`` does not stamp them — they have no
+      ``genome`` FK to write.
+    * Reverse FK to ``GenomeOwnedMixin``: always traversed. These are
+      the source row's owned children (e.g. Effector → its
+      ArgumentAssignments).
+    * Reverse FK to transit models: traversed only when the source
+      row's class is in ``transit_reverse_fk_sources``. The cascade
+      passes ``(NeuralPathway,)`` so reach descends from a Pathway
+      to its Neurons / Axons / NeuronContexts but does NOT later
+      reverse-walk from an Effector back to other Neurons in
+      neighbouring user content.
+    * The ``genome`` FK itself is never followed — it points at
+      ``NeuralModifier``, not at a bundle-eligible model.
+
+Four diagnostic states are emitted by ``build_bundle_graph`` per
+reachable row, keyed off the three-state Canonical Genome model:
 
 * ``canonical`` — ``genome_id == NeuralModifier.CANONICAL``. Ships in
   a committed core fixture; never deleted by any bundle operation.
@@ -24,7 +53,7 @@ the UI renders.
 
 from __future__ import annotations
 
-from typing import Any, Iterable, List, Tuple
+from typing import Any, Iterable, List, Sequence, Tuple
 
 from neuroplasticity import loader
 from neuroplasticity.genome_mixin import GenomeOwnedMixin
@@ -44,8 +73,31 @@ def _display_name(instance) -> str:
     return str(instance)
 
 
+def _transit_model_classes() -> Tuple[type, ...]:
+    """Models the walker steps THROUGH but cascade does not stamp.
+
+    These are non-``GenomeOwnedMixin`` models that compose pathways:
+    Axon, Neuron, NeuronContext. Stopping at them would mean reach
+    never finds the bundle children on the far side; treating them as
+    bundle-eligible would mean trying to write a non-existent
+    ``genome`` FK.
+
+    Imports are deferred so this module loads cleanly at AppConfig
+    boot time before all apps are ready.
+    """
+    from central_nervous_system.models import Axon, Neuron, NeuronContext
+    return (Axon, Neuron, NeuronContext)
+
+
+def _is_walkable_target(model: type) -> bool:
+    """The walker steps to a target if it's bundle-eligible or transit."""
+    if issubclass(model, GenomeOwnedMixin):
+        return True
+    return model in _transit_model_classes()
+
+
 def _forward_fk_fields(model: type) -> Iterable:
-    """Concrete FK fields on ``model`` whose target is also GenomeOwnedMixin."""
+    """Concrete forward FK fields whose target is walkable."""
     for field in model._meta.get_fields():
         if not getattr(field, 'is_relation', False):
             continue
@@ -56,17 +108,17 @@ def _forward_fk_fields(model: type) -> Iterable:
         related = field.related_model
         if related is None:
             continue
-        if not issubclass(related, GenomeOwnedMixin):
+        if not _is_walkable_target(related):
             continue
         # Exclude the genome FK itself — it points at NeuralModifier,
-        # not at one of the bundle-eligible models.
+        # not at a bundle-eligible model.
         if field.name == 'genome':
             continue
         yield field
 
 
 def _forward_m2m_fields(model: type) -> Iterable:
-    """Concrete forward M2M fields whose target is GenomeOwnedMixin."""
+    """Concrete forward M2M fields whose target is walkable."""
     for field in model._meta.get_fields():
         if not getattr(field, 'many_to_many', False):
             continue
@@ -75,9 +127,120 @@ def _forward_m2m_fields(model: type) -> Iterable:
         related = field.related_model
         if related is None:
             continue
-        if not issubclass(related, GenomeOwnedMixin):
+        if not _is_walkable_target(related):
             continue
         yield field
+
+
+def _reverse_fk_fields(
+    model: type, *, allow_transit: bool
+) -> Iterable[Tuple[Any, str]]:
+    """Reverse one-to-many fields whose target is walkable.
+
+    Always yields reverse-FK fields whose target is
+    ``GenomeOwnedMixin``. Yields reverse-FK fields whose target is a
+    transit model only when ``allow_transit`` is true (set per-source
+    by the caller via ``transit_reverse_fk_sources``).
+
+    Each yield is ``(field, accessor_name)`` so the caller can fetch
+    via ``getattr(instance, accessor)``.
+    """
+    transit_models = _transit_model_classes()
+    for field in model._meta.get_fields():
+        if not getattr(field, 'is_relation', False):
+            continue
+        if not getattr(field, 'one_to_many', False):
+            continue
+        if getattr(field, 'concrete', False):
+            # one_to_many concrete is unusual; the standard reverse
+            # accessor is non-concrete (ManyToOneRel).
+            continue
+        related = field.related_model
+        if related is None:
+            continue
+        if issubclass(related, GenomeOwnedMixin):
+            target_kind = 'genomeowned'
+        elif related in transit_models:
+            target_kind = 'transit'
+        else:
+            continue
+        if target_kind == 'transit' and not allow_transit:
+            continue
+        accessor = field.get_accessor_name()
+        if accessor is None:
+            continue
+        yield field, accessor
+
+
+def walk_genome_reach(
+    starts: Sequence[Any],
+    *,
+    reverse_fk: bool = False,
+    transit_reverse_fk_sources: Tuple[type, ...] = (),
+) -> List[Any]:
+    """BFS from ``starts`` through the bundle reach graph.
+
+    Forward FK / M2M traversal is unconditional to walkable targets.
+
+    Reverse-FK traversal is OFF by default (read-mode behaviour —
+    every owned row is already a starting point so reverse-FK reach
+    is redundant). When ``reverse_fk=True``, the walker traverses
+    reverse-FK to ``GenomeOwnedMixin`` targets always, and to
+    transit targets only when the source row's class is in
+    ``transit_reverse_fk_sources`` (the cascade passes
+    ``(NeuralPathway,)`` so reach descends from a Pathway to its
+    Neurons / Axons but does NOT reverse-walk from Effector back to
+    Neurons in neighbouring user content).
+
+    Returns the visited list (insertion-ordered, includes the starts).
+    Caller filters / classifies as needed.
+    """
+    transit_sources = set(transit_reverse_fk_sources)
+    visited: dict = {}
+    queue: List[Any] = []
+
+    def enqueue(inst) -> None:
+        if inst is None:
+            return
+        key = _row_key(type(inst), inst.pk)
+        if key not in visited:
+            visited[key] = inst
+            queue.append(inst)
+
+    for start in starts:
+        enqueue(start)
+
+    while queue:
+        instance = queue.pop(0)
+        src_model = type(instance)
+        allow_transit_reverse = src_model in transit_sources
+
+        for field in _forward_fk_fields(src_model):
+            try:
+                target = getattr(instance, field.name)
+            except field.related_model.DoesNotExist:
+                target = None
+            enqueue(target)
+
+        for field in _forward_m2m_fields(src_model):
+            manager = getattr(instance, field.name)
+            for target in manager.all():
+                enqueue(target)
+
+        if not reverse_fk:
+            continue
+
+        for field, accessor in _reverse_fk_fields(
+            src_model, allow_transit=allow_transit_reverse
+        ):
+            try:
+                manager = getattr(instance, accessor)
+            except AttributeError:
+                continue
+            for target in manager.all():
+                enqueue(target)
+
+    return list(visited.values())
 
 
 def _classify(instance, target_slug: str):
@@ -132,29 +295,34 @@ def build_bundle_graph(slug: str) -> dict:
             ...
           ],
         }
+
+    Read-only mode: every owned row is a start, so reverse-FK reach
+    is not needed (would just rediscover starts). Only forward FK and
+    M2M edges are emitted; the walker behaviour matches the original
+    forward-only diagnostic build.
     """
     modifier = NeuralModifier.objects.get(slug=slug)
 
-    visited: dict = {}
-    edges: List[dict] = []
-    queue: List[Any] = []
-
+    starts: List[Any] = []
     for model in loader.iter_genome_owned_models():
-        for instance in model.objects.filter(genome=modifier):
-            key = _row_key(model, instance.pk)
-            if key not in visited:
-                visited[key] = instance
-                queue.append(instance)
+        starts.extend(model.objects.filter(genome=modifier))
 
-    while queue:
-        instance = queue.pop(0)
+    # Visit walk first (forward only — no transit reverse-FK sources)
+    # so we have the full visited set; then derive forward-edge list
+    # from the visit set the same way the original walker did.
+    visited_list = walk_genome_reach(starts)
+    visited: dict = {
+        _row_key(type(inst), inst.pk): inst for inst in visited_list
+    }
+
+    edges: List[dict] = []
+    for instance in visited_list:
         src_model = type(instance)
         src_label = {
             'app_label': src_model._meta.app_label,
             'model': src_model._meta.model_name,
             'pk': str(instance.pk),
         }
-
         for field in _forward_fk_fields(src_model):
             try:
                 target = getattr(instance, field.name)
@@ -162,38 +330,33 @@ def build_bundle_graph(slug: str) -> dict:
                 target = None
             if target is None:
                 continue
-            target_model = type(target)
-            target_key = _row_key(target_model, target.pk)
+            target_key = _row_key(type(target), target.pk)
             if target_key not in visited:
-                visited[target_key] = target
-                queue.append(target)
+                continue
             edges.append(
                 {
                     'source': src_label,
                     'target': {
-                        'app_label': target_model._meta.app_label,
-                        'model': target_model._meta.model_name,
+                        'app_label': type(target)._meta.app_label,
+                        'model': type(target)._meta.model_name,
                         'pk': str(target.pk),
                     },
                     'via': field.name,
                     'kind': 'fk',
                 }
             )
-
         for field in _forward_m2m_fields(src_model):
             manager = getattr(instance, field.name)
             for target in manager.all():
-                target_model = type(target)
-                target_key = _row_key(target_model, target.pk)
+                target_key = _row_key(type(target), target.pk)
                 if target_key not in visited:
-                    visited[target_key] = target
-                    queue.append(target)
+                    continue
                 edges.append(
                     {
                         'source': src_label,
                         'target': {
-                            'app_label': target_model._meta.app_label,
-                            'model': target_model._meta.model_name,
+                            'app_label': type(target)._meta.app_label,
+                            'model': type(target)._meta.model_name,
                             'pk': str(target.pk),
                         },
                         'via': field.name,

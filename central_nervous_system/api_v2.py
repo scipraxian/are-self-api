@@ -157,6 +157,68 @@ class NeuralPathwayViewSetV2(viewsets.ModelViewSet):
                 {'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @action(detail=True, methods=['post'], url_path='set-genome')
+    def set_genome(self, request, pk=None):
+        """Stamp / clear the genome FK on the pathway and its full reach.
+
+        Body: ``{"genome_slug": "<slug>"}`` to assign, or
+        ``{"genome_slug": null}`` to clear. Cascade walks every
+        ``GenomeOwnedMixin`` row reachable from this pathway via
+        forward FK / M2M and reverse FK; each is stamped with the
+        target genome (or NULL).
+
+        Refuses with 409 if the cascade reach hits a canonical-owned
+        row or a row owned by a non-target NeuralModifier.
+        """
+        from neuroplasticity.genome_cascade import (
+            GenomeCascadeConflict,
+            cascade_pathway_genome,
+        )
+        from neuroplasticity.models import NeuralModifier
+
+        try:
+            pathway = self.get_object()
+        except Exception:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if 'genome_slug' not in request.data:
+            return Response(
+                {'detail': 'Missing required field: genome_slug.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        slug = request.data.get('genome_slug')
+
+        target = None
+        if slug is not None:
+            try:
+                target = NeuralModifier.objects.get(slug=slug)
+            except NeuralModifier.DoesNotExist:
+                return Response(
+                    {'detail': 'No NeuralModifier with slug {0!r}.'.format(slug)},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            if target.pk == NeuralModifier.CANONICAL:
+                return Response(
+                    {
+                        'detail': 'Refusing to stamp canonical via cascade. '
+                                  'Canonical ownership is set in fixtures.',
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        try:
+            result = cascade_pathway_genome(pathway, target)
+        except GenomeCascadeConflict as exc:
+            return Response(
+                {
+                    'detail': str(exc),
+                    'conflicts': exc.conflicts,
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        return Response(result, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=['get'])
     def sample(self, request, pk=None):
         """

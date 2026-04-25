@@ -128,6 +128,254 @@ during the live session, with the fat payload fetched only on explicit click.
   `graph_data?since_turn_number=N` + frontend cutover pieces are still
   open above.
 
+## Recently Done — Walker consolidation + save transit-row fix (2026-04-25, late afternoon)
+
+Closing the round-trip gap. Save now packs faithful unreal-style
+bundles; cascade and read paths share one walker.
+
+**Walker consolidation:** the FK / M2M / reverse-FK traversal lives in
+``neuroplasticity/graph_walker.walk_genome_reach`` as a single
+function with two flags: ``reverse_fk`` (off by default to match the
+original read-only behaviour) and ``transit_reverse_fk_sources``
+(model classes from which reverse-FK is allowed to descend into the
+transit allow-list). ``build_bundle_graph`` now seeds the walker with
+all owned rows and forward-walks (no behaviour change to the read
+mode); ``cascade_pathway_genome`` calls it with
+``reverse_fk=True, transit_reverse_fk_sources=(NeuralPathway,)`` so
+reach descends from a Pathway to its Neurons / Axons and forward to
+the Effectors / Executables / argument-assignments without later
+reverse-walking from Effector back to other Neurons in neighbouring
+user content. ``genome_cascade.py`` is now ~150 lines smaller, just
+the conflict policy + transactional stamp pass plus a
+``reachable_genome_rows`` shim for backward-compat with the test.
+
+**Cascade policy is additive.** The earlier policy refused on
+canonical or cross-bundle ownership in reach, which broke immediately
+because ``Effector.executable`` defaults to a fixture-canonical UUID
+— every cascade reaches canonical infrastructure. New policy: claim
+``genome=NULL`` rows for the target, skip canonical / cross-bundle
+silently, refuse only when the starting pathway itself is canonical-
+owned. Clear reverts only rows owned by the pathway's current bundle.
+``GenomeCascadeConflict`` now fires only on the pathway-canonical
+case. Result payload gained a ``skipped`` count alongside ``stamped``
+and ``unchanged``. Tests rewritten as ``CascadePolicyTest`` —
+``test_other_bundle_in_reach_skipped_silently``,
+``test_canonical_in_reach_skipped_silently``,
+``test_canonical_pathway_refuses``.
+
+**Save fix:** ``save_bundle_to_archive`` now also serializes the
+transit children of every owned ``NeuralPathway`` —
+``Neuron.objects.filter(pathway_id__in=owned_pathway_ids)``,
+``Axon.objects.filter(pathway_id__in=owned_pathway_ids)``,
+``NeuronContext.objects.filter(neuron__pathway_id__in=...)``. Three
+explicit queries, no walker (cleaner than walker-collect for save
+because we don't want SpikeTrain / Spike pulled in even
+accidentally). The ``_load_modifier_data`` install side already
+deserialised non-GenomeOwnedMixin rows correctly; this closes the
+round-trip. Saved zips no longer land empty pathway containers.
+
+**Confirmed not pulled into reach:** ``SpikeTrain`` and ``Spike`` —
+they inherit ``UUIDIdMixin`` + ``CreatedAndModifiedWithDelta`` +
+``ProjectEnvironmentMixin``, *not* ``GenomeOwnedMixin``, and are not
+in the transit allow-list. Telemetry stays out of bundle content.
+
+## Recently Done — Neuroplasticity CRU surface (2026-04-25, afternoon)
+
+Closing the "I have install/uninstall and that's it after six days"
+gap. Bundle-level CRUD now has Create, Read, the keystone Update
+(genome cascade + Save-with-version-bump), and the existing Delete.
+Enable/Disable removed as never-asked-for scope.
+
+**Backend surface changes:**
+
+- **`neuroplasticity/api.py`** — removed `enable` / `disable`
+  @actions. Added `POST /api/v2/neural-modifiers/create/` taking
+  `{slug, name, version, author, license}` for empty-bundle
+  scaffolding; returns 201 with the standard
+  `NeuralModifierDetailSerializer` payload. 409 on slug collision
+  (DB row OR catalog zip), 400 on invalid manifest fields. Fires
+  Acetylcholine `'create'`. No restart trigger — empty bundle has no
+  imports to flush.
+- **`neuroplasticity/loader.py`** — `enable_bundle` / `disable_bundle`
+  removed. Added `create_empty_bundle(slug, *, name, version, author,
+  license)` that scaffolds `grafts/<slug>/` with empty
+  `manifest.json` + `modifier_data.json` + `code/` and creates the
+  INSTALLED row + initial event log. `save_bundle_to_archive` now
+  always semver-patch-bumps the version: parses current version,
+  increments patch, mirrors the new value onto
+  `NeuralModifier.version` and `manifest_json`, writes the bumped
+  manifest into the zip. Returns gained `previous_version` and
+  `new_version` keys. `iter_installed_bundles` simplified to
+  INSTALLED-only after the ENABLED status retirement.
+- **`neuroplasticity/genome_cascade.py`** — new module. BFS reach from
+  a starting GenomeOwnedMixin row (forward FK / M2M + reverse FK
+  whose other end is also GenomeOwnedMixin), then stamps or clears
+  the `genome` FK on each row in a `transaction.atomic` block.
+  Conflict policy: refuse if reach hits a canonical-owned row or a
+  row owned by a non-target NeuralModifier — `GenomeCascadeConflict`
+  carries the conflict descriptors. Reach contract: graph_walker
+  symmetry — the cascade stamps exactly the rows
+  `build_bundle_graph` later reports as `owned`.
+- **`central_nervous_system/api_v2.py`** — added
+  `POST /api/v2/neuralpathways/<id>/set-genome/` on
+  `NeuralPathwayViewSetV2`. Body
+  `{"genome_slug": "<slug>" | null}`. 400 on missing field, 404 on
+  unknown slug or pathway, 400 if the slug is canonical, 409 with
+  the conflict tree on `GenomeCascadeConflict`. Returns the cascade
+  result `{pathway_id, target_slug, stamped, unchanged, rows}`.
+- **`central_nervous_system/serializers_v2.py`** —
+  `NeuralPathwaySerializer` now exposes read-only `genome_slug` so
+  the BEGIN_PLAY inspector dropdown can pre-populate.
+- **`neuroplasticity/models.py`** — `NeuralModifierStatus` state
+  machine docstring rewritten: `AVAILABLE -> INSTALLED <-> BROKEN`
+  is the live shape; `ENABLED` (3) and `DISABLED` (4) marked retired
+  but kept in the enum for historical log-event compat (same pattern
+  as `DISCOVERED`).
+- **`neuroplasticity/management/commands/enable_modifier.py`** and
+  **`disable_modifier.py`** — overwritten as deprecation stubs that
+  raise `CommandError`. The Linux sandbox couldn't unlink them off
+  the Windows mount during the rip; delete from a normal terminal:
+  `del neuroplasticity\management\commands\enable_modifier.py` and
+  `del neuroplasticity\management\commands\disable_modifier.py`.
+
+**Frontend surface changes:**
+
+- **`are-self-ui/src/pages/ModifierGardenPage.tsx`** — Enable /
+  Disable button + chip filters removed; `STATUS_ENABLED` /
+  `STATUS_DISABLED` constants retired (status pill colors stay so
+  historical events render correctly). Added Save button on
+  installed rows (`POST /save/`, optimistic local version bump). Added
+  New Bundle button + modal (slug / name / version / author /
+  license, posts to `/create/`).
+- **`are-self-ui/src/components/CNSInspector.tsx`** — accepts
+  `pathwayId` prop. New GENOME accordion, only visible when the
+  selected node's `effector === EFFECTOR.BEGIN_PLAY`. Dropdown lists
+  installed bundles + a "None" option; on change posts to
+  `/api/v2/neuralpathways/<id>/set-genome/`. Surfaces 409 conflict
+  detail + per-row conflict list inline.
+- **`CLAUDE.md`** — state-machine bullet rewritten; retired-status
+  note rolled in.
+
+**Tests:**
+
+- New `neuroplasticity/tests/test_genome_cascade.py`:
+  `CascadeReachTest` (reach walks through transit-model nodes —
+  Neuron + Axon — to reach the bundle-owned Effector on the far
+  side), `CascadeStampTest` (stamp writes only on the
+  GenomeOwnedMixin rows in reach: pathway + Effector, never on
+  transit; clear and idempotence verified), and
+  `CascadeConflictTest` (canonical and other-bundle ownership on
+  the Effector both refuse with `GenomeCascadeConflict`; rollback
+  verified).
+- `neuroplasticity/tests/test_modifier_lifecycle.py` —
+  `EnableDisableRoundTripTest` and `ListModifiersReportsStatusTest`
+  both removed; module docstring updated.
+- `neuroplasticity/tests/test_api.py` — `test_enable_disable_actions`
+  removed.
+- `neuroplasticity/tests/test_canonical_hidden_from_viewset.py` —
+  `test_enable_action_404s_for_canonical` and
+  `test_disable_action_404s_for_canonical` removed.
+
+**Architectural ruling.** Neuron / Axon / NeuronContext are NOT
+`GenomeOwnedMixin` and won't become so. Their bundle membership is
+transitive via the pathway FK chain. Cascade walker steps through
+them as transit; save serializes them via explicit pathway-rooted
+queries. Confirmed by Michael 2026-04-25.
+
+**Outstanding follow-ups (not blocking):**
+
+- `POST /api/v2/neural-modifiers/<slug>/upgrade/` HTTP wrapper for
+  `loader.upgrade_bundle` — already exists as a CLI; thin HTTP
+  wrapper would make Path B (fix-zip-externally → upgrade-in-place)
+  reachable from the UI without a terminal trip.
+- `cascade_pathway_genome` runs synchronously inside the request.
+  For very wide pathways this could grow uncomfortable; if it does,
+  promote to a Celery task with the response carrying a tracking
+  id. Not needed for current pathway sizes.
+
+## Recently Done — Restart-coordinated install/uninstall + UI optimistic updates (2026-04-25, morning)
+
+Closing 4-5 days of stuck-on-install/uninstall work. The original
+symptom: rapid install → uninstall → install on the Modifier Garden
+returned 409, leaking `[Synaptic Cleft] Dendrite disconnected from
+spike` and `Failed to install unreal` in the console.
+
+Root cause was layered: `shutil.rmtree(runtime, ignore_errors=True)`
+silently failed on Windows because the live Daphne process held
+imported bundle modules in `sys.modules` (file handles still locked).
+DB row got deleted, directory persisted, next install hit the
+`grafts_root() / slug` existence guard at `loader.py:212` and 409'd.
+
+**Architectural ruling.** Disk and in-memory state are ephemeral;
+restart is the atomic operation. Uninstall stops touching disk
+synchronously; boot rebuilds from authoritative DB + zip state in a
+fresh process. No unregister wiring, no genome-aware registries, no
+new state-machine columns — the restart sweeps everything.
+
+**Surface changes:**
+
+- **`neuroplasticity/loader.py`** — `uninstall_bundle` no longer
+  rmtrees the runtime dir; only `_remove_code_from_path` + DB delete.
+  `boot_bundles` got an orphan sweep pass before the import loop:
+  any `grafts/<slug>/` with no matching `NeuralModifier` row is
+  rmtree'd cleanly (loud, no `ignore_errors`) because the sweep runs
+  in a freshly-spawned process with empty `sys.modules`.
+- **`peripheral_nervous_system/autonomic_nervous_system.py`** —
+  `SystemControlViewSet.restart`'s body extracted into module-level
+  `trigger_system_restart()` callable. New helper
+  `_delayed_daphne_reload()` `time.sleep(1.0)`s then
+  `Path('config/__init__.py').touch()` to trigger Django's
+  autoreloader (exit code 3 → parent respawns child). Stale
+  `--pool=solo` celery cmd swapped for `--concurrency=4 -P threads -E`
+  to mirror `are-self.bat:33` topology.
+- **`neuroplasticity/api.py`** — `install`, `catalog_install`, and
+  `uninstall` actions now call `trigger_system_restart()` after
+  their `_broadcast(...)` and before returning the response.
+- **`are-self-ui/src/pages/ModifierGardenPage.tsx`** —
+  `installFromCatalog` rewritten to apply the install response's
+  authoritative `NeuralModifierDetail` directly into local state via
+  filter-then-append (same pattern as `confirmUninstall`). Without
+  this, the post-install Daphne autoreload eats the
+  Acetylcholine-triggered refetch and the row stays stuck on
+  AVAILABLE until manual refresh.
+- **`are-self-ui/src/components/ModifierInstallButton.tsx`** —
+  optional `onInstalled?: (data: NeuralModifierDetail) => void` prop;
+  the upload-zip path calls it on success. `ModifierGardenPage` wires
+  it to the same filter-then-append merge.
+
+**Tests:**
+
+- The two failing reinstall-cycle tests in
+  `integration_tests/test_install_unreal_bundle.py` (since moved
+  under `neuroplasticity/tests/`) got `loader.boot_bundles()` calls
+  inserted between uninstall and reinstall. They were modeling the
+  old in-process semantics; they now model the production flow
+  (boot sweeps disk between cycles).
+- `neuroplasticity/tests/test_api.py` — `@patch('neuroplasticity.
+  api.trigger_system_restart')` decorator added to
+  `ModifierApiSmokeTest.test_uninstall_action` and
+  `CatalogInstallCreatesRowTest.test_catalog_install_creates_row_
+  and_clears_operating_room`. Those were the only two tests hitting
+  endpoints that fire the trigger; everything else either uses the
+  loader directly or hits an early-return path. No global conftest
+  fixture — the spawn surface is exactly two tests.
+
+**Standing rulings landed.** Two new bullets in `CLAUDE.md` under
+the project-wide rulings: (a) uninstall defers disk cleanup to
+boot's orphan sweep; (b) install/uninstall API actions trigger
+`trigger_system_restart`, tests must mock it. See `CLAUDE.md`.
+
+**Architectural follow-up (not blocking, deferred).**
+`trigger_system_restart` is currently called inline from
+`neuroplasticity/api.py`, which mixes view logic with operational
+process management. The Are-Self-native answer is to make
+`autonomic_nervous_system` a *subscriber* to the Acetylcholine that
+`api._broadcast` already fires for install/uninstall — the API
+stops knowing anything about restart, and tests stop needing a
+mock because the consumer isn't running in test mode. Mentioned
+here as a future-Michael decision; today's mock is sufficient and
+ships clean.
+
 ## Recently Done — NeuralModifier layout consolidation + install/uninstall bug fixes (2026-04-20)
 
 Dogfood round-trip against the Unreal bundle flagged two live bugs and

@@ -50,24 +50,6 @@ class CanonicalHiddenFromViewSetTest(ModifierLifecycleTestCase, APITestCase):
             ).exists()
         )
 
-    def test_enable_action_404s_for_canonical(self):
-        """Assert enable refuses canonical with 404."""
-        res = self.client.post(
-            '/api/v2/neural-modifiers/{0}/enable/'.format(
-                NeuralModifier.CANONICAL_SLUG
-            )
-        )
-        self.assertEqual(res.status_code, 404)
-
-    def test_disable_action_404s_for_canonical(self):
-        """Assert disable refuses canonical with 404."""
-        res = self.client.post(
-            '/api/v2/neural-modifiers/{0}/disable/'.format(
-                NeuralModifier.CANONICAL_SLUG
-            )
-        )
-        self.assertEqual(res.status_code, 404)
-
     def test_save_action_404s_for_canonical(self):
         """Assert save refuses canonical with 404."""
         res = self.client.post(

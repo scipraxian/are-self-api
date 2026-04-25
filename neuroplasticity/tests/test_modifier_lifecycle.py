@@ -1,9 +1,9 @@
 """Lifecycle tests for the NeuralModifier loader and management commands.
 
-Covers install / enable / disable / uninstall happy paths plus the two
-BROKEN failure modes (manifest hash drift, entry-module import failure).
-Tests build self-contained fake bundles in a tmp directory and override
-the three root settings, so the committed Unreal bundle is never touched.
+Covers install / uninstall happy paths plus the two BROKEN failure
+modes (manifest hash drift, entry-module import failure). Tests build
+self-contained fake bundles in a tmp directory and override the three
+root settings, so the committed Unreal bundle is never touched.
 
 Under the genome-FK scheme there is no side-car contribution table —
 each installed row carries a ``genome`` FK back to the owning
@@ -13,7 +13,6 @@ does the rest.
 
 from __future__ import annotations
 
-import io
 import json
 import shutil
 import sys
@@ -23,7 +22,6 @@ import uuid
 from pathlib import Path
 from typing import Iterable, Optional
 
-from django.core.management import call_command
 from django.test import TestCase, override_settings
 
 from hypothalamus.models import AIModelTags
@@ -227,33 +225,6 @@ class InstallHappyPathTest(ModifierLifecycleTestCase):
         self.assertEqual(events[0].event_data['rows'], 3)
 
 
-class EnableDisableRoundTripTest(ModifierLifecycleTestCase):
-    def test_enable_disable_round_trip(self):
-        """Assert enable/disable flips status and writes one event per call."""
-        build_fake_bundle(self.scratch_root, 'beta')
-        self.install_fake('beta')
-
-        loader.enable_bundle('beta')
-        modifier = NeuralModifier.objects.get(slug='beta')
-        self.assertEqual(modifier.status_id, NeuralModifierStatus.ENABLED)
-
-        loader.disable_bundle('beta')
-        modifier.refresh_from_db()
-        self.assertEqual(modifier.status_id, NeuralModifierStatus.DISABLED)
-
-        loader.enable_bundle('beta')
-        modifier.refresh_from_db()
-        self.assertEqual(modifier.status_id, NeuralModifierStatus.ENABLED)
-
-        log = modifier.current_installation()
-        event_types = [e.event_type_id for e in log.events.order_by('created')]
-        self.assertIn(NeuralModifierInstallationEventType.ENABLE, event_types)
-        self.assertIn(NeuralModifierInstallationEventType.DISABLE, event_types)
-        self.assertEqual(
-            event_types.count(NeuralModifierInstallationEventType.ENABLE), 2
-        )
-
-
 class UninstallFullRollbackTest(ModifierLifecycleTestCase):
     def test_uninstall_full_rollback(self):
         """Assert uninstall cascades owned rows, logs, and events.
@@ -379,24 +350,6 @@ class ReinstallCreatesFreshRowTest(ModifierLifecycleTestCase):
             neural_modifier=second
         ).count()
         self.assertEqual(log_count, 1)
-
-
-class ListModifiersReportsStatusTest(ModifierLifecycleTestCase):
-    def test_list_modifiers_reports_status(self):
-        """Assert list_modifiers prints each slug + status."""
-        build_fake_bundle(self.scratch_root, 'theta')
-        build_fake_bundle(self.scratch_root, 'iota')
-        self.install_fake('theta')
-        self.install_fake('iota')
-        loader.enable_bundle('iota')
-
-        out = io.StringIO()
-        call_command('list_modifiers', stdout=out)
-        printed = out.getvalue()
-        self.assertIn('theta', printed)
-        self.assertIn('iota', printed)
-        self.assertIn('Installed', printed)
-        self.assertIn('Enabled', printed)
 
 
 class InstallRejectsInvalidSemverTest(ModifierLifecycleTestCase):

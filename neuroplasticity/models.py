@@ -28,37 +28,38 @@ class NeuralModifierStatus(NameMixin):
 
     State machine::
 
-        AVAILABLE -> INSTALLED -> ENABLED <-> DISABLED
-        (zip on                     |            |
-         disk,                      +------------+---> BROKEN
-         no row)                                       ^
-             ^                                         | boot-time
-             |                                         | drift or
-             +-------- uninstall (deletes row) --------+ load failure
+        AVAILABLE -> INSTALLED ----> BROKEN
+        (zip on        |              ^
+         disk,         |              | boot-time drift
+         no row)       |              | or load failure
+                       v
+            +-- uninstall (deletes row) --+
+            v                             v
+        AVAILABLE                    AVAILABLE
 
     AVAILABLE:  ``genomes/<slug>.zip`` exists and no DB row exists. Not
         a row state — the absence of a row IS the state.
     INSTALLED:  manifest validated, modifier_data.json loaded,
-        contributions recorded, code on sys.path. Not yet wired into MCP.
-    ENABLED:    INSTALLED plus actively contributing to the MCP tool-set
-        builder and live tool resolution.
-    DISABLED:   INSTALLED but skipped by the MCP builder. Code still on
-        sys.path, contributions still in DB. Reversible via ENABLE.
+        contributions recorded, code on sys.path. The only live state
+        for an installed bundle. Tools and contributions are active.
     BROKEN:     Error state surfaced by the boot re-check or an upgrade
         failure. Manifest hash mismatch against the runtime tree, or
         entry-module import failure. Requires manual intervention.
         (A failed fresh install deletes the row entirely; it does not
         leave a BROKEN row behind.)
 
-    DISCOVERED is retired. The enum value (1) is preserved for
-    backwards compatibility with historical log events but is never
-    assigned to a new row.
+    Retired states (enum values preserved for historical log events,
+    never assigned to new rows):
+        DISCOVERED (1) — the legacy "found a zip" state, replaced by
+            row-absence semantics for AVAILABLE.
+        ENABLED (3), DISABLED (4) — removed 2026-04-25 with the
+            enable/disable feature; INSTALLED now subsumes ENABLED.
     """
 
     DISCOVERED = 1
     INSTALLED = 2
-    ENABLED = 3
-    DISABLED = 4
+    ENABLED = 3       # retired — kept for historical log compat
+    DISABLED = 4      # retired — kept for historical log compat
     BROKEN = 5
 
     class Meta:

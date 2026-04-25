@@ -88,19 +88,6 @@ class ModifierApiSmokeTest(ModifierLifecycleTestCase, APITestCase):
             self.assertIn('pk', entry)
             self.assertIn('name_or_repr', entry)
 
-    def test_enable_disable_actions(self):
-        """Assert enable/disable endpoints flip status."""
-        build_fake_bundle(self.scratch_root, 'ui_gamma')
-        self.install_fake('ui_gamma')
-
-        res = self.client.post('/api/v2/neural-modifiers/ui_gamma/enable/')
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.json()['status_name'], 'Enabled')
-
-        res = self.client.post('/api/v2/neural-modifiers/ui_gamma/disable/')
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.json()['status_name'], 'Disabled')
-
     @patch('neuroplasticity.api.trigger_system_restart')
     def test_uninstall_action(self, mock_restart_system: patch.object):
         """Assert uninstall deletes the row and returns a minimal payload."""

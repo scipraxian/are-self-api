@@ -27,6 +27,23 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   install also deletes the row it created — never leaves a BROKEN or
   DISCOVERED stub behind. BROKEN is reserved for boot-time drift on a
   previously-working install.
+- Uninstall does NOT rmtree `grafts/<slug>/` synchronously. Disk cleanup is
+  deferred to `boot_bundles`' orphan sweep, which runs in the freshly-spawned
+  post-restart process where `sys.modules` is empty so no Windows file locks
+  block the rmtree. Any in-process test that does install → uninstall →
+  install must call `loader.boot_bundles()` between cycles to model what
+  production gets via the restart.
+- Install / uninstall / catalog_install API actions trigger a coordinated
+  process restart via `peripheral_nervous_system.autonomic_nervous_system.
+  trigger_system_restart()`: `celery_app.control.shutdown()` to drain
+  workers, `subprocess.Popen` a fresh worker (flags mirror `are-self.bat:33`
+  — `--concurrency=4 -P threads -E`), then a 1-second-delayed touch of
+  `config/__init__.py` so Django's autoreloader exits the Daphne child with
+  code 3 and respawns it. Tests hitting those endpoints MUST mock
+  `trigger_system_restart` (e.g. `@patch('neuroplasticity.api.
+  trigger_system_restart')` on the specific test methods) — without the
+  mock, every test run spawns a real Celery worker and reloads the live dev
+  Daphne.
 - UUIDs are `uuid.uuid4()` random literals — no UUIDv5, namespaces, or
   deterministic seeding. Existing UUID literals in fixtures are frozen; do not
   regenerate.
@@ -172,12 +189,14 @@ gitignored):
   `try/finally` — after any operation (success OR failure), `operating_room/` is empty.
 
 **State machine:** AVAILABLE (zip in `genomes/`, **no DB row**) → Install → INSTALLED →
-Enable → ENABLED → Disable → INSTALLED → Uninstall → AVAILABLE → (delete the zip to remove
-the bundle entirely). Uninstall **deletes** the `NeuralModifier` row — contributions, logs,
-and events all CASCADE away. BROKEN surfaces only from boot-time hash drift or load failure
-on a previously-installed bundle; a failed fresh install deletes its row instead of
-flipping BROKEN. `DISCOVERED` is retired as a surfaced status (enum value stays in fixtures
-for backwards compat of historical log events; never assigned to new rows).
+Uninstall → AVAILABLE → (delete the zip to remove the bundle entirely). Uninstall
+**deletes** the `NeuralModifier` row — contributions, logs, and events all CASCADE
+away. BROKEN surfaces only from boot-time hash drift or load failure on a
+previously-installed bundle; a failed fresh install deletes its row instead of
+flipping BROKEN. Retired statuses (enum values kept for historical log compat, never
+assigned to new rows): `DISCOVERED` (legacy "found a zip" state, replaced by row-absence
+semantics for AVAILABLE), `ENABLED` and `DISABLED` (removed 2026-04-25 with the
+enable/disable feature — INSTALLED is now the only live state).
 
 Bundle-time registration surfaces are in place: `register_parietal_tool` /
 `unregister_parietal_tool` in `parietal_lobe/parietal_mcp/gateway.py` (module-level
