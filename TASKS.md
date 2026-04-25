@@ -128,6 +128,100 @@ during the live session, with the fat payload fetched only on explicit click.
   `graph_data?since_turn_number=N` + frontend cutover pieces are still
   open above.
 
+## Recently Done — Save safety rails + merge_logs to bundle (2026-04-25, evening)
+
+Closing today's loop on bundle CRU. Two new save guardrails to make
+the workflow non-destructive, plus an architectural realignment that
+moves UE-specific log merging out of core into the bundle where it
+belongs.
+
+**Save safety rails (`neuroplasticity/loader.py:save_bundle_to_archive`):**
+
+- **Pre-flight refusal on missing entry-module code.** Before any
+  state mutation, save checks each `entry_modules` entry in the
+  manifest against `grafts/<slug>/code/<name>/__init__.py` or
+  `<name>.py`. If absent, save raises `ValueError` with a clear
+  message and does NOT bump version, write a staged zip, or touch
+  the catalog target. The exact failure mode that wiped a working
+  unreal.zip earlier today (grafts empty + save runs anyway) is now
+  impossible.
+- **Staged-zip validation.** After writing the staged zip in
+  `operating_room/`, `_verify_staged_archive` re-opens it with
+  `zipfile.ZipFile` to confirm it's a valid archive AND that the
+  declared entry-modules are present at `<slug>/code/<name>/...`.
+  Any failure aborts before the catalog `os.replace`. Catches
+  `BadZipFile` and missing-module shapes in one place.
+- **Single rolling backup before overwrite.** When
+  `genomes/<slug>.zip` already exists, save copies it to
+  `genomes/<slug>.zip.bak` via `shutil.copy2` (preserves mtime)
+  BEFORE the atomic replace. Result payload now carries
+  `backup_path` so the UI can surface "saved → backup at X."
+  Standing rule: any zip modification leaves a backup as a
+  programmatic effect.
+
+Order is now: read manifest → **pre-flight code check** → bump version
++ persist on row → stage zip → **verify staged** → backup target →
+atomic replace. If pre-flight fails, no row mutation lands.
+
+**Module-level imports in loader.py.** Moved `import zipfile` to
+module scope (was function-local, mount-sync flakiness produced
+NameError mid-test). `_missing_entry_modules` and
+`_verify_staged_archive` are module-level helpers callable from
+any save / install / repair path that needs the same checks later.
+
+**Merge-logs move to unreal bundle (architectural realignment).**
+`occipital_lobe/merge_logs.py`, `merge_logs_nway.py`, and their
+tests are bundle-specific despite living under
+`occipital_lobe/`. Each hardcodes `LogConstants.TYPE_RUN` and the
+only registered handler for that type is `UERunLogStrategy` from
+the unreal bundle. Tests in core couldn't run without staging the
+bundle's code into sys.path. Resolution: move them into
+`unreal/code/are_self_unreal/` so the bundle owns its merge tools
+and core stops pretending to be log-merge-generic.
+
+What stays in `occipital_lobe/`: `LogEntry`, `LogSession`,
+`LogParserStrategy` ABC, `LogParserFactory` registry, `LogConstants`
+shared format strings, `merge_sessions()` (truly generic, operates
+on already-parsed sessions). What goes to bundle: the UE-coupled
+merge utilities + their tests.
+
+**Standing rulings landed.**
+- *Bundle ownership is additive, not exclusive.* The cascade claims
+  NULL rows, skips canonical and cross-bundle silently, refuses only
+  when the starting pathway itself is canonical-owned. Reach hitting
+  shared infrastructure (the canonical Executable every Effector
+  defaults to) is normal — bundles legitimately reference shared
+  rows. Cascade no longer treats every reach as a claim.
+- *Save's transit collection is explicit, not walker-driven.*
+  Per-model queries — Neuron / Axon / NeuronContext /
+  EffectorArgumentAssignment / EffectorContext /
+  ExecutableArgumentAssignment / ContextVariable /
+  ToolParameterAssignment / ParameterEnum — surgical and
+  immune to "walker accidentally pulls in SpikeTrain telemetry."
+- *Save preserves the bundle's Python tree.* `grafts/<slug>/code/`
+  is read-only during save; the tree gets serialized into the
+  zip's `code/` directory verbatim. Pre-flight refuses if the tree
+  doesn't carry the manifest's declared entry_modules.
+- *Bundles are URL-route contributors.* Convention attribute
+  `V2_GENOME_ROUTER` (a `routers.SimpleRouter`) shipped from a
+  bundle's `urls.py` is auto-discovered by the V2 URL conf at
+  module-import time and merged into the core router's registry.
+  Refuse-on-collision; ImportError for "no urls.py" is fine,
+  any other error from a present-but-broken urls.py is loud.
+  *Spec landed; CC owns implementation.*
+
+**Outstanding:**
+- Bundle URL discovery (`_discover_bundle_routes` in v2-urls module
+  + `V2_GENOME_ROUTER` from `are_self_unreal/urls.py`) — designed
+  with Michael, CC building.
+- Move `central_nervous_system/views/spike_merge_viewset.py` into
+  the unreal bundle alongside the merge utilities; the viewset is
+  the consumer of `merge_logs_nway` so it goes where the merge
+  goes. Wired via the new URL discovery once that lands.
+- 11 unreal+merge-related tests still red; the bundle's new
+  `urls.py` + the moved-in merge files should clear them once the
+  URL discovery wires up. Other ~150 tests green.
+
 ## Recently Done — Walker consolidation + save transit-row fix (2026-04-25, late afternoon)
 
 Closing the round-trip gap. Save now packs faithful unreal-style

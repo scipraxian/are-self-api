@@ -2,6 +2,7 @@
 # genomes/ is committed — *.zip archives are the source of truth.
 /neuroplasticity/grafts/
 /neuroplasticity/operating_room/
+/neuroplasticity/genomes/backups/
 
 # --- Python & Venv ---
 __pycache__/

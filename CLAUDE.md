@@ -76,6 +76,59 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   `django_celery_beat` stays in `genetic_immutables`; `petri_dish.json` is
   intentionally non-empty and composes with `genetic_immutables.json` via
   the common test class.
+- Bundle ownership cascade is **additive, not exclusive**. Cascade claims
+  `genome=NULL` rows in reach for the target. Skips canonical-owned rows
+  silently (shared infrastructure — `Effector.executable` defaults to a
+  fixture-canonical UUID, every cascade naturally reaches it). Skips rows
+  owned by another bundle silently (cross-bundle references are a feature).
+  Refuses only when the **starting pathway itself** is canonical-owned.
+  Clearing reverts only rows owned by the pathway's current bundle.
+- Neuron / Axon / NeuronContext are NOT `GenomeOwnedMixin` and won't be —
+  bundle membership is transitive via the FK chain. Cascade walker steps
+  through them as transit. Save serializes them via explicit pathway-rooted
+  queries (`Neuron.objects.filter(pathway_id__in=owned_pathway_ids)` shape).
+- Save (`save_bundle_to_archive`) is non-destructive by construction:
+  (a) refuses if `manifest['entry_modules']` aren't findable under
+  `grafts/<slug>/code/` — no code-less zip ever gets written; (b) re-opens
+  the staged zip with `zipfile.ZipFile` to confirm validity + entry-module
+  presence before the catalog `os.replace`; (c) copies the existing
+  `genomes/<slug>.zip` to `<slug>.zip.bak` before overwrite (single rolling
+  backup, preserves mtime). Save also always semver-patch-bumps the manifest
+  version and mirrors the new value onto `NeuralModifier.version` and
+  `manifest_json` so the saved archive round-trips through `upgrade_bundle`.
+- Save's transit-row collection is **explicit per-model queries**, not
+  walker-driven: Neuron / Axon / NeuronContext (children of owned Pathway),
+  EffectorArgumentAssignment / EffectorContext (children of owned Effector),
+  ExecutableArgumentAssignment (children of owned Executable),
+  ContextVariable (children of owned ProjectEnvironment),
+  ToolParameterAssignment / ParameterEnum (children of owned ToolDefinition
+  / ToolParameter). SpikeTrain / Spike / ReasoningSession are intentionally
+  excluded — runtime telemetry, not bundle content.
+- Bundles can ship URL routes via convention. A bundle's `urls.py` exposes
+  `V2_GENOME_ROUTER` (a `routers.SimpleRouter()` with viewsets registered),
+  and the V2 URL conf auto-discovers it at module-import time (iterate
+  `iter_installed_bundles()` → ensure each bundle's `code/` is on
+  `sys.path` → `importlib.import_module(f'{entry_module}.urls')` → if the
+  module has `V2_GENOME_ROUTER`, extend the core router's registry).
+  Refuse-on-prefix-collision; missing `urls.py` is fine; broken `urls.py`
+  fails loudly. Bundles without route contributions don't ship a `urls.py`.
+- Log merge is **bundle-owned**, not in `occipital_lobe`. The N-way log
+  merge utilities (`merge_logs.py`, `merge_logs_nway.py`) and the spike-
+  log merge viewset live in `unreal/code/are_self_unreal/` because they
+  hardcode `LogConstants.TYPE_RUN` and only the unreal bundle's
+  `UERunLogStrategy` registers under that key. `occipital_lobe/` keeps
+  the generic surface: `LogEntry`, `LogSession`, `LogParserStrategy` ABC,
+  `LogParserFactory` registry, `LogConstants` shared format strings, and
+  `merge_sessions()` (operates on already-parsed sessions).
+- Neuroplasticity has no `enable` / `disable` lifecycle. The only live
+  status is INSTALLED. `ENABLED` (3) and `DISABLED` (4) remain in the
+  `NeuralModifierStatus` enum for historical log-event compat (same
+  pattern as retired `DISCOVERED`), never assigned to new rows. No CLI
+  for bundle lifecycle — five management commands (`enable_modifier`,
+  `disable_modifier`, `list_modifiers`, `uninstall_modifier`,
+  `upgrade_modifier`) are deprecation stubs that raise `CommandError` if
+  invoked. The HTTP API and Modifier Garden UI are the only supported
+  surfaces.
 
 ## The Developer
 
