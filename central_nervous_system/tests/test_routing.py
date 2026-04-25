@@ -4,6 +4,8 @@ from central_nervous_system.central_nervous_system import CNS
 from central_nervous_system.models import (
     Axon,
     AxonType,
+    CNSDistributionMode,
+    CNSDistributionModeID,
     Effector,
     NeuralPathway,
     Neuron,
@@ -223,3 +225,124 @@ class CNSGraphRoutingTest(CommonFixturesAPITestCase):
         self.assertIn(flow_target.id, target_neurons)
         self.assertIn(success_target.id, target_neurons)
         self.assertEqual(children.count(), 2)
+
+
+class CNSFleetBroadcastZeroAgentsTest(CommonFixturesAPITestCase):
+    """When distribution_mode is ALL_ONLINE_AGENTS and there are no agents
+    online, the spike should succeed silently — nothing to dispatch."""
+
+    def setUp(self):
+        super().setUp()
+        env_type = ProjectEnvironmentType.objects.get_or_create(name='UE5')[0]
+        env_status = ProjectEnvironmentStatus.objects.get_or_create(
+            name='Ready')[0]
+        self.env = ProjectEnvironment.objects.create(name='Test Env',
+                                                     type=env_type,
+                                                     status=env_status)
+        self.env.selected = True
+        self.env.save()
+
+        self.exe = Executable.objects.create(name='TestExe',
+                                             executable='cmd.exe')
+        fleet_mode = CNSDistributionMode.objects.get(
+            id=CNSDistributionModeID.ALL_ONLINE_AGENTS)
+        self.effector = Effector.objects.create(name='Fleet Spell',
+                                                executable=self.exe,
+                                                distribution_mode=fleet_mode)
+        self.book = NeuralPathway.objects.create(name='Fleet Book')
+        self.neuron = Neuron.objects.create(pathway=self.book,
+                                            effector=self.effector,
+                                            environment=self.env,
+                                            is_root=True)
+
+    @patch('central_nervous_system.central_nervous_system.fire_spike.delay')
+    def test_fleet_broadcast_no_agents_succeeds(self, mock_fire_spike_delay):
+        """Zero agents online → spike marked SUCCESS, graph keeps walking."""
+        cns = CNS(pathway_id=self.book.id)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            cns.dispatch_next_wave()
+
+        spike = Spike.objects.get(spike_train=cns.spike_train,
+                                  neuron=self.neuron)
+        self.assertEqual(spike.status_id, SpikeStatus.SUCCESS)
+        mock_fire_spike_delay.assert_not_called()
+
+    @patch('central_nervous_system.central_nervous_system.fire_spike.delay')
+    def test_fleet_broadcast_no_agents_continues_graph(
+        self, mock_fire_spike_delay
+    ):
+        """After zero-agent SUCCESS, downstream axons still fire."""
+        downstream_neuron = Neuron.objects.create(
+            pathway=self.book,
+            effector=Effector.objects.create(name='Local Spell',
+                                            executable=self.exe),
+            environment=self.env,
+            is_root=False,
+        )
+        success_type = AxonType.objects.get(id=AxonType.TYPE_SUCCESS)
+        Axon.objects.create(pathway=self.book,
+                            source=self.neuron,
+                            target=downstream_neuron,
+                            type=success_type)
+
+        cns = CNS(pathway_id=self.book.id)
+        with self.captureOnCommitCallbacks(execute=True):
+            cns.dispatch_next_wave()
+
+        fleet_spike = Spike.objects.get(spike_train=cns.spike_train,
+                                        neuron=self.neuron)
+        self.assertEqual(fleet_spike.status_id, SpikeStatus.SUCCESS)
+
+        mock_fire_spike_delay.reset_mock()
+        with self.captureOnCommitCallbacks(execute=True):
+            cns._process_graph_triggers(fleet_spike)
+
+        child = Spike.objects.get(spike_train=cns.spike_train,
+                                  neuron=downstream_neuron)
+        self.assertEqual(child.neuron, downstream_neuron)
+        self.assertEqual(child.provenance, fleet_spike)
+        self.assertEqual(child.status_id, SpikeStatus.PENDING)
+
+
+class CNSFirstResponderZeroAgentsTest(CommonFixturesAPITestCase):
+    """When distribution_mode is ONE_AVAILABLE_AGENT and there are no agents
+    online, the spike should succeed silently."""
+
+    def setUp(self):
+        super().setUp()
+        env_type = ProjectEnvironmentType.objects.get_or_create(name='UE5')[0]
+        env_status = ProjectEnvironmentStatus.objects.get_or_create(
+            name='Ready')[0]
+        self.env = ProjectEnvironment.objects.create(name='Test Env',
+                                                     type=env_type,
+                                                     status=env_status)
+        self.env.selected = True
+        self.env.save()
+
+        self.exe = Executable.objects.create(name='TestExe',
+                                             executable='cmd.exe')
+        first_responder_mode = CNSDistributionMode.objects.get(
+            id=CNSDistributionModeID.ONE_AVAILABLE_AGENT)
+        self.effector = Effector.objects.create(
+            name='First Responder Spell',
+            executable=self.exe,
+            distribution_mode=first_responder_mode)
+        self.book = NeuralPathway.objects.create(name='First Responder Book')
+        self.neuron = Neuron.objects.create(pathway=self.book,
+                                            effector=self.effector,
+                                            environment=self.env,
+                                            is_root=True)
+
+    @patch('central_nervous_system.central_nervous_system.fire_spike.delay')
+    def test_first_responder_no_agents_succeeds(self, mock_fire_spike_delay):
+        """Zero agents online → spike marked SUCCESS, not FAILED."""
+        cns = CNS(pathway_id=self.book.id)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            cns.dispatch_next_wave()
+
+        spike = Spike.objects.get(spike_train=cns.spike_train,
+                                  neuron=self.neuron)
+        self.assertEqual(spike.status_id, SpikeStatus.SUCCESS)
+        mock_fire_spike_delay.assert_not_called()

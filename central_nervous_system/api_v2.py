@@ -1,3 +1,6 @@
+import json
+
+from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
@@ -123,6 +126,16 @@ class NeuralPathwayViewSetV2(viewsets.ModelViewSet):
             return NeuralPathwayDetailSerializer
         return NeuralPathwaySerializer
 
+    def perform_create(self, serializer):
+        pathway = serializer.save()
+        # Every new pathway gets a Begin Play root neuron automatically.
+        Neuron.objects.create(
+            pathway=pathway,
+            effector_id=Effector.BEGIN_PLAY,
+            is_root=True,
+            ui_json='{"x": 100, "y": 200}',
+        )
+
     @action(detail=True, methods=['post'])
     def toggle_favorite(self, request, pk=None):
         pathway = self.get_object()
@@ -143,6 +156,45 @@ class NeuralPathwayViewSetV2(viewsets.ModelViewSet):
             return Response(
                 {'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    @action(detail=True, methods=['get'])
+    def sample(self, request, pk=None):
+        """
+        Export this pathway as a portable fixture JSON.
+        Objects already present in baseline fixtures are excluded.
+
+        Query params:
+            include_dependencies (bool, default true):
+                Walk the Effector/Executable FK chain.
+        """
+        from central_nervous_system.sample_pathway import sample_pathway
+
+        include_deps = (
+            request.query_params.get('include_dependencies', 'true').lower()
+            != 'false'
+        )
+
+        try:
+            fixture = sample_pathway(
+                str(pk), include_dependencies=include_deps
+            )
+        except NeuralPathway.DoesNotExist:
+            return Response(
+                {'error': 'Pathway not found.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        pathway = self.get_object()
+        filename = f'{pathway.name.lower().replace(" ", "_")}_sample.json'
+
+        response = HttpResponse(
+            json.dumps(fixture, indent=2, ensure_ascii=False),
+            content_type='application/json',
+        )
+        response['Content-Disposition'] = (
+            f'attachment; filename="{filename}"'
+        )
+        return response
 
 
 class NeuronViewSetV2(viewsets.ModelViewSet):

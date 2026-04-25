@@ -45,7 +45,9 @@ class PrefrontalCortexDispatchTest(CommonFixturesAPITestCase):
 
         # 3. Temporal Setup
         self.shift_sifting = Shift.objects.get(id=Shift.SIFTING)
-        self.iteration_def = IterationDefinition.objects.first()
+        self.iteration_def = IterationDefinition.objects.get(
+            name='Standard Agile Sprint'
+        )
 
         # FIX: Get the existing shift definition from the fixture to prevent IntegrityError
         self.shift_def = IterationShiftDefinition.objects.get(

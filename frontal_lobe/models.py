@@ -1,6 +1,4 @@
-import json
 from datetime import timedelta
-from typing import Optional
 
 from django.db import models
 
@@ -8,8 +6,6 @@ from common.models import (
     BigIdMixin,
     CreatedAndModifiedWithDelta,
     CreatedMixin,
-    DefaultFieldsMixin,
-    DescriptionMixin,
     ModifiedMixin,
     NameMixin,
     UUIDIdMixin,
@@ -229,6 +225,135 @@ class ReasoningTurn(
             else 'FAILED (Data footprint too large)'
         )
         return was_efficient, efficiency_status
+
+
+class ReasoningTurnDigest(CreatedAndModifiedWithDelta):
+    """
+    Lightweight summary of a single ReasoningTurn, written at turn close.
+
+    The full request/response payloads and full tool-call bodies stay on
+    the ReasoningTurn row and its ModelUsageRecord. The digest holds only
+    what the frontend needs to render a node on the reasoning-session
+    graph and the turn-level list — enough to show shape, status, tool
+    surface, and a short excerpt, without ever shipping a full payload in
+    the list response.
+
+    Full payloads are fetched on explicit click via
+    /api/v2/reasoning_turns/{id}/.
+
+    Written by a post_save signal on ReasoningTurn when
+    model_usage_record is populated (i.e., the assistant message and
+    tool_calls are finalized). Discardable and recomputable — no
+    authoritative data lives here.
+
+    The digest uses the turn's UUID as its own primary key (side-car
+    pattern): one digest per turn, lifecycle tied to turn via CASCADE,
+    no orphans possible.
+    """
+
+    turn = models.OneToOneField(
+        ReasoningTurn,
+        primary_key=True,
+        on_delete=models.CASCADE,
+        related_name='digest',
+        help_text='The turn this digest summarizes; also the digest PK.',
+    )
+    session = models.ForeignKey(
+        ReasoningSession,
+        on_delete=models.CASCADE,
+        related_name='turn_digests',
+        db_index=True,
+        help_text=(
+            'Denormalized from turn.session so the incremental-load '
+            'endpoint (graph_data?since_turn_number=N) can filter '
+            'digests without joining through ReasoningTurn.'
+        ),
+    )
+    turn_number = models.IntegerField(
+        db_index=True,
+        help_text='Denormalized from turn.turn_number for cheap ordering.',
+    )
+    status_name = models.CharField(
+        max_length=64,
+        db_index=True,
+        help_text=(
+            'Denormalized ReasoningStatus.name at the time the digest '
+            'was written. Read-only shadow; the turn is still the '
+            'source of truth.'
+        ),
+    )
+    model_name = models.CharField(
+        max_length=255,
+        blank=True,
+        default='',
+        help_text=(
+            'Flattened from '
+            'turn.model_usage_record.ai_model_provider.ai_model.name. '
+            'Used to render "qwen2.5-coder:32b" in the turn chip without '
+            'traversing four FKs.'
+        ),
+    )
+    tokens_in = models.IntegerField(
+        default=0,
+        help_text='Input tokens from the turn ModelUsageRecord.',
+    )
+    tokens_out = models.IntegerField(
+        default=0,
+        help_text='Output tokens from the turn ModelUsageRecord.',
+    )
+    excerpt = models.TextField(
+        blank=True,
+        default='',
+        help_text=(
+            'Up to ~300 chars of the assistant thought for this turn, '
+            'extracted by the same logic the frontend uses '
+            '(extractThoughtFromUsageRecord): plain assistant content, '
+            'or the "thought" field from an mcp_respond_to_user tool '
+            'call if the assistant spoke through the tool. Truncated '
+            'with an ellipsis. Not searchable, not authoritative — if '
+            'you need the real content, read the turn.'
+        ),
+    )
+    tool_calls_summary = models.JSONField(
+        default=list,
+        blank=True,
+        help_text=(
+            'List of {id, tool_name, success, target} dicts summarizing '
+            "the turn's ToolCall records. Enough to render the Parietal "
+            'Lobe chips. The id is the ToolCall pk (as a string) so the '
+            'frontend can look up the full row on the fetched turn by '
+            'stable id instead of array index. Args and result_payload '
+            'intentionally excluded — fetch the turn detail for those.'
+        ),
+    )
+    engram_ids = models.JSONField(
+        default=list,
+        blank=True,
+        help_text=(
+            'UUIDs (as strings) of engrams formed or referenced during '
+            'this turn. Resolved against the engram endpoint by the '
+            'frontend; not a FK/M2M because digests are meant to be '
+            'nukable without touching hippocampus.'
+        ),
+    )
+
+    class Meta:
+        ordering = ['session_id', 'turn_number']
+        verbose_name = 'reasoning turn digest'
+        verbose_name_plural = 'reasoning turn digests'
+        indexes = [
+            models.Index(
+                fields=['session', 'turn_number'],
+                name='turn_digest_session_turn_idx',
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return 'Digest(turn=%s, #%s, %s)' % (
+            str(self.turn_id)[:8],
+            self.turn_number,
+            self.status_name,
+        )
 
 
 class SessionConclusion(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):

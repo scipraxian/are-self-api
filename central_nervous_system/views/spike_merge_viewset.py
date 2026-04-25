@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from central_nervous_system.models import Spike, SpikeStatus
-from ue_tools.merge_logs_nway import (
+from occipital_lobe.merge_logs_nway import (
     merge_delta,
     merge_logs_nway,
     serialize_result,

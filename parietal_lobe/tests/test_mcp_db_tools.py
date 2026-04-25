@@ -75,6 +75,56 @@ async def test_mcp_query_model_basic_filters(db_setup):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
+async def test_mcp_query_model_uuid_alias_for_id(db_setup):
+    """Ensures filters={'uuid': <pk>} is silently treated as filters={'id': <pk>}.
+
+    Post-UUID-migration, the PK field is 'id' but the LLM frequently guesses
+    'uuid' because the value is a UUID. The tool should accept the alias rather
+    than fail with 'Cannot resolve keyword uuid'.
+    """
+    spike_id = str(db_setup['spike_1'].id)
+
+    result = await ParietalMCP.execute(
+        'mcp_query_model', {
+            'model_name': 'Spike',
+            'filters': {
+                'uuid': spike_id
+            }
+        }
+    )
+
+    data = json.loads(result)
+    assert 'Error applying filters' not in str(data)
+    assert len(data['records']) == 1
+    assert data['records'][0]['id'] == spike_id
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.asyncio
+async def test_mcp_query_model_explicit_id_wins_over_uuid_alias(db_setup):
+    """Ensures that if the LLM sends BOTH 'id' and 'uuid', 'id' is authoritative
+    and 'uuid' is ignored — so the alias never clobbers real intent."""
+    spike_1_id = str(db_setup['spike_1'].id)
+    spike_2_id = str(db_setup['spike_2'].id)
+
+    result = await ParietalMCP.execute(
+        'mcp_query_model', {
+            'model_name': 'Spike',
+            'filters': {
+                'id': spike_1_id,
+                'uuid': spike_2_id
+            }
+        }
+    )
+
+    data = json.loads(result)
+    assert 'Error applying filters' not in str(data)
+    assert len(data['records']) == 1
+    assert data['records'][0]['id'] == spike_1_id
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.asyncio
 async def test_mcp_query_model_q_string_logic(db_setup):
     """Ensures the AI can write raw Q() objects for complex queries."""
     # Test an OR query that should return both spikes

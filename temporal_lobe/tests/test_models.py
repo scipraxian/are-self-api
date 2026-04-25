@@ -83,6 +83,6 @@ class TemporalLobeModelsTest(CommonFixturesAPITestCase):
         self.assertEqual(response.status_code, drf_status.HTTP_201_CREATED)
         data = response.json()
         self.assertEqual(data['shift']['id'], shift.id)
-        self.assertEqual(data['definition'], definition.id)
+        self.assertEqual(data['definition'], str(definition.id))
         self.assertEqual(data['order'], 0)
         self.assertEqual(data['turn_limit'], 1)

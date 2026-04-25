@@ -12,7 +12,7 @@ from common.models import (
 from .variable_renderer import VariableRenderer
 
 
-class ExecutableSwitch(DefaultFieldsMixin):
+class ExecutableSwitch(UUIDIdMixin, DefaultFieldsMixin):
     """An option or flag for an executable."""
 
     flag = models.CharField(
@@ -24,7 +24,7 @@ class ExecutableSwitch(DefaultFieldsMixin):
     )
 
 
-class ExecutableArgument(DefaultFieldsMixin):
+class ExecutableArgument(UUIDIdMixin, DefaultFieldsMixin):
     """An argument to be passed to the executable."""
 
     argument = models.CharField(
@@ -35,19 +35,16 @@ class ExecutableArgument(DefaultFieldsMixin):
         return f'{self.name} - {self.argument}'
 
 
-class Executable(DefaultFieldsMixin, DescriptionMixin):
+class Executable(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     """Reference to an executable usable by Are-Self."""
 
-    BEGIN_PLAY = 1
-    PYTHON = 2  # venv/Scripts/python.exe
-    DJANGO = 3  # venv/Scripts/python.exe manage.py
-    UNREAL_CMD = 4  # C:\\Program Files\\Epic Games\\UE_5.6/Engine/Binaries/Win64/UnrealEditor-Cmd.exe
-    UNREAL_AUTOMATION_TOOL = 5  # C:\\Program Files\\Epic Games\\UE_5.6/Engine/Build/BatchFiles/RunUAT.bat
-    UNREAL_STAGING = 6  # C:\steambuild\Windows\HSHVacancy.exe
-    UNREAL_RELEASE_TEST = 7  # C:\steambuild\ReleaseTest\HSHVacancy.exe
-    UNREAL_SHADER_TOOL = 8  # C:\\Program Files\\Epic Games\\UE_5.6/Engine/Binaries/Win64/ShaderPipelineCacheTools.exe
-    VERSION_HANDLER = 9
-    DEPLOY_RELEASE = 10  # depreciated.
+    BEGIN_PLAY = uuid.UUID('974ed732-6f2d-47f4-9482-18d17c73086e')
+    PYTHON = uuid.UUID(
+        '558806d7-d009-4e89-8e4e-86979dcd0594'
+    )  # venv/Scripts/python.exe
+    DJANGO = uuid.UUID(
+        '11915177-a32b-4883-8c9f-e137c528c20d'
+    )  # venv/Scripts/python.exe manage.py
 
     internal = models.BooleanField(
         default=False, help_text='Internal Python Function'
@@ -83,12 +80,10 @@ class Executable(DefaultFieldsMixin, DescriptionMixin):
         return VariableRenderer.render_string(self.executable, context)
 
 
-class ExecutableArgumentAssignment(models.Model):
+class ExecutableArgumentAssignment(UUIDIdMixin):
     executable = models.ForeignKey(Executable, on_delete=models.CASCADE)
     order = models.IntegerField(default=10)
-    argument = models.ForeignKey(
-        ExecutableArgument, on_delete=models.CASCADE
-    )
+    argument = models.ForeignKey(ExecutableArgument, on_delete=models.CASCADE)
 
     class Meta(object):
         ordering = ['order']
@@ -105,17 +100,17 @@ class ExecutableSupplementaryFileOrPath(DefaultFieldsMixin):
     path = models.CharField(max_length=500, help_text='Full path to the file.')
 
 
-class ProjectEnvironmentContextKey(NameMixin):
+class ProjectEnvironmentContextKey(UUIDIdMixin, NameMixin):
     pass
 
 
-class ProjectEnvironmentStatus(NameMixin):
+class ProjectEnvironmentStatus(UUIDIdMixin, NameMixin):
     """Lookup for Environment Status (e.g. Active, Archived)."""
 
     pass
 
 
-class ProjectEnvironmentType(NameMixin):
+class ProjectEnvironmentType(UUIDIdMixin, NameMixin):
     """Lookup for Environment Type (e.g. UE5, Unity, Custom)."""
 
     pass
@@ -124,7 +119,7 @@ class ProjectEnvironmentType(NameMixin):
 class ProjectEnvironment(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     """Defines the context for a specific Application/Project."""
 
-    DEFAULT_ENVIRONMENT = uuid.UUID('44b23b94-6aae-4205-ae67-2f8c021c67aa')
+    DEFAULT_ENVIRONMENT = uuid.UUID('b7e4c2a1-3f8d-4a9e-9c1f-2d5a8b6f4e21')
 
     type = models.ForeignKey(ProjectEnvironmentType, on_delete=models.PROTECT)
     status = models.ForeignKey(
@@ -155,7 +150,7 @@ class ProjectEnvironment(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
         super().save(*args, **kwargs)
 
 
-class ContextVariable(models.Model):
+class ContextVariable(UUIDIdMixin):
     """Link table between Environment and Variables."""
 
     environment = models.ForeignKey(

@@ -10,14 +10,6 @@ from central_nervous_system.models import (
 
 
 class SpikeTrainViewSetV2FilterTest(CommonTestCase):
-    fixtures = (
-        'parietal_lobe/fixtures/initial_data.json',
-        'hypothalamus/fixtures/initial_data.json',
-        'temporal_lobe/fixtures/initial_data.json',
-        'environments/fixtures/initial_data.json',
-        'peripheral_nervous_system/fixtures/initial_data.json',
-        'central_nervous_system/fixtures/initial_data.json',
-    )
     """Assert the V2 spiketrains endpoint correctly filters by query params."""
 
     V2_URL = '/api/v2/spiketrains/'

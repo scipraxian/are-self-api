@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'synaptic_cleft.apps.SynapticCleftConfig',
     'hypothalamus.apps.HypothalamusConfig',
+    'neuroplasticity.apps.NeuroplasticityConfig',
 ]
 
 MIDDLEWARE = [
@@ -145,6 +146,19 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+# Neuroplasticity — NeuralModifier bundle roots. Tests override these.
+# GENOMES_ROOT: committed `<slug>.zip` archives — the single source of truth.
+# GRAFTS_ROOT:  runtime install trees (gitignored).
+# OPERATING_ROOM_ROOT: transient scratch for install/upgrade extractions.
+NEURAL_MODIFIER_GENOMES_ROOT = BASE_DIR / 'neuroplasticity' / 'genomes'
+NEURAL_MODIFIER_GRAFTS_ROOT = BASE_DIR / 'neuroplasticity' / 'grafts'
+NEURAL_MODIFIER_OPERATING_ROOM_ROOT = (
+    BASE_DIR / 'neuroplasticity' / 'operating_room'
+)
+NEURAL_MODIFIER_GENOMES_ROOT.mkdir(parents=True, exist_ok=True)
+NEURAL_MODIFIER_GRAFTS_ROOT.mkdir(parents=True, exist_ok=True)
+NEURAL_MODIFIER_OPERATING_ROOM_ROOT.mkdir(parents=True, exist_ok=True)
+
 # Celery
 # Override with CELERY_BROKER_URL env var if Redis is elsewhere (e.g. Docker, WSL).
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/')
@@ -187,7 +201,12 @@ LOGGING = {
             'level': 'INFO',
             'formatter': 'verbose',
             'receptor_class': 'Django',
-            'skipped_prefixes': ['synaptic_cleft', 'channels', 'redis', 'asyncio'],
+            'skipped_prefixes': [
+                'synaptic_cleft',
+                'channels',
+                'redis',
+                'asyncio',
+            ],
         },
     },
     'loggers': {

@@ -41,10 +41,22 @@ start "Are-Self Django Server" cmd /k ".\venv\Scripts\python.exe manage.py runse
 
 timeout /t 3 >nul
 echo Start RJS Server
-start "RJS Server" cmd /k "cd /d c:\Users\micha\are-self\are-self-ui\ && npm run dev"
+:: UI lives in a sibling repo. Use a path relative to this script so the
+:: launcher works on any machine, not just Michael's.
+set "UI_DIR=%~dp0..\are-self-ui"
+if exist "%UI_DIR%\package.json" (
+    start "RJS Server" cmd /k "cd /d ""%UI_DIR%"" && npm run dev"
+) else (
+    echo   WARNING: are-self-ui not found at %UI_DIR%.
+    echo   Clone https://github.com/scipraxian/are-self-ui next to this repo
+    echo   and re-run this launcher.
+)
 if exist "C:\Program Files\Google\Chrome\Application\chrome.exe" (
     start "" "C:\Program Files\Google\Chrome\Application\chrome.exe" --app=http://localhost:5173
+) else if exist "%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe" (
+    start "" "%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe" --app=http://localhost:5173
 ) else (
+    :: No Chrome detected — fall back to the default browser.
     start "" "http://localhost:5173"
 )
 

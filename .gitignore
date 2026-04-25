@@ -1,3 +1,8 @@
+# --- Neuroplasticity runtime ---
+# genomes/ is committed — *.zip archives are the source of truth.
+/neuroplasticity/grafts/
+/neuroplasticity/operating_room/
+
 # --- Python & Venv ---
 __pycache__/
 *.py[cod]

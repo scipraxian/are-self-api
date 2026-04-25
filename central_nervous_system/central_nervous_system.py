@@ -434,10 +434,11 @@ class CNS:
         )
 
         if not agents.exists():
-            seed_spike.status_id = CNSStatusID.FAILED
-            seed_spike.execution_log = (
-                '[CNS] No agents online for fleet broadcast.'
+            logger.info(
+                '[CNS] No agents online for Spike %s. Nothing to dispatch.',
+                seed_spike.id,
             )
+            seed_spike.status_id = SpikeStatus.SUCCESS
             seed_spike.save()
             return
 
@@ -460,8 +461,11 @@ class CNS:
         )
 
         if not agent:
-            seed_spike.status_id = CNSStatusID.FAILED
-            seed_spike.execution_log = '[CNS] No agents available.'
+            logger.info(
+                '[CNS] No agents available for Spike %s. Nothing to dispatch.',
+                seed_spike.id,
+            )
+            seed_spike.status_id = SpikeStatus.SUCCESS
             seed_spike.save()
             return
 

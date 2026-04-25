@@ -3,8 +3,44 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 
 from common.tests.common_test_case import CommonFixturesAPITestCase
+from frontal_lobe.models import ReasoningSession, ReasoningStatusID
 from hippocampus.models import Engram
 from identity.models import IdentityDisc
+
+
+class TestEngramFilterBySession(CommonFixturesAPITestCase):
+    """Assert EngramViewSet filters by sessions query param."""
+
+    def setUp(self):
+        super().setUp()
+        self.session_linked = ReasoningSession.objects.create(
+            status_id=ReasoningStatusID.ACTIVE
+        )
+        self.session_other = ReasoningSession.objects.create(
+            status_id=ReasoningStatusID.ACTIVE
+        )
+
+        self.engram_linked = Engram.objects.create(
+            name='Memory linked',
+            description='Linked to session_linked',
+        )
+        self.engram_linked.sessions.add(self.session_linked)
+
+        self.engram_unlinked = Engram.objects.create(
+            name='Memory unlinked',
+            description='Not linked to session_linked',
+        )
+
+    def test_filter_engrams_by_session(self):
+        """Assert filtering by sessions returns only linked engrams."""
+        response = self.test_client.get(
+            '/api/v2/engrams/',
+            {'sessions': str(self.session_linked.pk)},
+        )
+        assert response.status_code == 200
+        returned_ids = {item['id'] for item in response.data}
+        assert str(self.engram_linked.pk) in returned_ids
+        assert str(self.engram_unlinked.pk) not in returned_ids
 
 
 class TestEngramFilterByIdentityDisc(CommonFixturesAPITestCase):

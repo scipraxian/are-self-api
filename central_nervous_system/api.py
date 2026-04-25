@@ -1,5 +1,6 @@
 import json
 import logging
+from uuid import UUID
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
@@ -120,7 +121,11 @@ class CNSNeuralPathwayNodeViewSet(viewsets.ModelViewSet):
         invoked_pathway_id = self.request.data.get('invoked_pathway')
 
         is_root = False
-        if not invoked_pathway_id and int(effector_id) == Effector.BEGIN_PLAY:
+        if (
+            not invoked_pathway_id
+            and effector_id is not None
+            and UUID(str(effector_id)) == Effector.BEGIN_PLAY
+        ):
             is_root = True
 
         serializer.save(is_root=is_root)

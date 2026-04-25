@@ -118,7 +118,7 @@
 #         status_code, log = await run_frontal_lobe(self.spike.id)
 #
 #         self.assertEqual(status_code, 200)
-#         self.assertIn('Tool Call: mcp_update_blackboard', log)
+#         self.assertIn('Tool Call: mcp_update_axoplasm', log)
 #
 #         # Verify the tool ACTUALLY ran and mutated the database
 #         await sync_to_async(self.spike.refresh_from_db)()

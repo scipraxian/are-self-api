@@ -19,6 +19,16 @@
       "Bash(ls identity/migrations/*.py)",
       "Bash(./venv/Scripts/pytest frontal_lobe/tests/test_narrative_dump.py -x --tb=short)",
       "Bash(./venv/Scripts/pytest parietal_lobe/parietal_mcp/mcp_ticket_functions/tests/test_mcp_ticket_search.py central_nervous_system/tests/test_logic_node.py -x --tb=short)"
+      "Bash(venv/Scripts/pytest -x)",
+      "Bash(venv/Scripts/pytest -x *)",
+      "Bash(venv/Scripts/python -c ' *)",
+      "Bash(venv/Scripts/python *)",
+      "Bash(venv/Scripts/python manage.py *)",
+      "Bash(venv/Scripts/pytest *)",
+      "Bash(./venv/Scripts/python.exe manage.py *)",
+      "Bash(docker exec *)",
+      "Bash(venv/Scripts/python.exe manage.py *)",
+      "Bash(venv/Scripts/python.exe -c ' *)"
     ]
   }
 }

@@ -83,14 +83,31 @@ class ReasoningAPITest(TestCase):
         self.engram.sessions.add(self.session)
         self.engram.source_turns.add(self.turn)
 
-    def test_graph_data_api(self):
-        """Verifies pure JSON tree serialization outputs exact keys."""
+    def test_graph_data_returns_digest_list(self):
+        """Assert graph_data returns a list of digests matching the vesicle shape."""
         url = reverse('reasoningsession-graph-data', args=[self.session.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        data = response.data
-        # --- Check for the native REST keys instead of the old D3 keys ---
-        self.assertIn('turns', data)
-        self.assertIn('engrams', data)
-        self.assertIn('status_name', data)
+        # New shape: flat list of ReasoningTurnDigest rows written by the
+        # post_save signal. The setUp turn has a usage record, so exactly
+        # one digest exists.
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 1)
+        digest = response.data[0]
+        self.assertEqual(digest['turn_id'], str(self.turn.id))
+        self.assertEqual(digest['session_id'], str(self.session.id))
+        self.assertEqual(digest['turn_number'], 1)
+
+    def test_graph_data_since_turn_number_filters(self):
+        """Assert since_turn_number=N filters out digests with turn_number <= N."""
+        url = reverse('reasoningsession-graph-data', args=[self.session.id])
+        response = self.client.get(url, {'since_turn_number': 1})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [])
+
+    def test_graph_data_rejects_non_integer_since(self):
+        """Assert a non-integer since_turn_number returns 400."""
+        url = reverse('reasoningsession-graph-data', args=[self.session.id])
+        response = self.client.get(url, {'since_turn_number': 'not-a-number'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

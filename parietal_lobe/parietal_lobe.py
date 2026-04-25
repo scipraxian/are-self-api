@@ -4,6 +4,8 @@ import logging
 from typing import Any, Callable, Dict, List, Optional
 
 from asgiref.sync import sync_to_async
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Exists, OuterRef
 
 from frontal_lobe.models import (
     ReasoningSession,
@@ -12,6 +14,14 @@ from frontal_lobe.models import (
 )
 from frontal_lobe.synapse_client import SynapseClient, SynapseResponse
 from hypothalamus.serializers import ModelSelection
+from identity.addons._handler_registry import (
+    dispatch_tool_post,
+    dispatch_tool_pre,
+)
+from neuroplasticity.models import (
+    NeuralModifierContribution,
+    NeuralModifierStatus,
+)
 from parietal_lobe.models import ToolCall, ToolDefinition
 from parietal_lobe.parietal_mcp.gateway import ParietalMCP
 
@@ -109,6 +119,24 @@ class ParietalLobe:
             )
 
     def _fetch_tools(self, identity_disc):
+        """Return the ToolDefinitions the session's IdentityDisc enables.
+
+        Tools contributed by a NeuralModifier are excluded unless that
+        modifier is in the ENABLED state. Core tools (no
+        NeuralModifierContribution row pointing at them) are unaffected.
+        This is the gating codepath that makes bundle enable / disable
+        take effect on the next reasoning session — the per-session tool
+        manifest the LLM sees.
+        """
+        tool_ct = ContentType.objects.get_for_model(ToolDefinition)
+        non_enabled_contribution = (
+            NeuralModifierContribution.objects.filter(
+                content_type=tool_ct,
+                object_id=OuterRef('pk'),
+            ).exclude(
+                neural_modifier__status_id=NeuralModifierStatus.ENABLED
+            )
+        )
         return list(
             identity_disc.enabled_tools.prefetch_related(
                 'assignments__parameter__type',
@@ -116,6 +144,7 @@ class ParietalLobe:
             )
             .select_related('use_type')
             .filter(is_async=True)
+            .exclude(Exists(non_enabled_contribution))
         )
 
     async def build_tool_schemas(self) -> List[Dict[str, Any]]:
@@ -204,16 +233,17 @@ class ParietalLobe:
             }
 
         mechanics = tool_def.use_type if tool_def else None
-        focus_mod = mechanics.focus_modifier if mechanics else 0
-        xp_gain = mechanics.xp_reward if mechanics else 0
+        disc = self.session.identity_disc
 
-        # --- FOCUS FIZZLE ---
-        if focus_mod < 0 and self.session.current_focus + focus_mod < 0:
-            fizzle_msg = (
-                f'SYSTEM OVERRIDE: Effector Fizzled! Insufficient Focus. '
-                f'(Requires {-focus_mod}, but you only have {self.session.current_focus}). '
-                f'You must use Synthesis tools (like mcp_engram_save) to restore Focus.'
-            )
+        # --- TOOL PRE (handler first-veto) ---
+        # Each IdentityAddonHandler attached to the disc gets a pre-veto.
+        # Focus fizzles on insufficient focus; other handlers can add their
+        # own gates (rate-limit, quota, etc.). A disc with no handlers sees
+        # no veto — same as the old function-based "addon not installed".
+        fizzle_msg = await sync_to_async(dispatch_tool_pre)(
+            disc, self.session, mechanics
+        )
+        if fizzle_msg is not None:
             await self._log_live(f'Result: {fizzle_msg}')
 
             db_tool_call = await sync_to_async(ToolCall.objects.create)(
@@ -222,7 +252,7 @@ class ParietalLobe:
                 arguments=json.dumps(args),
                 status_id=ReasoningStatusID.ERROR,
                 result_payload=fizzle_msg,
-                traceback='Insufficient Focus.',
+                traceback='Tool pre-check vetoed.',
             )
             return {
                 'role': 'tool',
@@ -239,26 +269,19 @@ class ParietalLobe:
         )
 
         try:
-            tool_result = await ParietalMCP.execute(tool_name, args)
-
-            if hasattr(tool_result, 'focus_yield'):
-                focus_mod = getattr(tool_result, 'focus_yield')
-            if hasattr(tool_result, 'xp_yield'):
-                xp_gain = getattr(tool_result, 'xp_yield')
-
-            tool_result = str(tool_result)
+            tool_result_obj = await ParietalMCP.execute(tool_name, args)
+            tool_result = str(tool_result_obj)
 
             db_tool_call.result_payload = tool_result[:20000]
             db_tool_call.status_id = ReasoningStatusID.COMPLETED
             await sync_to_async(db_tool_call.save)()
 
-            self.session.current_focus = min(
-                self.session.max_focus,
-                self.session.current_focus + focus_mod,
-            )
-            self.session.total_xp += xp_gain
-            await sync_to_async(self.session.save)(
-                update_fields=['current_focus', 'total_xp']
+            # --- TOOL POST (handler collect-all) ---
+            # Focus owns the focus/XP ledger; any handler observing the raw
+            # result (focus_yield / xp_yield / other metadata) gets its shot.
+            # Passes the pre-stringification object so handlers can read attrs.
+            await sync_to_async(dispatch_tool_post)(
+                disc, self.session, mechanics, tool_result_obj
             )
 
         except Exception as e:
