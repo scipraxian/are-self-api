@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('frontal_lobe', '0003_reasoningsession_swarm_message_queue'),
+        ('frontal_lobe', '0003_reasoningturndigest'),
     ]
 
     operations = [

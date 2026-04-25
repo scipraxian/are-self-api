@@ -135,10 +135,14 @@ python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 docker compose up -d
 python manage.py migrate
-python manage.py loaddata initial_data.json
+python manage.py loaddata genetic_immutables.json
+python manage.py loaddata zygote.json
+python manage.py loaddata initial_phenotypes.json
 ollama pull nomic-embed-text
 python manage.py runserver
 ```
+
+`identity/fixtures/initial_data.json` (and similar exports) reference `parietal_lobe.ToolDefinition` rows from `zygote.json`. If you load that file explicitly, run `loaddata zygote.json` first in the same database, or you will get foreign key errors on `identity_identity_enabled_tools`.
 
 The `pgvector` extension is installed automatically by `common/migrations/0001_initial.py`
 via Django's `VectorExtension()` operation — no manual `CREATE EXTENSION` step required.

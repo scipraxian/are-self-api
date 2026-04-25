@@ -9,8 +9,8 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hippocampus', '0003_rename_talos_prefix'),
-        ('identity', '0007_remove_identitydisc_vector_identitydiscvector'),
+        ('hippocampus', '0002_initial'),
+        ('identity', '0001_initial'),
     ]
 
     operations = [

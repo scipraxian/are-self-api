@@ -33,7 +33,7 @@ class ToolUseType(DefaultFieldsMixin, DescriptionMixin):
         )
 
 
-class ToolDefinition(DefaultFieldsMixin, DescriptionMixin):
+class ToolDefinition(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     """
     The Registry for AI Tools.
     Defines the function signature available to the LLM.
@@ -45,7 +45,7 @@ class ToolDefinition(DefaultFieldsMixin, DescriptionMixin):
     )
 
 
-class ToolParameter(DefaultFieldsMixin, DescriptionMixin):
+class ToolParameter(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     """
     A strictly typed argument for a ToolDefinition.
     """
@@ -66,7 +66,7 @@ class ToolParameter(DefaultFieldsMixin, DescriptionMixin):
         return f'{self.name} ({self.type.name})'
 
 
-class ToolParameterAssignment(CreatedMixin, ModifiedMixin):
+class ToolParameterAssignment(UUIDIdMixin, CreatedMixin, ModifiedMixin):
     """
     The Link Table.
     Inherits strictly from timestamp mixins to avoid unique name constraints.
