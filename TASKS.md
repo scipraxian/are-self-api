@@ -128,6 +128,72 @@ during the live session, with the fat payload fetched only on explicit click.
   `graph_data?since_turn_number=N` + frontend cutover pieces are still
   open above.
 
+## Recently Done — Bundle URL discovery wired (2026-04-25, late evening)
+
+Closing the loop on bundles-as-URL-route-contributors. The convention
+spec'd earlier today now has an implementation, a test suite, and
+full-suite green (626 tests).
+
+**Discovery loop landed.** `_discover_bundle_routers` lives at the
+bottom of `central_nervous_system/urls/v2_urls.py` and runs once at
+module-import time after the core `V2_CNS_ROUTER` is fully built. It
+mirrors `_boot_one`'s shape: `grafts_root()` →
+`iter_installed_bundles()` → `_ensure_code_on_path(bundle_dir)` →
+`importlib.import_module('<entry>.urls')` → lift each exposed
+`V2_GENOME_ROUTER`'s registry entries into the core router with
+collision check.
+
+**Skip-silently vs. raise-loudly disambiguation.** A
+`ModuleNotFoundError` from `import_module('<entry>.urls')` could mean
+two things. If `exc.name == urls_module_name`, the bundle simply has
+no urls submodule — legitimate opt-out, skip silently (matches the
+spec's "missing urls.py is fine"). If `exc.name` is anything else,
+urls.py exists but a transitive import is broken — re-raise so the
+boot fails loudly per the spec's "broken urls.py fails loudly"
+guarantee. Same defensive shape as `_boot_one`'s LOAD_FAILED branch.
+
+**Environmental no-ops covered.** Neuroplasticity not importable,
+table not migrated (`OperationalError` / `ProgrammingError`), grafts
+root missing, INSTALLED row whose runtime dir is missing on disk,
+manifest missing `entry_modules` — all silent skips. None of those
+should crash URL conf assembly on a fresh DB or mid-migrate.
+
+**Spike-merge route now reachable via discovery.** Unreal bundle's
+`code/are_self_unreal/urls.py` registers `r'spike-logs'` with
+`SpikeLogMergeViewSet` under `V2_GENOME_ROUTER`. Once the bundle is
+INSTALLED + the process restarts, the route resolves at
+`/api/v2/spike-logs/` (matches the entry already in
+`API_REFERENCE.md` line 223).
+
+**Tests.** New file
+`central_nervous_system/tests/test_v2_url_discovery.py` — 11 tests
+across three buckets: happy paths (no bundles → no-op; valid bundle →
+entries lifted), silent-skip paths (no urls.py; urls.py without
+`V2_GENOME_ROUTER`; empty `entry_modules`; missing runtime dir;
+missing grafts root), and raise-loud paths (collision against core;
+collision between two bundles; broken-import urls.py propagates
+`ModuleNotFoundError`). Inherits `CommonTestCase` (same reasoning as
+`test_install_unreal_bundle.py` — avoid pre-loading `petri_dish` rows
+that would collide with test bundles). Uses `tempfile.mkdtemp` +
+`@override_settings(NEURAL_MODIFIER_GRAFTS_ROOT=...)`, snapshots
+`sys.path` / `sys.modules` in `setUp` / `tearDown` so each test runs
+against an isolated fake-bundle filesystem with no module-cache leak.
+The real `V2_CNS_ROUTER` is never mutated — each test passes a fresh
+`SimpleRouter` to `_discover_bundle_routers`.
+
+**Validation owed.** Smoke a real `GET /api/v2/spike-logs/` after
+`install + restart` of the dev server to confirm the production-side
+path routes through the discovery loop. Suite-side, the contract is
+covered by the new test file.
+
+**Pass 2 still pending — validate-at-install.** Discovery here is the
+load-side counterpart. The install API should also import a candidate
+bundle's modules (including `urls.py`) and refuse the install if any
+fail or collide, BEFORE the DB + Python install lands. Tracked under
+"Outstanding" in the section below.
+
+---
+
 ## Recently Done — Save safety rails + merge_logs to bundle (2026-04-25, evening)
 
 Closing today's loop on bundle CRU. Two new save guardrails to make
@@ -208,19 +274,16 @@ merge utilities + their tests.
   module-import time and merged into the core router's registry.
   Refuse-on-collision; ImportError for "no urls.py" is fine,
   any other error from a present-but-broken urls.py is loud.
-  *Spec landed; CC owns implementation.*
 
 **Outstanding:**
-- Bundle URL discovery (`_discover_bundle_routes` in v2-urls module
-  + `V2_GENOME_ROUTER` from `are_self_unreal/urls.py`) — designed
-  with Michael, CC building.
-- Move `central_nervous_system/views/spike_merge_viewset.py` into
-  the unreal bundle alongside the merge utilities; the viewset is
-  the consumer of `merge_logs_nway` so it goes where the merge
-  goes. Wired via the new URL discovery once that lands.
-- 11 unreal+merge-related tests still red; the bundle's new
-  `urls.py` + the moved-in merge files should clear them once the
-  URL discovery wires up. Other ~150 tests green.
+- *Validate-at-install for bundle URLs (Pass 2).* The discovery
+  loop in `v2_urls._discover_bundle_routers` is the load-side
+  counterpart; it raises loudly on collision / broken urls.py
+  but only at boot of a fresh process. Pass 2 wires the same
+  collision / import check into the install API path so a
+  broken or colliding bundle is REFUSED at install time and
+  never lands in the DB. Mirrors parietal_lobe's "validate
+  module imports before committing the DB row" shape.
 
 ## Recently Done — Walker consolidation + save transit-row fix (2026-04-25, late afternoon)
 
