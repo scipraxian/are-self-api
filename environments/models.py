@@ -83,7 +83,7 @@ class Executable(
         return VariableRenderer.render_string(self.executable, context)
 
 
-class ExecutableArgumentAssignment(UUIDIdMixin):
+class ExecutableArgumentAssignment(UUIDIdMixin, GenomeOwnedMixin):
     executable = models.ForeignKey(Executable, on_delete=models.CASCADE)
     order = models.IntegerField(default=10)
     argument = models.ForeignKey(ExecutableArgument, on_delete=models.CASCADE)
@@ -95,7 +95,7 @@ class ExecutableArgumentAssignment(UUIDIdMixin):
         return f'{self.executable} - {self.argument}'
 
 
-class ExecutableSupplementaryFileOrPath(DefaultFieldsMixin):
+class ExecutableSupplementaryFileOrPath(DefaultFieldsMixin, GenomeOwnedMixin):
     """The name should be treated like a json field name.
     e.g. name=destination_file, path=c:/temp/temp.txt"""
 
@@ -103,7 +103,7 @@ class ExecutableSupplementaryFileOrPath(DefaultFieldsMixin):
     path = models.CharField(max_length=500, help_text='Full path to the file.')
 
 
-class ProjectEnvironmentContextKey(UUIDIdMixin, NameMixin):
+class ProjectEnvironmentContextKey(UUIDIdMixin, NameMixin, GenomeOwnedMixin):
     pass
 
 
@@ -148,7 +148,7 @@ class ProjectEnvironment(
         super().save(*args, **kwargs)
 
 
-class ContextVariable(UUIDIdMixin):
+class ContextVariable(UUIDIdMixin, GenomeOwnedMixin):
     """Link table between Environment and Variables."""
 
     environment = models.ForeignKey(

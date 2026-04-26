@@ -42,10 +42,10 @@ reachable row, keyed off the three-state Canonical Genome model:
 * ``canonical`` — ``genome_id == NeuralModifier.CANONICAL``. Ships in
   a committed core fixture; never deleted by any bundle operation.
 * ``owned`` — ``genome.slug == <target_slug>``. Part of this bundle.
-* ``shared-with <other_slug>`` — ``genome`` non-null and points at
-  another bundle.
-* ``user`` — ``genome`` is NULL. Created by the user at runtime;
-  bundles must not touch it.
+* ``shared-with <other_slug>`` — ``genome`` points at another bundle.
+* ``user`` — ``genome_id == NeuralModifier.INCUBATOR``. Created by
+  the user at runtime in the default workspace; bundles must not
+  touch it.
 
 Output shape is API-only. If you're tempted to embed HTML, stop —
 the UI renders.
@@ -246,12 +246,12 @@ def walk_genome_reach(
 def _classify(instance, target_slug: str):
     """Return (state, owner_slug) for one row under the three-state model."""
     genome_id = getattr(instance, 'genome_id', None)
-    if genome_id is None:
+    if genome_id == NeuralModifier.INCUBATOR:
         return ('user', None)
     if genome_id == NeuralModifier.CANONICAL:
         return ('canonical', NeuralModifier.CANONICAL_SLUG)
-    # genome_id is non-null and not canonical — dereference the slug.
-    # The FK object may already be prefetched; fall back to a cheap
+    # genome_id points at a real bundle — dereference the slug. The
+    # FK object may already be prefetched; fall back to a cheap
     # values_list lookup otherwise.
     genome = getattr(instance, 'genome', None)
     owner_slug = getattr(genome, 'slug', None)

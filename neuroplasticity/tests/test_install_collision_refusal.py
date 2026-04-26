@@ -106,9 +106,9 @@ class InstallRefusesOverwriteOfOtherBundleRowTest(ModifierLifecycleTestCase):
 
 class InstallRefusesOverwriteOfUserRowTest(ModifierLifecycleTestCase):
     def test_install_refused_when_pk_owned_by_user(self):
-        """Assert install refuses to overwrite a user-created (NULL) PK."""
+        """Assert install refuses to overwrite a user-created (INCUBATOR) PK."""
         user_row = IdentityAddon.objects.create(name='user-created')
-        self.assertIsNone(user_row.genome_id)
+        self.assertEqual(user_row.genome_id, NeuralModifier.INCUBATOR)
 
         payload = [{
             'model': 'identity.identityaddon',
@@ -133,7 +133,7 @@ class InstallRefusesOverwriteOfUserRowTest(ModifierLifecycleTestCase):
         )
         survivor = IdentityAddon.objects.get(pk=user_row.pk)
         self.assertEqual(survivor.name, 'user-created')
-        self.assertIsNone(survivor.genome_id)
+        self.assertEqual(survivor.genome_id, NeuralModifier.INCUBATOR)
 
 
 class InstallRefusesCanonicalSlugTest(ModifierLifecycleTestCase):

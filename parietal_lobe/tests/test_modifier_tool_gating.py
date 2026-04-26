@@ -1,9 +1,13 @@
 """Tool-set gating by NeuralModifier state.
 
-The per-session Parietal tool manifest filters ToolDefinition rows
-whose ``genome`` FK points at a NeuralModifier that is not ENABLED.
-Core tools (``genome IS NULL``) are always included. Disable / broken
-/ not-yet-enabled hide the tool until the next session.
+The per-session Parietal tool manifest filters ToolDefinition rows by
+their ``genome`` FK under the tri-state model:
+
+* ``genome=CANONICAL`` — core-shipped tool, always included.
+* ``genome=INCUBATOR`` — user-workspace tool, always included.
+* ``genome=<bundle>``  — included only when the owning modifier has
+  status ``INSTALLED`` (the single live state — ENABLED / DISABLED
+  are retired).
 
 Under the genome-FK scheme ownership lives directly on the tool row,
 so the filter is a single WHERE clause — no side-car table, no
@@ -28,7 +32,7 @@ from parietal_lobe.parietal_lobe import ParietalLobe
 
 
 class ModifierToolGatingTest(CommonFixturesAPITestCase):
-    """Bundle-contributed tools appear only when the bundle is ENABLED."""
+    """Bundle-contributed tools appear only when the bundle is INSTALLED."""
 
     def setUp(self):
         pathway = NeuralPathway.objects.create(name='ToolGating Pathway')
@@ -59,14 +63,15 @@ class ModifierToolGatingTest(CommonFixturesAPITestCase):
         self.session.identity_disc = self.identity_disc
         self.session.save(update_fields=['identity_disc'])
 
-        # Core tool: null genome — always in the manifest.
+        # Core tool: explicit CANONICAL genome — always in the manifest.
         self.core_tool = ToolDefinition.objects.create(
             name='mcp_core_tool',
             description='A core-owned tool.',
             is_async=True,
+            genome_id=NeuralModifier.CANONICAL,
         )
 
-        # Bundle tool: genome FK set to an ENABLED modifier.
+        # Bundle tool: genome FK set to an INSTALLED modifier.
         self.modifier = NeuralModifier.objects.create(
             name='Test Bundle',
             slug='test_bundle',
@@ -75,7 +80,7 @@ class ModifierToolGatingTest(CommonFixturesAPITestCase):
             license='MIT',
             manifest_hash='0' * 64,
             manifest_json={},
-            status_id=NeuralModifierStatus.ENABLED,
+            status_id=NeuralModifierStatus.INSTALLED,
         )
         self.bundle_tool = ToolDefinition.objects.create(
             name='mcp_bundle_tool',
@@ -97,19 +102,12 @@ class ModifierToolGatingTest(CommonFixturesAPITestCase):
         schemas = async_to_sync(self.parietal_lobe.build_tool_schemas)()
         return {s['function']['name'] for s in schemas}
 
-    def test_enabled_bundle_tool_included(self):
-        """ENABLED: bundle tool appears alongside core tool."""
-        self._set_modifier_status(NeuralModifierStatus.ENABLED)
+    def test_installed_bundle_tool_included(self):
+        """INSTALLED: bundle tool appears alongside core tool."""
+        self._set_modifier_status(NeuralModifierStatus.INSTALLED)
         names = self._schema_names()
         self.assertIn('mcp_core_tool', names)
         self.assertIn('mcp_bundle_tool', names)
-
-    def test_disabled_bundle_tool_excluded(self):
-        """DISABLED: bundle tool hidden; core tool still present."""
-        self._set_modifier_status(NeuralModifierStatus.DISABLED)
-        names = self._schema_names()
-        self.assertIn('mcp_core_tool', names)
-        self.assertNotIn('mcp_bundle_tool', names)
 
     def test_broken_bundle_tool_excluded(self):
         """BROKEN: bundle tool hidden; core tool still present."""
@@ -117,21 +115,3 @@ class ModifierToolGatingTest(CommonFixturesAPITestCase):
         names = self._schema_names()
         self.assertIn('mcp_core_tool', names)
         self.assertNotIn('mcp_bundle_tool', names)
-
-    def test_installed_but_not_enabled_excluded(self):
-        """INSTALLED: contributions in DB, but tools not yet live."""
-        self._set_modifier_status(NeuralModifierStatus.INSTALLED)
-        names = self._schema_names()
-        self.assertIn('mcp_core_tool', names)
-        self.assertNotIn('mcp_bundle_tool', names)
-
-    def test_enable_disable_round_trips_on_next_session(self):
-        """ENABLED -> DISABLED -> ENABLED toggles tool visibility."""
-        self._set_modifier_status(NeuralModifierStatus.ENABLED)
-        self.assertIn('mcp_bundle_tool', self._schema_names())
-
-        self._set_modifier_status(NeuralModifierStatus.DISABLED)
-        self.assertNotIn('mcp_bundle_tool', self._schema_names())
-
-        self._set_modifier_status(NeuralModifierStatus.ENABLED)
-        self.assertIn('mcp_bundle_tool', self._schema_names())

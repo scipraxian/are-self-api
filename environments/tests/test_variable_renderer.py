@@ -14,6 +14,10 @@ from environments.variable_renderer import VariableRenderer
 
 
 class VariableRendererTest(TestCase):
+    # Loads CANONICAL + INCUBATOR NeuralModifier rows so any
+    # ProjectEnvironment.objects.create() call defaulting genome to
+    # NeuralModifier.INCUBATOR has the FK target present in the test DB.
+    fixtures = ['neuroplasticity/fixtures/genetic_immutables.json']
 
     def setUp(self):
         self.env_status = ProjectEnvironmentStatus.objects.create(

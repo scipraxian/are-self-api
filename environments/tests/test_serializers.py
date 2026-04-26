@@ -16,6 +16,11 @@ from environments.serializers import (
 
 @pytest.mark.django_db
 class EnvironmentSerializersTest(TestCase):
+    # Loads CANONICAL + INCUBATOR NeuralModifier rows so any
+    # ProjectEnvironment.objects.create() call defaulting genome to
+    # NeuralModifier.INCUBATOR has the FK target present in the test DB.
+    fixtures = ['neuroplasticity/fixtures/genetic_immutables.json']
+
     def setUp(self):
         # Setup basic types
         self.status_active = ProjectEnvironmentStatus.objects.create(

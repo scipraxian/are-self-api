@@ -5,12 +5,12 @@ and a small set of explicit transit models (Neuron / Axon /
 NeuronContext) so the walker can step from a Pathway through its
 neurons to the GenomeOwnedMixin Effectors on the other side.
 
-The cascade is **additive** — it claims `genome=NULL` rows for the
-target, leaves canonical / cross-bundle rows alone, and refuses only
-when the starting pathway itself is canonical-owned. Reach hitting
-canonical-owned infrastructure (the default Effector.executable for
-example, which is fixture-canonical) is normal — bundles legitimately
-reference shared canonical content.
+The cascade is **additive** — it claims `genome=INCUBATOR` rows for
+the target, leaves canonical / cross-bundle rows alone, and refuses
+only when the starting pathway itself is canonical-owned. Reach
+hitting canonical-owned infrastructure (the default
+Effector.executable for example, which is fixture-canonical) is
+normal — bundles legitimately reference shared canonical content.
 """
 
 from __future__ import annotations
@@ -46,11 +46,11 @@ def _make_modifier(slug: str) -> NeuralModifier:
 def _build_pathway(name: str = 'pw') -> tuple:
     """Build a small self-contained pathway: pathway + 2 neurons + axon
     + a shared Effector. Returns ``(pathway, neuron_a, neuron_b, axon,
-    effector)``. Pathway and Effector are GenomeOwnedMixin (will be
-    stamped by the cascade); Neuron and Axon are transit-only. The
-    Effector inherits the fixture-canonical default Executable, which
-    the cascade reaches via Effector.executable but skips silently
-    because it's canonical-owned shared infrastructure.
+    effector)``. All five models are GenomeOwnedMixin and start at
+    INCUBATOR via the mixin default — the cascade claims all five.
+    The Effector inherits the fixture-canonical default Executable,
+    which the cascade reaches via Effector.executable but skips
+    silently because it's canonical-owned shared infrastructure.
     """
     pathway = NeuralPathway.objects.create(name=name)
     effector = Effector.objects.create(name='{0}-eff'.format(name))
@@ -75,42 +75,43 @@ def _build_pathway(name: str = 'pw') -> tuple:
 
 
 class CascadeReachTest(CommonTestCase):
-    """The BFS reach walks through transit models to GenomeOwnedMixin children."""
+    """The BFS reach walks through the pathway to its GenomeOwnedMixin
+    children."""
 
     def test_reach_includes_pathway_neurons_axon_and_effector(self):
-        """Assert reach from a pathway covers transit nodes and the Effector."""
+        """Assert reach from a pathway covers neurons, axon, and the
+        Effector — all GenomeOwnedMixin and bundle-eligible."""
         pathway, neuron_a, neuron_b, axon, effector = _build_pathway('reach')
 
         rows = reachable_genome_rows(pathway)
 
         keys = {(type(r)._meta.model_name, str(r.pk)) for r in rows}
-        # Pathway and Effector — bundle-eligible, will be stamped
         self.assertIn(('neuralpathway', str(pathway.pk)), keys)
         self.assertIn(('effector', str(effector.pk)), keys)
-        # Neuron + Axon — transit, present in reach but not stamped
         self.assertIn(('neuron', str(neuron_a.pk)), keys)
         self.assertIn(('neuron', str(neuron_b.pk)), keys)
         self.assertIn(('axon', str(axon.pk)), keys)
 
 
 class CascadeStampTest(CommonTestCase):
-    """Happy-path stamp + clear cycle on a fresh user-NULL pathway."""
+    """Happy-path stamp + clear cycle on a fresh INCUBATOR pathway."""
 
     def setUp(self):
         super().setUp()
         self.alpha = _make_modifier('alpha')
 
     def test_stamp_writes_genome_on_user_owned_rows_only(self):
-        """Assert stamping claims NULL rows (pathway + effector), not the
-        canonical Executable that lives in reach by virtue of the
-        Effector.executable default."""
+        """Assert stamping claims all INCUBATOR rows in reach
+        (pathway + 2 neurons + axon + effector) and skips the canonical
+        Executable that lives in reach via the Effector.executable
+        default."""
         pathway, na, nb, axon, effector = _build_pathway('stamp')
 
         result = cascade_pathway_genome(pathway, self.alpha)
 
         self.assertEqual(result['target_slug'], 'alpha')
-        # Pathway + Effector — both NULL, both claimed.
-        self.assertEqual(result['stamped'], 2)
+        # Pathway + 2 Neurons + Axon + Effector — all INCUBATOR, all claimed.
+        self.assertEqual(result['stamped'], 5)
         # Canonical Executable in reach — skipped silently.
         self.assertGreaterEqual(result['skipped'], 1)
         pathway.refresh_from_db()
@@ -118,25 +119,27 @@ class CascadeStampTest(CommonTestCase):
         self.assertEqual(pathway.genome_id, self.alpha.pk)
         self.assertEqual(effector.genome_id, self.alpha.pk)
 
-    def test_clear_reverts_owned_reach_to_null(self):
+    def test_clear_reverts_owned_reach_to_incubator(self):
         """Assert target=None reverts rows owned by the pathway's current
-        bundle and leaves canonical infrastructure alone."""
+        bundle back to INCUBATOR and leaves canonical infrastructure
+        alone."""
         pathway, _, _, _, effector = _build_pathway('clear')
         cascade_pathway_genome(pathway, self.alpha)
 
         result = cascade_pathway_genome(pathway, None)
 
         self.assertIsNone(result['target_slug'])
-        # Pathway + Effector reverted; canonical Executable left alone.
-        self.assertEqual(result['stamped'], 2)
+        # Pathway + 2 Neurons + Axon + Effector reverted; canonical
+        # Executable left alone.
+        self.assertEqual(result['stamped'], 5)
         self.assertGreaterEqual(result['skipped'], 1)
         pathway.refresh_from_db()
         effector.refresh_from_db()
-        self.assertIsNone(pathway.genome_id)
-        self.assertIsNone(effector.genome_id)
+        self.assertEqual(pathway.genome_id, NeuralModifier.INCUBATOR)
+        self.assertEqual(effector.genome_id, NeuralModifier.INCUBATOR)
 
     def test_clear_on_unowned_pathway_is_noop(self):
-        """Assert clear on a NULL-genome pathway does nothing."""
+        """Assert clear on an INCUBATOR pathway does nothing."""
         pathway, _, _, _, _ = _build_pathway('noop')
 
         result = cascade_pathway_genome(pathway, None)
@@ -152,7 +155,7 @@ class CascadeStampTest(CommonTestCase):
         result = cascade_pathway_genome(pathway, self.alpha)
 
         self.assertEqual(result['stamped'], 0)
-        self.assertEqual(result['unchanged'], 2)
+        self.assertEqual(result['unchanged'], 5)
 
 
 class CascadePolicyTest(CommonTestCase):
@@ -169,24 +172,25 @@ class CascadePolicyTest(CommonTestCase):
         alone; the cascade succeeds for everything else."""
         pathway, _, _, _, effector = _build_pathway('shared')
         # Pre-stamp the Effector as beta-owned. Alpha's cascade must
-        # not steal it; it should still claim the (NULL) pathway.
+        # not steal it; it should still claim the (INCUBATOR) pathway,
+        # neurons, and axon.
         effector.genome = self.beta
         effector.save(update_fields=['genome'])
 
         result = cascade_pathway_genome(pathway, self.alpha)
 
-        # Pathway claimed; Effector left at beta; canonical Executable
-        # left alone.
+        # Pathway + 2 Neurons + Axon claimed; Effector left at beta;
+        # canonical Executable left alone.
         pathway.refresh_from_db()
         effector.refresh_from_db()
         self.assertEqual(pathway.genome_id, self.alpha.pk)
         self.assertEqual(effector.genome_id, self.beta.pk)
-        self.assertEqual(result['stamped'], 1)
+        self.assertEqual(result['stamped'], 4)
         self.assertGreaterEqual(result['skipped'], 2)  # beta + canonical
 
     def test_canonical_in_reach_skipped_silently(self):
         """Assert a canonical Effector in reach is left alone; the
-        cascade still claims the user-owned pathway."""
+        cascade still claims the user-owned pathway, neurons, axon."""
         pathway, _, _, _, effector = _build_pathway('shared-core')
         effector.genome_id = NeuralModifier.CANONICAL
         effector.save(update_fields=['genome'])
@@ -197,7 +201,7 @@ class CascadePolicyTest(CommonTestCase):
         effector.refresh_from_db()
         self.assertEqual(pathway.genome_id, self.alpha.pk)
         self.assertEqual(effector.genome_id, NeuralModifier.CANONICAL)
-        self.assertEqual(result['stamped'], 1)
+        self.assertEqual(result['stamped'], 4)
         self.assertGreaterEqual(result['skipped'], 2)  # effector + executable
 
     def test_canonical_pathway_refuses(self):

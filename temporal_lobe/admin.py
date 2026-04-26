@@ -75,7 +75,8 @@ class IterationShiftDefinitionInline(admin.TabularInline):
 
 @admin.register(IterationDefinition)
 class IterationDefinitionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'shift_sequence')
+    list_display = ('name', 'shift_sequence', 'genome')
+    list_filter = ('genome',)
     search_fields = ('name',)
     inlines = [IterationShiftDefinitionInline]
 

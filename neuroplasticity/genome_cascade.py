@@ -15,7 +15,8 @@ through their ``pathway`` FK.
 
 The cascade is **additive, not exclusive**:
 
-    * Rows with ``genome=NULL`` (user-owned) are claimed and stamped.
+    * Rows with ``genome=INCUBATOR`` (user workspace) are claimed and
+      stamped.
     * Rows already owned by the target genome are unchanged.
     * Rows owned by ``canonical`` are skipped silently — they're
       shared infrastructure (the fixture-shipped ProjectEnvironment a
@@ -29,10 +30,11 @@ The cascade is **additive, not exclusive**:
 
 Clearing (``target=None``):
 
-    * No-op if the pathway is already ``genome=NULL``.
+    * No-op if the pathway is already ``genome=INCUBATOR``.
     * Otherwise reverts rows in reach that match the pathway's current
-      bundle. Rows owned by canonical or by other bundles are left
-      alone; the cascade only undoes its own prior work.
+      bundle back to ``INCUBATOR``. Rows owned by canonical or by
+      other bundles are left alone; the cascade only undoes its own
+      prior work.
 
 Refused operations rollback via ``transaction.atomic``; partial stamps
 do not land.
@@ -109,20 +111,22 @@ def cascade_pathway_genome(
     pathway, target_modifier: Optional[NeuralModifier]
 ) -> dict:
     """Stamp ``target_modifier`` on the pathway and the reachable
-    GenomeOwnedMixin rows it composes. Pass ``None`` to clear.
+    GenomeOwnedMixin rows it composes. Pass ``None`` to clear back to
+    INCUBATOR.
 
     Stamp (``target_modifier`` not None):
-        * Claims ``genome=NULL`` rows in reach for ``target_modifier``.
+        * Claims ``genome=INCUBATOR`` rows in reach for
+          ``target_modifier``.
         * Skips rows owned by canonical or by another bundle (those
           are shared infrastructure / cross-bundle references; the
           cascade doesn't claim them).
         * Refuses only when the starting pathway itself is canonical.
 
     Clear (``target_modifier`` is None):
-        * No-op if the pathway is already ``genome=NULL``.
+        * No-op if the pathway is already ``genome=INCUBATOR``.
         * Otherwise reverts rows in reach that match the pathway's
-          current bundle. Canonical and cross-bundle rows are left
-          alone.
+          current bundle back to INCUBATOR. Canonical and
+          cross-bundle rows are left alone.
 
     Returns::
 
@@ -167,9 +171,10 @@ def cascade_pathway_genome(
     touched: List[dict] = []
 
     if target_modifier is None:
-        # Clear mode: revert rows owned by the pathway's current bundle.
+        # Clear mode: revert rows owned by the pathway's current bundle
+        # back to INCUBATOR.
         prior_bundle_pk = pathway.genome_id
-        if prior_bundle_pk is None:
+        if prior_bundle_pk == NeuralModifier.INCUBATOR:
             return {
                 'pathway_id': str(pathway.pk),
                 'target_slug': None,
@@ -180,7 +185,7 @@ def cascade_pathway_genome(
             }
         for row in bundle_rows:
             if row.genome_id == prior_bundle_pk:
-                row.genome_id = None
+                row.genome_id = NeuralModifier.INCUBATOR
                 row.save(update_fields=['genome'])
                 stamped += 1
                 touched.append(
@@ -192,7 +197,7 @@ def cascade_pathway_genome(
                         'previous_owner_slug': _slug_for_pk(prior_bundle_pk),
                     }
                 )
-            elif row.genome_id is None:
+            elif row.genome_id == NeuralModifier.INCUBATOR:
                 unchanged += 1
             else:
                 # Owned by canonical or another bundle — left alone.
@@ -206,13 +211,13 @@ def cascade_pathway_genome(
             'rows': touched,
         }
 
-    # Stamp mode: claim NULL rows for target; skip everyone else's.
+    # Stamp mode: claim INCUBATOR rows for target; skip everyone else's.
     for row in bundle_rows:
         current_pk = row.genome_id
         if current_pk == target_pk:
             unchanged += 1
             continue
-        if current_pk is None:
+        if current_pk == NeuralModifier.INCUBATOR:
             row.genome_id = target_pk
             row.save(update_fields=['genome'])
             stamped += 1
@@ -222,7 +227,7 @@ def cascade_pathway_genome(
                     'model': type(row)._meta.model_name,
                     'pk': str(row.pk),
                     'name_or_repr': _display_name(row),
-                    'previous_owner_slug': None,
+                    'previous_owner_slug': NeuralModifier.INCUBATOR_SLUG,
                 }
             )
             continue

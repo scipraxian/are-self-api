@@ -64,9 +64,14 @@ class GraphWalkerClassificationTest(CommonTestCase):
         self.assertEqual(state, 'canonical')
         self.assertEqual(owner, NeuralModifier.CANONICAL_SLUG)
 
-    def test_classify_user_for_null_genome(self):
-        """Assert a NULL-genome row classifies as 'user' (not orphan/core)."""
+    def test_classify_user_for_incubator_genome(self):
+        """Assert an INCUBATOR-genome row classifies as 'user'.
+
+        Fresh ``Effector.objects.create()`` calls land in INCUBATOR via
+        the GenomeOwnedMixin default — that's the user-workspace bucket.
+        """
         untagged = Effector.objects.create(name='user-row')
+        self.assertEqual(untagged.genome_id, NeuralModifier.INCUBATOR)
 
         state, owner = _classify(untagged, 'alpha')
         self.assertEqual(state, 'user')

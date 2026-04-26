@@ -17,7 +17,7 @@ from identity.addons._handler_registry import (
     dispatch_tool_post,
     dispatch_tool_pre,
 )
-from neuroplasticity.models import NeuralModifierStatus
+from neuroplasticity.models import NeuralModifier, NeuralModifierStatus
 from parietal_lobe.models import ToolCall, ToolDefinition
 from parietal_lobe.parietal_mcp.gateway import ParietalMCP
 
@@ -117,11 +117,13 @@ class ParietalLobe:
     def _fetch_tools(self, identity_disc):
         """Return the ToolDefinitions the session's IdentityDisc enables.
 
-        Tools owned by a NeuralModifier (``genome`` FK non-null) are
-        excluded unless their owning modifier is ENABLED. Core tools
-        (``genome IS NULL``) are always included. This is the gating
-        codepath that makes bundle enable / disable take effect on the
-        next reasoning session.
+        Three gating buckets under the tri-state genome model:
+
+        * ``genome=CANONICAL`` — core-shipped tool, always included.
+        * ``genome=INCUBATOR`` — user-workspace tool, always included.
+        * ``genome=<bundle>``  — bundle-contributed tool; included
+          only when the owning modifier has status INSTALLED (the
+          single live state — ENABLED / DISABLED are retired).
         """
         return list(
             identity_disc.enabled_tools.prefetch_related(
@@ -131,8 +133,9 @@ class ParietalLobe:
             .select_related('use_type')
             .filter(is_async=True)
             .filter(
-                Q(genome__isnull=True)
-                | Q(genome__status_id=NeuralModifierStatus.ENABLED)
+                Q(genome_id=NeuralModifier.CANONICAL)
+                | Q(genome_id=NeuralModifier.INCUBATOR)
+                | Q(genome__status_id=NeuralModifierStatus.INSTALLED)
             )
         )
 

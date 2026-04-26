@@ -1192,10 +1192,10 @@ def _guard_install_collision(
       upgrade's own-row update).
     * equals ``NeuralModifier.CANONICAL`` — refuse. Bundles must not
       overwrite core-shipped rows.
+    * equals ``NeuralModifier.INCUBATOR`` — refuse. Bundles must not
+      overwrite rows the user created in the default workspace.
     * points at any other ``NeuralModifier`` — refuse. Bundles must
       not overwrite rows another bundle already owns.
-    * is ``NULL`` — refuse. Bundles must not overwrite rows a user
-      created locally.
     """
     model = type(target)
     existing_genome_id = (
@@ -1204,14 +1204,13 @@ def _guard_install_collision(
         .first()
     )
     if existing_genome_id is None:
-        # No existing row — fresh insert. The `.first()` returns None
-        # both when the row is absent and when genome_id is NULL, so
-        # disambiguate with an exists check.
-        if not model.objects.filter(pk=target.pk).exists():
-            return
-        owner_label = 'user'
-    elif existing_genome_id == modifier.pk:
+        # genome is NOT NULL at the schema level, so a None result here
+        # means the row itself is absent — fresh insert.
         return
+    if existing_genome_id == modifier.pk:
+        return
+    if existing_genome_id == NeuralModifier.INCUBATOR:
+        owner_label = 'user'
     elif existing_genome_id == NeuralModifier.CANONICAL:
         owner_label = repr(NeuralModifier.CANONICAL_SLUG)
     else:

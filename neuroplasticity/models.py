@@ -20,7 +20,12 @@ from uuid import UUID
 from django.db import models
 
 from common.constants import STANDARD_CHARFIELD_LENGTH
-from common.models import CreatedMixin, DefaultFieldsMixin, NameMixin, UUIDIdMixin
+from common.models import (
+    CreatedMixin,
+    DefaultFieldsMixin,
+    NameMixin,
+    UUIDIdMixin,
+)
 
 
 class NeuralModifierStatus(NameMixin):
@@ -58,8 +63,8 @@ class NeuralModifierStatus(NameMixin):
 
     DISCOVERED = 1
     INSTALLED = 2
-    ENABLED = 3       # retired — kept for historical log compat
-    DISABLED = 4      # retired — kept for historical log compat
+    ENABLED = 3  # retired — kept for historical log compat
+    DISABLED = 4  # retired — kept for historical log compat
     BROKEN = 5
 
     class Meta:
@@ -87,23 +92,26 @@ class NeuralModifier(UUIDIdMixin, DefaultFieldsMixin):
     The ``CANONICAL`` class constant is the frozen UUID of the single
     ``canonical`` NeuralModifier row — it OWNS every row that ships in
     the core fixtures (``genetic_immutables`` / ``zygote`` /
-    ``initial_phenotypes``). Install collisions against a
-    canonical-owned PK are refused; uninstall of canonical is never
+    ``initial_phenotypes``). The ``INCUBATOR`` class constant is the
+    frozen UUID of the default user workspace — every owned row a
+    user creates at runtime lands here unless a different active
+    genome is selected. Install collisions against a canonical-owned
+    or incubator-owned PK are refused; uninstall of either is never
     attempted. The three-state model replaces the old ambiguous
     two-state (genome=NULL overloaded as both "core fixture row" and
     "user-created"):
 
         genome=canonical  — core-shipped, untouchable by bundle ops.
+        genome=incubator  — user workspace, untouchable by bundle ops.
         genome=<bundle>   — contributed by that bundle, CASCADE on uninstall.
-        genome=NULL       — user-created after boot, untouched by bundles.
     """
 
     CANONICAL = UUID('8192d7fd-2d20-4109-9c7c-45121e89f1dd')
     CANONICAL_SLUG = 'canonical'
+    INCUBATOR = UUID('1206f5a1-7ffd-4cb2-8c5a-3a9dfb5e5340')
+    INCUBATOR_SLUG = 'incubator'
 
-    status = models.ForeignKey(
-        NeuralModifierStatus, on_delete=models.CASCADE
-    )
+    status = models.ForeignKey(NeuralModifierStatus, on_delete=models.CASCADE)
     slug = models.SlugField(unique=True)
     version = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
     author = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)

@@ -96,7 +96,23 @@
       "license": "MIT",
       "manifest_hash": "",
       "manifest_json": {},
-      "status": 3
+      "status": 2
+    }
+  },
+  {
+    "model": "neuroplasticity.neuralmodifier",
+    "pk": "1206f5a1-7ffd-4cb2-8c5a-3a9dfb5e5340",
+    "fields": {
+      "created": "2026-04-23T00:00:00Z",
+      "modified": "2026-04-23T00:00:00Z",
+      "name": "Incubator",
+      "slug": "incubator",
+      "version": "0.0.0",
+      "author": "scipraxian",
+      "license": "MIT",
+      "manifest_hash": "",
+      "manifest_json": {},
+      "status": 2
     }
   }
 ]

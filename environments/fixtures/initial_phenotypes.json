@@ -353,21 +353,24 @@
     "model": "environments.projectenvironmentcontextkey",
     "pk": "662f350c-1595-5d5d-ba23-04259ca765be",
     "fields": {
-      "name": "project_name"
+      "name": "project_name",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
     "model": "environments.projectenvironmentcontextkey",
     "pk": "911ee78c-4251-5681-a235-18a2028a0474",
     "fields": {
-      "name": "test_root"
+      "name": "test_root",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
     "model": "environments.projectenvironmentcontextkey",
     "pk": "f88bfedf-6e56-5cad-83a8-82eebe5f2a81",
     "fields": {
-      "name": "project_root"
+      "name": "project_root",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   }
 ]

@@ -5,7 +5,8 @@
     "fields": {
       "environment": "b7e4c2a1-3f8d-4a9e-9c1f-2d5a8b6f4e21",
       "key": "fa470a08-db2a-5058-8da3-5b58895ea1b4",
-      "value": "{{BASE_DIR}}"
+      "value": "{{BASE_DIR}}",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -14,7 +15,8 @@
     "fields": {
       "environment": "b7e4c2a1-3f8d-4a9e-9c1f-2d5a8b6f4e21",
       "key": "d0af4b3d-a6cb-5d15-bc49-b8e9948fbb50",
-      "value": "{{BASE_DIR}}\\venv"
+      "value": "{{BASE_DIR}}\\venv",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -79,14 +81,16 @@
     "model": "environments.projectenvironmentcontextkey",
     "pk": "d0af4b3d-a6cb-5d15-bc49-b8e9948fbb50",
     "fields": {
-      "name": "venv_root"
+      "name": "venv_root",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
     "model": "environments.projectenvironmentcontextkey",
     "pk": "fa470a08-db2a-5058-8da3-5b58895ea1b4",
     "fields": {
-      "name": "are_self_root"
+      "name": "are_self_root",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -111,7 +115,8 @@
     "fields": {
       "executable": "558806d7-d009-4e89-8e4e-86979dcd0594",
       "order": 1,
-      "argument": "0878da24-abcc-4931-b139-87a0ed076038"
+      "argument": "0878da24-abcc-4931-b139-87a0ed076038",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {

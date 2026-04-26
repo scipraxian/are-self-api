@@ -6,7 +6,8 @@
       "created": "2026-03-10T12:00:00Z",
       "modified": "2026-03-10T12:00:00Z",
       "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
-      "value": "checkout"
+      "value": "checkout",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -16,7 +17,8 @@
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z",
       "parameter": "7672cbed-f22e-4896-852f-b7220e9a90ce",
-      "value": "CREATE"
+      "value": "CREATE",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -26,7 +28,8 @@
       "created": "2026-03-10T12:00:00Z",
       "modified": "2026-03-10T12:00:00Z",
       "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
-      "value": "log"
+      "value": "log",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -36,7 +39,8 @@
       "created": "2026-03-10T12:00:00Z",
       "modified": "2026-03-10T12:00:00Z",
       "parameter": "e2b6e573-a1b3-46cd-bee1-f47e201dbce6",
-      "value": "comment"
+      "value": "comment",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -46,7 +50,8 @@
       "created": "2026-03-01T12:00:00Z",
       "modified": "2026-03-01T12:00:00Z",
       "parameter": "043ac700-e2ed-48b7-bd07-347e1f724ab1",
-      "value": "CREATE"
+      "value": "CREATE",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -56,7 +61,8 @@
       "created": "2026-03-10T12:00:00Z",
       "modified": "2026-03-10T12:00:00Z",
       "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
-      "value": "stash"
+      "value": "stash",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -66,7 +72,8 @@
       "created": "2026-03-01T12:00:00Z",
       "modified": "2026-03-01T12:00:00Z",
       "parameter": "7aa7e380-2131-4af6-b08e-7174f084e5ab",
-      "value": "STORY"
+      "value": "STORY",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -76,7 +83,8 @@
       "created": "2026-03-01T12:00:00Z",
       "modified": "2026-03-01T12:00:00Z",
       "parameter": "043ac700-e2ed-48b7-bd07-347e1f724ab1",
-      "value": "UPDATE"
+      "value": "UPDATE",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -86,7 +94,8 @@
       "created": "2026-03-10T12:00:00Z",
       "modified": "2026-03-10T12:00:00Z",
       "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
-      "value": "add"
+      "value": "add",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -96,7 +105,8 @@
       "created": "2026-03-10T12:00:00Z",
       "modified": "2026-03-10T12:00:00Z",
       "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
-      "value": "branch"
+      "value": "branch",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -106,7 +116,8 @@
       "created": "2026-04-04T12:00:00Z",
       "modified": "2026-04-04T12:00:00Z",
       "parameter": "5411fce2-b136-4bb4-bc53-f62b1b48ddef",
-      "value": "male"
+      "value": "male",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -116,7 +127,8 @@
       "created": "2026-04-04T12:00:00Z",
       "modified": "2026-04-04T12:00:00Z",
       "parameter": "5411fce2-b136-4bb4-bc53-f62b1b48ddef",
-      "value": "child"
+      "value": "child",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -126,7 +138,8 @@
       "created": "2026-03-10T12:00:00Z",
       "modified": "2026-03-10T12:00:00Z",
       "parameter": "e2b6e573-a1b3-46cd-bee1-f47e201dbce6",
-      "value": "search"
+      "value": "search",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -136,7 +149,8 @@
       "created": "2026-03-10T12:00:00Z",
       "modified": "2026-03-10T12:00:00Z",
       "parameter": "41e78666-0070-4097-84e6-59d8277275d7",
-      "value": "read"
+      "value": "read",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -146,7 +160,8 @@
       "created": "2026-03-10T12:00:00Z",
       "modified": "2026-03-10T12:00:00Z",
       "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
-      "value": "diff"
+      "value": "diff",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -156,7 +171,8 @@
       "created": "2026-03-10T12:00:00Z",
       "modified": "2026-03-10T12:00:00Z",
       "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
-      "value": "commit"
+      "value": "commit",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -166,7 +182,8 @@
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z",
       "parameter": "043ac700-e2ed-48b7-bd07-347e1f724ab1",
-      "value": "count"
+      "value": "count",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -176,7 +193,8 @@
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z",
       "parameter": "5a4d499b-be43-4def-93a8-603953739a24",
-      "value": "SUCCESS"
+      "value": "SUCCESS",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -186,7 +204,8 @@
       "created": "2026-03-01T12:00:00Z",
       "modified": "2026-03-01T12:00:00Z",
       "parameter": "043ac700-e2ed-48b7-bd07-347e1f724ab1",
-      "value": "READ"
+      "value": "READ",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -196,7 +215,8 @@
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z",
       "parameter": "5a4d499b-be43-4def-93a8-603953739a24",
-      "value": "FAILURE"
+      "value": "FAILURE",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -206,7 +226,8 @@
       "created": "2026-03-10T12:00:00Z",
       "modified": "2026-03-10T12:00:00Z",
       "parameter": "41e78666-0070-4097-84e6-59d8277275d7",
-      "value": "patch"
+      "value": "patch",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -216,7 +237,8 @@
       "created": "2026-03-01T12:00:00Z",
       "modified": "2026-03-01T12:00:00Z",
       "parameter": "043ac700-e2ed-48b7-bd07-347e1f724ab1",
-      "value": "COMMENT"
+      "value": "COMMENT",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -226,7 +248,8 @@
       "created": "2026-03-10T12:00:00Z",
       "modified": "2026-03-10T12:00:00Z",
       "parameter": "41e78666-0070-4097-84e6-59d8277275d7",
-      "value": "grep"
+      "value": "grep",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -236,7 +259,8 @@
       "created": "2026-03-10T12:00:00Z",
       "modified": "2026-03-10T12:00:00Z",
       "parameter": "41e78666-0070-4097-84e6-59d8277275d7",
-      "value": "list"
+      "value": "list",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -246,7 +270,8 @@
       "created": "2026-03-01T12:00:00Z",
       "modified": "2026-03-01T12:00:00Z",
       "parameter": "7aa7e380-2131-4af6-b08e-7174f084e5ab",
-      "value": "EPIC"
+      "value": "EPIC",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -256,7 +281,8 @@
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z",
       "parameter": "043ac700-e2ed-48b7-bd07-347e1f724ab1",
-      "value": "list"
+      "value": "list",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -266,7 +292,8 @@
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z",
       "parameter": "7672cbed-f22e-4896-852f-b7220e9a90ce",
-      "value": "UPDATE"
+      "value": "UPDATE",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -276,7 +303,8 @@
       "created": "2026-03-10T12:00:00Z",
       "modified": "2026-03-10T12:00:00Z",
       "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
-      "value": "status"
+      "value": "status",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -286,7 +314,8 @@
       "created": "2026-04-04T12:00:00Z",
       "modified": "2026-04-04T12:00:00Z",
       "parameter": "5411fce2-b136-4bb4-bc53-f62b1b48ddef",
-      "value": "female"
+      "value": "female",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -296,7 +325,8 @@
       "created": "2026-03-01T12:00:00Z",
       "modified": "2026-03-01T12:00:00Z",
       "parameter": "7aa7e380-2131-4af6-b08e-7174f084e5ab",
-      "value": "TASK"
+      "value": "TASK",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -306,7 +336,8 @@
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z",
       "parameter": "7672cbed-f22e-4896-852f-b7220e9a90ce",
-      "value": "COMPLETE"
+      "value": "COMPLETE",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -316,7 +347,8 @@
       "created": "2026-04-04T12:00:00Z",
       "modified": "2026-04-04T12:00:00Z",
       "parameter": "5411fce2-b136-4bb4-bc53-f62b1b48ddef",
-      "value": "narrator"
+      "value": "narrator",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -326,7 +358,8 @@
       "created": "2026-03-10T12:00:00Z",
       "modified": "2026-03-10T12:00:00Z",
       "parameter": "e2b6e573-a1b3-46cd-bee1-f47e201dbce6",
-      "value": "create"
+      "value": "create",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -336,7 +369,8 @@
       "created": "2026-03-10T12:00:00Z",
       "modified": "2026-03-10T12:00:00Z",
       "parameter": "e2b6e573-a1b3-46cd-bee1-f47e201dbce6",
-      "value": "update"
+      "value": "update",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -346,7 +380,8 @@
       "created": "2026-04-04T12:00:00Z",
       "modified": "2026-04-04T12:00:00Z",
       "parameter": "5411fce2-b136-4bb4-bc53-f62b1b48ddef",
-      "value": "whisper"
+      "value": "whisper",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -356,7 +391,8 @@
       "created": "2026-02-18T12:00:00Z",
       "modified": "2026-02-18T12:00:00Z",
       "parameter": "5a4d499b-be43-4def-93a8-603953739a24",
-      "value": "NEEDS_CLARIFICATION"
+      "value": "NEEDS_CLARIFICATION",
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -377,7 +413,7 @@
     "pk": "0d3891ba-e915-444b-8ec2-7d4f6fb1cde0",
     "fields": {
       "created": "2026-04-04T12:00:00Z",
-      "description": "Convert text to speech and save as a WAV file. Uses Piper TTS locally \u2014 no GPU, no internet, no cost. Output saves to the audio_root environment path. Available voices: male, female, child, narrator, whisper.",
+      "description": "Convert text to speech and save as a WAV file. Uses Piper TTS locally — no GPU, no internet, no cost. Output saves to the audio_root environment path. Available voices: male, female, child, narrator, whisper.",
       "modified": "2026-04-04T12:00:00Z",
       "name": "mcp_tts",
       "is_async": true,
@@ -1396,7 +1432,8 @@
       "tool": "1672746c-8bcd-4c92-8154-7adb2cba3f5a",
       "parameter": "c66e1cd0-f25b-4c9d-9242-41c3e14dc17c",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1408,7 +1445,8 @@
       "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
       "parameter": "cd28b9a4-afeb-4c11-9779-0aa0c5a36d76",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1420,7 +1458,8 @@
       "tool": "d26a121e-cade-4f83-80a8-44947c4115ab",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": false,
-      "prune_after_turns": 1
+      "prune_after_turns": 1,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1432,7 +1471,8 @@
       "tool": "36151a8b-3c82-4a61-8a7f-b1392b1fb81c",
       "parameter": "26e51560-7865-4af9-90f9-dbdfdf752472",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1444,7 +1484,8 @@
       "tool": "1fe2d9dd-0b59-4caf-aa24-3ff09f17a6d9",
       "parameter": "058b3a99-0bd4-40f0-a607-40ee182a6448",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1456,7 +1497,8 @@
       "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
       "parameter": "043ac700-e2ed-48b7-bd07-347e1f724ab1",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1468,7 +1510,8 @@
       "tool": "c4ef2e80-59b7-49cd-86cc-1e988db9976e",
       "parameter": "41e78666-0070-4097-84e6-59d8277275d7",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1480,7 +1523,8 @@
       "tool": "2479e316-4277-4d4c-8ed9-44be01142fe4",
       "parameter": "2912462e-dfd8-4d7f-99fb-9413cdc28673",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1492,7 +1536,8 @@
       "tool": "92efa6a9-9392-4124-b10b-5c7a0ea61e08",
       "parameter": "93b3438d-d2fd-4fee-947b-4be61d89cea7",
       "required": true,
-      "prune_after_turns": 1
+      "prune_after_turns": 1,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1504,7 +1549,8 @@
       "tool": "abacd3a1-bcf1-4236-8b5c-7a39d37de0eb",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": false,
-      "prune_after_turns": 1
+      "prune_after_turns": 1,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1516,7 +1562,8 @@
       "tool": "aa061f89-6961-4ca6-9c33-7f0480e030ce",
       "parameter": "75042e4e-e551-4031-83c5-23b7d4754ad8",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1528,7 +1575,8 @@
       "tool": "8f80e108-0e43-4509-8c4c-d1259f393ad7",
       "parameter": "a8f744ef-8b72-4b5d-a73e-37d163413659",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1540,7 +1588,8 @@
       "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
       "parameter": "058b3a99-0bd4-40f0-a607-40ee182a6448",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1552,7 +1601,8 @@
       "tool": "0d3891ba-e915-444b-8ec2-7d4f6fb1cde0",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1564,7 +1614,8 @@
       "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
       "parameter": "f7050b29-399d-4d96-aacb-fbf3f7c79004",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1576,7 +1627,8 @@
       "tool": "5cb73221-3a7a-4e49-9342-bb3f7021c6f1",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": false,
-      "prune_after_turns": 1
+      "prune_after_turns": 1,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1588,7 +1640,8 @@
       "tool": "0d3891ba-e915-444b-8ec2-7d4f6fb1cde0",
       "parameter": "fb7beaa1-f32f-4893-92fa-0aa62730f5f1",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1600,7 +1653,8 @@
       "tool": "1fe2d9dd-0b59-4caf-aa24-3ff09f17a6d9",
       "parameter": "f07e2530-83eb-481f-a35f-42f9a9867597",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1612,7 +1666,8 @@
       "tool": "92efa6a9-9392-4124-b10b-5c7a0ea61e08",
       "parameter": "5236f0e1-73e0-4112-8ee4-43ff7a973c7e",
       "required": true,
-      "prune_after_turns": 6
+      "prune_after_turns": 6,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1624,7 +1679,8 @@
       "tool": "d26a121e-cade-4f83-80a8-44947c4115ab",
       "parameter": "058b3a99-0bd4-40f0-a607-40ee182a6448",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1636,7 +1692,8 @@
       "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
       "parameter": "76b5ada7-0c43-4a9e-b9f7-413531435916",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1648,7 +1705,8 @@
       "tool": "a5034848-16a9-4648-90b7-b13d3bc00792",
       "parameter": "41b193fb-4a86-4206-b432-92559d9f505a",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1660,7 +1718,8 @@
       "tool": "aa061f89-6961-4ca6-9c33-7f0480e030ce",
       "parameter": "c0ad4616-c48c-4d3f-8756-f81430d9d872",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1672,7 +1731,8 @@
       "tool": "8f80e108-0e43-4509-8c4c-d1259f393ad7",
       "parameter": "41b193fb-4a86-4206-b432-92559d9f505a",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1684,7 +1744,8 @@
       "tool": "d26a121e-cade-4f83-80a8-44947c4115ab",
       "parameter": "5540b3d1-dcf3-467a-b996-f3770516671a",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1696,7 +1757,8 @@
       "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
       "parameter": "7aa7e380-2131-4af6-b08e-7174f084e5ab",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1708,7 +1770,8 @@
       "tool": "d26a121e-cade-4f83-80a8-44947c4115ab",
       "parameter": "a479a414-9309-4031-8d56-cf7f2136ddb1",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1720,7 +1783,8 @@
       "tool": "92efa6a9-9392-4124-b10b-5c7a0ea61e08",
       "parameter": "0a9e1b1e-2941-45a3-ab01-6585c2e0c44e",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1732,7 +1796,8 @@
       "tool": "63db5e88-e3a3-4c1f-9df0-42eac3fbc522",
       "parameter": "ce4f3237-a259-40e9-b84e-2c5977d9c720",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1744,7 +1809,8 @@
       "tool": "b4c8fbec-8f5d-4995-85b0-e4e8adff12e3",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": true,
-      "prune_after_turns": 2
+      "prune_after_turns": 2,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1756,7 +1822,8 @@
       "tool": "d3138f37-1df1-42e9-b0fb-75ca21aaeb73",
       "parameter": "c0ad4616-c48c-4d3f-8756-f81430d9d872",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1768,7 +1835,8 @@
       "tool": "b4c8fbec-8f5d-4995-85b0-e4e8adff12e3",
       "parameter": "93b3438d-d2fd-4fee-947b-4be61d89cea7",
       "required": false,
-      "prune_after_turns": 1
+      "prune_after_turns": 1,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1780,7 +1848,8 @@
       "tool": "2479e316-4277-4d4c-8ed9-44be01142fe4",
       "parameter": "f07e2530-83eb-481f-a35f-42f9a9867597",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1792,7 +1861,8 @@
       "tool": "abacd3a1-bcf1-4236-8b5c-7a39d37de0eb",
       "parameter": "a41c4a55-429e-4f80-a640-81bfae3ffb59",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1804,7 +1874,8 @@
       "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": false,
-      "prune_after_turns": 1
+      "prune_after_turns": 1,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1816,7 +1887,8 @@
       "tool": "ec21f60f-93be-4ec9-8ac4-6253e2fed735",
       "parameter": "76b5ada7-0c43-4a9e-b9f7-413531435916",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1828,7 +1900,8 @@
       "tool": "03811f75-517a-4de4-8420-8fda7481c6cf",
       "parameter": "b27ff074-a21b-4d7b-b76b-7185dd11c1ea",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1840,7 +1913,8 @@
       "tool": "36151a8b-3c82-4a61-8a7f-b1392b1fb81c",
       "parameter": "a479a414-9309-4031-8d56-cf7f2136ddb1",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1852,7 +1926,8 @@
       "tool": "a5034848-16a9-4648-90b7-b13d3bc00792",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": false,
-      "prune_after_turns": 1
+      "prune_after_turns": 1,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1864,7 +1939,8 @@
       "tool": "c4ef2e80-59b7-49cd-86cc-1e988db9976e",
       "parameter": "f7050b29-399d-4d96-aacb-fbf3f7c79004",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1876,7 +1952,8 @@
       "tool": "1672746c-8bcd-4c92-8154-7adb2cba3f5a",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": false,
-      "prune_after_turns": 1
+      "prune_after_turns": 1,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1888,7 +1965,8 @@
       "tool": "1672746c-8bcd-4c92-8154-7adb2cba3f5a",
       "parameter": "bd144e2b-49f4-4b43-9a5d-82842d8ddc49",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1900,7 +1978,8 @@
       "tool": "5cb73221-3a7a-4e49-9342-bb3f7021c6f1",
       "parameter": "76b5ada7-0c43-4a9e-b9f7-413531435916",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1912,7 +1991,8 @@
       "tool": "8f80e108-0e43-4509-8c4c-d1259f393ad7",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": false,
-      "prune_after_turns": 1
+      "prune_after_turns": 1,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1924,7 +2004,8 @@
       "tool": "1fe2d9dd-0b59-4caf-aa24-3ff09f17a6d9",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": false,
-      "prune_after_turns": 1
+      "prune_after_turns": 1,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1936,7 +2017,8 @@
       "tool": "aa061f89-6961-4ca6-9c33-7f0480e030ce",
       "parameter": "4e4c94fb-83e5-4174-9dc4-139fe547f0d9",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1948,7 +2030,8 @@
       "tool": "d26a121e-cade-4f83-80a8-44947c4115ab",
       "parameter": "26e51560-7865-4af9-90f9-dbdfdf752472",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1960,7 +2043,8 @@
       "tool": "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
       "parameter": "0753598a-64ad-4fb2-af86-b0c8f990aac7",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1972,7 +2056,8 @@
       "tool": "2479e316-4277-4d4c-8ed9-44be01142fe4",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": false,
-      "prune_after_turns": 1
+      "prune_after_turns": 1,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1984,7 +2069,8 @@
       "tool": "2479e316-4277-4d4c-8ed9-44be01142fe4",
       "parameter": "26e51560-7865-4af9-90f9-dbdfdf752472",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -1996,7 +2082,8 @@
       "tool": "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
       "parameter": "c0ad4616-c48c-4d3f-8756-f81430d9d872",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2008,7 +2095,8 @@
       "tool": "03811f75-517a-4de4-8420-8fda7481c6cf",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": false,
-      "prune_after_turns": 1
+      "prune_after_turns": 1,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2020,7 +2108,8 @@
       "tool": "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
       "parameter": "5a4d499b-be43-4def-93a8-603953739a24",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2032,7 +2121,8 @@
       "tool": "d3138f37-1df1-42e9-b0fb-75ca21aaeb73",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": false,
-      "prune_after_turns": 1
+      "prune_after_turns": 1,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2044,7 +2134,8 @@
       "tool": "2479e316-4277-4d4c-8ed9-44be01142fe4",
       "parameter": "826de4d1-d7a5-4cf1-a3e0-601addc0dd3b",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2056,7 +2147,8 @@
       "tool": "b4c8fbec-8f5d-4995-85b0-e4e8adff12e3",
       "parameter": "5236f0e1-73e0-4112-8ee4-43ff7a973c7e",
       "required": true,
-      "prune_after_turns": 6
+      "prune_after_turns": 6,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2068,7 +2160,8 @@
       "tool": "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
       "parameter": "04f696db-cd64-4618-a050-a03c37b8d756",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2080,7 +2173,8 @@
       "tool": "63db5e88-e3a3-4c1f-9df0-42eac3fbc522",
       "parameter": "f7050b29-399d-4d96-aacb-fbf3f7c79004",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2092,7 +2186,8 @@
       "tool": "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
       "parameter": "5f8a1882-b6a6-4382-a62f-e4ef5b45b8d6",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2104,7 +2199,8 @@
       "tool": "0d3891ba-e915-444b-8ec2-7d4f6fb1cde0",
       "parameter": "5411fce2-b136-4bb4-bc53-f62b1b48ddef",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2116,7 +2212,8 @@
       "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
       "parameter": "47ac97ce-e42e-4529-b0a2-8aefe71e75c6",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2128,7 +2225,8 @@
       "tool": "1672746c-8bcd-4c92-8154-7adb2cba3f5a",
       "parameter": "aeb1329e-f6cc-4e8a-82b9-bfa3c6e153e4",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2140,7 +2238,8 @@
       "tool": "36151a8b-3c82-4a61-8a7f-b1392b1fb81c",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": false,
-      "prune_after_turns": 1
+      "prune_after_turns": 1,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2152,7 +2251,8 @@
       "tool": "63db5e88-e3a3-4c1f-9df0-42eac3fbc522",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": false,
-      "prune_after_turns": 1
+      "prune_after_turns": 1,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2164,7 +2264,8 @@
       "tool": "8f80e108-0e43-4509-8c4c-d1259f393ad7",
       "parameter": "c0ad4616-c48c-4d3f-8756-f81430d9d872",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2176,7 +2277,8 @@
       "tool": "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
       "parameter": "005f73ed-b6ee-4f94-9957-214bb832c4ec",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2188,7 +2290,8 @@
       "tool": "c4ef2e80-59b7-49cd-86cc-1e988db9976e",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": false,
-      "prune_after_turns": 1
+      "prune_after_turns": 1,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2200,7 +2303,8 @@
       "tool": "a5034848-16a9-4648-90b7-b13d3bc00792",
       "parameter": "c0ad4616-c48c-4d3f-8756-f81430d9d872",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2212,7 +2316,8 @@
       "tool": "1fe2d9dd-0b59-4caf-aa24-3ff09f17a6d9",
       "parameter": "26e51560-7865-4af9-90f9-dbdfdf752472",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2224,7 +2329,8 @@
       "tool": "03811f75-517a-4de4-8420-8fda7481c6cf",
       "parameter": "196561fc-3a9b-48b3-9c29-aba5a1219c35",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2236,7 +2342,8 @@
       "tool": "5cb73221-3a7a-4e49-9342-bb3f7021c6f1",
       "parameter": "95b07b83-1871-45ae-a1af-d5bcaa839094",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2248,7 +2355,8 @@
       "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
       "parameter": "3c397f55-6034-4c0f-8cfd-670f44f5d3c5",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2260,7 +2368,8 @@
       "tool": "03811f75-517a-4de4-8420-8fda7481c6cf",
       "parameter": "c0ad4616-c48c-4d3f-8756-f81430d9d872",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2272,7 +2381,8 @@
       "tool": "92efa6a9-9392-4124-b10b-5c7a0ea61e08",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": true,
-      "prune_after_turns": 2
+      "prune_after_turns": 2,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2284,7 +2394,8 @@
       "tool": "de7522e6-69c8-43e2-b433-3e3c8b8d557f",
       "parameter": "3ac2996d-5f4c-4680-9307-bdc20285d3a6",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2296,7 +2407,8 @@
       "tool": "0d3891ba-e915-444b-8ec2-7d4f6fb1cde0",
       "parameter": "b95ac897-df12-42d3-80fa-0af53c82c744",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2308,7 +2420,8 @@
       "tool": "ec21f60f-93be-4ec9-8ac4-6253e2fed735",
       "parameter": "144d23a0-7091-4759-b0e2-00ab812b0324",
       "required": false,
-      "prune_after_turns": 1
+      "prune_after_turns": 1,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2320,7 +2433,8 @@
       "tool": "03811f75-517a-4de4-8420-8fda7481c6cf",
       "parameter": "95b07b83-1871-45ae-a1af-d5bcaa839094",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2332,7 +2446,8 @@
       "tool": "1fe2d9dd-0b59-4caf-aa24-3ff09f17a6d9",
       "parameter": "a479a414-9309-4031-8d56-cf7f2136ddb1",
       "required": true,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -2344,7 +2459,8 @@
       "tool": "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
       "parameter": "7befa23c-4fc6-40d9-9ca6-65055d10609d",
       "required": false,
-      "prune_after_turns": 0
+      "prune_after_turns": 0,
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   }
 ]

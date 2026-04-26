@@ -15,7 +15,8 @@ from .models import (
 
 @admin.register(ExecutableSwitch)
 class ExecutableSwitchAdmin(admin.ModelAdmin):
-    list_display = ('name', 'flag', 'value', 'id')
+    list_display = ('name', 'flag', 'value', 'id', 'genome')
+    list_filter = ('genome',)
     search_fields = ('name', 'flag')
     ordering = ('flag',)
     list_editable = ('flag', 'value')
@@ -23,7 +24,8 @@ class ExecutableSwitchAdmin(admin.ModelAdmin):
 
 @admin.register(ExecutableArgument)
 class ExecutableArgumentAdmin(admin.ModelAdmin):
-    list_display = ('name', 'argument')
+    list_display = ('name', 'argument', 'genome')
+    list_filter = ('genome',)
     search_fields = (
         'name',
         'argument',
@@ -50,9 +52,9 @@ class SupplementaryFileInline(admin.TabularInline):
 
 @admin.register(Executable)
 class ExecutableAdmin(admin.ModelAdmin):
-    list_display = ('name', 'executable_short', 'working_path', 'switch_count')
+    list_display = ('name', 'executable_short', 'working_path', 'switch_count', 'genome')
     search_fields = ('name', 'executable')
-    list_filter = ('working_path',)
+    list_filter = ('genome', 'working_path')
 
     # The Power User Interface
     inlines = [ArgumentAssignmentInline, SupplementaryFileInline]
@@ -74,6 +76,9 @@ class ExecutableAdmin(admin.ModelAdmin):
                 'description': 'Global flags (unordered) that always apply.',
             },
         ),
+        ('Bundle Ownership', {
+            'fields': ('genome',),
+        }),
     )
 
     def executable_short(self, obj):
@@ -101,7 +106,8 @@ class ProjectEnvironmentStatusAdmin(admin.ModelAdmin):
 class ProjectEnvironmentContextKeyAdmin(admin.ModelAdmin):
     """Registered to allow inline autocomplete."""
 
-    list_display = ('name',)
+    list_display = ('name', 'genome')
+    list_filter = ('genome',)
     search_fields = ('name',)
 
 
@@ -113,8 +119,8 @@ class EnvironmentContextInline(admin.TabularInline):
 
 @admin.register(ProjectEnvironment)
 class ProjectEnvironmentAdmin(admin.ModelAdmin):
-    list_display = ('name', 'status', 'variable_count')
-    list_filter = ('status',)
+    list_display = ('name', 'status', 'variable_count', 'genome')
+    list_filter = ('genome', 'status')
     inlines = [EnvironmentContextInline]
 
     def variable_count(self, obj):

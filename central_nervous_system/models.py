@@ -44,7 +44,7 @@ from .constants import (
 
 class CNSTag(NameMixin):
     """
-    Native tagging system to avoid external dependency conflicts.
+    Local Native tagging system to avoid external dependency conflicts.
     """
 
     class Meta:
@@ -53,6 +53,7 @@ class CNSTag(NameMixin):
         ordering = ['name']
 
 
+# We do not currently add tags and favorites to Genomes. The user can.
 class TagsAndFavoriteMixin(models.Model):
     is_favorite = models.BooleanField(default=False, db_index=True)
     tags = models.ManyToManyField(CNSTag, blank=True)
@@ -239,7 +240,7 @@ class Effector(
         return command_list
 
 
-class EffectorContext(UUIDIdMixin):
+class EffectorContext(UUIDIdMixin, GenomeOwnedMixin):
     effector = models.ForeignKey(Effector, on_delete=models.CASCADE)
     key = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
     value = models.TextField(blank=True)
@@ -267,7 +268,7 @@ class EffectorTarget(models.Model):
         return f'{self.effector.name} -> {self.target}'
 
 
-class EffectorArgumentAssignment(UUIDIdMixin):
+class EffectorArgumentAssignment(UUIDIdMixin, GenomeOwnedMixin):
     effector = models.ForeignKey(Effector, on_delete=models.CASCADE)
     order = models.IntegerField(default=10)
     argument = models.ForeignKey(ExecutableArgument, on_delete=models.CASCADE)
@@ -300,7 +301,7 @@ class NeuralPathway(
         return self.name
 
 
-class Neuron(UUIDIdMixin, ProjectEnvironmentMixin):
+class Neuron(UUIDIdMixin, ProjectEnvironmentMixin, GenomeOwnedMixin):
     """
     A visual instance of a Effector on the Graph.
     Allows the same Effector (e.g., 'Wait') to be used
@@ -334,7 +335,7 @@ class Neuron(UUIDIdMixin, ProjectEnvironmentMixin):
         return f'Neuron {self.id}: {self.effector.name}'
 
 
-class NeuronContext(UUIDIdMixin):
+class NeuronContext(UUIDIdMixin, GenomeOwnedMixin):
     neuron = models.ForeignKey(Neuron, on_delete=models.CASCADE)
     key = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
     value = models.TextField(blank=True)
@@ -349,7 +350,7 @@ class AxonType(NameMixin):
     pass
 
 
-class Axon(UUIDIdMixin, ModifiedMixin):
+class Axon(UUIDIdMixin, ModifiedMixin, GenomeOwnedMixin):
     """
     The Wire. Connects two NODES (not effectors).
     Trigger Condition: Fires when 'source' finishes with 'status'.

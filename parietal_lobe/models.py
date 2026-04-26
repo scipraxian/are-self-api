@@ -70,7 +70,9 @@ class ToolParameter(
         return f'{self.name} ({self.type.name})'
 
 
-class ToolParameterAssignment(UUIDIdMixin, CreatedMixin, ModifiedMixin):
+class ToolParameterAssignment(
+    UUIDIdMixin, CreatedMixin, ModifiedMixin, GenomeOwnedMixin
+):
     """
     The Link Table.
     Inherits strictly from timestamp mixins to avoid unique name constraints.
@@ -97,7 +99,7 @@ class ToolParameterAssignment(UUIDIdMixin, CreatedMixin, ModifiedMixin):
         return f'{self.tool.name} -> {self.parameter.name}{req}'
 
 
-class ParameterEnum(UUIDIdMixin, CreatedMixin, ModifiedMixin):
+class ParameterEnum(UUIDIdMixin, CreatedMixin, ModifiedMixin, GenomeOwnedMixin):
     """Joined table for parameters that have strict pre-defined values."""
 
     parameter = models.ForeignKey(
