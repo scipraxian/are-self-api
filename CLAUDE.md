@@ -774,7 +774,7 @@ Do NOT invoke `psql -U postgres ...` directly — it will not reach the server. 
 the test database (e.g. after migration-order changes), use:
 
 ```
-docker exec are_self_db psql -U postgres -c 'DROP DATABASE IF EXISTS test_postgres;'
+docker exec are_self_db psql -U postgres -c 'DROP DATABASE IF EXISTS test_are_self;'
 ```
 
 **pgvector extension install lives in each vector-using app.** `VectorExtension()` is

@@ -102,11 +102,11 @@ ASGI_APPLICATION = 'config.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',  # Default name
-        'USER': 'postgres',  # Default user
-        'PASSWORD': 'frith',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': 'are_self',  # This is the database name within PostgreSQL.
+        'USER': 'postgres',  # This is the user connecting to PG from Django.
+        'PASSWORD': 'frith',  # in production this should be set in the env.
+        'HOST': 'localhost',  # localhost = the DB server running on this machine.
+        'PORT': '5432',  # default PostgreSQL port.
     }
 }
 

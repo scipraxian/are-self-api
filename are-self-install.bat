@@ -55,9 +55,13 @@ if %errorlevel% neq 0 (
     echo   container, check whether ports 80 or 443 are already in use.
 )
 
-:: Step 5: Enable pgvector
-echo [5/10] Enabling pgvector extension...
-docker exec -it are_self_db psql -U postgres -d postgres -c "CREATE EXTENSION IF NOT EXISTS vector;" >nul 2>&1
+:: Step 5: Create application DB and enable pgvector
+echo [5/10] Creating application database and enabling pgvector...
+:: POSTGRES_DB only creates the DB on first volume init. Reinstalls against
+:: an existing volume need an explicit create. CREATE DATABASE has no
+:: IF NOT EXISTS, so we swallow stderr — the "already exists" path is fine.
+docker exec are_self_db psql -U postgres -d template1 -c "CREATE DATABASE are_self;" >nul 2>&1
+docker exec -it are_self_db psql -U postgres -d are_self -c "CREATE EXTENSION IF NOT EXISTS vector;" >nul 2>&1
 
 :: Step 6: Run migrations
 echo [6/10] Running database migrations...

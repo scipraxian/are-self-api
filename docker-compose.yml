@@ -5,7 +5,7 @@ services:
     container_name: are_self_db
     restart: always
     environment:
-      POSTGRES_DB: postgres
+      POSTGRES_DB: are_self
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: frith
     ports:
