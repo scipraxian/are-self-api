@@ -9,6 +9,10 @@ from frontal_lobe.models import (
 from parietal_lobe.models import ToolDefinition
 
 from hypothalamus.models import AIModelSelectionFilter
+from neuroplasticity.serializer_mixins import (
+    GenomeDisplayMixin,
+    GenomeOwnedSerializerMixin,
+)
 
 from .models import (
     BudgetPeriod,
@@ -28,7 +32,9 @@ class ToolDefinitionSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
-class IdentityAddonSerializer(serializers.ModelSerializer):
+class IdentityAddonSerializer(
+    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+):
     class Meta:
         model = IdentityAddon
         fields = ALL_FIELDS
@@ -62,7 +68,9 @@ class IdentityBudgetRefSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
-class IdentitySerializer(serializers.ModelSerializer):
+class IdentitySerializer(
+    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+):
     enabled_tools = ToolDefinitionSerializer(many=True, read_only=True)
     enabled_tool_ids = serializers.PrimaryKeyRelatedField(
         source='enabled_tools', queryset=ToolDefinition.objects.all(),
@@ -134,7 +142,9 @@ class IdentityDiscReasoningSerializer(serializers.ModelSerializer):
         )
 
 
-class IdentityDiscSerializer(serializers.ModelSerializer):
+class IdentityDiscSerializer(
+    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+):
     enabled_tools = ToolDefinitionSerializer(many=True, read_only=True)
     enabled_tool_ids = serializers.PrimaryKeyRelatedField(
         source='enabled_tools', queryset=ToolDefinition.objects.all(),

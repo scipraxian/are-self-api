@@ -2,6 +2,10 @@ from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
 from identity.models import Identity, IdentityDisc
+from neuroplasticity.serializer_mixins import (
+    GenomeDisplayMixin,
+    GenomeOwnedSerializerMixin,
+)
 from temporal_lobe.models import (
     Iteration,
     IterationDefinition,
@@ -96,7 +100,9 @@ class IterationShiftDefinitionSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
-class IterationDefinitionSerializer(serializers.ModelSerializer):
+class IterationDefinitionSerializer(
+    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+):
     """Serializer for the IterationDefinition model."""
 
     shift_definitions = IterationShiftDefinitionSerializer(

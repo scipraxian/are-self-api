@@ -20,6 +20,10 @@ from environments.serializers import (
     ExecutableSerializer,
     ExecutableSwitchSerializer,
 )
+from neuroplasticity.serializer_mixins import (
+    GenomeDisplayMixin,
+    GenomeOwnedSerializerMixin,
+)
 
 
 class CNSTagSerializer(serializers.ModelSerializer):
@@ -28,26 +32,37 @@ class CNSTagSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 
-class EffectorLightSerializer(serializers.ModelSerializer):
+class EffectorLightSerializer(GenomeDisplayMixin, serializers.ModelSerializer):
     class Meta:
         model = Effector
-        fields = ['id', 'name', 'description', 'distribution_mode']
+        fields = ['id', 'name', 'description', 'distribution_mode', 'genome_slug']
 
 
-class EffectorArgumentAssignmentSerializer(serializers.ModelSerializer):
+class EffectorArgumentAssignmentSerializer(
+    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+):
     argument_detail = ExecutableArgumentSerializer(
         source='argument', read_only=True
     )
 
     class Meta:
         model = EffectorArgumentAssignment
-        fields = ['id', 'effector', 'argument', 'order', 'argument_detail']
+        fields = [
+            'id',
+            'effector',
+            'argument',
+            'order',
+            'argument_detail',
+            'genome_slug',
+        ]
 
 
-class EffectorContextSerializer(serializers.ModelSerializer):
+class EffectorContextSerializer(
+    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+):
     class Meta:
         model = EffectorContext
-        fields = ['id', 'effector', 'key', 'value']
+        fields = ['id', 'effector', 'key', 'value', 'genome_slug']
 
 
 class CNSDistributionModeSerializer(serializers.ModelSerializer):
@@ -56,7 +71,9 @@ class CNSDistributionModeSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description']
 
 
-class EffectorDetailSerializer(serializers.ModelSerializer):
+class EffectorDetailSerializer(
+    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+):
     """
     Full serializer for the Effector Editor page.
     Includes nested read-only details for executable, switches, arguments, and context.
@@ -101,6 +118,7 @@ class EffectorDetailSerializer(serializers.ModelSerializer):
             'tags',
             'is_favorite',
             'rendered_full_command',
+            'genome_slug',
         ]
 
     def get_rendered_full_command(self, obj) -> list:
@@ -111,15 +129,27 @@ class EffectorDetailSerializer(serializers.ModelSerializer):
         return obj.get_full_command()
 
 
-class AxonSerializer(serializers.ModelSerializer):
+class AxonSerializer(
+    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+):
     type_name = serializers.CharField(source='type.name', read_only=True)
 
     class Meta:
         model = Axon
-        fields = ['id', 'pathway', 'source', 'target', 'type', 'type_name']
+        fields = [
+            'id',
+            'pathway',
+            'source',
+            'target',
+            'type',
+            'type_name',
+            'genome_slug',
+        ]
 
 
-class NeuronSerializer(serializers.ModelSerializer):
+class NeuronSerializer(
+    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+):
     effector_name = serializers.CharField(
         source='effector.name', read_only=True
     )
@@ -153,10 +183,13 @@ class NeuronSerializer(serializers.ModelSerializer):
             'distribution_mode_name',
             'environment',
             'environment_name',
+            'genome_slug',
         ]
 
 
-class NeuralPathwaySerializer(serializers.ModelSerializer):
+class NeuralPathwaySerializer(
+    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+):
     tags = CNSTagSerializer(many=True, read_only=True)
     environment = serializers.PrimaryKeyRelatedField(
         queryset=ProjectEnvironment.objects.all(),
@@ -165,11 +198,6 @@ class NeuralPathwaySerializer(serializers.ModelSerializer):
     )
     environment_name = serializers.CharField(
         source='environment.name', read_only=True, default=None
-    )
-    # Read-only mirror of the genome FK as the bundle slug, for the
-    # BEGIN_PLAY inspector's bundle dropdown.
-    genome_slug = serializers.CharField(
-        source='genome.slug', read_only=True, default=None
     )
 
     class Meta:

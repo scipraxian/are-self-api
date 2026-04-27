@@ -2,6 +2,10 @@ from rest_framework import serializers
 
 from central_nervous_system.constants import ENVIRONMENT_KEY
 from common.constants import ALL_FIELDS
+from neuroplasticity.serializer_mixins import (
+    GenomeDisplayMixin,
+    GenomeOwnedSerializerMixin,
+)
 
 from .models import (
     ContextVariable,
@@ -22,13 +26,17 @@ class ProjectEnvironmentStatusSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
-class ProjectEnvironmentContextKeySerializer(serializers.ModelSerializer):
+class ProjectEnvironmentContextKeySerializer(
+    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+):
     class Meta:
         model = ProjectEnvironmentContextKey
         fields = ALL_FIELDS
 
 
-class ContextVariableSerializer(serializers.ModelSerializer):
+class ContextVariableSerializer(
+    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+):
     """
     Writable. Used to update environment variables.
     """
@@ -40,7 +48,9 @@ class ContextVariableSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
-class ProjectEnvironmentSerializer(serializers.ModelSerializer):
+class ProjectEnvironmentSerializer(
+    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+):
     """
     Main Environment serializer.
     'contexts' is read-only nested for display.
@@ -54,19 +64,23 @@ class ProjectEnvironmentSerializer(serializers.ModelSerializer):
         fields = ALL_FIELDS
 
 
-class ExecutableSwitchSerializer(serializers.ModelSerializer):
+class ExecutableSwitchSerializer(GenomeDisplayMixin, serializers.ModelSerializer):
     class Meta:
         model = ExecutableSwitch
         fields = ALL_FIELDS
 
 
-class ExecutableArgumentSerializer(serializers.ModelSerializer):
+class ExecutableArgumentSerializer(
+    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+):
     class Meta:
         model = ExecutableArgument
         fields = ALL_FIELDS
 
 
-class ExecutableArgumentAssignmentSerializer(serializers.ModelSerializer):
+class ExecutableArgumentAssignmentSerializer(
+    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+):
     argument_detail = ExecutableArgumentSerializer(
         source='argument', read_only=True
     )
@@ -77,14 +91,16 @@ class ExecutableArgumentAssignmentSerializer(serializers.ModelSerializer):
 
 
 class ExecutableSupplementaryFileOrPathSerializer(
-    serializers.ModelSerializer
+    GenomeDisplayMixin, serializers.ModelSerializer
 ):
     class Meta:
         model = ExecutableSupplementaryFileOrPath
         fields = ALL_FIELDS
 
 
-class ExecutableSerializer(serializers.ModelSerializer):
+class ExecutableSerializer(
+    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+):
     """
     Executable definition.
     Uses ALL_FIELDS for model data, plus computed fields for UI convenience.

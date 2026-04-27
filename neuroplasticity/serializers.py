@@ -67,6 +67,23 @@ class NeuralModifierSerializer(serializers.ModelSerializer):
             'status_name',
             'row_count',
             'latest_event',
+            'selected_for_edit',
+            'created',
+            'modified',
+        ]
+        # Only ``selected_for_edit`` is writable through this serializer.
+        # Lifecycle fields (slug, version, manifest, etc.) flow through
+        # the install / uninstall / save action endpoints; PATCH on the
+        # detail route exists exclusively to switch the active workspace.
+        read_only_fields = [
+            'id',
+            'slug',
+            'name',
+            'version',
+            'author',
+            'license',
+            'manifest_hash',
+            'manifest_json',
             'created',
             'modified',
         ]
