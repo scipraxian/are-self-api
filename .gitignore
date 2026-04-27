@@ -1,5 +1,6 @@
 # --- Neuroplasticity runtime ---
 # genomes/ is committed — *.zip archives are the source of truth.
+/neuroplasticity/genomes/backups/
 /neuroplasticity/grafts/
 /neuroplasticity/operating_room/
 
