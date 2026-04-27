@@ -3,27 +3,27 @@ from unittest.mock import MagicMock
 
 from django.test import TestCase
 
+from central_nervous_system.constants import KEY_SERVER
 from environments.models import (
     ContextVariable,
     ProjectEnvironment,
     ProjectEnvironmentContextKey,
     ProjectEnvironmentStatus,
-    ProjectEnvironmentType,
 )
 from environments.variable_renderer import VariableRenderer
-from central_nervous_system.constants import KEY_SERVER
 
 
 class VariableRendererTest(TestCase):
+    # Loads CANONICAL + INCUBATOR NeuralModifier rows so any
+    # ProjectEnvironment.objects.create() call defaulting genome to
+    # NeuralModifier.INCUBATOR has the FK target present in the test DB.
+    fixtures = ['neuroplasticity/fixtures/genetic_immutables.json']
 
     def setUp(self):
-        self.env_type = ProjectEnvironmentType.objects.create(
-            name="TestEnvType")
         self.env_status = ProjectEnvironmentStatus.objects.create(
             name="TestStatus")
         self.env = ProjectEnvironment.objects.create(
             name="TestEnv",
-            type=self.env_type,
             status=self.env_status,
         )
         self.key1 = ProjectEnvironmentContextKey.objects.create(name="var1")

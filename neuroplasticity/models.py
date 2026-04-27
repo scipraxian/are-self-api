@@ -5,21 +5,27 @@ Bundles live on disk as committed ``neuroplasticity/genomes/<slug>.zip``
 archives (manifest.json, modifier_data.json, code/, README.md inside
 the zip). At install time, the zip is extracted into
 ``neuroplasticity/grafts/<slug>/`` (the runtime tree) and its
-``modifier_data.json`` is loaded into the DB.
+``modifier_data.json`` is loaded into the DB — each row stamped with a
+``genome`` FK back to the installing ``NeuralModifier`` row.
 
-This app is the source of truth for *which* modifiers are installed,
-*what* each one contributed to the database, and the audit trail of
-install / enable / disable events.
+This app is the source of truth for *which* modifiers are installed
+and the audit trail of install / enable / disable events. Ownership of
+individual rows lives on the rows themselves (``genome`` FK from
+``GenomeOwnedMixin``), not in a side-car table.
 """
 
-from typing import Generator, Optional
+from typing import Optional
+from uuid import UUID
 
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from common.constants import STANDARD_CHARFIELD_LENGTH
-from common.models import CreatedMixin, DefaultFieldsMixin, NameMixin
+from common.models import (
+    CreatedMixin,
+    DefaultFieldsMixin,
+    NameMixin,
+    UUIDIdMixin,
+)
 
 
 class NeuralModifierStatus(NameMixin):
@@ -27,37 +33,38 @@ class NeuralModifierStatus(NameMixin):
 
     State machine::
 
-        AVAILABLE -> INSTALLED -> ENABLED <-> DISABLED
-        (zip on                     |            |
-         disk,                      +------------+---> BROKEN
-         no row)                                       ^
-             ^                                         | boot-time
-             |                                         | drift or
-             +-------- uninstall (deletes row) --------+ load failure
+        AVAILABLE -> INSTALLED ----> BROKEN
+        (zip on        |              ^
+         disk,         |              | boot-time drift
+         no row)       |              | or load failure
+                       v
+            +-- uninstall (deletes row) --+
+            v                             v
+        AVAILABLE                    AVAILABLE
 
     AVAILABLE:  ``genomes/<slug>.zip`` exists and no DB row exists. Not
         a row state — the absence of a row IS the state.
     INSTALLED:  manifest validated, modifier_data.json loaded,
-        contributions recorded, code on sys.path. Not yet wired into MCP.
-    ENABLED:    INSTALLED plus actively contributing to the MCP tool-set
-        builder and live tool resolution.
-    DISABLED:   INSTALLED but skipped by the MCP builder. Code still on
-        sys.path, contributions still in DB. Reversible via ENABLE.
+        contributions recorded, code on sys.path. The only live state
+        for an installed bundle. Tools and contributions are active.
     BROKEN:     Error state surfaced by the boot re-check or an upgrade
         failure. Manifest hash mismatch against the runtime tree, or
         entry-module import failure. Requires manual intervention.
         (A failed fresh install deletes the row entirely; it does not
         leave a BROKEN row behind.)
 
-    DISCOVERED is retired. The enum value (1) is preserved for
-    backwards compatibility with historical log events but is never
-    assigned to a new row.
+    Retired states (enum values preserved for historical log events,
+    never assigned to new rows):
+        DISCOVERED (1) — the legacy "found a zip" state, replaced by
+            row-absence semantics for AVAILABLE.
+        ENABLED (3), DISABLED (4) — removed 2026-04-25 with the
+            enable/disable feature; INSTALLED now subsumes ENABLED.
     """
 
     DISCOVERED = 1
     INSTALLED = 2
-    ENABLED = 3
-    DISABLED = 4
+    ENABLED = 3  # retired — kept for historical log compat
+    DISABLED = 4  # retired — kept for historical log compat
     BROKEN = 5
 
     class Meta:
@@ -65,7 +72,7 @@ class NeuralModifierStatus(NameMixin):
         verbose_name_plural = 'Neural Modifier Statuses'
 
 
-class NeuralModifier(DefaultFieldsMixin):
+class NeuralModifier(UUIDIdMixin, DefaultFieldsMixin):
     """An installed NeuralModifier bundle registered with the running system.
 
     One row per bundle currently in ``grafts/``. The `slug` is the
@@ -77,14 +84,34 @@ class NeuralModifier(DefaultFieldsMixin):
     tampering or version drift.
 
     Uninstall DELETES the row (AVAILABLE = zip exists + no row).
-    Contribution rows, installation logs, and log events all cascade
-    away. The committed ``genomes/<slug>.zip`` stays put — it is the
-    bundle, not a derivative.
+    Every bundle-owned row (``genome`` FK to this ``NeuralModifier``)
+    CASCADEs away, as do installation logs and their events. The
+    committed ``genomes/<slug>.zip`` stays put — it is the bundle, not
+    a derivative.
+
+    The ``CANONICAL`` class constant is the frozen UUID of the single
+    ``canonical`` NeuralModifier row — it OWNS every row that ships in
+    the core fixtures (``genetic_immutables`` / ``zygote`` /
+    ``initial_phenotypes``). The ``INCUBATOR`` class constant is the
+    frozen UUID of the default user workspace — every owned row a
+    user creates at runtime lands here unless a different active
+    genome is selected. Install collisions against a canonical-owned
+    or incubator-owned PK are refused; uninstall of either is never
+    attempted. The three-state model replaces the old ambiguous
+    two-state (genome=NULL overloaded as both "core fixture row" and
+    "user-created"):
+
+        genome=canonical  — core-shipped, untouchable by bundle ops.
+        genome=incubator  — user workspace, untouchable by bundle ops.
+        genome=<bundle>   — contributed by that bundle, CASCADE on uninstall.
     """
 
-    status = models.ForeignKey(
-        NeuralModifierStatus, on_delete=models.CASCADE
-    )
+    CANONICAL = UUID('8192d7fd-2d20-4109-9c7c-45121e89f1dd')
+    CANONICAL_SLUG = 'canonical'
+    INCUBATOR = UUID('1206f5a1-7ffd-4cb2-8c5a-3a9dfb5e5340')
+    INCUBATOR_SLUG = 'incubator'
+
+    status = models.ForeignKey(NeuralModifierStatus, on_delete=models.CASCADE)
     slug = models.SlugField(unique=True)
     version = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
     author = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
@@ -105,63 +132,6 @@ class NeuralModifier(DefaultFieldsMixin):
         never reach past it to an older log.
         """
         return self.installation_logs.order_by('-created').first()
-
-    def iter_contributed_objects(self) -> Generator[models.Model, None, None]:
-        """Yield each live DB object this modifier created, in install order.
-
-        Used during uninstall to walk contribution targets before deletion.
-        Orphaned contributions (target already deleted out from under us)
-        are skipped silently; detect them by comparing the yielded count
-        against `self.contributions.count()`.
-        """
-        contributions = self.contributions.order_by('created')
-        for contribution in contributions:
-            target = contribution.content_object
-            if target is not None:
-                yield target
-
-
-class NeuralModifierContribution(CreatedMixin):
-    """One row per DB object a NeuralModifier created on install.
-
-    This is the uninstall manifest in table form. When a modifier's
-    modifier_data.json loads and creates an Effector, NeuralPathway,
-    ContextVariable, etc., a Contribution row is written pointing at it
-    via GenericForeignKey. Uninstall iterates these rows, deletes each
-    target, then deletes the contribution rows themselves.
-
-    The `object_id` column is a UUIDField because every
-    NeuralModifier-extensible model in Are-Self was migrated to UUID
-    primary keys in the Pass 1 `uuid-migration` branch — that migration
-    is the prerequisite for this table existing at all. Protocol enums
-    (SpikeStatus, AxonType, etc.) stayed integer-keyed and are never
-    contribution targets.
-    """
-
-    neural_modifier = models.ForeignKey(
-        NeuralModifier,
-        on_delete=models.CASCADE,
-        related_name='contributions',
-    )
-    content_type = models.ForeignKey(
-        ContentType, on_delete=models.CASCADE
-    )
-    object_id = models.UUIDField()
-    content_object = GenericForeignKey('content_type', 'object_id')
-
-    class Meta:
-        verbose_name = 'Neural Modifier Contribution'
-        verbose_name_plural = 'Neural Modifier Contributions'
-        indexes = [
-            models.Index(fields=['content_type', 'object_id']),
-        ]
-
-    def __str__(self):
-        return '{modifier} -> {ct} {pk}'.format(
-            modifier=self.neural_modifier.name,
-            ct=self.content_type,
-            pk=self.object_id,
-        )
 
 
 class NeuralModifierInstallationLog(CreatedMixin):

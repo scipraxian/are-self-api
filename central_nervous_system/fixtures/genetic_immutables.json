@@ -191,19 +191,5 @@
     "fields": {
       "name": "Online"
     }
-  },
-  {
-    "model": "environments.projectenvironmenttype",
-    "pk": "65a5bf17-4a6a-41a5-9972-b049b6acd113",
-    "fields": {
-      "name": "Python"
-    }
-  },
-  {
-    "model": "environments.projectenvironmenttype",
-    "pk": "04701d65-e722-5c7c-8f06-10bc53413a36",
-    "fields": {
-      "name": "ReactJS"
-    }
   }
 ]

@@ -27,6 +27,23 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   install also deletes the row it created — never leaves a BROKEN or
   DISCOVERED stub behind. BROKEN is reserved for boot-time drift on a
   previously-working install.
+- Uninstall does NOT rmtree `grafts/<slug>/` synchronously. Disk cleanup is
+  deferred to `boot_bundles`' orphan sweep, which runs in the freshly-spawned
+  post-restart process where `sys.modules` is empty so no Windows file locks
+  block the rmtree. Any in-process test that does install → uninstall →
+  install must call `loader.boot_bundles()` between cycles to model what
+  production gets via the restart.
+- Install / uninstall / catalog_install API actions trigger a coordinated
+  process restart via `peripheral_nervous_system.autonomic_nervous_system.
+  trigger_system_restart()`: `celery_app.control.shutdown()` to drain
+  workers, `subprocess.Popen` a fresh worker (flags mirror `are-self.bat:33`
+  — `--concurrency=4 -P threads -E`), then a 1-second-delayed touch of
+  `config/__init__.py` so Django's autoreloader exits the Daphne child with
+  code 3 and respawns it. Tests hitting those endpoints MUST mock
+  `trigger_system_restart` (e.g. `@patch('neuroplasticity.api.
+  trigger_system_restart')` on the specific test methods) — without the
+  mock, every test run spawns a real Celery worker and reloads the live dev
+  Daphne.
 - UUIDs are `uuid.uuid4()` random literals — no UUIDv5, namespaces, or
   deterministic seeding. Existing UUID literals in fixtures are frozen; do not
   regenerate.
@@ -59,6 +76,62 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   `django_celery_beat` stays in `genetic_immutables`; `petri_dish.json` is
   intentionally non-empty and composes with `genetic_immutables.json` via
   the common test class.
+- Cascade is Django's `on_delete=CASCADE` on the `genome` FK; no custom
+  claim/walker logic. Every bundle-extensible row carries a non-NULL
+  `genome` FK (default `NeuralModifier.INCUBATOR`), so additive
+  claim-NULL semantics are moot.
+- Every bundle's `manifest.json` declares its genome UUID under the
+  `genome` key — required, validated as a UUID at install. Install
+  uses that UUID as the `NeuralModifier` row PK so bundle identity is
+  stable across machines and across versions, and the bundle's
+  `modifier_data.json` rows can carry `"genome": "<that uuid>"` and
+  resolve on any install target. UUID-collision against a different
+  installed slug refuses loudly. **Documented exceptions:**
+  `NeuralModifier.CANONICAL` (`8192d7fd-2d20-4109-9c7c-45121e89f1dd`)
+  and `NeuralModifier.INCUBATOR`
+  (`1206f5a1-7ffd-4cb2-8c5a-3a9dfb5e5340`) are system-substrate rows,
+  fixture-shipped in `neuroplasticity/fixtures/genetic_immutables.json`,
+  with no manifest and no install path.
+- Save (`save_bundle_to_archive`) is non-destructive by construction:
+  (a) refuses if `manifest['entry_modules']` aren't findable under
+  `grafts/<slug>/code/` — no code-less zip ever gets written; (b) re-opens
+  the staged zip with `zipfile.ZipFile` to confirm validity + entry-module
+  presence before the catalog `os.replace`; (c) copies the existing
+  `genomes/<slug>.zip` to `<slug>.zip.bak` before overwrite (single rolling
+  backup, preserves mtime). Save also always semver-patch-bumps the manifest
+  version and mirrors the new value onto `NeuralModifier.version` and
+  `manifest_json` so the saved archive round-trips through `upgrade_bundle`.
+- Save serializes every owned model uniformly via
+  `Model.objects.filter(genome_id=current_bundle)`. No per-model transit
+  carve-outs; every bundle-extensible model carries `GenomeOwnedMixin`
+  and resolves via that single query. SpikeTrain / Spike /
+  ReasoningSession are intentionally excluded — runtime telemetry,
+  not bundle content.
+- Bundles can ship URL routes via convention. A bundle's `urls.py` exposes
+  `V2_GENOME_ROUTER` (a `routers.SimpleRouter()` with viewsets registered),
+  and the V2 URL conf auto-discovers it at module-import time (iterate
+  `iter_installed_bundles()` → ensure each bundle's `code/` is on
+  `sys.path` → `importlib.import_module(f'{entry_module}.urls')` → if the
+  module has `V2_GENOME_ROUTER`, extend the core router's registry).
+  Refuse-on-prefix-collision; missing `urls.py` is fine; broken `urls.py`
+  fails loudly. Bundles without route contributions don't ship a `urls.py`.
+- Log merge is **bundle-owned**, not in `occipital_lobe`. The N-way log
+  merge utilities (`merge_logs.py`, `merge_logs_nway.py`) and the spike-
+  log merge viewset live in `unreal/code/are_self_unreal/` because they
+  hardcode `LogConstants.TYPE_RUN` and only the unreal bundle's
+  `UERunLogStrategy` registers under that key. `occipital_lobe/` keeps
+  the generic surface: `LogEntry`, `LogSession`, `LogParserStrategy` ABC,
+  `LogParserFactory` registry, `LogConstants` shared format strings, and
+  `merge_sessions()` (operates on already-parsed sessions).
+- Neuroplasticity has no `enable` / `disable` lifecycle. The only live
+  status is INSTALLED. `ENABLED` (3) and `DISABLED` (4) remain in the
+  `NeuralModifierStatus` enum for historical log-event compat (same
+  pattern as retired `DISCOVERED`), never assigned to new rows. No CLI
+  for bundle lifecycle — five management commands (`enable_modifier`,
+  `disable_modifier`, `list_modifiers`, `uninstall_modifier`,
+  `upgrade_modifier`) are deprecation stubs that raise `CommandError` if
+  invoked. The HTTP API and Modifier Garden UI are the only supported
+  surfaces.
 
 ## The Developer
 
@@ -172,12 +245,14 @@ gitignored):
   `try/finally` — after any operation (success OR failure), `operating_room/` is empty.
 
 **State machine:** AVAILABLE (zip in `genomes/`, **no DB row**) → Install → INSTALLED →
-Enable → ENABLED → Disable → INSTALLED → Uninstall → AVAILABLE → (delete the zip to remove
-the bundle entirely). Uninstall **deletes** the `NeuralModifier` row — contributions, logs,
-and events all CASCADE away. BROKEN surfaces only from boot-time hash drift or load failure
-on a previously-installed bundle; a failed fresh install deletes its row instead of
-flipping BROKEN. `DISCOVERED` is retired as a surfaced status (enum value stays in fixtures
-for backwards compat of historical log events; never assigned to new rows).
+Uninstall → AVAILABLE → (delete the zip to remove the bundle entirely). Uninstall
+**deletes** the `NeuralModifier` row — contributions, logs, and events all CASCADE
+away. BROKEN surfaces only from boot-time hash drift or load failure on a
+previously-installed bundle; a failed fresh install deletes its row instead of
+flipping BROKEN. Retired statuses (enum values kept for historical log compat, never
+assigned to new rows): `DISCOVERED` (legacy "found a zip" state, replaced by row-absence
+semantics for AVAILABLE), `ENABLED` and `DISABLED` (removed 2026-04-25 with the
+enable/disable feature — INSTALLED is now the only live state).
 
 Bundle-time registration surfaces are in place: `register_parietal_tool` /
 `unregister_parietal_tool` in `parietal_lobe/parietal_mcp/gateway.py` (module-level
@@ -696,6 +771,20 @@ not the molecule type (Layer 3). Both sides must agree on receptor_class.
 the NerveTerminalRegistry is empty — the local server is not an agent, and zero targets
 is a no-op, not an error. `_dispatch_pinned_wave` (SPECIFIC_TARGETS) is the exception:
 pinned targets are explicit user intent and failure there is a real failure.
+
+**Postgres runs in Docker, not on localhost.** The container is named `are_self_db`.
+Do NOT invoke `psql -U postgres ...` directly — it will not reach the server. To drop
+the test database (e.g. after migration-order changes), use:
+
+```
+docker exec are_self_db psql -U postgres -c 'DROP DATABASE IF EXISTS test_are_self;'
+```
+
+**pgvector extension install lives in each vector-using app.** `VectorExtension()` is
+the first operation in `0001_initial` of `hypothalamus`, `hippocampus`, `identity`, and
+`prefrontal_cortex` (idempotent — uses `CREATE EXTENSION IF NOT EXISTS`). `common/0001_initial`
+still installs it too but is a legacy safety net — INSTALLED_APPS order does NOT govern
+migration execution order, so the canonical fix is per-app self-installation.
 
 ## Scipraxianism
 

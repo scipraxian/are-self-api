@@ -24,7 +24,8 @@ class ToolParameterAssignmentInline(admin.TabularInline):
 
 @admin.register(ToolDefinition)
 class ToolDefinitionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'use_type', 'is_async', 'description')
+    list_display = ('name', 'use_type', 'is_async', 'description', 'genome')
+    list_filter = ('genome',)
     search_fields = ('name',)
     inlines = [ToolParameterAssignmentInline]
 
@@ -36,16 +37,16 @@ class ParameterEnumInline(admin.TabularInline):
 
 @admin.register(ToolParameter)
 class ToolParameterAdmin(admin.ModelAdmin):
-    list_display = ('name', 'type', 'description')
-    list_filter = ('type',)
+    list_display = ('name', 'type', 'description', 'genome')
+    list_filter = ('genome', 'type')
     search_fields = ('name',)
     inlines = [ParameterEnumInline]
 
 
 @admin.register(ToolParameterAssignment)
 class ToolParameterAssignmentAdmin(admin.ModelAdmin):
-    list_display = ('tool', 'parameter', 'required')
-    list_filter = ('tool', 'required')
+    list_display = ('tool', 'parameter', 'required', 'genome')
+    list_filter = ('genome', 'tool', 'required')
     search_fields = ('tool__name', 'parameter__name')
 
 

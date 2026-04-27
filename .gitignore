@@ -3,6 +3,7 @@
 /neuroplasticity/genomes/backups/
 /neuroplasticity/grafts/
 /neuroplasticity/operating_room/
+/neuroplasticity/genomes/backups/
 
 # --- Python & Venv ---
 __pycache__/

@@ -8,11 +8,12 @@ from common.models import (
     NameMixin,
     UUIDIdMixin,
 )
+from neuroplasticity.genome_mixin import GenomeOwnedMixin
 
 from .variable_renderer import VariableRenderer
 
 
-class ExecutableSwitch(UUIDIdMixin, DefaultFieldsMixin):
+class ExecutableSwitch(UUIDIdMixin, DefaultFieldsMixin, GenomeOwnedMixin):
     """An option or flag for an executable."""
 
     flag = models.CharField(
@@ -24,7 +25,7 @@ class ExecutableSwitch(UUIDIdMixin, DefaultFieldsMixin):
     )
 
 
-class ExecutableArgument(UUIDIdMixin, DefaultFieldsMixin):
+class ExecutableArgument(UUIDIdMixin, DefaultFieldsMixin, GenomeOwnedMixin):
     """An argument to be passed to the executable."""
 
     argument = models.CharField(
@@ -35,7 +36,9 @@ class ExecutableArgument(UUIDIdMixin, DefaultFieldsMixin):
         return f'{self.name} - {self.argument}'
 
 
-class Executable(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
+class Executable(
+    UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin, GenomeOwnedMixin
+):
     """Reference to an executable usable by Are-Self."""
 
     BEGIN_PLAY = uuid.UUID('974ed732-6f2d-47f4-9482-18d17c73086e')
@@ -80,7 +83,7 @@ class Executable(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
         return VariableRenderer.render_string(self.executable, context)
 
 
-class ExecutableArgumentAssignment(UUIDIdMixin):
+class ExecutableArgumentAssignment(UUIDIdMixin, GenomeOwnedMixin):
     executable = models.ForeignKey(Executable, on_delete=models.CASCADE)
     order = models.IntegerField(default=10)
     argument = models.ForeignKey(ExecutableArgument, on_delete=models.CASCADE)
@@ -92,7 +95,7 @@ class ExecutableArgumentAssignment(UUIDIdMixin):
         return f'{self.executable} - {self.argument}'
 
 
-class ExecutableSupplementaryFileOrPath(DefaultFieldsMixin):
+class ExecutableSupplementaryFileOrPath(DefaultFieldsMixin, GenomeOwnedMixin):
     """The name should be treated like a json field name.
     e.g. name=destination_file, path=c:/temp/temp.txt"""
 
@@ -100,7 +103,7 @@ class ExecutableSupplementaryFileOrPath(DefaultFieldsMixin):
     path = models.CharField(max_length=500, help_text='Full path to the file.')
 
 
-class ProjectEnvironmentContextKey(UUIDIdMixin, NameMixin):
+class ProjectEnvironmentContextKey(UUIDIdMixin, NameMixin, GenomeOwnedMixin):
     pass
 
 
@@ -110,18 +113,13 @@ class ProjectEnvironmentStatus(UUIDIdMixin, NameMixin):
     pass
 
 
-class ProjectEnvironmentType(UUIDIdMixin, NameMixin):
-    """Lookup for Environment Type (e.g. UE5, Unity, Custom)."""
-
-    pass
-
-
-class ProjectEnvironment(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
+class ProjectEnvironment(
+    UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin, GenomeOwnedMixin
+):
     """Defines the context for a specific Application/Project."""
 
     DEFAULT_ENVIRONMENT = uuid.UUID('b7e4c2a1-3f8d-4a9e-9c1f-2d5a8b6f4e21')
 
-    type = models.ForeignKey(ProjectEnvironmentType, on_delete=models.PROTECT)
     status = models.ForeignKey(
         ProjectEnvironmentStatus, on_delete=models.PROTECT
     )
@@ -132,7 +130,7 @@ class ProjectEnvironment(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     )
     default_iteration_definition = models.ForeignKey(
         'temporal_lobe.IterationDefinition',
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
     )
@@ -150,7 +148,7 @@ class ProjectEnvironment(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
         super().save(*args, **kwargs)
 
 
-class ContextVariable(UUIDIdMixin):
+class ContextVariable(UUIDIdMixin, GenomeOwnedMixin):
     """Link table between Environment and Variables."""
 
     environment = models.ForeignKey(
@@ -167,7 +165,7 @@ class ContextVariable(UUIDIdMixin):
 
 class ProjectEnvironmentMixin(models.Model):
     environment = models.ForeignKey(
-        ProjectEnvironment, on_delete=models.PROTECT, blank=True, null=True
+        ProjectEnvironment, on_delete=models.CASCADE, blank=True, null=True
     )
 
     class Meta:

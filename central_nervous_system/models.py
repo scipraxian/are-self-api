@@ -23,6 +23,7 @@ from environments.models import (
     ProjectEnvironmentMixin,
 )
 from environments.variable_renderer import VariableRenderer
+from neuroplasticity.genome_mixin import GenomeOwnedMixin
 
 from .constants import (
     ABORTED_LABEL,
@@ -43,7 +44,7 @@ from .constants import (
 
 class CNSTag(NameMixin):
     """
-    Native tagging system to avoid external dependency conflicts.
+    Local Native tagging system to avoid external dependency conflicts.
     """
 
     class Meta:
@@ -52,6 +53,7 @@ class CNSTag(NameMixin):
         ordering = ['name']
 
 
+# We do not currently add tags and favorites to Genomes. The user can.
 class TagsAndFavoriteMixin(models.Model):
     is_favorite = models.BooleanField(default=False, db_index=True)
     tags = models.ManyToManyField(CNSTag, blank=True)
@@ -153,7 +155,11 @@ class CNSDistributionMode(NameMixin, DescriptionMixin):
 
 
 class Effector(
-    UUIDIdMixin, DefaultFieldsMixin, TagsAndFavoriteMixin, DescriptionMixin
+    UUIDIdMixin,
+    DefaultFieldsMixin,
+    TagsAndFavoriteMixin,
+    DescriptionMixin,
+    GenomeOwnedMixin,
 ):
     """
     A configured action (Tool + specific Switches).
@@ -168,7 +174,7 @@ class Effector(
 
     executable = models.ForeignKey(
         Executable,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         default=UUID('974ed732-6f2d-47f4-9482-18d17c73086e'),
     )
     switches = models.ManyToManyField(ExecutableSwitch, blank=True)
@@ -201,16 +207,12 @@ class Effector(
             context.update(extra_context)
 
         # 2. Render Executable
-        executable_path = self.executable.get_rendered_executable(
-            environment
-        )
+        executable_path = self.executable.get_rendered_executable(environment)
         command_list = [executable_path]
 
         # 3. Gather and Render Arguments & Switches
         # We need to render them using the FULL context
-        executable_args = (
-            self.executable.executableargumentassignment_set.all()
-        )
+        executable_args = self.executable.executableargumentassignment_set.all()
         spell_args = self.effectorargumentassignment_set.all()
 
         # Combine arguments, preserving order is tricky because they are separate querysets
@@ -238,7 +240,7 @@ class Effector(
         return command_list
 
 
-class EffectorContext(UUIDIdMixin):
+class EffectorContext(UUIDIdMixin, GenomeOwnedMixin):
     effector = models.ForeignKey(Effector, on_delete=models.CASCADE)
     key = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
     value = models.TextField(blank=True)
@@ -266,12 +268,10 @@ class EffectorTarget(models.Model):
         return f'{self.effector.name} -> {self.target}'
 
 
-class EffectorArgumentAssignment(UUIDIdMixin):
+class EffectorArgumentAssignment(UUIDIdMixin, GenomeOwnedMixin):
     effector = models.ForeignKey(Effector, on_delete=models.CASCADE)
     order = models.IntegerField(default=10)
-    argument = models.ForeignKey(
-        ExecutableArgument, on_delete=models.CASCADE
-    )
+    argument = models.ForeignKey(ExecutableArgument, on_delete=models.CASCADE)
 
     class Meta(object):
         ordering = ['order']
@@ -286,6 +286,7 @@ class NeuralPathway(
     DescriptionMixin,
     TagsAndFavoriteMixin,
     ProjectEnvironmentMixin,
+    GenomeOwnedMixin,
 ):
     """
     The Container. Now supports a visual JSON layout, Tags, and Favorites.
@@ -300,7 +301,7 @@ class NeuralPathway(
         return self.name
 
 
-class Neuron(UUIDIdMixin, ProjectEnvironmentMixin):
+class Neuron(UUIDIdMixin, ProjectEnvironmentMixin, GenomeOwnedMixin):
     """
     A visual instance of a Effector on the Graph.
     Allows the same Effector (e.g., 'Wait') to be used
@@ -334,7 +335,7 @@ class Neuron(UUIDIdMixin, ProjectEnvironmentMixin):
         return f'Neuron {self.id}: {self.effector.name}'
 
 
-class NeuronContext(UUIDIdMixin):
+class NeuronContext(UUIDIdMixin, GenomeOwnedMixin):
     neuron = models.ForeignKey(Neuron, on_delete=models.CASCADE)
     key = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
     value = models.TextField(blank=True)
@@ -349,7 +350,7 @@ class AxonType(NameMixin):
     pass
 
 
-class Axon(UUIDIdMixin, ModifiedMixin):
+class Axon(UUIDIdMixin, ModifiedMixin, GenomeOwnedMixin):
     """
     The Wire. Connects two NODES (not effectors).
     Trigger Condition: Fires when 'source' finishes with 'status'.

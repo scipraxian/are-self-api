@@ -49,7 +49,7 @@ class NeuralModifierInstallationLogSerializer(serializers.ModelSerializer):
 class NeuralModifierSerializer(serializers.ModelSerializer):
     status_name = serializers.CharField(source='status.name', read_only=True)
     status_id = serializers.IntegerField(read_only=True)
-    contribution_count = serializers.SerializerMethodField()
+    row_count = serializers.SerializerMethodField()
     latest_event = serializers.SerializerMethodField()
 
     class Meta:
@@ -65,14 +65,18 @@ class NeuralModifierSerializer(serializers.ModelSerializer):
             'manifest_json',
             'status_id',
             'status_name',
-            'contribution_count',
+            'row_count',
             'latest_event',
             'created',
             'modified',
         ]
 
-    def get_contribution_count(self, obj):
-        return obj.contributions.count()
+    def get_row_count(self, obj):
+        from neuroplasticity import loader
+        total = 0
+        for model in loader.iter_genome_owned_models():
+            total += model.objects.filter(genome=obj).count()
+        return total
 
     def get_latest_event(self, obj):
         log = obj.current_installation()

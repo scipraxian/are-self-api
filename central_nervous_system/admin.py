@@ -74,8 +74,8 @@ class CNSTagAdmin(admin.ModelAdmin):
 
 @admin.register(NeuralPathway)
 class CNSNeuralPathwayAdmin(admin.ModelAdmin):
-    list_display = ('name', 'id', 'is_favorite', 'created', 'node_count')
-    list_filter = ('is_favorite', 'tags')
+    list_display = ('name', 'id', 'genome', 'is_favorite', 'created', 'node_count')
+    list_filter = ('genome', 'is_favorite', 'tags')
     filter_horizontal = ('tags',)
     # Use the new Inlines to visualize graph data in Admin
     inlines = [CNSNeuralPathwayNodeInline, CNSNeuralPathwayWireInline]
@@ -102,9 +102,10 @@ class EffectorAdmin(admin.ModelAdmin):
         'name',
         'executable',
         'distribution_mode',
+        'genome',
         'resolved_command_preview',
     )
-    list_filter = ('distribution_mode', 'executable')
+    list_filter = ('genome', 'distribution_mode', 'executable')
     filter_horizontal = ('switches',)
     inlines = [
         EffectorArgumentInline,
@@ -122,6 +123,13 @@ class EffectorAdmin(admin.ModelAdmin):
         }),
         ('Configuration', {
             'fields': ('executable', 'switches')
+        }),
+        ('Bundle Ownership', {
+            'fields': ('genome',),
+            'description':
+                'Which NeuralModifier owns this row. Leave at INCUBATOR '
+                'for user-workspace rows; CANONICAL = ships in core '
+                'fixtures; another bundle = contributed by that bundle.',
         }),
     )
 
@@ -186,8 +194,8 @@ class CNSNeuralPathwayNodeAdmin(admin.ModelAdmin):
     Instance-level configuration for Effectors on a Graph.
     """
 
-    list_display = ('id', 'pathway', 'effector', 'distribution_mode', 'is_root')
-    list_filter = ('pathway', 'effector', 'distribution_mode')
+    list_display = ('id', 'pathway', 'effector', 'distribution_mode', 'is_root', 'genome')
+    list_filter = ('genome', 'pathway', 'effector', 'distribution_mode')
     raw_id_fields = ('pathway', 'effector', 'invoked_pathway')
     inlines = [EffectorBookNodeContextInline]
 
@@ -215,6 +223,9 @@ class CNSNeuralPathwayNodeAdmin(admin.ModelAdmin):
                     'Shows the command as it would execute in the currently Selected Environment, applying Effector Defaults and Node Overrides.',
             },
         ),
+        ('Bundle Ownership', {
+            'fields': ('genome',),
+        }),
     )
 
     def resolved_command_preview(self, obj):

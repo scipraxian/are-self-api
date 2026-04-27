@@ -11,7 +11,8 @@
       "working_path": "{{venv_root}}",
       "executable": "{{venv_root}}/Scripts/python.exe",
       "log": "{{are_self_root}}\\logs\\django.log",
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -26,7 +27,8 @@
       "working_path": "",
       "executable": "run_frontal_lobe",
       "log": "",
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -41,7 +43,8 @@
       "working_path": "",
       "executable": "scan_and_register",
       "log": "",
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -56,7 +59,8 @@
       "working_path": "",
       "executable": "robocopy",
       "log": "",
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -71,7 +75,8 @@
       "working_path": "",
       "executable": "begin_play",
       "log": "",
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -86,7 +91,8 @@
       "working_path": "",
       "executable": "powershell",
       "log": "",
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -101,7 +107,8 @@
       "working_path": "",
       "executable": "cmd.exe",
       "log": "",
-      "switches": []
+      "switches": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   }
 ]

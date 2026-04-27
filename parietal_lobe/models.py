@@ -9,6 +9,7 @@ from common.models import (
     UUIDIdMixin,
 )
 from frontal_lobe.models import ReasoningStatusMixin, ReasoningTurn
+from neuroplasticity.genome_mixin import GenomeOwnedMixin
 
 
 class ToolParameterType(DefaultFieldsMixin, DescriptionMixin):
@@ -32,7 +33,9 @@ class ToolUseType(DefaultFieldsMixin, DescriptionMixin):
         )
 
 
-class ToolDefinition(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
+class ToolDefinition(
+    UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin, GenomeOwnedMixin
+):
     """
     The Registry for AI Tools.
     Defines the function signature available to the LLM.
@@ -44,7 +47,9 @@ class ToolDefinition(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
     )
 
 
-class ToolParameter(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
+class ToolParameter(
+    UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin, GenomeOwnedMixin
+):
     """
     A strictly typed argument for a ToolDefinition.
     """
@@ -65,7 +70,9 @@ class ToolParameter(UUIDIdMixin, DefaultFieldsMixin, DescriptionMixin):
         return f'{self.name} ({self.type.name})'
 
 
-class ToolParameterAssignment(UUIDIdMixin, CreatedMixin, ModifiedMixin):
+class ToolParameterAssignment(
+    UUIDIdMixin, CreatedMixin, ModifiedMixin, GenomeOwnedMixin
+):
     """
     The Link Table.
     Inherits strictly from timestamp mixins to avoid unique name constraints.
@@ -92,7 +99,7 @@ class ToolParameterAssignment(UUIDIdMixin, CreatedMixin, ModifiedMixin):
         return f'{self.tool.name} -> {self.parameter.name}{req}'
 
 
-class ParameterEnum(UUIDIdMixin, CreatedMixin, ModifiedMixin):
+class ParameterEnum(UUIDIdMixin, CreatedMixin, ModifiedMixin, GenomeOwnedMixin):
     """Joined table for parameters that have strict pre-defined values."""
 
     parameter = models.ForeignKey(
@@ -116,7 +123,7 @@ class ToolCall(CreatedMixin, ModifiedMixin, ReasoningStatusMixin):
     turn = models.ForeignKey(
         ReasoningTurn, on_delete=models.CASCADE, related_name='tool_calls'
     )
-    tool = models.ForeignKey(ToolDefinition, on_delete=models.PROTECT)
+    tool = models.ForeignKey(ToolDefinition, on_delete=models.CASCADE)
     arguments = models.TextField(help_text='JSON payload of arguments.')
     result_payload = models.TextField(blank=True, default='')
     traceback = models.TextField(

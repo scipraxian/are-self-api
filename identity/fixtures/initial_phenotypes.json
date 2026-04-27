@@ -42,7 +42,8 @@
         "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
         "c4ef2e80-59b7-49cd-86cc-1e988db9976e",
         "63db5e88-e3a3-4c1f-9df0-42eac3fbc522"
-      ]
+      ],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -88,7 +89,8 @@
         "89613bd2-52f5-4ccd-8a20-f8d18a5c2072",
         "c4ef2e80-59b7-49cd-86cc-1e988db9976e",
         "63db5e88-e3a3-4c1f-9df0-42eac3fbc522"
-      ]
+      ],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -143,7 +145,8 @@
         "c4ef2e80-59b7-49cd-86cc-1e988db9976e",
         "63db5e88-e3a3-4c1f-9df0-42eac3fbc522"
       ],
-      "memories": []
+      "memories": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -198,7 +201,8 @@
         "c4ef2e80-59b7-49cd-86cc-1e988db9976e",
         "63db5e88-e3a3-4c1f-9df0-42eac3fbc522"
       ],
-      "memories": []
+      "memories": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   }
 ]

@@ -68,9 +68,7 @@ class PFCTicketMixin(models.Model):
     dependencies = models.TextField(blank=True, default='')
     demo_specifics = models.TextField(blank=True, default='')
 
-    source_engrams = models.ManyToManyField(
-        'hippocampus.Engram', blank=True
-    )
+    source_engrams = models.ManyToManyField('hippocampus.Engram', blank=True)
 
     class Meta:
         abstract = True
@@ -79,7 +77,7 @@ class PFCTicketMixin(models.Model):
 class PFCAssignmentMixin(models.Model):
     owning_disc = models.ForeignKey(
         'identity.IdentityDisc',
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         blank=True,
         null=True,
         related_name='%(app_label)s_%(class)s_owned',

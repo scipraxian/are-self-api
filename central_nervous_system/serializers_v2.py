@@ -166,6 +166,11 @@ class NeuralPathwaySerializer(serializers.ModelSerializer):
     environment_name = serializers.CharField(
         source='environment.name', read_only=True, default=None
     )
+    # Read-only mirror of the genome FK as the bundle slug, for the
+    # BEGIN_PLAY inspector's bundle dropdown.
+    genome_slug = serializers.CharField(
+        source='genome.slug', read_only=True, default=None
+    )
 
     class Meta:
         model = NeuralPathway
@@ -178,6 +183,7 @@ class NeuralPathwaySerializer(serializers.ModelSerializer):
             'ui_json',
             'environment',
             'environment_name',
+            'genome_slug',
         ]
 
 

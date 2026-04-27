@@ -99,9 +99,9 @@ class IdentityTagAdmin(admin.ModelAdmin):
 
 @admin.register(IdentityAddon)
 class IdentityAddonAdmin(admin.ModelAdmin):
-    list_display = ('name', 'phase', 'description')
+    list_display = ('name', 'phase', 'description', 'genome')
     search_fields = ('name',)
-    list_filter = ('phase',)
+    list_filter = ('genome', 'phase')
 
 
 class IdentityBudgetAssignmentInline(admin.TabularInline):
@@ -113,8 +113,8 @@ class IdentityBudgetAssignmentInline(admin.TabularInline):
 
 @admin.register(Identity)
 class IdentityAdmin(admin.ModelAdmin):
-    list_display = ('name', 'identity_type', 'created', 'selection_filter')
-    list_filter = ('identity_type',)
+    list_display = ('name', 'identity_type', 'created', 'selection_filter', 'genome')
+    list_filter = ('genome', 'identity_type')
     search_fields = ('name', 'system_prompt_template')
     filter_horizontal = ('tags', 'addons', 'enabled_tools')
     readonly_fields = ('created', 'modified', 'delta', 'prompt_preview')
@@ -142,6 +142,12 @@ class IdentityAdmin(admin.ModelAdmin):
             {
                 'fields': ('prompt_preview',),
                 'description': 'The baseline persona instructions.',
+            },
+        ),
+        (
+            'Bundle Ownership',
+            {
+                'fields': ('genome',),
             },
         ),
         (
@@ -175,8 +181,10 @@ class IdentityDiscAdmin(admin.ModelAdmin):
         'xp',
         'available',
         'selection_filter',
+        'genome',
     )
     list_filter = (
+        'genome',
         'available',
         'level',
         'identity_type',
@@ -226,6 +234,12 @@ class IdentityDiscAdmin(admin.ModelAdmin):
             {
                 'fields': ('prompt_preview',),
                 'description': 'The exact system instructions this disc will generate on Turn 1 of its next session.',
+            },
+        ),
+        (
+            'Bundle Ownership',
+            {
+                'fields': ('genome',),
             },
         ),
         (

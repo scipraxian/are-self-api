@@ -3,18 +3,20 @@ from django.test import TestCase
 from environments.models import (
     ProjectEnvironment,
     ProjectEnvironmentStatus,
-    ProjectEnvironmentType,
 )
 
 
 class EnvironmentSelectionTest(TestCase):
+    # Loads CANONICAL + INCUBATOR NeuralModifier rows so any
+    # ProjectEnvironment.objects.create() call defaulting genome to
+    # NeuralModifier.INCUBATOR has the FK target present in the test DB.
+    fixtures = ['neuroplasticity/fixtures/genetic_immutables.json']
+
     def setUp(self):
-        self.type_ue = ProjectEnvironmentType.objects.create(name='UE5')
         self.status_ok = ProjectEnvironmentStatus.objects.create(name='Ready')
 
         self.env1 = ProjectEnvironment.objects.create(
             name='HSH Vacancy',
-            type=self.type_ue,
             status=self.status_ok,
             available=True,
             selected=True,  # Start selected
@@ -22,7 +24,6 @@ class EnvironmentSelectionTest(TestCase):
 
         self.env2 = ProjectEnvironment.objects.create(
             name='Project Titan',
-            type=self.type_ue,
             status=self.status_ok,
             available=True,
             selected=False,
@@ -45,4 +46,3 @@ class EnvironmentSelectionTest(TestCase):
         self.assertTrue(
             ProjectEnvironment.objects.get(pk=self.env2.pk).selected
         )
-

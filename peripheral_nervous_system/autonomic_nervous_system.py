@@ -266,6 +266,122 @@ def delayed_restart() -> None:
     os._exit(0)
 
 
+def _delayed_daphne_reload() -> None:
+    """Touch a watched file to make Django's autoreloader respawn Daphne's
+    child. Cleaner than ``os._exit`` — the reloader exits the child with
+    code 3 so the parent respawns it."""
+    time.sleep(1.0)
+    sentinel = Path(settings.BASE_DIR) / 'config' / '__init__.py'
+    sentinel.touch()
+
+
+def trigger_system_restart() -> None:
+    """Shut down Celery, respawn the worker (and Beat if running), then
+    kick Django's autoreloader so Daphne's child respawns too.
+
+    Module-level so ``neuroplasticity.api`` can call it without touching
+    the DRF ViewSet. The ``restart`` endpoint is a thin wrapper that
+    calls this function and returns the 200 Response.
+    """
+    logger.info('[PNS] System restart initiated.')
+    # 1. Shutdown Celery workers
+    celery_app.control.shutdown()
+
+    # 2. Restart Celery worker via subprocess. Flags mirror the launcher
+    #    in are-self.bat so hand-started and API-triggered restarts use
+    #    identical worker topology.
+    cwd = _project_root()
+    cmd = [
+        sys.executable,
+        '-m',
+        'celery',
+        '-A',
+        'config',
+        'worker',
+        '--loglevel=info',
+        '--concurrency=4',
+        '-P',
+        'threads',
+        '-E',
+    ]
+
+    try:
+        if sys.platform == 'win32':
+            # Windows: use CREATE_NEW_CONSOLE to spawn in new window
+            title_cmd = (
+                'title Are-Self Worker && '
+                f'{subprocess.list2cmdline(cmd)}'
+            )
+            subprocess.Popen(
+                ['cmd', '/c', title_cmd],
+                cwd=str(cwd),
+                creationflags=subprocess.CREATE_NEW_CONSOLE,
+            )
+        else:
+            # Unix: start new session
+            subprocess.Popen(
+                cmd,
+                cwd=str(cwd),
+                start_new_session=True,
+            )
+        logger.info('[PNS] Celery worker restart process spawned.')
+    except Exception as e:
+        logger.exception(
+            '[PNS] Failed to spawn Celery worker: %s', str(e)
+        )
+
+    # 3. Check if Beat is running and restart it
+    beat_pid = _read_beat_pid()
+    if _is_process_running(beat_pid):
+        logger.info('[PNS] Restarting Celery Beat.')
+        _terminate_process(beat_pid)
+        _clear_beat_pid()
+
+        # Restart Beat
+        celery_exe = _celery_exe()
+        if celery_exe.exists():
+            beat_cmd = [
+                str(celery_exe),
+                '-A',
+                'config',
+                'beat',
+                '-l',
+                'info',
+                '--scheduler',
+                'django_celery_beat.schedulers:DatabaseScheduler',
+            ]
+            try:
+                if sys.platform == 'win32':
+                    beat_title = (
+                        'title Are-Self Heartbeat && '
+                        f'{subprocess.list2cmdline(beat_cmd)}'
+                    )
+                    beat_proc = subprocess.Popen(
+                        ['cmd', '/c', beat_title],
+                        cwd=str(cwd),
+                        creationflags=subprocess.CREATE_NEW_CONSOLE,
+                    )
+                else:
+                    beat_proc = subprocess.Popen(
+                        beat_cmd,
+                        cwd=str(cwd),
+                        start_new_session=True,
+                    )
+                _write_beat_pid(beat_proc.pid)
+                logger.info(
+                    '[PNS] Celery Beat restarted with PID %s.',
+                    beat_proc.pid,
+                )
+            except Exception as e:
+                logger.exception('[PNS] Failed to restart Beat: %s',
+                                 str(e))
+
+    # 4. Spawn delayed thread to touch the autoreload sentinel so
+    #    Daphne's worker child exits with code 3 and the parent
+    #    respawns it — cheaper than killing the whole Daphne process.
+    threading.Thread(target=_delayed_daphne_reload).start()
+
+
 class SystemControlViewSet(viewsets.ViewSet):
     """API to control system shutdown, restart, and status."""
 
@@ -289,98 +405,7 @@ class SystemControlViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['post'])
     def restart(self, request) -> Response:
         """Restart Celery worker and Django process."""
-        logger.info('[PNS] System restart initiated.')
-        # 1. Shutdown Celery workers
-        celery_app.control.shutdown()
-
-        # 2. Restart Celery worker via subprocess
-        cwd = _project_root()
-        cmd = [
-            sys.executable,
-            '-m',
-            'celery',
-            '-A',
-            'config',
-            'worker',
-            '-l',
-            'info',
-            '--pool=solo',
-        ]
-
-        try:
-            if sys.platform == 'win32':
-                # Windows: use CREATE_NEW_CONSOLE to spawn in new window
-                title_cmd = (
-                    'title Are-Self Worker && '
-                    f'{subprocess.list2cmdline(cmd)}'
-                )
-                subprocess.Popen(
-                    ['cmd', '/c', title_cmd],
-                    cwd=str(cwd),
-                    creationflags=subprocess.CREATE_NEW_CONSOLE,
-                )
-            else:
-                # Unix: start new session
-                subprocess.Popen(
-                    cmd,
-                    cwd=str(cwd),
-                    start_new_session=True,
-                )
-            logger.info('[PNS] Celery worker restart process spawned.')
-        except Exception as e:
-            logger.exception(
-                '[PNS] Failed to spawn Celery worker: %s', str(e)
-            )
-
-        # 3. Check if Beat is running and restart it
-        beat_pid = _read_beat_pid()
-        if _is_process_running(beat_pid):
-            logger.info('[PNS] Restarting Celery Beat.')
-            _terminate_process(beat_pid)
-            _clear_beat_pid()
-
-            # Restart Beat
-            celery_exe = _celery_exe()
-            if celery_exe.exists():
-                beat_cmd = [
-                    str(celery_exe),
-                    '-A',
-                    'config',
-                    'beat',
-                    '-l',
-                    'info',
-                    '--scheduler',
-                    'django_celery_beat.schedulers:DatabaseScheduler',
-                ]
-                try:
-                    if sys.platform == 'win32':
-                        beat_title = (
-                            'title Are-Self Heartbeat && '
-                            f'{subprocess.list2cmdline(beat_cmd)}'
-                        )
-                        beat_proc = subprocess.Popen(
-                            ['cmd', '/c', beat_title],
-                            cwd=str(cwd),
-                            creationflags=subprocess.CREATE_NEW_CONSOLE,
-                        )
-                    else:
-                        beat_proc = subprocess.Popen(
-                            beat_cmd,
-                            cwd=str(cwd),
-                            start_new_session=True,
-                        )
-                    _write_beat_pid(beat_proc.pid)
-                    logger.info(
-                        '[PNS] Celery Beat restarted with PID %s.',
-                        beat_proc.pid,
-                    )
-                except Exception as e:
-                    logger.exception('[PNS] Failed to restart Beat: %s',
-                                     str(e))
-
-        # 4. Spawn delayed thread to kill Django process
-        threading.Thread(target=delayed_restart).start()
-
+        trigger_system_restart()
         return Response(
             {'status': 'System restart initiated'},
             status=status.HTTP_200_OK,

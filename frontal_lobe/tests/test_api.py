@@ -20,6 +20,11 @@ from frontal_lobe.models import (
 
 
 class ReasoningAPITest(TestCase):
+    # Loads CANONICAL + INCUBATOR NeuralModifier rows so any
+    # ToolDefinition.objects.create() call defaulting genome to
+    # NeuralModifier.INCUBATOR has the FK target present in the test DB.
+    fixtures = ['neuroplasticity/fixtures/genetic_immutables.json']
+
     def setUp(self):
         self.client = APIClient()
 

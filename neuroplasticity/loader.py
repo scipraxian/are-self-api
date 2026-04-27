@@ -1,8 +1,8 @@
-"""Contribution-aware NeuralModifier loader.
+"""NeuralModifier loader — genome-FK edition.
 
 Pure-Python library called by the management commands and the AppConfig
-boot hook. Manages the install / uninstall / enable / disable lifecycle
-plus the boot-time hash-check + side-effect re-import pass.
+boot hook. Manages the install / uninstall / create / save / upgrade
+lifecycle plus the boot-time hash-check + side-effect re-import pass.
 
 Layout invariants:
 
@@ -12,20 +12,19 @@ Layout invariants:
       Gitignored, derived state; install copies into it, uninstall
       removes it.
     * ``neuroplasticity/operating_room/`` is the scratch space for
-      transient install / upgrade extractions. Gitignored. Every
-      operation extracts into a fresh ``tempfile.mkdtemp`` under this
-      root and removes it in a ``finally`` block.
+      transient install / upgrade / save extractions. Gitignored. Every
+      operation creates a fresh ``tempfile.mkdtemp`` (or a fresh file)
+      under this root and removes it in a ``finally`` block.
 
 State invariants:
 
     * AVAILABLE = zip on disk, no DB row. Uninstall deletes the
-      ``NeuralModifier`` row entirely. CASCADE handles contributions,
+      ``NeuralModifier`` row entirely. CASCADE handles owned rows,
       logs, and events.
     * INSTALLED_APPS is never mutated. Bundles contribute data, not apps.
-    * Every DB object created by install gets one
-      ``NeuralModifierContribution`` row pointing at it via GFK, so
-      uninstall can walk the manifest in reverse-install order and
-      delete cleanly.
+    * Each DB object a bundle creates carries a ``genome`` FK (from
+      ``GenomeOwnedMixin``). Uninstall = ``NeuralModifier.delete()``
+      and CASCADE removes everything pointing at it.
     * Hash drift between the on-disk manifest and
       ``NeuralModifier.manifest_hash`` flips status to BROKEN and the
       bundle's entry modules are NOT imported.
@@ -41,20 +40,24 @@ import shutil
 import sys
 import tempfile
 import traceback
+import uuid
+import zipfile
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import Iterable, Iterator, Optional
 
+from django.apps import apps
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
-from django.db import OperationalError, ProgrammingError, transaction
-from django.db.models import Count
+from django.db import OperationalError, ProgrammingError, router, transaction
+from django.db.models import PROTECT, RESTRICT
+from django.db.models.deletion import Collector
 from packaging.specifiers import SpecifierSet
 from packaging.version import InvalidVersion, Version
 
+from neuroplasticity.genome_mixin import GenomeOwnedMixin
+
 from .models import (
     NeuralModifier,
-    NeuralModifierContribution,
     NeuralModifierInstallationEvent,
     NeuralModifierInstallationEventType,
     NeuralModifierInstallationLog,
@@ -67,6 +70,7 @@ REQUIRED_MANIFEST_KEYS = (
     'slug',
     'name',
     'version',
+    'genome',
     'author',
     'license',
     'entry_modules',
@@ -89,27 +93,66 @@ def genomes_root() -> Path:
 
 
 def operating_room_root() -> Path:
-    """Transient scratch root for install / upgrade extractions.
-
-    Each operation creates a fresh ``tempfile.mkdtemp`` under this dir
-    and removes it in a ``finally`` block. The root itself persists so
-    concurrent operations do not race on ``mkdir``.
-    """
+    """Transient scratch root for install / upgrade / save operations."""
     return Path(settings.NEURAL_MODIFIER_OPERATING_ROOM_ROOT)
 
 
-def read_archive_manifest(archive_path: Path) -> dict:
-    """Read manifest.json from inside a bundle zip without extracting it.
+def iter_genome_owned_models() -> Iterator[type]:
+    """Every concrete model that carries the ``genome`` FK.
 
-    The zip's single top-level directory is the slug; we read
-    ``<slug>/manifest.json`` from inside the archive. The manifest is
-    the authority on what slug to call this bundle.
-
-    Raises:
-        ValueError: zip is empty, has multiple top-level dirs, or has
-            no manifest.json at the slug path.
-        zipfile.BadZipFile: the file isn't a valid zip.
+    These are the twelve (and only twelve) models a ``NeuralModifier``
+    can own rows in. Derived from ``GenomeOwnedMixin`` subclassing, so
+    adding a thirteenth is a single-line mixin edit plus a migration —
+    no registry edit here.
     """
+    for model in apps.get_models():
+        if issubclass(model, GenomeOwnedMixin):
+            yield model
+
+
+def _owned_delete_order() -> list[type]:
+    """Topologically sort owned models for safe ``.delete()`` sequencing.
+
+    A single ``modifier.delete()`` runs one giant CASCADE pass and
+    Django's collector raises ``ProtectedError`` eagerly — it does NOT
+    recognize that the PROTECT-source row is also scheduled for delete
+    in the same pass. The fix is to delete owned rows per-model in an
+    order that respects PROTECT / RESTRICT FKs between owned models:
+    any model with a PROTECT FK pointing at another owned model is
+    deleted first, so the PROTECT target is unreferenced when we get
+    to it.
+    """
+    owned = list(iter_genome_owned_models())
+    owned_set = set(owned)
+    must_come_before = {m: set() for m in owned}
+    for source_model in owned:
+        for field in source_model._meta.fields:
+            related = getattr(field, 'related_model', None)
+            if related is None or related not in owned_set:
+                continue
+            if related is source_model:
+                continue
+            on_delete = field.remote_field.on_delete
+            if on_delete in (PROTECT, RESTRICT):
+                must_come_before[related].add(source_model)
+
+    ordered: list[type] = []
+    remaining = set(owned)
+    while remaining:
+        progress = False
+        for model in list(remaining):
+            if not (must_come_before[model] & remaining):
+                ordered.append(model)
+                remaining.remove(model)
+                progress = True
+        if not progress:
+            ordered.extend(remaining)
+            break
+    return ordered
+
+
+def read_archive_manifest(archive_path: Path) -> dict:
+    """Read manifest.json from inside a bundle zip without extracting it."""
     import zipfile
 
     with zipfile.ZipFile(archive_path) as zf:
@@ -136,12 +179,7 @@ def read_archive_manifest(archive_path: Path) -> dict:
 
 
 def read_catalog_manifests() -> list[dict]:
-    """Walk the genomes dir; one entry per readable zip.
-
-    Returns a list of ``{'manifest': dict, 'archive_path': str,
-    'archive_name': str}``. A malformed zip or missing-manifest entry
-    is logged and skipped — one bad zip never blanks the whole catalog.
-    """
+    """Walk the genomes dir; one entry per readable zip."""
     root = genomes_root()
     if not root.exists():
         return []
@@ -166,27 +204,110 @@ def read_catalog_manifests() -> list[dict]:
     return entries
 
 
-def install_bundle_from_source(source: Path, slug: str) -> NeuralModifier:
-    """Copy ``source`` to the runtime tree, import its code, load its data.
+def create_empty_bundle(
+    slug: str,
+    *,
+    name: str = '',
+    version: str = '0.1.0',
+    author: str = '',
+    license: str = '',
+) -> NeuralModifier:
+    """Scaffold a brand-new empty bundle.
 
-    The source is a directory containing ``manifest.json``,
-    ``modifier_data.json``, and ``code/``. In production callers always
-    reach this function via :func:`install_bundle_from_archive` which
-    extracts a zip into ``operating_room/`` and passes the extraction
-    path here. Tests call this directly on a directory they've built.
+    Creates ``grafts/<slug>/`` with an empty ``manifest.json``,
+    ``modifier_data.json``, and ``code/`` dir, then registers a
+    ``NeuralModifier`` row in INSTALLED state with no contributions.
+    The user then stamps rows into it via the BEGIN_PLAY genome hook
+    and packs the first archive via :func:`save_bundle_to_archive`.
 
-    Raises:
-        FileExistsError: runtime `grafts/<slug>/` already exists. Raised
-            BEFORE any DB state is created so a failed install never
-            leaves a half-baked row behind.
-        ValueError: manifest fails validation.
-        Exception: re-raised after BROKEN flip if the entry module fails
-            to import or modifier_data.json fails to deserialize.
+    Refuses if the slug is already in use as an installed bundle, the
+    runtime dir already exists, the catalog already has
+    ``genomes/<slug>.zip``, or the slug is ``canonical``.
     """
+    if slug == NeuralModifier.CANONICAL_SLUG:
+        raise ValueError(
+            '[Neuroplasticity] Cannot create a bundle named {0!r}.'.format(
+                NeuralModifier.CANONICAL_SLUG
+            )
+        )
+    if NeuralModifier.objects.filter(slug=slug).exists():
+        raise FileExistsError(
+            '[Neuroplasticity] Bundle {0!r} is already installed.'.format(slug)
+        )
+    catalog_archive = genomes_root() / '{0}.zip'.format(slug)
+    if catalog_archive.exists():
+        raise FileExistsError(
+            '[Neuroplasticity] Catalog already has an archive at {0}; '
+            'delete it first or pick a different slug.'.format(catalog_archive)
+        )
+    runtime = grafts_root() / slug
+    if runtime.exists():
+        raise FileExistsError(
+            '[Neuroplasticity] Runtime dir already exists at {0}; '
+            'uninstall first.'.format(runtime)
+        )
+
+    genome_uuid = uuid.uuid4()
+    manifest = {
+        'slug': slug,
+        'name': name or slug,
+        'version': version,
+        'genome': str(genome_uuid),
+        'author': author,
+        'license': license,
+        'entry_modules': [],
+        'requires': [],
+    }
+    _validate_manifest(manifest)
+
+    runtime.parent.mkdir(parents=True, exist_ok=True)
+    runtime.mkdir(parents=True, exist_ok=False)
+    (runtime / 'code').mkdir(parents=True, exist_ok=True)
+    manifest_path = runtime / 'manifest.json'
+    manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
+    (runtime / 'modifier_data.json').write_text('[]\n')
+
+    manifest_hash = _compute_manifest_hash(manifest_path)
+    modifier = NeuralModifier.objects.create(
+        pk=genome_uuid,
+        slug=slug,
+        name=manifest['name'],
+        version=manifest['version'],
+        author=manifest['author'],
+        license=manifest['license'],
+        manifest_hash=manifest_hash,
+        manifest_json=manifest,
+        status_id=NeuralModifierStatus.INSTALLED,
+    )
+    log = NeuralModifierInstallationLog.objects.create(
+        neural_modifier=modifier,
+        installation_manifest=manifest,
+    )
+    _log_event(
+        log,
+        NeuralModifierInstallationEventType.INSTALL,
+        {
+            'rows': 0,
+            'manifest_hash': manifest_hash,
+            'entry_modules': [],
+            'created_empty': True,
+        },
+    )
+    logger.info(
+        '[Neuroplasticity] Created empty bundle %s (version %s).',
+        slug,
+        manifest['version'],
+    )
+    return modifier
+
+
+def install_bundle_from_source(source: Path, slug: str) -> NeuralModifier:
+    """Copy ``source`` to the runtime tree, import its code, load its data."""
     manifest_path = source / 'manifest.json'
     manifest = json.loads(manifest_path.read_text())
     _validate_manifest(manifest)
     _check_requires(manifest)
+    _guard_genome_uuid_collision(manifest, slug)
     manifest_hash = _compute_manifest_hash(manifest_path)
 
     runtime = grafts_root() / slug
@@ -196,25 +317,26 @@ def install_bundle_from_source(source: Path, slug: str) -> NeuralModifier:
             'uninstall first.'.format(runtime)
         )
 
-    # A prior install may have left a row behind if this one is a retry
-    # against the same slug. Otherwise we create fresh. The row is
-    # created UP FRONT so there is something to hang the installation
-    # log off, but on ANY failure below it is deleted — see except branch.
     pre_existing_row = NeuralModifier.objects.filter(slug=slug).exists()
     modifier = _get_or_create_modifier(slug, manifest, manifest_hash)
+    if modifier.pk == NeuralModifier.CANONICAL:
+        raise ValueError(
+            '[Neuroplasticity] Refusing to install/upgrade onto the '
+            'canonical modifier.'
+        )
     log = NeuralModifierInstallationLog.objects.create(
         neural_modifier=modifier,
         installation_manifest=manifest,
     )
 
-    contribution_count = 0
+    row_count = 0
     try:
         runtime.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(source, runtime)
         _ensure_code_on_path(runtime)
         with transaction.atomic():
             _import_entry_modules(manifest['entry_modules'])
-            contribution_count = _load_modifier_data(
+            row_count = _load_modifier_data(
                 modifier, runtime / 'modifier_data.json'
             )
             modifier.status_id = NeuralModifierStatus.INSTALLED
@@ -232,11 +354,6 @@ def install_bundle_from_source(source: Path, slug: str) -> NeuralModifier:
         logger.error(
             '[Neuroplasticity] Install failed for %s; rolling back.', slug
         )
-        # AVAILABLE = no DB row. A fresh failed install deletes the row
-        # it created so the bundle returns to AVAILABLE. If a pre-existing
-        # row (from a prior successful install) is now being re-installed
-        # and THIS attempt failed, keep the row at its prior state — we
-        # do not want to delete live contributions out from under the user.
         if not pre_existing_row:
             modifier.delete()
         raise
@@ -245,164 +362,65 @@ def install_bundle_from_source(source: Path, slug: str) -> NeuralModifier:
         log,
         NeuralModifierInstallationEventType.INSTALL,
         {
-            'contributions': contribution_count,
+            'rows': row_count,
             'manifest_hash': manifest_hash,
             'entry_modules': list(manifest['entry_modules']),
         },
     )
     logger.info(
-        '[Neuroplasticity] Installed %s (%d contributions).',
+        '[Neuroplasticity] Installed %s (%d rows).',
         slug,
-        contribution_count,
+        row_count,
     )
     return modifier
 
 
 def uninstall_bundle(slug: str) -> Optional[str]:
-    """Walk contributions in reverse-install order, delete targets, delete row.
+    """Drop owned rows in topological order, then delete the modifier row.
 
-    AVAILABLE = no DB row (see module docstring), so uninstall DELETES
-    the ``NeuralModifier`` row. Contribution rows, installation logs,
-    and their events all cascade away via FK CASCADE. The committed zip
-    in ``genomes/`` stays put — it is the bundle, not a derivative.
+    AVAILABLE = no DB row. Ideally this would be a single
+    ``modifier.delete()`` and CASCADE on every ``genome`` FK would
+    clean up — but Django's collector raises ``ProtectedError`` eagerly
+    whenever an in-pass PROTECT FK is seen, even when the PROTECT
+    source is also scheduled for delete. So we delete owned rows
+    per-model in an order that honours PROTECT/RESTRICT edges first,
+    then the modifier itself (whose remaining CASCADEs only touch
+    logs and events).
 
-    Reverse-created order unwinds intra-bundle FK chains: children
-    (later-created) get deleted before parents (earlier-created), so
-    PROTECT constraints inside the bundle's own graph don't trip.
+    Installation logs and events still cascade away with the modifier;
+    this is consistent with "AVAILABLE means no DB footprint." Returns
+    the deleted slug, or raises ``NeuralModifier.DoesNotExist`` if
+    there is no row.
 
-    Event payload disambiguates three outcomes per contribution:
-
-    * ``contributions_resolved``: target existed at snapshot time and is
-      gone after the loop (deleted directly or via FK cascade — healthy).
-    * ``orphaned_ids``: target was already missing at snapshot time
-      (true orphan — out-of-band deletion before this uninstall).
-    * ``contributions_unresolved``: target existed at snapshot time and
-      somehow survived the loop. Should always be empty; a non-empty
-      list means a bug to investigate.
-
-    Returns the slug of the deleted bundle. Raises
-    ``NeuralModifier.DoesNotExist`` if no row exists.
+    Disk cleanup is intentionally deferred. On Windows, the current
+    Daphne process has already imported the bundle's modules and holds
+    live file handles, so ``shutil.rmtree`` silently no-ops and the
+    runtime dir persists — which then blocks the next install with a
+    ``FileExistsError``. Instead, ``uninstall_bundle`` only drops the
+    code dir from ``sys.path`` (best effort; nothing else touches
+    disk) and the API-level ``trigger_system_restart`` respawns
+    Daphne. The orphan sweep in :func:`boot_bundles` does the real
+    rmtree in the fresh process where no file locks remain.
     """
     modifier = NeuralModifier.objects.get(slug=slug)
-    log = NeuralModifierInstallationLog.objects.create(
-        neural_modifier=modifier,
-        installation_manifest=modifier.manifest_json,
-    )
-
-    contributions = list(modifier.contributions.order_by('-created'))
-    contributions_total = len(contributions)
-
-    # Snapshot which targets exist NOW (before any deletion). FK cascade
-    # during the loop will vanish dependent rows before the loop reaches
-    # them — those are 'resolved', not 'orphaned'. Only targets missing
-    # at snapshot time are real orphans.
-    pre_existing: list[tuple[int, str]] = []
-    pre_missing: list[str] = []
-    for contribution in contributions:
-        ct_id = contribution.content_type_id
-        obj_id = str(contribution.object_id)
-        model_cls = contribution.content_type.model_class()
-        if model_cls is not None and model_cls._default_manager.filter(
-            pk=contribution.object_id
-        ).exists():
-            pre_existing.append((ct_id, obj_id))
-        else:
-            pre_missing.append(obj_id)
-
-    for contribution in contributions:
-        target = contribution.content_object
-        if target is not None:
-            target.delete()
-        contribution.delete()
-
-    # Anything in pre_existing whose target row still survives is a bug.
-    contributions_unresolved: list[str] = []
-    for ct_id, obj_id in pre_existing:
-        ct = ContentType.objects.get_for_id(ct_id)
-        model_cls = ct.model_class()
-        if model_cls is None:
-            continue
-        if model_cls._default_manager.filter(pk=obj_id).exists():
-            contributions_unresolved.append(obj_id)
-
-    contributions_resolved = len(pre_existing) - len(contributions_unresolved)
 
     runtime = grafts_root() / slug
     _remove_code_from_path(runtime)
-    if runtime.exists():
-        shutil.rmtree(runtime, ignore_errors=True)
 
-    if contributions_unresolved:
-        logger.warning(
-            '[Neuroplasticity] Uninstall of %s left %d unresolved target(s): %s',
-            slug,
-            len(contributions_unresolved),
-            contributions_unresolved,
-        )
-
-    # Emit the UNINSTALL event BEFORE deleting the modifier so the event
-    # (hung off `log`, which CASCADEs from modifier) has somewhere to live.
-    _log_event(
-        log,
-        NeuralModifierInstallationEventType.UNINSTALL,
-        {
-            'contributions_total': contributions_total,
-            'contributions_resolved': contributions_resolved,
-            'orphaned_ids': pre_missing,
-            'contributions_unresolved': contributions_unresolved,
-        },
-    )
-    logger.info(
-        '[Neuroplasticity] Uninstalled %s (%d resolved, %d orphaned, '
-        '%d unresolved).',
-        slug,
-        contributions_resolved,
-        len(pre_missing),
-        len(contributions_unresolved),
-    )
-
-    # Now delete the row. CASCADE removes contributions, logs, and events
-    # the caller no longer needs — AVAILABLE means no DB footprint.
-    modifier.delete()
+    with transaction.atomic():
+        for model in _owned_delete_order():
+            model.objects.filter(genome=modifier).delete()
+        modifier.delete()
+    logger.info('[Neuroplasticity] Uninstalled %s.', slug)
     return slug
-
-
-def enable_bundle(slug: str) -> NeuralModifier:
-    """Flip INSTALLED or DISABLED -> ENABLED. Emits an ENABLE event."""
-    modifier = NeuralModifier.objects.get(slug=slug)
-    modifier.status_id = NeuralModifierStatus.ENABLED
-    modifier.save()
-    log = modifier.current_installation()
-    if log is not None:
-        _log_event(
-            log,
-            NeuralModifierInstallationEventType.ENABLE,
-            {'previous_status': 'enabled-flip'},
-        )
-    return modifier
-
-
-def disable_bundle(slug: str) -> NeuralModifier:
-    """Flip ENABLED -> DISABLED. Code stays on sys.path. DB stays intact."""
-    modifier = NeuralModifier.objects.get(slug=slug)
-    modifier.status_id = NeuralModifierStatus.DISABLED
-    modifier.save()
-    log = modifier.current_installation()
-    if log is not None:
-        _log_event(
-            log,
-            NeuralModifierInstallationEventType.DISABLE,
-            {'previous_status': 'disabled-flip'},
-        )
-    return modifier
 
 
 def upgrade_bundle_from_source(
     source: Path, slug: str, *, allow_same_version: bool = False
 ) -> dict:
-    """Diff new modifier_data.json against current contributions; apply the delta.
+    """Diff new modifier_data.json against currently-owned rows; apply the delta.
 
-    Returns a stats dict::
+    Returns::
 
         {previous_version, new_version, created, updated, deleted}
 
@@ -413,6 +431,11 @@ def upgrade_bundle_from_source(
             <= old (unless allow_same_version).
     """
     modifier = NeuralModifier.objects.get(slug=slug)
+    if modifier.pk == NeuralModifier.CANONICAL:
+        raise ValueError(
+            '[Neuroplasticity] Refusing to install/upgrade onto the '
+            'canonical modifier.'
+        )
 
     if not source.exists():
         raise FileNotFoundError(
@@ -423,6 +446,15 @@ def upgrade_bundle_from_source(
     manifest = json.loads(manifest_path.read_text())
     _validate_manifest(manifest)
     _check_requires(manifest)
+    _guard_genome_uuid_collision(manifest, slug)
+    manifest_genome = uuid.UUID(manifest['genome'])
+    if manifest_genome != modifier.pk:
+        raise ValueError(
+            '[Neuroplasticity] Manifest genome {0} does not match the '
+            'installed bundle {1!r} (pk {2}); refusing upgrade.'.format(
+                manifest_genome, slug, modifier.pk
+            )
+        )
 
     previous_version = modifier.version
     new_version = manifest['version']
@@ -450,41 +482,43 @@ def upgrade_bundle_from_source(
     updated = 0
     deleted = 0
     try:
-        new_payload = json.loads(
-            (staging / 'modifier_data.json').read_text()
-        )
-        old_contributions_by_id = {
-            str(c.object_id): c for c in modifier.contributions.all()
-        }
-        old_ids = set(old_contributions_by_id.keys())
-        new_ids = {obj['pk'] for obj in new_payload}
-        to_delete = old_ids - new_ids
+        new_payload = json.loads((staging / 'modifier_data.json').read_text())
+
+        # Collect (model, pk) pairs the bundle currently owns across
+        # every GenomeOwnedMixin-bearing model.
+        old_pairs: set[tuple[type, str]] = set()
+        for model in iter_genome_owned_models():
+            for pk in model.objects.filter(genome=modifier).values_list(
+                'pk', flat=True
+            ):
+                old_pairs.add((model, str(pk)))
+
+        new_pairs: set[tuple[type, str]] = set()
+        for row in new_payload:
+            app_label, model_name = row['model'].split('.')
+            model = apps.get_model(app_label, model_name)
+            new_pairs.add((model, str(row['pk'])))
+
+        to_delete = old_pairs - new_pairs
+        new_pks_only = {pk for (_, pk) in new_pairs - old_pairs}
 
         with transaction.atomic():
-            for pk in to_delete:
-                contribution = old_contributions_by_id[pk]
-                target = contribution.content_object
-                if target is not None:
-                    target.delete()
-                contribution.delete()
+            for model, pk in to_delete:
+                model.objects.filter(pk=pk).delete()
                 deleted += 1
 
             raw = json.dumps(new_payload)
             for deserialized in serializers.deserialize('json', raw):
-                pk = str(deserialized.object.pk)
+                target = deserialized.object
+                pk = str(target.pk)
+                if isinstance(target, GenomeOwnedMixin):
+                    _guard_install_collision(target, modifier)
+                    target.genome_id = modifier.pk
                 deserialized.save()
-                if pk in old_ids:
-                    updated += 1
-                else:
-                    ct = ContentType.objects.get_for_model(
-                        type(deserialized.object)
-                    )
-                    NeuralModifierContribution.objects.create(
-                        neural_modifier=modifier,
-                        content_type=ct,
-                        object_id=deserialized.object.pk,
-                    )
+                if pk in new_pks_only:
                     created += 1
+                else:
+                    updated += 1
 
             _remove_code_from_path(runtime)
             if runtime.exists():
@@ -541,14 +575,8 @@ def upgrade_bundle_from_source(
     }
 
 
-def upgrade_bundle(
-    slug: str, *, allow_same_version: bool = False
-) -> dict:
-    """Upgrade from the committed zip at ``genomes/<slug>.zip``.
-
-    Extracts into a fresh tempdir under ``operating_room/``, runs the
-    diff/apply pass, and removes the tempdir on every exit path.
-    """
+def upgrade_bundle(slug: str, *, allow_same_version: bool = False) -> dict:
+    """Upgrade from the committed zip at ``genomes/<slug>.zip``."""
     archive_path = genomes_root() / '{0}.zip'.format(slug)
     if not archive_path.exists():
         raise FileNotFoundError(
@@ -567,29 +595,239 @@ def upgrade_bundle(
             shutil.rmtree(extraction, ignore_errors=True)
 
 
-def iter_installed_bundles() -> Iterable[NeuralModifier]:
-    """Yield every NeuralModifier whose status is INSTALLED or ENABLED."""
-    return NeuralModifier.objects.filter(
-        status_id__in=(
-            NeuralModifierStatus.INSTALLED,
-            NeuralModifierStatus.ENABLED,
+def _bump_patch_version(version: str) -> str:
+    """Increment the semver patch of ``version``. Always returns a
+    valid semver. Non-semver input is replaced with ``0.0.1`` rather
+    than silently surviving as junk.
+    """
+    if not version:
+        return '0.0.1'
+    parts = version.split('.')
+    if len(parts) == 3 and all(p.isdigit() for p in parts):
+        major, minor, patch = int(parts[0]), int(parts[1]), int(parts[2])
+        return '{0}.{1}.{2}'.format(major, minor, patch + 1)
+    # Permissive fallback: bump from 0.0.0 rather than refusing the save.
+    return '0.0.1'
+
+
+def save_bundle_to_archive(slug: str) -> dict:
+    """Serialize every bundle-owned row back into ``genomes/<slug>.zip``.
+
+    The zip is built under ``operating_room/`` first, then atomically
+    renamed over ``genomes/<slug>.zip`` — partial writes never land on
+    disk. Includes manifest, modifier_data.json (every
+    ``GenomeOwnedMixin`` row filtered by ``genome=modifier``), and the
+    bundle's live ``grafts/<slug>/code/`` tree. SpikeTrains / Spikes /
+    ReasoningSessions are intentionally excluded — they're runtime
+    telemetry, not bundle content. M2M through-tables (effector
+    switches, executable switches, engram_spikes) are serialized
+    implicitly as part of the parent row's M2M field list.
+
+    Always bumps the semver patch on save: the manifest's ``version``
+    field is incremented, the new value is mirrored onto the
+    ``NeuralModifier.version`` row, and the bumped manifest is what
+    lands in the zip. This makes the saved archive ready for
+    ``upgrade_bundle`` on another machine without an out-of-band
+    version bump.
+
+    Returns::
+
+        {'slug', 'bytes_written', 'row_count', 'zip_path',
+         'previous_version', 'new_version'}
+    """
+    import os
+    import zipfile
+
+    modifier = NeuralModifier.objects.get(slug=slug)
+
+    rows: list = []
+    row_count = 0
+    for model in iter_genome_owned_models():
+        qs = model.objects.filter(genome=modifier).order_by('pk')
+        if not qs.exists():
+            continue
+        payload = json.loads(serializers.serialize('json', qs))
+        for row in payload:
+            # Strip the install-time genome FK — the consumer stamps it
+            # at install time, so the value in the archive would just
+            # point at a defunct NeuralModifier PK and confuse readers.
+            row.get('fields', {}).pop('genome', None)
+            rows.append(row)
+            row_count += 1
+
+    runtime_bundle = grafts_root() / slug
+    manifest_path = runtime_bundle / 'manifest.json'
+    if manifest_path.exists():
+        manifest_obj = json.loads(manifest_path.read_text())
+    else:
+        manifest_obj = dict(modifier.manifest_json or {})
+        manifest_obj.setdefault('slug', modifier.slug)
+        manifest_obj.setdefault('name', modifier.name)
+        manifest_obj.setdefault('version', modifier.version)
+        manifest_obj.setdefault('author', modifier.author)
+        manifest_obj.setdefault('license', modifier.license)
+        manifest_obj.setdefault('entry_modules', [])
+
+    code_dir = runtime_bundle / 'code'
+
+    # Pre-flight (FIRST — before any state mutation): refuse the save
+    # if the manifest declares entry_modules but the runtime code tree
+    # doesn't carry them. The earlier silent-broken-zip path overwrote
+    # a working unreal.zip with a code-less archive because
+    # grafts/<slug>/code/ was empty at save time. Catch that here
+    # before bumping version, before any disk write, and before
+    # touching the modifier row.
+    declared_modules = list(manifest_obj.get('entry_modules', []))
+    missing_modules = _missing_entry_modules(code_dir, declared_modules)
+    if missing_modules:
+        raise ValueError(
+            '[Neuroplasticity] Refusing to save {0!r} - manifest declares '
+            'entry_modules {1} but {2} cannot be located under {3}. Save '
+            'would produce a code-less archive.'.format(
+                slug, declared_modules, missing_modules, code_dir
+            )
         )
+
+    previous_version = manifest_obj.get('version', modifier.version or '0.0.0')
+    new_version = _bump_patch_version(previous_version)
+    manifest_obj['version'] = new_version
+    manifest_text = json.dumps(manifest_obj, indent=2) + '\n'
+
+    # Persist the bumped version onto the row + cached manifest_json so
+    # subsequent reads don't drift from what the zip carries.
+    modifier.version = new_version
+    modifier.manifest_json = manifest_obj
+    modifier.save(update_fields=['version', 'manifest_json'])
+
+    operating_room_root().mkdir(parents=True, exist_ok=True)
+    genomes_root().mkdir(parents=True, exist_ok=True)
+    staging_fd, staging_name = tempfile.mkstemp(
+        prefix='{0}-save-'.format(slug),
+        suffix='.zip',
+        dir=str(operating_room_root()),
+    )
+    os.close(staging_fd)
+    staging_path = Path(staging_name)
+    target = genomes_root() / '{0}.zip'.format(slug)
+    backup_path: Optional[Path] = None
+    try:
+        with zipfile.ZipFile(staging_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr('{0}/manifest.json'.format(slug), manifest_text)
+            zf.writestr(
+                '{0}/modifier_data.json'.format(slug),
+                json.dumps(rows, indent=2) + '\n',
+            )
+            if code_dir.exists():
+                for path in sorted(code_dir.rglob('*')):
+                    if path.is_dir():
+                        continue
+                    arcname = Path(slug) / 'code' / path.relative_to(code_dir)
+                    zf.write(path, arcname.as_posix())
+
+        # Pre-flight: verify the staged zip is valid and contains the
+        # declared entry_modules under the slug's code/ tree. Anything
+        # the install side would later choke on must fail HERE, before
+        # we replace the catalog target.
+        _verify_staged_archive(staging_path, slug, declared_modules)
+
+        # Backup the existing catalog zip before atomic replace. Single
+        # rolling backup at <target>.bak — overwrites any prior backup.
+        # This was Michael's standing rule after a save earlier today
+        # silently destroyed a working unreal.zip: any modification to
+        # a .zip must leave a backup as a programmatic effect.
+        if target.exists():
+            backup_path = target.with_suffix(target.suffix + '.bak')
+            shutil.copy2(str(target), str(backup_path))
+
+        os.replace(str(staging_path), str(target))
+    except Exception:
+        if staging_path.exists():
+            staging_path.unlink()
+        raise
+
+    bytes_written = target.stat().st_size
+    logger.info(
+        '[Neuroplasticity] Saved %s to archive (%d rows, %d bytes, '
+        'version %s -> %s).',
+        slug,
+        row_count,
+        bytes_written,
+        previous_version,
+        new_version,
+    )
+    return {
+        'slug': slug,
+        'bytes_written': bytes_written,
+        'row_count': row_count,
+        'zip_path': str(target),
+        'previous_version': previous_version,
+        'new_version': new_version,
+        'backup_path': str(backup_path) if backup_path else None,
+    }
+
+
+def _missing_entry_modules(code_dir: Path, entry_modules: list) -> list:
+    """Return the subset of ``entry_modules`` not findable under
+    ``code_dir`` as either ``<name>/__init__.py`` or ``<name>.py``.
+
+    Empty list = all modules accounted for, save is safe to proceed.
+    """
+    missing: list = []
+    if not entry_modules:
+        return missing
+    if not code_dir.exists():
+        return list(entry_modules)
+    for module_name in entry_modules:
+        package_init = code_dir / module_name / '__init__.py'
+        single_module = code_dir / '{0}.py'.format(module_name)
+        if package_init.exists() or single_module.exists():
+            continue
+        missing.append(module_name)
+    return missing
+
+
+def _verify_staged_archive(
+    staging_path: Path, slug: str, entry_modules: list
+) -> None:
+    """Re-open the staged zip with ``zipfile`` to confirm it's valid
+    and that the declared entry_modules are present under
+    ``<slug>/code/``. Raises ``ValueError`` on any failure — the caller
+    is in a try/except that nukes the staged file before re-raising.
+    """
+    try:
+        with zipfile.ZipFile(staging_path) as zf:
+            names = set(zf.namelist())
+    except zipfile.BadZipFile as exc:
+        raise ValueError(
+            '[Neuroplasticity] Staged archive failed re-open '
+            'validation: {0}'.format(exc)
+        )
+
+    missing: list = []
+    for module_name in entry_modules:
+        package_init = '{0}/code/{1}/__init__.py'.format(slug, module_name)
+        single_module = '{0}/code/{1}.py'.format(slug, module_name)
+        if package_init in names or single_module in names:
+            continue
+        missing.append(module_name)
+    if missing:
+        raise ValueError(
+            '[Neuroplasticity] Staged archive is missing entry_modules '
+            '{0} under {1}/code/. Save aborted before catalog replace.'.format(
+                missing, slug
+            )
+        )
+
+
+def iter_installed_bundles() -> Iterable[NeuralModifier]:
+    """Yield every NeuralModifier whose status is INSTALLED."""
+    return NeuralModifier.objects.filter(
+        status_id=NeuralModifierStatus.INSTALLED,
     )
 
 
 def boot_bundles() -> None:
-    """AppConfig.ready() hook. Re-imports entry modules; flips BROKEN on drift.
-
-    Walks every directory under the grafts root. For each bundle whose
-    NeuralModifier row exists and is INSTALLED/ENABLED, verifies
-    manifest_hash matches disk, then puts code/ on sys.path and imports
-    entry_modules.
-
-    Does NOT re-load modifier_data.json. Data load only happens at install.
-
-    Silently returns if the neuralmodifier table doesn't exist yet (pre-migrate
-    state, e.g. inside `manage.py migrate` or test-DB setup).
-    """
+    """AppConfig-hook driven re-import pass; flips BROKEN on drift."""
     runtime = grafts_root()
     if not runtime.exists():
         return
@@ -603,6 +841,21 @@ def boot_bundles() -> None:
         return
 
     by_slug = {m.slug: m for m in bootable}
+
+    # Orphan sweep: remove any runtime dir that no longer has a DB
+    # row. Uninstall defers disk cleanup to here so it runs in a
+    # fresh process with empty sys.modules — Windows file locks from
+    # the prior process are gone. Real rmtree, loud on failure.
+    for bundle_dir in sorted(runtime.iterdir()):
+        if not bundle_dir.is_dir() or bundle_dir.name in by_slug:
+            continue
+        try:
+            shutil.rmtree(bundle_dir)
+        except Exception:
+            logger.exception(
+                '[Neuroplasticity] Orphan sweep failed for %s',
+                bundle_dir,
+            )
 
     for bundle_dir in sorted(runtime.iterdir()):
         if not bundle_dir.is_dir():
@@ -650,17 +903,19 @@ def _boot_one(bundle_dir: Path, modifier: NeuralModifier) -> None:
 def _get_or_create_modifier(
     slug: str, manifest: dict, manifest_hash: str
 ) -> NeuralModifier:
-    """Reuse an existing row by slug, otherwise create one.
+    """Reuse an existing row by slug, otherwise create one with the
+    manifest-pinned UUID as PK.
 
-    The new row is created with INSTALLED status — under the
-    "AVAILABLE = no DB row" ruling there is no DISCOVERED-in-flight
-    state. If the install then fails downstream, the except branch
-    flips the row to BROKEN (for diagnostic inspection).
+    Bundles declare a stable genome UUID in their manifest; install uses
+    it as the row's PK so bundle identity is portable across machines and
+    survives uninstall/reinstall cycles. Slug-collision short-circuit
+    keeps reinstall/upgrade pointing at the same row.
     """
     modifier = NeuralModifier.objects.filter(slug=slug).first()
     if modifier is not None:
         return modifier
     return NeuralModifier.objects.create(
+        pk=uuid.UUID(manifest['genome']),
         slug=slug,
         name=manifest.get('name', slug),
         version=manifest.get('version', ''),
@@ -670,6 +925,26 @@ def _get_or_create_modifier(
         manifest_json=manifest,
         status_id=NeuralModifierStatus.INSTALLED,
     )
+
+
+def _guard_genome_uuid_collision(manifest: dict, slug: str) -> None:
+    """Refuse the install if the manifest's genome UUID is already in use
+    by a different slug. Same UUID + same slug is the upgrade/reinstall
+    path and is allowed through.
+    """
+    manifest_genome = uuid.UUID(manifest['genome'])
+    existing_slug = (
+        NeuralModifier.objects.filter(pk=manifest_genome)
+        .exclude(slug=slug)
+        .values_list('slug', flat=True)
+        .first()
+    )
+    if existing_slug is not None:
+        raise ValueError(
+            '[Neuroplasticity] Manifest genome {0} is already used by '
+            'installed bundle {1!r}; refusing to install {2!r} onto the '
+            'same UUID.'.format(manifest_genome, existing_slug, slug)
+        )
 
 
 def _validate_manifest(manifest: dict) -> None:
@@ -693,6 +968,19 @@ def _validate_manifest(manifest: dict) -> None:
         raise ValueError(
             '[Neuroplasticity] Manifest version {0!r} is not valid semver: '
             '{1}'.format(manifest['version'], exc)
+        )
+    genome_value = manifest['genome']
+    if not isinstance(genome_value, str):
+        raise ValueError(
+            '[Neuroplasticity] Manifest genome must be a UUID string; got '
+            '{0!r}.'.format(type(genome_value).__name__)
+        )
+    try:
+        uuid.UUID(genome_value)
+    except (ValueError, AttributeError, TypeError) as exc:
+        raise ValueError(
+            '[Neuroplasticity] Manifest genome {0!r} is not a valid UUID: '
+            '{1}'.format(genome_value, exc)
         )
     _validate_requires(manifest.get('requires', []))
 
@@ -723,22 +1011,14 @@ def _validate_requires(requires: list) -> None:
 
 
 def _check_requires(manifest: dict) -> None:
-    """Raise ValueError if any declared requirement is unmet.
-
-    Requirements resolve against installed NeuralModifier rows — BROKEN
-    is treated as not-installed for this check.
-    """
+    """Raise ValueError if any declared requirement is unmet."""
     requires = manifest.get('requires', [])
     if not requires:
         return
     installed = {
         m.slug: m
         for m in NeuralModifier.objects.filter(
-            status_id__in=(
-                NeuralModifierStatus.INSTALLED,
-                NeuralModifierStatus.ENABLED,
-                NeuralModifierStatus.DISABLED,
-            )
+            status_id=NeuralModifierStatus.INSTALLED,
         )
     }
     missing = []
@@ -795,27 +1075,86 @@ def _import_entry_modules(entry_modules: Iterable[str]) -> None:
         importlib.import_module(module_name)
 
 
-def _load_modifier_data(
-    modifier: NeuralModifier, data_path: Path
-) -> int:
-    """Deserialize a bundle's modifier_data.json with contribution tracking.
+def _load_modifier_data(modifier: NeuralModifier, data_path: Path) -> int:
+    """Deserialize modifier_data.json; stamp ``genome`` on owned rows.
 
-    Each row is saved with its serialized PK preserved, then recorded as
-    a NeuralModifierContribution row pointing back at the new object.
+    Every row whose model inherits ``GenomeOwnedMixin`` gets
+    ``genome_id`` set to the installing modifier's PK before save.
+    Rows in other models (pure link tables, etc.) load as-is. The
+    returned count is the total number of saved rows, regardless of
+    ownership flag.
+
+    Collision guard: for each GenomeOwnedMixin row, if the target PK
+    already exists and is owned by canonical, another bundle, or a
+    user (NULL), the install is refused with a clear error. Same-slug
+    reinstalls are allowed through because the existing row's genome
+    already points at this modifier. This stops the old
+    silent-overwrite-and-stamp path that destroyed unrelated work
+    when a bundle's PK happened to collide.
     """
     payload = data_path.read_text()
     count = 0
     for deserialized in serializers.deserialize('json', payload):
-        deserialized.save()
         target = deserialized.object
-        ct = ContentType.objects.get_for_model(type(target))
-        NeuralModifierContribution.objects.create(
-            neural_modifier=modifier,
-            content_type=ct,
-            object_id=target.pk,
-        )
+        if isinstance(target, GenomeOwnedMixin):
+            _guard_install_collision(target, modifier)
+            target.genome_id = modifier.pk
+        deserialized.save()
         count += 1
     return count
+
+
+def _guard_install_collision(
+    target: 'GenomeOwnedMixin', modifier: NeuralModifier
+) -> None:
+    """Raise if ``target.pk`` is already owned by anyone but this bundle.
+
+    Called per-row inside the install / upgrade deserialize loop.
+    The existing row's ``genome_id`` decides the verdict:
+
+    * matches the installing modifier — OK (same-slug reinstall /
+      upgrade's own-row update).
+    * equals ``NeuralModifier.CANONICAL`` — refuse. Bundles must not
+      overwrite core-shipped rows.
+    * equals ``NeuralModifier.INCUBATOR`` — refuse. Bundles must not
+      overwrite rows the user created in the default workspace.
+    * points at any other ``NeuralModifier`` — refuse. Bundles must
+      not overwrite rows another bundle already owns.
+    """
+    model = type(target)
+    existing_genome_id = (
+        model.objects.filter(pk=target.pk)
+        .values_list('genome_id', flat=True)
+        .first()
+    )
+    if existing_genome_id is None:
+        # genome is NOT NULL at the schema level, so a None result here
+        # means the row itself is absent — fresh insert.
+        return
+    if existing_genome_id == modifier.pk:
+        return
+    if existing_genome_id == NeuralModifier.INCUBATOR:
+        owner_label = 'user'
+    elif existing_genome_id == NeuralModifier.CANONICAL:
+        owner_label = repr(NeuralModifier.CANONICAL_SLUG)
+    else:
+        existing_slug = (
+            NeuralModifier.objects.filter(pk=existing_genome_id)
+            .values_list('slug', flat=True)
+            .first()
+        )
+        owner_label = repr(existing_slug) if existing_slug else 'unknown-bundle'
+
+    raise RuntimeError(
+        '[Neuroplasticity] Refusing to overwrite {0}.{1} PK {2} owned '
+        'by {3} while installing {4!r}.'.format(
+            model._meta.app_label,
+            model._meta.model_name,
+            target.pk,
+            owner_label,
+            modifier.slug,
+        )
+    )
 
 
 def _log_event(
@@ -853,12 +1192,7 @@ def _flip_broken_with_event(
 def _extract_archive_into(
     archive_path: Path, extraction_dir: Path, slug: str
 ) -> Path:
-    """Extract ``archive_path`` into ``extraction_dir`` and return the slug dir.
-
-    The archive's single top-level directory is renamed to the canonical
-    ``<slug>`` if it doesn't already match, so downstream code can trust
-    the path shape.
-    """
+    """Extract ``archive_path`` into ``extraction_dir`` and return the slug dir."""
     import zipfile
 
     with zipfile.ZipFile(archive_path) as zf:
@@ -877,20 +1211,7 @@ def _extract_archive_into(
 
 
 def install_bundle_from_archive(archive_path: Path) -> NeuralModifier:
-    """Install a bundle from a zip on disk.
-
-    Extracts the zip into a fresh ``tempfile.mkdtemp`` under
-    ``operating_room/``, runs the normal install against the extraction,
-    then nukes the tempdir in a ``finally`` block — success or failure.
-    The zip stays where it was; it IS the bundle.
-
-    The zip must contain a single top-level directory; the manifest at
-    ``<top>/manifest.json`` is the authority on the slug.
-
-    Raises:
-        ValueError: zip has bad shape or missing/invalid manifest.
-        FileExistsError: a runtime dir for that slug already exists.
-    """
+    """Install a bundle from a zip on disk."""
     archive_path = Path(archive_path)
     if not archive_path.exists():
         raise FileNotFoundError(
@@ -916,36 +1237,128 @@ def install_bundle_from_archive(archive_path: Path) -> NeuralModifier:
             shutil.rmtree(extraction, ignore_errors=True)
 
 
-def bundle_impact(slug: str) -> dict:
-    """Contribution-count breakdown for a bundle, used by the uninstall preview.
+def bundle_uninstall_preview(slug: str) -> dict:
+    """Full cascade tree for an uninstall, built via ``Collector.collect()``.
 
-    Returns::
+    Gathers every row the bundle directly owns (``genome=modifier`` across
+    the GenomeOwnedMixin consumers), feeds them into a
+    ``django.db.models.deletion.Collector`` — the same collector Django
+    admin uses for its delete-confirmation page — and returns the walked
+    tree as::
 
         {
           'slug': str,
-          'contribution_count': int,
-          'breakdown': [{'content_type': 'app.model', 'count': N}, ...],
+          'row_count': int,
+          'direct':    [{...}, ...],  # rows the bundle owns
+          'cascade':   [{...}, ...],  # rows CASCADE removes with them
+          'set_null':  [{...}, ...],  # rows whose FK gets nulled
+          'protected': [{...}, ...],  # rows that would PROTECT-block
         }
+
+    Each entry is ``{app_label, model, pk, name_or_repr, reason}``.
+    The UI renders the full tree in the confirmation dialog — Michael's
+    explicit ask: show, like Django admin does.
     """
     modifier = NeuralModifier.objects.get(slug=slug)
-    qs = (
-        modifier.contributions
-        .values('content_type__app_label', 'content_type__model')
-        .annotate(count=Count('id'))
-        .order_by('content_type__app_label', 'content_type__model')
-    )
-    breakdown = [
-        {
-            'content_type': '{0}.{1}'.format(
-                row['content_type__app_label'], row['content_type__model']
-            ),
-            'count': row['count'],
-        }
-        for row in qs
-    ]
-    total = modifier.contributions.count()
+
+    direct_keys: set = set()
+    per_model: dict = {}
+    for model in iter_genome_owned_models():
+        bucket = list(model.objects.filter(genome=modifier))
+        if not bucket:
+            continue
+        per_model[model] = bucket
+        for obj in bucket:
+            direct_keys.add((type(obj), obj.pk))
+
+    collector = Collector(using=router.db_for_write(NeuralModifier))
+    protected_entries: list = []
+    try:
+        # Collector.collect assumes a homogeneous list — it keys off
+        # the first instance's model. Call it per-model so every bucket
+        # contributes its own forward walk to the same collector state.
+        for bucket in per_model.values():
+            collector.collect(bucket)
+    except ProgrammingError:
+        raise
+    except Exception as exc:
+        # Collector raises django.db.models.deletion.ProtectedError (and
+        # RestrictedError) when a PROTECT/RESTRICT edge blocks the
+        # delete. Harvest the blocking rows and surface them rather
+        # than re-raise — the caller renders a full dialog, not a 500.
+        blockers = getattr(exc, 'protected_objects', None) or getattr(
+            exc, 'restricted_objects', None
+        )
+        if blockers is None:
+            raise
+        for obj in blockers:
+            protected_entries.append(_row_entry(obj, reason='protected'))
+
+    direct_entries: list = []
+    cascade_entries: list = []
+    for model, instances in collector.data.items():
+        for obj in instances:
+            entry = _row_entry(
+                obj,
+                reason=(
+                    'direct' if (model, obj.pk) in direct_keys else 'cascade'
+                ),
+            )
+            if (model, obj.pk) in direct_keys:
+                direct_entries.append(entry)
+            else:
+                cascade_entries.append(entry)
+
+    # fast_deletes hold QuerySets Collector intends to bulk-delete
+    # without fetching instances — these are still real cascades that
+    # need to show in the preview.
+    for qs in collector.fast_deletes:
+        for obj in qs:
+            cascade_entries.append(_row_entry(obj, reason='cascade'))
+
+    set_null_entries: list = []
+    # Collector.field_updates shape is
+    # ``{(field, value): [iterable_of_instances, ...]}``. Each list entry
+    # is itself a QuerySet or instance list, so iterate twice.
+    for (field, _value), buckets in collector.field_updates.items():
+        for bucket in buckets:
+            for obj in bucket:
+                set_null_entries.append(
+                    _row_entry(
+                        obj,
+                        reason='set_null:{0}'.format(field.name),
+                    )
+                )
+
+    for bucket in (
+        direct_entries,
+        cascade_entries,
+        set_null_entries,
+        protected_entries,
+    ):
+        bucket.sort(key=lambda row: (row['model'], str(row['pk'])))
+
     return {
         'slug': slug,
-        'contribution_count': total,
-        'breakdown': breakdown,
+        'row_count': len(direct_entries),
+        'direct': direct_entries,
+        'cascade': cascade_entries,
+        'set_null': set_null_entries,
+        'protected': protected_entries,
+    }
+
+
+def _row_entry(obj, *, reason: str) -> dict:
+    """Serialize one row for the uninstall-preview payload."""
+    model = type(obj)
+    name = getattr(obj, 'name', None)
+    label = str(name) if name else repr(obj)
+    return {
+        'app_label': model._meta.app_label,
+        'model': '{0}.{1}'.format(
+            model._meta.app_label, model._meta.model_name
+        ),
+        'pk': str(obj.pk),
+        'name_or_repr': label,
+        'reason': reason,
     }

@@ -3,6 +3,7 @@ from django.db import models
 from common.constants import STANDARD_CHARFIELD_LENGTH
 from common.models import CreatedAndModifiedWithDelta, NameMixin, UUIDIdMixin
 from identity.models import Identity, IdentityDisc
+from neuroplasticity.genome_mixin import GenomeOwnedMixin
 
 
 class Shift(NameMixin):
@@ -33,7 +34,7 @@ class ShiftDefaultParticipant(models.Model):
         return f'{self.participant} - {self.shift}'
 
 
-class IterationDefinition(UUIDIdMixin, NameMixin):
+class IterationDefinition(UUIDIdMixin, NameMixin, GenomeOwnedMixin):
     pass
 
 

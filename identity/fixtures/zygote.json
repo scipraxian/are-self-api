@@ -17,7 +17,8 @@
       "addons": [
         "453a673d-f378-4cb3-852b-2f0fe94b38f7"
       ],
-      "enabled_tools": []
+      "enabled_tools": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   },
   {
@@ -47,7 +48,8 @@
         "453a673d-f378-4cb3-852b-2f0fe94b38f7"
       ],
       "enabled_tools": [],
-      "memories": []
+      "memories": [],
+      "genome": "8192d7fd-2d20-4109-9c7c-45121e89f1dd"
     }
   }
 ]

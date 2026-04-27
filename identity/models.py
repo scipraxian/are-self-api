@@ -15,6 +15,7 @@ from common.models import (
 )
 from frontal_lobe.models import ReasoningTurn
 from hippocampus.models import Engram
+from neuroplasticity.genome_mixin import GenomeOwnedMixin
 from parietal_lobe.models import ToolDefinition
 
 
@@ -27,7 +28,7 @@ class IdentityAddonPhase(NameMixin):
     TERMINAL = 4  # YOUR MOVE
 
 
-class IdentityAddon(UUIDIdMixin, NameMixin, DescriptionMixin):
+class IdentityAddon(UUIDIdMixin, NameMixin, DescriptionMixin, GenomeOwnedMixin):
     """These are the different addons that can be applied to a persona."""
 
     phase = models.ForeignKey(
@@ -120,7 +121,7 @@ class IdentityBudget(NameMixin):
     )
 
 
-class IdentityFields(models.Model):
+class IdentityFields(GenomeOwnedMixin):
     """These are the details used to represent a persona."""
 
     identity_type = models.ForeignKey(
