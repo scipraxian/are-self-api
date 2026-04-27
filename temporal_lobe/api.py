@@ -28,6 +28,7 @@ from temporal_lobe.temporal_lobe import (
     fetch_canonical_temporal_pathway,
     trigger_temporal_metronomes,
 )
+from neuroplasticity.serializer_mixins import GenomeMoveRestartMixin
 
 
 # DEPRECIATED
@@ -352,7 +353,7 @@ class ShiftViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
 
 
-class IterationDefinitionViewSet(viewsets.ModelViewSet):
+class IterationDefinitionViewSet(GenomeMoveRestartMixin, viewsets.ModelViewSet):
     """Provides the UI with the available blueprints for Inception. Supports editing
     definition participants (slot_disc / remove_disc) and incepting a new iteration.
     """

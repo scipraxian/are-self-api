@@ -23,9 +23,10 @@ from identity.serializers import (
     IdentityTagSerializer,
     IdentityTypeSerializer,
 )
+from neuroplasticity.serializer_mixins import GenomeMoveRestartMixin
 
 
-class IdentityViewSet(viewsets.ModelViewSet):
+class IdentityViewSet(GenomeMoveRestartMixin, viewsets.ModelViewSet):
     """
     The Foundry: Read-only access to base Identity templates.
     """
@@ -48,7 +49,7 @@ class IdentityViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class IdentityDiscViewSet(viewsets.ModelViewSet):
+class IdentityDiscViewSet(GenomeMoveRestartMixin, viewsets.ModelViewSet):
     """
     The Barracks: Full CRUD access to the stateful, leveled-up AI instances.
     """
@@ -92,7 +93,7 @@ class IdentityDiscViewSet(viewsets.ModelViewSet):
         })
 
 
-class IdentityAddonViewSet(viewsets.ModelViewSet):
+class IdentityAddonViewSet(GenomeMoveRestartMixin, viewsets.ModelViewSet):
     queryset = IdentityAddon.objects.all().order_by('name')
     serializer_class = IdentityAddonSerializer
 

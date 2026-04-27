@@ -23,6 +23,7 @@ from environments.serializers import (
 from neuroplasticity.serializer_mixins import (
     GenomeDisplayMixin,
     GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
 )
 
 
@@ -32,14 +33,26 @@ class CNSTagSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 
-class EffectorLightSerializer(GenomeDisplayMixin, serializers.ModelSerializer):
+class EffectorLightSerializer(
+    GenomeWritableMixin, GenomeDisplayMixin, serializers.ModelSerializer
+):
     class Meta:
         model = Effector
-        fields = ['id', 'name', 'description', 'distribution_mode', 'genome_slug']
+        fields = [
+            'id',
+            'name',
+            'description',
+            'distribution_mode',
+            'genome',
+            'genome_slug',
+        ]
 
 
 class EffectorArgumentAssignmentSerializer(
-    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+    GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
+    GenomeDisplayMixin,
+    serializers.ModelSerializer,
 ):
     argument_detail = ExecutableArgumentSerializer(
         source='argument', read_only=True
@@ -53,16 +66,27 @@ class EffectorArgumentAssignmentSerializer(
             'argument',
             'order',
             'argument_detail',
+            'genome',
             'genome_slug',
         ]
 
 
 class EffectorContextSerializer(
-    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+    GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
+    GenomeDisplayMixin,
+    serializers.ModelSerializer,
 ):
     class Meta:
         model = EffectorContext
-        fields = ['id', 'effector', 'key', 'value', 'genome_slug']
+        fields = [
+            'id',
+            'effector',
+            'key',
+            'value',
+            'genome',
+            'genome_slug',
+        ]
 
 
 class CNSDistributionModeSerializer(serializers.ModelSerializer):
@@ -72,7 +96,10 @@ class CNSDistributionModeSerializer(serializers.ModelSerializer):
 
 
 class EffectorDetailSerializer(
-    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+    GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
+    GenomeDisplayMixin,
+    serializers.ModelSerializer,
 ):
     """
     Full serializer for the Effector Editor page.
@@ -118,6 +145,7 @@ class EffectorDetailSerializer(
             'tags',
             'is_favorite',
             'rendered_full_command',
+            'genome',
             'genome_slug',
         ]
 
@@ -130,7 +158,10 @@ class EffectorDetailSerializer(
 
 
 class AxonSerializer(
-    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+    GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
+    GenomeDisplayMixin,
+    serializers.ModelSerializer,
 ):
     type_name = serializers.CharField(source='type.name', read_only=True)
 
@@ -143,12 +174,16 @@ class AxonSerializer(
             'target',
             'type',
             'type_name',
+            'genome',
             'genome_slug',
         ]
 
 
 class NeuronSerializer(
-    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+    GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
+    GenomeDisplayMixin,
+    serializers.ModelSerializer,
 ):
     effector_name = serializers.CharField(
         source='effector.name', read_only=True
@@ -183,12 +218,16 @@ class NeuronSerializer(
             'distribution_mode_name',
             'environment',
             'environment_name',
+            'genome',
             'genome_slug',
         ]
 
 
 class NeuralPathwaySerializer(
-    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+    GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
+    GenomeDisplayMixin,
+    serializers.ModelSerializer,
 ):
     tags = CNSTagSerializer(many=True, read_only=True)
     environment = serializers.PrimaryKeyRelatedField(
@@ -211,6 +250,7 @@ class NeuralPathwaySerializer(
             'ui_json',
             'environment',
             'environment_name',
+            'genome',
             'genome_slug',
         ]
 

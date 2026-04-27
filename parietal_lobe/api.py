@@ -1,5 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 
+from neuroplasticity.serializer_mixins import GenomeMoveRestartMixin
+
 from .models import (
     ParameterEnum,
     ToolCall,
@@ -30,24 +32,24 @@ class ToolUseTypeViewSet(ModelViewSet):
     serializer_class = ToolUseTypeSerializer
 
 
-class ToolDefinitionViewSet(ModelViewSet):
+class ToolDefinitionViewSet(GenomeMoveRestartMixin, ModelViewSet):
     queryset = ToolDefinition.objects.select_related('use_type').all()
     serializer_class = ToolDefinitionSerializer
 
 
-class ToolParameterViewSet(ModelViewSet):
+class ToolParameterViewSet(GenomeMoveRestartMixin, ModelViewSet):
     queryset = ToolParameter.objects.select_related('type').all()
     serializer_class = ToolParameterSerializer
 
 
-class ToolParameterAssignmentViewSet(ModelViewSet):
+class ToolParameterAssignmentViewSet(GenomeMoveRestartMixin, ModelViewSet):
     queryset = ToolParameterAssignment.objects.select_related(
         'tool', 'parameter'
     ).all()
     serializer_class = ToolParameterAssignmentSerializer
 
 
-class ParameterEnumViewSet(ModelViewSet):
+class ParameterEnumViewSet(GenomeMoveRestartMixin, ModelViewSet):
     queryset = ParameterEnum.objects.select_related('parameter').all()
     serializer_class = ParameterEnumSerializer
 

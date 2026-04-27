@@ -3,7 +3,7 @@
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from django.db import models
+from django.db import models, transaction
 
 import environments
 from common.constants import STANDARD_CHARFIELD_LENGTH
@@ -184,6 +184,21 @@ class Effector(
         default=CNSDistributionModeID.LOCAL_SERVER,
     )
 
+    def save(self, *args, **kwargs):
+        old_genome_id = None
+        if self.pk and not self._state.adding:
+            old_genome_id = type(self).objects.filter(pk=self.pk).values_list(
+                'genome_id', flat=True,
+            ).first()
+        super().save(*args, **kwargs)
+        if old_genome_id is None or old_genome_id == self.genome_id:
+            return
+        with transaction.atomic():
+            self.effectorcontext_set.all().update(genome_id=self.genome_id)
+            self.effectorargumentassignment_set.all().update(
+                genome_id=self.genome_id,
+            )
+
     def get_full_command(
         self,
         environment: Optional['environments.models.ProjectEnvironment'] = None,
@@ -299,6 +314,22 @@ class NeuralPathway(
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        old_genome_id = None
+        if self.pk and not self._state.adding:
+            old_genome_id = type(self).objects.filter(pk=self.pk).values_list(
+                'genome_id', flat=True,
+            ).first()
+        super().save(*args, **kwargs)
+        if old_genome_id is None or old_genome_id == self.genome_id:
+            return
+        with transaction.atomic():
+            self.neurons.all().update(genome_id=self.genome_id)
+            self.axons.all().update(genome_id=self.genome_id)
+            NeuronContext.objects.filter(neuron__pathway=self).update(
+                genome_id=self.genome_id,
+            )
 
 
 class Neuron(UUIDIdMixin, ProjectEnvironmentMixin, GenomeOwnedMixin):

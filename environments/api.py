@@ -3,6 +3,8 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from neuroplasticity.serializer_mixins import GenomeMoveRestartMixin
+
 from .models import (
     ContextVariable,
     Executable,
@@ -23,7 +25,7 @@ from .serializers import (
 )
 
 
-class ProjectEnvironmentViewSet(viewsets.ModelViewSet):
+class ProjectEnvironmentViewSet(GenomeMoveRestartMixin, viewsets.ModelViewSet):
     """
     Manages Project Contexts.
     MCP Usage: List to find environments, POST to 'select' to switch active context.
@@ -55,7 +57,7 @@ class ProjectEnvironmentViewSet(viewsets.ModelViewSet):
         return Response({'status': f'Active Environment set to: {env.name}'})
 
 
-class ExecutableViewSet(viewsets.ModelViewSet):
+class ExecutableViewSet(GenomeMoveRestartMixin, viewsets.ModelViewSet):
     """
     Registry of Tools/Executables — full CRUD for the Effector Editor.
     """
@@ -73,13 +75,13 @@ class ExecutableViewSet(viewsets.ModelViewSet):
     serializer_class = ExecutableSerializer
 
 
-class ContextVariableViewSet(viewsets.ModelViewSet):
+class ContextVariableViewSet(GenomeMoveRestartMixin, viewsets.ModelViewSet):
     queryset = ContextVariable.objects.all().select_related('key')
     serializer_class = ContextVariableSerializer
     filterset_fields = ['environment']
 
 
-class ContextKeyViewSet(viewsets.ModelViewSet):
+class ContextKeyViewSet(GenomeMoveRestartMixin, viewsets.ModelViewSet):
     queryset = ProjectEnvironmentContextKey.objects.all().order_by('name')
     serializer_class = ProjectEnvironmentContextKeySerializer
 
@@ -89,7 +91,7 @@ class EnvironmentStatusViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectEnvironmentStatusSerializer
 
 
-class ExecutableArgumentViewSet(viewsets.ModelViewSet):
+class ExecutableArgumentViewSet(GenomeMoveRestartMixin, viewsets.ModelViewSet):
     """
     CRUD for standalone argument definitions.
     These are the reusable argument templates that get assigned to Executables/Effectors.
@@ -99,7 +101,9 @@ class ExecutableArgumentViewSet(viewsets.ModelViewSet):
     serializer_class = ExecutableArgumentSerializer
 
 
-class ExecutableArgumentAssignmentViewSet(viewsets.ModelViewSet):
+class ExecutableArgumentAssignmentViewSet(
+    GenomeMoveRestartMixin, viewsets.ModelViewSet
+):
     """
     CRUD for the join table linking arguments to executables (with order).
     Filterable by executable FK.

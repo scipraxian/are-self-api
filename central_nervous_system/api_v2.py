@@ -32,6 +32,7 @@ from central_nervous_system.serializers_v2 import (
     SpikeDetailSerializer,
     SpikeTrainSerializer,
 )
+from neuroplasticity.serializer_mixins import GenomeMoveRestartMixin
 
 
 class SpikeTrainViewSetV2(viewsets.ModelViewSet):
@@ -102,7 +103,7 @@ class SpikeViewSetV2(viewsets.ReadOnlyModelViewSet):
     ordering_fields = '__all__'
 
 
-class NeuralPathwayViewSetV2(viewsets.ModelViewSet):
+class NeuralPathwayViewSetV2(GenomeMoveRestartMixin, viewsets.ModelViewSet):
     """
     CNS Editor: If retrieving a list, gets light metadata.
     If retrieving one by ID, fetches the entire node/wire topology.
@@ -129,11 +130,15 @@ class NeuralPathwayViewSetV2(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         pathway = serializer.save()
         # Every new pathway gets a Begin Play root neuron automatically.
+        # Mirror the pathway's genome so the auto-created neuron lands
+        # in the same workspace bundle the user just created the pathway
+        # under — otherwise it would default to INCUBATOR and diverge.
         Neuron.objects.create(
             pathway=pathway,
             effector_id=Effector.BEGIN_PLAY,
             is_root=True,
             ui_json='{"x": 100, "y": 200}',
+            genome=pathway.genome,
         )
 
     @action(detail=True, methods=['post'])
@@ -197,7 +202,7 @@ class NeuralPathwayViewSetV2(viewsets.ModelViewSet):
         return response
 
 
-class NeuronViewSetV2(viewsets.ModelViewSet):
+class NeuronViewSetV2(GenomeMoveRestartMixin, viewsets.ModelViewSet):
     """
     React Canvas Hook: Directly mutate Nodes (Neurons)
     e.g., PATCH {"ui_json": "{\"x\": 250, \"y\": 150}"}
@@ -207,7 +212,7 @@ class NeuronViewSetV2(viewsets.ModelViewSet):
     serializer_class = NeuronSerializer
 
 
-class AxonViewSetV2(viewsets.ModelViewSet):
+class AxonViewSetV2(GenomeMoveRestartMixin, viewsets.ModelViewSet):
     """
     React Canvas Hook: Directly mutate Edges (Wires)
     """
@@ -216,7 +221,7 @@ class AxonViewSetV2(viewsets.ModelViewSet):
     serializer_class = AxonSerializer
 
 
-class EffectorViewSetV2(viewsets.ModelViewSet):
+class EffectorViewSetV2(GenomeMoveRestartMixin, viewsets.ModelViewSet):
     """
     Effector CRUD: Light list for the palette, full detail for the editor.
     """
@@ -246,7 +251,7 @@ class EffectorViewSetV2(viewsets.ModelViewSet):
         return EffectorLightSerializer
 
 
-class EffectorContextViewSetV2(viewsets.ModelViewSet):
+class EffectorContextViewSetV2(GenomeMoveRestartMixin, viewsets.ModelViewSet):
     """CRUD for EffectorContext key/value pairs."""
 
     queryset = EffectorContext.objects.all()
@@ -254,7 +259,9 @@ class EffectorContextViewSetV2(viewsets.ModelViewSet):
     filterset_fields = ['effector']
 
 
-class EffectorArgumentAssignmentViewSetV2(viewsets.ModelViewSet):
+class EffectorArgumentAssignmentViewSetV2(
+    GenomeMoveRestartMixin, viewsets.ModelViewSet
+):
     """
     CRUD for the join table linking arguments to effectors (with order).
     Filterable by effector FK.

@@ -147,6 +147,12 @@ that can be null (consistency with the existing codebase). Use built-in generics
 Standard library, then blank line, then third-party, then blank line, then Django, then blank line, then project
 imports. Within each group, alphabetical. `isort` compatible.
 
+**Module-level only.** No function-scoped, method-scoped, or inline imports. Every import
+lives at the top of the file in the grouped block above. Same shape as the no-nested-functions
+rule: if a circular import forces a local import, the structure is wrong — fix the structure.
+A local import is almost always a sign that the file wasn't read carefully enough to see the
+real coupling.
+
 ## Docstrings
 
 Google style. Classes always get a docstring. Public methods get a docstring if the behavior isn't obvious from the name

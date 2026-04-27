@@ -97,7 +97,14 @@ class ModifierApiSmokeTest(ModifierLifecycleTestCase, APITestCase):
         res = self.client.post('/api/v2/neural-modifiers/ui_delta/uninstall/')
 
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.json(), {'slug': 'ui_delta', 'uninstalled': True})
+        self.assertEqual(
+            res.json(),
+            {
+                'slug': 'ui_delta',
+                'uninstalled': True,
+                'restart_imminent': True,
+            },
+        )
         self.assertFalse(
             NeuralModifier.objects.filter(slug='ui_delta').exists()
         )

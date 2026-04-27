@@ -96,7 +96,8 @@
       "license": "MIT",
       "manifest_hash": "",
       "manifest_json": {},
-      "status": 2
+      "status": 2,
+      "selected_for_edit": false
     }
   },
   {
@@ -112,7 +113,8 @@
       "license": "MIT",
       "manifest_hash": "",
       "manifest_json": {},
-      "status": 2
+      "status": 2,
+      "selected_for_edit": true
     }
   }
 ]

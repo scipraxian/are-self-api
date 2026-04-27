@@ -14,7 +14,7 @@ from pathlib import Path
 
 from asgiref.sync import async_to_sync
 from django.http import Http404
-from rest_framework import status, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
@@ -97,11 +97,20 @@ def _save_upload_to_catalog(uploaded_file) -> Path:
     return target
 
 
-class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
-    """Read-only viewset; mutations flow through action endpoints."""
+class NeuralModifierViewSet(
+    mixins.UpdateModelMixin, viewsets.ReadOnlyModelViewSet
+):
+    """Read-only viewset; mutations flow through action endpoints.
+
+    The single exception is PATCH on ``selected_for_edit`` — the
+    frontend uses PATCH against the detail route to switch the active
+    workspace bundle. Every other field is read_only at the serializer
+    layer; PUT is not exposed.
+    """
 
     lookup_field = 'slug'
     parser_classes = [MultiPartParser, FormParser, JSONParser]
+    http_method_names = ['get', 'patch', 'post', 'head', 'options']
 
     def get_queryset(self):
         # Canonical is a system-tier row — it owns every core fixture row
@@ -142,6 +151,34 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
         except Http404:
             return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def partial_update(self, request, *args, **kwargs):
+        # Resolve against the unfiltered queryset so CANONICAL is reachable
+        # for the explicit 400 below — the read-only get_queryset() hides
+        # canonical and would otherwise return 404 instead.
+        slug = kwargs.get(self.lookup_field) or kwargs.get('slug')
+        modifier = NeuralModifier.objects.filter(slug=slug).first()
+        if modifier is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if (
+            modifier.pk == NeuralModifier.CANONICAL
+            and request.data.get('selected_for_edit') is True
+        ):
+            return Response(
+                {
+                    'detail': (
+                        'Canonical is read-only and cannot be the active '
+                        'edit target. Select a user bundle or the incubator.'
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer = self.get_serializer(
+            modifier, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(serializer.data)
 
     @action(detail=False, methods=['post'], url_path='create')
@@ -214,7 +251,9 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
 
         _broadcast(modifier, 'install')
         trigger_system_restart()
-        return Response(NeuralModifierDetailSerializer(modifier).data)
+        payload = NeuralModifierDetailSerializer(modifier).data
+        payload['restart_imminent'] = True
+        return Response(payload)
 
     @action(detail=True, methods=['post'], url_path='uninstall')
     def uninstall(self, request, slug=None):
@@ -228,7 +267,11 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
         _broadcast(None, 'uninstall', slug=deleted_slug)
         trigger_system_restart()
         return Response(
-            {'slug': deleted_slug, 'uninstalled': True},
+            {
+                'slug': deleted_slug,
+                'uninstalled': True,
+                'restart_imminent': True,
+            },
             status=status.HTTP_200_OK,
         )
 
@@ -370,7 +413,9 @@ class NeuralModifierViewSet(viewsets.ReadOnlyModelViewSet):
             )
         _broadcast(modifier, 'install')
         trigger_system_restart()
-        return Response(NeuralModifierDetailSerializer(modifier).data)
+        payload = NeuralModifierDetailSerializer(modifier).data
+        payload['restart_imminent'] = True
+        return Response(payload)
 
     @action(
         detail=False,

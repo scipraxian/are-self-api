@@ -82,6 +82,23 @@ class Executable(
 
         return VariableRenderer.render_string(self.executable, context)
 
+    def save(self, *args, **kwargs):
+        old_genome_id = None
+        if self.pk and not self._state.adding:
+            old_genome_id = type(self).objects.filter(pk=self.pk).values_list(
+                'genome_id', flat=True,
+            ).first()
+        super().save(*args, **kwargs)
+        if old_genome_id is None or old_genome_id == self.genome_id:
+            return
+        with transaction.atomic():
+            self.executableargumentassignment_set.all().update(
+                genome_id=self.genome_id,
+            )
+            self.executablesupplementaryfileorpath_set.all().update(
+                genome_id=self.genome_id,
+            )
+
 
 class ExecutableArgumentAssignment(UUIDIdMixin, GenomeOwnedMixin):
     executable = models.ForeignKey(Executable, on_delete=models.CASCADE)

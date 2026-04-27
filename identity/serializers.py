@@ -12,6 +12,7 @@ from hypothalamus.models import AIModelSelectionFilter
 from neuroplasticity.serializer_mixins import (
     GenomeDisplayMixin,
     GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
 )
 
 from .models import (
@@ -33,7 +34,10 @@ class ToolDefinitionSerializer(serializers.ModelSerializer):
 
 
 class IdentityAddonSerializer(
-    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+    GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
+    GenomeDisplayMixin,
+    serializers.ModelSerializer,
 ):
     class Meta:
         model = IdentityAddon
@@ -69,7 +73,10 @@ class IdentityBudgetRefSerializer(serializers.ModelSerializer):
 
 
 class IdentitySerializer(
-    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+    GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
+    GenomeDisplayMixin,
+    serializers.ModelSerializer,
 ):
     enabled_tools = ToolDefinitionSerializer(many=True, read_only=True)
     enabled_tool_ids = serializers.PrimaryKeyRelatedField(
@@ -143,7 +150,10 @@ class IdentityDiscReasoningSerializer(serializers.ModelSerializer):
 
 
 class IdentityDiscSerializer(
-    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+    GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
+    GenomeDisplayMixin,
+    serializers.ModelSerializer,
 ):
     enabled_tools = ToolDefinitionSerializer(many=True, read_only=True)
     enabled_tool_ids = serializers.PrimaryKeyRelatedField(

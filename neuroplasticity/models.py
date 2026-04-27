@@ -17,7 +17,7 @@ individual rows lives on the rows themselves (``genome`` FK from
 from typing import Optional
 from uuid import UUID
 
-from django.db import models
+from django.db import models, transaction
 
 from common.constants import STANDARD_CHARFIELD_LENGTH
 from common.models import (
@@ -118,6 +118,7 @@ class NeuralModifier(UUIDIdMixin, DefaultFieldsMixin):
     license = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
     manifest_hash = models.CharField(max_length=STANDARD_CHARFIELD_LENGTH)
     manifest_json = models.JSONField()
+    selected_for_edit = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Neural Modifier'
@@ -132,6 +133,15 @@ class NeuralModifier(UUIDIdMixin, DefaultFieldsMixin):
         never reach past it to an older log.
         """
         return self.installation_logs.order_by('-created').first()
+
+    def save(self, *args, **kwargs):
+        """Enforce Single Selection Logic"""
+        if self.selected_for_edit:
+            with transaction.atomic():
+                NeuralModifier.objects.filter(selected_for_edit=True).exclude(
+                    id=self.id
+                ).update(selected_for_edit=False)
+        super().save(*args, **kwargs)
 
 
 class NeuralModifierInstallationLog(CreatedMixin):

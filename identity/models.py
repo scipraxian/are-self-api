@@ -208,30 +208,27 @@ class IdentityDisc(
             self.vector_node.embeddings = value
             self.vector_node.save(update_fields=['embeddings'])
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Track the original state of the prompt so we know if it changes
-        self._original_prompt = self.system_prompt_template
-        self._original_type_id = self.identity_type_id
-
     def save(self, *args, **kwargs):
-        # 1. Check if this is an existing record being updated
+        # Compare against the persisted row to decide if vector regen is
+        # needed. Reading from the DB (via ``values_list``, NOT
+        # ``refresh_from_db``) avoids constructing a deferred-fields
+        # instance — Django would route that back through
+        # ``Model.__init__`` and recurse on any field this method later
+        # touches. Mirrors the genome save() fan-out pattern on
+        # NeuralPathway / Effector / Executable.
         needs_vector = False
-        if self.pk:
-            if (
-                self.system_prompt_template != self._original_prompt
-                or self.identity_type_id != self._original_type_id
+        if self.pk and not self._state.adding:
+            old = type(self).objects.filter(pk=self.pk).values_list(
+                'system_prompt_template', 'identity_type_id',
+            ).first()
+            if old is not None and (
+                self.system_prompt_template != old[0]
+                or self.identity_type_id != old[1]
             ):
                 needs_vector = True
 
-        # 2. Save the object normally first (so it gets a PK if it's new)
         super().save(*args, **kwargs)
 
-        # 3. Update the tracking state
-        self._original_prompt = self.system_prompt_template
-        self._original_type_id = self.identity_type_id
-
-        # 4. Fire the vector update if a base field changed
         if needs_vector:
             self.update_vector()
 

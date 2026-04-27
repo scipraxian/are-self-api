@@ -128,6 +128,133 @@ during the live session, with the fat payload fetched only on explicit click.
   `graph_data?since_turn_number=N` + frontend cutover pieces are still
   open above.
 
+## Recently Done — Genome architecture comprehensive + manifest-pinned bundle UUIDs (2026-04-27)
+
+Backend genome-ownership story landed end-to-end. Smoke (install +
+uninstall + URL discovery) cleared on Michael's machine.
+
+**Genome mixin everywhere bundle-extensible.** All 21 owned models
+gained `GenomeOwnedMixin` with `null=False, default=NeuralModifier.INCUBATOR`:
+
+- cns: `Effector`, `EffectorContext`, `EffectorArgumentAssignment`,
+  `NeuralPathway`, `Neuron`, `NeuronContext`, `Axon`
+- environments: `Executable`, `ExecutableArgument`, `ExecutableSwitch`,
+  `ExecutableArgumentAssignment`, `ExecutableSupplementaryFileOrPath`,
+  `ProjectEnvironment`, `ProjectEnvironmentContextKey`, `ContextVariable`
+- parietal_lobe: `ToolDefinition`, `ToolParameter`,
+  `ToolParameterAssignment`, `ParameterEnum`
+- identity: `Identity`, `IdentityAddon`, `IdentityDisc`
+- temporal_lobe: `IterationDefinition`
+
+The earlier "transit nodes are NOT GenomeOwnedMixin" stance is retired.
+Save serializes uniformly via `Model.objects.filter(genome_id=current_bundle)`
+per owned model — no per-model transit list, no walker-driven collection,
+no carve-outs. Standing rulings updated to match.
+
+**CANONICAL + INCUBATOR class constants on `NeuralModifier`.**
+
+- `CANONICAL` (`8192d7fd-2d20-4109-9c7c-45121e89f1dd`): fixture-shipped
+  baseline; git-managed; never mutated at runtime.
+- `INCUBATOR` (`1206f5a1-7ffd-4cb2-8c5a-3a9dfb5e5340`): default user
+  workspace; runtime creates land here unless an active genome is set.
+
+Both ship in `neuroplasticity/fixtures/genetic_immutables.json` at
+`status: 2` (INSTALLED). NULL is unreachable in the schema; every
+owned row resolves to one of three identities (CANONICAL / INCUBATOR /
+a bundle's UUID).
+
+**Bundle UUIDs are manifest-pinned.** Every bundle's `manifest.json`
+declares a required `"genome"` UUID. `_get_or_create_modifier` reads it
+and uses it as the `NeuralModifier` PK at install — no `uuid.uuid4()`
+generated at install time. `_validate_manifest` rejects manifests
+missing or non-UUID `genome`. Pre-install collision check refuses
+different-slug bundles claiming the same UUID. Same-slug + same-UUID
+across versions is the upgrade path. Rationale: bundle identity stable
+across machines and across bundle versions; `modifier_data.json` rows
+can carry `"genome": "<that uuid>"` and resolve on any install target.
+
+CANONICAL and INCUBATOR are documented exceptions to the
+manifest-UUID rule — system-substrate, fixture-shipped, no manifest,
+no install path.
+
+**Vestigial cascade-claim infrastructure retired.** With NULL
+unreachable, the additive-cascade-claim semantics from the morning
+of 2026-04-26 became no-op behavior. Removed:
+
+- `neuroplasticity/genome_cascade.py` (the `cascade_pathway_genome`
+  function, `GenomeCascadeConflict` exception, `reachable_genome_rows`
+  shim)
+- `neuroplasticity/tests/test_genome_cascade.py`
+- `central_nervous_system/api_v2.py` set_genome ViewSet action
+  (61 lines)
+- `central_nervous_system/serializers_v2.py` stale `/set-genome/`
+  pointer in `genome_slug` comment
+
+Surviving from the cascade machinery: `walk_genome_reach` in
+`graph_walker.py` continues backing the diagnostic
+`build_bundle_graph` (forward-only, used by the Modifier Garden read
+endpoint). `genome_slug` on the pathway serializer remains as a
+read-only mirror of the FK so the UI can still show "this pathway
+is owned by bundle X" without any walker / cascade behind it.
+
+**Fixture sweep.** CC walked every fixture file across the project,
+adding `"genome": "<CANONICAL UUID>"` to every owned-model row that
+ships with the canonical baseline. 161 rows touched across six
+fixture files (cns / environments / identity / parietal_lobe — all
+zygote and initial_phenotypes tiers); 166 rows already at CANONICAL
+(no-op). Zero non-CANONICAL conflicts surfaced.
+
+**unreal.zip surgically rebuilt.** Picked uuid4
+`3551c656-3100-4c93-bfab-1a56471339fd` for unreal's stable genome,
+declared in `manifest.json`, stamped on all 260 owned rows in
+`modifier_data.json`. Fixed the `unreal.unreal.code...` import typo
+in `spike_merge_viewset.py` (relative `from .merge_logs_nway`).
+Repacked.
+
+**Smoke result.** Install via modifier-garden lands the unreal
+NeuralModifier row at PK `3551c656-...` per the manifest. Discovery
+loop picks up `V2_GENOME_ROUTER` from the bundle's `urls.py`.
+Uninstall CASCADE-removes the bundle's owned rows; orphan sweep
+removes `grafts/unreal/` on the next boot post-restart. Clean
+round-trip.
+
+**Outstanding (not blocking):**
+
+- `loader.py:857` orphan-sweep WARNING + self-stack-trace —
+  defensive logging from earlier today's file-loss debugging,
+  earned its keep, now noise on every legitimate uninstall.
+  Downgrade to INFO and drop the trace.
+- `iter_installed_bundles()` returns CANONICAL + INCUBATOR
+  alongside real bundles (correct on `status=INSTALLED` filter,
+  conceptually noisy). One-line filter to exclude the two system
+  UUIDs would clean up call-sites that have to know about the
+  exception.
+- INCUBATOR uninstall is NOT API-protected (the modifier-garden UI
+  hides the option but the endpoint would honor an uninstall
+  request, dropping all user runtime work). Belt + suspenders fix.
+- `are-self-ui` BEGIN_PLAY inspector calls the now-removed
+  `POST /api/v2/neural-pathways/{pk}/set-genome/`. Will 404
+  until the UI restart-from-scratch pass picks up the new
+  shape: plain `PATCH /api/v2/neuralpathways/<id>/` with
+  `{"genome": "<uuid>"}` in the body. The pathway's `save()`
+  override fans the new genome out to Neurons / Axons /
+  NeuronContexts in the same transaction; the viewset
+  surfaces `restart_imminent: true` in the response and fires
+  `trigger_system_restart()`. No dedicated action endpoint —
+  same blueprint as `selected_for_edit` on `NeuralModifier`.
+  Effector and Executable promote the same way via PATCH on
+  their own V2 viewsets; leaf-row supplements (args,
+  assignments, contexts hanging off a canonical parent) PATCH
+  directly on their own viewset.
+- "Save vs. Save As" distinction in bundle CRUD verbs (in-place
+  save vs. clone-to-new-genome export — the "save my INCUBATOR
+  contents to a new bundle" pattern).
+- Test bundle (small fixture-bundle without UE specifics) to
+  exercise install/uninstall plumbing in isolation, separate
+  from the unreal bundle.
+
+---
+
 ## Recently Done — Bundle URL discovery wired (2026-04-25, late evening)
 
 Closing the loop on bundles-as-URL-route-contributors. The convention

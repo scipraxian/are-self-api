@@ -107,6 +107,32 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   and resolves via that single query. SpikeTrain / Spike /
   ReasoningSession are intentionally excluded — runtime telemetry,
   not bundle content.
+- Genome editing is plain V2 PATCH on the existing viewset, not a
+  custom action endpoint. Every owned-model V2 serializer carries
+  `GenomeWritableMixin` from `neuroplasticity/serializer_mixins.py`
+  (writable `genome` FK with refusals for canonical-as-target,
+  canonical-as-source, and non-INSTALLED targets — all 400 with
+  `{"detail": "..."}` against named string constants in that same
+  module). Every owned-model V2 viewset carries
+  `GenomeMoveRestartMixin` (fires `trigger_system_restart()` and stamps
+  `restart_imminent: true` on the response when the PATCH actually
+  changes `genome_id`; no-op otherwise). The three parents —
+  `NeuralPathway`, `Effector`, `Executable` — additionally override
+  `save()` to fan the new genome out to their direct cascade children
+  atomically: Pathway → Neurons + Axons + NeuronContexts; Effector →
+  EffectorContexts + EffectorArgumentAssignments; Executable →
+  ExecutableArgumentAssignments + ExecutableSupplementaryFileOrPath.
+  No walker. No "preserve canonical / cross-bundle / same-source"
+  policy — children are glued to their parent's genome by construction,
+  so the fan-out is unconditional. Comparison source for "did the
+  genome actually change" is a `values_list` read against the
+  persisted row, NEVER `refresh_from_db(fields=[...])` — deferred-
+  fields construction routes through `Model.__init__` and recurses on
+  any field the override later touches (the trap that bit `IdentityDisc`
+  before its 2026-04-27 `__init__` snapshot was moved into `save()`).
+  Leaf-row supplements — e.g. an `EffectorArgumentAssignment` the user
+  added to a canonical `Effector` — promote independently via PATCH
+  on their own V2 viewset since the canonical parent is read-only.
 - Bundles can ship URL routes via convention. A bundle's `urls.py` exposes
   `V2_GENOME_ROUTER` (a `routers.SimpleRouter()` with viewsets registered),
   and the V2 URL conf auto-discovers it at module-import time (iterate
@@ -480,6 +506,9 @@ Read STYLE_GUIDE.md for the full guide. Key rules for quick reference:
 
 **Functions:** No nested functions. No closures. If it doesn't use `self`, it's a
 module-level function. Classes are for state.
+
+**Imports:** Module-level only. No function-scoped or inline imports. If you hit
+a circular import, fix the structure — don't paper over it with a local import.
 
 **Error handling:** Short, targeted try/except. Catch specific exceptions. Broad
 `except Exception` only at Celery task or Frontal Lobe `run()` boundaries.

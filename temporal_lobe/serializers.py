@@ -5,6 +5,7 @@ from identity.models import Identity, IdentityDisc
 from neuroplasticity.serializer_mixins import (
     GenomeDisplayMixin,
     GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
 )
 from temporal_lobe.models import (
     Iteration,
@@ -101,7 +102,10 @@ class IterationShiftDefinitionSerializer(serializers.ModelSerializer):
 
 
 class IterationDefinitionSerializer(
-    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+    GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
+    GenomeDisplayMixin,
+    serializers.ModelSerializer,
 ):
     """Serializer for the IterationDefinition model."""
 

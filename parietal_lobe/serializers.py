@@ -4,6 +4,7 @@ from common.constants import ALL_FIELDS
 from neuroplasticity.serializer_mixins import (
     GenomeDisplayMixin,
     GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
 )
 from .models import (
     ParameterEnum,
@@ -29,7 +30,10 @@ class ToolUseTypeSerializer(serializers.ModelSerializer):
 
 
 class ToolDefinitionSerializer(
-    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+    GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
+    GenomeDisplayMixin,
+    serializers.ModelSerializer,
 ):
     class Meta:
         model = ToolDefinition
@@ -37,7 +41,10 @@ class ToolDefinitionSerializer(
 
 
 class ToolParameterSerializer(
-    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+    GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
+    GenomeDisplayMixin,
+    serializers.ModelSerializer,
 ):
     class Meta:
         model = ToolParameter
@@ -45,7 +52,10 @@ class ToolParameterSerializer(
 
 
 class ToolParameterAssignmentSerializer(
-    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+    GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
+    GenomeDisplayMixin,
+    serializers.ModelSerializer,
 ):
     class Meta:
         model = ToolParameterAssignment
@@ -53,7 +63,10 @@ class ToolParameterAssignmentSerializer(
 
 
 class ParameterEnumSerializer(
-    GenomeOwnedSerializerMixin, GenomeDisplayMixin, serializers.ModelSerializer
+    GenomeOwnedSerializerMixin,
+    GenomeWritableMixin,
+    GenomeDisplayMixin,
+    serializers.ModelSerializer,
 ):
     class Meta:
         model = ParameterEnum
