@@ -76,17 +76,22 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   `django_celery_beat` stays in `genetic_immutables`; `petri_dish.json` is
   intentionally non-empty and composes with `genetic_immutables.json` via
   the common test class.
-- Bundle ownership cascade is **additive, not exclusive**. Cascade claims
-  `genome=NULL` rows in reach for the target. Skips canonical-owned rows
-  silently (shared infrastructure — `Effector.executable` defaults to a
-  fixture-canonical UUID, every cascade naturally reaches it). Skips rows
-  owned by another bundle silently (cross-bundle references are a feature).
-  Refuses only when the **starting pathway itself** is canonical-owned.
-  Clearing reverts only rows owned by the pathway's current bundle.
-- Neuron / Axon / NeuronContext are NOT `GenomeOwnedMixin` and won't be —
-  bundle membership is transitive via the FK chain. Cascade walker steps
-  through them as transit. Save serializes them via explicit pathway-rooted
-  queries (`Neuron.objects.filter(pathway_id__in=owned_pathway_ids)` shape).
+- Cascade is Django's `on_delete=CASCADE` on the `genome` FK; no custom
+  claim/walker logic. Every bundle-extensible row carries a non-NULL
+  `genome` FK (default `NeuralModifier.INCUBATOR`), so additive
+  claim-NULL semantics are moot.
+- Every bundle's `manifest.json` declares its genome UUID under the
+  `genome` key — required, validated as a UUID at install. Install
+  uses that UUID as the `NeuralModifier` row PK so bundle identity is
+  stable across machines and across versions, and the bundle's
+  `modifier_data.json` rows can carry `"genome": "<that uuid>"` and
+  resolve on any install target. UUID-collision against a different
+  installed slug refuses loudly. **Documented exceptions:**
+  `NeuralModifier.CANONICAL` (`8192d7fd-2d20-4109-9c7c-45121e89f1dd`)
+  and `NeuralModifier.INCUBATOR`
+  (`1206f5a1-7ffd-4cb2-8c5a-3a9dfb5e5340`) are system-substrate rows,
+  fixture-shipped in `neuroplasticity/fixtures/genetic_immutables.json`,
+  with no manifest and no install path.
 - Save (`save_bundle_to_archive`) is non-destructive by construction:
   (a) refuses if `manifest['entry_modules']` aren't findable under
   `grafts/<slug>/code/` — no code-less zip ever gets written; (b) re-opens
@@ -96,14 +101,12 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   backup, preserves mtime). Save also always semver-patch-bumps the manifest
   version and mirrors the new value onto `NeuralModifier.version` and
   `manifest_json` so the saved archive round-trips through `upgrade_bundle`.
-- Save's transit-row collection is **explicit per-model queries**, not
-  walker-driven: Neuron / Axon / NeuronContext (children of owned Pathway),
-  EffectorArgumentAssignment / EffectorContext (children of owned Effector),
-  ExecutableArgumentAssignment (children of owned Executable),
-  ContextVariable (children of owned ProjectEnvironment),
-  ToolParameterAssignment / ParameterEnum (children of owned ToolDefinition
-  / ToolParameter). SpikeTrain / Spike / ReasoningSession are intentionally
-  excluded — runtime telemetry, not bundle content.
+- Save serializes every owned model uniformly via
+  `Model.objects.filter(genome_id=current_bundle)`. No per-model transit
+  carve-outs; every bundle-extensible model carries `GenomeOwnedMixin`
+  and resolves via that single query. SpikeTrain / Spike /
+  ReasoningSession are intentionally excluded — runtime telemetry,
+  not bundle content.
 - Bundles can ship URL routes via convention. A bundle's `urls.py` exposes
   `V2_GENOME_ROUTER` (a `routers.SimpleRouter()` with viewsets registered),
   and the V2 URL conf auto-discovers it at module-import time (iterate

@@ -9,30 +9,21 @@ Two callers share the traversal logic in this module:
   needed in read mode because every owned row is already a starting
   point — reverse-FK reach is redundant.
 
-* ``walk_genome_reach(starts, *, transit_reverse_fk_sources=())`` —
-  general-purpose visit walker used by the cascade (write-stamp) and
-  the save-time transit collection. Starts from a small seed set and
-  walks both forward FK / M2M and (under controlled rules) reverse FK
-  to find the seed's bundle reach.
+* ``walk_genome_reach(starts, *, reverse_fk=False)`` — general-purpose
+  visit walker used by the cascade (write-stamp). Starts from a small
+  seed set and walks forward FK / M2M; with ``reverse_fk=True`` it
+  also walks reverse-FK to ``GenomeOwnedMixin`` targets.
 
 Reach traversal rules:
 
-    * Forward FK / M2M: traverse if the target model is "walkable" —
-      either ``GenomeOwnedMixin`` or in the transit allow-list
-      (Neuron, Axon, NeuronContext). Transit nodes are non-bundle
-      models that link bundle parents (NeuralPathway) to bundle
-      children (Effector). The walker steps THROUGH them but
-      ``cascade_pathway_genome`` does not stamp them — they have no
-      ``genome`` FK to write.
-    * Reverse FK to ``GenomeOwnedMixin``: always traversed. These are
-      the source row's owned children (e.g. Effector → its
+    * Forward FK / M2M: traverse if the target model inherits
+      ``GenomeOwnedMixin`` (every bundle-extensible model carries the
+      mixin, including the former transit models Neuron / Axon /
+      NeuronContext).
+    * Reverse FK to ``GenomeOwnedMixin``: traversed when
+      ``reverse_fk=True``. These are the source row's owned children
+      (e.g. NeuralPathway → its Neurons; Effector → its
       ArgumentAssignments).
-    * Reverse FK to transit models: traversed only when the source
-      row's class is in ``transit_reverse_fk_sources``. The cascade
-      passes ``(NeuralPathway,)`` so reach descends from a Pathway
-      to its Neurons / Axons / NeuronContexts but does NOT later
-      reverse-walk from an Effector back to other Neurons in
-      neighbouring user content.
     * The ``genome`` FK itself is never followed — it points at
       ``NeuralModifier``, not at a bundle-eligible model.
 
@@ -73,27 +64,9 @@ def _display_name(instance) -> str:
     return str(instance)
 
 
-def _transit_model_classes() -> Tuple[type, ...]:
-    """Models the walker steps THROUGH but cascade does not stamp.
-
-    These are non-``GenomeOwnedMixin`` models that compose pathways:
-    Axon, Neuron, NeuronContext. Stopping at them would mean reach
-    never finds the bundle children on the far side; treating them as
-    bundle-eligible would mean trying to write a non-existent
-    ``genome`` FK.
-
-    Imports are deferred so this module loads cleanly at AppConfig
-    boot time before all apps are ready.
-    """
-    from central_nervous_system.models import Axon, Neuron, NeuronContext
-    return (Axon, Neuron, NeuronContext)
-
-
 def _is_walkable_target(model: type) -> bool:
-    """The walker steps to a target if it's bundle-eligible or transit."""
-    if issubclass(model, GenomeOwnedMixin):
-        return True
-    return model in _transit_model_classes()
+    """The walker steps to a target iff it carries ``GenomeOwnedMixin``."""
+    return issubclass(model, GenomeOwnedMixin)
 
 
 def _forward_fk_fields(model: type) -> Iterable:
@@ -132,20 +105,12 @@ def _forward_m2m_fields(model: type) -> Iterable:
         yield field
 
 
-def _reverse_fk_fields(
-    model: type, *, allow_transit: bool
-) -> Iterable[Tuple[Any, str]]:
-    """Reverse one-to-many fields whose target is walkable.
-
-    Always yields reverse-FK fields whose target is
-    ``GenomeOwnedMixin``. Yields reverse-FK fields whose target is a
-    transit model only when ``allow_transit`` is true (set per-source
-    by the caller via ``transit_reverse_fk_sources``).
+def _reverse_fk_fields(model: type) -> Iterable[Tuple[Any, str]]:
+    """Reverse one-to-many fields whose target is ``GenomeOwnedMixin``.
 
     Each yield is ``(field, accessor_name)`` so the caller can fetch
     via ``getattr(instance, accessor)``.
     """
-    transit_models = _transit_model_classes()
     for field in model._meta.get_fields():
         if not getattr(field, 'is_relation', False):
             continue
@@ -158,13 +123,7 @@ def _reverse_fk_fields(
         related = field.related_model
         if related is None:
             continue
-        if issubclass(related, GenomeOwnedMixin):
-            target_kind = 'genomeowned'
-        elif related in transit_models:
-            target_kind = 'transit'
-        else:
-            continue
-        if target_kind == 'transit' and not allow_transit:
+        if not issubclass(related, GenomeOwnedMixin):
             continue
         accessor = field.get_accessor_name()
         if accessor is None:
@@ -176,26 +135,20 @@ def walk_genome_reach(
     starts: Sequence[Any],
     *,
     reverse_fk: bool = False,
-    transit_reverse_fk_sources: Tuple[type, ...] = (),
 ) -> List[Any]:
     """BFS from ``starts`` through the bundle reach graph.
 
-    Forward FK / M2M traversal is unconditional to walkable targets.
-
-    Reverse-FK traversal is OFF by default (read-mode behaviour —
-    every owned row is already a starting point so reverse-FK reach
-    is redundant). When ``reverse_fk=True``, the walker traverses
-    reverse-FK to ``GenomeOwnedMixin`` targets always, and to
-    transit targets only when the source row's class is in
-    ``transit_reverse_fk_sources`` (the cascade passes
-    ``(NeuralPathway,)`` so reach descends from a Pathway to its
-    Neurons / Axons but does NOT reverse-walk from Effector back to
-    Neurons in neighbouring user content).
+    Forward FK / M2M traversal is unconditional to ``GenomeOwnedMixin``
+    targets. Reverse-FK traversal is OFF by default (read-mode
+    behaviour — every owned row is already a starting point so
+    reverse-FK reach is redundant). When ``reverse_fk=True``, the
+    walker also traverses reverse-FK to ``GenomeOwnedMixin`` targets,
+    so reach descends from a parent (e.g. NeuralPathway) to its
+    children (e.g. Neurons / Axons).
 
     Returns the visited list (insertion-ordered, includes the starts).
     Caller filters / classifies as needed.
     """
-    transit_sources = set(transit_reverse_fk_sources)
     visited: dict = {}
     queue: List[Any] = []
 
@@ -213,7 +166,6 @@ def walk_genome_reach(
     while queue:
         instance = queue.pop(0)
         src_model = type(instance)
-        allow_transit_reverse = src_model in transit_sources
 
         for field in _forward_fk_fields(src_model):
             try:
@@ -230,9 +182,7 @@ def walk_genome_reach(
         if not reverse_fk:
             continue
 
-        for field, accessor in _reverse_fk_fields(
-            src_model, allow_transit=allow_transit_reverse
-        ):
+        for field, accessor in _reverse_fk_fields(src_model):
             try:
                 manager = getattr(instance, accessor)
             except AttributeError:

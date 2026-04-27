@@ -40,6 +40,7 @@ import shutil
 import sys
 import tempfile
 import traceback
+import uuid
 import zipfile
 from pathlib import Path
 from typing import Iterable, Iterator, Optional
@@ -69,6 +70,7 @@ REQUIRED_MANIFEST_KEYS = (
     'slug',
     'name',
     'version',
+    'genome',
     'author',
     'license',
     'entry_modules',
@@ -245,10 +247,12 @@ def create_empty_bundle(
             'uninstall first.'.format(runtime)
         )
 
+    genome_uuid = uuid.uuid4()
     manifest = {
         'slug': slug,
         'name': name or slug,
         'version': version,
+        'genome': str(genome_uuid),
         'author': author,
         'license': license,
         'entry_modules': [],
@@ -265,6 +269,7 @@ def create_empty_bundle(
 
     manifest_hash = _compute_manifest_hash(manifest_path)
     modifier = NeuralModifier.objects.create(
+        pk=genome_uuid,
         slug=slug,
         name=manifest['name'],
         version=manifest['version'],
@@ -302,6 +307,7 @@ def install_bundle_from_source(source: Path, slug: str) -> NeuralModifier:
     manifest = json.loads(manifest_path.read_text())
     _validate_manifest(manifest)
     _check_requires(manifest)
+    _guard_genome_uuid_collision(manifest, slug)
     manifest_hash = _compute_manifest_hash(manifest_path)
 
     runtime = grafts_root() / slug
@@ -440,6 +446,15 @@ def upgrade_bundle_from_source(
     manifest = json.loads(manifest_path.read_text())
     _validate_manifest(manifest)
     _check_requires(manifest)
+    _guard_genome_uuid_collision(manifest, slug)
+    manifest_genome = uuid.UUID(manifest['genome'])
+    if manifest_genome != modifier.pk:
+        raise ValueError(
+            '[Neuroplasticity] Manifest genome {0} does not match the '
+            'installed bundle {1!r} (pk {2}); refusing upgrade.'.format(
+                manifest_genome, slug, modifier.pk
+            )
+        )
 
     previous_version = modifier.version
     new_version = manifest['version']
@@ -600,11 +615,13 @@ def save_bundle_to_archive(slug: str) -> dict:
 
     The zip is built under ``operating_room/`` first, then atomically
     renamed over ``genomes/<slug>.zip`` — partial writes never land on
-    disk. Includes manifest, modifier_data.json (the GenomeOwnedMixin
-    rows filtered by ``genome=modifier`` PLUS the transit children of
-    each owned NeuralPathway — Neurons / Axons / NeuronContexts —
-    which compose the pathway but carry no ``genome`` FK of their
-    own), and the bundle's live ``grafts/<slug>/code/`` tree.
+    disk. Includes manifest, modifier_data.json (every
+    ``GenomeOwnedMixin`` row filtered by ``genome=modifier``), and the
+    bundle's live ``grafts/<slug>/code/`` tree. SpikeTrains / Spikes /
+    ReasoningSessions are intentionally excluded — they're runtime
+    telemetry, not bundle content. M2M through-tables (effector
+    switches, executable switches, engram_spikes) are serialized
+    implicitly as part of the parent row's M2M field list.
 
     Always bumps the semver patch on save: the manifest's ``version``
     field is incremented, the new value is mirrored onto the
@@ -621,31 +638,6 @@ def save_bundle_to_archive(slug: str) -> dict:
     import os
     import zipfile
 
-    # Local imports — central_nervous_system / environments / parietal_lobe
-    # depend on this app via the genome FK, so importing them at module
-    # load risks circulars.
-    from central_nervous_system.models import (
-        Axon,
-        Effector,
-        EffectorArgumentAssignment,
-        EffectorContext,
-        NeuralPathway,
-        Neuron,
-        NeuronContext,
-    )
-    from environments.models import (
-        ContextVariable,
-        Executable,
-        ExecutableArgumentAssignment,
-        ProjectEnvironment,
-    )
-    from parietal_lobe.models import (
-        ParameterEnum,
-        ToolDefinition,
-        ToolParameter,
-        ToolParameterAssignment,
-    )
-
     modifier = NeuralModifier.objects.get(slug=slug)
 
     rows: list = []
@@ -660,108 +652,6 @@ def save_bundle_to_archive(slug: str) -> dict:
             # at install time, so the value in the archive would just
             # point at a defunct NeuralModifier PK and confuse readers.
             row.get('fields', {}).pop('genome', None)
-            rows.append(row)
-            row_count += 1
-
-    # Transit children of owned bundle parents. These rows are NOT
-    # GenomeOwnedMixin — they don't carry a genome FK — but they
-    # compose the bundle's content via their FK back to a bundle
-    # parent. Without them, the saved bundle would land its owned
-    # parents (pathways, effectors, etc.) as empty husks. Bundle
-    # ownership is transitive via the FK chain. SpikeTrains / Spikes /
-    # ReasoningSessions are intentionally excluded — they're runtime
-    # telemetry, not bundle content. M2M through-tables (effector
-    # switches, executable switches, engram_spikes) are serialized
-    # implicitly as part of the parent row's M2M field list.
-    owned_pathway_ids = list(
-        NeuralPathway.objects.filter(genome=modifier).values_list(
-            'pk', flat=True
-        )
-    )
-    owned_effector_ids = list(
-        Effector.objects.filter(genome=modifier).values_list('pk', flat=True)
-    )
-    owned_executable_ids = list(
-        Executable.objects.filter(genome=modifier).values_list('pk', flat=True)
-    )
-    owned_environment_ids = list(
-        ProjectEnvironment.objects.filter(genome=modifier).values_list(
-            'pk', flat=True
-        )
-    )
-    owned_tool_def_ids = list(
-        ToolDefinition.objects.filter(genome=modifier).values_list(
-            'pk', flat=True
-        )
-    )
-    owned_tool_param_ids = list(
-        ToolParameter.objects.filter(genome=modifier).values_list(
-            'pk', flat=True
-        )
-    )
-
-    transit_querysets: list = []
-    if owned_pathway_ids:
-        transit_querysets.append(
-            Neuron.objects.filter(pathway_id__in=owned_pathway_ids).order_by(
-                'pk'
-            )
-        )
-        transit_querysets.append(
-            Axon.objects.filter(pathway_id__in=owned_pathway_ids).order_by('pk')
-        )
-        owned_neuron_ids = list(
-            Neuron.objects.filter(pathway_id__in=owned_pathway_ids).values_list(
-                'pk', flat=True
-            )
-        )
-        if owned_neuron_ids:
-            transit_querysets.append(
-                NeuronContext.objects.filter(
-                    neuron_id__in=owned_neuron_ids
-                ).order_by('pk')
-            )
-    if owned_effector_ids:
-        transit_querysets.append(
-            EffectorArgumentAssignment.objects.filter(
-                effector_id__in=owned_effector_ids
-            ).order_by('pk')
-        )
-        transit_querysets.append(
-            EffectorContext.objects.filter(
-                effector_id__in=owned_effector_ids
-            ).order_by('pk')
-        )
-    if owned_executable_ids:
-        transit_querysets.append(
-            ExecutableArgumentAssignment.objects.filter(
-                executable_id__in=owned_executable_ids
-            ).order_by('pk')
-        )
-    if owned_environment_ids:
-        transit_querysets.append(
-            ContextVariable.objects.filter(
-                environment_id__in=owned_environment_ids
-            ).order_by('pk')
-        )
-    if owned_tool_def_ids:
-        transit_querysets.append(
-            ToolParameterAssignment.objects.filter(
-                tool_id__in=owned_tool_def_ids
-            ).order_by('pk')
-        )
-    if owned_tool_param_ids:
-        transit_querysets.append(
-            ParameterEnum.objects.filter(
-                parameter_id__in=owned_tool_param_ids
-            ).order_by('pk')
-        )
-
-    for qs in transit_querysets:
-        if not qs.exists():
-            continue
-        payload = json.loads(serializers.serialize('json', qs))
-        for row in payload:
             rows.append(row)
             row_count += 1
 
@@ -960,14 +850,7 @@ def boot_bundles() -> None:
         if not bundle_dir.is_dir() or bundle_dir.name in by_slug:
             continue
         try:
-            logger.warning(
-                '[Neuroplasticity] Orphan sweep about to remove %s; bootable=%s; stack:\n%s',
-                bundle_dir,
-                [m.slug for m in bootable],
-                ''.join(traceback.format_stack()),
-            )
             shutil.rmtree(bundle_dir)
-            logger.info('[Neuroplasticity] Orphan sweep removed %s', bundle_dir)
         except Exception:
             logger.exception(
                 '[Neuroplasticity] Orphan sweep failed for %s',
@@ -1020,11 +903,19 @@ def _boot_one(bundle_dir: Path, modifier: NeuralModifier) -> None:
 def _get_or_create_modifier(
     slug: str, manifest: dict, manifest_hash: str
 ) -> NeuralModifier:
-    """Reuse an existing row by slug, otherwise create one."""
+    """Reuse an existing row by slug, otherwise create one with the
+    manifest-pinned UUID as PK.
+
+    Bundles declare a stable genome UUID in their manifest; install uses
+    it as the row's PK so bundle identity is portable across machines and
+    survives uninstall/reinstall cycles. Slug-collision short-circuit
+    keeps reinstall/upgrade pointing at the same row.
+    """
     modifier = NeuralModifier.objects.filter(slug=slug).first()
     if modifier is not None:
         return modifier
     return NeuralModifier.objects.create(
+        pk=uuid.UUID(manifest['genome']),
         slug=slug,
         name=manifest.get('name', slug),
         version=manifest.get('version', ''),
@@ -1034,6 +925,26 @@ def _get_or_create_modifier(
         manifest_json=manifest,
         status_id=NeuralModifierStatus.INSTALLED,
     )
+
+
+def _guard_genome_uuid_collision(manifest: dict, slug: str) -> None:
+    """Refuse the install if the manifest's genome UUID is already in use
+    by a different slug. Same UUID + same slug is the upgrade/reinstall
+    path and is allowed through.
+    """
+    manifest_genome = uuid.UUID(manifest['genome'])
+    existing_slug = (
+        NeuralModifier.objects.filter(pk=manifest_genome)
+        .exclude(slug=slug)
+        .values_list('slug', flat=True)
+        .first()
+    )
+    if existing_slug is not None:
+        raise ValueError(
+            '[Neuroplasticity] Manifest genome {0} is already used by '
+            'installed bundle {1!r}; refusing to install {2!r} onto the '
+            'same UUID.'.format(manifest_genome, existing_slug, slug)
+        )
 
 
 def _validate_manifest(manifest: dict) -> None:
@@ -1057,6 +968,19 @@ def _validate_manifest(manifest: dict) -> None:
         raise ValueError(
             '[Neuroplasticity] Manifest version {0!r} is not valid semver: '
             '{1}'.format(manifest['version'], exc)
+        )
+    genome_value = manifest['genome']
+    if not isinstance(genome_value, str):
+        raise ValueError(
+            '[Neuroplasticity] Manifest genome must be a UUID string; got '
+            '{0!r}.'.format(type(genome_value).__name__)
+        )
+    try:
+        uuid.UUID(genome_value)
+    except (ValueError, AttributeError, TypeError) as exc:
+        raise ValueError(
+            '[Neuroplasticity] Manifest genome {0!r} is not a valid UUID: '
+            '{1}'.format(genome_value, exc)
         )
     _validate_requires(manifest.get('requires', []))
 

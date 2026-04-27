@@ -123,6 +123,7 @@ def build_fake_bundle(
                 'slug': slug,
                 'name': 'Fake {0}'.format(slug),
                 'version': '0.0.1',
+                'genome': str(uuid.uuid4()),
                 'author': 'tests',
                 'license': 'MIT',
                 'description': 'Test bundle.',
@@ -329,9 +330,15 @@ class InstallFileExistsDoesNotLeakRowTest(ModifierLifecycleTestCase):
         )
 
 
-class ReinstallCreatesFreshRowTest(ModifierLifecycleTestCase):
-    def test_reinstall_creates_fresh_row(self):
-        """Assert reinstall after uninstall yields a fresh NeuralModifier row."""
+class ReinstallReusesManifestPinnedPkTest(ModifierLifecycleTestCase):
+    def test_reinstall_reuses_manifest_pinned_pk(self):
+        """Assert reinstall after uninstall lands on the same PK declared
+        in the manifest, with a fresh installation log.
+
+        Manifest-pinned UUIDs make bundle identity stable across the
+        uninstall/reinstall cycle — the row itself is freshly created
+        (the prior row was deleted; its logs cascaded away), but the
+        PK is preserved because the manifest declares it."""
         build_fake_bundle(self.scratch_root, 'eta')
         first = self.install_fake('eta')
         first_pk = first.pk
@@ -345,7 +352,7 @@ class ReinstallCreatesFreshRowTest(ModifierLifecycleTestCase):
         loader.boot_bundles()
         second = self.install_fake('eta')
 
-        self.assertNotEqual(second.pk, first_pk)
+        self.assertEqual(second.pk, first_pk)
         log_count = NeuralModifierInstallationLog.objects.filter(
             neural_modifier=second
         ).count()

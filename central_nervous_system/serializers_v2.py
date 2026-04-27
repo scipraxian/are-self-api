@@ -167,8 +167,7 @@ class NeuralPathwaySerializer(serializers.ModelSerializer):
         source='environment.name', read_only=True, default=None
     )
     # Read-only mirror of the genome FK as the bundle slug, for the
-    # BEGIN_PLAY inspector's bundle dropdown. Mutation goes through the
-    # cascade endpoint /set-genome/, never directly through PATCH.
+    # BEGIN_PLAY inspector's bundle dropdown.
     genome_slug = serializers.CharField(
         source='genome.slug', read_only=True, default=None
     )
