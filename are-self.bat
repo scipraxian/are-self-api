@@ -28,6 +28,17 @@ if %errorlevel% neq 0 (
 if not exist ".\nginx\certs" mkdir ".\nginx\certs"
 docker compose up -d
 
+:: Wait for Postgres to accept connections. `docker compose up -d` returns
+:: when containers are created, not when Postgres is ready — Daphne and
+:: Celery would otherwise race the DB and fail their first connect.
+:check_postgres
+docker exec are_self_db pg_isready -U postgres -d are_self >nul 2>&1
+if %errorlevel% neq 0 (
+    echo Waiting for Postgres to accept connections...
+    timeout /t 2 >nul
+    goto check_postgres
+)
+
 :: 1. Start Celery Worker in a new window
 echo Starting Celery Worker...
 start "Are-Self Worker" cmd /c ".\venv\Scripts\celery -A config worker --loglevel=info --concurrency=4 -P threads -E"
