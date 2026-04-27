@@ -1,12 +1,25 @@
 """System-wide API endpoints (Config)."""
 
 from django.db.models import Count
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from frontal_lobe.models import ReasoningSession
 from hypothalamus.models import AIModel
 from identity.models import IdentityDisc
+
+
+@require_GET
+def health_probe(request):
+    """Frontend disconnect-overlay probe.
+
+    Plain Django view — no DB query, no auth — so the frontend can poll
+    it cheaply during install / uninstall / move-to-genome restarts and
+    flip the overlay off the instant the worker is reachable again.
+    """
+    return JsonResponse({'status': 'ok'})
 
 
 class StatsAPIView(APIView):

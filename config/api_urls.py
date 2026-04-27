@@ -6,6 +6,7 @@ from config.api import (
     LatestSessionsAPIView,
     LatestSpikesAPIView,
     StatsAPIView,
+    health_probe,
 )
 
 CONFIG_URLS = [
@@ -16,4 +17,5 @@ CONFIG_URLS = [
         LatestSessionsAPIView.as_view(),
         name='latest-sessions',
     ),
+    path('health/', health_probe, name='health-probe'),
 ]
