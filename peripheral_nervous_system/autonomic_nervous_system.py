@@ -118,19 +118,25 @@ class CeleryBeatViewSet(viewsets.ViewSet):
             elif pt.crontab:
                 schedule_str = f'{pt.crontab.minute} {pt.crontab.hour} {pt.crontab.day_of_week}'
 
-            tasks.append({
-                'name': pt.name,
-                'task': pt.task,
-                'schedule': schedule_str,
-                'total_run_count': pt.total_run_count,
-                'last_run_at': pt.last_run_at.isoformat() if pt.last_run_at else None,
-            })
+            tasks.append(
+                {
+                    'name': pt.name,
+                    'task': pt.task,
+                    'schedule': schedule_str,
+                    'total_run_count': pt.total_run_count,
+                    'last_run_at': pt.last_run_at.isoformat()
+                    if pt.last_run_at
+                    else None,
+                }
+            )
 
-        return Response({
-            'running': running,
-            'pid': pid if running else None,
-            'scheduled_tasks': tasks,
-        })
+        return Response(
+            {
+                'running': running,
+                'pid': pid if running else None,
+                'scheduled_tasks': tasks,
+            }
+        )
 
     @action(detail=False, methods=['post'])
     def start(self, request):
@@ -155,10 +161,13 @@ class CeleryBeatViewSet(viewsets.ViewSet):
         cwd = _project_root()
         cmd = [
             str(celery_exe),
-            '-A', 'config',
+            '-A',
+            'config',
             'beat',
-            '-l', 'info',
-            '--scheduler', 'django_celery_beat.schedulers:DatabaseScheduler',
+            '-l',
+            'info',
+            '--scheduler',
+            'django_celery_beat.schedulers:DatabaseScheduler',
         ]
 
         try:
@@ -194,13 +203,19 @@ class CeleryBeatViewSet(viewsets.ViewSet):
         pid = _read_beat_pid()
         if pid is None:
             return Response(
-                {'status': 'not_tracked', 'message': 'No Beat process was started by this API.'},
+                {
+                    'status': 'not_tracked',
+                    'message': 'No Beat process was started by this API.',
+                },
                 status=status.HTTP_200_OK,
             )
         if not _is_process_running(pid):
             _clear_beat_pid()
             return Response(
-                {'status': 'already_stopped', 'message': 'Process was not running.'},
+                {
+                    'status': 'already_stopped',
+                    'message': 'Process was not running.',
+                },
                 status=status.HTTP_200_OK,
             )
         ok = _terminate_process(pid)
@@ -235,19 +250,19 @@ class CeleryWorkerViewSet(viewsets.ViewSet):
         for hostname, tasks in active.items():
             worker_stats = stats.get(hostname, {})
             worker_reserved = reserved.get(hostname, [])
-            workers.append({
-                'hostname': hostname,
-                'active_tasks': tasks,
-                'reserved_tasks': worker_reserved,
-                'pool': worker_stats.get('pool', {}),
-                'broker': worker_stats.get('broker', {}),
-                'prefetch_count': worker_stats.get(
-                    'prefetch_count', 0
-                ),
-                'rusage': worker_stats.get('rusage', {}),
-                'total': worker_stats.get('total', {}),
-                'pid': worker_stats.get('pid'),
-            })
+            workers.append(
+                {
+                    'hostname': hostname,
+                    'active_tasks': tasks,
+                    'reserved_tasks': worker_reserved,
+                    'pool': worker_stats.get('pool', {}),
+                    'broker': worker_stats.get('broker', {}),
+                    'prefetch_count': worker_stats.get('prefetch_count', 0),
+                    'rusage': worker_stats.get('rusage', {}),
+                    'total': worker_stats.get('total', {}),
+                    'pid': worker_stats.get('pid'),
+                }
+            )
 
         return Response({'workers': workers})
 
@@ -282,7 +297,19 @@ def trigger_system_restart() -> None:
     Module-level so ``neuroplasticity.api`` can call it without touching
     the DRF ViewSet. The ``restart`` endpoint is a thin wrapper that
     calls this function and returns the 200 Response.
+
+    Test-mode short-circuit: pytest's ``conftest.py`` sets
+    ``ARE_SELF_SUPPRESS_RESTART=1`` so an unmocked path never spawns a
+    real Celery worker or reloads the live Daphne mid-suite. Tests that
+    want to *assert* the call still ``@patch`` this function — the
+    short-circuit is belt-and-suspenders for the unmocked surface.
     """
+    if os.environ.get('ARE_SELF_SUPPRESS_RESTART'):
+        logger.info(
+            '[PNS] trigger_system_restart suppressed '
+            '(ARE_SELF_SUPPRESS_RESTART set).'
+        )
+        return
     logger.info('[PNS] System restart initiated.')
     # 1. Shutdown Celery workers
     celery_app.control.shutdown()
@@ -309,8 +336,7 @@ def trigger_system_restart() -> None:
         if sys.platform == 'win32':
             # Windows: use CREATE_NEW_CONSOLE to spawn in new window
             title_cmd = (
-                'title Are-Self Worker && '
-                f'{subprocess.list2cmdline(cmd)}'
+                f'title Are-Self Worker && {subprocess.list2cmdline(cmd)}'
             )
             subprocess.Popen(
                 ['cmd', '/c', title_cmd],
@@ -326,9 +352,7 @@ def trigger_system_restart() -> None:
             )
         logger.info('[PNS] Celery worker restart process spawned.')
     except Exception as e:
-        logger.exception(
-            '[PNS] Failed to spawn Celery worker: %s', str(e)
-        )
+        logger.exception('[PNS] Failed to spawn Celery worker: %s', str(e))
 
     # 3. Check if Beat is running and restart it
     beat_pid = _read_beat_pid()
@@ -373,8 +397,7 @@ def trigger_system_restart() -> None:
                     beat_proc.pid,
                 )
             except Exception as e:
-                logger.exception('[PNS] Failed to restart Beat: %s',
-                                 str(e))
+                logger.exception('[PNS] Failed to restart Beat: %s', str(e))
 
     # 4. Spawn delayed thread to touch the autoreload sentinel so
     #    Daphne's worker child exits with code 3 and the parent
@@ -430,8 +453,10 @@ class SystemControlViewSet(viewsets.ViewSet):
         if beat_pid is not None and not beat_running:
             _clear_beat_pid()
 
-        return Response({
-            'workers_online': workers_online,
-            'beat_running': beat_running,
-            'timestamp': timezone.now().isoformat(),
-        })
+        return Response(
+            {
+                'workers_online': workers_online,
+                'beat_running': beat_running,
+                'timestamp': timezone.now().isoformat(),
+            }
+        )

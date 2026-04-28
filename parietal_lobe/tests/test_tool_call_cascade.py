@@ -7,6 +7,12 @@ gone has no forensic value. Softened from PROTECT to CASCADE so
 owns the tool and real turns have fired against it.
 """
 
+import shutil
+import tempfile
+from pathlib import Path
+
+from django.test import override_settings
+
 from central_nervous_system.models import (
     NeuralPathway,
     Spike,
@@ -29,6 +35,15 @@ class ToolCallCascadesOnToolDeleteTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         super().setUp()
+        # Isolate NEURAL_MODIFIER_GRAFTS_ROOT so loader.uninstall_bundle's
+        # path resolution can never resolve to the real grafts/ tree.
+        self._tmp_grafts_root = Path(
+            tempfile.mkdtemp(prefix='fk-toolcall-grafts-')
+        )
+        self._settings_override = override_settings(
+            NEURAL_MODIFIER_GRAFTS_ROOT=str(self._tmp_grafts_root),
+        )
+        self._settings_override.enable()
         self.modifier = NeuralModifier.objects.create(
             name='FK Test Bundle',
             slug='fk-test-toolcall-cascade',
@@ -70,6 +85,11 @@ class ToolCallCascadesOnToolDeleteTest(CommonFixturesAPITestCase):
             tool=self.bundle_tool,
             arguments='{}',
         )
+
+    def tearDown(self):
+        self._settings_override.disable()
+        shutil.rmtree(self._tmp_grafts_root, ignore_errors=True)
+        super().tearDown()
 
     def test_uninstall_cascades_tool_call_rows(self):
         """Assert ToolCall rows cascade away when the owning bundle uninstalls."""

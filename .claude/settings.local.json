@@ -18,7 +18,15 @@
       "Bash(./venv/Scripts/python.exe manage.py *)",
       "Bash(docker exec *)",
       "Bash(venv/Scripts/python.exe manage.py *)",
-      "Bash(venv/Scripts/python.exe -c ' *)"
+      "Bash(venv/Scripts/python.exe -c ' *)",
+      "Bash(rm C:/Users/micha/are-self/are-self-api/neuroplasticity/grafts/unreal/code/__init__.py)",
+      "Bash(rm -rf C:/Users/micha/are-self/are-self-api/neuroplasticity/grafts/unreal/code/__pycache__ C:/Users/micha/are-self/are-self-api/neuroplasticity/grafts/unreal/code/are_self_unreal/__pycache__ C:/Users/micha/are-self/are-self-api/neuroplasticity/grafts/unreal/code/are_self_unreal/tests/__pycache__)",
+      "Bash(mkdir -p /tmp/grafts-backup)",
+      "Bash(cp -r C:/Users/micha/are-self/are-self-api/neuroplasticity/grafts/unreal /tmp/grafts-backup/unreal)",
+      "Read(//tmp/grafts-backup/unreal/code/**)",
+      "Read(//tmp/grafts-backup/**)",
+      "Bash(cp -r /tmp/grafts-backup/unreal C:/Users/micha/are-self/are-self-api/neuroplasticity/grafts/unreal)",
+      "Bash(rm -rf /tmp/grafts-backup/unreal)"
     ]
   }
 }

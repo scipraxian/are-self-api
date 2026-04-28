@@ -28,6 +28,7 @@ class CommonTestCase(APITestCase):
 
     @classmethod
     def setUpClass(cls):
+        # TODO: Remove this. Global patches are not acceptable.
         if not _EMBED_PATCH.is_started:
             _EMBED_PATCH.start()
         super().setUpClass()

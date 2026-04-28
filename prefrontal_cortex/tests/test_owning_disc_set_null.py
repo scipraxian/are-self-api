@@ -5,6 +5,12 @@ assigned to an IdentityDisc owned by a bundle cascade away with the
 bundle. No dangling-null reassignment cleanup required.
 """
 
+import shutil
+import tempfile
+from pathlib import Path
+
+from django.test import override_settings
+
 from common.tests.common_test_case import CommonFixturesAPITestCase
 from identity.models import IdentityDisc, IdentityType
 from neuroplasticity import loader
@@ -16,6 +22,15 @@ class PFCRowsCascadeOnOwningDiscRemovalTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         super().setUp()
+        # Isolate NEURAL_MODIFIER_GRAFTS_ROOT so loader.uninstall_bundle's
+        # path resolution can never resolve to the real grafts/ tree.
+        self._tmp_grafts_root = Path(
+            tempfile.mkdtemp(prefix='fk-disc-grafts-')
+        )
+        self._settings_override = override_settings(
+            NEURAL_MODIFIER_GRAFTS_ROOT=str(self._tmp_grafts_root),
+        )
+        self._settings_override.enable()
         self.modifier = NeuralModifier.objects.create(
             name='FK Test Bundle',
             slug='fk-test-owning-disc-cascade',
@@ -51,6 +66,11 @@ class PFCRowsCascadeOnOwningDiscRemovalTest(CommonFixturesAPITestCase):
             story=self.story,
             owning_disc=self.bundle_disc,
         )
+
+    def tearDown(self):
+        self._settings_override.disable()
+        shutil.rmtree(self._tmp_grafts_root, ignore_errors=True)
+        super().tearDown()
 
     def test_uninstall_cascades_pfc_rows_with_owning_disc(self):
         """Assert PFC epic/story/task rows cascade when their owning disc goes."""

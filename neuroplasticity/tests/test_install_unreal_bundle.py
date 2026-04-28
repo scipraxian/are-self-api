@@ -1,10 +1,10 @@
-"""Install round-trip tests for the real Unreal NeuralModifier bundle.
+"""Install round-trip tests for an unreal-shaped NeuralModifier bundle.
 
-Exercises the loader end-to-end against the committed
-`neuroplasticity/genomes/unreal.zip` archive: copies it into a tmp
-genomes root, installs via `install_bundle_from_archive`, asserts
-owned rows + registrations land, uninstalls, asserts everything rolls
-back, then reinstalls to prove idempotency.
+Exercises the loader end-to-end against a *synthetic* archive built on
+the fly during ``setUp`` — slug, ToolDefinition PK, native-handler
+slug, parietal-tool slug, and parser class names all match what the
+real ``neuroplasticity/genomes/unreal.zip`` exposes, but no
+production artifact is touched. The test owns its bundle.
 
 Uses a custom fixture list rather than CommonFixturesAPITestCase
 because CommonFixturesAPITestCase pre-loads `modifier_data.json` as a
@@ -15,12 +15,14 @@ the loader.
 
 from __future__ import annotations
 
+import json
 import shutil
 import sys
 import tempfile
+import uuid
+import zipfile
 from pathlib import Path
 
-from django.conf import settings
 from django.test import override_settings
 
 from central_nervous_system.effectors.effector_casters.neuromuscular_junction import (
@@ -40,6 +42,151 @@ UE_TOOL_DEF_PK = '4967bb81-ceaf-40f2-95b9-38dd07983172'
 UE_HANDLER_SLUG = 'update_version_metadata'
 UE_TOOL_SLUG = 'mcp_run_unreal_diagnostic_parser'
 THALAMUS_IDENTITY_PK = '14148e25-283d-4547-a17d-e28d021eba07'
+
+# Entry module name for the synthetic bundle. Distinct from the real
+# unreal bundle's `are_self_unreal` so a stray production artifact
+# can't shadow this fixture by name.
+SYNTH_ENTRY_MODULE = 'are_self_unreal_synthetic_test'
+
+# Source for the synthetic entry module's __init__.py. Registers the
+# same names + class shapes the real unreal bundle exposes so the
+# test assertions remain meaningful. Idempotent — re-import on
+# reinstall must succeed without duplicate-registration errors.
+_SYNTH_ENTRY_INIT_PY = '''\
+"""Synthetic test stand-in for the unreal bundle's entry module.
+
+Registers the names and class shapes test_install_unreal_bundle.py
+asserts against, so the test does not depend on the committed
+neuroplasticity/genomes/unreal.zip artifact. Pop-then-register makes
+re-import on a reinstall idempotent.
+"""
+
+from central_nervous_system.effectors.effector_casters.neuromuscular_junction import (  # noqa: E501
+    NATIVE_HANDLERS,
+    register_native_handler,
+)
+from occipital_lobe.log_parser import (
+    LogConstants,
+    LogParserFactory,
+    LogParserStrategy,
+)
+from parietal_lobe.parietal_mcp.gateway import (
+    _PARIETAL_TOOL_REGISTRY,
+    register_parietal_tool,
+)
+
+
+class UERunLogStrategy(LogParserStrategy):
+    """Synthetic stand-in. Class name matches what the test asserts."""
+
+    def parse_chunk(self, lines):
+        return []
+
+
+class UEBuildLogStrategy(LogParserStrategy):
+    """Synthetic stand-in. Class name matches what the test asserts."""
+
+    def parse_chunk(self, lines):
+        return []
+
+
+def update_version_metadata(*args, **kwargs):
+    """Synthetic native handler stand-in."""
+    return None
+
+
+async def mcp_run_unreal_diagnostic_parser(*args, **kwargs):
+    """Synthetic parietal tool stand-in."""
+    return ''
+
+
+NATIVE_HANDLERS.pop('update_version_metadata', None)
+register_native_handler('update_version_metadata', update_version_metadata)
+
+_PARIETAL_TOOL_REGISTRY.pop('mcp_run_unreal_diagnostic_parser', None)
+register_parietal_tool(
+    'mcp_run_unreal_diagnostic_parser',
+    mcp_run_unreal_diagnostic_parser,
+)
+
+LogParserFactory.register(LogConstants.TYPE_RUN, UERunLogStrategy)
+LogParserFactory.register(LogConstants.TYPE_BUILD, UEBuildLogStrategy)
+'''
+
+
+def _build_synthetic_unreal_archive(
+    archive_path: Path, scratch_dir: Path
+) -> Path:
+    """Build a synthetic unreal-shaped bundle archive entirely in tmp.
+
+    The output zip contains:
+
+      * ``manifest.json`` declaring slug ``'unreal'`` and our synthetic
+        entry module.
+      * ``modifier_data.json`` with a single ``ToolDefinition`` row at
+        ``UE_TOOL_DEF_PK`` — the only owned-row PK the suite asserts on.
+      * ``code/<entry_module>/__init__.py`` registering the native
+        handler, parietal tool, and parser strategies whose names match
+        the test assertions.
+
+    Mirrors the real unreal bundle's *contract* (names + class shapes +
+    one ToolDefinition PK) without copying its production artifact.
+    """
+    scratch_dir.mkdir(parents=True, exist_ok=True)
+    bundle_dir = scratch_dir / UNREAL_BUNDLE_SLUG
+    bundle_dir.mkdir()
+
+    manifest = {
+        'slug': UNREAL_BUNDLE_SLUG,
+        'name': 'Synthetic Unreal Test Bundle',
+        'version': '0.0.1',
+        'genome': str(uuid.uuid4()),
+        'author': 'tests',
+        'license': 'MIT',
+        'description': 'Synthetic test fixture; no production artifact.',
+        'entry_modules': [SYNTH_ENTRY_MODULE],
+    }
+    (bundle_dir / 'manifest.json').write_text(
+        json.dumps(manifest, indent=2) + '\n'
+    )
+
+    # ``ToolDefinition`` carries ``DefaultFieldsMixin`` (created /
+    # modified) — these are non-nullable and ``auto_now_add`` /
+    # ``auto_now`` do not fire through ``serializers.deserialize``,
+    # so explicit timestamps are required in the payload.
+    fixed_ts = '2026-01-01T00:00:00Z'
+    modifier_data = [
+        {
+            'model': 'parietal_lobe.tooldefinition',
+            'pk': UE_TOOL_DEF_PK,
+            'fields': {
+                'created': fixed_ts,
+                'modified': fixed_ts,
+                'name': UE_TOOL_SLUG,
+                'description': 'Synthetic UE diagnostic parser tool.',
+                'is_async': True,
+            },
+        }
+    ]
+    (bundle_dir / 'modifier_data.json').write_text(
+        json.dumps(modifier_data, indent=2) + '\n'
+    )
+
+    code_dir = bundle_dir / 'code'
+    code_dir.mkdir()
+    pkg_dir = code_dir / SYNTH_ENTRY_MODULE
+    pkg_dir.mkdir()
+    (pkg_dir / '__init__.py').write_text(_SYNTH_ENTRY_INIT_PY)
+
+    archive_path.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(archive_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for path in sorted(bundle_dir.rglob('*')):
+            if path.is_dir():
+                continue
+            arcname = Path(UNREAL_BUNDLE_SLUG) / path.relative_to(bundle_dir)
+            zf.write(path, arcname.as_posix())
+
+    return archive_path
 
 
 class UnrealBundleInstallTestCase(CommonTestCase):
@@ -76,16 +223,15 @@ class UnrealBundleInstallTestCase(CommonTestCase):
         self.grafts_root.mkdir()
         self.operating_room_root.mkdir()
 
-        real_archive = (
-            Path(settings.BASE_DIR)
-            / 'neuroplasticity'
-            / 'genomes'
-            / '{0}.zip'.format(UNREAL_BUNDLE_SLUG)
-        )
+        # Build a synthetic unreal-shaped archive on the fly so this
+        # test never reads or copies the committed production
+        # neuroplasticity/genomes/unreal.zip.
         self.archive_path = (
             self.genomes_root / '{0}.zip'.format(UNREAL_BUNDLE_SLUG)
         )
-        shutil.copy(real_archive, self.archive_path)
+        _build_synthetic_unreal_archive(
+            self.archive_path, self._tmp_root / 'scratch'
+        )
 
         self._sys_path_snapshot = list(sys.path)
         self._sys_modules_snapshot = set(sys.modules.keys())

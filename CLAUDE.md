@@ -39,11 +39,26 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   workers, `subprocess.Popen` a fresh worker (flags mirror `are-self.bat:33`
   — `--concurrency=4 -P threads -E`), then a 1-second-delayed touch of
   `config/__init__.py` so Django's autoreloader exits the Daphne child with
-  code 3 and respawns it. Tests hitting those endpoints MUST mock
-  `trigger_system_restart` (e.g. `@patch('neuroplasticity.api.
-  trigger_system_restart')` on the specific test methods) — without the
-  mock, every test run spawns a real Celery worker and reloads the live dev
-  Daphne.
+  code 3 and respawns it. The function short-circuits with a log line when
+  `ARE_SELF_SUPPRESS_RESTART` is set in the env (the rootdir `conftest.py`
+  sets it before Django setup), so an unmocked path under pytest cannot
+  spawn a real worker or reload the live Daphne. Tests that *assert* the
+  call still `@patch('neuroplasticity.api.trigger_system_restart')` (or the
+  `serializer_mixins` import path for V2 PATCH genome moves) so
+  `mock_restart.assert_called_once()` works — the env-var short-circuit is
+  defense-in-depth, not a substitute.
+- Loader test isolation. Every public mutation entry point in
+  `neuroplasticity/loader.py` (install / uninstall / upgrade / save /
+  create_empty / boot_bundles) is wrapped at `pytest_configure` time by
+  `conftest.py`'s `_install_loader_isolation_guard`. The wrap refuses with a
+  loud `RuntimeError` if `NEURAL_MODIFIER_GRAFTS_ROOT` (or, for ops that
+  also touch the catalog, `NEURAL_MODIFIER_GENOMES_ROOT`) resolves to the
+  on-disk repo path while the call is in flight. Tests that drive the
+  loader MUST `override_settings(NEURAL_MODIFIER_GRAFTS_ROOT=<tmp>, ...)`
+  before any loader call; if a test forgets, the guard names the operation
+  and the offending test in the traceback. The loader itself stays free
+  of any pytest awareness — the guard exists only when the conftest is
+  loaded, which is by definition only under pytest.
 - UUIDs are `uuid.uuid4()` random literals — no UUIDv5, namespaces, or
   deterministic seeding. Existing UUID literals in fixtures are frozen; do not
   regenerate.
@@ -133,6 +148,18 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   Leaf-row supplements — e.g. an `EffectorArgumentAssignment` the user
   added to a canonical `Effector` — promote independently via PATCH
   on their own V2 viewset since the canonical parent is read-only.
+- Every `NeuralPathway` must always carry at least one Begin Play
+  neuron (`Neuron.effector_id == Effector.BEGIN_PLAY`) to fire from.
+  Enforced two-deep: `Neuron.delete()` raises
+  `django.core.exceptions.ValidationError` if the row being deleted is
+  the *last* Begin Play neuron in an existing pathway, and
+  `NeuronViewSetV2.destroy()` translates that exception into a 400
+  with the constant-message `BEGIN_PLAY_UNDELETABLE` from
+  `central_nervous_system/models.py`. CASCADE-from-pathway-delete
+  still removes the row because Django's Collector uses bulk
+  `QuerySet.delete()` which bypasses `model.delete()` per-row.
+  Redundant Begin Play neurons in the same pathway *are* deletable —
+  only the last one is protected, so duplicates can be cleaned up.
 - Bundles can ship URL routes via convention. A bundle's `urls.py` exposes
   `V2_GENOME_ROUTER` (a `routers.SimpleRouter()` with viewsets registered),
   and the V2 URL conf auto-discovers it at module-import time (iterate
@@ -525,6 +552,12 @@ CreatedAndModifiedWithDelta, NameMixin, DefaultFieldsMixin, UUIDIdMixin, Descrip
 **Testing:** Real database with fixtures, not mocks. Inherit from `CommonTestCase` or
 `CommonFixturesAPITestCase`. Test docstrings begin with "Assert". Run tests with
 `venv/Scripts/pytest` from project root on Windows (`venv/bin/pytest` on Linux/Mac).
+Any test that calls into `neuroplasticity.loader` (directly or through an API
+endpoint that does) MUST `override_settings(NEURAL_MODIFIER_GRAFTS_ROOT=<tmp>, ...)`
+before the call — see the loader-isolation ruling above. Bundle-shape tests should
+build their archive on the fly inside the test's tmp tree
+(`test_install_unreal_bundle.py` is the reference pattern); never copy or read
+the committed `genomes/<slug>.zip` artifacts into a test.
 
 **Async testing trap:** NEVER make Django test methods async even though `asyncio_mode = "auto"` is
 set in pyproject.toml. Async test methods get a SEPARATE database connection that cannot see

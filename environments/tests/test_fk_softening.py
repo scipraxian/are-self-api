@@ -13,6 +13,12 @@ Covers two softened PROTECT edges at once, both now CASCADE:
    never cross-referenced at a bundle's default iteration definition).
 """
 
+import shutil
+import tempfile
+from pathlib import Path
+
+from django.test import override_settings
+
 from central_nervous_system.models import (
     Effector,
     NeuralPathway,
@@ -27,6 +33,28 @@ from environments.models import (
 from neuroplasticity import loader
 from neuroplasticity.models import NeuralModifier, NeuralModifierStatus
 from temporal_lobe.models import IterationDefinition
+
+
+class _IsolatedGraftsRootMixin:
+    """Tmp-isolate ``NEURAL_MODIFIER_GRAFTS_ROOT`` for tests that call
+    ``loader.uninstall_bundle`` directly so its path resolution can
+    never reach the real ``neuroplasticity/grafts/`` tree.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self._tmp_grafts_root = Path(
+            tempfile.mkdtemp(prefix='fk-soft-grafts-')
+        )
+        self._settings_override = override_settings(
+            NEURAL_MODIFIER_GRAFTS_ROOT=str(self._tmp_grafts_root),
+        )
+        self._settings_override.enable()
+
+    def tearDown(self):
+        self._settings_override.disable()
+        shutil.rmtree(self._tmp_grafts_root, ignore_errors=True)
+        super().tearDown()
 
 
 def _make_modifier(slug: str) -> NeuralModifier:
@@ -53,7 +81,9 @@ def _make_project_env(
     )
 
 
-class NeuronEnvironmentCascadeOnBundleRemovalTest(CommonFixturesAPITestCase):
+class NeuronEnvironmentCascadeOnBundleRemovalTest(
+    _IsolatedGraftsRootMixin, CommonFixturesAPITestCase
+):
     def setUp(self):
         super().setUp()
         self.modifier = _make_modifier('fk-test-env-cascade')
@@ -87,7 +117,7 @@ class NeuronEnvironmentCascadeOnBundleRemovalTest(CommonFixturesAPITestCase):
 
 
 class CrossBundleDefaultIterationDefinitionCascadeTest(
-    CommonFixturesAPITestCase
+    _IsolatedGraftsRootMixin, CommonFixturesAPITestCase
 ):
     """Bundle A's env points at Bundle B's IterationDefinition; B goes first."""
 

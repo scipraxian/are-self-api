@@ -6,6 +6,12 @@ Neuron pointing at that Effector. A Neuron without a runnable
 Effector cannot execute; cleaner to remove than to leave dangling.
 """
 
+import shutil
+import tempfile
+from pathlib import Path
+
+from django.test import override_settings
+
 from central_nervous_system.models import (
     Effector,
     NeuralPathway,
@@ -21,6 +27,15 @@ class NeuronCascadesOnBundleExecutableDeleteTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         super().setUp()
+        # Isolate NEURAL_MODIFIER_GRAFTS_ROOT so loader.uninstall_bundle's
+        # path resolution can never resolve to the real grafts/ tree.
+        self._tmp_grafts_root = Path(
+            tempfile.mkdtemp(prefix='fk-cascade-grafts-')
+        )
+        self._settings_override = override_settings(
+            NEURAL_MODIFIER_GRAFTS_ROOT=str(self._tmp_grafts_root),
+        )
+        self._settings_override.enable()
         self.modifier = NeuralModifier.objects.create(
             name='FK Test Bundle',
             slug='fk-test-executable-cascade',
@@ -47,6 +62,11 @@ class NeuronCascadesOnBundleExecutableDeleteTest(CommonFixturesAPITestCase):
             pathway=pathway,
             effector=self.bundle_effector,
         )
+
+    def tearDown(self):
+        self._settings_override.disable()
+        shutil.rmtree(self._tmp_grafts_root, ignore_errors=True)
+        super().tearDown()
 
     def test_uninstall_cascades_neuron_when_bundle_effector_goes(self):
         """Assert Neurons go when their bundle-owned Effector/Executable go."""

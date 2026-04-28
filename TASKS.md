@@ -1493,6 +1493,32 @@ remains invisible there. The v1→v2 migration is tracked separately under
   path only), leaving gate/delay and retry's happy path untouched. Michael didn't
   remember this bug, so it may not be reproducible in current pathways.
 
+### From smoke 2026-04-28 (cross-filed in `are-self-ui/TASKS.md` → "Smoke-Test Findings")
+
+- [ ] **Daphne / Django server not appearing in PNS fleet view.** The web-server process is
+  missing from the PNS dashboard. Verify whether Daphne is meant to register itself in the
+  nerve-terminal registry / vital-signs collector and whether that registration regressed.
+  UI side investigates whether it's filtering the row out. Pairs with `[both]` on the UI
+  side.
+- [ ] **CNS distribution mode SPECIFIC_TARGETS — targets M2M not writable from the API.**
+  Frontend can't set the targets list for SPECIFIC_TARGETS distribution mode. Audit the
+  relevant serializer (`AxonSerializer` or wherever the targets M2M is exposed) for the
+  classic DRF pitfall: nested serializer with `read_only=True` and no companion writable
+  `PrimaryKeyRelatedField`. Apply the same fix already in place on Identity, Temporal,
+  Hypothalamus SelectionFilter, and AIModelDescription serializers. Pairs with `[both]`
+  on the UI side.
+- [ ] **Ollama no longer releases GPU memory after a model run.** Process is holding GPU
+  memory instead of unloading between runs. Hypothalamus model lifecycle / unload flow.
+  Possibly an `OLLAMA_KEEP_ALIVE` regression or a missing unload call on session
+  conclusion — verify against current Ollama API and the model selection / failover path.
+- [ ] **BEGIN_PLAY neuron environment context not inherited by child neurons.** Setting
+  the environment on the BEGIN_PLAY neuron does not propagate to children when the spike
+  chain fires. Verify whether environment context is intended to inherit (it should be —
+  the env determines `{{project_root}}` resolution and the children have to render the
+  same paths) and where the propagation should live. Likely either `Spike._execute_spike()`
+  reading parent context, or a `NeuronContext` resolution that walks the pathway.
+  Pairs with `[both]` on the UI side.
+
 ## Next Up
 
 - [ ] **Swarm message queue — delivery + persistence bug.** Typing a message in the Thalamus chat window

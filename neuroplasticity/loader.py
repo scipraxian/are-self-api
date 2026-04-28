@@ -403,7 +403,6 @@ def uninstall_bundle(slug: str) -> Optional[str]:
     rmtree in the fresh process where no file locks remain.
     """
     modifier = NeuralModifier.objects.get(slug=slug)
-
     runtime = grafts_root() / slug
     _remove_code_from_path(runtime)
 

@@ -88,9 +88,12 @@ TASKS.md "Recently Done" entries for the shape of each.
 - **Bundle-author reference.** Inside the Unreal bundle itself at
   `neuroplasticity/genomes/unreal.zip` (extract to see the README +
   layout).
-- **Unreal bundle round-trip test.**
+- **Unreal-shaped bundle round-trip test.**
   `neuroplasticity/tests/test_install_unreal_bundle.py` — 6 scenarios
-  against `genomes/unreal.zip`.
+  against an *unreal-shaped* archive built on the fly in tmp during
+  `setUp` (slug, ToolDefinition PK, native-handler slug, parietal-tool
+  slug, and parser class names match the real bundle's contract; no
+  production artifact is read).
 
 **Not landed (this plan):**
 
@@ -368,12 +371,16 @@ and NM code.
 
 **Status (April 20).** Automated round-trip coverage landed:
 `neuroplasticity/tests/test_install_unreal_bundle.py` exercises
-`install_bundle_from_archive` against `genomes/unreal.zip` with six
-scenarios covering install, uninstall, reinstall idempotency,
-operating_room cleanup, and soft-lookup on M2M edges. Parietal tool
-gating on ENABLED (Task 13) has its own 5 integration tests. What
-remains un-exercised is a real browser session driving the state
-machine end-to-end — the sort of test a non-developer would run.
+`install_bundle_from_archive` against an unreal-shaped archive built
+on the fly in the test's tmp tree (slug + `ToolDefinition` PK +
+native-handler / parietal-tool slugs + parser class names match the
+real bundle's contract — but the committed `genomes/unreal.zip` is
+never read). Six scenarios cover install, uninstall, reinstall
+idempotency, operating_room cleanup, and soft-lookup on M2M edges.
+Parietal tool gating on ENABLED (Task 13) has its own 5 integration
+tests. What remains un-exercised is a real browser session driving
+the state machine end-to-end — the sort of test a non-developer
+would run.
 
 **Scope.** Live round-trip from the Modifier Garden UI against the
 committed `genomes/unreal.zip`:
