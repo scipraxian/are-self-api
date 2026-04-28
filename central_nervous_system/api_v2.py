@@ -1,5 +1,6 @@
 import json
 
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
@@ -210,6 +211,22 @@ class NeuronViewSetV2(GenomeMoveRestartMixin, viewsets.ModelViewSet):
 
     queryset = Neuron.objects.all()
     serializer_class = NeuronSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        # Translate the model-level Begin-Play guard
+        # (``Neuron.delete()`` raises ``django.core.exceptions.ValidationError``)
+        # into a clean DRF 400. Other neurons delete normally.
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except DjangoValidationError as exc:
+            detail = (
+                exc.messages[0]
+                if getattr(exc, 'messages', None)
+                else str(exc)
+            )
+            return Response(
+                {'detail': detail}, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class AxonViewSetV2(GenomeMoveRestartMixin, viewsets.ModelViewSet):

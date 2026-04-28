@@ -3,6 +3,7 @@
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
+from django.core.exceptions import ValidationError
 from django.db import models, transaction
 
 import environments
@@ -38,6 +39,12 @@ from .constants import (
     STOPPING_LABEL,
     SUCCESS_LABEL,
 )
+
+BEGIN_PLAY_UNDELETABLE = (
+    'Cannot delete the Begin Play neuron of an existing pathway. '
+    'Every pathway must have one — delete the pathway to remove it.'
+)
+
 
 # --- DEFINITIONS (The Library) ---
 
@@ -364,6 +371,26 @@ class Neuron(UUIDIdMixin, ProjectEnvironmentMixin, GenomeOwnedMixin):
 
     def __str__(self):
         return f'Neuron {self.id}: {self.effector.name}'
+
+    def delete(self, *args, **kwargs):
+        # A pathway must always carry at least one Begin Play neuron
+        # to fire from. Refuse a direct ``.delete()`` that would remove
+        # the last one. Does NOT block CASCADE-from-pathway-delete:
+        # Django's Collector uses bulk ``QuerySet.delete()`` which
+        # bypasses this method, so deleting a pathway still takes its
+        # Begin Play with it.
+        if (
+            self.effector_id == Effector.BEGIN_PLAY
+            and self.pathway_id is not None
+            and NeuralPathway.objects.filter(pk=self.pathway_id).exists()
+        ):
+            other_begin_plays = Neuron.objects.filter(
+                pathway_id=self.pathway_id,
+                effector_id=Effector.BEGIN_PLAY,
+            ).exclude(pk=self.pk)
+            if not other_begin_plays.exists():
+                raise ValidationError(BEGIN_PLAY_UNDELETABLE)
+        return super().delete(*args, **kwargs)
 
 
 class NeuronContext(UUIDIdMixin, GenomeOwnedMixin):
