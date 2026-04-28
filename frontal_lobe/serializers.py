@@ -187,6 +187,7 @@ class DigestSerializer(serializers.ModelSerializer):
             'engram_ids',
             'created',
             'modified',
+            'delta',
         )
         read_only_fields = fields
 
