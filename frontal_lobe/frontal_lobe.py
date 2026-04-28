@@ -114,7 +114,10 @@ class FrontalLobe:
         return rendered_prompt
 
     async def _initialize_session(
-        self, raw_context: Dict[str, Any], rendered_objective: str, max_turns: int
+        self,
+        raw_context: Dict[str, Any],
+        rendered_objective: str,
+        max_turns: int,
     ) -> None:
         """Creates or resumes the ReasoningSession in the DB."""
         if not self.session:
@@ -239,7 +242,9 @@ class FrontalLobe:
                     logger.debug(
                         f'Executing legacy addon: {addon_model.function_slug}'
                     )
-                    addon_messages = await sync_to_async(addon_func)(turn_record)
+                    addon_messages = await sync_to_async(addon_func)(
+                        turn_record
+                    )
                     if addon_messages:
                         all_messages.extend(addon_messages)
                 else:
@@ -302,11 +307,23 @@ class FrontalLobe:
         messages = await self._build_turn_payload(turn_record)
         tools = ollama_tools if ollama_tools else {}
 
-        # 🛒 1. BUILD THE PENDING LEDGER
+        # 🛒 1. BUILD THE PENDING LEDGER and persist it BEFORE the LLM round-trip.
+        # Saving the turn with the ledger attached fires the standard
+        # post_save signal on ReasoningTurn, which broadcasts the digest
+        # via Acetylcholine so the UI can render the in-flight inspector
+        # with the real request_payload + tool_payload while the LLM is
+        # still thinking. The LLM call can take ~10 minutes; without this
+        # save the prompt is unreachable from the API surface for the
+        # entire window.
         pending_ledger = AIModelProviderUsageRecord(
             identity_disc=self.session.identity_disc,
             request_payload=messages,
             tool_payload=tools,
+        )
+        await sync_to_async(pending_ledger.save)()
+        turn_record.model_usage_record = pending_ledger
+        await sync_to_async(turn_record.save)(
+            update_fields=[MODEL_USAGE_RECORD]
         )
 
         MAX_FAILOVERS = 8
@@ -318,8 +335,6 @@ class FrontalLobe:
             routing_success = await sync_to_async(
                 Hypothalamus().pick_optimal_model
             )(pending_ledger, attempt=attempt)
-
-            # TODO: Save the ledger here.
 
             if not routing_success or not pending_ledger.ai_model_provider:
                 logger.error(
@@ -333,15 +348,11 @@ class FrontalLobe:
                     update_fields=[STATUS_ID]
                 )
                 turn_record.status_id = ReasoningStatusID.ERROR
-                await sync_to_async(turn_record.save)(
-                    update_fields=[STATUS_ID]
-                )
+                await sync_to_async(turn_record.save)(update_fields=[STATUS_ID])
                 return False, turn_record
 
             # ⚡ 3. PASS THE LEDGER TO THE SYNAPSE
             synapse = await sync_to_async(SynapseClient)(pending_ledger)
-
-            # TODO: Save the ledger here. maybe new status?
 
             try:
                 # chat() mutates the ledger, returns normalized tool calls
@@ -353,7 +364,6 @@ class FrontalLobe:
                 provider_id = (
                     pending_ledger.ai_model_provider.provider_unique_model_id
                 )
-                # TODO: we should consider minting an error log for this.
                 logger.warning(
                     f'[FrontalLobe] BRAIN REJECTED ({provider_id}): {str(e)}'
                 )
@@ -393,9 +403,7 @@ class FrontalLobe:
             )
 
         if content:
-            await self._log_live(
-                f'[{pending_ledger.ai_model.name}] {content}'
-            )
+            await self._log_live(f'[{pending_ledger.ai_model.name}] {content}')
 
         # Recovery: model emitted tool calls as text content
         if not tool_calls_data and content:
@@ -441,7 +449,9 @@ class FrontalLobe:
                     'max_turns', FrontalLobeConstants.DEFAULT_MAX_TURNS
                 )
             )
-            await self._initialize_session(raw_context, rendered_objective, max_turns)
+            await self._initialize_session(
+                raw_context, rendered_objective, max_turns
+            )
 
             # 3. Resolve IdentityDisc and prep Parietal Lobe
             identity_disc = await sync_to_async(_fetch_disc_sync)(
