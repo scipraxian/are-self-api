@@ -47,7 +47,7 @@ KWARG_API_BASE = 'api_base'
 KWARG_TOOLS = 'tools'
 KWARG_TOOL_CHOICE = 'tool_choice'
 KWARG_MAX_TOKENS = 'max_tokens'
-KWARG_NUM_KEEP_ALIVE = 'num_keep_alive'
+KWARG_KEEP_ALIVE = 'keep_alive'
 
 TOOL_CHOICE_AUTO = 'auto'
 
@@ -455,7 +455,7 @@ class SynapseClient:
                         }
                     ],
                     KWARG_MAX_TOKENS: UNLOAD_MAX_TOKENS,
-                    KWARG_NUM_KEEP_ALIVE: UNLOAD_KEEP_ALIVE,
+                    KWARG_KEEP_ALIVE: UNLOAD_KEEP_ALIVE,
                     KWARG_API_BASE: (
                         self.network_config.base_url.rstrip('/')
                         if self.network_config.base_url

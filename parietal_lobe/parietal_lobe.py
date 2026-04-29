@@ -3,6 +3,7 @@ import json
 import logging
 from typing import Any, Callable, Dict, List, Optional
 
+import requests
 from asgiref.sync import sync_to_async
 from django.db.models import Q
 
@@ -11,7 +12,12 @@ from frontal_lobe.models import (
     ReasoningStatusID,
     ReasoningTurn,
 )
-from frontal_lobe.synapse_client import SynapseClient, SynapseResponse
+from frontal_lobe.synapse_client import (
+    PROVIDER_OLLAMA,
+    SynapseClient,
+    SynapseResponse,
+)
+from hypothalamus.models import AIModelProviderUsageRecord
 from hypothalamus.serializers import ModelSelection
 from identity.addons._handler_registry import (
     dispatch_tool_post,
@@ -34,10 +40,50 @@ def _sync_chat_execution(
     return client.chat(messages, tools)
 
 
-def _sync_unload_execution(model_selection: ModelSelection):
-    """Runs synchronously to send the VRAM drop signal."""
-    client = SynapseClient(model_selection)
-    client.unload()
+def _sync_unload_execution(ledger: AIModelProviderUsageRecord):
+    """Drops the resident model from Ollama VRAM via direct HTTP.
+
+    Bypasses LiteLLM. ``litellm.drop_params = True`` is set globally in
+    ``synapse_client.py``, and ``keep_alive`` is not in LiteLLM's standard
+    OpenAI-compatible param set — so a LiteLLM-mediated unload may silently
+    strip the directive before it reaches Ollama. Ollama's native /api/chat
+    accepts a bare ``{model, keep_alive: 0}`` POST with no messages and
+    unloads the model immediately. We use that path directly so the signal
+    is guaranteed to land.
+
+    No-op for non-Ollama providers — cloud models have no local VRAM."""
+    provider = ledger.ai_model_provider.provider
+    if provider.key.lower() != PROVIDER_OLLAMA:
+        return
+
+    base_url = (provider.base_url or '').rstrip('/')
+    if not base_url:
+        logger.warning(
+            '[ParietalLobe] Ollama provider %s has no base_url, '
+            'skipping VRAM unload.',
+            provider.key,
+        )
+        return
+
+    # LiteLLM-style 'ollama/foo:bar' -> bare 'foo:bar' for native Ollama API.
+    raw_id = ledger.ai_model_provider.provider_unique_model_id
+    model_id = (
+        raw_id[len('ollama/'):] if raw_id.startswith('ollama/') else raw_id
+    )
+
+    try:
+        requests.post(
+            f'{base_url}/api/chat',
+            json={'model': model_id, 'keep_alive': 0},
+            timeout=2,
+        )
+        logger.info(
+            '[ParietalLobe] VRAM unload signal sent for %s', model_id
+        )
+    except requests.RequestException as exc:
+        logger.warning(
+            '[ParietalLobe] VRAM unload failed for %s: %s', model_id, exc,
+        )
 
 
 def _json_str_to_dict(raw_args: Any) -> Dict[str, Any]:
@@ -74,12 +120,23 @@ class ParietalLobe:
         self.session = session
         self.log_callback = log_callback
         self._last_used_model_selection: Optional[ModelSelection] = None
+        # The ledger from the most-recent successful synapse.chat() in
+        # FrontalLobe._execute_turn. This is the source of truth for the
+        # VRAM unload signal in the run() finally block.
+        self._last_used_ledger: Optional[AIModelProviderUsageRecord] = None
 
         self.enabled_tools = (
             self.session.identity_disc.enabled_tools
             if self.session.identity_disc
             else None
         )
+
+    def record_last_used_ledger(
+        self, ledger: AIModelProviderUsageRecord
+    ) -> None:
+        """FrontalLobe calls this after a successful synapse.chat() so the
+        finally-block unload targets the model that was just held resident."""
+        self._last_used_ledger = ledger
 
     async def _log_live(self, message: str) -> None:
         if self.log_callback:
@@ -105,13 +162,15 @@ class ParietalLobe:
         )
 
     async def unload_client(self) -> None:
-        """Sends the VRAM unload signal to the last used model."""
-        if (
-            hasattr(self, '_last_used_model_selection')
-            and self._last_used_model_selection
-        ):
+        """Sends the VRAM unload signal to the last used model.
+
+        Uses the ledger recorded by ``record_last_used_ledger`` after the
+        most-recent successful FrontalLobe synapse.chat(). If no chat ever
+        succeeded (model rejection, hypothalamus paralysis, etc.) there's
+        nothing to unload and we silently no-op."""
+        if self._last_used_ledger is not None:
             await asyncio.to_thread(
-                _sync_unload_execution, self._last_used_model_selection
+                _sync_unload_execution, self._last_used_ledger
             )
 
     def _fetch_tools(self, identity_disc):

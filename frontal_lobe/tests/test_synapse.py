@@ -39,3 +39,27 @@ class SynapseTest(TestCase):
         response = client.chat([{'role': 'user', 'content': 'Test'}])
 
         self.assertIn('Error communicating with local LLM', response.content)
+
+    @patch('frontal_lobe.synapse.requests.post')
+    def test_embed_sends_keep_alive_zero(self, mock_post):
+        """Assert embed() releases the model from VRAM via keep_alive=0.
+
+        Per Michael's rule: caching is Are-Self-side, not Ollama-side.
+        Every embedding call must drop VRAM the moment it returns, so
+        nomic-embed-text doesn't sit resident next to the chat model.
+        """
+        mock_response = MagicMock()
+        mock_response.json.return_value = {'embeddings': [[0.1, 0.2, 0.3]]}
+        mock_response.raise_for_status.return_value = None
+        mock_post.return_value = mock_response
+
+        client = OllamaClient('nomic-embed-text')
+        result = client.embed('hello world')
+
+        self.assertEqual(result, [0.1, 0.2, 0.3])
+        mock_post.assert_called_once()
+        _, kwargs = mock_post.call_args
+        payload = kwargs['json']
+        self.assertEqual(payload['model'], 'nomic-embed-text')
+        self.assertEqual(payload['input'], 'hello world')
+        self.assertEqual(payload['keep_alive'], 0)

@@ -358,6 +358,15 @@ class FrontalLobe:
                 # chat() mutates the ledger, returns normalized tool calls
                 success, tool_calls_data = await sync_to_async(synapse.chat)()
                 if success:
+                    # Hand the ledger to ParietalLobe and drop VRAM
+                    # immediately. Per Michael: caching is Are-Self-side, not
+                    # Ollama-side — every single inference must release the
+                    # model. The finally-block unload in run() is now a
+                    # belt-and-suspenders safety net for the rare cases this
+                    # branch is bypassed (e.g. an exception between record
+                    # and the next loop iteration).
+                    self.parietal_lobe.record_last_used_ledger(pending_ledger)
+                    await self.parietal_lobe.unload_client()
                     break  # Success! escape loop!
 
             except (RateLimitError, APIConnectionError, NotFoundError) as e:

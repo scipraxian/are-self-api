@@ -172,7 +172,11 @@ class OllamaClient:
             return False
 
     def embed(self, text: str) -> List[float]:
-        """Generates an embedding vector using the modern Ollama /api/embed endpoint."""
+        """Generates an embedding vector using the modern Ollama /api/embed endpoint.
+
+        Sends ``keep_alive=0`` so the embedding model (e.g. nomic-embed-text)
+        is released from VRAM the moment the call returns. Per Michael's
+        rule: caching is Are-Self-side; Ollama is not a model cache."""
         # Corrected: Singular 'embed' endpoint to resolve 404
         url = f'{OllamaConstants.BASE_URL}/api/embed'
 
@@ -180,6 +184,7 @@ class OllamaClient:
         payload = {
             OllamaConstants.KEY_MODEL: self.model,
             'input': text,
+            'keep_alive': 0,
         }
 
         logger.info(
