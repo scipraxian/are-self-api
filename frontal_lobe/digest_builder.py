@@ -17,6 +17,8 @@ import json
 import logging
 from typing import Any, Dict, List, Optional
 
+from django.utils.duration import duration_string
+
 from frontal_lobe.models import (
     ReasoningStatus,
     ReasoningTurn,
@@ -92,6 +94,9 @@ def digest_to_vesicle(digest: ReasoningTurnDigest) -> Dict[str, Any]:
         'created': digest.created.isoformat() if digest.created else None,
         'modified': (
             digest.modified.isoformat() if digest.modified else None
+        ),
+        'delta': (
+            duration_string(digest.delta) if digest.delta is not None else None
         ),
     }
 
