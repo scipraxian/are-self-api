@@ -123,6 +123,61 @@ class ThalamusViewSet(viewsets.ViewSet):
             status=status.HTTP_200_OK,
         )
 
+    @action(detail=False, methods=['post'], url_path='clear')
+    def clear(self, request):
+        """Mark the current Thalamus session as STOPPED.
+
+        After clear() returns, the next ``/interact/`` call falls
+        through to the GENESIS / FRESH START path instead of injecting
+        into the existing session. Idempotent: clearing twice or
+        clearing when nothing is active both return 200 with an
+        explanatory message.
+        """
+        pathway_id = NeuralPathway.THALAMUS
+        standing_train = (
+            SpikeTrain.objects.filter(pathway_id=pathway_id)
+            .order_by('-created')
+            .first()
+        )
+        if not standing_train:
+            dto = ThalamusResponseDTO(
+                ok=True, message='No standing train; nothing to clear.'
+            )
+            return Response(
+                ThalamusResponseSerializer(instance=dto).data,
+                status=status.HTTP_200_OK,
+            )
+
+        session = (
+            ReasoningSession.objects.filter(spike__spike_train=standing_train)
+            .order_by('-created')
+            .first()
+        )
+        terminal_states = (
+            ReasoningStatusID.COMPLETED,
+            ReasoningStatusID.STOPPED,
+            ReasoningStatusID.ERROR,
+            ReasoningStatusID.MAXED_OUT,
+        )
+        if session is None or session.status_id in terminal_states:
+            dto = ThalamusResponseDTO(
+                ok=True, message='No active session to clear.'
+            )
+            return Response(
+                ThalamusResponseSerializer(instance=dto).data,
+                status=status.HTTP_200_OK,
+            )
+
+        session.status_id = ReasoningStatusID.STOPPED
+        session.save(update_fields=['status_id'])
+        dto = ThalamusResponseDTO(
+            ok=True, message='Session marked STOPPED.'
+        )
+        return Response(
+            ThalamusResponseSerializer(instance=dto).data,
+            status=status.HTTP_200_OK,
+        )
+
     @action(detail=False, methods=['get'])
     def messages(self, request):
         """
@@ -144,8 +199,13 @@ class ThalamusViewSet(viewsets.ViewSet):
                 status=status.HTTP_200_OK,
             )
 
+        # Skip STOPPED sessions explicitly: ``/clear/`` flips the
+        # current session to STOPPED so the next ``/interact/`` falls
+        # through to GENESIS. Until that happens, ``/messages/`` would
+        # otherwise hydrate the UI with the just-cleared chat history.
         session = (
             ReasoningSession.objects.filter(spike__spike_train=standing_train)
+            .exclude(status_id=ReasoningStatusID.STOPPED)
             .order_by('-created')
             .first()
         )
