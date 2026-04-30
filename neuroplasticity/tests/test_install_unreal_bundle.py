@@ -244,9 +244,18 @@ class UnrealBundleInstallTestCase(CommonTestCase):
 
         # Snapshot + restore the in-memory registries so a test that
         # installs the bundle doesn't leak handler registrations into
-        # sibling tests that run in the same process.
+        # sibling tests that run in the same process. The synthetic
+        # bundle's __init__.py re-registers TYPE_BUILD/TYPE_RUN log
+        # parser strategies under the same keys the real unreal bundle
+        # uses, overwriting them with stubs whose parse_chunk returns
+        # []. Without restoring LogParserFactory._registry, any later
+        # bundle parser test that calls LogParserFactory.create()
+        # picks up the stub and fails with IndexError.
         self._native_handlers_snapshot = dict(NATIVE_HANDLERS)
         self._parietal_registry_snapshot = dict(_PARIETAL_TOOL_REGISTRY)
+        self._log_parser_registry_snapshot = dict(
+            LogParserFactory._registry
+        )
 
     def tearDown(self):
         self._settings_override.disable()
@@ -258,6 +267,8 @@ class UnrealBundleInstallTestCase(CommonTestCase):
         NATIVE_HANDLERS.update(self._native_handlers_snapshot)
         _PARIETAL_TOOL_REGISTRY.clear()
         _PARIETAL_TOOL_REGISTRY.update(self._parietal_registry_snapshot)
+        LogParserFactory._registry.clear()
+        LogParserFactory._registry.update(self._log_parser_registry_snapshot)
         shutil.rmtree(self._tmp_root, ignore_errors=True)
         super().tearDown()
 
