@@ -57,7 +57,7 @@ def _query_model_sync(
         results = []
         for obj in qs_page:
             # 1. Base identity
-            item = {'_model': f'{app_label}.{model_name}', 'id': str(obj.pk)}
+            item = {'_model': model_name, 'id': str(obj.pk)}
 
             # 2. Extract all native fields safely
             for field in obj._meta.get_fields():
