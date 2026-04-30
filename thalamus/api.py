@@ -22,6 +22,8 @@ from identity.models import IdentityDisc
 from .serializers import (
     ThalamusMessageListDTO,
     ThalamusMessageListSerializer,
+    ThalamusModelInfoDTO,
+    ThalamusModelInfoSerializer,
     ThalamusRequestSerializer,
     ThalamusResponseDTO,
     ThalamusResponseSerializer,
@@ -122,6 +124,85 @@ class ThalamusViewSet(viewsets.ViewSet):
             ThalamusResponseSerializer(instance=dto).data,
             status=status.HTTP_200_OK,
         )
+
+    @action(detail=False, methods=['get'], url_path='model-info')
+    def model_info(self, request):
+        """Return the Thalamus identity's configured model + live token pressure.
+
+        ``model_name`` and ``context_window`` are a cheap lookup off
+        ``IdentityDisc.THALAMUS.selection_filter.preferred_model.ai_model``
+        -- configured intent, NOT live routing.  ``current_tokens``
+        is the most recent ``ReasoningTurn.model_usage_record.input_tokens``
+        on the standing Thalamus session (excluding STOPPED sessions
+        the same way ``/messages/`` does, so a freshly-cleared chat
+        reports null until the next turn runs).  Any unresolved link
+        in either chain collapses to null.  UI refetches on every
+        ``ReasoningTurnDigest`` ``activity='saved'`` push.
+        """
+        try:
+            disc = IdentityDisc.objects.select_related(
+                'selection_filter__preferred_model__ai_model'
+            ).get(id=IdentityDisc.THALAMUS)
+            selection_filter = disc.selection_filter
+            provider = (
+                selection_filter.preferred_model
+                if selection_filter else None
+            )
+            model = provider.ai_model if provider else None
+            model_name = model.name if model else None
+            context_window = model.context_length if model else None
+        except IdentityDisc.DoesNotExist:
+            model_name = None
+            context_window = None
+
+        current_tokens = self._resolve_current_input_tokens()
+
+        dto = ThalamusModelInfoDTO(
+            model_name=model_name,
+            context_window=context_window,
+            current_tokens=current_tokens,
+        )
+        return Response(
+            ThalamusModelInfoSerializer(instance=dto).data,
+            status=status.HTTP_200_OK,
+        )
+
+    def _resolve_current_input_tokens(self):
+        """Most recent ``input_tokens`` on the standing Thalamus session.
+
+        Walks the same standing-train chain as ``/interact/`` and
+        ``/messages/``: latest SpikeTrain on the THALAMUS pathway,
+        latest non-STOPPED ReasoningSession on it, highest-numbered
+        ReasoningTurn whose ``model_usage_record`` is populated.
+        Any null link returns ``None``.
+        """
+        standing_train = (
+            SpikeTrain.objects
+            .filter(pathway_id=NeuralPathway.THALAMUS)
+            .order_by('-created')
+            .first()
+        )
+        if not standing_train:
+            return None
+        session = (
+            ReasoningSession.objects
+            .filter(spike__spike_train=standing_train)
+            .exclude(status_id=ReasoningStatusID.STOPPED)
+            .order_by('-created')
+            .first()
+        )
+        if not session:
+            return None
+        recent_turn = (
+            session.turns
+            .filter(model_usage_record__isnull=False)
+            .order_by('-turn_number')
+            .select_related('model_usage_record')
+            .first()
+        )
+        if not recent_turn:
+            return None
+        return recent_turn.model_usage_record.input_tokens
 
     @action(detail=False, methods=['post'], url_path='clear')
     def clear(self, request):

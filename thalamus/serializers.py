@@ -52,3 +52,28 @@ class ThalamusMessageListSerializer(serializers.Serializer):
     """Schema for the full history payload expected by assistant-ui."""
 
     messages = ThalamusMessageSerializer(many=True)
+
+
+@dataclass
+class ThalamusModelInfoDTO:
+    model_name: Optional[str]
+    context_window: Optional[int]
+    current_tokens: Optional[int]
+
+
+class ThalamusModelInfoSerializer(serializers.Serializer):
+    """Schema for the Thalamus identity's configured-model pill.
+
+    All three fields are nullable.  Any unresolved link in the
+    configured-model chain
+    (``IdentityDisc -> selection_filter -> preferred_model -> ai_model``)
+    collapses ``model_name`` and ``context_window`` to null. Likewise,
+    the live token-pressure read
+    (``standing SpikeTrain -> latest non-STOPPED session -> highest-turn
+    ReasoningTurn -> model_usage_record.input_tokens``) collapses
+    ``current_tokens`` to null when no turn has run yet.
+    """
+
+    model_name = serializers.CharField(allow_null=True, allow_blank=True)
+    context_window = serializers.IntegerField(allow_null=True)
+    current_tokens = serializers.IntegerField(allow_null=True)
