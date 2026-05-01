@@ -9,6 +9,7 @@ from identity.models import (
     BudgetPeriod,
     Identity,
     IdentityAddon,
+    IdentityAddonPhase,
     IdentityBudget,
     IdentityDisc,
     IdentityTag,
@@ -16,6 +17,7 @@ from identity.models import (
 )
 from identity.serializers import (
     BudgetPeriodSerializer,
+    IdentityAddonPhaseSerializer,
     IdentityAddonSerializer,
     IdentityBudgetSerializer,
     IdentityDiscSerializer,
@@ -103,12 +105,29 @@ class IdentityTagViewSet(viewsets.ModelViewSet):
     serializer_class = IdentityTagSerializer
 
 
-class IdentityTypeViewSet(viewsets.ModelViewSet):
+class IdentityTypeViewSet(viewsets.ReadOnlyModelViewSet):
+    """Protocol-enum surface — class constants (PM, WORKER) are owned by
+    code, fixture-shipped, and must not be mutated at runtime.
+    """
+
     queryset = IdentityType.objects.all().order_by('name')
     serializer_class = IdentityTypeSerializer
 
 
-class BudgetPeriodViewSet(viewsets.ModelViewSet):
+class IdentityAddonPhaseViewSet(viewsets.ReadOnlyModelViewSet):
+    """Protocol-enum surface — phase rows (IDENTIFY, CONTEXT, HISTORY,
+    TERMINAL) are owned by code and dispatched by integer PK.
+    """
+
+    queryset = IdentityAddonPhase.objects.all().order_by('id')
+    serializer_class = IdentityAddonPhaseSerializer
+
+
+class BudgetPeriodViewSet(viewsets.ReadOnlyModelViewSet):
+    """Protocol-enum surface — period rows are core vocabulary; runtime
+    edits would silently change every IdentityBudget pointing at them.
+    """
+
     queryset = BudgetPeriod.objects.all()
     serializer_class = BudgetPeriodSerializer
 

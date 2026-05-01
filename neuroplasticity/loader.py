@@ -668,6 +668,7 @@ def save_bundle_to_archive(slug: str) -> dict:
         manifest_obj.setdefault('entry_modules', [])
 
     code_dir = runtime_bundle / 'code'
+    media_dir = runtime_bundle / 'media'
 
     # Pre-flight (FIRST — before any state mutation): refuse the save
     # if the manifest declares entry_modules but the runtime code tree
@@ -721,6 +722,19 @@ def save_bundle_to_archive(slug: str) -> dict:
                     if path.is_dir():
                         continue
                     arcname = Path(slug) / 'code' / path.relative_to(code_dir)
+                    zf.write(path, arcname.as_posix())
+
+            # Bundle-owned media (e.g. Avatar display=FILE bytes) — bake
+            # whatever is under grafts/<slug>/media/ into the archive at
+            # <slug>/media/. Round-trips on install via the existing
+            # copytree from extracted source into grafts/<slug>/.
+            if media_dir.exists():
+                for path in sorted(media_dir.rglob('*')):
+                    if path.is_dir():
+                        continue
+                    arcname = (
+                        Path(slug) / 'media' / path.relative_to(media_dir)
+                    )
                     zf.write(path, arcname.as_posix())
 
         # Pre-flight: verify the staged zip is valid and contains the

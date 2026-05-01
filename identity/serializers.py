@@ -1,3 +1,4 @@
+import numpy as np
 from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
@@ -19,6 +20,7 @@ from .models import (
     BudgetPeriod,
     Identity,
     IdentityAddon,
+    IdentityAddonPhase,
     IdentityBudget,
     IdentityBudgetAssignment,
     IdentityDisc,
@@ -53,6 +55,12 @@ class IdentityTagSerializer(serializers.ModelSerializer):
 class IdentityTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = IdentityType
+        fields = ALL_FIELDS
+
+
+class IdentityAddonPhaseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IdentityAddonPhase
         fields = ALL_FIELDS
 
 
@@ -197,6 +205,7 @@ class IdentityDiscSerializer(
     turn_count = serializers.SerializerMethodField()
 
     memories = serializers.SerializerMethodField()
+    composite_vector = serializers.SerializerMethodField()
 
     class Meta:
         model = IdentityDisc
@@ -224,6 +233,30 @@ class IdentityDiscSerializer(
             identity_disc.engrams.distinct(),
             many=True,
         ).data
+
+    def get_composite_vector(self, identity_disc):
+        """Unit-normalized centroid of the disc's identity vector and the
+        vectors of every attached engram. Engrams without vectors are
+        skipped, not crashed. Returns ``None`` when there is nothing to
+        embed (no identity vector AND no engrams with vectors), or when
+        the element-wise sum collapses to zero (so the badge can fall
+        through to a non-vector visual cue instead of dividing by zero).
+        """
+        components = []
+        if identity_disc.vector is not None:
+            components.append(np.asarray(identity_disc.vector, dtype=float))
+        for engram in identity_disc.engrams.distinct():
+            if engram.vector is not None:
+                components.append(np.asarray(engram.vector, dtype=float))
+
+        if not components:
+            return None
+
+        summed = np.sum(components, axis=0)
+        norm = float(np.linalg.norm(summed))
+        if norm == 0.0:
+            return None
+        return (summed / norm).tolist()
 
     def get_budget_id(self, obj):
         """Get the budget ID from the OneToOne budget_assignments relationship."""

@@ -13,7 +13,8 @@ consumes what we emit; this module does not know the UI exists.
 from pathlib import Path
 
 from asgiref.sync import async_to_sync
-from django.http import Http404
+from django.http import FileResponse, Http404, HttpResponseBadRequest
+from django.views.decorators.http import require_GET
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -26,7 +27,7 @@ from peripheral_nervous_system.autonomic_nervous_system import (
 from synaptic_cleft.axon_hillok import fire_neurotransmitter
 from synaptic_cleft.neurotransmitters import Acetylcholine
 
-from .models import NeuralModifier
+from .models import NeuralModifier, NeuralModifierStatus
 from .serializers import (
     NeuralModifierDetailSerializer,
     NeuralModifierSerializer,
@@ -441,3 +442,52 @@ class NeuralModifierViewSet(
             {'slug': catalog_slug, 'deleted': True},
             status=status.HTTP_200_OK,
         )
+
+
+@require_GET
+def serve_genome_media(request, slug, filename):
+    """Serve a file from ``grafts/<slug>/media/`` for an INSTALLED bundle.
+
+    The single core resolver behind ``Avatar`` ``display=FILE`` rows
+    and any other bundle-shipped media. One route, every bundle uses
+    it — bundles do NOT register their own media routes.
+
+    Refusals:
+        * ``slug`` not present, not INSTALLED, or canonical (canonical
+          has no graft tree) → 404.
+        * ``filename`` containing path separators, leading ``.``, or
+          equal to ``.`` / ``..`` → 400.
+        * Resolved path escapes the slug's media directory (defense in
+          depth against case-insensitive / symlink shenanigans) → 404.
+        * File does not exist → 404.
+    """
+    if (
+        not filename
+        or filename in ('.', '..')
+        or '/' in filename
+        or '\\' in filename
+        or filename.startswith('.')
+    ):
+        return HttpResponseBadRequest('Invalid filename.')
+
+    if slug == NeuralModifier.CANONICAL_SLUG:
+        raise Http404('Canonical genome has no media tree.')
+
+    bundle_exists = NeuralModifier.objects.filter(
+        slug=slug,
+        status_id=NeuralModifierStatus.INSTALLED,
+    ).exists()
+    if not bundle_exists:
+        raise Http404('No installed bundle with that slug.')
+
+    media_dir = (loader.grafts_root() / slug / 'media').resolve()
+    target = (media_dir / filename).resolve()
+    try:
+        target.relative_to(media_dir)
+    except ValueError:
+        raise Http404('Media path escapes the bundle media directory.')
+
+    if not target.is_file():
+        raise Http404('No such media file.')
+
+    return FileResponse(open(target, 'rb'))

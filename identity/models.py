@@ -1,3 +1,4 @@
+import shutil
 from decimal import Decimal
 from uuid import UUID
 
@@ -15,7 +16,9 @@ from common.models import (
 )
 from frontal_lobe.models import ReasoningTurn
 from hippocampus.models import Engram
+from identity.avatar_storage import avatar_media_dir
 from neuroplasticity.genome_mixin import GenomeOwnedMixin
+from neuroplasticity.models import NeuralModifier
 from parietal_lobe.models import ToolDefinition
 
 
@@ -121,6 +124,102 @@ class IdentityBudget(NameMixin):
     )
 
 
+class AvatarSelectedDisplayType(NameMixin):
+    """The type of avatar to use."""
+
+    GENERATED = 1  # Default, zero size.
+    FILE = 2  # NeuralModifier media file.
+    URL = 3
+    EMOJI = 4  # multiple characters.
+
+
+class Avatar(UUIDIdMixin, NameMixin, DescriptionMixin, GenomeOwnedMixin):
+    """A visual representation of an identity, used for display and branding.
+
+    Genome-owned: every Avatar row carries a ``genome`` FK via
+    ``GenomeOwnedMixin``. ``display=FILE`` rows store their bytes in
+    the owning genome's graft tree at::
+
+        neuroplasticity/grafts/<genome.slug>/media/<stored_filename>
+
+    and are served via the single core resolver at::
+
+        /api/v2/genomes/<genome.slug>/media/<stored_filename>
+
+    (one route in ``neuroplasticity/urls.py``, not per-bundle).
+
+    Canonical genome has no graft tree (no manifest, no install
+    path), so canonical Avatar rows must use ``display`` ∈ {GENERATED,
+    URL, EMOJI} only — never FILE. ``GenomeWritableMixin`` already
+    refuses every API write that targets canonical, so canonical
+    Avatar rows are fixture-only by construction; their display-kind
+    constraint is a coding-time invariant on whoever ships the
+    fixture.
+
+    Curated default art ships as its own bundle (Nano pack,
+    HSH-aliens pack), not in canonical.
+    """
+
+    display = models.ForeignKey(
+        AvatarSelectedDisplayType, default=1, on_delete=models.PROTECT
+    )
+
+    original_filename = models.CharField(
+        max_length=STANDARD_CHARFIELD_LENGTH, blank=True, null=True
+    )
+    stored_filename = models.CharField(
+        max_length=STANDARD_CHARFIELD_LENGTH, blank=True, null=True
+    )
+
+    url = models.URLField(blank=True, null=True)
+    emoji = models.CharField(
+        max_length=STANDARD_CHARFIELD_LENGTH, blank=True, null=True
+    )
+    tint_color = models.CharField(
+        max_length=STANDARD_CHARFIELD_LENGTH, blank=True, null=True
+    )
+
+    def save(self, *args, **kwargs):
+        # When ``genome`` changes on a ``display=FILE`` row, the bytes
+        # under ``<grafts>/<old_slug>/media/`` need to travel to
+        # ``<grafts>/<new_slug>/media/`` so the next
+        # ``save_bundle_to_archive`` bakes them into the correct zip.
+        # Snapshot via ``values_list`` (not ``refresh_from_db``) to
+        # avoid deferred-fields recursion through this same override.
+        old_genome_id = None
+        old_stored_filename = None
+        if self.pk and not self._state.adding:
+            old = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values_list('genome_id', 'stored_filename')
+                .first()
+            )
+            if old is not None:
+                old_genome_id, old_stored_filename = old
+
+        super().save(*args, **kwargs)
+
+        if (
+            old_genome_id is None
+            or old_genome_id == self.genome_id
+            or self.display_id != AvatarSelectedDisplayType.FILE
+            or not old_stored_filename
+        ):
+            return
+
+        old_genome = NeuralModifier.objects.filter(pk=old_genome_id).first()
+        if old_genome is None:
+            return
+        source = avatar_media_dir(old_genome) / old_stored_filename
+        if not source.exists():
+            return
+        target_dir = avatar_media_dir(self.genome)
+        target_dir.mkdir(parents=True, exist_ok=True)
+        target = target_dir / (self.stored_filename or old_stored_filename)
+        shutil.move(str(source), str(target))
+
+
 class IdentityFields(GenomeOwnedMixin):
     """These are the details used to represent a persona."""
 
@@ -147,6 +246,9 @@ class IdentityFields(GenomeOwnedMixin):
         null=True,
         blank=True,
         help_text='Scope this budget to a specific filter. Null = applies globally.',
+    )
+    avatar = models.ForeignKey(
+        Avatar, null=True, blank=True, on_delete=models.SET_NULL
     )
 
     class Meta:
@@ -218,9 +320,15 @@ class IdentityDisc(
         # NeuralPathway / Effector / Executable.
         needs_vector = False
         if self.pk and not self._state.adding:
-            old = type(self).objects.filter(pk=self.pk).values_list(
-                'system_prompt_template', 'identity_type_id',
-            ).first()
+            old = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values_list(
+                    'system_prompt_template',
+                    'identity_type_id',
+                )
+                .first()
+            )
             if old is not None and (
                 self.system_prompt_template != old[0]
                 or self.identity_type_id != old[1]

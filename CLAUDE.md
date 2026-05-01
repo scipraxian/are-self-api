@@ -185,6 +185,45 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   `upgrade_modifier`) are deprecation stubs that raise `CommandError` if
   invoked. The HTTP API and Modifier Garden UI are the only supported
   surfaces.
+- Avatar (`identity/models.py`) is the catalog model for visual
+  representation on `Identity` and `IdentityDisc`. Four display kinds via
+  `AvatarSelectedDisplayType` (integer-PK protocol enum, class constants):
+  GENERATED=1 (default; frontend renders Kandinsky from
+  `IdentityDiscSerializer.composite_vector`), FILE=2 (bytes in
+  `grafts/<genome.slug>/media/<stored_filename>`), URL=3, EMOJI=4. The
+  `avatar` FK on `IdentityFields` propagates to both `Identity` and
+  `IdentityDisc`; `forge_identity_disc` carries it (along with
+  `selection_filter` and `category`) from blueprint to forged disc.
+  `Avatar.save()` moves FILE-display bytes between graft trees on
+  `genome_id` change — `values_list` snapshot of
+  `(genome_id, stored_filename)` before `super().save()`, then
+  `shutil.move` from old graft's `media/` to new graft's `media/` if
+  display=FILE, old stored_filename present, source on disk. Path helper
+  `identity.avatar_storage.avatar_media_dir(genome)` is the single source
+  for `<grafts>/<genome.slug>/media/` math; lives in its own module so
+  `models.py` can import it without the DRF viewset layer.
+- `save_bundle_to_archive` packs `grafts/<slug>/media/` into the zip
+  alongside `<slug>/code/`. Round-trips on install via the existing
+  extracted-source `shutil.copytree` into runtime grafts. Bundle media is
+  first-class bundle content alongside `modifier_data.json` and `code/`.
+- Single core media resolver: `GET /api/v2/genomes/<slug>/media/<filename>`
+  in `neuroplasticity/api.py:serve_genome_media`. `@require_GET`. Refuses
+  empty / `.` / `..` / `/` / `\` / leading-`.` filenames (400),
+  canonical-slug or non-INSTALLED slug (404), `.resolve()`-based escape of
+  the bundle's media directory (404). Bundles do NOT register their own
+  media routes — one core route serves all.
+- Protocol-enum viewsets are `ReadOnlyModelViewSet`: `IdentityType`,
+  `BudgetPeriod`, `IdentityAddonPhase`, `AvatarSelectedDisplayType`. Their
+  rows are referenced from code by integer-PK class constants and must not
+  mutate at runtime. (Batched 2026-05-01.)
+- `IdentityDiscSerializer.composite_vector` is the disc's effective
+  semantic state — centroid of the disc's identity vector + every attached
+  engram vector (via `disc.engrams.distinct()`), normalized to unit length.
+  Computed on serialize, no stored field. Returns `None` when there is
+  nothing to embed (no identity vector AND no engrams with vectors) or
+  when the sum is the zero vector. Frontend uses this for the always-on
+  Kandinsky overlay on every `IdentityDisc` avatar tile, regardless of
+  display kind.
 
 ## The Developer
 

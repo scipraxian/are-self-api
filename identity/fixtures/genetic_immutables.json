@@ -1,5 +1,33 @@
 [
   {
+    "model": "identity.avatarselecteddisplaytype",
+    "pk": 1,
+    "fields": {
+      "name": "Generated"
+    }
+  },
+  {
+    "model": "identity.avatarselecteddisplaytype",
+    "pk": 2,
+    "fields": {
+      "name": "File"
+    }
+  },
+  {
+    "model": "identity.avatarselecteddisplaytype",
+    "pk": 3,
+    "fields": {
+      "name": "URL"
+    }
+  },
+  {
+    "model": "identity.avatarselecteddisplaytype",
+    "pk": 4,
+    "fields": {
+      "name": "Emoji"
+    }
+  },
+  {
     "model": "identity.budgetperiod",
     "pk": 4,
     "fields": {

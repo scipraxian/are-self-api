@@ -24,8 +24,14 @@ from typing import Iterable, Optional
 
 from django.test import TestCase, override_settings
 
+import zipfile
+
 from hypothalamus.models import AIModelTags
-from identity.models import IdentityAddon
+from identity.models import (
+    Avatar,
+    AvatarSelectedDisplayType,
+    IdentityAddon,
+)
 from neuroplasticity import loader
 from neuroplasticity.models import (
     NeuralModifier,
@@ -727,3 +733,66 @@ class SaveBundleRoundTripTest(ModifierLifecycleTestCase):
             )
         )
         self.assertEqual(before_pks, after_pks)
+
+
+class SaveBundleMediaRoundTripTest(ModifierLifecycleTestCase):
+    """Assert grafts/<slug>/media/ rides the save→install zip round-trip."""
+
+    fixtures = list(ModifierLifecycleTestCase.fixtures) + [
+        'identity/fixtures/genetic_immutables.json',
+    ]
+
+    def test_media_baked_into_archive_and_restored_on_install(self):
+        build_fake_bundle(self.scratch_root, 'painter')
+        modifier = self.install_fake('painter')
+
+        # Drop a display=FILE Avatar row owned by the bundle plus its
+        # bytes under grafts/painter/media/. The save side should
+        # mirror the bytes into the archive at painter/media/.
+        avatar = Avatar.objects.create(
+            name='Painter Avatar',
+            display_id=AvatarSelectedDisplayType.FILE,
+            genome=modifier,
+        )
+        avatar.original_filename = 'face.png'
+        avatar.stored_filename = f'{avatar.id}.png'
+        avatar.save()
+        media_dir = self.grafts_root / 'painter' / 'media'
+        media_dir.mkdir(parents=True, exist_ok=True)
+        bytes_payload = b'\x89PNG\r\n\x1a\nFAKEBYTES'
+        (media_dir / avatar.stored_filename).write_bytes(bytes_payload)
+
+        result = loader.save_bundle_to_archive('painter')
+        archive = Path(result['zip_path'])
+        self.assertTrue(archive.exists())
+
+        # The zip must contain painter/media/<filename>.
+        with zipfile.ZipFile(archive) as zf:
+            names = set(zf.namelist())
+            arc_name = f'painter/media/{avatar.stored_filename}'
+            self.assertIn(arc_name, names)
+            self.assertEqual(zf.read(arc_name), bytes_payload)
+
+        # Round-trip: uninstall, sweep, reinstall — bytes must land
+        # back at grafts/painter/media/<filename>, and the Avatar row
+        # must be re-stamped with the bundle's genome.
+        loader.uninstall_bundle('painter')
+        self.assertFalse(
+            NeuralModifier.objects.filter(slug='painter').exists()
+        )
+        loader.boot_bundles()
+        loader.install_bundle_from_archive(archive)
+
+        restored = NeuralModifier.objects.get(slug='painter')
+        restored_avatar = Avatar.objects.get(pk=avatar.pk)
+        self.assertEqual(restored_avatar.genome_id, restored.pk)
+        self.assertEqual(restored_avatar.stored_filename, avatar.stored_filename)
+
+        restored_path = (
+            self.grafts_root
+            / 'painter'
+            / 'media'
+            / restored_avatar.stored_filename
+        )
+        self.assertTrue(restored_path.exists())
+        self.assertEqual(restored_path.read_bytes(), bytes_payload)
