@@ -5,7 +5,7 @@ Owns the `LogEntry` / `LogSession` / `LogStats` data model, the
 the registry-based `LogParserFactory`. Format-specific strategies live in
 NeuralModifier bundles and register themselves with
 `LogParserFactory.register()` when their bundle boots (see
-`boot_bundles()` in `neuroplasticity/loader.py`).
+`boot_genomes()` in `neuroplasticity/loader.py`).
 
 This module knows nothing about any specific log format. Bundle-specific
 test setup — including any `sys.path` work needed to import a bundle's

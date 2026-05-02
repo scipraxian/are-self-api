@@ -1,12 +1,12 @@
 """Pytest bootstrap — runs before Django setup.
 
 Sets ``NEUROPLASTICITY_SKIP_BOOT=1`` so ``NeuroplasticityConfig.ready()``
-does NOT connect ``request_started`` to ``boot_bundles()``. Without this,
-the first ``APIClient`` call in any test fires ``boot_bundles()`` against
+does NOT connect ``request_started`` to ``boot_genomes()``. Without this,
+the first ``APIClient`` call in any test fires ``boot_genomes()`` against
 the *real* ``neuroplasticity/grafts/`` directory — its orphan sweep then
-``rmtree``s every bundle dir lacking an INSTALLED row in the (test) DB.
+``rmtree``s every graft dir lacking an INSTALLED row in the (test) DB.
 
-Tests that legitimately need the boot pass call ``loader.boot_bundles()``
+Tests that legitimately need the boot pass call ``loader.boot_genomes()``
 directly under ``override_settings(NEURAL_MODIFIER_GRAFTS_ROOT=...)``;
 see ``test_modifier_lifecycle.py`` and ``test_install_unreal_bundle.py``.
 
@@ -35,7 +35,7 @@ os.environ.setdefault('ARE_SELF_SUPPRESS_RESTART', '1')
 def _install_loader_isolation_guard():
     """Wrap public ``neuroplasticity.loader`` entry points so a test
     that forgot to override the active grafts/genomes roots can't
-    quietly mutate the user's checked-out bundle tree.
+    quietly mutate the user's checked-out genome tree.
 
     Lives here, not in the loader, so production code stays free of
     pytest awareness. The wrap happens once at ``pytest_configure``
@@ -83,14 +83,16 @@ def _install_loader_isolation_guard():
 
         setattr(loader, name, guarded)
 
-    _wrap('boot_bundles', check_genomes=False)
-    _wrap('uninstall_bundle', check_genomes=False)
-    _wrap('install_bundle_from_source', check_genomes=True)
-    _wrap('install_bundle_from_archive', check_genomes=True)
-    _wrap('upgrade_bundle_from_source', check_genomes=True)
-    _wrap('upgrade_bundle', check_genomes=True)
-    _wrap('save_bundle_to_archive', check_genomes=True)
-    _wrap('create_empty_bundle', check_genomes=True)
+    _wrap('boot_genomes', check_genomes=False)
+    _wrap('uninstall_genome', check_genomes=False)
+    _wrap('graft_incubator', check_genomes=True)
+    _wrap('install_source_to_graft', check_genomes=True)
+    _wrap('install_genome_to_graft', check_genomes=True)
+    _wrap('upgrade_source_to_graft', check_genomes=True)
+    _wrap('upgrade_genome', check_genomes=True)
+    _wrap('save_graft_to_genome', check_genomes=True)
+    _wrap('save_as_genome', check_genomes=True)
+    _wrap('create_empty_genome', check_genomes=True)
 
 
 def pytest_configure(config):

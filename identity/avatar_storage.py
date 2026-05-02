@@ -18,11 +18,13 @@ def avatar_media_dir(genome: NeuralModifier) -> Path:
 
     Bytes for ``display=FILE`` Avatar rows live at
     ``<grafts_root>/<genome.slug>/media/<stored_filename>``. The
-    directory is created on first write. INCUBATOR has no
-    graft-of-record by spec (no manifest, no install path), but a
-    media subdirectory is created under it on demand to hold user
-    uploads that haven't been promoted into a real bundle yet;
-    ``save_bundle_to_archive`` will bake them in once the user
-    promotes the row.
+    directory is created on first write. INCUBATOR is now a real
+    grafted genome — its graft tree is bootstrapped on every Django
+    boot via :func:`neuroplasticity.loader.graft_incubator`, so the
+    ``media/`` subdir is guaranteed to exist alongside the manifest
+    by the time any avatar write reaches it. Uploads stamped
+    ``genome=INCUBATOR`` land here until the user promotes the row
+    into another genome via the V2 PATCH path or
+    ``save_graft_to_genome`` bakes it into the genome's zip.
     """
     return grafts_root() / genome.slug / 'media'

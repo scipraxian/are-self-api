@@ -195,7 +195,7 @@ class ModifierLifecycleTestCase(TestCase):
         super().tearDown()
 
     def install_fake(self, slug: str) -> NeuralModifier:
-        return loader.install_bundle_from_source(
+        return loader.install_source_to_graft(
             self.scratch_root / slug, slug
         )
 
@@ -237,7 +237,7 @@ class UninstallFullRollbackTest(ModifierLifecycleTestCase):
         """Assert uninstall cascades owned rows, logs, and events.
 
         The runtime dir stays on disk — cleanup is deferred to
-        :func:`loader.boot_bundles` so the real rmtree runs in a fresh
+        :func:`loader.boot_genomes` so the real rmtree runs in a fresh
         process where the prior Daphne's file locks are gone. See
         ``UninstallDefersDiskCleanupTest`` for the on-disk contract.
         """
@@ -252,7 +252,7 @@ class UninstallFullRollbackTest(ModifierLifecycleTestCase):
         modifier = NeuralModifier.objects.get(slug='gamma')
         log_pk = modifier.current_installation().pk
 
-        deleted_slug = loader.uninstall_bundle('gamma')
+        deleted_slug = loader.uninstall_genome('gamma')
 
         self.assertEqual(deleted_slug, 'gamma')
         self.assertFalse(NeuralModifier.objects.filter(slug='gamma').exists())
@@ -278,7 +278,7 @@ class InstallRejectsHashDriftTest(ModifierLifecycleTestCase):
         manifest['version'] = '9.9.9'
         manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
 
-        loader.boot_bundles()
+        loader.boot_genomes()
 
         modifier = NeuralModifier.objects.get(slug='epsilon')
         self.assertEqual(modifier.status_id, NeuralModifierStatus.BROKEN)
@@ -349,13 +349,13 @@ class ReinstallReusesManifestPinnedPkTest(ModifierLifecycleTestCase):
         first = self.install_fake('eta')
         first_pk = first.pk
 
-        loader.uninstall_bundle('eta')
-        # Simulate the coordinated restart: boot_bundles' orphan sweep
+        loader.uninstall_genome('eta')
+        # Simulate the coordinated restart: boot_genomes' orphan sweep
         # removes the runtime dir left behind by uninstall. Without
-        # this, install_bundle_from_source would hit its FileExistsError
+        # this, install_source_to_graft would hit its FileExistsError
         # guard and 409 — exactly the bug this machinery exists to
         # prevent in production.
-        loader.boot_bundles()
+        loader.boot_genomes()
         second = self.install_fake('eta')
 
         self.assertEqual(second.pk, first_pk)
@@ -499,7 +499,7 @@ class UpgradeDiffTest(ModifierLifecycleTestCase):
             json.dumps(modifier_data_v2, indent=2) + '\n'
         )
 
-        result = loader.upgrade_bundle_from_source(bundle, 'evolver')
+        result = loader.upgrade_source_to_graft(bundle, 'evolver')
 
         self.assertEqual(result['previous_version'], '0.0.1')
         self.assertEqual(result['new_version'], '0.0.2')
@@ -530,7 +530,7 @@ class UpgradeRefusesStaleVersionTest(ModifierLifecycleTestCase):
         self.install_fake('samever')
 
         with self.assertRaisesRegex(ValueError, 'not newer'):
-            loader.upgrade_bundle_from_source(
+            loader.upgrade_source_to_graft(
                 self.scratch_root / 'samever', 'samever'
             )
 
@@ -539,7 +539,7 @@ class UpgradeRefusesStaleVersionTest(ModifierLifecycleTestCase):
         build_fake_bundle(self.scratch_root, 'samever2')
         self.install_fake('samever2')
 
-        result = loader.upgrade_bundle_from_source(
+        result = loader.upgrade_source_to_graft(
             self.scratch_root / 'samever2', 'samever2',
             allow_same_version=True,
         )
@@ -555,7 +555,7 @@ class BootFlipsBrokenOnMissingManifestTest(ModifierLifecycleTestCase):
         (self.grafts_root / 'manifest_gone' / 'manifest.json').unlink()
         sys.modules.pop('are_self_fake', None)
 
-        loader.boot_bundles()
+        loader.boot_genomes()
 
         modifier = NeuralModifier.objects.get(slug='manifest_gone')
         self.assertEqual(modifier.status_id, NeuralModifierStatus.BROKEN)
@@ -577,7 +577,7 @@ class BootFlipsBrokenOnMissingCodeTest(ModifierLifecycleTestCase):
         sys.modules.pop('are_self_fake', None)
         shutil.rmtree(self.grafts_root / 'code_gone' / 'code')
 
-        loader.boot_bundles()
+        loader.boot_genomes()
 
         modifier = NeuralModifier.objects.get(slug='code_gone')
         self.assertEqual(modifier.status_id, NeuralModifierStatus.BROKEN)
@@ -597,14 +597,14 @@ class UninstallDefersDiskCleanupTest(ModifierLifecycleTestCase):
         when the current Daphne process held live file handles on the
         bundle's code, which left the dir on disk and produced a 409 on
         the next install. Cleanup now defers to
-        :func:`loader.boot_bundles` in a fresh process.
+        :func:`loader.boot_genomes` in a fresh process.
         """
         build_fake_bundle(self.scratch_root, 'deferred')
         self.install_fake('deferred')
         runtime = self.grafts_root / 'deferred'
         self.assertTrue(runtime.is_dir())
 
-        loader.uninstall_bundle('deferred')
+        loader.uninstall_genome('deferred')
 
         self.assertFalse(
             NeuralModifier.objects.filter(slug='deferred').exists()
@@ -617,24 +617,24 @@ class UninstallDefersDiskCleanupTest(ModifierLifecycleTestCase):
 
 class BootBundlesSweepsOrphanDirsTest(ModifierLifecycleTestCase):
     def test_boot_bundles_removes_orphan_dir(self):
-        """Assert boot_bundles() deletes grafts dirs with no matching DB row."""
+        """Assert boot_genomes() deletes grafts dirs with no matching DB row."""
         orphan = self.grafts_root / 'orphan'
         orphan.mkdir()
         (orphan / 'stub.txt').write_text('payload')
 
-        loader.boot_bundles()
+        loader.boot_genomes()
 
         self.assertFalse(orphan.exists())
 
 
 class BootBundlesPreservesInstalledDirsTest(ModifierLifecycleTestCase):
     def test_boot_bundles_preserves_installed_bundle(self):
-        """Assert boot_bundles() keeps dirs whose slug has a DB row."""
+        """Assert boot_genomes() keeps dirs whose slug has a DB row."""
         build_fake_bundle(self.scratch_root, 'keeper')
         modifier = self.install_fake('keeper')
         status_before = modifier.status_id
 
-        loader.boot_bundles()
+        loader.boot_genomes()
 
         modifier.refresh_from_db()
         self.assertTrue((self.grafts_root / 'keeper').is_dir())
@@ -643,7 +643,7 @@ class BootBundlesPreservesInstalledDirsTest(ModifierLifecycleTestCase):
 
 class BootBundlesSkipsMissingTableTest(ModifierLifecycleTestCase):
     def test_boot_bundles_skips_missing_table(self):
-        """Assert boot_bundles returns silently when DB is not ready."""
+        """Assert boot_genomes returns silently when DB is not ready."""
         from unittest.mock import patch
 
         from django.db import OperationalError
@@ -653,10 +653,10 @@ class BootBundlesSkipsMissingTableTest(ModifierLifecycleTestCase):
         (runtime_bundle / 'manifest.json').write_text('{}')
 
         target = (
-            'neuroplasticity.loader.iter_installed_bundles'
+            'neuroplasticity.loader.iter_installed_genomes'
         )
         with patch(target, side_effect=OperationalError('test')):
-            loader.boot_bundles()
+            loader.boot_genomes()
 
 
 class InstallFromArchiveClearsOperatingRoomTest(ModifierLifecycleTestCase):
@@ -664,7 +664,7 @@ class InstallFromArchiveClearsOperatingRoomTest(ModifierLifecycleTestCase):
         """Assert operating_room is empty after a successful archive install."""
         archive = build_fake_bundle_archive(self.genomes_root, 'or_happy')
 
-        loader.install_bundle_from_archive(archive)
+        loader.install_genome_to_graft(archive)
 
         self.assertEqual(list(self.operating_room_root.iterdir()), [])
         self.assertTrue((self.grafts_root / 'or_happy').is_dir())
@@ -687,7 +687,7 @@ class InstallFromArchiveClearsOperatingRoomOnFailureTest(
             )
 
         with self.assertRaises(Exception):
-            loader.install_bundle_from_archive(archive)
+            loader.install_genome_to_graft(archive)
 
         self.assertEqual(list(self.operating_room_root.iterdir()), [])
         self.assertFalse(
@@ -709,22 +709,22 @@ class SaveBundleRoundTripTest(ModifierLifecycleTestCase):
         )
         self.assertEqual(len(before_pks), 3)
 
-        result = loader.save_bundle_to_archive('saver')
+        result = loader.save_graft_to_genome('saver')
         self.assertEqual(result['slug'], 'saver')
         self.assertEqual(result['row_count'], 3)
         self.assertTrue(Path(result['zip_path']).exists())
         self.assertGreater(result['bytes_written'], 0)
 
         # Round trip — uninstall, reinstall from the freshly written zip.
-        loader.uninstall_bundle('saver')
+        loader.uninstall_genome('saver')
         self.assertFalse(
             NeuralModifier.objects.filter(slug='saver').exists()
         )
-        # Simulate the coordinated restart: boot_bundles' orphan sweep
+        # Simulate the coordinated restart: boot_genomes' orphan sweep
         # clears the deferred runtime dir before the archive reinstall.
-        loader.boot_bundles()
+        loader.boot_genomes()
         archive = Path(result['zip_path'])
-        loader.install_bundle_from_archive(archive)
+        loader.install_genome_to_graft(archive)
 
         modifier2 = NeuralModifier.objects.get(slug='saver')
         after_pks = set(
@@ -762,7 +762,7 @@ class SaveBundleMediaRoundTripTest(ModifierLifecycleTestCase):
         bytes_payload = b'\x89PNG\r\n\x1a\nFAKEBYTES'
         (media_dir / avatar.stored_filename).write_bytes(bytes_payload)
 
-        result = loader.save_bundle_to_archive('painter')
+        result = loader.save_graft_to_genome('painter')
         archive = Path(result['zip_path'])
         self.assertTrue(archive.exists())
 
@@ -776,12 +776,12 @@ class SaveBundleMediaRoundTripTest(ModifierLifecycleTestCase):
         # Round-trip: uninstall, sweep, reinstall — bytes must land
         # back at grafts/painter/media/<filename>, and the Avatar row
         # must be re-stamped with the bundle's genome.
-        loader.uninstall_bundle('painter')
+        loader.uninstall_genome('painter')
         self.assertFalse(
             NeuralModifier.objects.filter(slug='painter').exists()
         )
-        loader.boot_bundles()
-        loader.install_bundle_from_archive(archive)
+        loader.boot_genomes()
+        loader.install_genome_to_graft(archive)
 
         restored = NeuralModifier.objects.get(slug='painter')
         restored_avatar = Avatar.objects.get(pk=avatar.pk)

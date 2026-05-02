@@ -146,7 +146,7 @@ class Avatar(UUIDIdMixin, NameMixin, DescriptionMixin, GenomeOwnedMixin):
 
         /api/v2/genomes/<genome.slug>/media/<stored_filename>
 
-    (one route in ``neuroplasticity/urls.py``, not per-bundle).
+    (one route in ``neuroplasticity/urls.py``, not per-genome).
 
     Canonical genome has no graft tree (no manifest, no install
     path), so canonical Avatar rows must use ``display`` ∈ {GENERATED,
@@ -156,7 +156,7 @@ class Avatar(UUIDIdMixin, NameMixin, DescriptionMixin, GenomeOwnedMixin):
     constraint is a coding-time invariant on whoever ships the
     fixture.
 
-    Curated default art ships as its own bundle (Nano pack,
+    Curated default art ships as its own genome (Nano pack,
     HSH-aliens pack), not in canonical.
     """
 
@@ -183,7 +183,7 @@ class Avatar(UUIDIdMixin, NameMixin, DescriptionMixin, GenomeOwnedMixin):
         # When ``genome`` changes on a ``display=FILE`` row, the bytes
         # under ``<grafts>/<old_slug>/media/`` need to travel to
         # ``<grafts>/<new_slug>/media/`` so the next
-        # ``save_bundle_to_archive`` bakes them into the correct zip.
+        # ``save_graft_to_genome`` bakes them into the correct zip.
         # Snapshot via ``values_list`` (not ``refresh_from_db``) to
         # avoid deferred-fields recursion through this same override.
         old_genome_id = None

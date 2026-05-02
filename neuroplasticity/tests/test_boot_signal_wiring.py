@@ -1,15 +1,15 @@
 """Wiring tests for ``neuroplasticity.boot``.
 
-The destructive logic in ``loader.boot_bundles`` is covered directly in
+The destructive logic in ``loader.boot_genomes`` is covered directly in
 ``test_modifier_lifecycle.py`` under overridden settings. What is NOT
 exercised by the rest of the suite is the signal-handler hookup itself —
 ``schedule_boot`` connecting receivers, ``_on_request_started`` firing
-``boot_bundles`` exactly once, and the disconnect-after-fire behavior.
+``boot_genomes`` exactly once, and the disconnect-after-fire behavior.
 The repo-level ``conftest.py`` sets ``NEUROPLASTICITY_SKIP_BOOT=1`` so
 the signal is NOT connected during normal test runs (otherwise the
 first ``APIClient`` call in any test rmtree's the real ``grafts/``
 dir). These tests opt back in by manually invoking ``schedule_boot``
-with ``loader.boot_bundles`` patched out, so nothing touches disk.
+with ``loader.boot_genomes`` patched out, so nothing touches disk.
 """
 
 from __future__ import annotations
@@ -43,8 +43,8 @@ class BootSignalWiringTests(TestCase):
         boot._booted = False
 
     def test_schedule_boot_fires_boot_bundles_once_on_request(self):
-        """Assert boot_bundles fires exactly once when request_started fires."""
-        with patch('neuroplasticity.loader.boot_bundles') as mock_boot:
+        """Assert boot_genomes fires exactly once when request_started fires."""
+        with patch('neuroplasticity.loader.boot_genomes') as mock_boot:
             boot.schedule_boot()
             request_started.send(sender=None)
             request_started.send(sender=None)
@@ -53,7 +53,7 @@ class BootSignalWiringTests(TestCase):
 
     def test_receiver_disconnects_after_first_fire(self):
         """Assert the request_started receiver disconnects after firing once."""
-        with patch('neuroplasticity.loader.boot_bundles'):
+        with patch('neuroplasticity.loader.boot_genomes'):
             boot.schedule_boot()
             request_started.send(sender=None)
 
@@ -70,16 +70,16 @@ class BootSignalWiringTests(TestCase):
 
     def test_run_once_is_idempotent_across_calls(self):
         """Assert _run_once short-circuits after the first invocation."""
-        with patch('neuroplasticity.loader.boot_bundles') as mock_boot:
+        with patch('neuroplasticity.loader.boot_genomes') as mock_boot:
             boot._run_once()
             boot._run_once()
             boot._run_once()
         self.assertEqual(mock_boot.call_count, 1)
 
     def test_boot_bundles_exception_is_swallowed(self):
-        """Assert _run_once swallows boot_bundles failures (logs, no raise)."""
+        """Assert _run_once swallows boot_genomes failures (logs, no raise)."""
         with patch(
-            'neuroplasticity.loader.boot_bundles',
+            'neuroplasticity.loader.boot_genomes',
             side_effect=RuntimeError('simulated bundle blowup'),
         ):
             # Must not propagate — would otherwise take down the first

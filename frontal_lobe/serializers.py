@@ -89,6 +89,10 @@ class ReasoningSessionMinimalSerializer(serializers.ModelSerializer):
     """Minimal serializer for dashboard and list views. No heavy relations."""
 
     status_name = serializers.CharField(source='status.name', read_only=True)
+    identity_disc_id = serializers.PrimaryKeyRelatedField(
+        source='identity_disc',
+        read_only=True,
+    )
     identity_disc_name = serializers.CharField(
         source='identity_disc.name',
         read_only=True,
@@ -102,6 +106,7 @@ class ReasoningSessionMinimalSerializer(serializers.ModelSerializer):
             'id',
             'status',
             'status_name',
+            'identity_disc_id',
             'identity_disc_name',
             'created',
             'modified',

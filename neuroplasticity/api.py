@@ -6,6 +6,9 @@ event timeline stays the source of truth. After a successful lifecycle
 call, the viewset fires an Acetylcholine so the frontend's NeuralModifier
 dendrites refetch.
 
+Vocabulary: ``genome`` is the persisted identity (UUID + zip),
+``graft`` is the runtime tree, ``modifier`` is the conceptual entity.
+
 API is 100% standalone — endpoints return raw JSON state. A dumb UI
 consumes what we emit; this module does not know the UI exists.
 """
@@ -38,10 +41,10 @@ def _broadcast(modifier, action_name: str, slug: str = None) -> None:
     """Fire an Acetylcholine so the garden view refetches."""
     if modifier is not None:
         dendrite_id = str(modifier.pk)
-        bundle_slug = modifier.slug
+        modifier_slug = modifier.slug
     else:
         dendrite_id = None
-        bundle_slug = slug
+        modifier_slug = slug
     async_to_sync(fire_neurotransmitter)(
         Acetylcholine(
             receptor_class='NeuralModifier',
@@ -49,7 +52,7 @@ def _broadcast(modifier, action_name: str, slug: str = None) -> None:
             activity='updated',
             vesicle={
                 'action': action_name,
-                'slug': bundle_slug,
+                'slug': modifier_slug,
             },
         )
     )
@@ -105,7 +108,7 @@ class NeuralModifierViewSet(
 
     The single exception is PATCH on ``selected_for_edit`` — the
     frontend uses PATCH against the detail route to switch the active
-    workspace bundle. Every other field is read_only at the serializer
+    workspace genome. Every other field is read_only at the serializer
     layer; PUT is not exposed.
     """
 
@@ -170,7 +173,7 @@ class NeuralModifierViewSet(
                 {
                     'detail': (
                         'Canonical is read-only and cannot be the active '
-                        'edit target. Select a user bundle or the incubator.'
+                        'edit target. Select a user genome or the incubator.'
                     )
                 },
                 status=status.HTTP_400_BAD_REQUEST,
@@ -184,10 +187,10 @@ class NeuralModifierViewSet(
 
     @action(detail=False, methods=['post'], url_path='create')
     def create_empty(self, request):
-        """Scaffold a brand-new empty bundle from manifest fields.
+        """Scaffold a brand-new empty genome from manifest fields.
 
         Body: ``{slug, name?, version?, author?, license?}``. Creates
-        the empty bundle on disk and in the DB; the user then stamps
+        the empty genome on disk and in the DB; the user then stamps
         rows into it via the BEGIN_PLAY genome hook and packs the
         first archive via ``/save``.
         """
@@ -198,7 +201,7 @@ class NeuralModifierViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            modifier = loader.create_empty_bundle(
+            modifier = loader.create_empty_genome(
                 slug,
                 name=request.data.get('name', '') or '',
                 version=request.data.get('version', '0.1.0') or '0.1.0',
@@ -222,16 +225,16 @@ class NeuralModifierViewSet(
 
     @action(detail=False, methods=['post'], url_path='install')
     def install(self, request):
-        """Install a bundle from an uploaded archive OR from an existing slug."""
+        """Install a genome from an uploaded archive OR from an existing slug."""
         archive = request.FILES.get('archive')
         slug = request.data.get('slug')
         try:
             if archive is not None:
                 archive_path = _save_upload_to_catalog(archive)
-                modifier = loader.install_bundle_from_archive(archive_path)
+                modifier = loader.install_genome_to_graft(archive_path)
             elif slug:
                 archive_path = loader.genomes_root() / '{0}.zip'.format(slug)
-                modifier = loader.install_bundle_from_archive(archive_path)
+                modifier = loader.install_genome_to_graft(archive_path)
             else:
                 return Response(
                     {'detail': 'Provide either archive upload or slug.'},
@@ -258,13 +261,25 @@ class NeuralModifierViewSet(
 
     @action(detail=True, methods=['post'], url_path='uninstall')
     def uninstall(self, request, slug=None):
+        """Three-mode uninstall, dispatched by the loader.
+
+        * Canonical — refused (the viewset's queryset already hides it).
+        * Incubator — cascade-clears its rows + media and re-grafts
+          from ``incubator.zip``. The row stays put. This IS the
+          "Clear" semantic for the default workspace.
+        * Anything else — delete the row + cascade.
+        """
         missing = self._visible_or_404()
         if missing is not None:
             return missing
         try:
-            deleted_slug = loader.uninstall_bundle(slug)
+            deleted_slug = loader.uninstall_genome(slug)
         except NeuralModifier.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+        except ValueError as exc:
+            return Response(
+                {'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST,
+            )
         _broadcast(None, 'uninstall', slug=deleted_slug)
         trigger_system_restart()
         return Response(
@@ -282,14 +297,14 @@ class NeuralModifierViewSet(
 
         Kept wired so older clients stay functional; new callers should
         hit ``/uninstall-preview/`` directly. Payload shape matches
-        :func:`loader.bundle_uninstall_preview` (direct / cascade /
+        :func:`loader.genome_uninstall_preview` (direct / cascade /
         set_null / protected tree).
         """
         missing = self._visible_or_404()
         if missing is not None:
             return missing
         try:
-            return Response(loader.bundle_uninstall_preview(slug))
+            return Response(loader.genome_uninstall_preview(slug))
         except NeuralModifier.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -298,7 +313,7 @@ class NeuralModifierViewSet(
         """Cascade tree Django-admin-style for the uninstall dialog.
 
         Returns the full reach of ``modifier.delete()``: rows the
-        bundle directly owns, rows Django's Collector walks via
+        genome directly owns, rows Django's Collector walks via
         CASCADE, rows whose FK gets nulled (SET_NULL), and any rows
         that would PROTECT-block the delete. The UI renders the whole
         tree so Michael can SEE everything that disappears.
@@ -307,7 +322,7 @@ class NeuralModifierViewSet(
         if missing is not None:
             return missing
         try:
-            return Response(loader.bundle_uninstall_preview(slug))
+            return Response(loader.genome_uninstall_preview(slug))
         except NeuralModifier.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -323,7 +338,7 @@ class NeuralModifierViewSet(
         if missing is not None:
             return missing
         try:
-            result = loader.save_bundle_to_archive(slug)
+            result = loader.save_graft_to_genome(slug)
         except NeuralModifier.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         except Exception as exc:
@@ -334,9 +349,57 @@ class NeuralModifierViewSet(
         _broadcast(modifier, 'save')
         return Response(result)
 
+    @action(detail=True, methods=['post'], url_path='save-as')
+    def save_as(self, request, slug=None):
+        """Forge a new genome from this modifier's owned rows + media.
+
+        Body: ``{slug, name?}``. Source can be any visible modifier
+        (INCUBATOR included; CANONICAL hidden by ``get_queryset``).
+        Owned rows are deep-cloned with fresh PKs; FKs between cloned
+        rows are remapped onto the new PK space. ``code/`` and
+        ``media/`` are copied from the source graft. The new genome's
+        zip is baked atomically and installed live; the source row is
+        untouched. Triggers a coordinated restart so the freshly-
+        registered URL routes / native handlers / parietal tools come
+        online cleanly.
+        """
+        missing = self._visible_or_404()
+        if missing is not None:
+            return missing
+        new_slug = (request.data.get('slug') or '').strip()
+        new_name = (request.data.get('name') or '').strip()
+        if not new_slug:
+            return Response(
+                {'detail': 'slug is required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            new_modifier = loader.save_as_genome(
+                slug, new_slug, new_name=new_name,
+            )
+        except NeuralModifier.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except FileExistsError as exc:
+            return Response(
+                {'detail': str(exc)}, status=status.HTTP_409_CONFLICT,
+            )
+        except ValueError as exc:
+            return Response(
+                {'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as exc:
+            return Response(
+                {'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST,
+            )
+        _broadcast(new_modifier, 'save_as')
+        trigger_system_restart()
+        payload = NeuralModifierDetailSerializer(new_modifier).data
+        payload['restart_imminent'] = True
+        return Response(payload, status=status.HTTP_201_CREATED)
+
     @action(detail=True, methods=['get'], url_path='graph')
     def graph(self, request, slug=None):
-        """Forward-FK graph of bundle-owned rows + reachable neighbours.
+        """Forward-FK graph of genome-owned rows + reachable neighbours.
 
         Each reachable row is tagged with one of: ``owned`` / ``shared-with
         <slug>`` / ``orphan`` / ``core``. Walker is API-only.
@@ -345,7 +408,7 @@ class NeuralModifierViewSet(
         if missing is not None:
             return missing
         try:
-            return Response(graph_walker.build_bundle_graph(slug))
+            return Response(graph_walker.build_genome_graph(slug))
         except NeuralModifier.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -393,13 +456,13 @@ class NeuralModifierViewSet(
         if NeuralModifier.objects.filter(slug=catalog_slug).exists():
             return Response(
                 {
-                    'detail': 'Bundle {0!r} already installed; uninstall '
+                    'detail': 'Genome {0!r} already installed; uninstall '
                     'first.'.format(catalog_slug)
                 },
                 status=status.HTTP_409_CONFLICT,
             )
         try:
-            modifier = loader.install_bundle_from_archive(archive_path)
+            modifier = loader.install_genome_to_graft(archive_path)
         except FileExistsError as exc:
             return Response(
                 {'detail': str(exc)}, status=status.HTTP_409_CONFLICT
@@ -446,11 +509,11 @@ class NeuralModifierViewSet(
 
 @require_GET
 def serve_genome_media(request, slug, filename):
-    """Serve a file from ``grafts/<slug>/media/`` for an INSTALLED bundle.
+    """Serve a file from ``grafts/<slug>/media/`` for an INSTALLED genome.
 
     The single core resolver behind ``Avatar`` ``display=FILE`` rows
-    and any other bundle-shipped media. One route, every bundle uses
-    it — bundles do NOT register their own media routes.
+    and any other genome-shipped media. One route, every genome uses
+    it — genomes do NOT register their own media routes.
 
     Refusals:
         * ``slug`` not present, not INSTALLED, or canonical (canonical
@@ -473,19 +536,19 @@ def serve_genome_media(request, slug, filename):
     if slug == NeuralModifier.CANONICAL_SLUG:
         raise Http404('Canonical genome has no media tree.')
 
-    bundle_exists = NeuralModifier.objects.filter(
+    genome_installed = NeuralModifier.objects.filter(
         slug=slug,
         status_id=NeuralModifierStatus.INSTALLED,
     ).exists()
-    if not bundle_exists:
-        raise Http404('No installed bundle with that slug.')
+    if not genome_installed:
+        raise Http404('No installed genome with that slug.')
 
     media_dir = (loader.grafts_root() / slug / 'media').resolve()
     target = (media_dir / filename).resolve()
     try:
         target.relative_to(media_dir)
     except ValueError:
-        raise Http404('Media path escapes the bundle media directory.')
+        raise Http404('Media path escapes the genome media directory.')
 
     if not target.is_file():
         raise Http404('No such media file.')

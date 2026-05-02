@@ -10,6 +10,7 @@ from frontal_lobe.models import (
 from parietal_lobe.models import ToolDefinition
 
 from hypothalamus.models import AIModelSelectionFilter
+from identity.avatars import AvatarNestingMixin
 from neuroplasticity.serializer_mixins import (
     GenomeDisplayMixin,
     GenomeOwnedSerializerMixin,
@@ -81,6 +82,7 @@ class IdentityBudgetRefSerializer(serializers.ModelSerializer):
 
 
 class IdentitySerializer(
+    AvatarNestingMixin,
     GenomeOwnedSerializerMixin,
     GenomeWritableMixin,
     GenomeDisplayMixin,
@@ -158,6 +160,7 @@ class IdentityDiscReasoningSerializer(serializers.ModelSerializer):
 
 
 class IdentityDiscSerializer(
+    AvatarNestingMixin,
     GenomeOwnedSerializerMixin,
     GenomeWritableMixin,
     GenomeDisplayMixin,

@@ -35,7 +35,7 @@ class ToolCallCascadesOnToolDeleteTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         super().setUp()
-        # Isolate NEURAL_MODIFIER_GRAFTS_ROOT so loader.uninstall_bundle's
+        # Isolate NEURAL_MODIFIER_GRAFTS_ROOT so loader.uninstall_genome's
         # path resolution can never resolve to the real grafts/ tree.
         self._tmp_grafts_root = Path(
             tempfile.mkdtemp(prefix='fk-toolcall-grafts-')
@@ -97,7 +97,7 @@ class ToolCallCascadesOnToolDeleteTest(CommonFixturesAPITestCase):
             ToolCall.objects.filter(pk=self.tool_call.pk).exists()
         )
 
-        loader.uninstall_bundle(self.modifier.slug)
+        loader.uninstall_genome(self.modifier.slug)
 
         self.assertFalse(
             ToolDefinition.objects.filter(pk=self.bundle_tool.pk).exists()

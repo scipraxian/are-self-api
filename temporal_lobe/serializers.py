@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from common.constants import ALL_FIELDS
+from identity.avatars import AvatarNestingMixin
 from identity.models import Identity, IdentityDisc
 from neuroplasticity.serializer_mixins import (
     GenomeDisplayMixin,
@@ -20,7 +21,9 @@ from temporal_lobe.models import (
 )
 
 
-class IdentityDiscLightSerializer(serializers.ModelSerializer):
+class IdentityDiscLightSerializer(
+    AvatarNestingMixin, serializers.ModelSerializer,
+):
     """Lightweight representation of an Identity Disc for the Inspector."""
 
     class Meta:

@@ -11,8 +11,8 @@ from central_nervous_system.api_v2 import (
     SpikeTrainViewSetV2,
     SpikeViewSetV2,
 )
-from central_nervous_system.urls._v2_bundle_discovery import (
-    _discover_bundle_routers,
+from central_nervous_system.urls._v2_genome_discovery import (
+    _discover_genome_routers,
 )
 from central_nervous_system.views.v2_viewsets import Pathway3DViewSet
 
@@ -45,4 +45,4 @@ V2_CNS_ROUTER.register(
 )
 
 
-_discover_bundle_routers(V2_CNS_ROUTER)
+_discover_genome_routers(V2_CNS_ROUTER)

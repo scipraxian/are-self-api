@@ -1,6 +1,6 @@
 """Tests for the V2 URL discovery loop.
 
-Exercises ``central_nervous_system.urls.v2_urls._discover_bundle_routers``
+Exercises ``central_nervous_system.urls.v2_urls._discover_genome_routers``
 in isolation: each test materializes a fake NeuralModifier bundle on disk
 under an ``@override_settings(NEURAL_MODIFIER_GRAFTS_ROOT=...)`` tempdir,
 seeds an INSTALLED ``NeuralModifier`` row, then calls the discovery
@@ -38,8 +38,8 @@ from django.test import override_settings
 from rest_framework import routers
 from rest_framework.viewsets import ViewSet
 
-from central_nervous_system.urls._v2_bundle_discovery import (
-    _discover_bundle_routers,
+from central_nervous_system.urls._v2_genome_discovery import (
+    _discover_genome_routers,
 )
 from common.tests.common_test_case import CommonTestCase
 from neuroplasticity.models import NeuralModifier, NeuralModifierStatus
@@ -126,7 +126,7 @@ class V2UrlDiscoveryTestCase(CommonTestCase):
     def _fresh_core_router(self):
         """Return a SimpleRouter with one canonical-shaped registration.
 
-        Used as the input ``core_router`` to ``_discover_bundle_routers``
+        Used as the input ``core_router`` to ``_discover_genome_routers``
         so each test gets an isolated router (the real V2_CNS_ROUTER is
         never touched).
         """
@@ -192,7 +192,7 @@ class V2UrlDiscoveryTestCase(CommonTestCase):
         """Assert discovery is a no-op when zero bundles are installed."""
         router = self._fresh_core_router()
         before = list(router.registry)
-        _discover_bundle_routers(router)
+        _discover_genome_routers(router)
         self.assertEqual(router.registry, before)
 
     def test_valid_bundle_extends_core_router(self):
@@ -203,7 +203,7 @@ class V2UrlDiscoveryTestCase(CommonTestCase):
             urls_content=_BUNDLE_URLS_HAPPY,
         )
         router = self._fresh_core_router()
-        _discover_bundle_routers(router)
+        _discover_genome_routers(router)
         prefixes = [prefix for prefix, _, _ in router.registry]
         self.assertIn('discovery-test-prefix', prefixes)
         # Original core registration still present.
@@ -220,7 +220,7 @@ class V2UrlDiscoveryTestCase(CommonTestCase):
         )
         router = self._fresh_core_router()
         before = list(router.registry)
-        _discover_bundle_routers(router)
+        _discover_genome_routers(router)
         self.assertEqual(router.registry, before)
 
     def test_bundle_with_urls_but_no_router_is_silent_skip(self):
@@ -232,7 +232,7 @@ class V2UrlDiscoveryTestCase(CommonTestCase):
         )
         router = self._fresh_core_router()
         before = list(router.registry)
-        _discover_bundle_routers(router)
+        _discover_genome_routers(router)
         self.assertEqual(router.registry, before)
 
     def test_bundle_with_no_entry_modules_is_skipped(self):
@@ -245,7 +245,7 @@ class V2UrlDiscoveryTestCase(CommonTestCase):
         )
         router = self._fresh_core_router()
         before = list(router.registry)
-        _discover_bundle_routers(router)
+        _discover_genome_routers(router)
         self.assertEqual(router.registry, before)
 
     def test_bundle_with_missing_runtime_dir_is_skipped(self):
@@ -259,7 +259,7 @@ class V2UrlDiscoveryTestCase(CommonTestCase):
         )
         router = self._fresh_core_router()
         before = list(router.registry)
-        _discover_bundle_routers(router)
+        _discover_genome_routers(router)
         self.assertEqual(router.registry, before)
 
     def test_grafts_dir_missing_is_noop(self):
@@ -269,7 +269,7 @@ class V2UrlDiscoveryTestCase(CommonTestCase):
         shutil.rmtree(self._grafts_root)
         router = self._fresh_core_router()
         before = list(router.registry)
-        _discover_bundle_routers(router)
+        _discover_genome_routers(router)
         self.assertEqual(router.registry, before)
 
     # --- raise-loud paths --------------------------------------------
@@ -283,7 +283,7 @@ class V2UrlDiscoveryTestCase(CommonTestCase):
         )
         router = self._fresh_core_router()
         with self.assertRaises(RuntimeError) as cm:
-            _discover_bundle_routers(router)
+            _discover_genome_routers(router)
         message = str(cm.exception)
         self.assertIn('disc_colcore', message)
         self.assertIn('core-canon-prefix', message)
@@ -312,7 +312,7 @@ class V2UrlDiscoveryTestCase(CommonTestCase):
         )
         router = self._fresh_core_router()
         with self.assertRaises(RuntimeError) as cm:
-            _discover_bundle_routers(router)
+            _discover_genome_routers(router)
         message = str(cm.exception)
         self.assertIn('discovery-test-prefix', message)
 
@@ -325,4 +325,4 @@ class V2UrlDiscoveryTestCase(CommonTestCase):
         )
         router = self._fresh_core_router()
         with self.assertRaises(ModuleNotFoundError):
-            _discover_bundle_routers(router)
+            _discover_genome_routers(router)

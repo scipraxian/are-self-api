@@ -159,11 +159,11 @@ class InstallRefusesUuidCollisionTest(ModifierLifecycleTestCase):
         first = self.install_fake('reusable')
         self.assertEqual(first.pk, declared_uuid)
 
-        loader.uninstall_bundle('reusable')
-        # boot_bundles' orphan sweep clears the deferred runtime dir
+        loader.uninstall_genome('reusable')
+        # boot_genomes' orphan sweep clears the deferred runtime dir
         # before the reinstall — same restart simulation other lifecycle
         # tests use.
-        loader.boot_bundles()
+        loader.boot_genomes()
 
         second = self.install_fake('reusable')
         self.assertEqual(second.pk, declared_uuid)

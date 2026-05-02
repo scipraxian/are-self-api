@@ -37,7 +37,7 @@ from temporal_lobe.models import IterationDefinition
 
 class _IsolatedGraftsRootMixin:
     """Tmp-isolate ``NEURAL_MODIFIER_GRAFTS_ROOT`` for tests that call
-    ``loader.uninstall_bundle`` directly so its path resolution can
+    ``loader.uninstall_genome`` directly so its path resolution can
     never reach the real ``neuroplasticity/grafts/`` tree.
     """
 
@@ -105,7 +105,7 @@ class NeuronEnvironmentCascadeOnBundleRemovalTest(
         """Assert Neuron and Pathway are gone after bundle uninstall."""
         self.assertEqual(self.neuron.environment_id, self.bundle_env.pk)
 
-        loader.uninstall_bundle(self.modifier.slug)
+        loader.uninstall_genome(self.modifier.slug)
 
         self.assertFalse(
             ProjectEnvironment.objects.filter(pk=self.bundle_env.pk).exists()
@@ -139,7 +139,7 @@ class CrossBundleDefaultIterationDefinitionCascadeTest(
             self.env_a.default_iteration_definition_id, self.iter_def_b.pk
         )
 
-        loader.uninstall_bundle(self.modifier_b.slug)
+        loader.uninstall_genome(self.modifier_b.slug)
 
         self.assertFalse(
             IterationDefinition.objects.filter(pk=self.iter_def_b.pk).exists()

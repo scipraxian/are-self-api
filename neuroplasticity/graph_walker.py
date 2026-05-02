@@ -2,7 +2,7 @@
 
 Two callers share the traversal logic in this module:
 
-* ``build_bundle_graph(slug)`` — read-only diagnostic graph for the
+* ``build_genome_graph(slug)`` — read-only diagnostic graph for the
   Modifier Garden UI. Starts from every row a bundle owns
   (``genome__slug=<slug>``) and walks forward FKs and forward M2M
   relations to other ``GenomeOwnedMixin`` rows. Reverse-FK is not
@@ -27,7 +27,7 @@ Reach traversal rules:
     * The ``genome`` FK itself is never followed — it points at
       ``NeuralModifier``, not at a bundle-eligible model.
 
-Four diagnostic states are emitted by ``build_bundle_graph`` per
+Four diagnostic states are emitted by ``build_genome_graph`` per
 reachable row, keyed off the three-state Canonical Genome model:
 
 * ``canonical`` — ``genome_id == NeuralModifier.CANONICAL``. Ships in
@@ -216,7 +216,7 @@ def _classify(instance, target_slug: str):
     return ('shared-with {0}'.format(owner_slug), owner_slug)
 
 
-def build_bundle_graph(slug: str) -> dict:
+def build_genome_graph(slug: str) -> dict:
     """Return the state tree for the Modifier Garden builder.
 
     Shape::

@@ -16,23 +16,73 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
 
 - `initial_data.json` and fixture files are **Michael-only-delete** — never
   propose removing them.
-- NeuralModifier bundles install via the modifier-garden UI, not `install.bat`.
+- **Vocabulary**: a **genome** is the persisted identity (UUID + the
+  `neuroplasticity/genomes/<slug>.zip` archive); a **graft** is the runtime
+  tree at `neuroplasticity/grafts/<slug>/` where the genome's code,
+  manifest, and media are extracted; a **modifier** / **NeuralModifier**
+  is the conceptual entity (DB row + lifecycle status). The word "bundle"
+  is retired vocabulary — do not introduce it in new code. Loader entry
+  points use the new names: `install_genome_to_graft`,
+  `save_graft_to_genome`, `iter_installed_genomes`, `boot_genomes`,
+  `uninstall_genome`, `upgrade_genome`, `create_empty_genome`,
+  `genome_uninstall_preview`, `graft_incubator`, `save_as_genome`.
+- NeuralModifier genomes install via the modifier-garden UI, not `install.bat`.
 - NeuralModifier layout is locked: **`neuroplasticity/genomes/<slug>.zip`**
   (committed source of truth), **`neuroplasticity/grafts/<slug>/`** (gitignored
   runtime install tree), **`neuroplasticity/operating_room/`** (gitignored
   transient scratch — empty between operations). No sibling root-level dirs;
   no unzipped source tree under `modifier_genome/`.
-- Uninstall DELETES the `NeuralModifier` row (AVAILABLE = zip exists + no DB
-  row). Contributions, logs, and events all CASCADE away. A failed fresh
-  install also deletes the row it created — never leaves a BROKEN or
-  DISCOVERED stub behind. BROKEN is reserved for boot-time drift on a
-  previously-working install.
+- Uninstall is three-mode in `loader.uninstall_genome` and routed by slug:
+  - **CANONICAL** — refused. Canonical is fixture-shipped, owns every core
+    row, has no install path, and is undeletable.
+  - **INCUBATOR** — cascade-clears every row at `genome=INCUBATOR`, wipes
+    `grafts/incubator/` (including `media/`), then re-grafts from
+    `incubator.zip` via `graft_incubator()`. The INCUBATOR row itself
+    stays put. End state: factory-fresh incubator. **This IS the "Clear"
+    semantic** — uninstall+reinstall on INCUBATOR is the user's reset
+    path; no separate clear endpoint.
+  - **Anything else** — DELETES the `NeuralModifier` row (AVAILABLE = zip
+    exists + no DB row); contributions, logs, and events all CASCADE
+    away. A failed fresh install also deletes the row it created — never
+    leaves a BROKEN or DISCOVERED stub behind. BROKEN is reserved for
+    boot-time drift on a previously-working install.
 - Uninstall does NOT rmtree `grafts/<slug>/` synchronously. Disk cleanup is
-  deferred to `boot_bundles`' orphan sweep, which runs in the freshly-spawned
+  deferred to `boot_genomes`' orphan sweep, which runs in the freshly-spawned
   post-restart process where `sys.modules` is empty so no Windows file locks
   block the rmtree. Any in-process test that does install → uninstall →
-  install must call `loader.boot_bundles()` between cycles to model what
+  install must call `loader.boot_genomes()` between cycles to model what
   production gets via the restart.
+- **INCUBATOR is bootstrap-grafted on every Django boot** via
+  `loader.graft_incubator()`. It IS a real, permanently-grafted, system-
+  substrate genome — has a manifest, has a graft tree, has a real
+  (minimal) `urls.py` exposing one hello-world example viewset, ships
+  `neuroplasticity/genomes/incubator.zip` exactly like every other
+  genome. The bootstrap function runs from `boot_genomes()` (ahead of the
+  orphan sweep + per-genome boot pass) so the INCUBATOR's manifest and
+  code are guaranteed to be on disk before any consumer iterates the
+  grafts root. Idempotent: if the on-disk manifest hash matches the
+  archive's, no re-extract; otherwise re-extract while preserving any
+  user-uploaded `media/` content. The `incubator_genome` package's
+  `urls.py` exposes `V2_GENOME_ROUTER` registering one
+  `IncubatorHelloViewSet` at `/api/v2/incubator-hello/`. INCUBATOR is
+  undeletable; uninstall against it does the factory-reset semantic
+  (see above). The "install path" for INCUBATOR is system-only, not the
+  user-facing install flow.
+- **CANONICAL stays DB-only**: no manifest, no graft tree, no install
+  path, fixture-shipped in `neuroplasticity/fixtures/genetic_immutables.
+  json`. Owns every row that ships in core fixtures
+  (`genetic_immutables` / `zygote` / `initial_phenotypes`). Excluded
+  from `iter_installed_genomes()` so it never participates in boot-pass
+  / URL discovery / catalog flows.
+- **Boot-time mutex sanity checks** run after `graft_incubator()` and
+  the per-genome boot pass in `loader.boot_genomes()`:
+  `ProjectEnvironment.selected` count must be 1 (snaps to
+  `DEFAULT_ENVIRONMENT` if not), and `NeuralModifier.selected_for_edit`
+  count must be 1 (snaps to `INCUBATOR` if not). The per-write `save()`
+  overrides on each model already enforce the "only one true at a time"
+  invariant; this sanity check exists because duplicate fixture loads
+  (e.g. re-running the installer) can slip rows past those overrides
+  via raw inserts.
 - Install / uninstall / catalog_install API actions trigger a coordinated
   process restart via `peripheral_nervous_system.autonomic_nervous_system.
   trigger_system_restart()`: `celery_app.control.shutdown()` to drain
@@ -49,16 +99,18 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   defense-in-depth, not a substitute.
 - Loader test isolation. Every public mutation entry point in
   `neuroplasticity/loader.py` (install / uninstall / upgrade / save /
-  create_empty / boot_bundles) is wrapped at `pytest_configure` time by
-  `conftest.py`'s `_install_loader_isolation_guard`. The wrap refuses with a
-  loud `RuntimeError` if `NEURAL_MODIFIER_GRAFTS_ROOT` (or, for ops that
-  also touch the catalog, `NEURAL_MODIFIER_GENOMES_ROOT`) resolves to the
-  on-disk repo path while the call is in flight. Tests that drive the
-  loader MUST `override_settings(NEURAL_MODIFIER_GRAFTS_ROOT=<tmp>, ...)`
-  before any loader call; if a test forgets, the guard names the operation
-  and the offending test in the traceback. The loader itself stays free
-  of any pytest awareness — the guard exists only when the conftest is
-  loaded, which is by definition only under pytest.
+  save-as / create_empty / graft_incubator / boot_genomes) is wrapped
+  at `pytest_configure` time by `conftest.py`'s
+  `_install_loader_isolation_guard`. The wrap refuses with a loud
+  `RuntimeError` if `NEURAL_MODIFIER_GRAFTS_ROOT` (or, for ops that
+  also touch the catalog, `NEURAL_MODIFIER_GENOMES_ROOT`) resolves to
+  the on-disk repo path while the call is in flight. Tests that drive
+  the loader MUST `override_settings(NEURAL_MODIFIER_GRAFTS_ROOT=<tmp>,
+  NEURAL_MODIFIER_GENOMES_ROOT=<tmp>, NEURAL_MODIFIER_OPERATING_ROOM_ROOT=<tmp>)`
+  before any loader call; if a test forgets, the guard names the
+  operation and the offending test in the traceback. The loader itself
+  stays free of any pytest awareness — the guard exists only when the
+  conftest is loaded, which is by definition only under pytest.
 - UUIDs are `uuid.uuid4()` random literals — no UUIDv5, namespaces, or
   deterministic seeding. Existing UUID literals in fixtures are frozen; do not
   regenerate.
@@ -82,7 +134,7 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   `Effector.BEGIN_PLAY` / `LOGIC_GATE` / `LOGIC_RETRY` / `LOGIC_DELAY` /
   `FRONTAL_LOBE` / `DEBUG`, `Executable.BEGIN_PLAY` / `PYTHON` / `DJANGO`,
   and `SyncStatus.RUNNING` / `SUCCESS` / `FAILED`. NeuralModifier-contributed
-  rows in those same tables go to `initial_phenotypes` or bundle fixtures
+  rows in those same tables go to `initial_phenotypes` or genome fixtures
   instead — the rule is about the *row*, not the table.
 - Other fixture-tier rulings: definition rows (e.g. `IterationDefinition`) →
   `zygote`, instance rows (e.g. `Iteration`) → `initial_phenotypes`; entire
@@ -92,22 +144,24 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   intentionally non-empty and composes with `genetic_immutables.json` via
   the common test class.
 - Cascade is Django's `on_delete=CASCADE` on the `genome` FK; no custom
-  claim/walker logic. Every bundle-extensible row carries a non-NULL
+  claim/walker logic. Every genome-extensible row carries a non-NULL
   `genome` FK (default `NeuralModifier.INCUBATOR`), so additive
   claim-NULL semantics are moot.
-- Every bundle's `manifest.json` declares its genome UUID under the
+- Every genome's `manifest.json` declares its UUID under the
   `genome` key — required, validated as a UUID at install. Install
-  uses that UUID as the `NeuralModifier` row PK so bundle identity is
-  stable across machines and across versions, and the bundle's
+  uses that UUID as the `NeuralModifier` row PK so genome identity is
+  stable across machines and across versions, and the genome's
   `modifier_data.json` rows can carry `"genome": "<that uuid>"` and
   resolve on any install target. UUID-collision against a different
-  installed slug refuses loudly. **Documented exceptions:**
+  installed slug refuses loudly. **Documented exceptions split:**
   `NeuralModifier.CANONICAL` (`8192d7fd-2d20-4109-9c7c-45121e89f1dd`)
-  and `NeuralModifier.INCUBATOR`
-  (`1206f5a1-7ffd-4cb2-8c5a-3a9dfb5e5340`) are system-substrate rows,
-  fixture-shipped in `neuroplasticity/fixtures/genetic_immutables.json`,
-  with no manifest and no install path.
-- Save (`save_bundle_to_archive`) is non-destructive by construction:
+  is DB-only — no manifest, no graft tree, fixture-shipped in
+  `neuroplasticity/fixtures/genetic_immutables.json`. `NeuralModifier.
+  INCUBATOR` (`1206f5a1-7ffd-4cb2-8c5a-3a9dfb5e5340`) is a real
+  grafted genome — it ships its own `incubator.zip`, gets bootstrap-
+  grafted on every Django boot via `graft_incubator()`, and is
+  undeletable (uninstall = factory reset).
+- Save (`save_graft_to_genome`) is non-destructive by construction:
   (a) refuses if `manifest['entry_modules']` aren't findable under
   `grafts/<slug>/code/` — no code-less zip ever gets written; (b) re-opens
   the staged zip with `zipfile.ZipFile` to confirm validity + entry-module
@@ -115,13 +169,25 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   `genomes/<slug>.zip` to `<slug>.zip.bak` before overwrite (single rolling
   backup, preserves mtime). Save also always semver-patch-bumps the manifest
   version and mirrors the new value onto `NeuralModifier.version` and
-  `manifest_json` so the saved archive round-trips through `upgrade_bundle`.
+  `manifest_json` so the saved archive round-trips through `upgrade_genome`.
+- **Save-As** (`save_as_genome` / `POST /api/v2/neural-modifiers/<slug>/
+  save-as/`) forges a new genome from any visible modifier's owned rows
+  + media. Owned rows are deep-cloned with fresh `uuid.uuid4()` PKs;
+  FKs that point at other source-owned rows are remapped onto the new
+  PK space; FKs that point at non-source rows (CANONICAL vocabulary,
+  etc.) keep their values; the `genome` FK is stripped (install stamps
+  it). `code/` and `media/` are copytree'd from the source graft.
+  Source row is untouched. Refusals: empty new slug, reserved slug
+  (canonical / incubator), name collision in catalog or installed
+  rows, source = canonical. Triggers a coordinated restart so newly-
+  registered URL routes / native handlers / parietal tools come online
+  cleanly.
 - Save serializes every owned model uniformly via
-  `Model.objects.filter(genome_id=current_bundle)`. No per-model transit
-  carve-outs; every bundle-extensible model carries `GenomeOwnedMixin`
+  `Model.objects.filter(genome_id=current_genome)`. No per-model transit
+  carve-outs; every genome-extensible model carries `GenomeOwnedMixin`
   and resolves via that single query. SpikeTrain / Spike /
   ReasoningSession are intentionally excluded — runtime telemetry,
-  not bundle content.
+  not genome content.
 - Genome editing is plain V2 PATCH on the existing viewset, not a
   custom action endpoint. Every owned-model V2 serializer carries
   `GenomeWritableMixin` from `neuroplasticity/serializer_mixins.py`
@@ -137,7 +203,7 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   atomically: Pathway → Neurons + Axons + NeuronContexts; Effector →
   EffectorContexts + EffectorArgumentAssignments; Executable →
   ExecutableArgumentAssignments + ExecutableSupplementaryFileOrPath.
-  No walker. No "preserve canonical / cross-bundle / same-source"
+  No walker. No "preserve canonical / cross-genome / same-source"
   policy — children are glued to their parent's genome by construction,
   so the fan-out is unconditional. Comparison source for "did the
   genome actually change" is a `values_list` read against the
@@ -160,18 +226,22 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   `QuerySet.delete()` which bypasses `model.delete()` per-row.
   Redundant Begin Play neurons in the same pathway *are* deletable —
   only the last one is protected, so duplicates can be cleaned up.
-- Bundles can ship URL routes via convention. A bundle's `urls.py` exposes
-  `V2_GENOME_ROUTER` (a `routers.SimpleRouter()` with viewsets registered),
-  and the V2 URL conf auto-discovers it at module-import time (iterate
-  `iter_installed_bundles()` → ensure each bundle's `code/` is on
-  `sys.path` → `importlib.import_module(f'{entry_module}.urls')` → if the
-  module has `V2_GENOME_ROUTER`, extend the core router's registry).
-  Refuse-on-prefix-collision; missing `urls.py` is fine; broken `urls.py`
-  fails loudly. Bundles without route contributions don't ship a `urls.py`.
-- Log merge is **bundle-owned**, not in `occipital_lobe`. The N-way log
+- Genomes can ship URL routes via convention. A genome's `urls.py`
+  exposes `V2_GENOME_ROUTER` (a `routers.SimpleRouter()` with viewsets
+  registered), and the V2 URL conf auto-discovers it at module-import
+  time in `central_nervous_system/urls/_v2_genome_discovery.py`
+  (iterate `iter_installed_genomes()` → ensure each graft's `code/` is
+  on `sys.path` → `importlib.import_module(f'{entry_module}.urls')` →
+  if the module has `V2_GENOME_ROUTER`, extend the core router's
+  registry). Refuse-on-prefix-collision; missing `urls.py` is fine;
+  broken `urls.py` fails loudly. Genomes without route contributions
+  don't ship a `urls.py`. The incubator genome ships a minimal
+  reference `urls.py` with one hello-world example viewset — crack
+  it open as a tutorial.
+- Log merge is **genome-owned**, not in `occipital_lobe`. The N-way log
   merge utilities (`merge_logs.py`, `merge_logs_nway.py`) and the spike-
   log merge viewset live in `unreal/code/are_self_unreal/` because they
-  hardcode `LogConstants.TYPE_RUN` and only the unreal bundle's
+  hardcode `LogConstants.TYPE_RUN` and only the unreal genome's
   `UERunLogStrategy` registers under that key. `occipital_lobe/` keeps
   the generic surface: `LogEntry`, `LogSession`, `LogParserStrategy` ABC,
   `LogParserFactory` registry, `LogConstants` shared format strings, and
@@ -180,7 +250,7 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   status is INSTALLED. `ENABLED` (3) and `DISABLED` (4) remain in the
   `NeuralModifierStatus` enum for historical log-event compat (same
   pattern as retired `DISCOVERED`), never assigned to new rows. No CLI
-  for bundle lifecycle — five management commands (`enable_modifier`,
+  for genome lifecycle — five management commands (`enable_modifier`,
   `disable_modifier`, `list_modifiers`, `uninstall_modifier`,
   `upgrade_modifier`) are deprecation stubs that raise `CommandError` if
   invoked. The HTTP API and Modifier Garden UI are the only supported
@@ -202,15 +272,16 @@ Michael-rulings that outlive any one task. Do not re-litigate or forget these:
   `identity.avatar_storage.avatar_media_dir(genome)` is the single source
   for `<grafts>/<genome.slug>/media/` math; lives in its own module so
   `models.py` can import it without the DRF viewset layer.
-- `save_bundle_to_archive` packs `grafts/<slug>/media/` into the zip
+- `save_graft_to_genome` packs `grafts/<slug>/media/` into the zip
   alongside `<slug>/code/`. Round-trips on install via the existing
-  extracted-source `shutil.copytree` into runtime grafts. Bundle media is
-  first-class bundle content alongside `modifier_data.json` and `code/`.
+  extracted-source `shutil.copytree` into runtime grafts. Genome media
+  is first-class genome content alongside `modifier_data.json` and
+  `code/`.
 - Single core media resolver: `GET /api/v2/genomes/<slug>/media/<filename>`
   in `neuroplasticity/api.py:serve_genome_media`. `@require_GET`. Refuses
   empty / `.` / `..` / `/` / `\` / leading-`.` filenames (400),
   canonical-slug or non-INSTALLED slug (404), `.resolve()`-based escape of
-  the bundle's media directory (404). Bundles do NOT register their own
+  the genome's media directory (404). Genomes do NOT register their own
   media routes — one core route serves all.
 - Protocol-enum viewsets are `ReadOnlyModelViewSet`: `IdentityType`,
   `BudgetPeriod`, `IdentityAddonPhase`, `AvatarSelectedDisplayType`. Their
@@ -308,45 +379,54 @@ PNS (Celery Beat ticks)
 Legacy app still present: `dashboard/` (old HTMX views) — deprecated, will be removed.
 
 `ue_tools/` is **not** deprecated. It contains the Unreal Engine build orchestration flow
-and is being extracted as the first `NeuralModifier` bundle in the Pass 2 neuroplasticity
-architecture — the committed bundle archive lives at `neuroplasticity/genomes/unreal.zip`.
+and is being extracted as the first `NeuralModifier` genome in the Pass 2 neuroplasticity
+architecture — the committed genome archive lives at `neuroplasticity/genomes/unreal.zip`.
 `occipital_lobe/` is **not** a placeholder — it is the home for OS-level file-watcher
 intake (visual-cortex-style event detection that routes folder changes to the associated
 environment's neural pathways) and now also hosts the generic log-merge utilities and the
 `LogParserFactory` registry (moved out of `ue_tools/` in Pass 2 Task 3/4).
 
-`neuroplasticity/` is the Pass 2 install / lifecycle registry for `NeuralModifier` bundles
-(Are-Self's word for an installable extension bundle). The app owns `NeuralModifier`,
-`NeuralModifierContribution` (GFK with UUIDField object_id — the uninstall manifest),
-`NeuralModifierInstallationLog`, and the `NeuralModifierStatus` /
-`NeuralModifierInstallationEventType` enums. `INSTALLED_APPS` is never mutated at runtime —
-contributions are data.
+`neuroplasticity/` is the Pass 2 install / lifecycle registry for `NeuralModifier`
+genomes (Are-Self's word for an installable extension). The app owns
+`NeuralModifier`, `NeuralModifierInstallationLog`, the `NeuralModifierStatus` /
+`NeuralModifierInstallationEventType` enums, and the loader's full lifecycle
+surface (`install_genome_to_graft`, `save_graft_to_genome`, `uninstall_genome`,
+`save_as_genome`, `graft_incubator`, `boot_genomes`, etc.).
+`INSTALLED_APPS` is never mutated at runtime — contributions are data.
 
 **Three directories, three roles** (all under `neuroplasticity/`; the latter two are
 gitignored):
 
-- `neuroplasticity/genomes/<slug>.zip` — **committed** user-facing archives. The zip IS the
-  bundle; there is no unzipped source tree anywhere. Each zip holds `manifest.json`,
-  `modifier_data.json`, and `code/` at its top level. The Modifier Garden UI drives install
-  / delete against these zips. A fresh clone ships `genomes/unreal.zip` → one AVAILABLE row.
-- `neuroplasticity/grafts/<slug>/` — runtime install tree that persists the bundle's live
-  code on `sys.path` after install. `install_bundle_from_archive` is the single install
-  entry; it extracts into `operating_room/` then copies into `grafts/<slug>/`.
-- `neuroplasticity/operating_room/` — transient scratch root for install / upgrade
-  extractions. Every op creates a fresh `tempfile.mkdtemp` under this dir and nukes it in a
-  `try/finally` — after any operation (success OR failure), `operating_room/` is empty.
+- `neuroplasticity/genomes/<slug>.zip` — **committed** user-facing archives. The zip
+  IS the genome; there is no unzipped source tree anywhere. Each zip holds
+  `manifest.json`, `modifier_data.json`, `code/`, and (optionally) `media/` at its
+  top level. The Modifier Garden UI drives install / delete against these zips.
+  A fresh clone ships `genomes/unreal.zip` (AVAILABLE — needs install) and
+  `genomes/incubator.zip` (auto-grafted on every boot via `graft_incubator()`).
+- `neuroplasticity/grafts/<slug>/` — runtime install tree that persists the
+  genome's live code on `sys.path` after install. `install_genome_to_graft` is
+  the single install entry; it extracts into `operating_room/` then copies into
+  `grafts/<slug>/`. The `incubator/` graft is bootstrapped on every Django boot
+  by `graft_incubator()`.
+- `neuroplasticity/operating_room/` — transient scratch root for install /
+  upgrade / save / save-as extractions. Every op creates a fresh
+  `tempfile.mkdtemp` under this dir and nukes it in a `try/finally` — after any
+  operation (success OR failure), `operating_room/` is empty.
 
-**State machine:** AVAILABLE (zip in `genomes/`, **no DB row**) → Install → INSTALLED →
-Uninstall → AVAILABLE → (delete the zip to remove the bundle entirely). Uninstall
-**deletes** the `NeuralModifier` row — contributions, logs, and events all CASCADE
-away. BROKEN surfaces only from boot-time hash drift or load failure on a
-previously-installed bundle; a failed fresh install deletes its row instead of
-flipping BROKEN. Retired statuses (enum values kept for historical log compat, never
-assigned to new rows): `DISCOVERED` (legacy "found a zip" state, replaced by row-absence
-semantics for AVAILABLE), `ENABLED` and `DISABLED` (removed 2026-04-25 with the
-enable/disable feature — INSTALLED is now the only live state).
+**State machine:** AVAILABLE (zip in `genomes/`, **no DB row**) → Install →
+INSTALLED → Uninstall → AVAILABLE → (delete the zip to remove the genome
+entirely). Uninstall **deletes** the `NeuralModifier` row — contributions,
+logs, and events all CASCADE away — *except* for INCUBATOR, which is undeletable
+and gets cascade-cleared + re-grafted from `incubator.zip` instead (factory-reset
+semantic). BROKEN surfaces only from boot-time hash drift or load failure on a
+previously-installed genome; a failed fresh install deletes its row instead of
+flipping BROKEN. Retired statuses (enum values kept for historical log compat,
+never assigned to new rows): `DISCOVERED` (legacy "found a zip" state, replaced
+by row-absence semantics for AVAILABLE), `ENABLED` and `DISABLED` (removed
+2026-04-25 with the enable/disable feature — INSTALLED is now the only live
+state).
 
-Bundle-time registration surfaces are in place: `register_parietal_tool` /
+Genome-time registration surfaces are in place: `register_parietal_tool` /
 `unregister_parietal_tool` in `parietal_lobe/parietal_mcp/gateway.py` (module-level
 `_PARIETAL_TOOL_REGISTRY` checked first in `ParietalMCP.execute()`, falls through to the
 importlib path on miss); `register_native_handler` / `unregister_native_handler` in
@@ -553,7 +633,7 @@ For current-state specifics, in-flight work, and priorities: see `TASKS.md`.
   will be removed.
 - `parietal_lobe/registry.py` is superseded by Hypothalamus DB-driven routing.
 - `synapse_open_router.py` is deprecated (no production callers).
-- `ue_tools/` stays, being extracted as the first `NeuralModifier` bundle at
+- `ue_tools/` stays, being extracted as the first `NeuralModifier` genome at
   `neuroplasticity/genomes/unreal.zip`. Its generic log-merge utilities
   already moved to `occipital_lobe/`; its parser split into generic core + UE
   strategies registered via `LogParserFactory`. `deploy_release_test` is slated
@@ -593,7 +673,7 @@ CreatedAndModifiedWithDelta, NameMixin, DefaultFieldsMixin, UUIDIdMixin, Descrip
 `venv/Scripts/pytest` from project root on Windows (`venv/bin/pytest` on Linux/Mac).
 Any test that calls into `neuroplasticity.loader` (directly or through an API
 endpoint that does) MUST `override_settings(NEURAL_MODIFIER_GRAFTS_ROOT=<tmp>, ...)`
-before the call — see the loader-isolation ruling above. Bundle-shape tests should
+before the call — see the loader-isolation ruling above. Genome-shape tests should
 build their archive on the fly inside the test's tmp tree
 (`test_install_unreal_bundle.py` is the reference pattern); never copy or read
 the committed `genomes/<slug>.zip` artifacts into a test.
@@ -634,7 +714,7 @@ UUID-keyed.
    `Effector.BEGIN_PLAY`, `LOGIC_GATE`, `LOGIC_RETRY`, `LOGIC_DELAY`,
    `FRONTAL_LOBE`, `DEBUG`; `Executable.BEGIN_PLAY`, `PYTHON`, `DJANGO`;
    `SyncStatus.RUNNING`, `SUCCESS`, `FAILED`. NeuralModifier-contributed rows
-   in those same tables go to `initial_phenotypes` or bundle fixtures.
+   in those same tables go to `initial_phenotypes` or genome fixtures.
    Loaded by install, Docker, and tests. Never renumber (for integer-PK rows),
    never delete.
 2. **`zygote.json`** — the minimum UUID-keyed rows the system needs to boot and bind

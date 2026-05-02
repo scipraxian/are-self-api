@@ -177,7 +177,7 @@ class CatalogListReturnsInstalledFlagTest(
         """Assert catalog rows tag installed=true iff a DB row exists."""
         build_fake_bundle_archive(self.genomes_root, 'cat_installed')
         build_fake_bundle_archive(self.genomes_root, 'cat_available')
-        loader.install_bundle_from_archive(
+        loader.install_genome_to_graft(
             self.genomes_root / 'cat_installed.zip'
         )
 
@@ -222,7 +222,7 @@ class CatalogInstallConflictsWhenAlreadyInstalledTest(
     def test_catalog_install_conflicts_when_already_installed(self):
         """Assert second install attempt against an installed slug is rejected."""
         build_fake_bundle_archive(self.genomes_root, 'cat_dupe')
-        loader.install_bundle_from_archive(self.genomes_root / 'cat_dupe.zip')
+        loader.install_genome_to_graft(self.genomes_root / 'cat_dupe.zip')
 
         res = self.client.post(
             '/api/v2/neural-modifiers/catalog/cat_dupe/install/'
@@ -264,7 +264,7 @@ class CatalogDeleteRefusesWhenInstalledTest(
     def test_catalog_delete_refuses_when_installed(self):
         """Assert delete 400s with a clear message when a DB row exists."""
         archive = build_fake_bundle_archive(self.genomes_root, 'cat_locked')
-        loader.install_bundle_from_archive(archive)
+        loader.install_genome_to_graft(archive)
 
         res = self.client.post(
             '/api/v2/neural-modifiers/catalog/cat_locked/delete/'

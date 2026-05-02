@@ -283,7 +283,7 @@ def _total_owned_rows(modifier):
 class UnrealBundleInstallRoundTripTest(UnrealBundleInstallTestCase):
     def test_install_registers_everything(self):
         """Assert install creates rows, native handler, parietal tool, parsers."""
-        modifier = loader.install_bundle_from_archive(self.archive_path)
+        modifier = loader.install_genome_to_graft(self.archive_path)
 
         self.assertEqual(
             modifier.status_id, NeuralModifierStatus.INSTALLED
@@ -326,8 +326,8 @@ class UnrealBundleInstallRoundTripTest(UnrealBundleInstallTestCase):
 
     def test_uninstall_rolls_everything_back(self):
         """Assert uninstall drops bundle rows, row, and bundle registrations."""
-        loader.install_bundle_from_archive(self.archive_path)
-        loader.uninstall_bundle(UNREAL_BUNDLE_SLUG)
+        loader.install_genome_to_graft(self.archive_path)
+        loader.uninstall_genome(UNREAL_BUNDLE_SLUG)
 
         # AVAILABLE = zip exists, no row. Uninstall DELETES the row.
         self.assertFalse(
@@ -356,25 +356,25 @@ class UnrealBundleInstallRoundTripTest(UnrealBundleInstallTestCase):
 
     def test_operating_room_is_empty_after_install(self):
         """Assert the scratch dir is empty once install returns."""
-        loader.install_bundle_from_archive(self.archive_path)
+        loader.install_genome_to_graft(self.archive_path)
         self.assertEqual(list(self.operating_room_root.iterdir()), [])
 
 
 class UnrealBundleReinstallIdempotentTest(UnrealBundleInstallTestCase):
     def test_reinstall_cycle_is_clean(self):
         """Assert install → uninstall → reinstall converges to the same state."""
-        first_modifier = loader.install_bundle_from_archive(self.archive_path)
+        first_modifier = loader.install_genome_to_graft(self.archive_path)
         first_count = _total_owned_rows(first_modifier)
-        loader.uninstall_bundle(UNREAL_BUNDLE_SLUG)
+        loader.uninstall_genome(UNREAL_BUNDLE_SLUG)
         # CASCADE removed the owning bundle — owned row count drops to zero.
         self.assertFalse(
             NeuralModifier.objects.filter(slug=UNREAL_BUNDLE_SLUG).exists()
         )
 
-        # Simulate the coordinated restart: boot_bundles' orphan sweep
+        # Simulate the coordinated restart: boot_genomes' orphan sweep
         # clears the deferred runtime dir before the archive reinstall.
-        loader.boot_bundles()
-        second_modifier = loader.install_bundle_from_archive(self.archive_path)
+        loader.boot_genomes()
+        second_modifier = loader.install_genome_to_graft(self.archive_path)
         second_count = _total_owned_rows(second_modifier)
         self.assertEqual(first_count, second_count)
 
@@ -399,7 +399,7 @@ class ThalamusEnabledToolsSoftLookupTest(UnrealBundleInstallTestCase):
 
     def setUp(self):
         super().setUp()
-        loader.install_bundle_from_archive(self.archive_path)
+        loader.install_genome_to_graft(self.archive_path)
         self.thalamus = Identity.objects.create(
             pk=THALAMUS_IDENTITY_PK,
             name='Thalamus (test)',
@@ -423,7 +423,7 @@ class ThalamusEnabledToolsSoftLookupTest(UnrealBundleInstallTestCase):
         before = self._resolve_tools()
         self.assertEqual(len(before), 2)
 
-        loader.uninstall_bundle(UNREAL_BUNDLE_SLUG)
+        loader.uninstall_genome(UNREAL_BUNDLE_SLUG)
 
         after = self._resolve_tools()
         self.assertEqual(len(after), 1)
@@ -437,14 +437,14 @@ class ThalamusEnabledToolsSoftLookupTest(UnrealBundleInstallTestCase):
         through-table rows. Re-linking is a manual operator action, out
         of scope for the loader.
         """
-        loader.uninstall_bundle(UNREAL_BUNDLE_SLUG)
+        loader.uninstall_genome(UNREAL_BUNDLE_SLUG)
         self.assertFalse(
             ToolDefinition.objects.filter(pk=UE_TOOL_DEF_PK).exists()
         )
-        # Simulate the coordinated restart: boot_bundles' orphan sweep
+        # Simulate the coordinated restart: boot_genomes' orphan sweep
         # clears the deferred runtime dir before the archive reinstall.
-        loader.boot_bundles()
-        loader.install_bundle_from_archive(self.archive_path)
+        loader.boot_genomes()
+        loader.install_genome_to_graft(self.archive_path)
         self.assertTrue(
             ToolDefinition.objects.filter(pk=UE_TOOL_DEF_PK).exists()
         )

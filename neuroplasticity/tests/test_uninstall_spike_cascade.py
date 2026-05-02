@@ -106,7 +106,7 @@ class BundleEnvUninstallCascadesSpikeTrainTest(
         train_pk = train.pk
         spike_pk = spike.pk
 
-        loader.uninstall_bundle('envspikes')
+        loader.uninstall_genome('envspikes')
 
         self.assertFalse(
             ProjectEnvironment.objects.filter(pk=bundle_env_pk).exists(),
@@ -141,7 +141,7 @@ class CanonicalEnvSpikeTrainSurvivesUninstallTest(
 
         build_fake_bundle(self.scratch_root, 'unrelated')
         self.install_fake('unrelated')
-        loader.uninstall_bundle('unrelated')
+        loader.uninstall_genome('unrelated')
 
         train.refresh_from_db()
         self.assertEqual(train.environment_id, canonical_env.pk)

@@ -36,7 +36,7 @@ class GraphWalkerClassificationTest(CommonTestCase):
             name='alpha-owned', genome=self.alpha
         )
 
-        graph = graph_walker.build_bundle_graph('alpha')
+        graph = graph_walker.build_genome_graph('alpha')
 
         node = next(n for n in graph['nodes'] if n['pk'] == str(owned.pk))
         self.assertEqual(node['state'], 'owned')
@@ -49,7 +49,7 @@ class GraphWalkerClassificationTest(CommonTestCase):
             name='beta-owner', genome=self.beta
         )
 
-        graph = graph_walker.build_bundle_graph('alpha')
+        graph = graph_walker.build_genome_graph('alpha')
 
         pks = {n['pk'] for n in graph['nodes']}
         self.assertNotIn(str(pathway.pk), pks)

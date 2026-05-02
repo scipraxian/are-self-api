@@ -124,7 +124,7 @@ class BundleContributedEnvCascadesOnUninstallTest(
             ProjectEnvironment.objects.filter(pk=bundle_env_pk).exists()
         )
 
-        loader.uninstall_bundle('envbundle')
+        loader.uninstall_genome('envbundle')
 
         self.assertFalse(
             ProjectEnvironment.objects.filter(pk=bundle_env_pk).exists()

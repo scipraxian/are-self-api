@@ -21,12 +21,12 @@ class NeuroplasticityConfig(AppConfig):
             return
         if os.environ.get('NEUROPLASTICITY_SKIP_BOOT'):
             return
-        # Defer boot_bundles off AppConfig.ready() — the NeuralModifier
-        # ORM query inside iter_installed_bundles() would otherwise trip
+        # Defer boot_genomes off AppConfig.ready() — the NeuralModifier
+        # ORM query inside iter_installed_genomes() would otherwise trip
         # Django 6.x's "Accessing the database during app initialization
         # is discouraged" RuntimeWarning on every process start. The
         # boot module hooks request_started / worker_ready and runs the
-        # bundle sweep on the first post-ready signal.
+        # genome sweep on the first post-ready signal.
         from . import boot
 
         boot.schedule_boot()

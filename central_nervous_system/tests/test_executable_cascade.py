@@ -27,7 +27,7 @@ class NeuronCascadesOnBundleExecutableDeleteTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         super().setUp()
-        # Isolate NEURAL_MODIFIER_GRAFTS_ROOT so loader.uninstall_bundle's
+        # Isolate NEURAL_MODIFIER_GRAFTS_ROOT so loader.uninstall_genome's
         # path resolution can never resolve to the real grafts/ tree.
         self._tmp_grafts_root = Path(
             tempfile.mkdtemp(prefix='fk-cascade-grafts-')
@@ -72,7 +72,7 @@ class NeuronCascadesOnBundleExecutableDeleteTest(CommonFixturesAPITestCase):
         """Assert Neurons go when their bundle-owned Effector/Executable go."""
         self.assertTrue(Neuron.objects.filter(pk=self.neuron.pk).exists())
 
-        loader.uninstall_bundle(self.modifier.slug)
+        loader.uninstall_genome(self.modifier.slug)
 
         self.assertFalse(
             Executable.objects.filter(pk=self.bundle_executable.pk).exists()

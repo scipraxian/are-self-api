@@ -1,10 +1,10 @@
-"""Deferred boot hook for NeuralModifier bundles.
+"""Deferred boot hook for NeuralModifier genomes.
 
 Django 6.x raises ``RuntimeWarning: Accessing the database during app
 initialization is discouraged.`` whenever an ORM query fires inside
 ``AppConfig.ready()`` (or anywhere on the module-import path). The boot
-pass in ``loader.boot_bundles()`` reads ``NeuralModifier`` rows to
-decide which bundles to put on ``sys.path``, so running it straight
+pass in ``loader.boot_genomes()`` reads ``NeuralModifier`` rows to
+decide which genomes to put on ``sys.path``, so running it straight
 from ``NeuroplasticityConfig.ready()`` trips the warning every time
 the process starts.
 
@@ -12,14 +12,14 @@ This module shims that off the ready path. ``schedule_boot()`` is
 called from ``ready()``; it connects one-shot receivers to
 ``django.core.signals.request_started`` (covers Daphne / runserver /
 any HTTP-facing process) and ``celery.signals.worker_ready`` (covers
-Celery workers). The first receiver to fire runs ``boot_bundles()``
+Celery workers). The first receiver to fire runs ``boot_genomes()``
 and disconnects both — a module-level flag guards against any double
 fire inside the same process.
 
 Test, ``migrate``, and ``makemigrations`` paths don't reach here at
 all — ``NeuroplasticityConfig.ready()`` short-circuits before calling
 ``schedule_boot()`` for those, and tests that need the boot pass call
-``loader.boot_bundles()`` directly (see
+``loader.boot_genomes()`` directly (see
 ``test_modifier_lifecycle.py``).
 """
 
@@ -37,7 +37,7 @@ _booted = False
 
 
 def schedule_boot() -> None:
-    """Connect one-shot receivers that run ``boot_bundles`` post-ready.
+    """Connect one-shot receivers that run ``boot_genomes`` post-ready.
 
     Safe to call multiple times — subsequent calls are no-ops once
     ``_booted`` flips. ``weak=False`` pins the receivers so they stay
@@ -72,7 +72,7 @@ def _on_worker_ready(sender, **kwargs) -> None:
 
 
 def _run_once() -> None:
-    """Call ``boot_bundles`` exactly once per process, ever."""
+    """Call ``boot_genomes`` exactly once per process, ever."""
     global _booted
     with _lock:
         if _booted:
@@ -80,14 +80,14 @@ def _run_once() -> None:
         _booted = True
     try:
         from . import loader
-        loader.boot_bundles()
+        loader.boot_genomes()
     except Exception:
-        # Never let a bundle boot failure take down the first request.
-        logger.exception('[Neuroplasticity] boot_bundles failed')
+        # Never let a genome boot failure take down the first request.
+        logger.exception('[Neuroplasticity] boot_genomes failed')
 
 
 def run_now() -> None:
-    """Synchronous entry point for callers that need bundles loaded now.
+    """Synchronous entry point for callers that need genomes loaded now.
 
     Intended for diagnostic shells and tests. Idempotent — second call
     in the same process is a no-op.

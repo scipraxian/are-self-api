@@ -56,7 +56,7 @@ class UninstallPreviewIncludesCascadesTest(ModifierLifecycleTestCase):
         )
         Neuron.objects.create(pathway=pathway, effector=effector)
 
-        preview = loader.bundle_uninstall_preview('preview_bundle')
+        preview = loader.genome_uninstall_preview('preview_bundle')
 
         self.assertEqual(preview['slug'], 'preview_bundle')
         direct_models = {row['model'] for row in preview['direct']}
@@ -94,7 +94,7 @@ class UninstallPreviewIncludesCascadesTest(ModifierLifecycleTestCase):
             status_id=NeuralModifierStatus.INSTALLED,
         )
 
-        preview = loader.bundle_uninstall_preview('empty_bundle')
+        preview = loader.genome_uninstall_preview('empty_bundle')
 
         self.assertEqual(preview['slug'], 'empty_bundle')
         self.assertEqual(preview['row_count'], 0)

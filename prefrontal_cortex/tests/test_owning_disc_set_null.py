@@ -22,7 +22,7 @@ class PFCRowsCascadeOnOwningDiscRemovalTest(CommonFixturesAPITestCase):
 
     def setUp(self):
         super().setUp()
-        # Isolate NEURAL_MODIFIER_GRAFTS_ROOT so loader.uninstall_bundle's
+        # Isolate NEURAL_MODIFIER_GRAFTS_ROOT so loader.uninstall_genome's
         # path resolution can never resolve to the real grafts/ tree.
         self._tmp_grafts_root = Path(
             tempfile.mkdtemp(prefix='fk-disc-grafts-')
@@ -79,7 +79,7 @@ class PFCRowsCascadeOnOwningDiscRemovalTest(CommonFixturesAPITestCase):
         story_pk = self.story.pk
         epic_pk = self.epic.pk
 
-        loader.uninstall_bundle(self.modifier.slug)
+        loader.uninstall_genome(self.modifier.slug)
 
         self.assertFalse(
             IdentityDisc.objects.filter(pk=self.bundle_disc.pk).exists()

@@ -48,12 +48,36 @@ from identity.models import Avatar, AvatarSelectedDisplayType
 
 
 __all__ = (
+    'AvatarNestingMixin',
     'AvatarSelectedDisplayTypeSerializer',
     'AvatarSelectedDisplayTypeViewSet',
     'AvatarSerializer',
     'AvatarViewSet',
     'avatar_media_dir',
 )
+
+
+class AvatarNestingMixin:
+    """Read-side mixin: replaces the auto-generated ``avatar`` UUID on
+    serializer output with the full nested ``AvatarSerializer.data`` so
+    the UI can render avatar tiles without a follow-up fetch.
+
+    Write contract is unchanged — the auto-generated
+    ``PrimaryKeyRelatedField`` for ``avatar`` still accepts a UUID on
+    POST/PATCH. This is read augmentation only. When the source
+    instance has ``avatar=None``, the field stays ``None``; when the
+    serializer doesn't expose an ``avatar`` key at all, the dict is
+    returned untouched.
+    """
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        avatar = getattr(instance, 'avatar', None)
+        if avatar is not None and 'avatar' in data:
+            data['avatar'] = AvatarSerializer(
+                avatar, context=self.context,
+            ).data
+        return data
 
 
 class AvatarSelectedDisplayTypeSerializer(serializers.ModelSerializer):

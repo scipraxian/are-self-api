@@ -227,7 +227,7 @@ class ReinstallSameBundleIsAllowedTest(ModifierLifecycleTestCase):
             json.dumps(upgrade_payload, indent=2) + '\n'
         )
 
-        loader.upgrade_bundle_from_source(bundle, 'echobundle')
+        loader.upgrade_source_to_graft(bundle, 'echobundle')
 
         self.assertEqual(
             IdentityAddon.objects.get(pk=pk_str).description,
