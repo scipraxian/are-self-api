@@ -308,11 +308,16 @@ class SpikeSerializer(serializers.ModelSerializer):
 class SpikeDetailSerializer(SpikeSerializer):
     """Heavy forensic payload for right-click inspector panels."""
 
+    cerebrospinal_fluid = serializers.JSONField(
+        source='spike_train.cerebrospinal_fluid', read_only=True
+    )
+
     class Meta(SpikeSerializer.Meta):
         fields = SpikeSerializer.Meta.fields + [
             'application_log',
             'execution_log',
             'axoplasm',
+            'cerebrospinal_fluid',
         ]
 
 
