@@ -350,6 +350,7 @@ class SpikeTrainSerializer(serializers.ModelSerializer):
             'status_name',
             'pathway',
             'pathway_name',
+            'cerebrospinal_fluid',
             'created',
             'modified',
             'spikes',
