@@ -156,11 +156,17 @@ async def _dispatch(method: str, params: dict) -> dict:
 
 
 def _handle_get_sse(request) -> HttpResponse:
-    """SSE stream for server-initiated notifications (Phase 2)."""
-    return JsonResponse(
-        {'message': 'SSE notifications — Phase 2'},
-        status=501,
-    )
+    """No SSE notifications offered.
+
+    Per the MCP Streamable HTTP transport spec, a server that does not
+    offer a server-to-client SSE stream MUST return 405 Method Not
+    Allowed on GET — clients then proceed POST-only without treating
+    the absence of streaming as a fatal error. Returning 501 here used
+    to surface as `[ERROR] Not Implemented: /mcp` on Claude Code start.
+    """
+    response = HttpResponse(status=405)
+    response['Allow'] = 'POST, DELETE'
+    return response
 
 
 def _handle_delete(request) -> HttpResponse:
