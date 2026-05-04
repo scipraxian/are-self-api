@@ -93,6 +93,7 @@ def _install_loader_isolation_guard():
     _wrap('save_graft_to_genome', check_genomes=True)
     _wrap('save_as_genome', check_genomes=True)
     _wrap('create_empty_genome', check_genomes=True)
+    _wrap('edit_genome_metadata', check_genomes=True)
 
 
 def pytest_configure(config):

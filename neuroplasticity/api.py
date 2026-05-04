@@ -397,6 +397,67 @@ class NeuralModifierViewSet(
         payload['restart_imminent'] = True
         return Response(payload, status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=['post'], url_path='edit-metadata')
+    def edit_metadata(self, request, slug=None):
+        """Edit ``name`` / ``description`` and re-bake the catalog zip.
+
+        Body: ``{name?, description?}``. Refused on canonical
+        (read-only) and incubator (bootstrap-managed); both are 400 with
+        a descriptive message. Updates the graft's ``manifest.json`` +
+        the row's ``name`` column, then runs the standard
+        save-graft-to-genome flow so the on-disk archive matches the
+        row.
+        """
+        missing = self._visible_or_404()
+        if missing is not None:
+            return missing
+        name = request.data.get('name')
+        description = request.data.get('description')
+        if name is None and description is None:
+            return Response(
+                {'detail': 'Provide name or description.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            result = loader.edit_genome_metadata(
+                slug,
+                name=name,
+                description=description,
+            )
+        except NeuralModifier.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except FileNotFoundError as exc:
+            return Response(
+                {'detail': str(exc)}, status=status.HTTP_404_NOT_FOUND,
+            )
+        except ValueError as exc:
+            return Response(
+                {'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST,
+            )
+        modifier = NeuralModifier.objects.get(slug=slug)
+        _broadcast(modifier, 'edit_metadata')
+        return Response(result)
+
+    @action(detail=True, methods=['get'], url_path='preview')
+    def preview(self, request, slug=None):
+        """Read-only snapshot of an INSTALLED genome's live state.
+
+        Returns ``{slug, manifest, rows_by_model, code_tree, media_tree}``.
+        Refuses canonical (no graft tree, no useful "rows owned by"
+        bound). INCUBATOR is in scope.
+        """
+        missing = self._visible_or_404()
+        if missing is not None:
+            return missing
+        try:
+            return Response(loader.genome_preview(slug))
+        except NeuralModifier.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except ValueError as exc:
+            return Response(
+                {'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST,
+            )
+
     @action(detail=True, methods=['get'], url_path='graph')
     def graph(self, request, slug=None):
         """Forward-FK graph of genome-owned rows + reachable neighbours.

@@ -57,6 +57,7 @@ State invariants:
 
 from __future__ import annotations
 
+import datetime
 import hashlib
 import importlib
 import json
@@ -956,6 +957,8 @@ def save_graft_to_genome(slug: str) -> dict:
                 for path in sorted(code_dir.rglob('*')):
                     if path.is_dir():
                         continue
+                    if not _should_pack(path):
+                        continue
                     arcname = Path(slug) / 'code' / path.relative_to(code_dir)
                     zf.write(path, arcname.as_posix())
 
@@ -966,6 +969,8 @@ def save_graft_to_genome(slug: str) -> dict:
             if media_dir.exists():
                 for path in sorted(media_dir.rglob('*')):
                     if path.is_dir():
+                        continue
+                    if not _should_pack(path):
                         continue
                     arcname = (
                         Path(slug) / 'media' / path.relative_to(media_dir)
@@ -1060,6 +1065,13 @@ def save_as_genome(
 
     new_genome_uuid = uuid.uuid4()
     source_manifest = dict(source.manifest_json or {})
+    # Empty-package convention: the new graft ships a single Python
+    # package whose name is the new slug with hyphens turned to
+    # underscores plus a ``_genome`` suffix (matches the incubator
+    # convention). The user lands on Save As → install → edit
+    # ``grafts/<new_slug>/code/<package>/`` → save-to-genome to bake.
+    new_package_name = new_slug.replace('-', '_') + '_genome'
+    forged_today = datetime.date.today().isoformat()
     new_manifest = {
         'slug': new_slug,
         'name': new_name.strip() or new_slug,
@@ -1067,14 +1079,13 @@ def save_as_genome(
         'genome': str(new_genome_uuid),
         'author': source_manifest.get('author', ''),
         'license': source_manifest.get('license', ''),
-        'description': source_manifest.get(
-            'description', 'Forged from {0!r}.'.format(source_slug),
+        # Always auto-generate — never carry the source's description
+        # forward. Users edit the description through the dedicated
+        # PATCH endpoint after Save As completes.
+        'description': 'Forged from {0!r} on {1}.'.format(
+            source_slug, forged_today,
         ),
-        # Don't carry source's entry_modules forward — the new genome's
-        # code/ tree is copied from the source graft, so any imports the
-        # source declared still resolve, but the new genome starts with
-        # an empty contract until the user explicitly opts in.
-        'entry_modules': [],
+        'entry_modules': [new_package_name],
         'requires_are_self': source_manifest.get(
             'requires_are_self', '>=0.1.0',
         ),
@@ -1090,17 +1101,21 @@ def save_as_genome(
             json.dumps(new_manifest, indent=2) + '\n',
         )
 
-        source_graft = grafts_root() / source_slug
-        source_code = source_graft / 'code'
-        if source_code.exists():
-            shutil.copytree(str(source_code), str(new_bundle / 'code'))
-        else:
-            (new_bundle / 'code').mkdir(parents=True, exist_ok=True)
+        # Ship an EMPTY package matching the new slug. We deliberately
+        # do NOT copy the source graft's code/ — that would orphan the
+        # source's package directory inside the new genome and risk a
+        # sys.path collision if both source and target end up
+        # installed at the same time.
+        new_code = new_bundle / 'code'
+        new_code.mkdir(parents=True)
+        (new_code / new_package_name).mkdir()
+        (new_code / new_package_name / '__init__.py').write_text('')
 
+        source_graft = grafts_root() / source_slug
         source_media = source_graft / 'media'
         target_media = new_bundle / 'media'
         if source_media.exists():
-            shutil.copytree(str(source_media), str(target_media))
+            _copytree_filtered(source_media, target_media)
         else:
             target_media.mkdir(parents=True, exist_ok=True)
 
@@ -1125,6 +1140,8 @@ def save_as_genome(
                 for path in sorted(new_bundle.rglob('*')):
                     if path.is_dir():
                         continue
+                    if not _should_pack(path):
+                        continue
                     arcname = (
                         Path(new_slug) / path.relative_to(new_bundle)
                     )
@@ -1147,6 +1164,134 @@ def save_as_genome(
         len(modifier_data),
     )
     return new_modifier
+
+
+def edit_genome_metadata(
+    slug: str,
+    *,
+    name: Optional[str] = None,
+    description: Optional[str] = None,
+) -> dict:
+    """Update the genome's ``name`` / ``description`` and re-bake the zip.
+
+    Updates the graft's ``manifest.json`` and the ``NeuralModifier`` row's
+    ``name`` column (when name is provided), then calls
+    :func:`save_graft_to_genome` so the on-disk archive matches the row.
+
+    Refusals (all 400-friendly):
+        * canonical — read-only by structural rule (no manifest, no graft).
+        * incubator — bootstrap-managed; description comes from the
+          shipped ``incubator.zip`` and is reset on every boot via
+          :func:`graft_incubator`.
+        * blank ``name`` (when supplied).
+        * neither field supplied.
+    """
+    if slug == NeuralModifier.CANONICAL_SLUG:
+        raise ValueError(
+            '[Neuroplasticity] edit-metadata: cannot edit the canonical '
+            'modifier.'
+        )
+    if slug == NeuralModifier.INCUBATOR_SLUG:
+        raise ValueError(
+            '[Neuroplasticity] edit-metadata: incubator metadata is '
+            'managed by the bootstrap incubator.zip; edit that archive '
+            'directly.'
+        )
+    if name is None and description is None:
+        raise ValueError(
+            '[Neuroplasticity] edit-metadata: provide name or description.'
+        )
+    if name is not None and not name.strip():
+        raise ValueError(
+            '[Neuroplasticity] edit-metadata: name cannot be blank.'
+        )
+
+    modifier = NeuralModifier.objects.get(slug=slug)
+
+    runtime_graft = grafts_root() / slug
+    manifest_path = runtime_graft / 'manifest.json'
+    if not manifest_path.exists():
+        raise FileNotFoundError(
+            '[Neuroplasticity] edit-metadata: graft manifest missing for '
+            '{0!r}.'.format(slug)
+        )
+
+    manifest_obj = json.loads(manifest_path.read_text())
+    if name is not None:
+        manifest_obj['name'] = name.strip()
+        modifier.name = name.strip()
+        modifier.save(update_fields=['name'])
+    if description is not None:
+        manifest_obj['description'] = description
+
+    manifest_path.write_text(json.dumps(manifest_obj, indent=2) + '\n')
+
+    # save_graft_to_genome re-reads the on-disk manifest, bumps the
+    # patch version, mirrors the bumped manifest onto the row's
+    # manifest_json, and atomically replaces the catalog zip.
+    return save_graft_to_genome(slug)
+
+
+def genome_preview(slug: str) -> dict:
+    """Read-only snapshot of an INSTALLED genome's live state.
+
+    Returns the manifest, per-model owned-row counts, and the file
+    layout under the graft's ``code/`` and ``media/`` trees. Works on
+    any INSTALLED genome including INCUBATOR; refuses CANONICAL
+    because canonical has no graft tree and "rows owned by canonical"
+    spans every fixture-shipped row, which is not a useful preview.
+    """
+    if slug == NeuralModifier.CANONICAL_SLUG:
+        raise ValueError(
+            '[Neuroplasticity] preview: canonical has no graft tree '
+            'and is not previewable.'
+        )
+
+    modifier = NeuralModifier.objects.get(slug=slug)
+    if modifier.status_id != NeuralModifierStatus.INSTALLED:
+        raise ValueError(
+            '[Neuroplasticity] preview: {0!r} is not INSTALLED.'.format(slug)
+        )
+
+    rows_by_model: dict = {}
+    for model in iter_genome_owned_models():
+        count = model.objects.filter(genome=modifier).count()
+        if count == 0:
+            continue
+        label = '{0}.{1}'.format(
+            model._meta.app_label, model._meta.model_name,
+        )
+        rows_by_model[label] = count
+
+    runtime_graft = grafts_root() / slug
+    code_dir = runtime_graft / 'code'
+    media_dir = runtime_graft / 'media'
+
+    code_tree: list = []
+    if code_dir.exists():
+        for path in sorted(code_dir.rglob('*')):
+            if path.is_dir():
+                continue
+            if not _should_pack(path):
+                continue
+            code_tree.append(path.relative_to(code_dir).as_posix())
+
+    media_tree: list = []
+    if media_dir.exists():
+        for path in sorted(media_dir.rglob('*')):
+            if path.is_dir():
+                continue
+            if not _should_pack(path):
+                continue
+            media_tree.append(path.relative_to(media_dir).as_posix())
+
+    return {
+        'slug': slug,
+        'manifest': dict(modifier.manifest_json or {}),
+        'rows_by_model': rows_by_model,
+        'code_tree': code_tree,
+        'media_tree': media_tree,
+    }
 
 
 def _build_remapped_owned_data(
@@ -1267,6 +1412,39 @@ def _build_remapped_owned_data(
             payload.append(row)
 
     return payload
+
+
+def _should_pack(path: Path) -> bool:
+    """Return True if ``path`` should be included in a baked genome zip.
+
+    Filters out ``__pycache__`` directories and compiled bytecode files
+    (``*.pyc`` / ``*.pyo``) from any walk that feeds zip writes or
+    media copies. Without this, save / save-as round-trips ship the
+    interpreter's bytecode cache for the source genome alongside the
+    user's actual code.
+    """
+    if any(part == '__pycache__' for part in path.parts):
+        return False
+    if path.suffix in ('.pyc', '.pyo'):
+        return False
+    return True
+
+
+def _copytree_filtered(src: Path, dst: Path) -> None:
+    """``shutil.copytree`` with the ``_should_pack`` filter applied.
+
+    Used by save-as for ``media/`` copies so a source graft's stray
+    bytecode never bleeds into the new genome's media tree.
+    """
+    def _ignore(directory: str, names: list[str]) -> list[str]:
+        ignored: list[str] = []
+        for name in names:
+            candidate = Path(directory) / name
+            if not _should_pack(candidate):
+                ignored.append(name)
+        return ignored
+
+    shutil.copytree(str(src), str(dst), ignore=_ignore)
 
 
 def _missing_entry_modules(code_dir: Path, entry_modules: list) -> list:
