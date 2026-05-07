@@ -289,6 +289,87 @@ class DigestSignalTest(CommonTestCase):
             )
         )
 
+    def test_in_place_ledger_population_updates_digest_model_name(self):
+        """Assert the second post_save broadcast after in-place ledger ai_model_provider population carries the populated model_name."""
+        usage = _make_usage_record(
+            response_payload={'role': 'assistant', 'content': ''},
+            ai_model_provider=None,
+        )
+        with patch(
+            'frontal_lobe.signals.fire_neurotransmitter',
+            new_callable=AsyncMock,
+        ) as mock_fire:
+            turn = ReasoningTurn.objects.create(
+                session=self.session,
+                turn_number=1,
+                status_id=ReasoningStatusID.ACTIVE,
+                model_usage_record=usage,
+            )
+
+            self.assertEqual(mock_fire.call_count, 1)
+            self.assertEqual(
+                mock_fire.call_args_list[0].args[0].vesicle['model_name'],
+                '',
+            )
+
+            usage.ai_model_provider = self.ai_model_provider
+            usage.save(update_fields=['ai_model_provider'])
+
+            turn.status_id = ReasoningStatusID.COMPLETED
+            turn.save(update_fields=['status', 'model_usage_record'])
+
+            self.assertEqual(mock_fire.call_count, 2)
+            self.assertEqual(
+                mock_fire.call_args_list[1].args[0].vesicle['model_name'],
+                'test-model',
+            )
+
+        self.assertEqual(
+            ReasoningTurnDigest.objects.get(turn=turn).model_name,
+            'test-model',
+        )
+
+    def test_in_place_ledger_population_with_turn_reassign_updates_model_name(self):
+        """Assert reassigning turn.model_usage_record before the second save still carries the populated model_name."""
+        usage = _make_usage_record(
+            response_payload={'role': 'assistant', 'content': ''},
+            ai_model_provider=None,
+        )
+        with patch(
+            'frontal_lobe.signals.fire_neurotransmitter',
+            new_callable=AsyncMock,
+        ) as mock_fire:
+            turn = ReasoningTurn.objects.create(
+                session=self.session,
+                turn_number=1,
+                status_id=ReasoningStatusID.ACTIVE,
+                model_usage_record=usage,
+            )
+
+            self.assertEqual(mock_fire.call_count, 1)
+            self.assertEqual(
+                mock_fire.call_args_list[0].args[0].vesicle['model_name'],
+                '',
+            )
+
+            usage.ai_model_provider = self.ai_model_provider
+            usage.save(update_fields=['ai_model_provider'])
+
+            turn.status_id = ReasoningStatusID.COMPLETED
+            turn.model_usage_record = usage
+            turn.save(update_fields=['status', 'model_usage_record'])
+
+            self.assertEqual(mock_fire.call_count, 2)
+            self.assertEqual(
+                mock_fire.call_args_list[1].args[0].vesicle['model_name'],
+                'test-model',
+            )
+
+        self.assertEqual(
+            ReasoningTurnDigest.objects.get(turn=turn).model_name,
+            'test-model',
+        )
+
 
 # ---------------------------------------------------------------------------
 # Builder tests

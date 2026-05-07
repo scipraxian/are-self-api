@@ -351,7 +351,20 @@ class FrontalLobe:
                 await sync_to_async(turn_record.save)(update_fields=[STATUS_ID])
                 return False, turn_record
 
-            # ⚡ 3. PASS THE LEDGER TO THE SYNAPSE
+            # 🛒 3. PERSIST THE LEDGER WITH THE PICK and re-fire the digest.
+            # The early save at step 1 made request_payload reachable for
+            # the inspector before Hypothalamus ran; this save propagates
+            # the just-picked ai_model_provider to the DB and fires a
+            # second post_save on the turn so the digest broadcast carries
+            # a populated model_name through the slow LLM round-trip
+            # window. On a failover retry the next iteration's save
+            # re-fires with the newly-picked model.
+            await sync_to_async(pending_ledger.save)()
+            await sync_to_async(turn_record.save)(
+                update_fields=[MODEL_USAGE_RECORD]
+            )
+
+            # ⚡ 4. PASS THE LEDGER TO THE SYNAPSE
             synapse = await sync_to_async(SynapseClient)(pending_ledger)
 
             try:
@@ -382,7 +395,7 @@ class FrontalLobe:
 
         duration = timezone.now() - start_time
 
-        # 💳 4. CHECKOUT (File the Form)
+        # 💳 5. CHECKOUT (File the Form)
         pending_ledger.query_time = duration
         if pending_ledger.input_tokens and pending_ledger.input_cost_per_token:
             pending_ledger.estimated_cost = (
@@ -394,14 +407,14 @@ class FrontalLobe:
 
         await sync_to_async(pending_ledger.save)()
 
-        # 5. Update and Save the Turn Record
+        # 6. Update and Save the Turn Record
         turn_record.status_id = ReasoningStatusID.COMPLETED
         turn_record.model_usage_record = pending_ledger
         await sync_to_async(turn_record.save)(
             update_fields=[STATUS_ID, MODEL_USAGE_RECORD]
         )
 
-        # 6. Logging and Tool Execution
+        # 7. Logging and Tool Execution
         res_payload = pending_ledger.response_payload or {}
         content = ''
         if isinstance(res_payload, dict):
